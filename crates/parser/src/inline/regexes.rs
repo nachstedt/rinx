@@ -155,8 +155,12 @@ pub(super) static PHRASED_LINK_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`_").unwrap());
 pub(super) static SIMPLE_LINK_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\b(?P<name>[a-zA-Z0-9_.-]+)_\b").unwrap());
+/// The embedded destination ending a phrase: `` `text <destination>`_ ``, or
+/// a phrase that is nothing but one, `` `<destination>`_ ``. The text may wrap
+/// over lines, and must be separated from the `<` by whitespace, as docutils
+/// requires.
 pub(super) static EMBEDDED_URI_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^(?P<text>.*)\s+<(?P<uri>[^>]+)>$").unwrap());
+    LazyLock::new(|| Regex::new(r"(?s)^(?:(?P<text>.*?)\s+)?<(?P<uri>[^<>]+)>$").unwrap());
 pub(super) static ANONYMOUS_PHRASED_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`__").unwrap());
 pub(super) static ANONYMOUS_SIMPLE_REGEX: LazyLock<Regex> =

@@ -1,8 +1,11 @@
-//! Hyperlink target parsing: the named `.. _label: uri` form and the
-//! anonymous `.. __: uri` form, either of which may carry its URI on the
-//! following indented line instead of inline.
+//! Hyperlink target parsing: the named `.. _label: destination` form and the
+//! anonymous `.. __: destination` form, either of which may carry its
+//! destination on the following indented line instead of inline. A
+//! destination is a URI, or another target's name (`.. _a: b_`).
 
 use rinx_ast::{Node, TargetName};
+
+use crate::inline::read_target_destination;
 
 pub(super) fn try_parse_target(lines: &[&str], i: usize) -> Option<(usize, Node)> {
     let line = lines[i].trim();
@@ -19,7 +22,12 @@ pub(super) fn try_parse_target(lines: &[&str], i: usize) -> Option<(usize, Node)
         }
 
         if !uri.is_empty() {
-            return Some((consumed, Node::AnonymousTarget { uri }));
+            return Some((
+                consumed,
+                Node::AnonymousTarget {
+                    destination: read_target_destination(&uri),
+                },
+            ));
         }
     }
 
@@ -47,13 +55,15 @@ pub(super) fn try_parse_target(lines: &[&str], i: usize) -> Option<(usize, Node)
             }
         }
 
-        let uri_opt = if uri.is_empty() { None } else { Some(uri) };
+        // An empty destination makes an internal target, labelling what
+        // follows; anything else leads to a URI or to another target.
+        let destination = (!uri.is_empty()).then(|| read_target_destination(&uri));
 
         return Some((
             consumed,
             Node::Target {
                 name: TargetName::new(name_str),
-                uri: uri_opt,
+                destination,
             },
         ));
     }

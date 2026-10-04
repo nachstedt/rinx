@@ -9,6 +9,7 @@ use crate::docutils_rfc_number::DocutilsRfcNumber;
 use crate::image::ImageOptions;
 use crate::index_entry::{IndexEntry, InvalidIndexEntry};
 use crate::inventory_selector::InventorySelector;
+use crate::link_destination::{HyperlinkTarget, LinkDestination};
 use crate::number_format::NumberFormat;
 use crate::registry_target::{Registry, RegistryTarget};
 use crate::script_position::ScriptPosition;
@@ -88,7 +89,7 @@ pub enum InlineNode {
     },
     Hyperlink {
         text: String,
-        target: String,
+        target: HyperlinkTarget,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
     },
@@ -97,9 +98,11 @@ pub enum InlineNode {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
     },
+    /// `` `text <destination>`__ ``: an anonymous reference carrying its own
+    /// destination, so it consumes no anonymous target.
     AnonymousHyperlink {
         text: String,
-        target: String,
+        target: LinkDestination,
     },
     Emphasis(String),
     Strong(String),
@@ -677,7 +680,7 @@ mod tests {
             },
             InlineNode::Hyperlink {
                 text: "t".to_string(),
-                target: "u".to_string(),
+                target: HyperlinkTarget::Reference(crate::TargetName::new("u")),
                 span: None,
             },
             InlineNode::AnonymousReference {
@@ -686,7 +689,7 @@ mod tests {
             },
             InlineNode::AnonymousHyperlink {
                 text: "t".to_string(),
-                target: "u".to_string(),
+                target: LinkDestination::Uri("u".to_string()),
             },
             InlineNode::TermReference {
                 display: "d".to_string(),

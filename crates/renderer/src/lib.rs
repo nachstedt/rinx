@@ -117,7 +117,7 @@ pub(crate) struct RenderCtx<'a> {
     /// and reported by the caller, not turned into a broken link.
     pub entity_template_errors: &'a mut Vec<String>,
     pub doc_path: &'a str,
-    pub anon_targets: &'a [String],
+    pub anon_targets: &'a [rinx_ast::LinkDestination],
     pub anon_index: &'a mut usize,
     /// The targets a `` `name`_ `` written in this document may reach, which
     /// docutils keeps local to it — see [`hyperlink_target`].
@@ -657,7 +657,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Target {
                 name: TargetName::new("section-1"),
-                uri: None,
+                destination: None,
             }],
         );
         let index = ProjectIndex::default();
@@ -687,7 +687,9 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Target {
                 name: TargetName::new("google"),
-                uri: Some("https://google.com".to_string()),
+                destination: Some(rinx_ast::LinkDestination::Uri(
+                    "https://google.com".to_string(),
+                )),
             }],
         );
         let index = ProjectIndex::default();
@@ -827,12 +829,14 @@ mod tests {
             vec![
                 Node::Paragraph(vec![rinx_ast::InlineNode::Hyperlink {
                     text: "Python".to_string(),
-                    target: "Python".to_string(),
+                    target: rinx_ast::HyperlinkTarget::Reference(TargetName::new("Python")),
                     span: None,
                 }]),
                 Node::Target {
                     name: TargetName::new("Python"),
-                    uri: Some("https://python.org".to_string()),
+                    destination: Some(rinx_ast::LinkDestination::Uri(
+                        "https://python.org".to_string(),
+                    )),
                 },
             ],
         );
@@ -853,12 +857,14 @@ mod tests {
                 vec![
                     Node::Paragraph(vec![rinx_ast::InlineNode::Hyperlink {
                         text: "guide".to_string(),
-                        target: "Python Packaging User Guide".to_string(),
+                        target: rinx_ast::HyperlinkTarget::Reference(TargetName::new(
+                            "Python Packaging User Guide",
+                        )),
                         span: None,
                     }]),
                     Node::Target {
                         name: TargetName::new("Python Packaging User Guide"),
-                        uri: Some(url.to_string()),
+                        destination: Some(rinx_ast::LinkDestination::Uri(url.to_string())),
                     },
                 ],
             )
@@ -882,7 +888,9 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Paragraph(vec![rinx_ast::InlineNode::Hyperlink {
                 text: "Google".to_string(),
-                target: "https://google.com".to_string(),
+                target: rinx_ast::HyperlinkTarget::Embedded(rinx_ast::LinkDestination::Uri(
+                    "https://google.com".to_string(),
+                )),
                 span: None,
             }])],
         );
@@ -936,7 +944,9 @@ mod tests {
                         .unwrap(),
                     items: vec![ListItem {
                         nodes: vec![Node::AnonymousTarget {
-                            uri: "https://example.com/".to_string(),
+                            destination: rinx_ast::LinkDestination::Uri(
+                                "https://example.com/".to_string(),
+                            ),
                         }],
                     }],
                 },
@@ -973,10 +983,10 @@ mod tests {
                     },
                 ]),
                 Node::AnonymousTarget {
-                    uri: "https://first.com".to_string(),
+                    destination: rinx_ast::LinkDestination::Uri("https://first.com".to_string()),
                 },
                 Node::AnonymousTarget {
-                    uri: "https://second.com".to_string(),
+                    destination: rinx_ast::LinkDestination::Uri("https://second.com".to_string()),
                 },
             ],
         );
@@ -998,7 +1008,7 @@ mod tests {
                 Node::Paragraph(vec![
                     InlineNode::AnonymousHyperlink {
                         text: "Embedded".to_string(),
-                        target: "https://embedded.com".to_string(),
+                        target: rinx_ast::LinkDestination::Uri("https://embedded.com".to_string()),
                     },
                     InlineNode::Text(" then ".to_string()),
                     InlineNode::AnonymousReference {
@@ -1007,7 +1017,7 @@ mod tests {
                     },
                 ]),
                 Node::AnonymousTarget {
-                    uri: "https://target.com".to_string(),
+                    destination: rinx_ast::LinkDestination::Uri("https://target.com".to_string()),
                 },
             ],
         );

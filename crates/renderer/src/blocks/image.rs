@@ -494,7 +494,9 @@ mod tests {
                 rinx_ast::Node::Directive(Directive::Image(Box::new(options))),
                 rinx_ast::Node::Target {
                     name: TargetName::new("python"),
-                    uri: Some("https://python.org".to_string()),
+                    destination: Some(rinx_ast::LinkDestination::Uri(
+                        "https://python.org".to_string(),
+                    )),
                 },
             ],
         );

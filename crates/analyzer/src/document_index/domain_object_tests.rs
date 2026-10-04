@@ -97,7 +97,7 @@ fn test_analyze_indexes_a_multi_signature_objects_body_only_once() {
                 value: None,
                 body: vec![Node::Target {
                     name: rinx_ast::TargetName::new("address-families"),
-                    uri: None,
+                    destination: None,
                 }],
             },
         ))],

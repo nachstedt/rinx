@@ -5,12 +5,17 @@
 //! one shares used to live here; it moved to [`crate::explicit_title`] once
 //! `.. toctree::` needed the same syntax on its entry lines.
 
-use rinx_ast::{Domain, InlineNode, InventoryName, InventorySelector};
+use rinx_ast::{
+    Domain, HyperlinkTarget, InlineNode, InventoryName, InventorySelector, LinkDestination,
+    TargetName,
+};
 
 use crate::context::ParseCtx;
 
 use crate::explicit_title::{split_display_and_target, split_optional_title};
 
+use super::escapes::unescape;
+use super::link_destination::read_link_destination;
 use super::regexes::{
     ANONYMOUS_PHRASED_REGEX, EMBEDDED_URI_REGEX, EXTERNAL_PREFIX_REGEX, PHRASED_LINK_REGEX,
     PROGRAM_ROLE_REGEX, REF_REGEX, TERM_ROLE_REGEX,
@@ -228,17 +233,17 @@ fn build_inline_node(
             let name = m_str.strip_suffix('_').unwrap_or(m_str);
             InlineNode::Hyperlink {
                 text: name.to_string(),
-                target: name.to_string(),
+                target: HyperlinkTarget::Reference(TargetName::new(&unescape(name))),
                 span: None,
             }
         }
         "anon_phrased" => {
             let caps = ANONYMOUS_PHRASED_REGEX.captures(m_str).unwrap();
             let text_full = &caps["text"];
-            if let Some(embedded) = EMBEDDED_URI_REGEX.captures(text_full) {
+            if let Some((text, destination)) = read_embedded_destination(text_full) {
                 InlineNode::AnonymousHyperlink {
-                    text: embedded["text"].trim().to_string(),
-                    target: embedded["uri"].to_string(),
+                    text,
+                    target: destination,
                 }
             } else {
                 InlineNode::AnonymousReference {
@@ -258,24 +263,41 @@ fn build_inline_node(
     }
 }
 
-/// Builds the hyperlink for a matched `` `text <uri>`_ `` or `` `name`_ ``:
-/// an embedded URI is the target, else the phrase names one.
+/// Builds the hyperlink for a matched `` `text <destination>`_ `` or
+/// `` `name`_ ``: an embedded destination is the target, else the phrase
+/// names one.
 fn handle_phrased_link_match(m_str: &str) -> InlineNode {
     let caps = PHRASED_LINK_REGEX.captures(m_str).unwrap();
     let text_full = &caps["text"];
-    if let Some(embedded) = EMBEDDED_URI_REGEX.captures(text_full) {
+    if let Some((text, destination)) = read_embedded_destination(text_full) {
         InlineNode::Hyperlink {
-            text: embedded["text"].trim().to_string(),
-            target: embedded["uri"].to_string(),
+            text,
+            target: HyperlinkTarget::Embedded(destination),
             span: None,
         }
     } else {
         InlineNode::Hyperlink {
             text: text_full.to_string(),
-            target: text_full.to_string(),
+            target: HyperlinkTarget::Reference(TargetName::new(&unescape(text_full))),
             span: None,
         }
     }
+}
+
+/// The text and destination of a phrase ending in an embedded `<…>`, still
+/// escaped as the scan holds it, or `None` when the phrase embeds none.
+///
+/// A phrase that is nothing but its destination shows the destination as its
+/// text — the URI, or the name an alias points at.
+fn read_embedded_destination(phrase: &str) -> Option<(String, LinkDestination)> {
+    let embedded = EMBEDDED_URI_REGEX.captures(phrase)?;
+    let written = &embedded["uri"];
+    let destination = read_link_destination(written);
+    let text = match embedded.name("text") {
+        Some(text) => text.as_str().trim().to_string(),
+        None => written.trim().trim_end_matches('_').to_string(),
+    };
+    Some((text, destination))
 }
 
 #[cfg(test)]
@@ -418,7 +440,9 @@ mod tests {
             result,
             InlineNode::Hyperlink {
                 text: "text".to_string(),
-                target: "http://uri".to_string(),
+                target: rinx_ast::HyperlinkTarget::Embedded(rinx_ast::LinkDestination::Uri(
+                    "http://uri".to_string()
+                )),
                 span: None
             }
         );
@@ -436,7 +460,9 @@ mod tests {
             result,
             InlineNode::Hyperlink {
                 text: "just text".to_string(),
-                target: "just text".to_string(),
+                target: rinx_ast::HyperlinkTarget::Reference(rinx_ast::TargetName::new(
+                    "just text"
+                )),
                 span: None
             }
         );
@@ -454,7 +480,7 @@ mod tests {
             result,
             InlineNode::Hyperlink {
                 text: "name".to_string(),
-                target: "name".to_string(),
+                target: rinx_ast::HyperlinkTarget::Reference(rinx_ast::TargetName::new("name")),
                 span: None
             }
         );
@@ -472,7 +498,7 @@ mod tests {
             result,
             InlineNode::AnonymousHyperlink {
                 text: "text".to_string(),
-                target: "http://uri".to_string(),
+                target: rinx_ast::LinkDestination::Uri("http://uri".to_string()),
             }
         );
     }
@@ -530,7 +556,7 @@ mod tests {
             result,
             InlineNode::Hyperlink {
                 text: "-".to_string(),
-                target: "-".to_string(),
+                target: rinx_ast::HyperlinkTarget::Reference(rinx_ast::TargetName::new("-")),
                 span: None
             }
         );
@@ -567,7 +593,9 @@ mod tests {
             node,
             InlineNode::Hyperlink {
                 text: "Rust".to_string(),
-                target: "https://rust-lang.org".to_string(),
+                target: rinx_ast::HyperlinkTarget::Embedded(rinx_ast::LinkDestination::Uri(
+                    "https://rust-lang.org".to_string()
+                )),
                 span: None,
             }
         );
@@ -583,7 +611,9 @@ mod tests {
             node,
             InlineNode::Hyperlink {
                 text: "my target".to_string(),
-                target: "my target".to_string(),
+                target: rinx_ast::HyperlinkTarget::Reference(rinx_ast::TargetName::new(
+                    "my target"
+                )),
                 span: None,
             }
         );

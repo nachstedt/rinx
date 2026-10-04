@@ -109,7 +109,10 @@ pub fn preceding_labels(siblings: &[Node], index: usize) -> Vec<&TargetName> {
         .iter()
         .rev()
         .map_while(|node| match node {
-            Node::Target { name, uri: None } => Some(name),
+            Node::Target {
+                name,
+                destination: None,
+            } => Some(name),
             _ => None,
         })
         .collect();
@@ -191,7 +194,7 @@ mod tests {
     fn target(name: &str) -> Node {
         Node::Target {
             name: TargetName::new(name),
-            uri: None,
+            destination: None,
         }
     }
 
@@ -297,7 +300,9 @@ mod tests {
             Node::Comment,
             Node::Target {
                 name: TargetName::new("external"),
-                uri: Some("https://example.org".to_string()),
+                destination: Some(crate::LinkDestination::Uri(
+                    "https://example.org".to_string(),
+                )),
             },
             target("near"),
             Node::Transition,

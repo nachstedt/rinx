@@ -18,79 +18,136 @@
 //! A name standing for two different things within one of these kinds stands
 //! for neither: picking one would depend on which was written first, and
 //! docutils refuses such a reference too.
+//!
+//! An explicit target may also be an *alias* of another: `.. _a: b_`, or the
+//! text of an embedded `` `a <b_>`_ ``. Aliases are followed within the same
+//! document, and a chain that comes back on itself resolves to nothing.
+//! The text of an embedded `` `text <https://…>`_ `` is an explicit target
+//! too, as docutils makes it, so a later `` `text`_ `` links the same URI.
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use rinx_ast::{Document, Node, SectionId, TargetName, inline_plain_text, walk_nodes};
+use rinx_ast::{
+    Document, HyperlinkTarget, InlineNode, LinkDestination, Node, SectionId, TargetName,
+    for_each_inline_list, inline_plain_text, walk_nodes,
+};
 use rinx_index::ProjectIndex;
 
 /// The targets a named reference written in one document may reach, each
-/// mapped to the href it links.
+/// mapped to where it leads.
 #[derive(Debug, Default)]
 pub(crate) struct DocumentHyperlinkTargets {
-    /// External URLs and `#anchor`s of internal targets, together: docutils
-    /// keeps them in one namespace, so a name that is both is a duplicate.
-    explicit: BTreeMap<TargetName, BTreeSet<String>>,
-    /// `#anchor`s of the sections, by title.
-    implicit: BTreeMap<TargetName, BTreeSet<String>>,
+    /// External targets, internal targets (as a `#anchor` URI) and aliases,
+    /// together: docutils keeps them in one namespace, so a name that is two
+    /// of them is a duplicate.
+    explicit: BTreeMap<TargetName, BTreeSet<LinkDestination>>,
+    /// The sections, as `#anchor` URIs, by title.
+    implicit: BTreeMap<TargetName, BTreeSet<LinkDestination>>,
 }
 
 impl DocumentHyperlinkTargets {
-    /// The targets of `doc`: its external targets wherever they are nested,
-    /// the internal targets `index` records for it, and its top-level section
-    /// titles, anchored at `section_ids` (by node index, as
-    /// [`rinx_ast::allocate_section_ids`] returns them).
+    /// The targets of `doc`: its hyperlink targets and embedded references
+    /// wherever they are nested, the internal targets `index` records for it,
+    /// and its top-level section titles, anchored at `section_ids` (by node
+    /// index, as [`rinx_ast::allocate_section_ids`] returns them).
     pub(crate) fn collect(
         doc: &Document,
         index: &ProjectIndex,
         section_ids: &BTreeMap<usize, SectionId>,
     ) -> Self {
-        let mut explicit: BTreeMap<TargetName, BTreeSet<String>> = BTreeMap::new();
+        let mut explicit: BTreeMap<TargetName, BTreeSet<LinkDestination>> = BTreeMap::new();
         walk_nodes(&doc.nodes, &mut |node| {
             if let Node::Target {
                 name,
-                uri: Some(uri),
+                destination: Some(destination),
             } = node
             {
                 explicit
                     .entry(name.clone())
                     .or_default()
-                    .insert(uri.clone());
+                    .insert(destination.clone());
+            }
+        });
+        for_each_inline_list(&doc.nodes, &mut |list| {
+            for node in list {
+                if let InlineNode::Hyperlink {
+                    text,
+                    target: HyperlinkTarget::Embedded(destination),
+                    ..
+                } = node
+                {
+                    explicit
+                        .entry(TargetName::new(text))
+                        .or_default()
+                        .insert(destination.clone());
+                }
             }
         });
         for (name, doc_path) in &index.targets {
             if *doc_path == doc.path {
                 let anchor = format!("#{}", index.target_anchor(name));
-                explicit.entry(name.clone()).or_default().insert(anchor);
+                explicit
+                    .entry(name.clone())
+                    .or_default()
+                    .insert(LinkDestination::Uri(anchor));
             }
         }
 
-        let mut implicit: BTreeMap<TargetName, BTreeSet<String>> = BTreeMap::new();
+        let mut implicit: BTreeMap<TargetName, BTreeSet<LinkDestination>> = BTreeMap::new();
         for (node_index, id) in section_ids {
             if let Some(Node::Heading { text, .. }) = doc.nodes.get(*node_index) {
                 implicit
                     .entry(TargetName::new(&inline_plain_text(text)))
                     .or_default()
-                    .insert(format!("#{}", id.as_str()));
+                    .insert(LinkDestination::Uri(format!("#{}", id.as_str())));
             }
         }
         Self { explicit, implicit }
     }
 
-    /// The href a reference to `name` in this document links, or `None` when
-    /// the document defines no single target of that name.
+    /// The href a reference to `name` in this document links, following
+    /// aliases, or `None` when the document defines no single target of that
+    /// name — or an alias chain leads back on itself.
     pub(crate) fn href(&self, name: &TargetName) -> Option<&str> {
+        let mut visited = BTreeSet::new();
+        let mut current = name;
+        loop {
+            if !visited.insert(current) {
+                return None;
+            }
+            match self.destination_of(current)? {
+                LinkDestination::Uri(uri) => return Some(uri),
+                LinkDestination::Name(next) => current = next,
+            }
+        }
+    }
+
+    /// The href `destination` — written in a reference or a target of this
+    /// document — links.
+    pub(crate) fn destination_href<'a>(
+        &'a self,
+        destination: &'a LinkDestination,
+    ) -> Option<&'a str> {
+        match destination {
+            LinkDestination::Uri(uri) => Some(uri),
+            LinkDestination::Name(name) => self.href(name),
+        }
+    }
+
+    /// The one destination this document gives `name`: an explicit target's,
+    /// else a section's.
+    fn destination_of(&self, name: &TargetName) -> Option<&LinkDestination> {
         match self.explicit.get(name) {
-            Some(hrefs) => only(hrefs),
+            Some(destinations) => only(destinations),
             None => self.implicit.get(name).and_then(only),
         }
     }
 }
 
-/// The one href in `hrefs`, or `None` when there are several.
-fn only(hrefs: &BTreeSet<String>) -> Option<&str> {
-    match hrefs.len() {
-        1 => hrefs.first().map(String::as_str),
+/// The one destination in `destinations`, or `None` when there are several.
+fn only(destinations: &BTreeSet<LinkDestination>) -> Option<&LinkDestination> {
+    match destinations.len() {
+        1 => destinations.first(),
         _ => None,
     }
 }
@@ -98,13 +155,28 @@ fn only(hrefs: &BTreeSet<String>) -> Option<&str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rinx_ast::{Directive, InlineNode, ListItem, allocate_section_ids};
+    use rinx_ast::{Directive, ListItem, allocate_section_ids};
 
     fn external(name: &str, uri: &str) -> Node {
         Node::Target {
             name: TargetName::new(name),
-            uri: Some(uri.to_string()),
+            destination: Some(LinkDestination::Uri(uri.to_string())),
         }
+    }
+
+    fn alias(name: &str, of: &str) -> Node {
+        Node::Target {
+            name: TargetName::new(name),
+            destination: Some(LinkDestination::Name(TargetName::new(of))),
+        }
+    }
+
+    fn embedded(text: &str, destination: LinkDestination) -> Node {
+        Node::Paragraph(vec![InlineNode::Hyperlink {
+            text: text.to_string(),
+            target: HyperlinkTarget::Embedded(destination),
+            span: None,
+        }])
     }
 
     fn heading(title: &str) -> Node {
@@ -275,5 +347,75 @@ mod tests {
 
         // Then
         assert_eq!(href(&targets, "guide").as_deref(), Some("https://a.org"));
+    }
+
+    #[test]
+    fn test_href_follows_an_indirect_target() {
+        // Given — `tkinter.ttk.rst`'s `.. _Layout: `Layouts`_`.
+        let nodes = vec![
+            alias("Layout", "Layouts"),
+            external("Layouts", "https://tkdocs.com/layouts"),
+        ];
+
+        // When
+        let targets = collect(nodes, &ProjectIndex::default());
+
+        // Then
+        assert_eq!(
+            href(&targets, "layout").as_deref(),
+            Some("https://tkdocs.com/layouts")
+        );
+    }
+
+    #[test]
+    fn test_href_is_none_for_an_alias_cycle() {
+        // Given
+        let nodes = vec![alias("a", "b"), alias("b", "a")];
+
+        // When
+        let targets = collect(nodes, &ProjectIndex::default());
+
+        // Then
+        assert_eq!(href(&targets, "a"), None);
+    }
+
+    #[test]
+    fn test_collect_makes_an_embedded_references_text_a_target() {
+        // Given — `` `Python <https://python.org>`_ ``, later `Python`_.
+        let nodes = vec![embedded(
+            "Python",
+            LinkDestination::Uri("https://python.org".to_string()),
+        )];
+
+        // When
+        let targets = collect(nodes, &ProjectIndex::default());
+
+        // Then
+        assert_eq!(
+            href(&targets, "python").as_deref(),
+            Some("https://python.org")
+        );
+    }
+
+    #[test]
+    fn test_destination_href_resolves_an_alias_within_the_document() {
+        // Given — `` `isolation <interp-isolation_>`_ `` in
+        // `concurrent.interpreters.rst`, naming a label of the same page.
+        let mut index = ProjectIndex::default();
+        index
+            .targets
+            .insert(TargetName::new("interp-isolation"), "page.rst".to_string());
+        let targets = collect(Vec::new(), &index);
+        let destination = LinkDestination::Name(TargetName::new("interp-isolation"));
+
+        // When / Then
+        assert_eq!(
+            targets.destination_href(&destination),
+            Some("#interp-isolation")
+        );
+        assert_eq!(
+            targets.destination_href(&LinkDestination::Uri("#usage".to_string())),
+            Some("#usage")
+        );
     }
 }

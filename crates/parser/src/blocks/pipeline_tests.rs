@@ -143,7 +143,7 @@ fn test_parse_creates_target_node_for_explicit_target() {
         doc.nodes[0],
         Node::Target {
             name: TargetName::new("my-target"),
-            uri: None
+            destination: None
         }
     );
     assert_eq!(
@@ -164,7 +164,9 @@ fn test_parse_creates_external_target_node() {
         doc.nodes[0],
         Node::Target {
             name: TargetName::new("my-link"),
-            uri: Some("https://example.com".to_string())
+            destination: Some(rinx_ast::LinkDestination::Uri(
+                "https://example.com".to_string()
+            ))
         }
     );
 }
@@ -181,7 +183,9 @@ fn test_parse_creates_indented_external_target_node() {
         doc.nodes[0],
         Node::Target {
             name: TargetName::new("my-link"),
-            uri: Some("https://example.com".to_string())
+            destination: Some(rinx_ast::LinkDestination::Uri(
+                "https://example.com".to_string()
+            ))
         }
     );
 }

@@ -26,6 +26,29 @@ You can also embed URIs directly within a phrased link using the
 Check out the `Sphinx Documentation <https://www.sphinx-doc.org>`_ for more 
 details on reStructuredText.
 
+Relative and Wrapped Embedded URIs
+----------------------------------
+
+An embedded URI may be relative, such as a fragment of this page:
+`back to the top <#hyperlinks-and-targets>`_. The link text may also wrap
+over a line break before its `embedded
+URI <https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#embedded-uris-and-aliases>`_,
+and a URI that is all there is shows itself: `<https://www.python.org>`_.
+
+The text of an embedded reference names a target of its own, so
+`Sphinx Documentation`_ links to the URI embedded above.
+
+Aliases and Indirect Targets
+----------------------------
+
+Text ending in an underscore inside ``<…>`` names another target instead of
+a URI: `the language <Rust Language_>`_ links where ``Rust Language`` does.
+A target can point at another target in the same way:
+
+.. _Rust: `Rust Language`_
+
+so Rust_ leads to the Rust site as well.
+
 Phrased and Simple Links
 ========================
 

@@ -47,7 +47,9 @@ fn test_parse_creates_phrased_hyperlink_node() {
             InlineNode::Text("Check the ".to_string()),
             InlineNode::Hyperlink {
                 text: "Python Guide".to_string(),
-                target: "Python Guide".to_string(),
+                target: rinx_ast::HyperlinkTarget::Reference(rinx_ast::TargetName::new(
+                    "Python Guide"
+                )),
                 span: Some(at(1, 11, 26))
             },
             InlineNode::Text(" for more.".to_string()),
@@ -65,7 +67,9 @@ fn test_parse_creates_embedded_uri_hyperlink_node() {
             InlineNode::Text("Check ".to_string()),
             InlineNode::Hyperlink {
                 text: "Google".to_string(),
-                target: "https://google.com".to_string(),
+                target: rinx_ast::HyperlinkTarget::Embedded(rinx_ast::LinkDestination::Uri(
+                    "https://google.com".to_string()
+                )),
                 span: Some(at(1, 7, 37))
             },
             InlineNode::Text(" now.".to_string()),
@@ -83,7 +87,7 @@ fn test_parse_creates_simple_link_node() {
             InlineNode::Text("Refer to ".to_string()),
             InlineNode::Hyperlink {
                 text: "target".to_string(),
-                target: "target".to_string(),
+                target: rinx_ast::HyperlinkTarget::Reference(rinx_ast::TargetName::new("target")),
                 span: Some(at(1, 10, 17))
             },
             InlineNode::Text(" for details.".to_string()),
@@ -131,7 +135,9 @@ fn test_parse_creates_simple_link_node_for_target_name_containing_underscore() {
             InlineNode::Text("See ".to_string()),
             InlineNode::Hyperlink {
                 text: "my_target".to_string(),
-                target: "my_target".to_string(),
+                target: rinx_ast::HyperlinkTarget::Reference(rinx_ast::TargetName::new(
+                    "my_target"
+                )),
                 span: Some(at(1, 5, 15))
             },
             InlineNode::Text(" here.".to_string()),
@@ -160,7 +166,7 @@ fn test_parse_creates_anonymous_target_node() {
     assert_eq!(
         doc.nodes[0],
         Node::AnonymousTarget {
-            uri: "https://example.com".to_string()
+            destination: rinx_ast::LinkDestination::Uri("https://example.com".to_string())
         }
     );
 }
@@ -200,7 +206,7 @@ fn test_parse_creates_anonymous_hyperlink_with_embedded_uri() {
             inlines[1],
             InlineNode::AnonymousHyperlink {
                 text: "Google".to_string(),
-                target: "https://google.com".to_string()
+                target: rinx_ast::LinkDestination::Uri("https://google.com".to_string())
             }
         );
     } else {
@@ -874,4 +880,157 @@ fn test_parse_unescapes_a_numref_title_before_reading_its_format() {
         &inlines[1],
         InlineNode::NumberReference { title: Some(title), .. } if title.as_str() == "100%s"
     ));
+}
+
+/// The single hyperlink-like node of `input`'s first paragraph.
+fn only_link(input: &str) -> InlineNode {
+    let doc = parse("test.rst", input);
+    let Some(Node::Paragraph(inlines)) = doc.nodes.first() else {
+        panic!("Expected a paragraph, got {:?}", doc.nodes);
+    };
+    inlines
+        .iter()
+        .find(|inline| {
+            matches!(
+                inline,
+                InlineNode::Hyperlink { .. } | InlineNode::AnonymousHyperlink { .. }
+            )
+        })
+        .cloned()
+        .unwrap_or_else(|| panic!("Expected a link, got {inlines:?}"))
+}
+
+#[test]
+fn test_parse_reads_an_embedded_fragment_as_a_uri() {
+    // Given — `configparser.rst`'s `` `…<#unnamed-sections>`_ ``.
+    let input = "See `unnamed sections <#unnamed-sections>`_.";
+
+    // When
+    let link = only_link(input);
+
+    // Then
+    let InlineNode::Hyperlink { text, target, .. } = link else {
+        panic!("Expected a hyperlink, got {link:?}");
+    };
+    assert_eq!(text, "unnamed sections");
+    assert_eq!(
+        target,
+        rinx_ast::HyperlinkTarget::Embedded(rinx_ast::LinkDestination::Uri(
+            "#unnamed-sections".to_string()
+        ))
+    );
+}
+
+#[test]
+fn test_parse_reads_an_embedded_alias() {
+    // Given — `concurrent.interpreters.rst`'s `` `isolated <interp-isolation_>`_ ``.
+    let input = "They are `isolated <interp-isolation_>`_ from each other.";
+
+    // When
+    let link = only_link(input);
+
+    // Then
+    let InlineNode::Hyperlink { text, target, .. } = link else {
+        panic!("Expected a hyperlink, got {link:?}");
+    };
+    assert_eq!(text, "isolated");
+    assert_eq!(
+        target,
+        rinx_ast::HyperlinkTarget::Embedded(rinx_ast::LinkDestination::Name(
+            rinx_ast::TargetName::new("interp-isolation")
+        ))
+    );
+}
+
+#[test]
+fn test_parse_reads_link_text_wrapped_over_a_line_break() {
+    // Given — `decimal.rst` wraps the text before its embedded URI.
+    let input =
+        "Read `the general\ndecimal specification <https://speleotrove.com/decimal/>`_ now.";
+
+    // When
+    let link = only_link(input);
+
+    // Then
+    let InlineNode::Hyperlink { text, target, .. } = link else {
+        panic!("Expected a hyperlink, got {link:?}");
+    };
+    assert_eq!(text, "the general\ndecimal specification");
+    assert_eq!(
+        target,
+        rinx_ast::HyperlinkTarget::Embedded(rinx_ast::LinkDestination::Uri(
+            "https://speleotrove.com/decimal/".to_string()
+        ))
+    );
+}
+
+#[test]
+fn test_parse_shows_a_bare_embedded_uri_as_its_text() {
+    // Given
+    let input = "Visit `<https://python.org>`_ today.";
+
+    // When
+    let link = only_link(input);
+
+    // Then
+    let InlineNode::Hyperlink { text, .. } = link else {
+        panic!("Expected a hyperlink, got {link:?}");
+    };
+    assert_eq!(text, "https://python.org");
+}
+
+#[test]
+fn test_parse_reads_an_escaped_trailing_underscore_as_part_of_a_uri() {
+    // Given
+    let input = r"See `page <files/name\_>`_.";
+
+    // When
+    let link = only_link(input);
+
+    // Then
+    let InlineNode::Hyperlink { target, .. } = link else {
+        panic!("Expected a hyperlink, got {link:?}");
+    };
+    assert_eq!(
+        target,
+        rinx_ast::HyperlinkTarget::Embedded(rinx_ast::LinkDestination::Uri(
+            "files/name_".to_string()
+        ))
+    );
+}
+
+#[test]
+fn test_parse_reads_an_anonymous_embedded_alias() {
+    // Given
+    let input = "See `the guide <guide_>`__.";
+
+    // When
+    let link = only_link(input);
+
+    // Then
+    assert_eq!(
+        link,
+        InlineNode::AnonymousHyperlink {
+            text: "the guide".to_string(),
+            target: rinx_ast::LinkDestination::Name(rinx_ast::TargetName::new("guide")),
+        }
+    );
+}
+
+#[test]
+fn test_parse_keeps_text_glued_to_angle_brackets_as_a_name() {
+    // Given — docutils needs whitespace before an embedded `<`.
+    let input = "See `a<b>`_.";
+
+    // When
+    let link = only_link(input);
+
+    // Then
+    let InlineNode::Hyperlink { target, .. } = link else {
+        panic!("Expected a hyperlink, got {link:?}");
+    };
+    assert_eq!(
+        target,
+        rinx_ast::HyperlinkTarget::Reference(rinx_ast::TargetName::new("a<b>"))
+    );
 }

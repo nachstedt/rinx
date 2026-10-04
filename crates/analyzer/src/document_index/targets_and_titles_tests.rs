@@ -44,7 +44,7 @@ fn test_analyze_populates_targets_for_target_nodes() {
         vec![
             Node::Target {
                 name: TargetName::new("section-1"),
-                uri: None,
+                destination: None,
             },
             Node::Paragraph(vec![InlineNode::Text("some text".to_string())]),
         ],
@@ -210,7 +210,7 @@ fn test_analyze_registers_target_nested_in_table_cell() {
                     rowspan: 1,
                     content: vec![Node::Target {
                         name: TargetName::new("nested-target"),
-                        uri: None,
+                        destination: None,
                     }],
                 }],
             }],
@@ -327,7 +327,7 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
                     rowspan: 1,
                     content: vec![Node::Target {
                         name: TargetName::new("in-header"),
-                        uri: None,
+                        destination: None,
                     }],
                 }],
             }],
@@ -337,7 +337,7 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
                     rowspan: 1,
                     content: vec![Node::Target {
                         name: TargetName::new("in-body"),
-                        uri: None,
+                        destination: None,
                     }],
                 }],
             }],
@@ -477,7 +477,7 @@ fn test_analyze_indexes_targets_inside_a_figure_legend() {
             None,
             vec![Node::Target {
                 name: TargetName::new("in-legend"),
-                uri: None,
+                destination: None,
             }],
         )],
     );
@@ -629,7 +629,7 @@ fn test_analyze_indexes_targets_inside_a_dropdown_body() {
             None,
             vec![Node::Target {
                 name: TargetName::new("in-dropdown"),
-                uri: None,
+                destination: None,
             }],
         )],
     );
@@ -836,7 +836,7 @@ fn test_analyze_registers_a_bar_charts_name_as_a_target() {
 fn label(name: &str) -> Node {
     Node::Target {
         name: TargetName::new(name),
-        uri: None,
+        destination: None,
     }
 }
 
@@ -929,7 +929,9 @@ fn test_analyze_records_no_title_for_an_external_hyperlink_target() {
         vec![
             Node::Target {
                 name: TargetName::new("python"),
-                uri: Some("https://python.org".to_string()),
+                destination: Some(rinx_ast::LinkDestination::Uri(
+                    "https://python.org".to_string(),
+                )),
             },
             heading("Installing"),
         ],
@@ -951,7 +953,9 @@ fn test_analyze_leaves_an_external_hyperlink_target_out_of_the_index() {
         vec![
             Node::Target {
                 name: TargetName::new("python"),
-                uri: Some("https://python.org".to_string()),
+                destination: Some(rinx_ast::LinkDestination::Uri(
+                    "https://python.org".to_string(),
+                )),
             },
             label("installing"),
         ],

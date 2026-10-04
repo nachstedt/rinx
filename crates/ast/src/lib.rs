@@ -74,6 +74,7 @@ mod inline_node;
 mod inventory_selector;
 mod label_rotation;
 mod line_block;
+mod link_destination;
 mod list_item;
 mod module_options;
 mod node;
@@ -153,6 +154,7 @@ pub use inline_node::{InlineNode, NumberReferenceRefusal, RoleRefusal, inline_pl
 pub use inventory_selector::InventorySelector;
 pub use label_rotation::{InvalidLabelRotation, LabelRotation};
 pub use line_block::LineBlockItem;
+pub use link_destination::{HyperlinkTarget, LinkDestination};
 pub use list_item::ListItem;
 pub use module_options::{ModuleFlag, ModuleOptions};
 pub use node::Node;
