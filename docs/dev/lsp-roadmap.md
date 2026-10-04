@@ -30,7 +30,7 @@ finished one 🔶. A heading with no marker means the step has not started.
 
 - **Done:** #1 (PR #226), plus the testing and CI groundwork that came before #2
   (PRs #238–#248, listed at the end of M0), #2 (PR #253), #3 (PR #255),
-  #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), and #6.
+  #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), and #6 (PR #270).
 - **Done early:** most of #12, which is the packaging, the CI artifact and the
   installed-VSIX test.
 - **Next: #7, hover on references.**
@@ -166,7 +166,7 @@ The list is marked incomplete while the scan runs, so the editor asks again.
 A document outside every workspace folder gets no completion, and a role whose
 text wraps onto the next line is not recognised.
 
-### 6. Broken-reference diagnostics ✅
+### 6. Broken-reference diagnostics ✅ (#270)
 
 **You experience:** a typo in a `:ref:` is underlined, and adding the label in
 another file clears it.
