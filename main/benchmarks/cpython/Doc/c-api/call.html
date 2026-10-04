@@ -702,7 +702,7 @@ where the name of the method is given as a Python string object in <em>name</em>
   <dt id="c:function:pyobject_vectorcall"><code class="sig-name">PyObject* PyObject_Vectorcall(PyObject *callable, PyObject *const *args, size_t nargsf, PyObject *kwnames)</code></dt>
   <dd><p>Call a callable Python object <em>callable</em>.
 The arguments are the same as for <a class="reference internal" href="call.html#c:type:vectorcallfunc"><code class="xref c type docutils literal">vectorcallfunc</code></a>.
-If <em>callable</em> supports <a href="call.html#vectorcall">vectorcall</a>, this directly calls
+If <em>callable</em> supports <a href="#vectorcall">vectorcall</a>, this directly calls
 the vectorcall function stored in <em>callable</em>.</p>
 <p>Return the result of the call on success, or raise an exception and return
 <em>NULL</em> on failure.</p>
@@ -713,7 +713,7 @@ the vectorcall function stored in <em>callable</em>.</p>
 </dl>
 <dl class="c function">
   <dt id="c:function:pyobject_vectorcalldict"><code class="sig-name">PyObject* PyObject_VectorcallDict(PyObject *callable, PyObject *const *args, size_t nargsf, PyObject *kwdict)</code></dt>
-  <dd><p>Call <em>callable</em> with positional arguments passed exactly as in the <a href="call.html#vectorcall">vectorcall</a> protocol,
+  <dd><p>Call <em>callable</em> with positional arguments passed exactly as in the <a href="#vectorcall">vectorcall</a> protocol,
 but with keyword arguments passed as a dictionary <em>kwdict</em>.
 The <em>args</em> array contains only the positional arguments.</p>
 <p>Regardless of which protocol is used internally,

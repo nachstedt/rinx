@@ -476,7 +476,7 @@ implementations of network or IPC protocols (e.g. HTTP).</p>
 <p>Essentially, transports and protocols should only be used in
 libraries and frameworks and never in high-level asyncio
 applications.</p>
-<p>This documentation page covers both <a href="#" class="broken-link">Transports</a> and <a href="#" class="broken-link">Protocols</a>.</p>
+<p>This documentation page covers both <a href="#transports">Transports</a> and <a href="#protocols">Protocols</a>.</p>
 <div class="directive-error">
 <p class="directive-error-message">unknown directive type 'rubric'</p>
 <pre class="directive-error-source">.. rubric:: Introduction</pre>
@@ -506,16 +506,16 @@ Such methods usually return a tuple of <code>(transport, protocol)</code>.</p>
 </div>
 <p>This documentation page contains the following sections:</p>
 <ul>
-<li><p>The <a href="#" class="broken-link">Transports</a> section documents asyncio <a class="reference internal" href="asyncio-protocol.html#py:class:asyncio.basetransport"><code class="xref py class docutils literal">BaseTransport</code></a>,
+<li><p>The <a href="#transports">Transports</a> section documents asyncio <a class="reference internal" href="asyncio-protocol.html#py:class:asyncio.basetransport"><code class="xref py class docutils literal">BaseTransport</code></a>,
 <a class="reference internal" href="asyncio-protocol.html#py:class:asyncio.readtransport"><code class="xref py class docutils literal">ReadTransport</code></a>, <a class="reference internal" href="asyncio-protocol.html#py:class:asyncio.writetransport"><code class="xref py class docutils literal">WriteTransport</code></a>, <a class="reference internal" href="asyncio-protocol.html#py:class:asyncio.transport"><code class="xref py class docutils literal">Transport</code></a>,
 <a class="reference internal" href="asyncio-protocol.html#py:class:asyncio.datagramtransport"><code class="xref py class docutils literal">DatagramTransport</code></a>, and <a class="reference internal" href="asyncio-protocol.html#py:class:asyncio.subprocesstransport"><code class="xref py class docutils literal">SubprocessTransport</code></a>
 classes.</p>
 </li>
-<li><p>The <a href="#" class="broken-link">Protocols</a> section documents asyncio <a class="reference internal" href="asyncio-protocol.html#py:class:asyncio.baseprotocol"><code class="xref py class docutils literal">BaseProtocol</code></a>,
+<li><p>The <a href="#protocols">Protocols</a> section documents asyncio <a class="reference internal" href="asyncio-protocol.html#py:class:asyncio.baseprotocol"><code class="xref py class docutils literal">BaseProtocol</code></a>,
 <a class="reference internal" href="asyncio-protocol.html#py:class:asyncio.protocol"><code class="xref py class docutils literal">Protocol</code></a>, <a class="reference internal" href="asyncio-protocol.html#py:class:asyncio.bufferedprotocol"><code class="xref py class docutils literal">BufferedProtocol</code></a>,
 <a class="reference internal" href="asyncio-protocol.html#py:class:asyncio.datagramprotocol"><code class="xref py class docutils literal">DatagramProtocol</code></a>, and <a class="reference internal" href="asyncio-protocol.html#py:class:asyncio.subprocessprotocol"><code class="xref py class docutils literal">SubprocessProtocol</code></a> classes.</p>
 </li>
-<li><p>The <a href="#" class="broken-link">Examples</a> section showcases how to work with transports,
+<li><p>The <a href="#examples">Examples</a> section showcases how to work with transports,
 protocols, and low-level event loop APIs.</p>
 </li>
 </ul>
@@ -1023,7 +1023,7 @@ start -&gt; connection_made
   <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
 </div>
 <p>Buffered Protocols can be used with any event loop method
-that supports <a href="#" class="broken-link">Streaming Protocols</a>.</p>
+that supports <a href="#streaming-protocols">Streaming Protocols</a>.</p>
 <p><code>BufferedProtocol</code> implementations allow explicit manual allocation
 and control of the receive buffer.  Event loops can then use the buffer
 provided by the protocol to avoid unnecessary data copies.  This

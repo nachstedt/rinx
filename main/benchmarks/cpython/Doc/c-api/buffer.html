@@ -427,7 +427,7 @@ indicating the shape of the memory as an n-dimensional array. Note that
 <code>shape[0] * ... * shape[ndim-1] * itemsize</code> MUST be equal to
 <a class="reference internal" href="buffer.html#c:member:py_buffer.len"><code class="xref c member docutils literal">len</code></a>.</p>
 <p>Shape values are restricted to <code>shape[n] &gt;= 0</code>. The case
-<code>shape[n] == 0</code> requires special attention. See <a href="#" class="broken-link">complex arrays</a>
+<code>shape[n] == 0</code> requires special attention. See <a href="#complex-arrays">complex arrays</a>
 for further information.</p>
 <p>The shape array is read-only for the consumer.</p>
 </dd>
@@ -439,7 +439,7 @@ giving the number of bytes to skip to get to a new element in each
 dimension.</p>
 <p>Stride values can be any integer. For regular arrays, strides are
 usually positive, but a consumer MUST be able to handle the case
-<code>strides[n] &lt;= 0</code>. See <a href="#" class="broken-link">complex arrays</a> for further information.</p>
+<code>strides[n] &lt;= 0</code>. See <a href="#complex-arrays">complex arrays</a> for further information.</p>
 <p>The strides array is read-only for the consumer.</p>
 </dd>
 </dl>
@@ -454,7 +454,7 @@ memory block).</p>
 <p>If all suboffsets are negative (i.e. no de-referencing is needed), then
 this field must be <code>NULL</code> (the default value).</p>
 <p>This type of array representation is used by the Python Imaging Library
-(PIL). See <a href="#" class="broken-link">complex arrays</a> for further information how to access elements
+(PIL). See <a href="#complex-arrays">complex arrays</a> for further information how to access elements
 of such an array.</p>
 <p>The suboffsets array is read-only for the consumer.</p>
 </dd>

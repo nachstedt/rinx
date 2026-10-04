@@ -464,46 +464,46 @@ to <code class="xref py module docutils literal">argparse</code>, see <a href=".
 as keyword arguments. Each parameter has its own more detailed description
 below, but in short they are:</p>
 <ul>
-<li><p><a href="argparse.html#prog">prog</a> - The name of the program (default: generated from the <code>__main__</code>
+<li><p><a href="#prog">prog</a> - The name of the program (default: generated from the <code>__main__</code>
 module attributes and <code>sys.argv[0]</code>)</p>
 </li>
-<li><p><a href="#" class="broken-link">usage</a> - The string describing the program usage (default: generated from
+<li><p><a href="#usage">usage</a> - The string describing the program usage (default: generated from
 arguments added to parser)</p>
 </li>
-<li><p><a href="argparse.html#description">description</a> - Text to display before the argument help
+<li><p><a href="#description">description</a> - Text to display before the argument help
 (by default, no text)</p>
 </li>
-<li><p><a href="#" class="broken-link">epilog</a> - Text to display after the argument help (by default, no text)</p>
+<li><p><a href="#epilog">epilog</a> - Text to display after the argument help (by default, no text)</p>
 </li>
-<li><p><a href="#" class="broken-link">parents</a> - A list of <a class="reference internal" href="argparse.html#py:class:argparse.argumentparser"><code class="xref py class docutils literal">ArgumentParser</code></a> objects whose arguments should
+<li><p><a href="#parents">parents</a> - A list of <a class="reference internal" href="argparse.html#py:class:argparse.argumentparser"><code class="xref py class docutils literal">ArgumentParser</code></a> objects whose arguments should
 also be included</p>
 </li>
-<li><p><a href="argparse.html#formatter_class">formatter_class</a> - A class for customizing the help output</p>
+<li><p><a href="#formatter_class">formatter_class</a> - A class for customizing the help output</p>
 </li>
-<li><p><a href="#" class="broken-link">prefix_chars</a> - The set of characters that prefix optional arguments
+<li><p><a href="#prefix-chars">prefix_chars</a> - The set of characters that prefix optional arguments
 (default: '-')</p>
 </li>
-<li><p><a href="#" class="broken-link">fromfile_prefix_chars</a> - The set of characters that prefix files from
+<li><p><a href="#fromfile-prefix-chars">fromfile_prefix_chars</a> - The set of characters that prefix files from
 which additional arguments should be read (default: <code>None</code>)</p>
 </li>
-<li><p><a href="#" class="broken-link">argument_default</a> - The global default value for arguments
+<li><p><a href="#argument-default">argument_default</a> - The global default value for arguments
 (default: <code>None</code>)</p>
 </li>
-<li><p><a href="#" class="broken-link">conflict_handler</a> - The strategy for resolving conflicting optionals
+<li><p><a href="#conflict-handler">conflict_handler</a> - The strategy for resolving conflicting optionals
 (usually unnecessary)</p>
 </li>
-<li><p><a href="#" class="broken-link">add_help</a> - Add a <code>-h/--help</code> option to the parser (default: <code>True</code>)</p>
+<li><p><a href="#add-help">add_help</a> - Add a <code>-h/--help</code> option to the parser (default: <code>True</code>)</p>
 </li>
-<li><p><a href="argparse.html#allow_abbrev">allow_abbrev</a> - Allows long options to be abbreviated if the
+<li><p><a href="#allow_abbrev">allow_abbrev</a> - Allows long options to be abbreviated if the
 abbreviation is unambiguous (default: <code>True</code>)</p>
 </li>
-<li><p><a href="#" class="broken-link">exit_on_error</a> - Determines whether or not <code class="xref py class docutils literal">ArgumentParser</code> exits with
+<li><p><a href="#exit-on-error">exit_on_error</a> - Determines whether or not <code class="xref py class docutils literal">ArgumentParser</code> exits with
 error info when an error occurs. (default: <code>True</code>)</p>
 </li>
-<li><p><a href="#" class="broken-link">suggest_on_error</a> - Enables suggestions for mistyped argument choices
+<li><p><a href="#suggest-on-error">suggest_on_error</a> - Enables suggestions for mistyped argument choices
 and subparser names (default: <code>False</code>)</p>
 </li>
-<li><p><a href="#" class="broken-link">color</a> - Allow color output (default: <code>True</code>)</p>
+<li><p><a href="#color">color</a> - Allow color output (default: <code>True</code>)</p>
 </li>
 </ul>
 <div class="versionchanged">
@@ -602,7 +602,7 @@ what the program does and how it works.  In help messages, the description is
 displayed between the command-line usage string and the help messages for the
 various arguments.</p>
 <p>By default, the description will be line-wrapped so that it fits within the
-given space.  To change this behavior, see the <a href="argparse.html#formatter_class">formatter_class</a> argument.</p>
+given space.  To change this behavior, see the <a href="#formatter_class">formatter_class</a> argument.</p>
 <h3 id="epilog">epilog</h3>
 <p>Some programs like to display additional description of the program after the
 description of the arguments.  Such text can be specified using the <code>epilog=</code>
@@ -620,8 +620,8 @@ argument to <a class="reference internal" href="argparse.html#py:class:argparse.
 <span class="hl-source hl-python"> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">h</span></span>, <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-function hl-builtin hl-python">help</span></span>  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">show</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">this</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-function hl-builtin hl-python">help</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">message</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">and</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">exit</span></span></span>
 <span class="hl-source hl-python"></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">And</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">that</span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">s how you<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">d</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">foo</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">a</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">bar</span></span></span></pre></div>
-<p>As with the <a href="argparse.html#description">description</a> argument, the <code>epilog=</code> text is by default
-line-wrapped, but this behavior can be adjusted with the <a href="argparse.html#formatter_class">formatter_class</a>
+<p>As with the <a href="#description">description</a> argument, the <code>epilog=</code> text is by default
+line-wrapped, but this behavior can be adjusted with the <a href="#formatter_class">formatter_class</a>
 argument to <a class="reference internal" href="argparse.html#py:class:argparse.argumentparser"><code class="xref py class docutils literal">ArgumentParser</code></a>.</p>
 <h3 id="parents">parents</h3>
 <p>Sometimes, several parsers share a common set of arguments. Rather than
@@ -666,8 +666,8 @@ classes:</p>
 </dl>
 <p><a class="reference internal" href="argparse.html#py:class:argparse.rawdescriptionhelpformatter"><code class="xref py class docutils literal">RawDescriptionHelpFormatter</code></a> and <a class="reference internal" href="argparse.html#py:class:argparse.rawtexthelpformatter"><code class="xref py class docutils literal">RawTextHelpFormatter</code></a> give
 more control over how textual descriptions are displayed.
-By default, <a class="reference internal" href="argparse.html#py:class:argparse.argumentparser"><code class="xref py class docutils literal">ArgumentParser</code></a> objects line-wrap the <a href="argparse.html#description">description</a> and
-<a href="#" class="broken-link">epilog</a> texts in command-line help messages:</p>
+By default, <a class="reference internal" href="argparse.html#py:class:argparse.argumentparser"><code class="xref py class docutils literal">ArgumentParser</code></a> objects line-wrap the <a href="#description">description</a> and
+<a href="#epilog">epilog</a> texts in command-line help messages:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">parser</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">argparse</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ArgumentParser</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-variable hl-parameter hl-python">prog</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">PROG<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
@@ -689,7 +689,7 @@ By default, <a class="reference internal" href="argparse.html#py:class:argparse.
 <span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">likewise</span></span> <span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">this</span> <span class="hl-meta hl-generic-name hl-python">epilog</span> <span class="hl-meta hl-generic-name hl-python">whose</span> <span class="hl-meta hl-generic-name hl-python">whitespace</span> <span class="hl-meta hl-generic-name hl-python">will</span> <span class="hl-meta hl-generic-name hl-python">be</span> <span class="hl-meta hl-generic-name hl-python">cleaned</span> <span class="hl-meta hl-generic-name hl-python">up</span> <span class="hl-invalid hl-illegal hl-name hl-python">and</span> <span class="hl-meta hl-generic-name hl-python">whose</span> <span class="hl-meta hl-generic-name hl-python">words</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">will</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">be</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">wrapped</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">across</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">a</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">couple</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lines</span></span></span></pre></div>
 <p>Passing <a class="reference internal" href="argparse.html#py:class:argparse.rawdescriptionhelpformatter"><code class="xref py class docutils literal">RawDescriptionHelpFormatter</code></a> as <code>formatter_class=</code>
-indicates that <a href="argparse.html#description">description</a> and <a href="#" class="broken-link">epilog</a> are already correctly formatted and
+indicates that <a href="#description">description</a> and <a href="#epilog">epilog</a> are already correctly formatted and
 should not be line-wrapped:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">parser</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">argparse</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ArgumentParser</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span></span></span>
@@ -734,8 +734,8 @@ default values to each of the argument help messages:</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">options</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
 <span class="hl-source hl-python"> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">h</span></span>, <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-function hl-builtin hl-python">help</span></span>  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">show</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">this</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-function hl-builtin hl-python">help</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">message</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">and</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">exit</span></span></span>
 <span class="hl-source hl-python"> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">foo</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">FOO</span></span>   <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">FOO</span></span>! <span class="hl-meta hl-group hl-python"><span class="hl-punctuation hl-section hl-group hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">default</span></span>: <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">42</span><span class="hl-punctuation hl-section hl-group hl-end hl-python">)</span></span></span></pre></div>
-<p><a class="reference internal" href="argparse.html#py:class:argparse.metavartypehelpformatter"><code class="xref py class docutils literal">MetavarTypeHelpFormatter</code></a> uses the name of the <a href="../reference/simple_stmts.html#type">type</a> argument for each
-argument as the display name for its values (rather than using the <a href="argparse.html#dest">dest</a>
+<p><a class="reference internal" href="argparse.html#py:class:argparse.metavartypehelpformatter"><code class="xref py class docutils literal">MetavarTypeHelpFormatter</code></a> uses the name of the <a href="#type">type</a> argument for each
+argument as the display name for its values (rather than using the <a href="#dest">dest</a>
 as the regular formatter does):</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">parser</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">argparse</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ArgumentParser</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span></span></span>
@@ -849,7 +849,7 @@ use:</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Traceback</span></span></span> </span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">most</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">recent</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">call</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">last</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
 <span class="hl-source hl-python"> ..</span>
 <span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ArgumentError</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">argument</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">foo</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">conflicting</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">option</span></span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">string</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">s</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">foo</span></span></span></pre></div>
-<p>Sometimes (e.g. when using <a href="#" class="broken-link">parents</a>) it may be useful to simply override any
+<p>Sometimes (e.g. when using <a href="#parents">parents</a>) it may be useful to simply override any
 older arguments with the same option string.  To get this behavior, the value
 <code>'resolve'</code> can be supplied to the <code>conflict_handler=</code> argument of
 <a class="reference internal" href="argparse.html#py:class:argparse.argumentparser"><code class="xref py class docutils literal">ArgumentParser</code></a>:</p>
@@ -965,34 +965,34 @@ are set.</p>
   <dd><p>Define how a single command-line argument should be parsed.  Each parameter
 has its own more detailed description below, but in short they are:</p>
 <ul>
-<li><p><a href="#" class="broken-link">name or flags</a> - Either a name or a list of option strings, e.g. <code>'foo'</code>
+<li><p><a href="#name-or-flags">name or flags</a> - Either a name or a list of option strings, e.g. <code>'foo'</code>
 or <code>'-f', '--foo'</code>.</p>
 </li>
-<li><p><a href="argparse.html#action">action</a> - The basic type of action to be taken when this argument is
+<li><p><a href="#action">action</a> - The basic type of action to be taken when this argument is
 encountered at the command line.</p>
 </li>
-<li><p><a href="argparse.html#nargs">nargs</a> - The number of command-line arguments that should be consumed.</p>
+<li><p><a href="#nargs">nargs</a> - The number of command-line arguments that should be consumed.</p>
 </li>
-<li><p><a href="argparse.html#const">const</a> - A constant value required by some <a href="argparse.html#action">action</a> and <a href="argparse.html#nargs">nargs</a> selections.</p>
+<li><p><a href="#const">const</a> - A constant value required by some <a href="#action">action</a> and <a href="#nargs">nargs</a> selections.</p>
 </li>
-<li><p><a href="argparse.html#default">default</a> - The value produced if the argument is absent from the
+<li><p><a href="#default">default</a> - The value produced if the argument is absent from the
 command line and if it is absent from the namespace object.</p>
 </li>
-<li><p><a href="../reference/simple_stmts.html#type">type</a> - The type to which the command-line argument should be converted.</p>
+<li><p><a href="#type">type</a> - The type to which the command-line argument should be converted.</p>
 </li>
-<li><p><a href="argparse.html#choices">choices</a> - A sequence of the allowable values for the argument.</p>
+<li><p><a href="#choices">choices</a> - A sequence of the allowable values for the argument.</p>
 </li>
-<li><p><a href="argparse.html#required">required</a> - Whether or not the command-line option may be omitted
+<li><p><a href="#required">required</a> - Whether or not the command-line option may be omitted
 (optionals only).</p>
 </li>
-<li><p><a href="argparse.html#help">help</a> - A brief description of what the argument does.</p>
+<li><p><a href="#help">help</a> - A brief description of what the argument does.</p>
 </li>
-<li><p><a href="argparse.html#metavar">metavar</a> - A name for the argument in usage messages.</p>
+<li><p><a href="#metavar">metavar</a> - A name for the argument in usage messages.</p>
 </li>
-<li><p><a href="argparse.html#dest">dest</a> - The name of the attribute to be added to the object returned by
+<li><p><a href="#dest">dest</a> - The name of the attribute to be added to the object returned by
 <a class="reference internal" href="argparse.html#py:method:argparse.argumentparser.parse_args"><code class="xref py method docutils literal">parse_args</code></a>.</p>
 </li>
-<li><p><a href="argparse.html#deprecated">deprecated</a> - Whether or not use of the argument is deprecated.</p>
+<li><p><a href="#deprecated">deprecated</a> - Whether or not use of the argument is deprecated.</p>
 </li>
 </ul>
 </dd>
@@ -1028,9 +1028,9 @@ be positional:</p>
 <p>By default, <code class="xref py module docutils literal">argparse</code> automatically handles the internal naming and
 display names of arguments, simplifying the process without requiring
 additional configuration.
-As such, you do not need to specify the <a href="argparse.html#dest">dest</a> and <a href="argparse.html#metavar">metavar</a> parameters.
-The <a href="argparse.html#dest">dest</a> parameter defaults to the argument name with underscores <code>_</code>
-replacing hyphens <code>-</code> . The <a href="argparse.html#metavar">metavar</a> parameter defaults to the
+As such, you do not need to specify the <a href="#dest">dest</a> and <a href="#metavar">metavar</a> parameters.
+The <a href="#dest">dest</a> parameter defaults to the argument name with underscores <code>_</code>
+replacing hyphens <code>-</code> . The <a href="#metavar">metavar</a> parameter defaults to the
 upper-cased name. For example:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">parser</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">argparse</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ArgumentParser</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">prog</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">PROG<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
@@ -1054,8 +1054,8 @@ how the command-line arguments should be handled. The supplied actions are:</p>
 <li><p><code>'store'</code> - This just stores the argument's value.  This is the default
 action.</p>
 </li>
-<li><p><code>'store_const'</code> - This stores the value specified by the <a href="argparse.html#const">const</a> keyword
-argument; note that the <a href="argparse.html#const">const</a> keyword argument defaults to <code>None</code>.  The
+<li><p><code>'store_const'</code> - This stores the value specified by the <a href="#const">const</a> keyword
+argument; note that the <a href="#const">const</a> keyword argument defaults to <code>None</code>.  The
 <code>'store_const'</code> action is most commonly used with optional arguments that
 specify some sort of flag.  For example:</p>
 <div class="highlight hl-code"><pre>
@@ -1088,7 +1088,7 @@ will be appended after those default values. Example usage:</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Namespace</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">foo</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">0<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">1<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">2<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
 </li>
 <li><p><code>'append_const'</code> - This appends the value specified by
-the <a href="argparse.html#const">const</a> keyword argument to a list; note that the <a href="argparse.html#const">const</a> keyword
+the <a href="#const">const</a> keyword argument to a list; note that the <a href="#const">const</a> keyword
 argument defaults to <code>None</code>. The <code>'append_const'</code> action is typically
 useful when multiple arguments need to store constants to the same list. For
 example:</p>
@@ -1101,9 +1101,9 @@ example:</p>
 </li>
 <li><p><code>'extend'</code> - This appends each item from a multi-value
 argument to a list.
-The <code>'extend'</code> action is typically used with the <a href="argparse.html#nargs">nargs</a> keyword argument
+The <code>'extend'</code> action is typically used with the <a href="#nargs">nargs</a> keyword argument
 value <code>'+'</code> or <code>'*'</code>.
-Note that when <a href="argparse.html#nargs">nargs</a> is <code>None</code> (the default) or <code>'?'</code>, each
+Note that when <a href="#nargs">nargs</a> is <code>None</code> (the default) or <code>'?'</code>, each
 character of the argument string will be appended to the list.
 Example usage:</p>
 <div class="highlight hl-code"><pre>
@@ -1192,9 +1192,9 @@ the default, in which the item is produced by itself.</p>
 <ul>
 <li><p><code>'?'</code>. One argument will be consumed from the command line if possible, and
 produced as a single item.  If no command-line argument is present, the value from
-<a href="argparse.html#default">default</a> will be produced.  Note that for optional arguments, there is an
+<a href="#default">default</a> will be produced.  Note that for optional arguments, there is an
 additional case - the option string is present but not followed by a
-command-line argument.  In this case the value from <a href="argparse.html#const">const</a> will be produced.  Some
+command-line argument.  In this case the value from <a href="#const">const</a> will be produced.  Some
 examples to illustrate this:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">parser</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">argparse</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ArgumentParser</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
@@ -1251,7 +1251,7 @@ least one command-line argument present.  For example:</p>
 </li>
 </ul>
 <p>If the <code>nargs</code> keyword argument is not provided, the number of arguments consumed
-is determined by the <a href="argparse.html#action">action</a>.  Generally this means a single command-line argument
+is determined by the <a href="#action">action</a>.  Generally this means a single command-line argument
 will be consumed and a single item (not a list) will be produced.
 Actions that do not consume command-line arguments (e.g.
 <code>'store_const'</code>) set <code>nargs=0</code>.</p>
@@ -1264,7 +1264,7 @@ the various <a class="reference internal" href="argparse.html#py:class:argparse.
 <li><p>When <a class="reference internal" href="argparse.html#py:method:argparse.argumentparser.add_argument"><code class="xref py method docutils literal">add_argument</code></a> is called with
 <code>action='store_const'</code> or <code>action='append_const'</code>.  These actions add the
 <code>const</code> value to one of the attributes of the object returned by
-<a class="reference internal" href="argparse.html#py:method:argparse.argumentparser.parse_args"><code class="xref py method docutils literal">parse_args</code></a>. See the <a href="argparse.html#action">action</a> description for examples.
+<a class="reference internal" href="argparse.html#py:method:argparse.argumentparser.parse_args"><code class="xref py method docutils literal">parse_args</code></a>. See the <a href="#action">action</a> description for examples.
 If <code>const</code> is not provided to <a class="reference internal" href="argparse.html#py:method:argparse.argumentparser.add_argument"><code class="xref py method docutils literal">add_argument</code></a>, it will
 receive a default value of <code>None</code>.</p>
 </li>
@@ -1273,7 +1273,7 @@ receive a default value of <code>None</code>.</p>
 argument that can be followed by zero or one command-line arguments.
 When parsing the command line, if the option string is encountered with no
 command-line argument following it, the value from <code>const</code> will be used.
-See the <a href="argparse.html#nargs">nargs</a> description for examples.</p>
+See the <a href="#nargs">nargs</a> description for examples.</p>
 </li>
 </ul>
 <div class="versionchanged">
@@ -1304,7 +1304,7 @@ will not overwrite it:</p>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">parser</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">parse_args</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-sequence hl-list hl-empty hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">namespace</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">argparse</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Namespace</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">foo</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">101</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Namespace</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">foo</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">101</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
 <p>If the <code>default</code> value is a string, the parser parses the value as if it
-were a command-line argument.  In particular, the parser applies any <a href="../reference/simple_stmts.html#type">type</a>
+were a command-line argument.  In particular, the parser applies any <a href="#type">type</a>
 conversion argument, if provided, before setting the attribute on the
 <a class="reference internal" href="argparse.html#py:class:argparse.namespace"><code class="xref py class docutils literal">Namespace</code></a> return value.  Otherwise, the parser uses the value as is:</p>
 <div class="highlight hl-code"><pre>
@@ -1313,7 +1313,7 @@ conversion argument, if provided, before setting the attribute on the
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">parser</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">add_argument</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">--width<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">default</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">10<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>5</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">type</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">parser</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">parse_args</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Namespace</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">length</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">width</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">10<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>5</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
-<p>For positional arguments with <a href="argparse.html#nargs">nargs</a> equal to <code>?</code> or <code>*</code>, the <code>default</code> value
+<p>For positional arguments with <a href="#nargs">nargs</a> equal to <code>?</code> or <code>*</code>, the <code>default</code> value
 is used when no command-line argument was present:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">parser</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">argparse</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ArgumentParser</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
@@ -1322,8 +1322,8 @@ is used when no command-line argument was present:</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Namespace</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">foo</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">a<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">parser</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">parse_args</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-sequence hl-list hl-empty hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Namespace</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">foo</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">42</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
-<p>For <a href="argparse.html#required">required</a> arguments, the <code>default</code> value is ignored. For example, this
-applies to positional arguments with <a href="argparse.html#nargs">nargs</a> values other than <code>?</code> or <code>*</code>,
+<p>For <a href="#required">required</a> arguments, the <code>default</code> value is ignored. For example, this
+applies to positional arguments with <a href="#nargs">nargs</a> values other than <code>?</code> or <code>*</code>,
 or optional arguments marked as <code>required=True</code>.</p>
 <p>Providing <code>default=argparse.SUPPRESS</code> causes no attribute to be added if the
 command-line argument was not present:</p>
@@ -1341,7 +1341,7 @@ strings. However, quite often the command-line string should instead be
 interpreted as another type, such as a <a class="reference internal" href="functions.html#py:class:float"><code class="xref py class docutils literal">float</code></a> or <a class="reference internal" href="functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a>.  The
 <code>type</code> keyword for <a class="reference internal" href="argparse.html#py:method:argparse.argumentparser.add_argument"><code class="xref py method docutils literal">add_argument</code></a> allows any
 necessary type-checking and type conversions to be performed.</p>
-<p>If the <a href="../reference/simple_stmts.html#type">type</a> keyword is used with the <a href="argparse.html#default">default</a> keyword, the type converter
+<p>If the <a href="#type">type</a> keyword is used with the <a href="#default">default</a> keyword, the type converter
 is only applied if the default is a string.</p>
 <p>The argument to <code>type</code> can be a callable that accepts a single string or
 the name of a registered type (see <a class="reference internal" href="argparse.html#py:method:argparse.argumentparser.register"><code class="xref py method docutils literal">register</code></a>)
@@ -1386,7 +1386,7 @@ automatically closed.  In this case, it would be better to wait until after
 the parser has run and then use the :keyword:`with`-statement to manage the
 files.</p>
 <p>For type checkers that simply check against a fixed set of values, consider
-using the <a href="argparse.html#choices">choices</a> keyword instead.</p>
+using the <a href="#choices">choices</a> keyword instead.</p>
 <a id="choices"></a>
 <h3 id="choices">choices</h3>
 <p>Some command-line arguments should be selected from a restricted set of values.
@@ -1407,17 +1407,17 @@ if the argument was not one of the acceptable values:</p>
 <a class="reference internal" href="stdtypes.html#py:class:tuple"><code class="xref py class docutils literal">tuple</code></a> objects, and custom sequences are all supported.</p>
 <p>Use of <a class="reference internal" href="enum.html#py:class:enum.enum"><code class="xref py class docutils literal">enum.Enum</code></a> is not recommended because it is difficult to
 control its appearance in usage, help, and error messages.</p>
-<p>Note that <em>choices</em> are checked after any <a href="../reference/simple_stmts.html#type">type</a>
+<p>Note that <em>choices</em> are checked after any <a href="#type">type</a>
 conversions have been performed, so objects in <em>choices</em>
-should match the <a href="../reference/simple_stmts.html#type">type</a> specified. This can make <em>choices</em>
+should match the <a href="#type">type</a> specified. This can make <em>choices</em>
 appear unfamiliar in usage, help, or error messages.</p>
 <p>To keep <em>choices</em> user-friendly, consider a custom type wrapper that
-converts and formats values, or omit <a href="../reference/simple_stmts.html#type">type</a> and handle conversion in
+converts and formats values, or omit <a href="#type">type</a> and handle conversion in
 your application code.</p>
 <p>Formatted choices override the default <em>metavar</em> which is normally derived
 from <em>dest</em>.  This is usually what you want because the user never sees the
 <em>dest</em> parameter.  If this display isn't desirable (perhaps because there are
-many choices), just specify an explicit <a href="argparse.html#metavar">metavar</a>.</p>
+many choices), just specify an explicit <a href="#metavar">metavar</a>.</p>
 <a id="required"></a>
 <h3 id="required">required</h3>
 <p>In general, the <code class="xref py module docutils literal">argparse</code> module assumes that flags like <code>-f</code> and <code>--bar</code>
@@ -1447,7 +1447,7 @@ When a user requests help (usually by using <code>-h</code> or <code>--help</cod
 command line), these <code>help</code> descriptions will be displayed with each
 argument.</p>
 <p>The <code>help</code> strings can include various format specifiers to avoid repetition
-of things like the program name or the argument <a href="argparse.html#default">default</a>.  The available
+of things like the program name or the argument <a href="#default">default</a>.  The available
 specifiers include the program name, <code>%(prog)s</code> and most keyword arguments to
 <a class="reference internal" href="argparse.html#py:method:argparse.argumentparser.add_argument"><code class="xref py method docutils literal">add_argument</code></a>, e.g. <code>%(default)s</code>, <code>%(type)s</code>, etc.:</p>
 <div class="highlight hl-code"><pre>
@@ -1477,10 +1477,10 @@ setting the <code>help</code> value to <code>argparse.SUPPRESS</code>:</p>
 <a id="metavar"></a>
 <h3 id="metavar">metavar</h3>
 <p>When <a class="reference internal" href="argparse.html#py:class:argparse.argumentparser"><code class="xref py class docutils literal">ArgumentParser</code></a> generates help messages, it needs some way to refer
-to each expected argument.  By default, <code class="xref py class docutils literal">ArgumentParser</code> objects use the <a href="argparse.html#dest">dest</a>
+to each expected argument.  By default, <code class="xref py class docutils literal">ArgumentParser</code> objects use the <a href="#dest">dest</a>
 value as the "name" of each object.  By default, for positional argument
-actions, the <a href="argparse.html#dest">dest</a> value is used directly, and for optional argument actions,
-the <a href="argparse.html#dest">dest</a> value is uppercased.  So, a single positional argument with
+actions, the <a href="#dest">dest</a> value is used directly, and for optional argument actions,
+the <a href="#dest">dest</a> value is uppercased.  So, a single positional argument with
 <code>dest='bar'</code> will be referred to as <code>bar</code>. A single
 optional argument <code>--foo</code> that should be followed by a single command-line argument
 will be referred to as <code>FOO</code>.  An example:</p>
@@ -1517,7 +1517,7 @@ will be referred to as <code>FOO</code>.  An example:</p>
 <span class="hl-source hl-python"> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">foo</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">YYY</span></span></span></pre></div>
 <p>Note that <code>metavar</code> only changes the <em>displayed</em> name - the name of the
 attribute on the <a class="reference internal" href="argparse.html#py:method:argparse.argumentparser.parse_args"><code class="xref py method docutils literal">parse_args</code></a> object is still determined
-by the <a href="argparse.html#dest">dest</a> value.</p>
+by the <a href="#dest">dest</a> value.</p>
 <p>Different values of <code>nargs</code> may cause the metavar to be used multiple times.
 Providing a tuple to <code>metavar</code> specifies a different display for each of the
 arguments:</p>
@@ -1620,7 +1620,7 @@ are defined is to call <code class="xref py method docutils literal">Action.__in
 object using <a class="reference internal" href="functions.html#py:function:setattr"><code class="xref py function docutils literal">setattr</code></a>.</p>
 </li>
 <li><p><em>values</em> - The associated command-line arguments, with any type conversions
-applied.  Type conversions are specified with the <a href="../reference/simple_stmts.html#type">type</a> keyword argument to
+applied.  Type conversions are specified with the <a href="#type">type</a> keyword argument to
 <a class="reference internal" href="argparse.html#py:method:argparse.argumentparser.add_argument"><code class="xref py method docutils literal">add_argument</code></a>.</p>
 </li>
 <li><p><em>option_string</em> - The option string that was used to invoke this action.
@@ -1667,10 +1667,10 @@ namespace.  Return the populated namespace.</p>
 created and how they are assigned. See the documentation for
 <code class="xref py method docutils literal">add_argument</code> for details.</p>
 <ul>
-<li><p><a href="argparse.html#args">args</a> - List of strings to parse.  The default is taken from
+<li><p><a href="#args">args</a> - List of strings to parse.  The default is taken from
 <a class="reference internal" href="sys.html#py:data:sys.argv"><code class="xref py data docutils literal">sys.argv</code></a>.</p>
 </li>
-<li><p><a href="argparse.html#namespace">namespace</a> - An object to take the attributes.  The default is a new empty
+<li><p><a href="#namespace">namespace</a> - An object to take the attributes.  The default is a new empty
 <a class="reference internal" href="argparse.html#py:class:argparse.namespace"><code class="xref py class docutils literal">Namespace</code></a> object.</p>
 </li>
 </ul>
@@ -1884,18 +1884,18 @@ subparser argument</p>
 <li><p><em>parser_class</em> - class which will be used to create sub-parser instances, by
 default the class of the current parser (e.g. <a class="reference internal" href="argparse.html#py:class:argparse.argumentparser"><code class="xref py class docutils literal">ArgumentParser</code></a>)</p>
 </li>
-<li><p><a href="argparse.html#action">action</a> - the basic type of action to be taken when this argument is
+<li><p><a href="#action">action</a> - the basic type of action to be taken when this argument is
 encountered at the command line</p>
 </li>
-<li><p><a href="argparse.html#dest">dest</a> - name of the attribute under which sub-command name will be
+<li><p><a href="#dest">dest</a> - name of the attribute under which sub-command name will be
 stored; by default <code>None</code> and no value is stored</p>
 </li>
-<li><p><a href="argparse.html#required">required</a> - Whether or not a subcommand must be provided, by default
+<li><p><a href="#required">required</a> - Whether or not a subcommand must be provided, by default
 <code>False</code> (added in 3.7)</p>
 </li>
-<li><p><a href="argparse.html#help">help</a> - help for sub-parser group in help output, by default <code>None</code></p>
+<li><p><a href="#help">help</a> - help for sub-parser group in help output, by default <code>None</code></p>
 </li>
-<li><p><a href="argparse.html#metavar">metavar</a> - string presenting available subcommands in help; by default it
+<li><p><a href="#metavar">metavar</a> - string presenting available subcommands in help; by default it
 is <code>None</code> and presents subcommands in form {cmd1, cmd2, ..}</p>
 </li>
 </ul>
@@ -2160,7 +2160,7 @@ customize this display:</p>
 <span class="hl-source hl-python">  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">group2</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">description</span></span></span>
 <span class="hl-source hl-python"></span>
 <span class="hl-source hl-python">  <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">bar</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">BAR</span></span>  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">bar</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-function hl-builtin hl-python">help</span></span></span></pre></div>
-<p>The optional, keyword-only parameters <a href="#" class="broken-link">argument_default</a> and <a href="#" class="broken-link">conflict_handler</a>
+<p>The optional, keyword-only parameters <a href="#argument-default">argument_default</a> and <a href="#conflict-handler">conflict_handler</a>
 allow for finer-grained control of the behavior of the argument group. These
 parameters have the same meaning as in the <a class="reference internal" href="argparse.html#py:class:argparse.argumentparser"><code class="xref py class docutils literal">ArgumentParser</code></a> constructor,
 but apply specifically to the argument group rather than the entire parser.</p>
@@ -2175,7 +2175,7 @@ in the usual "positional arguments" and "optional arguments" sections.</p>
 </div>
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.14:</span></p>
-<p>Passing <a href="#" class="broken-link">prefix_chars</a> to <a class="reference internal" href="argparse.html#py:method:argparse.argumentparser.add_argument_group"><code class="xref py method docutils literal">add_argument_group</code></a>
+<p>Passing <a href="#prefix-chars">prefix_chars</a> to <a class="reference internal" href="argparse.html#py:method:argparse.argumentparser.add_argument_group"><code class="xref py method docutils literal">add_argument_group</code></a>
 is now deprecated.</p>
 </div>
 </dd>

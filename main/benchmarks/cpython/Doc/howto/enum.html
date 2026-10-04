@@ -629,7 +629,7 @@ and no flags set, i.e. <code>0</code>.</p>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Color</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">RED</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">is</span> <span class="hl-keyword hl-operator hl-logical hl-python">not</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Color</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">BLUE</span></span></span>
 <span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">True</span></span></pre></div>
 <p>Ordered comparisons between enumeration values are <em>not</em> supported.  Enum
-members are not integers (but see <a href="#" class="broken-link">IntEnum</a> below):</p>
+members are not integers (but see <a href="#intenum">IntEnum</a> below):</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Color</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">RED</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">&lt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Color</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">BLUE</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Traceback</span></span></span> </span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">most</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">recent</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">call</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">last</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
@@ -657,7 +657,7 @@ compare identical/equal to the original members.</p>
 </div>
 <h2 id="allowed-members-and-attributes-of-enumerations">Allowed members and attributes of enumerations</h2>
 <p>Most of the examples above use integers for enumeration values.  Using integers
-is short and handy (and provided by default by the <a href="#" class="broken-link">Functional API</a>), but not
+is short and handy (and provided by default by the <a href="#functional-api">Functional API</a>), but not
 strictly enforced.  In the vast majority of use-cases, one doesn't care what
 the actual value of an enumeration is.  But if the value <em>is</em> important,
 enumerations can have arbitrary values.</p>
@@ -698,7 +698,7 @@ enumeration, with the exception of special methods (<a class="reference internal
 variable names listed in <a class="reference internal" href="../library/enum.html#py:attribute:enum.enum._ignore_"><code class="xref py attribute docutils literal">_ignore_</code></a>.</p>
 <p>Note:  if your enumeration defines <a class="reference internal" href="../reference/datamodel.html#py:method:object.__new__"><code class="xref py method docutils literal">__new__</code></a> and/or <a class="reference internal" href="../reference/datamodel.html#py:method:object.__init__"><code class="xref py method docutils literal">__init__</code></a>,
 any value(s) given to the enum member will be passed into those methods.
-See <a href="#" class="broken-link">Planet</a> for an example.</p>
+See <a href="#planet">Planet</a> for an example.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
 <p>The <a class="reference internal" href="../reference/datamodel.html#py:method:object.__new__"><code class="xref py method docutils literal">__new__</code></a> method, if defined, is used during creation of the Enum
@@ -735,7 +735,7 @@ any members.  So this is forbidden:</p>
 <p>Allowing subclassing of enums that define members would lead to a violation of
 some important invariants of types and instances.  On the other hand, it makes
 sense to allow sharing some common behavior between a group of enumerations.
-(See <a href="#" class="broken-link">OrderedEnum</a> for an example.)</p>
+(See <a href="#orderedenum">OrderedEnum</a> for an example.)</p>
 <a id="enum-dataclass-support"></a>
 <h2 id="dataclass-support">Dataclass support</h2>
 <p>When inheriting from a <a href="#" class="broken-link"><code class="xref py class docutils literal">dataclass</code></a>,
@@ -1206,7 +1206,7 @@ an enum member; may be overridden</p>
 member.</p>
 </li>
 <li><p><a class="reference internal" href="../library/enum.html#py:method:enum.enum._add_value_alias_"><code class="xref py method docutils literal">_add_value_alias_</code></a> – adds a new value as an alias to an
-existing member.  See <a href="#" class="broken-link">MultiValueEnum</a> for an example.</p>
+existing member.  See <a href="#multivalueenum">MultiValueEnum</a> for an example.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
 <p>For standard <a class="reference internal" href="../library/enum.html#py:class:enum.enum"><code class="xref py class docutils literal">Enum</code></a> classes the next value chosen is the highest
@@ -1292,7 +1292,7 @@ your class:</p>
 <span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-python">bool</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">value</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
 <p>Plain <a class="reference internal" href="../library/enum.html#py:class:enum.enum"><code class="xref py class docutils literal">Enum</code></a> classes always evaluate as <a class="reference internal" href="../library/constants.html#py:data:true"><code class="xref py data docutils literal">True</code></a>.</p>
 <h4 id="enum-classes-with-methods"><code>Enum</code> classes with methods</h4>
-<p>If you give your enum subclass extra methods, like the <a href="#" class="broken-link">Planet</a>
+<p>If you give your enum subclass extra methods, like the <a href="#planet">Planet</a>
 class below, those methods will show up in a <a class="reference internal" href="../library/functions.html#py:function:dir"><code class="xref py function docutils literal">dir</code></a> of the member,
 but not of the class:</p>
 <div class="highlight hl-code"><pre>

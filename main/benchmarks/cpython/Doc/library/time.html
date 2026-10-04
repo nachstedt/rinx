@@ -412,7 +412,7 @@ POSIX-compliant platforms.</p>
 </ul>
 <span id="index-2"></span>
 <ul>
-<li><p>The functions in this module may not handle dates and times before the <a href="time.html#epoch">epoch</a> or
+<li><p>The functions in this module may not handle dates and times before the <a href="#epoch">epoch</a> or
 far in the future.  The cut-off point in the future is determined by the C
 library; for 32-bit systems, it is typically in 2038.</p>
 </li>
@@ -635,7 +635,7 @@ undefined behavior, such as segmentation fault.</p>
 </dl>
 <dl class="py function">
   <dt id="py:function:time.ctime"><code class="sig-name">ctime([secs])</code></dt>
-  <dd><p>Convert a time expressed in seconds since the <a href="time.html#epoch">epoch</a> to a string of a form:
+  <dd><p>Convert a time expressed in seconds since the <a href="#epoch">epoch</a> to a string of a form:
 <code>'Sun Jun 20 23:21:05 1993'</code> representing local time. The day field
 is two characters long and is space padded if the day is a single digit,
 e.g.: <code>'Wed Jun  9 04:26:40 1993'</code>.</p>
@@ -683,7 +683,7 @@ the clock value.  Refer to <a href="time.html#time-clock-id-constants">Clock ID 
 </dl>
 <dl class="py function">
   <dt id="py:function:time.gmtime"><code class="sig-name">gmtime([secs])</code></dt>
-  <dd><p>Convert a time expressed in seconds since the <a href="time.html#epoch">epoch</a> to a <a class="reference internal" href="time.html#py:class:time.struct_time"><code class="xref py class docutils literal">struct_time</code></a> in
+  <dd><p>Convert a time expressed in seconds since the <a href="#epoch">epoch</a> to a <a class="reference internal" href="time.html#py:class:time.struct_time"><code class="xref py class docutils literal">struct_time</code></a> in
 UTC in which the dst flag is always zero.  If <em>secs</em> is not provided or
 <a class="reference internal" href="constants.html#py:data:none"><code class="xref py data docutils literal">None</code></a>, the current time as returned by <a class="reference internal" href="time.html#py:function:time.time"><code class="xref py function docutils literal">time</code></a> is used.  Fractions
 of a second are ignored.  See above for a description of the
@@ -1346,10 +1346,10 @@ this is not known, and will usually result in the correct state being filled in.
 </dl>
 <dl class="py function">
   <dt id="py:function:time.time"><code class="sig-name">time() -&gt; float</code></dt>
-  <dd><p>Return the time in seconds since the <a href="time.html#epoch">epoch</a> as a floating-point
+  <dd><p>Return the time in seconds since the <a href="#epoch">epoch</a> as a floating-point
 number. The handling of <a href="https://en.wikipedia.org/wiki/Leap_second">leap seconds</a> is platform dependent.
 On Windows and most Unix systems, the leap seconds are not counted towards
-the time in seconds since the <a href="time.html#epoch">epoch</a>. This is commonly referred to as <a href="#" class="broken-link">Unix
+the time in seconds since the <a href="#epoch">epoch</a>. This is commonly referred to as <a href="#" class="broken-link">Unix
 time &lt;https://en.wikipedia.org/wiki/Unix_time&gt;</a>.</p>
 <p>Note that even though the time is always returned as a floating-point
 number, not all systems provide time with a better precision than 1 second.
@@ -1383,7 +1383,7 @@ type.</p>
 <dl class="py function">
   <dt id="py:function:time.time_ns"><code class="sig-name">time_ns() -&gt; int</code></dt>
   <dd><p>Similar to <a class="reference internal" href="time.html#py:function:time.time"><code class="xref py function docutils literal">time</code></a> but returns time as an integer number of
-nanoseconds since the <a href="time.html#epoch">epoch</a>.</p>
+nanoseconds since the <a href="#epoch">epoch</a>.</p>
 <div class="versionadded">
   <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
 </div>

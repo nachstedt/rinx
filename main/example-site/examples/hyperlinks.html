@@ -49,6 +49,11 @@
           </li>
         
           <li class="toctree-l2">
+            <a href="hyperlinks.html#targets-belong-to-their-page">Targets Belong to Their Page</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
             <a href="hyperlinks.html#case-insensitivity-and-normalization">Case Insensitivity and Normalization</a>
             
           </li>
@@ -353,6 +358,15 @@ Simple links are just a word followed by an underscore: <a href="https://www.sph
 <code>my_variable_name</code> or <code>foo_bar_baz</code>, are left as plain text and are not
 treated as references, since they don't end in a trailing underscore at a
 word boundary.</p>
+<a id="hyperlinks-own-targets"></a>
+<h2 id="targets-belong-to-their-page">Targets Belong to Their Page</h2>
+<p>An external target is local to the page that writes it, as in docutils:
+the <a class="reference internal" href="seealso.html"><span class="doc">See Also Directive</span></a> page defines its own <code>Sphinx</code> target with a different
+URL, and each page's <code>Sphinx_</code> links use that page's definition. A named
+reference never reaches another page — that is what <code>:ref:</code> is for, as in
+<a href="index.html#home-index">Rinx Example Site</a>.</p>
+<p>Section titles are targets of their own page too: <a href="#embedded-uris">Embedded URIs</a> links to
+the section above.</p>
 <h2 id="case-insensitivity-and-normalization">Case Insensitivity and Normalization</h2>
 <p>Target names are normalized. This means <a href="https://www.google.com">GOOGLE</a>, <a href="https://www.google.com">google</a>, and <a href="https://www.google.com">Google</a>
 all point to the same target defined above.</p>

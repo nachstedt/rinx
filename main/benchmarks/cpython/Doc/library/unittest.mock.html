@@ -415,7 +415,7 @@ and arguments they were called with. You can also specify return values and
 set needed attributes in the normal way.</p>
 <p>Additionally, mock provides a <a class="reference internal" href="unittest.mock.html#py:function:unittest.mock.patch"><code class="xref py function docutils literal">patch</code></a> decorator that handles patching
 module and class level attributes within the scope of a test, along with
-<a class="reference internal" href="unittest.mock.html#py:data:unittest.mock.sentinel"><code class="xref py data docutils literal">sentinel</code></a> for creating unique objects. See the <a href="#" class="broken-link">quick guide</a> for
+<a class="reference internal" href="unittest.mock.html#py:data:unittest.mock.sentinel"><code class="xref py data docutils literal">sentinel</code></a> for creating unique objects. See the <a href="#quick-guide">quick guide</a> for
 some examples of how to use <a class="reference internal" href="unittest.mock.html#py:class:unittest.mock.mock"><code class="xref py class docutils literal">Mock</code></a>, <a class="reference internal" href="unittest.mock.html#py:class:unittest.mock.magicmock"><code class="xref py class docutils literal">MagicMock</code></a> and
 <a class="reference internal" href="unittest.mock.html#py:function:unittest.mock.patch"><code class="xref py function docutils literal">patch</code></a>.</p>
 <p>Mock is designed for use with <a class="reference internal" href="unittest.html#py:module:unittest" title="unittest: Unit testing framework for Python."><code class="xref py module docutils literal">unittest</code></a> and
@@ -1804,7 +1804,7 @@ statements or as class decorators.</p>
 <h3 id="patch">patch</h3>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>The key is to do the patching in the right namespace. See the section <a href="#" class="broken-link">where to patch</a>.</p>
+<p>The key is to do the patching in the right namespace. See the section <a href="#where-to-patch">where to patch</a>.</p>
 </div>
 <dl class="py function">
   <dt id="py:function:unittest.mock.patch"><code class="sig-name">patch(target, new=DEFAULT, spec=None, create=False, spec_set=None, autospec=None, new_callable=None, **kwargs)</code></dt>
@@ -2342,7 +2342,7 @@ being looked up in the module and so we have to patch <code>a.SomeClass</code> i
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-annotation hl-python"><span class="hl-punctuation hl-definition hl-annotation hl-python">@</span><span class="hl-meta hl-annotation hl-function hl-python"></span></span><span class="hl-meta hl-annotation hl-function hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-annotation hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">patch</span></span></span></span><span class="hl-meta hl-annotation hl-function hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span></span><span class="hl-meta hl-annotation hl-arguments hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">a.SomeClass<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-annotation hl-function hl-python"><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
 <h3 id="patching-descriptors-and-proxy-objects">Patching Descriptors and Proxy Objects</h3>
-<p>Both <a href="#" class="broken-link">patch</a> and <a href="#" class="broken-link">patch.object</a> correctly patch and restore descriptors: class
+<p>Both <a href="#patch">patch</a> and <a href="#patch-object">patch.object</a> correctly patch and restore descriptors: class
 methods, static methods and properties. You should patch these on the <em>class</em>
 rather than an instance. They also work with <em>some</em> objects
 that proxy attribute access, like the <a href="https://web.archive.org/web/20200603181648/http://www.voidspace.org.uk/python/weblog/arch_d7_2010_12_04.shtml#e1198">django settings object</a>.</p>

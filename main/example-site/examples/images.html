@@ -396,12 +396,14 @@ side by side, and a centred image between them starts below the float rather
 than riding up alongside it — both of which depend on the <code>clear</code> rules in
 the stylesheet.</p>
 <h2 id="making-the-image-a-link">Making the image a link</h2>
-<p><code>:target:</code> accepts a URL, or the name of a target elsewhere in the project
-written with a trailing underscore.</p>
+<p><code>:target:</code> accepts a URL, or the name of a target on this page written
+with a trailing underscore — resolved as a named hyperlink reference is.</p>
 <a href="https://www.sphinx-doc.org/"><img src="../_images/examples/data/logo.svg" alt="The logo, linking to a website" /></a>
 <a id="the-image-target"></a>
 <p>This paragraph is a link target, and the next image points at it.</p>
-<a href="images.html#the-image-target"><img src="../_images/examples/data/logo.svg" alt="The logo, linking to a target in this document" /></a>
+<a href="#the-image-target"><img src="../_images/examples/data/logo.svg" alt="The logo, linking to a target in this document" /></a>
+<p>The name may also be an external target of this page, as in a hyperlink:</p>
+<a href="https://www.sphinx-doc.org/"><img src="../_images/examples/data/logo.svg" alt="The logo, linking through an external target" /></a>
 <h2 id="referring-to-an-image">Referring to an image</h2>
 <p><code>:name:</code> makes the image itself a target, so <a href="images.html#the-logo">the-logo</a> reaches it.</p>
 <span id="the-logo"></span><img src="../_images/examples/data/logo.svg" alt="A named logo" />

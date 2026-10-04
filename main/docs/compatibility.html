@@ -330,9 +330,21 @@ the label; Sphinx warns.</p>
 <tr>
 <td><p>Named and anonymous hyperlink references</p>
 </td>
-<td><p>✅</p>
+<td><p>🔶</p>
 </td>
-<td></td>
+<td><ul>
+<li><p>A named reference resolves within its own document, as in docutils:
+against its external targets, labels and section titles.</p>
+</li>
+<li><p>A name given two different targets in one document links nowhere, but
+is not yet reported as docutils' "Duplicate explicit target name".</p>
+</li>
+<li><p>Embedded relative URIs (<code>&lt;#anchor&gt;</code>), embedded aliases
+(<code>&lt;name_&gt;</code>) and link text wrapped over a line break are not
+recognised.</p>
+</li>
+</ul>
+</td>
 </tr>
 <tr>
 <td><p>Smart typography (<code>---</code>, <code>--</code>, <code>...</code>)</p>

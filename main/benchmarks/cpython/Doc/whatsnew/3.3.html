@@ -510,7 +510,7 @@ module syntax are supported. Views with unrecognised format strings
 are still permitted, but will always compare as unequal, regardless
 of view contents.</p>
 </li>
-<li><p>For further changes see <a href="#" class="broken-link">Build and C API Changes</a> and <a href="#" class="broken-link">Porting C code</a>.</p>
+<li><p>For further changes see <a href="#build-and-c-api-changes">Build and C API Changes</a> and <a href="#porting-c-code">Porting C code</a>.</p>
 </li>
 </ul>
 <p>(Contributed by Stefan Krah in :issue:`10181`.)</p>
@@ -989,7 +989,7 @@ future growth to occur.</p>
 <p>For the common user, there should be no visible change in semantics.  For
 those whose code currently manipulates import or calls import
 programmatically, the code changes that might possibly be required are covered
-in the <a href="#" class="broken-link">Porting Python code</a> section of this document.</p>
+in the <a href="#porting-python-code">Porting Python code</a> section of this document.</p>
 <h3 id="new-apis">New APIs</h3>
 <p>One of the large benefits of this work is the exposure of what goes into
 making the import statement work. That means the various importers that were
@@ -1019,7 +1019,7 @@ module's name.</p>
 the same name on all finders cached in <a class="reference internal" href="../library/sys.html#py:data:sys.path_importer_cache"><code class="xref py data docutils literal">sys.path_importer_cache</code></a> to help
 clean up any stored state as necessary.</p>
 <h3 id="visible-changes">Visible Changes</h3>
-<p>For potential required changes to code, see the <a href="#" class="broken-link">Porting Python code</a>
+<p>For potential required changes to code, see the <a href="#porting-python-code">Porting Python code</a>
 section.</p>
 <p>Beyond the expanse of what <a class="reference internal" href="../library/importlib.html#py:module:importlib" title="importlib: The implementation of the import machinery."><code class="xref py module docutils literal">importlib</code></a> now exposes, there are other
 visible changes to import. The biggest is that <a class="reference internal" href="../library/sys.html#py:data:sys.meta_path"><code class="xref py data docutils literal">sys.meta_path</code></a> and
@@ -1041,7 +1041,7 @@ directly exposed on <a class="reference internal" href="../library/sys.html#py:d
 always be available to use as a value representing no finder found.</p>
 <p>All other changes relate to semantic changes which should be taken into
 consideration when updating code for Python 3.3, and thus should be read about
-in the <a href="#" class="broken-link">Porting Python code</a> section of this document.</p>
+in the <a href="#porting-python-code">Porting Python code</a> section of this document.</p>
 <p>(Implementation by Brett Cannon)</p>
 <h2 id="other-language-changes">Other Language Changes</h2>
 <p>Some smaller changes made to the core Python language are:</p>

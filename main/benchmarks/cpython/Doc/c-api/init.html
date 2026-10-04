@@ -2115,7 +2115,7 @@ module is initialized and filled with the contents of this copy; the
 extension's <code>init</code> function is not called.
 Objects in the module's dictionary thus end up shared across
 (sub-)interpreters, which might cause unwanted behavior (see
-<a href="#" class="broken-link">Bugs and caveats</a> below).</p>
+<a href="#bugs-and-caveats">Bugs and caveats</a> below).</p>
 <p>Note that this is different from what happens when an extension is
 imported after the interpreter has been completely re-initialized by
 calling <a class="reference internal" href="init.html#c:function:py_finalizeex"><code class="xref c function docutils literal">Py_FinalizeEx</code></a> and <a class="reference internal" href="init.html#c:function:py_initialize"><code class="xref c function docutils literal">Py_Initialize</code></a>; in that

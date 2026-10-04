@@ -617,7 +617,7 @@ on test fail or error and is added to the failure messages.</p>
   <dd><p>:kbd:`Control-C` during the test run waits for the current test to end and then
 reports all the results so far. A second :kbd:`Control-C` raises the normal
 <a class="reference internal" href="exceptions.html#py:exception:keyboardinterrupt"><code class="xref py exception docutils literal">KeyboardInterrupt</code></a> exception.</p>
-<p>See <a href="#" class="broken-link">Signal Handling</a> for the functions that provide this functionality.</p>
+<p>See <a href="#signal-handling">Signal Handling</a> for the functions that provide this functionality.</p>
 </dd>
 </dl>
 <dl class="std cmdoption">
@@ -733,7 +733,7 @@ imports from is the location you intended, so you will not get the
 warning.</p>
 </div>
 <p>Test modules and packages can customize test loading and discovery by through
-the <a href="#" class="broken-link">load_tests protocol</a>.</p>
+the <a href="#load-tests-protocol">load_tests protocol</a>.</p>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
 <p>Test discovery supports <a class="reference internal" href="../glossary.html#term-namespace-package"><span class="xref std std-term">namespace packages</span></a>.</p>
@@ -1121,7 +1121,7 @@ and must be decorated as a <a class="reference internal" href="functions.html#py
 <span class="hl-source hl-python"><span class="hl-meta hl-annotation hl-python"><span class="hl-punctuation hl-definition hl-annotation hl-python">@</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-annotation hl-python"><span class="hl-support hl-function hl-builtin hl-python">classmethod</span></span></span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">setUpClass</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">cls</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
 <span class="hl-source hl-python">    <span class="hl-constant hl-language hl-python">...</span></span></pre></div>
-<p>See <a href="#" class="broken-link">Class and Module Fixtures</a> for more details.</p>
+<p>See <a href="#class-and-module-fixtures">Class and Module Fixtures</a> for more details.</p>
 <div class="versionadded">
   <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
 </div>
@@ -1136,7 +1136,7 @@ and must be decorated as a <a href="#" class="broken-link"><code class="xref py 
 <span class="hl-source hl-python"><span class="hl-meta hl-annotation hl-python"><span class="hl-punctuation hl-definition hl-annotation hl-python">@</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-annotation hl-python"><span class="hl-support hl-function hl-builtin hl-python">classmethod</span></span></span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">tearDownClass</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">cls</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
 <span class="hl-source hl-python">    <span class="hl-constant hl-language hl-python">...</span></span></pre></div>
-<p>See <a href="#" class="broken-link">Class and Module Fixtures</a> for more details.</p>
+<p>See <a href="#class-and-module-fixtures">Class and Module Fixtures</a> for more details.</p>
 <div class="versionadded">
   <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
 </div>
@@ -2467,7 +2467,7 @@ be useful when the fixtures are different and defined in subclasses.</p>
 </div>
 <p>If a module provides a <code>load_tests</code> function it will be called to
 load the tests. This allows modules to customize test loading.
-This is the <a href="#" class="broken-link">load_tests protocol</a>.  The <em>pattern</em> argument is passed as
+This is the <a href="#load-tests-protocol">load_tests protocol</a>.  The <em>pattern</em> argument is passed as
 the third argument to <code>load_tests</code>.</p>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
@@ -2967,7 +2967,7 @@ calling <a class="reference internal" href="sys.html#py:function:sys.exit"><code
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">unittest</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">main</span></span></span>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">module</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">test_module<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">exit</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-language hl-python">False</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
 <p>The <em>failfast</em>, <em>catchbreak</em> and <em>buffer</em> parameters have the same
-effect as the same-name <a href="#" class="broken-link">command-line options</a>.</p>
+effect as the same-name <a href="#command-line-options">command-line options</a>.</p>
 <p>The <em>warnings</em> argument specifies the <a href="warnings.html#warning-filter">warning filter</a>
 that should be used while running the tests.  If it's not specified, it will
 remain <code>None</code> if a <a href="#" class="broken-link"><code class="xref std cmdoption docutils literal">!-W</code></a> option is passed to <strong class="program">python</strong>
