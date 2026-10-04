@@ -16,6 +16,7 @@ rinx_ast.workspace = true
 rinx_entity.workspace = true
 rinx_index.workspace = true
 rinx_parser.workspace = true
+rinx_renderer.workspace = true
 rinx_toctree.workspace = true
 anyhow = "1.0.102"
 crossbeam-channel = "0.5"

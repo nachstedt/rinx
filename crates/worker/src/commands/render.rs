@@ -7,12 +7,7 @@ use rinx_renderer::{self as renderer, config};
 use std::fs;
 
 use super::cli_args::{flag_value, flag_value_opt};
-use super::diagnostics::{
-    WarningOrigin, check_broken_links_strict, format_broken_link_warning,
-    format_diagram_error_warning, format_empty_listing_error_warning,
-    format_highlight_error_warning, format_image_error_warning, format_math_error_warning,
-    format_object_type_mismatch_warning,
-};
+use super::diagnostics::{WarningOrigin, check_broken_links_strict, format_diagnostic};
 use rinx_ast::retain_reportable;
 
 use super::entity_schema::{load_entity_schema, load_entity_templates};
@@ -219,25 +214,25 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
 
     let origin = WarningOrigin::new(&page.source_path, &page.source_files);
     for link in &page.broken_links {
-        eprintln!("{}", format_broken_link_warning(&origin, link));
+        eprintln!("{}", format_diagnostic(&origin, link));
     }
     for mismatch in &page.object_type_mismatches {
-        eprintln!("{}", format_object_type_mismatch_warning(&origin, mismatch));
+        eprintln!("{}", format_diagnostic(&origin, mismatch));
     }
     for error in &page.math_errors {
-        eprintln!("{}", format_math_error_warning(&origin, error));
+        eprintln!("{}", format_diagnostic(&origin, error));
     }
     for error in &page.empty_listing_errors {
-        eprintln!("{}", format_empty_listing_error_warning(&origin, error));
+        eprintln!("{}", format_diagnostic(&origin, error));
     }
     for error in &page.diagram_errors {
-        eprintln!("{}", format_diagram_error_warning(&origin, error));
+        eprintln!("{}", format_diagnostic(&origin, error));
     }
     for error in &page.highlight_errors {
-        eprintln!("{}", format_highlight_error_warning(&origin, error));
+        eprintln!("{}", format_diagnostic(&origin, error));
     }
     for error in &page.image_errors {
-        eprintln!("{}", format_image_error_warning(&origin, error));
+        eprintln!("{}", format_diagnostic(&origin, error));
     }
 
     // Emit the structured domain-object warning sidecar when requested. Written

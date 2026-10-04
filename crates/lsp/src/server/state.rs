@@ -10,21 +10,31 @@
 //!
 //! A completion reads the same index: the open buffer's latest analysis is
 //! already in it, so a label typed a moment ago completes elsewhere.
+//!
+//! What only a render finds — a broken reference above all — is a second
+//! tier (ADR-038 §9). It is computed for the documents the graph diagnoses,
+//! one at a time, when the loop finds the client quiet, and against the index
+//! of the document's workspace folder. Which renders are due is derived rather
+//! than recorded: a document is due when its parse or its folder's index has
+//! changed since it was last rendered, so a label added in one document
+//! re-renders every other one shown, and nothing has to remember to say so.
 
 use lsp_server::{Message, RequestId, Response};
 use lsp_types::{CompletionList, CompletionResponse, Uri};
-use std::collections::{BTreeSet, HashSet};
+use rinx_ast::Diagnostic;
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use super::handlers::publish_diagnostics;
 use super::scan::ScanEvent;
 use crate::completion::{completion_items, role_at};
-use crate::diagnostics::{diagnose_source, parse_source};
+use crate::diagnostics::{ParsedSource, diagnose_source, parse_source};
 use crate::documents::DocumentStore;
 use crate::includes::IncludeGraph;
 use crate::position::{PositionEncoding, char_index_of, to_lsp_position};
 use crate::progress::{IndexState, IndexStatus, ScanProgress};
+use crate::render::render_diagnostics;
 use crate::uri::{file_path, file_uri};
 use crate::workspace::{IndexedDocument, WorkspaceFolder};
 
@@ -39,6 +49,11 @@ pub struct ServerState {
     /// The URIs last published with at least one diagnostic — the ones an
     /// empty publish must reach to clear.
     pub(super) shown: HashSet<Uri>,
+    /// The latest parse of every document the graph diagnoses, and what
+    /// rendering it found.
+    tracked: HashMap<Uri, TrackedDocument>,
+    /// How many parses the server has recorded, which orders them.
+    parses: u64,
     /// The workspace folders, each a project of its own.
     pub(super) folders: Vec<WorkspaceFolder>,
     /// Whether the client accepts `$/progress` reports.
@@ -47,6 +62,34 @@ pub struct ServerState {
     scan: Option<RunningScan>,
     /// The id the next request the server sends will carry.
     next_request_id: i32,
+}
+
+/// A document the graph diagnoses: its latest parse, and what rendering it
+/// found, if it has been rendered since.
+#[derive(Debug)]
+struct TrackedDocument {
+    parsed: ParsedSource,
+    /// The workspace folder the document is in, whose index it renders
+    /// against — `None` for one in no folder, which is never rendered.
+    folder: Option<usize>,
+    /// Which parse this is, counted over every document.
+    parse: u64,
+    rendered: Option<Rendered>,
+}
+
+/// What rendering a document found, and what it rendered.
+#[derive(Debug)]
+struct Rendered {
+    key: RenderKey,
+    diagnostics: Vec<Diagnostic>,
+}
+
+/// The inputs of a render: one parse of the document, and one version of its
+/// folder's index. A render is due when either changed.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct RenderKey {
+    parse: u64,
+    generation: u64,
 }
 
 /// A workspace scan under way.
@@ -69,6 +112,8 @@ impl ServerState {
             documents: DocumentStore::default(),
             graph: IncludeGraph::default(),
             shown: HashSet::new(),
+            tracked: HashMap::new(),
+            parses: 0,
             folders: Vec::new(),
             progress_supported: false,
             scan: None,
@@ -329,6 +374,10 @@ impl ServerState {
     /// when it is a workspace document — records it in its folder's index,
     /// and records its diagnosis while it is open or includes an open file.
     /// Returns the URIs whose published diagnostics may have changed.
+    ///
+    /// What the last render found is dropped with the parse it was found in:
+    /// its positions count in the old text. It returns when the document is
+    /// rendered again.
     fn diagnose(&mut self, uri: &Uri) -> BTreeSet<Uri> {
         let path = file_path(uri);
         let located = path.as_deref().and_then(|path| self.locate(path));
@@ -340,31 +389,119 @@ impl ServerState {
             (Some(text), _, _) => text.clone(),
             (None, Some(_), Some(path)) => match std::fs::read_to_string(path) {
                 Ok(text) => text,
-                Err(_) => return self.graph.forget(uri),
+                Err(_) => return self.untrack(uri),
             },
-            _ => return self.graph.forget(uri),
+            _ => return self.untrack(uri),
         };
         let doc_path = located.as_ref().map(|(_, doc_path)| doc_path.as_str());
         let parsed = parse_source(uri, doc_path, &text, &self.documents);
+        let folder = located.as_ref().map(|(folder, _)| *folder);
         if let Some((folder, doc_path)) = located {
             let indexed = IndexedDocument::of(&parsed.document, parsed.reads.paths.clone());
             self.folders[folder].record(doc_path, indexed);
-        }
-        if open.is_some() {
-            let diagnosis = diagnose_source(uri, &parsed, &self.documents, self.encoding);
-            return self.graph.record(uri.clone(), diagnosis);
         }
         let reads_open = parsed
             .reads
             .paths
             .iter()
             .any(|read| self.documents.uri_of(read).is_some());
-        if !reads_open {
-            return self.graph.forget(uri);
+        if open.is_none() && !reads_open {
+            return self.untrack(uri);
         }
-        let mut diagnosis = diagnose_source(uri, &parsed, &self.documents, self.encoding);
-        diagnosis.by_uri.remove(uri);
+        self.parses += 1;
+        self.tracked.insert(
+            uri.clone(),
+            TrackedDocument {
+                parsed,
+                folder,
+                parse: self.parses,
+                rendered: None,
+            },
+        );
+        self.record_diagnosis(uri)
+    }
+
+    /// Stops diagnosing the document at `uri`, returning the URIs whose
+    /// published diagnostics may have changed.
+    fn untrack(&mut self, uri: &Uri) -> BTreeSet<Uri> {
+        self.tracked.remove(uri);
+        self.graph.forget(uri)
+    }
+
+    /// Records in the graph what the tracked document at `uri` found — its
+    /// latest parse, and its render while that is of the same parse — and
+    /// returns the URIs whose published diagnostics may have changed.
+    ///
+    /// A closed document shows nothing of its own: it is diagnosed only for
+    /// the open files it includes.
+    fn record_diagnosis(&mut self, uri: &Uri) -> BTreeSet<Uri> {
+        let Some(tracked) = self.tracked.get(uri) else {
+            return self.graph.forget(uri);
+        };
+        let rendered = tracked
+            .rendered
+            .as_ref()
+            .map_or(&[][..], |rendered| rendered.diagnostics.as_slice());
+        let mut diagnosis = diagnose_source(
+            uri,
+            &tracked.parsed,
+            rendered,
+            &self.documents,
+            self.encoding,
+        );
+        if self.documents.get(uri).is_none() {
+            diagnosis.by_uri.remove(uri);
+        }
         self.graph.record(uri.clone(), diagnosis)
+    }
+
+    /// Whether a document the server shows has not been rendered against its
+    /// latest parse and its folder's current index.
+    pub(super) fn has_pending_renders(&self) -> bool {
+        self.pending_render().is_some()
+    }
+
+    /// Renders the document most recently parsed among those due, and
+    /// publishes what changed — nothing when none is due.
+    ///
+    /// One document per call, so the loop can answer the client between two
+    /// renders: a render reads the current parse and index whenever it runs,
+    /// so no render's result can be stale when it is recorded.
+    pub(super) fn render_next(&mut self) -> Vec<Message> {
+        let Some((uri, folder, key)) = self.pending_render() else {
+            return Vec::new();
+        };
+        let index = self.folders[folder].project_index();
+        let Some(tracked) = self.tracked.get_mut(&uri) else {
+            return Vec::new();
+        };
+        let diagnostics = render_diagnostics(&tracked.parsed.document, index);
+        tracked.rendered = Some(Rendered { key, diagnostics });
+        self.record_diagnosis(&uri)
+            .into_iter()
+            .filter_map(|uri| self.publish(uri, false))
+            .collect()
+    }
+
+    /// The document due to be rendered next, with its folder and what the
+    /// render would read: the one most recently parsed, which is the one the
+    /// author is most likely looking at.
+    fn pending_render(&self) -> Option<(Uri, usize, RenderKey)> {
+        self.tracked
+            .iter()
+            .filter_map(|(uri, tracked)| {
+                let folder = tracked.folder?;
+                let key = RenderKey {
+                    parse: tracked.parse,
+                    generation: self.folders[folder].generation(),
+                };
+                let due = tracked
+                    .rendered
+                    .as_ref()
+                    .is_none_or(|rendered| rendered.key != key);
+                due.then(|| (uri.clone(), folder, key))
+            })
+            .max_by_key(|(_, _, key)| key.parse)
     }
 
     /// The notification publishing what `uri` shows now — or nothing, when it

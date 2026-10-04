@@ -11,6 +11,8 @@
 //! two — the build's worker and the language server — and they must agree on
 //! what a comment silences, or the editor and CI would disagree.
 
+use std::borrow::Cow;
+
 use serde::{Deserialize, Serialize};
 
 use crate::diagnostic::Diagnostic;
@@ -23,11 +25,24 @@ use crate::span::{FileId, Span};
 /// A trait rather than a conversion to [`Diagnostic`] because the renderer's
 /// findings carry more than a message — the target of a broken link, which
 /// `--strict-links` then fails over — and the survivors must keep it.
+///
+/// It also answers the message, so every front end words a finding the same
+/// way: the build's warning line and the language server's diagnostic are
+/// both written from it.
 pub trait Reported {
     /// The code a `.. noqa:` names to silence this.
     fn code(&self) -> DiagnosticCode;
     /// Where this was found, when that is known.
     fn span(&self) -> Option<Span>;
+    /// What was found, for the document's author — without the code or the
+    /// position, which the reporting layer writes around it.
+    fn message(&self) -> Cow<'_, str>;
+
+    /// This finding as a plain [`Diagnostic`], for a front end that needs
+    /// nothing beyond what any diagnostic carries.
+    fn to_diagnostic(&self) -> Diagnostic {
+        Diagnostic::at(self.code(), self.message(), self.span())
+    }
 }
 
 impl Reported for Diagnostic {
@@ -37,6 +52,10 @@ impl Reported for Diagnostic {
 
     fn span(&self) -> Option<Span> {
         self.span
+    }
+
+    fn message(&self) -> Cow<'_, str> {
+        Cow::Borrowed(&self.message)
     }
 }
 
@@ -178,13 +197,23 @@ mod tests {
     }
 
     #[test]
-    fn test_diagnostic_reports_its_code_and_span() {
+    fn test_diagnostic_reports_its_code_span_and_message() {
         // Given
         let diagnostic = Diagnostic::new(DiagnosticCode::CsvNoData, "no data", span_on(4));
 
         // When / Then
         assert_eq!(Reported::code(&diagnostic), DiagnosticCode::CsvNoData);
         assert_eq!(Reported::span(&diagnostic), Some(span_on(4)));
+        assert_eq!(Reported::message(&diagnostic), "no data");
+    }
+
+    #[test]
+    fn test_to_diagnostic_keeps_code_message_and_span() {
+        // Given
+        let diagnostic = Diagnostic::new(DiagnosticCode::CsvNoData, "no data", span_on(4));
+
+        // When / Then
+        assert_eq!(diagnostic.to_diagnostic(), diagnostic);
     }
 
     #[test]

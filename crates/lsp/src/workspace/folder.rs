@@ -51,6 +51,9 @@ pub struct WorkspaceFolder {
     documents: BTreeMap<String, IndexedDocument>,
     /// The fold of `documents`, until one of them changes.
     index: Option<ProjectIndex>,
+    /// Counts the changes to `documents`, so a render can tell whether the
+    /// index it read is still the index.
+    generation: u64,
 }
 
 impl WorkspaceFolder {
@@ -61,6 +64,7 @@ impl WorkspaceFolder {
             root,
             documents: BTreeMap::new(),
             index: None,
+            generation: 0,
         }
     }
 
@@ -97,7 +101,7 @@ impl WorkspaceFolder {
     pub fn record(&mut self, doc_path: String, indexed: IndexedDocument) {
         if self.documents.get(&doc_path) != Some(&indexed) {
             self.documents.insert(doc_path, indexed);
-            self.index = None;
+            self.invalidate();
         }
     }
 
@@ -111,9 +115,22 @@ impl WorkspaceFolder {
                 self.documents.entry(doc_path)
             {
                 entry.insert(indexed);
-                self.index = None;
+                self.invalidate();
             }
         }
+    }
+
+    /// Which version of the folder's documents the project index folds: it
+    /// changes whenever a document's analysis does, and only then.
+    #[must_use]
+    pub fn generation(&self) -> u64 {
+        self.generation
+    }
+
+    /// Drops the cached fold, a document having changed.
+    fn invalidate(&mut self) {
+        self.index = None;
+        self.generation += 1;
     }
 
     /// The documents whose latest parse read the file at `path`.
@@ -227,6 +244,39 @@ mod tests {
         assert!(!index.targets.contains_key(&TargetName::new("saved")));
         assert!(index.targets.contains_key(&TargetName::new("other")));
         assert_eq!(folder.document_count(), 2);
+    }
+
+    #[test]
+    fn test_generation_changes_only_when_a_document_changes() {
+        // Given
+        let mut folder = folder();
+        let start = folder.generation();
+
+        // When — a document is recorded, then recorded again unchanged
+        folder.record("a.rst".to_string(), labelled("a.rst", "setup"));
+        let after_change = folder.generation();
+        folder.record("a.rst".to_string(), labelled("a.rst", "setup"));
+
+        // Then
+        assert_ne!(after_change, start);
+        assert_eq!(folder.generation(), after_change);
+    }
+
+    #[test]
+    fn test_generation_changes_when_a_scan_brings_a_new_document() {
+        // Given — `a.rst` already recorded from its open buffer
+        let mut folder = folder();
+        folder.record("a.rst".to_string(), labelled("a.rst", "edited"));
+        let before = folder.generation();
+
+        // When — the scan brings only `a.rst`, which is kept, then `b.rst`
+        folder.record_scanned([("a.rst".to_string(), labelled("a.rst", "saved"))]);
+        let after_known = folder.generation();
+        folder.record_scanned([("b.rst".to_string(), labelled("b.rst", "other"))]);
+
+        // Then
+        assert_eq!(after_known, before);
+        assert_ne!(folder.generation(), before);
     }
 
     #[test]

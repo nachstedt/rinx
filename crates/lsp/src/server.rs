@@ -23,6 +23,8 @@ mod notification_tests;
 #[cfg(test)]
 mod property_tests;
 #[cfg(test)]
+mod render_tests;
+#[cfg(test)]
 mod session_tests;
 #[cfg(test)]
 mod test_support;

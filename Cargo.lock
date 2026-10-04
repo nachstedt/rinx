@@ -1176,6 +1176,7 @@ dependencies = [
  "rinx_entity",
  "rinx_index",
  "rinx_parser",
+ "rinx_renderer",
  "rinx_toctree",
  "serde",
  "serde_json",
