@@ -4,10 +4,13 @@
 //! [`directive`] is the shared dispatcher [`super::dispatch`] calls; it reads
 //! the signature prefix labels from [`labels`] and hands the `std`-domain
 //! `option` bodies to [`c`], which also renders the `c`-domain objects whose
-//! signatures need the C declaration parser.
+//! signatures need the C declaration parser. [`scope_directive_tests`] covers
+//! the directives that only move the scope the names are qualified in.
 
 mod c;
 mod directive;
 mod labels;
+#[cfg(test)]
+mod scope_directive_tests;
 
 pub(crate) use directive::render_domain_object;

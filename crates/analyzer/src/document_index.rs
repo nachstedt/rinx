@@ -5,7 +5,7 @@ use rinx_index::{
     EntityUpdateRecord, EquationLocation, GenIndexEntry, GenIndexRedirect, GenIndexRedirectKind,
     ProjectIndex,
 };
-use rinx_scope::Scope;
+use rinx_scope::DocumentScopes;
 
 use super::domain_object_index::index_domain_object;
 use super::equation_numbering::number_equations;
@@ -59,7 +59,12 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
         index.toctrees.insert(doc.path.clone(), toctrees);
     }
 
-    index_nodes(&doc.nodes, &doc.path, &mut index, &mut Scope::default());
+    index_nodes(
+        &doc.nodes,
+        &doc.path,
+        &mut index,
+        &DocumentScopes::of(&doc.nodes),
+    );
     index_inline_index_entries(&doc.nodes, &doc.path, &mut index);
     let numbering = collect_numbering(doc);
     if !numbering.steps.is_empty() {
@@ -156,13 +161,13 @@ fn index_entity_update(
     update: &rinx_ast::EntityUpdate,
     doc_path: &str,
     index: &mut ProjectIndex,
-    scope: &mut Scope,
+    scopes: &DocumentScopes,
 ) {
     index.entity_updates.push(EntityUpdateRecord {
         doc_path: doc_path.to_string(),
         update: update.clone(),
     });
-    index_nodes(&update.body, doc_path, index, scope);
+    index_nodes(&update.body, doc_path, index, scopes);
 }
 
 /// Records one entity, its link target, and everything inside its sections.
@@ -170,7 +175,7 @@ fn index_entity_and_its_sections(
     entity: &rinx_ast::EntityBody,
     doc_path: &str,
     index: &mut ProjectIndex,
-    scope: &mut Scope,
+    scopes: &DocumentScopes,
 ) {
     super::entity_index::index_entity(entity, doc_path, index);
     // An entity is also an ordinary link target, so `:ref:` reaches one without
@@ -186,7 +191,7 @@ fn index_entity_and_its_sections(
     // target, a nested entity, a glossary. Recursing keeps this walk mirroring
     // `render_nodes`, as the module doc requires.
     for section in &entity.sections {
-        index_nodes(&section.body, doc_path, index, scope);
+        index_nodes(&section.body, doc_path, index, scopes);
     }
 }
 
@@ -198,25 +203,14 @@ fn index_entity_and_its_sections(
 /// cross-references to resolve, exactly like it's still rendered with a
 /// working anchor.
 ///
-/// `scope.python` carries the enclosing `py:class`/`py:exception` stack
-/// (lexical, pushed/popped around a nested body — see
-/// [`rinx_ast::DomainObjectBody::deduce_local_scope`], shared with
-/// the renderer so index keys and anchor `id`s can't drift apart) and the
-/// most recently seen `py:module` (document-order state, not lexical
-/// nesting — real Sphinx docs write `py:module` and the functions/classes it
-/// documents as *siblings*, not nested underneath it, so it is never popped
-/// when returning from a nested body; a module stays "current" for the rest
-/// of the document until another `py:module`, or `py:currentmodule`,
-/// changes it). `scope.c` is the same idea for the `c` domain's
-/// `c:struct`/`c:union` nesting — a wholly separate stack (see
-/// [`rinx_scope::CScope`]'s doc comment for why it isn't a variant of
-/// `PythonScope`); `c:function`/`c:macro` never touch it and keep qualifying
-/// via `scope.python` exactly as before it existed.
+/// `scopes` holds the names every domain object in the document is qualified
+/// to — computed once, in one walk, by [`DocumentScopes`], so the keys indexed
+/// here and the anchor `id`s the renderer writes come from the same answer.
 pub(super) fn index_nodes(
     nodes: &[Node],
     doc_path: &str,
     index: &mut ProjectIndex,
-    scope: &mut Scope,
+    scopes: &DocumentScopes,
 ) {
     record_target_titles(nodes, index);
     for node in nodes {
@@ -240,10 +234,10 @@ pub(super) fn index_nodes(
                 }
             }
             Node::Directive(Directive::Entity(entity)) => {
-                index_entity_and_its_sections(entity, doc_path, index, scope);
+                index_entity_and_its_sections(entity, doc_path, index, scopes);
             }
             Node::Directive(Directive::EntityUpdate(update)) => {
-                index_entity_update(update, doc_path, index, scope);
+                index_entity_update(update, doc_path, index, scopes);
             }
             Node::Directive(Directive::Glossary { entries, .. }) => {
                 for entry in entries {
@@ -258,15 +252,8 @@ pub(super) fn index_nodes(
                 index_genindex_entries(entries, id, doc_path, index);
             }
             Node::Directive(Directive::DomainObject(obj)) => {
-                index_domain_object(obj, doc_path, index, scope);
+                index_domain_object(obj, doc_path, index, scopes);
             }
-            Node::Directive(
-                directive @ (Directive::PyCurrentModule { .. }
-                | Directive::CNamespace { .. }
-                | Directive::CNamespacePush { .. }
-                | Directive::CNamespacePop
-                | Directive::StdProgram { .. }),
-            ) => apply_scope_directive(directive, scope),
             Node::Directive(
                 directive @ (Directive::Admonition { .. }
                 | Directive::VersionChange { .. }
@@ -279,26 +266,26 @@ pub(super) fn index_nodes(
                 // document exactly as if it had been written outside one.
                 | Directive::Grid(_)
                 | Directive::GridItem(_)),
-            ) => index_body_only_directive(directive, doc_path, index, scope),
+            ) => index_body_only_directive(directive, doc_path, index, scopes),
             Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
                 for item in items {
-                    index_nodes(&item.nodes, doc_path, index, scope);
+                    index_nodes(&item.nodes, doc_path, index, scopes);
                 }
             }
             Node::DefinitionList { items } => {
                 for item in items {
-                    index_nodes(&item.definition, doc_path, index, scope);
+                    index_nodes(&item.definition, doc_path, index, scopes);
                 }
             }
             Node::Table {
                 header_rows,
                 body_rows,
             } => {
-                index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, scope);
+                index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, scopes);
             }
             Node::Directive(Directive::DataTable { rows, name, .. }) => {
                 register_directive_name(name.as_ref(), doc_path, index);
-                index_table_rows(rows, doc_path, index, scope);
+                index_table_rows(rows, doc_path, index, scopes);
             }
             Node::Directive(Directive::Table {
                 header_rows,
@@ -307,7 +294,7 @@ pub(super) fn index_nodes(
                 ..
             }) => {
                 register_directive_name(name.as_ref(), doc_path, index);
-                index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, scope);
+                index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, scopes);
             }
             Node::Directive(
                 directive @ (Directive::CodeBlock(_)
@@ -321,7 +308,7 @@ pub(super) fn index_nodes(
                 | Directive::EntityPie(_)
                 | Directive::EntityBar(_)
                 | Directive::Uml(_)),
-            ) => index_name_bearing_directive(directive, doc_path, index, scope),
+            ) => index_name_bearing_directive(directive, doc_path, index, scopes),
             Node::Directive(Directive::Sectnum(options)) => index_sectnum(options, doc_path, index),
             _ => {}
         }
@@ -385,15 +372,15 @@ fn element_title(node: &Node) -> (Option<&TargetName>, Option<String>) {
 /// this document — a target, section or entity written inside one of these
 /// must still be reached.
 ///
-/// Split out of [`index_nodes`] for the same reason [`apply_scope_directive`]
-/// is: these five arms were the bulk of what made that match too long. Any
-/// other directive is a no-op here rather than a panic, for the same reason
-/// `apply_scope_directive`'s catch-all is.
+/// Split out of [`index_nodes`] because these arms were the bulk of what made
+/// that match too long. Any other directive is a no-op here rather than a
+/// panic: the caller's match decides which ones arrive, and duplicating that
+/// list would be a second place to keep in step.
 fn index_body_only_directive(
     directive: &Directive,
     doc_path: &str,
     index: &mut ProjectIndex,
-    scope: &mut Scope,
+    scopes: &DocumentScopes,
 ) {
     let body = match directive {
         Directive::Admonition { body, .. }
@@ -404,33 +391,7 @@ fn index_body_only_directive(
         Directive::GridItem(item) => &item.body,
         _ => return,
     };
-    index_nodes(body, doc_path, index, scope);
-}
-
-/// Applies the directives that only move the traversal scope, indexing
-/// nothing themselves.
-///
-/// Split out of [`index_nodes`] because they form one responsibility — the
-/// same one the renderer keeps in its own `scope_directives` module — and
-/// because their five arms are the bulk of what made that match unreadable.
-/// Any other directive is a no-op here rather than a panic: the caller's match
-/// decides which ones arrive, and duplicating that list would be a second
-/// place to keep in step.
-fn apply_scope_directive(directive: &Directive, scope: &mut Scope) {
-    match directive {
-        Directive::PyCurrentModule { module } => match module {
-            Some(name) => scope.python.set_module(name),
-            None => scope.python.clear_module(),
-        },
-        Directive::CNamespace { namespace } => scope.c.set_namespace(namespace.as_deref()),
-        Directive::CNamespacePush { namespace } => scope.c.push_namespace(namespace),
-        Directive::CNamespacePop => scope.c.pop_namespace(),
-        Directive::StdProgram { name } => match name {
-            Some(name) => scope.program.set(name),
-            None => scope.program.clear(),
-        },
-        _ => {}
-    }
+    index_nodes(body, doc_path, index, scopes);
 }
 
 /// Registers a directive's optional `:name:` as an internal cross-reference
@@ -454,7 +415,7 @@ fn index_name_bearing_directive(
     directive: &Directive,
     doc_path: &str,
     index: &mut ProjectIndex,
-    scope: &mut Scope,
+    scopes: &DocumentScopes,
 ) {
     match directive {
         Directive::CodeBlock(block) => {
@@ -465,7 +426,7 @@ fn index_name_bearing_directive(
         }
         Directive::Figure(figure) => {
             register_directive_name(figure.image.name.as_ref(), doc_path, index);
-            index_nodes(&figure.legend, doc_path, index, scope);
+            index_nodes(&figure.legend, doc_path, index, scopes);
         }
         Directive::Contents(contents) => {
             register_directive_name(contents.options.name.as_ref(), doc_path, index);
@@ -511,7 +472,7 @@ fn index_name_bearing_directive(
         // if they had been written outside it.
         Directive::Dropdown(dropdown) => {
             register_directive_name(dropdown.name.as_ref(), doc_path, index);
-            index_nodes(&dropdown.body, doc_path, index, scope);
+            index_nodes(&dropdown.body, doc_path, index, scopes);
         }
         _ => {}
     }
@@ -553,11 +514,11 @@ fn index_table_rows<'a>(
     rows: impl IntoIterator<Item = &'a TableRow>,
     doc_path: &str,
     index: &mut ProjectIndex,
-    scope: &mut Scope,
+    scopes: &DocumentScopes,
 ) {
     for row in rows {
         for cell in &row.cells {
-            index_nodes(&cell.content, doc_path, index, scope);
+            index_nodes(&cell.content, doc_path, index, scopes);
         }
     }
 }

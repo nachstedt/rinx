@@ -17,8 +17,8 @@ use rinx_ast::{Diagnostic, DiagnosticCode, DomainObjectBody, NonEmptyVector, Spa
 /// falls back to the whole spec rather than losing it — only its
 /// malformedness is surfaced here; the actual split+extract that drives
 /// indexing/rendering is cheap enough to safely redo later, directly from
-/// these same stored raw strings (see `index_domain_object`/
-/// `render_domain_object`), rather than caching it on the AST.
+/// these same stored raw strings (see `rinx_scope`'s
+/// `Scope::enter_definition`), rather than caching it on the AST.
 pub(crate) fn parse_cmdoption(
     signatures: NonEmptyVector<String>,
     body_lines: &[&str],

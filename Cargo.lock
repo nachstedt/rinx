@@ -1227,6 +1227,7 @@ name = "rinx_scope"
 version = "0.1.0"
 dependencies = [
  "rinx_ast",
+ "rinx_parser",
 ]
 
 [[package]]

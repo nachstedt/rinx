@@ -43,6 +43,19 @@ pub(super) fn with_ctx_for<R>(
     embedded_assets: &EmbeddedAssets,
     body: impl FnOnce(&mut RenderCtx<'_>) -> R,
 ) -> R {
+    with_ctx_over(&[], index, doc_path, language, embedded_assets, body)
+}
+
+/// As [`with_ctx_for`], for a test rendering `nodes`: a domain object or a
+/// reference among them is looked up in the scopes computed over them.
+fn with_ctx_over<R>(
+    nodes: &[Node],
+    index: &ProjectIndex,
+    doc_path: &str,
+    language: ResolvedLanguage,
+    embedded_assets: &EmbeddedAssets,
+    body: impl FnOnce(&mut RenderCtx<'_>) -> R,
+) -> R {
     let anon_targets = Vec::new();
     let mut anon_index = 0;
     let domain_resolver = crate::resolution::DomainObjectResolver::new(index);
@@ -100,7 +113,7 @@ pub(super) fn with_ctx_for<R>(
         at_top_level: true,
         contents_backlinks: &mut std::collections::HashMap::new(),
         contents_id_allocator: &mut rinx_ast::SectionIdAllocator::new(),
-        scope: rinx_scope::Scope::default(),
+        scopes: &rinx_scope::DocumentScopes::of(nodes),
     };
 
     body(&mut ctx)
@@ -128,7 +141,8 @@ pub(super) fn render_directive_with_assets(
     embedded_assets: &EmbeddedAssets,
 ) -> String {
     let nodes = vec![Node::Directive(directive.clone())];
-    with_ctx_for(
+    with_ctx_over(
+        &nodes,
         index,
         doc_path,
         ResolvedLanguage::default(),

@@ -57,7 +57,7 @@ use math::MathRenderer;
 use resolution::{DomainObjectResolver, OptionResolver};
 use rinx_ast::{Document, ResolvedLanguage};
 use rinx_index::ProjectIndex;
-use rinx_scope::Scope;
+use rinx_scope::DocumentScopes;
 
 /// The result of rendering a document: the body HTML, any cross-references
 /// that failed to resolve against the [`ProjectIndex`], any domain-object
@@ -208,16 +208,11 @@ pub(crate) struct RenderCtx<'a> {
     pub contents_id_allocator: &'a mut rinx_ast::SectionIdAllocator,
     /// `numfig`'s settings and this page's caption numbers.
     pub numbering: &'a numbering::Numbering<'a>,
-    /// The enclosing scope for both domains, mirroring the analyzer's
-    /// `index_nodes`/`index_domain_object` scope so a domain object's anchor
-    /// `id` always matches the qualified key the analyzer indexed it under.
-    /// `.python` carries the enclosing `py:class`/`py:exception` stack and
-    /// current `py:module`; `.c` carries the enclosing `c:struct`/`c:union`
-    /// stack — see [`rinx_scope::Scope`]'s doc comment for why they
-    /// stay separate fields rather than being unified further. Both are
-    /// pushed/popped by `render_domain_object` around a nested body; the
-    /// module component of `.python` is document-order state, never popped.
-    pub scope: Scope,
+    /// The names every domain object on the page is qualified to, and the
+    /// scope in force at every reference that resolves against one —
+    /// computed once for the document, the same answer the analyzer indexed
+    /// it with, so a domain object's anchor `id` always matches its index key.
+    pub scopes: &'a DocumentScopes<'a>,
 }
 
 /// Renders a Document into HTML, reporting any cross-references that failed to resolve.
@@ -298,6 +293,7 @@ pub fn render_with_assets(
         contents_id_allocator.seed(id);
     }
     let numbering = numbering::Numbering::new(doc, index, config);
+    let scopes = DocumentScopes::of(&doc.nodes);
     let mut ctx = RenderCtx {
         numbering: &numbering,
         index,
@@ -335,7 +331,7 @@ pub fn render_with_assets(
         at_top_level: true,
         contents_backlinks: &mut contents_backlinks,
         contents_id_allocator: &mut contents_id_allocator,
-        scope: Scope::default(),
+        scopes: &scopes,
     };
 
     render_nodes(&mut html, &doc.nodes, &mut ctx);

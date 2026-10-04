@@ -13,5 +13,8 @@ keywords.workspace = true
 [dependencies]
 rinx_ast.workspace = true
 
+[dev-dependencies]
+rinx_parser.workspace = true
+
 [lints]
 workspace = true
