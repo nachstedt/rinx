@@ -1,16 +1,16 @@
 //! The pure handlers: from the server's state and one incoming message to the
 //! messages to send back.
 
-use lsp_server::{ErrorCode, Message, Notification, Request, Response};
+use lsp_server::{ErrorCode, Message, Notification, Request, RequestId, Response};
 use lsp_types::notification::{
     DidChangeTextDocument, DidCloseTextDocument, DidOpenTextDocument, Notification as _,
     PublishDiagnostics,
 };
-use lsp_types::request::{Completion, Request as _};
+use lsp_types::request::{Completion, HoverRequest, Request as _};
 use lsp_types::{
-    ClientCapabilities, CompletionOptions, CompletionParams, InitializeResult,
-    PublishDiagnosticsParams, ServerCapabilities, ServerInfo, TextDocumentSyncCapability,
-    TextDocumentSyncKind, Uri,
+    ClientCapabilities, CompletionOptions, CompletionParams, HoverParams, HoverProviderCapability,
+    InitializeResult, PublishDiagnosticsParams, ServerCapabilities, ServerInfo,
+    TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
 };
 
 use super::state::ServerState;
@@ -33,6 +33,7 @@ pub fn initialize_result(
                 trigger_characters: Some(["`", "<", "/"].map(String::from).to_vec()),
                 ..CompletionOptions::default()
             }),
+            hover_provider: Some(HoverProviderCapability::Simple(true)),
             ..ServerCapabilities::default()
         },
         server_info: Some(ServerInfo {
@@ -97,11 +98,21 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
 }
 
 /// The response to a request other than `shutdown`, which the loop answers
-/// itself: a completion, or the refusal of a method rinx does not support or
-/// of parameters that do not parse.
+/// itself: a completion or a hover, or the refusal of a method rinx does not
+/// support or of parameters that do not parse.
 pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
     let Request { id, method, params } = request;
     match method.as_str() {
+        HoverRequest::METHOD => match serde_json::from_value::<HoverParams>(params) {
+            Ok(params) => {
+                let position = params.text_document_position_params;
+                Response::new_ok(
+                    id,
+                    state.hover(&position.text_document.uri, position.position),
+                )
+            }
+            Err(error) => invalid_params(id, &method, &error),
+        },
         Completion::METHOD => match serde_json::from_value::<CompletionParams>(params) {
             Ok(params) => {
                 let position = params.text_document_position;
@@ -110,11 +121,7 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
                     state.complete(&position.text_document.uri, position.position),
                 )
             }
-            Err(error) => Response::new_err(
-                id,
-                ErrorCode::InvalidParams as i32,
-                format!("invalid '{method}' parameters: {error}"),
-            ),
+            Err(error) => invalid_params(id, &method, &error),
         },
         _ => Response::new_err(
             id,
@@ -122,6 +129,15 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
             format!("rinx does not support '{method}'"),
         ),
     }
+}
+
+/// The refusal of a `method` request whose parameters did not parse.
+fn invalid_params(id: RequestId, method: &str, error: &serde_json::Error) -> Response {
+    Response::new_err(
+        id,
+        ErrorCode::InvalidParams as i32,
+        format!("invalid '{method}' parameters: {error}"),
+    )
 }
 
 /// A `textDocument/publishDiagnostics` notification.

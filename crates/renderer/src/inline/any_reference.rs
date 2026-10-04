@@ -12,15 +12,20 @@ use rinx_ast::{InventorySelector, Span};
 use rinx_index::{ProjectIndex, relative_doc_href};
 use rinx_scope::Scope;
 
-use super::doc_reference::write_doc_link;
-use super::domain_object_reference::{domain_object_href, module_title_attribute};
+use super::doc_reference::{document_reference_target, write_doc_link};
+use super::domain_object_reference::{
+    domain_object_href, domain_object_reference_target, module_title_attribute,
+};
 use super::external_link::write_external_link;
-use super::math::write_equation_link;
-use super::reference::{label_href, label_link_text, write_special_page_link};
-use super::term_reference::term_href;
+use super::math::{equation_reference_target, write_equation_link};
+use super::reference::{
+    label_href, label_link_text, label_reference_target, special_page_target,
+    write_special_page_link,
+};
+use super::term_reference::{term_href, term_reference_target};
 use crate::blocks::equation_anchor_id;
 use crate::resolution::{AnyHit, AnyResolution, AnyResolver, unresolved_kind};
-use crate::{BrokenLink, BrokenLinkKind};
+use crate::{BrokenLink, BrokenLinkKind, ReferenceTarget};
 
 /// An `:any:` as the author wrote it.
 #[derive(Debug, Clone, Copy)]
@@ -112,6 +117,72 @@ pub(super) fn render_inline_any_reference(
                 BrokenLinkKind::AnyReference,
             ),
         ),
+    }
+}
+
+/// Where `reference`, written inside `scope` in the page at `doc_path`,
+/// leads — `None` for the `!` form and whenever
+/// [`render_inline_any_reference`] would draw it broken, ambiguity included.
+pub(super) fn any_target(
+    reference: AnyRef<'_>,
+    resolver: &AnyResolver<'_, '_>,
+    scope: &Scope,
+    doc_path: &str,
+) -> Option<ReferenceTarget> {
+    if !reference.link {
+        return None;
+    }
+    match resolver.resolve(
+        scope,
+        scope.program.current(),
+        doc_path,
+        reference.target,
+        reference.inventory,
+    ) {
+        AnyResolution::Local(hits) => match &hits[..] {
+            [hit] => Some(hit_target(hit, reference.target, resolver.index)),
+            _ => None,
+        },
+        AnyResolution::External(hit) => Some(ReferenceTarget::external(
+            None,
+            hit.inventory,
+            hit.target,
+            doc_path,
+        )),
+        AnyResolution::Contested(_) | AnyResolution::NotFound => None,
+    }
+}
+
+/// The one target an `:any:` resolved to — each kind as its own role
+/// describes it.
+fn hit_target(hit: &AnyHit<'_>, target: &str, index: &ProjectIndex) -> ReferenceTarget {
+    match hit {
+        AnyHit::Label {
+            name,
+            doc_path: target_doc,
+        } => label_reference_target(index, name, target, target_doc),
+        AnyHit::Term {
+            name,
+            doc_path: term_doc,
+        } => term_reference_target(name.as_str(), term_doc),
+        AnyHit::Option {
+            qualified_name,
+            doc_path: target_doc,
+        } => domain_object_reference_target(
+            rinx_ast::ObjectType::Std(rinx_ast::StdObjectType::Cmdoption),
+            qualified_name,
+            target_doc,
+        ),
+        AnyHit::Document {
+            doc_path: target_doc,
+        } => document_reference_target(index, target_doc),
+        AnyHit::Equation { label, location } => equation_reference_target(label, location),
+        AnyHit::SpecialPage { page } => special_page_target(*page),
+        AnyHit::DomainObject {
+            object_type,
+            qualified_name,
+            doc_path: target_doc,
+        } => domain_object_reference_target(*object_type, qualified_name, target_doc),
     }
 }
 

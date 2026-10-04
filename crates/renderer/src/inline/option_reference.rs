@@ -5,10 +5,10 @@ use std::fmt::Write as _;
 use super::RefText;
 use rinx_ast::{InventorySelector, ObjectType, StdObjectType};
 
-use super::domain_object_reference::domain_object_href;
+use super::domain_object_reference::{domain_object_href, domain_object_reference_target};
 use super::external_link::write_external_link;
 use crate::resolution::{OptionResolution, OptionResolver, unresolved_kind};
-use crate::{BrokenLink, BrokenLinkKind};
+use crate::{BrokenLink, BrokenLinkKind, ReferenceTarget};
 
 /// Renders a `:option:` cross-reference.
 ///
@@ -75,5 +75,34 @@ pub(super) fn render_inline_option_reference(
                 span,
             });
         }
+    }
+}
+
+/// Where the `:option:` to `target`, written under `ambient_program` in the
+/// page at `doc_path`, leads — `None` whenever
+/// [`render_inline_option_reference`] would draw it broken.
+pub(super) fn option_target(
+    target: &str,
+    inventory: &InventorySelector,
+    resolver: &OptionResolver<'_>,
+    ambient_program: Option<&str>,
+    doc_path: &str,
+) -> Option<ReferenceTarget> {
+    match resolver.resolve(ambient_program, target, inventory) {
+        OptionResolution::Resolved {
+            qualified_name,
+            doc_path: target_doc,
+        } => Some(domain_object_reference_target(
+            ObjectType::Std(StdObjectType::Cmdoption),
+            &qualified_name,
+            target_doc,
+        )),
+        OptionResolution::External(hit) => Some(ReferenceTarget::external(
+            None,
+            hit.inventory,
+            hit.target,
+            doc_path,
+        )),
+        OptionResolution::Contested { .. } | OptionResolution::NotFound => None,
     }
 }

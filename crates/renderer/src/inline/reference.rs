@@ -7,8 +7,8 @@ use rinx_index::relative_doc_href;
 use rinx_index::{ProjectIndex, SpecialPage};
 
 use super::external_link::write_external_link;
-use crate::resolution::{resolve_external, unresolved_kind};
-use crate::{BrokenLink, BrokenLinkKind};
+use crate::resolution::{ExternalHit, resolve_external, unresolved_kind};
+use crate::{BrokenLink, BrokenLinkKind, Destination, ReferenceTarget};
 
 /// A `:ref:` as the author wrote it.
 ///
@@ -26,6 +26,68 @@ pub(super) struct LabelRef<'a> {
     pub span: Option<Span>,
     /// Which sites may define the label — see [`InventorySelector`].
     pub inventory: &'a InventorySelector,
+}
+
+/// What a `:ref:` label resolved to.
+enum LabelResolution<'a> {
+    /// A label a document of this site defines, in `doc_path`.
+    Local { name: TargetName, doc_path: &'a str },
+    /// A page the build writes that no document is.
+    SpecialPage(SpecialPage),
+    /// A label another site's inventory lists.
+    External(ExternalHit<'a>),
+    /// Nothing the reference may link to; why.
+    Unresolved(BrokenLinkKind),
+}
+
+/// Resolves the label `target` against this site, then — when no document of
+/// it defines the label — against the other sites' inventories.
+fn resolve_label<'a>(
+    index: &'a ProjectIndex,
+    target: &str,
+    inventory: &InventorySelector,
+) -> LabelResolution<'a> {
+    let name = TargetName::new(target);
+    if let Some(doc_path) = index
+        .targets
+        .get(&name)
+        .filter(|_| inventory.allows_local())
+    {
+        return LabelResolution::Local { name, doc_path };
+    }
+    // A label several documents define is this site's, twice: refused here
+    // rather than looked up in another site, which would link it elsewhere.
+    let contested = index
+        .ambiguous_definitions
+        .targets
+        .get(&name)
+        .filter(|_| inventory.allows_local());
+    // A page the build writes that no document is (`genindex`, and the module
+    // index where enabled): local, so ahead of every inventory, but behind a
+    // label a document defines.
+    if inventory.allows_local()
+        && let Some(page) = index.special_page(&name)
+    {
+        return LabelResolution::SpecialPage(page);
+    }
+    if contested.is_none()
+        && let Some(hit) = resolve_external(
+            &index.external_inventories,
+            &["std:label".to_string()],
+            target,
+            inventory,
+        )
+    {
+        return LabelResolution::External(hit);
+    }
+    LabelResolution::Unresolved(
+        unresolved_kind(
+            inventory,
+            &index.external_inventories,
+            BrokenLinkKind::Reference,
+        )
+        .unless_contested(contested),
+    )
 }
 
 /// Renders a named `:ref:` reference. Resolves `target` via the project
@@ -52,63 +114,88 @@ pub(super) fn render_inline_reference(
         span,
         inventory,
     } = reference;
-    let target_name = TargetName::new(target);
-    let local = match index.targets.get(&target_name) {
-        Some(target_path) if inventory.allows_local() => Some(target_path),
-        _ => None,
-    };
-    // A label several documents define is this site's, twice: refused here
-    // rather than looked up in another site, which would link it elsewhere.
-    let contested = index
-        .ambiguous_definitions
-        .targets
-        .get(&target_name)
-        .filter(|_| inventory.allows_local());
-    // A page the build writes that no document is (`genindex`, and the module
-    // index where enabled): local, so ahead of every inventory, but behind a
-    // label a document defines.
-    if local.is_none()
-        && inventory.allows_local()
-        && let Some(page) = index.special_page(&target_name)
-    {
-        write_special_page_link(html, page, title, doc_path);
-        return;
+    match resolve_label(index, target, inventory) {
+        LabelResolution::Local {
+            name,
+            doc_path: target_path,
+        } => {
+            let display_escaped =
+                html_escape::encode_text(label_link_text(index, title, &name, target));
+            let href = label_href(index, &name, target_path, doc_path);
+            let href_attr = html_escape::encode_double_quoted_attribute(&href);
+            let _ = write!(html, "<a href=\"{href_attr}\">{display_escaped}</a>");
+        }
+        LabelResolution::SpecialPage(page) => {
+            write_special_page_link(html, page, title, doc_path);
+        }
+        LabelResolution::External(hit) => {
+            let display = title.unwrap_or_else(|| hit.target.display_text());
+            write_external_link(html, &hit, doc_path, &html_escape::encode_text(display));
+        }
+        LabelResolution::Unresolved(kind) => {
+            let name = TargetName::new(target);
+            let display_escaped =
+                html_escape::encode_text(label_link_text(index, title, &name, target));
+            let target_escaped = html_escape::encode_text(target);
+            let _ = write!(
+                html,
+                "<a href=\"#{target_escaped}\" class=\"broken-link\">{display_escaped}</a>"
+            );
+            broken_links.push(BrokenLink {
+                kind,
+                target: target.to_string(),
+                span,
+            });
+        }
     }
-    if local.is_none()
-        && contested.is_none()
-        && let Some(hit) = resolve_external(
-            &index.external_inventories,
-            &["std:label".to_string()],
-            target,
-            inventory,
-        )
-    {
-        let display = title.unwrap_or_else(|| hit.target.display_text());
-        write_external_link(html, &hit, doc_path, &html_escape::encode_text(display));
-        return;
+}
+
+/// Where the `:ref:` to `target`, written in the page at `doc_path`, leads —
+/// `None` when [`render_inline_reference`] would draw it broken.
+pub(super) fn label_target(
+    index: &ProjectIndex,
+    target: &str,
+    inventory: &InventorySelector,
+    doc_path: &str,
+) -> Option<ReferenceTarget> {
+    match resolve_label(index, target, inventory) {
+        LabelResolution::Local {
+            name,
+            doc_path: target_doc,
+        } => Some(label_reference_target(index, &name, target, target_doc)),
+        LabelResolution::SpecialPage(page) => Some(special_page_target(page)),
+        LabelResolution::External(hit) => Some(ReferenceTarget::external(
+            None,
+            hit.inventory,
+            hit.target,
+            doc_path,
+        )),
+        LabelResolution::Unresolved(_) => None,
     }
-    let display = label_link_text(index, title, &target_name, target);
-    let display_escaped = html_escape::encode_text(display);
-    if let Some(target_path) = local {
-        let href = label_href(index, &target_name, target_path, doc_path);
-        let href_attr = html_escape::encode_double_quoted_attribute(&href);
-        let _ = write!(html, "<a href=\"{href_attr}\">{display_escaped}</a>");
-    } else {
-        let target_escaped = html_escape::encode_text(target);
-        let _ = write!(
-            html,
-            "<a href=\"#{target_escaped}\" class=\"broken-link\">{display_escaped}</a>"
-        );
-        broken_links.push(BrokenLink {
-            kind: unresolved_kind(
-                inventory,
-                &index.external_inventories,
-                BrokenLinkKind::Reference,
-            )
-            .unless_contested(contested),
-            target: target.to_string(),
-            span,
-        });
+}
+
+/// The label `name`, written `target` and defined in `target_doc`, as a
+/// reference target — shared with `:any:`, which finds labels the same way.
+pub(super) fn label_reference_target(
+    index: &ProjectIndex,
+    name: &TargetName,
+    target: &str,
+    target_doc: &str,
+) -> ReferenceTarget {
+    ReferenceTarget::in_document(
+        label_link_text(index, None, name, target),
+        target_doc,
+        Some(index.target_anchor(name).to_string()),
+    )
+}
+
+/// A page the build writes as a reference target — shared with `:any:`.
+pub(super) fn special_page_target(page: SpecialPage) -> ReferenceTarget {
+    ReferenceTarget {
+        title: page.title.to_string(),
+        destination: Destination::GeneratedPage {
+            path: page.path.to_string(),
+        },
     }
 }
 

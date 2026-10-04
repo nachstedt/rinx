@@ -9,7 +9,9 @@
 //! file: its own squiggles would describe text nobody is looking at.
 //!
 //! A completion reads the same index: the open buffer's latest analysis is
-//! already in it, so a label typed a moment ago completes elsewhere.
+//! already in it, so a label typed a moment ago completes elsewhere. A hover
+//! reads it too, resolving the reference under the cursor in the document's
+//! latest parse through the renderer's own resolution.
 //!
 //! What only a render finds — a broken reference above all — is a second
 //! tier (ADR-038 §9). It is computed for the documents the graph diagnoses,
@@ -20,8 +22,11 @@
 //! re-renders every other one shown, and nothing has to remember to say so.
 
 use lsp_server::{Message, RequestId, Response};
-use lsp_types::{CompletionList, CompletionResponse, Uri};
+use lsp_types::{CompletionList, CompletionResponse, Hover, Uri};
 use rinx_ast::Diagnostic;
+use rinx_entity::EntitySchema;
+use rinx_renderer::ReferenceResolver;
+use rinx_renderer::config::SiteConfig;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -31,9 +36,11 @@ use super::scan::ScanEvent;
 use crate::completion::{completion_items, role_at};
 use crate::diagnostics::{ParsedSource, diagnose_source, parse_source};
 use crate::documents::DocumentStore;
+use crate::hover::reference_hover;
 use crate::includes::IncludeGraph;
-use crate::position::{PositionEncoding, char_index_of, to_lsp_position};
+use crate::position::{PositionEncoding, char_index_of, to_lsp_position, to_lsp_range};
 use crate::progress::{IndexState, IndexStatus, ScanProgress};
+use crate::reference_at::reference_at;
 use crate::render::render_diagnostics;
 use crate::uri::{file_path, file_uri};
 use crate::workspace::{IndexedDocument, WorkspaceFolder};
@@ -253,6 +260,38 @@ impl ServerState {
         Some(CompletionResponse::List(CompletionList {
             is_incomplete,
             items: completion_items(index, &doc_path, &context, range),
+        }))
+    }
+
+    /// The hover for the reference at `position` in the open document `uri`:
+    /// where the built page would link it, from its workspace folder's index
+    /// — or `None` when the cursor is on no reference, the reference would be
+    /// drawn broken, or the document is not open or lies in no workspace
+    /// folder.
+    ///
+    /// Read from the document's latest parse, which every change brings up
+    /// to date before the next message is handled, so a hover never waits for
+    /// the render tier.
+    pub(super) fn hover(&mut self, uri: &Uri, position: lsp_types::Position) -> Option<Hover> {
+        let text = &self.documents.get(uri)?.text;
+        let line = text.lines().nth(position.line as usize).unwrap_or_default();
+        let column = char_index_of(line, position.character, self.encoding) + 1;
+        let at = rinx_ast::Position::new(position.line + 1, u32::try_from(column).ok()?);
+        let tracked = self.tracked.get(uri)?;
+        let folder = tracked.folder?;
+        let document = &tracked.parsed.document;
+        let reference = reference_at(document, at)?;
+        let range = to_lsp_range(reference.span()?, text, self.encoding);
+        // Until the server reads a project's configuration (roadmap #10,
+        // #18), it resolves as a site with no `rinx.toml` and no entity
+        // schema would, as the render tier does.
+        let config = SiteConfig::default();
+        let index = self.folders[folder].project_index();
+        let target = ReferenceResolver::new(document, index, &config, EntitySchema::empty_ref())
+            .resolve(reference)?;
+        let folder = &self.folders[folder];
+        Some(reference_hover(&target, range, |doc_path| {
+            file_uri(&folder.path_of(doc_path))
         }))
     }
 
