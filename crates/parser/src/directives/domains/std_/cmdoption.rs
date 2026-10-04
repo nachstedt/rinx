@@ -1,14 +1,12 @@
-use super::super::body::parse_body;
+use super::super::body::parse_object_body;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use rinx_ast::{Diagnostic, DiagnosticCode, DomainObjectBody, NonEmptyVector, Span};
 
-/// Parses a `.. option::`/`.. cmdoption::` body. Unlike every other domain
-/// object type, `StdCmdoption` has no directive-specific option lines to strip
-/// off the front — real Sphinx's `Cmdoption` directive class has none — so the
-/// whole body is the docstring, parsed the same way [`parse_body`] handles
-/// it for `c:function`/`c:macro`.
+/// Parses a `.. option::`/`.. cmdoption::` body. Real Sphinx's `Cmdoption`
+/// adds no option of its own to the object-description flags, so its body
+/// is parsed exactly as `c:function`'s is.
 ///
 /// The only extra work here is a diagnostic pass over each raw signature
 /// line's comma-separated specs (see
@@ -43,9 +41,11 @@ pub(crate) fn parse_cmdoption(
         }
     }
 
+    let parsed = parse_object_body::<()>("option", body_lines, adornment_order, diagnostics, ctx);
     DomainObjectBody::StdCmdoption {
         signatures,
-        body: parse_body(body_lines, adornment_order, diagnostics, ctx),
+        flags: parsed.flags,
+        body: parsed.content,
     }
 }
 
@@ -107,6 +107,7 @@ mod tests {
 
         // Then
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::StdCmdoption {
+            flags: _,
             signatures,
             body,
         })) = &doc.nodes[0]

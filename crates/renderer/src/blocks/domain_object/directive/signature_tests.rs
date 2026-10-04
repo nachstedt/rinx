@@ -20,6 +20,7 @@ fn test_render_domain_object_repeats_prefix_labels_on_every_dt() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyMethod {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::new(
@@ -54,6 +55,7 @@ fn test_render_domain_object_emits_one_dt_per_declared_name() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyData {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::new(
                     "AF_UNIX".to_string(),
@@ -89,6 +91,8 @@ fn test_render_domain_object_shows_each_signature_as_its_own_dt_text() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyFunction {
+                flags: rinx_ast::DescriptionFlags::default(),
+                is_async: false,
                 module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::new(
@@ -125,6 +129,7 @@ fn test_render_domain_object_qualifies_every_alias_by_the_current_module() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyData {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     module: None,
                     signatures: NonEmptyVector::new(
                         "AF_UNIX".to_string(),
@@ -162,11 +167,13 @@ fn test_render_domain_object_module_option_overrides_the_anchor_id() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyClass {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     module: Some("multiprocessing.managers".to_string()),
                     signatures: NonEmptyVector::single("SharedMemoryManager".to_string()),
                     is_final: false,
                     body: vec![Node::Directive(Directive::DomainObject(
                         rinx_ast::DomainObjectBody::PyMethod {
+                            flags: rinx_ast::DescriptionFlags::default(),
                             module: None,
                             is_decorator: false,
                             signatures: NonEmptyVector::single("get_server()".to_string()),
@@ -181,6 +188,8 @@ fn test_render_domain_object_module_option_overrides_the_anchor_id() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyFunction {
+                    flags: rinx_ast::DescriptionFlags::default(),
+                    is_async: false,
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("track(size)".to_string()),
@@ -208,6 +217,8 @@ fn test_render_domain_object_module_option_overrides_the_anchor_id() {
 fn test_render_domain_object_options_renders_nothing_for_py_function() {
     // Given
     let obj = rinx_ast::DomainObjectBody::PyFunction {
+        flags: rinx_ast::DescriptionFlags::default(),
+        is_async: false,
         module: None,
         is_decorator: false,
         signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -225,6 +236,7 @@ fn test_render_domain_object_options_renders_nothing_for_py_function() {
 fn test_render_domain_object_options_renders_nothing_for_py_exception() {
     // Given
     let obj = rinx_ast::DomainObjectBody::PyException {
+        flags: rinx_ast::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("GreeterError".to_string()),
         is_final: false,

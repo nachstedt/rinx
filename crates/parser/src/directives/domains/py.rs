@@ -1,7 +1,7 @@
 //! The `py` domain: a submodule per object type (`.. py:function::`,
 //! `.. py:module::`, `.. py:data::`, `.. py:method::`, `.. py:class::`/
-//! `.. py:exception::`, `.. py:attribute::`), each with its own body-option
-//! extractor, plus the [`dispatch`] that routes to them.
+//! `.. py:exception::`, `.. py:attribute::`), each declaring the options it
+//! takes, plus the [`dispatch`] that routes to them.
 
 pub(super) mod attribute;
 pub(super) mod class;

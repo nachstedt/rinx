@@ -194,6 +194,8 @@ mod tests {
         // Given
         let mut nodes = vec![Node::Directive(Directive::DomainObject(
             DomainObjectBody::PyFunction {
+                is_async: false,
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("foo()".to_string()),
                 is_decorator: false,

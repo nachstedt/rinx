@@ -1,14 +1,11 @@
-use crate::blocks::parse_blocks;
+use super::super::body::parse_object_body;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 use rinx_ast::{CSignature, DomainObjectBody, NonEmptyVector};
 
-/// Parses a `.. c:struct::` body: strips the common object-description flag
-/// lines (`:no-index:`, `:no-index-entry:`, `:no-contents-entry:`, and their
-/// legacy spellings) off the front before parsing the rest as the docstring
-/// body.
+/// Parses a `.. c:struct::` body: the object-description flags, then its
+/// content.
 pub(crate) fn parse_c_struct(
     signatures: NonEmptyVector<CSignature>,
     body_lines: &[&str],
@@ -16,22 +13,11 @@ pub(crate) fn parse_c_struct(
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (no_index, no_index_entry, no_contents_entry, options_consumed) =
-        super::dispatch::extract_common_object_description_options(&unindented_lines);
-
-    let body_content: Vec<&str> = unindented_lines[options_consumed..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
-
+    let parsed = parse_object_body::<()>("c:struct", body_lines, adornment_order, diagnostics, ctx);
     DomainObjectBody::CStruct {
         signatures,
-        no_index,
-        no_index_entry,
-        no_contents_entry,
-        body,
+        flags: parsed.flags,
+        body: parsed.content,
     }
 }
 
@@ -59,16 +45,12 @@ mod tests {
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::CStruct {
             signatures,
-            no_index,
-            no_index_entry,
-            no_contents_entry,
+            flags,
             body,
         })) = &doc.nodes[0]
         {
             assert_eq!(signature_texts(signatures), ["Data"]);
-            assert!(!no_index);
-            assert!(!no_index_entry);
-            assert!(!no_contents_entry);
+            assert_eq!(flags, &rinx_ast::DescriptionFlags::default());
             assert_eq!(body.len(), 1);
         } else {
             panic!("Expected CStruct, got {:?}", doc.nodes[0]);

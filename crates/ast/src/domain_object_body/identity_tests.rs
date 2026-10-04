@@ -1,10 +1,12 @@
 use super::*;
 
 #[test]
-fn test_domain_object_body_object_type_matches_variant() {
+fn test_domain_object_body_object_type_matches_python_variant() {
     // Given / When / Then
     assert_eq!(
         DomainObjectBody::PyFunction {
+            is_async: false,
+            flags: crate::DescriptionFlags::default(),
             module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -24,6 +26,7 @@ fn test_domain_object_body_object_type_matches_variant() {
     );
     assert_eq!(
         DomainObjectBody::PyData {
+            flags: crate::DescriptionFlags::default(),
             module: None,
             signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
             type_: None,
@@ -35,6 +38,7 @@ fn test_domain_object_body_object_type_matches_variant() {
     );
     assert_eq!(
         DomainObjectBody::PyAttribute {
+            flags: crate::DescriptionFlags::default(),
             module: None,
             signatures: NonEmptyVector::single("Greeter.name".to_string()),
             type_: None,
@@ -46,23 +50,8 @@ fn test_domain_object_body_object_type_matches_variant() {
         ObjectType::Py(PyObjectType::Attribute)
     );
     assert_eq!(
-        DomainObjectBody::CFunction {
-            signatures: NonEmptyVector::single("int add(int a, int b)".into()),
-            body: vec![],
-        }
-        .object_type(),
-        ObjectType::C(CObjectType::Function)
-    );
-    assert_eq!(
-        DomainObjectBody::CMacro {
-            signatures: NonEmptyVector::single("MAX(a, b)".into()),
-            body: vec![],
-        }
-        .object_type(),
-        ObjectType::C(CObjectType::Macro)
-    );
-    assert_eq!(
         DomainObjectBody::PyMethod {
+            flags: crate::DescriptionFlags::default(),
             module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("greet(self, name)".to_string()),
@@ -77,6 +66,7 @@ fn test_domain_object_body_object_type_matches_variant() {
     );
     assert_eq!(
         DomainObjectBody::PyClass {
+            flags: crate::DescriptionFlags::default(),
             module: None,
             signatures: NonEmptyVector::single("Greeter".to_string()),
             is_final: false,
@@ -87,6 +77,7 @@ fn test_domain_object_body_object_type_matches_variant() {
     );
     assert_eq!(
         DomainObjectBody::PyException {
+            flags: crate::DescriptionFlags::default(),
             module: None,
             signatures: NonEmptyVector::single("GreeterError".to_string()),
             is_final: false,
@@ -98,6 +89,29 @@ fn test_domain_object_body_object_type_matches_variant() {
 }
 
 #[test]
+fn test_domain_object_body_object_type_matches_c_variant() {
+    // Given / When / Then
+    assert_eq!(
+        DomainObjectBody::CFunction {
+            flags: crate::DescriptionFlags::default(),
+            signatures: NonEmptyVector::single("int add(int a, int b)".into()),
+            body: vec![],
+        }
+        .object_type(),
+        ObjectType::C(CObjectType::Function)
+    );
+    assert_eq!(
+        DomainObjectBody::CMacro {
+            flags: crate::DescriptionFlags::default(),
+            signatures: NonEmptyVector::single("MAX(a, b)".into()),
+            body: vec![],
+        }
+        .object_type(),
+        ObjectType::C(CObjectType::Macro)
+    );
+}
+
+#[test]
 fn test_domain_object_body_object_type_is_function_for_decorator() {
     // Given — a `.. decorator::`-derived `PyFunction`: real Sphinx
     // registers it under the exact same object type as a plain
@@ -105,6 +119,8 @@ fn test_domain_object_body_object_type_is_function_for_decorator() {
     // `self.name = 'py:function'`), so `is_decorator` must not change
     // `object_type()`.
     let decorator = DomainObjectBody::PyFunction {
+        is_async: false,
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("classmethod".to_string()),
         is_decorator: true,
@@ -122,6 +138,7 @@ fn test_domain_object_body_object_type_is_function_for_decorator() {
 fn test_domain_object_body_object_type_is_method_for_decoratormethod() {
     // Given
     let decorator_method = DomainObjectBody::PyMethod {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("register(cls)".to_string()),
         is_classmethod: false,
@@ -143,6 +160,8 @@ fn test_domain_object_body_object_type_is_method_for_decoratormethod() {
 fn test_domain_object_body_name_extracts_from_signature_for_functions() {
     // Given
     let function = DomainObjectBody::PyFunction {
+        is_async: false,
+        flags: crate::DescriptionFlags::default(),
         module: None,
         is_decorator: false,
         signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -157,6 +176,7 @@ fn test_domain_object_body_name_extracts_from_signature_for_functions() {
 fn test_domain_object_body_name_extracts_from_signature_for_macros() {
     // Given
     let macro_ = DomainObjectBody::CMacro {
+        flags: crate::DescriptionFlags::default(),
         signatures: NonEmptyVector::single("MAX(a, b)".into()),
         body: vec![],
     };
@@ -169,6 +189,7 @@ fn test_domain_object_body_name_extracts_from_signature_for_macros() {
 fn test_domain_object_body_name_uses_bare_signature_for_object_like_macros() {
     // Given
     let macro_ = DomainObjectBody::CMacro {
+        flags: crate::DescriptionFlags::default(),
         signatures: NonEmptyVector::single("PY_SSIZE_T_MAX".into()),
         body: vec![],
     };
@@ -181,6 +202,7 @@ fn test_domain_object_body_name_uses_bare_signature_for_object_like_macros() {
 fn test_domain_object_body_name_extracts_from_signature_for_methods() {
     // Given
     let method = DomainObjectBody::PyMethod {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         is_decorator: false,
         signatures: NonEmptyVector::single("Greeter.greet(self, name)".to_string()),
@@ -199,6 +221,7 @@ fn test_domain_object_body_name_extracts_from_signature_for_methods() {
 fn test_domain_object_body_signature_text_shows_full_signature_for_methods() {
     // Given
     let method = DomainObjectBody::PyMethod {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         is_decorator: false,
         signatures: NonEmptyVector::single("greet(self, name)".to_string()),
@@ -217,6 +240,7 @@ fn test_domain_object_body_signature_text_shows_full_signature_for_methods() {
 fn test_domain_object_body_name_extracts_from_signature_for_classes() {
     // Given
     let class = DomainObjectBody::PyClass {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("Greeter".to_string()),
         is_final: false,
@@ -231,6 +255,7 @@ fn test_domain_object_body_name_extracts_from_signature_for_classes() {
 fn test_domain_object_body_name_ignores_base_class_list() {
     // Given — base classes shouldn't leak into the referenceable name
     let class = DomainObjectBody::PyClass {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("Greeter(Base)".to_string()),
         is_final: false,
@@ -245,6 +270,7 @@ fn test_domain_object_body_name_ignores_base_class_list() {
 fn test_domain_object_body_signature_text_shows_full_signature_for_classes() {
     // Given
     let class = DomainObjectBody::PyClass {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("Greeter(Base)".to_string()),
         is_final: true,
@@ -259,6 +285,7 @@ fn test_domain_object_body_signature_text_shows_full_signature_for_classes() {
 fn test_domain_object_body_name_extracts_from_signature_for_exceptions() {
     // Given
     let exception = DomainObjectBody::PyException {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("GreeterError".to_string()),
         is_final: false,
@@ -273,6 +300,7 @@ fn test_domain_object_body_name_extracts_from_signature_for_exceptions() {
 fn test_domain_object_body_name_ignores_base_class_list_for_exceptions() {
     // Given — base classes shouldn't leak into the referenceable name
     let exception = DomainObjectBody::PyException {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("InvalidNameError(GreeterError)".to_string()),
         is_final: false,
@@ -287,6 +315,7 @@ fn test_domain_object_body_name_ignores_base_class_list_for_exceptions() {
 fn test_domain_object_body_signature_text_shows_full_signature_for_exceptions() {
     // Given
     let exception = DomainObjectBody::PyException {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("InvalidNameError(GreeterError)".to_string()),
         is_final: true,
@@ -317,6 +346,7 @@ fn test_domain_object_body_name_uses_bare_name_for_modules() {
 fn test_domain_object_body_name_uses_bare_name_for_data() {
     // Given
     let data = DomainObjectBody::PyData {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
         type_: None,
@@ -332,6 +362,7 @@ fn test_domain_object_body_name_uses_bare_name_for_data() {
 fn test_domain_object_body_name_uses_bare_name_for_attributes() {
     // Given
     let attribute = DomainObjectBody::PyAttribute {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("Greeter.name".to_string()),
         type_: None,
@@ -348,6 +379,7 @@ fn test_domain_object_body_name_uses_bare_name_for_attributes() {
 fn test_domain_object_body_signature_text_shows_full_signature_for_functions() {
     // Given
     let function = DomainObjectBody::CFunction {
+        flags: crate::DescriptionFlags::default(),
         signatures: NonEmptyVector::single("int add(int a, int b)".into()),
         body: vec![],
     };
@@ -360,6 +392,7 @@ fn test_domain_object_body_signature_text_shows_full_signature_for_functions() {
 fn test_domain_object_body_signature_text_shows_full_signature_for_macros() {
     // Given
     let macro_ = DomainObjectBody::CMacro {
+        flags: crate::DescriptionFlags::default(),
         signatures: NonEmptyVector::single("MAX(a, b)".into()),
         body: vec![],
     };
@@ -385,6 +418,7 @@ fn test_domain_object_body_signature_text_shows_bare_name_for_modules() {
 fn test_domain_object_body_signature_text_shows_bare_name_for_data() {
     // Given
     let data = DomainObjectBody::PyData {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
         type_: None,
@@ -400,6 +434,7 @@ fn test_domain_object_body_signature_text_shows_bare_name_for_data() {
 fn test_domain_object_body_signature_text_shows_bare_name_for_attributes() {
     // Given
     let attribute = DomainObjectBody::PyAttribute {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("Greeter.name".to_string()),
         type_: None,
@@ -417,6 +452,8 @@ fn test_names_extracts_from_every_signature_not_just_the_first() {
     // Given — a multi-signature function: every entry needs the same
     // name extraction applied, not only the primary.
     let function = DomainObjectBody::PyFunction {
+        is_async: false,
+        flags: crate::DescriptionFlags::default(),
         module: None,
         is_decorator: false,
         signatures: NonEmptyVector::new(
@@ -437,6 +474,7 @@ fn test_names_extracts_from_every_signature_not_just_the_first() {
 fn test_names_strips_base_class_lists_from_every_signature() {
     // Given
     let class = DomainObjectBody::PyClass {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::new(
             "Greeter(Base)".to_string(),
@@ -457,6 +495,7 @@ fn test_names_strips_base_class_lists_from_every_signature() {
 fn test_names_strips_c_return_types_from_every_signature() {
     // Given
     let function = DomainObjectBody::CFunction {
+        flags: crate::DescriptionFlags::default(),
         signatures: NonEmptyVector::new(
             "int add(int a, int b)".into(),
             vec!["PyObject *PyUnicode_FromString(const char *str)".into()],
@@ -482,9 +521,7 @@ fn test_names_reads_the_name_parsed_from_a_function_pointer_typedef() {
             "int (*Py_tracefunc)(PyObject *obj, PyFrameObject *frame, int what, PyObject *arg)"
                 .into(),
         ),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::default(),
         body: vec![],
     };
 
@@ -500,39 +537,33 @@ fn test_names_reads_the_parsed_name_for_every_c_object_type() {
     // Given — one of each `c` variant, all carrying a signature whose
     // name only a real declarator parse recovers.
     let function = DomainObjectBody::CFunction {
+        flags: crate::DescriptionFlags::default(),
         signatures: NonEmptyVector::single("PyObject *(*getattrofunc)(PyObject *)".into()),
         body: vec![],
     };
     let macro_ = DomainObjectBody::CMacro {
+        flags: crate::DescriptionFlags::default(),
         signatures: NonEmptyVector::single("void (*freefunc)(void *)".into()),
         body: vec![],
     };
     let struct_ = DomainObjectBody::CStruct {
         signatures: NonEmptyVector::single("int (*inquiry)(PyObject *)".into()),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::default(),
         body: vec![],
     };
     let union_ = DomainObjectBody::CUnion {
         signatures: NonEmptyVector::single("Py_ssize_t (*lenfunc)(PyObject *)".into()),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::default(),
         body: vec![],
     };
     let member = DomainObjectBody::CMember {
         signatures: NonEmptyVector::single("int (*visitproc)(PyObject *o, void *arg)".into()),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::default(),
         body: vec![],
     };
     let type_ = DomainObjectBody::CType {
         signatures: NonEmptyVector::single("PyObject *(*unaryfunc)(PyObject *)".into()),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::default(),
         body: vec![],
     };
 
@@ -554,9 +585,7 @@ fn test_signature_texts_returns_c_signatures_as_written() {
             "int (*Py_tracefunc)(PyObject *obj, int what)".into(),
             vec!["unsigned long ulong".into()],
         ),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::default(),
         body: vec![],
     };
 
@@ -582,9 +611,7 @@ fn test_names_and_signature_texts_stay_index_parallel_for_c_objects() {
             "int (*Py_tracefunc)(PyObject *obj)".into(),
             vec!["unsigned long ulong".into(), "FILE".into()],
         ),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::default(),
         body: vec![],
     };
 
@@ -602,6 +629,7 @@ fn test_names_uses_bare_signatures_verbatim_for_data() {
     // Given — the confirmed `library/socket.rst` shape: `py:data`
     // signatures are already bare names, so nothing is extracted.
     let data = DomainObjectBody::PyData {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::new(
             "AF_UNIX".to_string(),
@@ -624,6 +652,8 @@ fn test_signature_texts_returns_every_signature_unextracted() {
     // Given — the `<dt>` display text keeps the full signature, unlike
     // `names()`.
     let function = DomainObjectBody::PyFunction {
+        is_async: false,
+        flags: crate::DescriptionFlags::default(),
         module: None,
         is_decorator: false,
         signatures: NonEmptyVector::new(
@@ -666,6 +696,7 @@ fn test_names_and_signature_texts_stay_index_parallel() {
     // Given — the renderer zips the two to pair each anchor with its
     // display text, so they must have matching lengths and order.
     let method = DomainObjectBody::PyMethod {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         is_decorator: false,
         signatures: NonEmptyVector::new(

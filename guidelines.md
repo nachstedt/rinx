@@ -102,6 +102,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Keep the resilient parser and the strict build separate: the parser degrades bad input and records what went wrong, and the build step decides whether that is fatal.
 - Do not diagnose a failure the author could not have caused or acted on: a value this codebase chose for them degrades silently, while one they wrote is reported.
 - When a lookup is genuinely ambiguous, do not pick a winner — leave it unresolved and emit a warning that names every candidate, so the diagnostic tells the author what to disambiguate between.
+- Never let a result depend on the order inputs arrive in: a definition claimed twice defines nothing, and its warning reads the same whichever came first.
 - When porting a reference implementation, port its full diagnostic set, and additionally invent diagnostics of your own wherever it silently degrades valid-looking input into something else.
 - When fixing one missing diagnostic of a construct, port every check the reference implementation makes on that construct, including where it may stand, rather than scoping the change to the case that was noticed.
 - When two phases must derive the same identifier, give them one function to call rather than two implementations to keep in step, and key it on something that cannot collide (a position) rather than on content that can.
@@ -155,6 +156,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Configuration files should contain metadata and settings, not file paths; sandboxed build systems relocate files, breaking embedded paths.
 - Check whether a rule about configuration is about *paths* or about *phases* before invoking it: a config file the parser reads is fine, and a workspace-relative path survives relocation — what a config file cannot do is declare a build input.
 - Relative file paths work correctly for offline viewing; do not use inlining as a workaround for path computation.
+- Decide which files a tool reads from explicit configuration, never from a convention meant for another tool such as `.gitignore`, since generated sources are often exactly what such a file ignores.
 
 ## Build, examples and documentation
 

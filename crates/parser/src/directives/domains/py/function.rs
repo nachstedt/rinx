@@ -1,15 +1,12 @@
-use super::dispatch::parse_module_option_line;
-use crate::blocks::parse_blocks;
+use super::super::body::{ObjectOptions, parse_object_body};
+use super::dispatch::read_module_option;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::options::OptionLine;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 use rinx_ast::{DomainObjectBody, NonEmptyVector};
 
-/// Parses a `.. py:function::` body: strips a leading `:module:` option line
-/// off the front before parsing the rest as the docstring body — the only
-/// option real Sphinx's `py:function` directive has (unlike `py:method`,
-/// it has no body-option flags of its own).
+/// Parses a `.. py:function::` body: its option block, then its content.
 ///
 /// `forced_decorator` comes from the legacy `.. decorator::` directive-name
 /// alias (which is just `py:function` with `is_decorator` implied) — see
@@ -25,50 +22,46 @@ pub(crate) fn parse_py_function(
     ctx: &ParseCtx<'_>,
     forced_decorator: bool,
 ) -> DomainObjectBody {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (module, options_consumed) = extract_function_options(&unindented_lines);
-
-    let body_content: Vec<&str> = unindented_lines[options_consumed..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
-
+    let parsed = parse_object_body::<FunctionOptions>(
+        "py:function",
+        body_lines,
+        adornment_order,
+        diagnostics,
+        ctx,
+    );
     DomainObjectBody::PyFunction {
-        module,
+        flags: parsed.flags,
+        module: parsed.options.module,
         signatures,
         is_decorator: forced_decorator,
-        body,
+        is_async: parsed.options.is_async,
+        body: parsed.content,
     }
 }
 
-/// Extracts `.. py:function::`-specific options (`:module:`, the only one
-/// real Sphinx's `py:function` directive has) from the leading lines of a
-/// domain object's body.
-///
-/// Scans from the start and stops at the first line that isn't `:module:`
-/// (e.g. a blank line or the start of the docstring body), returning how
-/// many leading lines were consumed as options so the caller can slice them
-/// off before parsing the remaining body content.
-fn extract_function_options(lines: &[String]) -> (Option<String>, usize) {
-    let mut module = None;
-    let mut consumed = 0;
+/// The options Sphinx's `PyFunction` takes beyond the object-description
+/// flags: `:async:`, and the `:module:` every `py` object takes.
+#[derive(Debug, Default, PartialEq, Eq)]
+struct FunctionOptions {
+    module: Option<String>,
+    is_async: bool,
+}
 
-    for line in lines {
-        let trimmed = line.trim();
-        if let Some(value) = parse_module_option_line(trimmed) {
-            module = Some(value);
-        } else {
-            break;
+impl ObjectOptions for FunctionOptions {
+    fn read(&mut self, line: &OptionLine) -> bool {
+        match line.name.as_str() {
+            "async" => {
+                self.is_async = true;
+                true
+            }
+            _ => read_module_option(line, &mut self.module),
         }
-        consumed += 1;
     }
-
-    (module, consumed)
 }
 
 #[cfg(test)]
 mod tests {
+    use super::super::super::body::test_support::read_options;
     use super::*;
     use crate::parse;
     use rinx_ast::{Directive, Node};
@@ -88,8 +81,8 @@ mod tests {
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
             signatures,
             is_decorator,
-            module: _,
             body,
+            ..
         })) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["classmethod"]);
@@ -139,32 +132,56 @@ mod tests {
         }
     }
     #[test]
-    fn test_extract_function_options_parses_module_option() {
-        // Given — real Sphinx's `py:function` directive has no other options.
-        let lines = vec![
-            ":module: ctypes.util".to_string(),
-            String::new(),
-            "Finds a library.".to_string(),
-        ];
+    fn test_function_options_read_module_and_async() {
+        // Given — `asyncio-task.rst` writes `:async:` on a `.. function::`.
+        let body = [":module: asyncio", ":async:", "", "Sleeps."];
 
         // When
-        let (module, consumed) = extract_function_options(&lines);
+        let (options, _, unrecognized) = read_options::<FunctionOptions>(&body);
 
         // Then
-        assert_eq!(module.as_deref(), Some("ctypes.util"));
-        assert_eq!(consumed, 1);
+        assert_eq!(
+            options,
+            FunctionOptions {
+                module: Some("asyncio".to_string()),
+                is_async: true,
+            }
+        );
+        assert!(unrecognized.is_empty());
     }
     #[test]
-    fn test_extract_function_options_returns_defaults_when_no_options_present() {
+    fn test_function_options_leave_a_method_only_option() {
         // Given
-        let lines = vec!["Finds a library.".to_string()];
+        let body = [":classmethod:"];
 
         // When
-        let (module, consumed) = extract_function_options(&lines);
+        let (options, _, unrecognized) = read_options::<FunctionOptions>(&body);
 
         // Then
-        assert_eq!(module, None);
-        assert_eq!(consumed, 0);
+        assert_eq!(options, FunctionOptions::default());
+        assert_eq!(unrecognized, ["classmethod"]);
+    }
+    #[test]
+    fn test_parse_py_function_reads_no_index_and_module_in_any_order() {
+        // Given — the shape `ctypes.rst` writes, where `:noindex:` used to stop
+        // the option scan and both lines leaked into the body as text.
+        let input =
+            ".. function:: prototype(address)\n   :noindex:\n   :module:\n\n   Returns a function.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        let Some(Node::Directive(Directive::DomainObject(
+            object @ DomainObjectBody::PyFunction { module, body, .. },
+        ))) = doc.nodes.first()
+        else {
+            panic!("Expected PyFunction, got {:?}", doc.nodes);
+        };
+        assert!(object.no_index());
+        assert_eq!(module.as_deref(), Some(""));
+        assert_eq!(body.len(), 1);
+        assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
     }
     #[test]
     fn test_parse_creates_py_function_domain_object() {
@@ -179,8 +196,8 @@ mod tests {
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
             signatures,
             is_decorator,
-            module: _,
             body,
+            ..
         })) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["greet(name)"]);
@@ -203,8 +220,8 @@ mod tests {
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
             signatures,
             is_decorator,
-            module: _,
             body,
+            ..
         })) = &doc.nodes[0]
         {
             assert_eq!(

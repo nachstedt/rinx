@@ -1,16 +1,15 @@
-use super::dispatch::parse_module_option_line;
-use crate::blocks::parse_blocks;
+use super::super::body::{ObjectOptions, parse_object_body};
+use super::dispatch::read_module_option;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::options::OptionLine;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 use rinx_ast::{DomainObjectBody, NonEmptyVector};
 
-/// Parses a `.. py:class::` body: strips a leading `:final:` flag line off
-/// the front before parsing the rest as the docstring body. Any nested
-/// domain object directives (e.g. `.. py:method::`) in the body are parsed
-/// through the same recursive `parse_blocks` call every other domain object
-/// uses — qualifying their cross-reference names by this class is the
+/// Parses a `.. py:class::` body: its option block, then its content. Any
+/// nested domain object directives (e.g. `.. py:method::`) in the body are
+/// parsed through the same recursive `parse_blocks` call every other domain
+/// object uses — qualifying their cross-reference names by this class is the
 /// analyzer/renderer's job, not the parser's.
 pub(crate) fn parse_py_class(
     signatures: NonEmptyVector<String>,
@@ -19,28 +18,25 @@ pub(crate) fn parse_py_class(
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (is_final, module, options_consumed) = extract_class_options(&unindented_lines);
-
-    let body_content: Vec<&str> = unindented_lines[options_consumed..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
-
+    let parsed = parse_object_body::<ClassOptions>(
+        "py:class",
+        body_lines,
+        adornment_order,
+        diagnostics,
+        ctx,
+    );
     DomainObjectBody::PyClass {
-        module,
+        flags: parsed.flags,
+        module: parsed.options.module,
         signatures,
-        is_final,
-        body,
+        is_final: parsed.options.is_final,
+        body: parsed.content,
     }
 }
 
-/// Parses a `.. py:exception::` body: strips a leading `:final:` flag line
-/// off the front before parsing the rest as the docstring body. Shares
-/// `extract_class_options` with `.. py:class::` since both directives have
-/// the same option set; only the object type (and thus the produced
-/// [`DomainObjectBody`] variant) differs.
+/// Parses a `.. py:exception::` body. Shares [`ClassOptions`] with
+/// `.. py:class::`, since both directives have the same option set; only the
+/// object type (and thus the produced [`DomainObjectBody`] variant) differs.
 pub(crate) fn parse_py_exception(
     signatures: NonEmptyVector<String>,
     body_lines: &[&str],
@@ -48,123 +44,126 @@ pub(crate) fn parse_py_exception(
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (is_final, module, options_consumed) = extract_class_options(&unindented_lines);
-
-    let body_content: Vec<&str> = unindented_lines[options_consumed..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
-
+    let parsed = parse_object_body::<ClassOptions>(
+        "py:exception",
+        body_lines,
+        adornment_order,
+        diagnostics,
+        ctx,
+    );
     DomainObjectBody::PyException {
-        module,
+        flags: parsed.flags,
+        module: parsed.options.module,
         signatures,
-        is_final,
-        body,
+        is_final: parsed.options.is_final,
+        body: parsed.content,
     }
 }
 
-/// Extracts `.. py:class::`/`.. py:exception::`-specific options: the
-/// `:final:` flag plus `:module:` (shared with every other `py:*`
-/// object-description directive) from the leading lines of a domain object's
-/// body.
-///
-/// Scans from the start and stops at the first line that isn't one of these
-/// recognized options (e.g. a blank line, a nested directive, or the start
-/// of the docstring body), returning how many leading lines were consumed as
-/// options so the caller can slice them off before parsing the remaining
-/// body content.
-fn extract_class_options(lines: &[String]) -> (bool, Option<String>, usize) {
-    let mut is_final = false;
-    let mut module = None;
-    let mut consumed = 0;
+/// The options `.. py:class::`/`.. py:exception::` take beyond the
+/// object-description flags: `:final:`, and the `:module:` every `py` object
+/// takes.
+#[derive(Debug, Default, PartialEq, Eq)]
+struct ClassOptions {
+    is_final: bool,
+    module: Option<String>,
+}
 
-    for line in lines {
-        let trimmed = line.trim();
-        if let Some(module_value) = parse_module_option_line(trimmed) {
-            module = Some(module_value);
-        } else if trimmed == ":final:" {
-            is_final = true;
-        } else {
-            break;
+impl ObjectOptions for ClassOptions {
+    fn read(&mut self, line: &OptionLine) -> bool {
+        match line.name.as_str() {
+            "final" => {
+                self.is_final = true;
+                true
+            }
+            _ => read_module_option(line, &mut self.module),
         }
-        consumed += 1;
     }
-
-    (is_final, module, consumed)
 }
 
 #[cfg(test)]
 mod tests {
+    use super::super::super::body::test_support::read_options;
     use super::*;
     use crate::parse;
     use rinx_ast::Domain;
     use rinx_ast::{Directive, Node};
 
     #[test]
-    fn test_extract_class_options_parses_final_flag() {
-        // Given
-        let lines = vec![
-            ":final:".to_string(),
-            String::new(),
-            "A greeter.".to_string(),
-        ];
-
-        // When
-        let (is_final, module, consumed) = extract_class_options(&lines);
-
-        // Then
-        assert!(is_final);
-        assert_eq!(module, None);
-        assert_eq!(consumed, 1);
-    }
-    #[test]
-    fn test_extract_class_options_returns_defaults_when_no_options_present() {
-        // Given
-        let lines = vec!["A greeter.".to_string()];
-
-        // When
-        let (is_final, module, consumed) = extract_class_options(&lines);
-
-        // Then
-        assert!(!is_final);
-        assert_eq!(module, None);
-        assert_eq!(consumed, 0);
-    }
-    #[test]
-    fn test_extract_class_options_parses_module_option_alongside_final_flag() {
+    fn test_class_options_read_final_and_module_in_any_order() {
         // Given — the `docs/dev/known_bugs.md` motivating shape: CPython's
         // `multiprocessing.shared_memory.rst` documents `SharedMemoryManager`
         // under a different module via `:module:`.
-        let lines = vec![
-            ":module: multiprocessing.managers".to_string(),
-            ":final:".to_string(),
-            String::new(),
-            "A subclass of BaseManager.".to_string(),
+        let body = [
+            ":module: multiprocessing.managers",
+            ":final:",
+            "",
+            "A subclass.",
         ];
 
         // When
-        let (is_final, module, consumed) = extract_class_options(&lines);
-
-        // Then — order-independent, like the other options.
-        assert!(is_final);
-        assert_eq!(module.as_deref(), Some("multiprocessing.managers"));
-        assert_eq!(consumed, 2);
-    }
-    #[test]
-    fn test_extract_class_options_parses_module_option_with_empty_value() {
-        // Given — real Sphinx's falsy-`modname` check: a bare `:module:`
-        // deliberately un-qualifies the object.
-        let lines = vec![":module:".to_string(), "A greeter.".to_string()];
-
-        // When
-        let (is_final, module, consumed) = extract_class_options(&lines);
+        let (options, _, unrecognized) = read_options::<ClassOptions>(&body);
 
         // Then
-        assert!(!is_final);
-        assert_eq!(module.as_deref(), Some(""));
-        assert_eq!(consumed, 1);
+        assert_eq!(
+            options,
+            ClassOptions {
+                is_final: true,
+                module: Some("multiprocessing.managers".to_string()),
+            }
+        );
+        assert!(unrecognized.is_empty());
+    }
+    #[test]
+    fn test_class_options_read_nothing_from_a_plain_body() {
+        // Given
+        let body = ["A greeter."];
+
+        // When
+        let (options, _, unrecognized) = read_options::<ClassOptions>(&body);
+
+        // Then
+        assert_eq!(options, ClassOptions::default());
+        assert!(unrecognized.is_empty());
+    }
+    #[test]
+    fn test_class_options_read_a_bare_module_as_empty() {
+        // Given — real Sphinx's falsy-`modname` check: a bare `:module:`
+        // deliberately un-qualifies the object.
+        let body = [":module:", "A greeter."];
+
+        // When
+        let (options, _, _) = read_options::<ClassOptions>(&body);
+
+        // Then
+        assert_eq!(options.module.as_deref(), Some(""));
+    }
+    #[test]
+    fn test_parse_py_class_reads_noindex_instead_of_showing_it() {
+        // Given — `functions.rst` documents `bytearray` again under
+        // `:noindex:`, which used to be rendered as a paragraph of text.
+        let input = ".. class:: bytearray(source=b'')\n           bytearray(source, encoding)\n   :noindex:\n\n   Return a new array of bytes.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        let Some(Node::Directive(Directive::DomainObject(
+            object @ DomainObjectBody::PyClass {
+                signatures, body, ..
+            },
+        ))) = doc.nodes.first()
+        else {
+            panic!("Expected PyClass, got {:?}", doc.nodes);
+        };
+        assert!(object.no_index());
+        assert_eq!(signatures.as_slice().len(), 2);
+        assert_eq!(
+            body,
+            &[Node::Paragraph(vec![rinx_ast::InlineNode::Text(
+                "Return a new array of bytes.".to_string()
+            )])]
+        );
     }
     #[test]
     fn test_parse_creates_py_class_domain_object() {
@@ -179,8 +178,8 @@ mod tests {
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass {
             signatures,
             is_final,
-            module: _,
             body,
+            ..
         })) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["Greeter"]);
@@ -203,8 +202,8 @@ mod tests {
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass {
             signatures,
             is_final,
-            module: _,
             body,
+            ..
         })) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["Greeter(Base)"]);
@@ -228,6 +227,7 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass {
+            flags: _,
             signatures,
             is_final,
             module,
@@ -287,8 +287,8 @@ mod tests {
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyException {
             signatures,
             is_final,
-            module: _,
             body,
+            ..
         })) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["GreeterError"]);
@@ -311,8 +311,8 @@ mod tests {
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyException {
             signatures,
             is_final,
-            module: _,
             body,
+            ..
         })) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["InvalidNameError(GreeterError)"]);

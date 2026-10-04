@@ -20,11 +20,21 @@ pub(super) fn index_domain_object(
     // the single-name-per-`<dt>` loop below at all. Handled as its own early
     // branch rather than folded into the `is_module`/`uses_c_scope` chain.
     if let DomainObjectBody::StdCmdoption { signatures, .. } = obj {
-        for line in signatures.as_slice() {
+        // `:no-index:` drops the target and the index entry but keeps the
+        // body, exactly as on every other object type below.
+        let indexed_lines = if obj.no_index() {
+            &[][..]
+        } else {
+            signatures.as_slice()
+        };
+        for line in indexed_lines {
             for spec in rinx_ast::split_option_line_specs(line) {
                 let optname = rinx_ast::extract_option_name(&spec);
                 let qualified_name = scope.program.qualify(&optname);
                 index.insert_domain_object(obj.object_type(), &qualified_name, doc_path);
+                if obj.no_index_entry() {
+                    continue;
+                }
                 let anchor = rinx_ast::build_domain_object_key(obj.object_type(), &qualified_name);
                 index.genindex_entries.push(GenIndexEntry {
                     primary: format!("{qualified_name} ({})", obj.object_type().as_str()),

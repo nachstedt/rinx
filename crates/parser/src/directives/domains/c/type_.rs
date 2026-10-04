@@ -1,8 +1,7 @@
-use crate::blocks::parse_blocks;
+use super::super::body::parse_object_body;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 use rinx_ast::{CSignature, DomainObjectBody, NonEmptyVector};
 
 /// Parses a `.. c:type::` body — same common flags and shape as
@@ -20,22 +19,11 @@ pub(crate) fn parse_c_type(
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (no_index, no_index_entry, no_contents_entry, options_consumed) =
-        super::dispatch::extract_common_object_description_options(&unindented_lines);
-
-    let body_content: Vec<&str> = unindented_lines[options_consumed..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
-
+    let parsed = parse_object_body::<()>("c:type", body_lines, adornment_order, diagnostics, ctx);
     DomainObjectBody::CType {
         signatures,
-        no_index,
-        no_index_entry,
-        no_contents_entry,
-        body,
+        flags: parsed.flags,
+        body: parsed.content,
     }
 }
 
@@ -63,16 +51,12 @@ mod tests {
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::CType {
             signatures,
-            no_index,
-            no_index_entry,
-            no_contents_entry,
+            flags,
             body,
         })) = &doc.nodes[0]
         {
             assert_eq!(signature_texts(signatures), ["PyMemAllocatorDomain"]);
-            assert!(!no_index);
-            assert!(!no_index_entry);
-            assert!(!no_contents_entry);
+            assert_eq!(flags, &rinx_ast::DescriptionFlags::default());
             assert_eq!(body.len(), 1);
         } else {
             panic!("Expected CType, got {:?}", doc.nodes[0]);
@@ -108,11 +92,10 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CType {
-            no_index, ..
-        })) = &doc.nodes[0]
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CType { flags, .. })) =
+            &doc.nodes[0]
         {
-            assert!(no_index);
+            assert!(flags.has(rinx_ast::DescriptionFlag::NoIndex));
         } else {
             panic!("Expected CType, got {:?}", doc.nodes[0]);
         }

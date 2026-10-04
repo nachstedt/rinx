@@ -25,15 +25,14 @@ fn lookup_domain_object<'a>(index: &'a ProjectIndex, flat_key: &str) -> Option<&
 fn c_member(signature: &str) -> Node {
     Node::Directive(Directive::DomainObject(DomainObjectBody::CMember {
         signatures: NonEmptyVector::single(signature.into()),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: rinx_ast::DescriptionFlags::default(),
         body: vec![],
     }))
 }
 
 fn c_macro(signature: &str) -> Node {
     Node::Directive(Directive::DomainObject(DomainObjectBody::CMacro {
+        flags: rinx_ast::DescriptionFlags::default(),
         signatures: NonEmptyVector::single(signature.into()),
         body: vec![],
     }))
@@ -47,9 +46,7 @@ fn test_analyze_qualifies_bare_c_member_nested_under_c_struct() {
         vec![Node::Directive(Directive::DomainObject(
             DomainObjectBody::CStruct {
                 signatures: NonEmptyVector::single("Data".into()),
-                no_index: false,
-                no_index_entry: false,
-                no_contents_entry: false,
+                flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![c_member("int count")],
             },
         ))],
@@ -74,9 +71,7 @@ fn test_analyze_qualifies_bare_c_member_nested_under_c_union() {
         vec![Node::Directive(Directive::DomainObject(
             DomainObjectBody::CUnion {
                 signatures: NonEmptyVector::single("Number".into()),
-                no_index: false,
-                no_index_entry: false,
-                no_contents_entry: false,
+                flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![c_member("int as_int")],
             },
         ))],
@@ -125,11 +120,10 @@ fn test_analyze_c_function_nested_in_c_struct_is_qualified_by_it() {
         vec![Node::Directive(Directive::DomainObject(
             DomainObjectBody::CStruct {
                 signatures: NonEmptyVector::single("Data".into()),
-                no_index: false,
-                no_index_entry: false,
-                no_contents_entry: false,
+                flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![Node::Directive(Directive::DomainObject(
                     DomainObjectBody::CFunction {
+                        flags: rinx_ast::DescriptionFlags::default(),
                         signatures: NonEmptyVector::single("int helper(void)".into()),
                         body: vec![],
                     },
@@ -157,9 +151,7 @@ fn test_analyze_qualifies_c_macro_nested_under_c_type() {
         vec![Node::Directive(Directive::DomainObject(
             DomainObjectBody::CType {
                 signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
-                no_index: false,
-                no_index_entry: false,
-                no_contents_entry: false,
+                flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![c_macro("PYMEM_DOMAIN_RAW")],
             },
         ))],
@@ -186,9 +178,7 @@ fn test_analyze_c_namespace_null_inside_c_type_body_unqualifies_nested_macro() {
         vec![Node::Directive(Directive::DomainObject(
             DomainObjectBody::CType {
                 signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
-                no_index: false,
-                no_index_entry: false,
-                no_contents_entry: false,
+                flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![
                     Node::Directive(Directive::CNamespace { namespace: None }),
                     c_macro("PYMEM_DOMAIN_RAW"),
@@ -221,9 +211,7 @@ fn test_analyze_c_type_body_restores_scope_after_an_inner_namespace_reset() {
             }),
             Node::Directive(Directive::DomainObject(DomainObjectBody::CType {
                 signatures: NonEmptyVector::single("Inner".into()),
-                no_index: false,
-                no_index_entry: false,
-                no_contents_entry: false,
+                flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![Node::Directive(Directive::CNamespace { namespace: None })],
             })),
             c_macro("AFTER"),
@@ -309,11 +297,13 @@ fn test_analyze_c_function_nested_in_py_class_is_not_qualified_by_it() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyClass {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     module: None,
                     signatures: NonEmptyVector::single("Greeter".to_string()),
                     is_final: false,
                     body: vec![Node::Directive(Directive::DomainObject(
                         DomainObjectBody::CFunction {
+                            flags: rinx_ast::DescriptionFlags::default(),
                             signatures: NonEmptyVector::single("int helper(void)".into()),
                             body: vec![],
                         },
@@ -340,9 +330,7 @@ fn test_analyze_qualifies_bare_c_member_nested_under_c_type() {
         vec![Node::Directive(Directive::DomainObject(
             DomainObjectBody::CType {
                 signatures: NonEmptyVector::single("Data".into()),
-                no_index: false,
-                no_index_entry: false,
-                no_contents_entry: false,
+                flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![c_member("int count")],
             },
         ))],
@@ -365,9 +353,7 @@ fn test_analyze_registers_bare_c_type_without_nesting() {
         vec![Node::Directive(Directive::DomainObject(
             DomainObjectBody::CType {
                 signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
-                no_index: false,
-                no_index_entry: false,
-                no_contents_entry: false,
+                flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![],
             },
         ))],
@@ -396,9 +382,7 @@ fn test_analyze_registers_a_function_pointer_typedef_under_its_declared_name() {
                         "int (*Py_tracefunc)(PyObject *obj, PyFrameObject *frame, int what, PyObject *arg)"
                             .into(),
                     ),
-                    no_index: false,
-                    no_index_entry: false,
-                    no_contents_entry: false,
+                    flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
             ))],
@@ -423,18 +407,14 @@ fn test_analyze_registers_slot_typedefs_with_pointer_return_types() {
         vec![
             Node::Directive(Directive::DomainObject(DomainObjectBody::CType {
                 signatures: NonEmptyVector::single("PyObject *(*unaryfunc)(PyObject *)".into()),
-                no_index: false,
-                no_index_entry: false,
-                no_contents_entry: false,
+                flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![],
             })),
             Node::Directive(Directive::DomainObject(DomainObjectBody::CType {
                 signatures: NonEmptyVector::single(
                     "int (*visitproc)(PyObject *object, void *arg)".into(),
                 ),
-                no_index: false,
-                no_index_entry: false,
-                no_contents_entry: false,
+                flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![],
             })),
         ],
@@ -461,9 +441,7 @@ fn test_analyze_no_index_suppresses_target_and_genindex_entry_for_c_type() {
         vec![Node::Directive(Directive::DomainObject(
             DomainObjectBody::CType {
                 signatures: NonEmptyVector::single("Hidden".into()),
-                no_index: true,
-                no_index_entry: false,
-                no_contents_entry: false,
+                flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
                 body: vec![],
             },
         ))],
