@@ -1,7 +1,7 @@
 use crate::{
     DocumentNumbers, DocumentOutline, DocumentToctree, DomainIndex, ElementNumbers,
     EntityFieldHistory, EntityRecord, EntityUpdateRecord, EquationLocation, ExternalInventory,
-    GenIndexEntry, GenIndexRedirect, ModuleEntry, NumberingStep, NumrefTarget, TargetLocation,
+    GenIndexEntry, GenIndexRedirect, ModuleEntry, NumberingStep, NumrefTarget,
 };
 use rinx_ast::{AttributeValue, EntityId, ObjectType, SectnumOptions, TargetName};
 use serde::{Deserialize, Serialize};
@@ -10,8 +10,14 @@ use std::collections::{BTreeMap, BTreeSet};
 /// A global symbol table built from all documents in the project.
 #[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ProjectIndex {
-    /// Maps target names to document paths.
-    pub targets: BTreeMap<TargetName, TargetLocation>,
+    /// Maps every internal target — a `.. _label:`, a `:name:`, an entity —
+    /// to the path of the document defining it.
+    ///
+    /// External targets (`.. _name: https://…`) are not here: docutils keeps
+    /// one local to the document that writes it, so two documents may give
+    /// one name different URLs, and the renderer reads them from the
+    /// document itself.
+    pub targets: BTreeMap<TargetName, String>,
     /// Maps an internal target to the title of the section it labels — the
     /// text a `:ref:` written without an explicit title shows, as in Sphinx.
     ///
@@ -985,10 +991,9 @@ mod tests {
     fn test_project_index_round_trips_through_json() {
         // Given — a populated index exercising every field
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("section-1"),
-            TargetLocation::Internal("api.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("section-1"), "api.rst".to_string());
         index
             .document_titles
             .insert("api.rst".to_string(), "API".to_string());

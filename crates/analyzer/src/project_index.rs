@@ -296,9 +296,7 @@ mod tests {
         // Then
         assert_eq!(
             index.targets.get(&rinx_ast::TargetName::new("main-toc")),
-            Some(&rinx_index::TargetLocation::Internal(
-                "index.rst".to_string()
-            ))
+            Some(&"index.rst".to_string())
         );
     }
 

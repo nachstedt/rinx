@@ -225,7 +225,7 @@ mod tests {
     use super::*;
     use crate::resolution::{DomainObjectResolver, OptionResolver};
     use rinx_ast::{CObjectType, ObjectType, PyObjectType, TargetName};
-    use rinx_index::{EquationLocation, TargetLocation};
+    use rinx_index::EquationLocation;
 
     /// Renders `` :any:`written` `` from `index.rst`, returning the HTML and
     /// what was reported.
@@ -267,10 +267,9 @@ mod tests {
     fn test_a_label_hit_shows_its_section_title() {
         // Given
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("install"),
-            TargetLocation::Internal("guide.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("install"), "guide.rst".to_string());
         index
             .target_titles
             .insert(TargetName::new("install"), "Installing".to_string());
@@ -488,10 +487,9 @@ mod tests {
     fn test_an_ambiguous_reference_links_nothing_and_names_every_candidate() {
         // Given — a label and a Python function both called `shared`
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("shared"),
-            TargetLocation::Internal("other.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("shared"), "other.rst".to_string());
         index.insert_domain_object(ObjectType::Py(PyObjectType::Function), "shared", "api.rst");
 
         // When

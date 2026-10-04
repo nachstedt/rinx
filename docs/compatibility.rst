@@ -88,8 +88,14 @@ Inline markup
      - ✅
      -
    * - Named and anonymous hyperlink references
-     - ✅
-     -
+     - 🔶
+     - - A named reference resolves within its own document, as in docutils:
+         against its external targets, labels and section titles.
+       - A name given two different targets in one document links nowhere, but
+         is not yet reported as docutils' "Duplicate explicit target name".
+       - Embedded relative URIs (``<#anchor>``), embedded aliases
+         (``<name_>``) and link text wrapped over a line break are not
+         recognised.
    * - Smart typography (``---``, ``--``, ``...``)
      - ✅
      -

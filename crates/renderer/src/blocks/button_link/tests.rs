@@ -1,7 +1,7 @@
 use rinx_ast::{
     ButtonFlag, ButtonLink, ButtonTarget, Directive, InlineNode, SemanticColor, TextAlign,
 };
-use rinx_index::{ProjectIndex, TargetLocation};
+use rinx_index::ProjectIndex;
 
 use crate::blocks::render_test_support::render_directive_html;
 
@@ -190,7 +190,7 @@ fn test_a_reference_in_the_label_is_flattened_to_its_text() {
     let mut index = ProjectIndex::default();
     index.targets.insert(
         rinx_ast::TargetName::new("the-guide"),
-        TargetLocation::Internal("guide.rst".to_string()),
+        "guide.rst".to_string(),
     );
     let mut link = button();
     link.label = vec![

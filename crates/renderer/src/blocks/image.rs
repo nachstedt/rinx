@@ -10,12 +10,10 @@
 use std::fmt::Write as _;
 
 use rinx_ast::{AssetUri, ImageAlign, ImageLoading, ImageOptions, ImageTarget};
-use rinx_index::TargetLocation;
 
 use crate::RenderCtx;
 use crate::image_error::ImageError;
 use crate::{BrokenLink, BrokenLinkKind};
-use rinx_index::relative_doc_href;
 
 use crate::asset_href::{AssetDir, relative_asset_href};
 
@@ -130,27 +128,31 @@ pub(crate) fn render_image_element(
     let _ = write!(html, " />");
 }
 
-/// Resolves an image's `:target:` into an href, reporting a named target that
-/// resolves to nothing exactly as a broken `:ref:` is reported.
-fn target_href(target: &ImageTarget, options: &ImageOptions, ctx: &mut RenderCtx) -> String {
+/// Resolves an image's `:target:` into an href. A named target that resolves
+/// to nothing is reported exactly as a broken hyperlink is, and yields its
+/// `#name` fallback as the error.
+///
+/// A named target resolves as a `` `name`_ `` reference does, so
+/// `:target: python_` reaches the document's own `.. _python: https://…`.
+fn target_href(
+    target: &ImageTarget,
+    options: &ImageOptions,
+    ctx: &mut RenderCtx,
+) -> Result<String, String> {
     match target {
-        ImageTarget::Uri(uri) => uri.clone(),
-        ImageTarget::Reference(name) => {
-            if let Some(TargetLocation::Internal(target_path)) = ctx.index.targets.get(name) {
-                format!(
-                    "{}#{}",
-                    relative_doc_href(target_path, ctx.doc_path),
-                    name.as_str()
-                )
-            } else {
+        ImageTarget::Uri(uri) => Ok(uri.clone()),
+        ImageTarget::Reference(name) => ctx
+            .hyperlink_targets
+            .href(name)
+            .map(str::to_string)
+            .ok_or_else(|| {
                 ctx.broken_links.push(BrokenLink {
                     kind: BrokenLinkKind::Hyperlink,
                     target: name.as_str().to_string(),
                     span: options.span,
                 });
                 format!("#{}", name.as_str())
-            }
-        }
+            }),
     }
 }
 
@@ -170,14 +172,15 @@ pub(crate) fn render_linked_image(
         return;
     };
 
-    let href = target_href(&target, options, ctx);
-    let href_attr = html_escape::encode_double_quoted_attribute(&href);
-    let broken = matches!(target, ImageTarget::Reference(ref name)
-        if !matches!(ctx.index.targets.get(name), Some(TargetLocation::Internal(_))));
-    if broken {
-        let _ = write!(html, "<a href=\"{href_attr}\" class=\"broken-link\">");
-    } else {
-        let _ = write!(html, "<a href=\"{href_attr}\">");
+    match target_href(&target, options, ctx) {
+        Ok(href) => {
+            let href_attr = html_escape::encode_double_quoted_attribute(&href);
+            let _ = write!(html, "<a href=\"{href_attr}\">");
+        }
+        Err(fallback) => {
+            let href_attr = html_escape::encode_double_quoted_attribute(&fallback);
+            let _ = write!(html, "<a href=\"{href_attr}\" class=\"broken-link\">");
+        }
     }
     render_image_element(html, options, extra_classes, ctx);
     let _ = write!(html, "</a>");
@@ -425,25 +428,87 @@ mod tests {
     }
 
     #[test]
-    fn test_renders_a_resolved_reference_target_as_a_link() {
+    fn test_renders_a_reference_to_a_label_of_this_document_as_a_link() {
         // Given
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("some-section"),
-            TargetLocation::Internal("other.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("some-section"), "index.rst".to_string());
         let mut options = image("logo.png");
         options.target = Some(ImageTarget::new("some-section_"));
+        let doc = rinx_ast::Document::new(
+            "index.rst".to_string(),
+            vec![rinx_ast::Node::Directive(Directive::Image(Box::new(
+                options,
+            )))],
+        );
 
         // When
-        let html = render_directive_html(&Directive::Image(Box::new(options)), &index, "index.rst");
+        let output = crate::render(&doc, &index, &doc.path);
 
         // Then
         assert!(
-            html.contains("<a href=\"other.html#some-section\">"),
-            "unexpected: {html}"
+            output.html.contains("<a href=\"#some-section\">"),
+            "unexpected: {}",
+            output.html
         );
-        assert!(!html.contains("broken-link"), "unexpected: {html}");
+        assert!(output.broken_links.is_empty());
+    }
+
+    #[test]
+    fn test_marks_a_reference_to_a_label_of_another_document_as_broken() {
+        // Given — as a `` `name`_ `` would be; `:ref:` reaches other pages.
+        let mut index = ProjectIndex::default();
+        index
+            .targets
+            .insert(TargetName::new("some-section"), "other.rst".to_string());
+        let mut options = image("logo.png");
+        options.target = Some(ImageTarget::new("some-section_"));
+        let doc = rinx_ast::Document::new(
+            "index.rst".to_string(),
+            vec![rinx_ast::Node::Directive(Directive::Image(Box::new(
+                options,
+            )))],
+        );
+
+        // When
+        let output = crate::render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(
+            output.html.contains("class=\"broken-link\""),
+            "unexpected: {}",
+            output.html
+        );
+        assert_eq!(output.broken_links.len(), 1);
+    }
+
+    #[test]
+    fn test_renders_a_reference_to_the_documents_external_target_as_a_link() {
+        // Given — `:target: python_` naming `.. _python: https://…` on the page.
+        let mut options = image("logo.png");
+        options.target = Some(ImageTarget::new("python_"));
+        let doc = rinx_ast::Document::new(
+            "index.rst".to_string(),
+            vec![
+                rinx_ast::Node::Directive(Directive::Image(Box::new(options))),
+                rinx_ast::Node::Target {
+                    name: TargetName::new("python"),
+                    uri: Some("https://python.org".to_string()),
+                },
+            ],
+        );
+
+        // When
+        let output = crate::render(&doc, &ProjectIndex::default(), &doc.path);
+
+        // Then
+        assert!(
+            output.html.contains("<a href=\"https://python.org\">"),
+            "unexpected: {}",
+            output.html
+        );
+        assert!(output.broken_links.is_empty());
     }
 
     #[test]

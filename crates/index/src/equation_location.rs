@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 
 /// Where a labeled `.. math::` lives, and which number it was given.
 ///
-/// Unlike [`crate::TargetLocation`], this carries a payload beyond the
-/// location: an `:eq:` reference renders the equation's *number* as its link
+/// Unlike a label in [`crate::ProjectIndex::targets`], which maps to its
+/// document alone, this carries a payload beyond the location: an `:eq:` reference renders the equation's *number* as its link
 /// text, so the number has to be resolved centrally — the referencing document
 /// cannot count the equations of the document it points into.
 ///

@@ -22,6 +22,13 @@ The body can also contain a bullet list:
 
    * `Sphinx seealso documentation <https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-seealso>`_
    * The :ref:`version-changes` page for version-related directives.
+   * Sphinx_ itself — here, its page on directives.
+
+.. _Sphinx: https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html
+
+That last ``Sphinx_`` link goes to this page's own target, while the
+:ref:`hyperlinks <hyperlinks-own-targets>` page defines ``Sphinx`` as the
+project's home page: an external target belongs to the page it is written on.
 
 Multiple Paragraphs
 -------------------

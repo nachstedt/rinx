@@ -176,7 +176,7 @@ mod tests {
     use rinx_ast::{
         AssetUri, Directive, Document, Figure, ImageOptions, InlineNode, Node, SectionId,
     };
-    use rinx_index::{DocumentNumbers, ElementNumbers, NumrefTarget, TargetLocation};
+    use rinx_index::{DocumentNumbers, ElementNumbers, NumrefTarget};
 
     use crate::config::SiteConfig;
 
@@ -205,10 +205,9 @@ mod tests {
             },
         );
         for label in ["fig-a", "fig-orphan", "usage"] {
-            index.targets.insert(
-                TargetName::new(label),
-                TargetLocation::Internal("guide.rst".to_string()),
-            );
+            index
+                .targets
+                .insert(TargetName::new(label), "guide.rst".to_string());
         }
         index
             .target_titles

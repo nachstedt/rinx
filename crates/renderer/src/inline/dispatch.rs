@@ -257,8 +257,7 @@ fn render_hyperlink_reference(
                     target,
                     span: *span,
                 },
-                ctx.index,
-                ctx.doc_path,
+                ctx.hyperlink_targets,
                 ctx.broken_links,
             );
         }

@@ -87,8 +87,8 @@ the stylesheet.
 Making the image a link
 -----------------------
 
-``:target:`` accepts a URL, or the name of a target elsewhere in the project
-written with a trailing underscore.
+``:target:`` accepts a URL, or the name of a target on this page written
+with a trailing underscore — resolved as a named hyperlink reference is.
 
 .. image:: data/logo.svg
    :alt: The logo, linking to a website
@@ -101,6 +101,14 @@ This paragraph is a link target, and the next image points at it.
 .. image:: data/logo.svg
    :alt: The logo, linking to a target in this document
    :target: the-image-target_
+
+The name may also be an external target of this page, as in a hyperlink:
+
+.. _sphinx-home: https://www.sphinx-doc.org/
+
+.. image:: data/logo.svg
+   :alt: The logo, linking through an external target
+   :target: sphinx-home_
 
 Referring to an image
 ---------------------

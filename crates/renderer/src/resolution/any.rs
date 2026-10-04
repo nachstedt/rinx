@@ -32,7 +32,7 @@
 //! the first listing wins — intersphinx reports no ambiguity for `:any:`.
 
 use rinx_ast::{Domain, InventorySelector, ObjectType, TargetName, TargetSearchOrder};
-use rinx_index::{EquationLocation, ProjectIndex, SpecialPage, TargetLocation};
+use rinx_index::{EquationLocation, ProjectIndex, SpecialPage};
 use rinx_scope::Scope;
 
 use super::{
@@ -148,7 +148,7 @@ impl<'a> AnyResolver<'_, 'a> {
     ) -> Vec<AnyHit<'a>> {
         let name = TargetName::new(target);
         let mut hits = Vec::new();
-        if let Some(TargetLocation::Internal(label_doc)) = self.index.targets.get(&name) {
+        if let Some(label_doc) = self.index.targets.get(&name) {
             hits.push(AnyHit::Label {
                 name: name.clone(),
                 doc_path: label_doc,
@@ -265,10 +265,9 @@ mod tests {
     fn test_resolve_finds_a_label_case_insensitively() {
         // Given
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("install"),
-            TargetLocation::Internal("guide.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("install"), "guide.rst".to_string());
 
         // When
         let resolution = resolve(&index, "INSTALL");
@@ -306,10 +305,9 @@ mod tests {
     fn test_resolve_prefers_a_documents_label_over_a_special_page() {
         // Given
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("genindex"),
-            TargetLocation::Internal("guide.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("genindex"), "guide.rst".to_string());
 
         // When
         let resolution = resolve(&index, "genindex");
@@ -322,19 +320,6 @@ mod tests {
                 doc_path: "guide.rst",
             }])
         );
-    }
-
-    #[test]
-    fn test_resolve_ignores_an_external_hyperlink_target() {
-        // Given — `.. _python: https://python.org`, which `:ref:` cannot reach
-        let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("python"),
-            TargetLocation::External("https://python.org".to_string()),
-        );
-
-        // When / Then
-        assert_eq!(resolve(&index, "python"), AnyResolution::NotFound);
     }
 
     #[test]
@@ -481,10 +466,9 @@ mod tests {
         // Given — Sphinx's own example of an ambiguous `:any:`: a label, a C
         // function and a Python function all called `shared`
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("shared"),
-            TargetLocation::Internal("other.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("shared"), "other.rst".to_string());
         index.insert_domain_object(py(PyObjectType::Function), "shared", "other.rst");
         index.insert_domain_object(ObjectType::C(CObjectType::Function), "shared", "other.rst");
 
@@ -524,10 +508,9 @@ mod tests {
     fn test_resolve_searches_no_local_target_for_an_external_selector() {
         // Given — a local label `dict`, and Python's inventory
         let mut index = crate::test_support::index_linking_into_python();
-        index.targets.insert(
-            TargetName::new("dict"),
-            TargetLocation::Internal("local.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("dict"), "local.rst".to_string());
 
         // When
         let resolution = resolve_with(

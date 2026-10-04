@@ -3,7 +3,7 @@ use rinx_ast::{
 };
 use rinx_index::{
     EntityUpdateRecord, EquationLocation, GenIndexEntry, GenIndexRedirect, GenIndexRedirectKind,
-    ProjectIndex, TargetLocation,
+    ProjectIndex,
 };
 use rinx_scope::Scope;
 
@@ -177,9 +177,7 @@ fn index_entity_and_its_sections(
     // any role being declared — which is what makes a schema's roles optional
     // sugar rather than an obligation.
     let name = TargetName::new(entity.id.as_str());
-    index
-        .targets
-        .insert(name.clone(), TargetLocation::Internal(doc_path.to_string()));
+    index.targets.insert(name.clone(), doc_path.to_string());
     // Its anchor is not its name, so a `:ref:` must be told where it is.
     index
         .target_anchors
@@ -223,12 +221,11 @@ pub(super) fn index_nodes(
     record_target_titles(nodes, index);
     for node in nodes {
         match node {
-            Node::Target { name, uri } => {
-                let location = uri.as_ref().map_or_else(
-                    || TargetLocation::Internal(doc_path.to_string()),
-                    |url| TargetLocation::External(url.clone()),
-                );
-                index.targets.insert(name.clone(), location);
+            // An external target (`.. _name: https://…`) is local to its
+            // document in docutils, so it stays out of the project index:
+            // the renderer reads it from the document it is written in.
+            Node::Target { name, uri: None } => {
+                index.targets.insert(name.clone(), doc_path.to_string());
             }
             Node::Directive(Directive::Toctree(toctree)) => {
                 // `:name:` makes the toctree itself a `:ref:` target. Recorded
@@ -239,7 +236,7 @@ pub(super) fn index_nodes(
                 if let Some(name) = &toctree.options.name {
                     index
                         .targets
-                        .insert(name.clone(), TargetLocation::Internal(doc_path.to_string()));
+                        .insert(name.clone(), doc_path.to_string());
                 }
             }
             Node::Directive(Directive::Entity(entity)) => {
@@ -538,10 +535,9 @@ fn index_sectnum(options: &rinx_ast::SectnumOptions, doc_path: &str, index: &mut
 
 fn register_directive_name(name: Option<&TargetName>, doc_path: &str, index: &mut ProjectIndex) {
     if let Some(target_name) = name {
-        index.targets.insert(
-            target_name.clone(),
-            TargetLocation::Internal(doc_path.to_string()),
-        );
+        index
+            .targets
+            .insert(target_name.clone(), doc_path.to_string());
     }
 }
 

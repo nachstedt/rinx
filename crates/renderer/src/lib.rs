@@ -19,6 +19,7 @@ pub mod config;
 mod embedded_assets;
 mod empty_listing_error;
 mod highlight;
+mod hyperlink_target;
 mod image_error;
 mod inline;
 mod math;
@@ -118,6 +119,9 @@ pub(crate) struct RenderCtx<'a> {
     pub doc_path: &'a str,
     pub anon_targets: &'a [String],
     pub anon_index: &'a mut usize,
+    /// The targets a `` `name`_ `` written in this document may reach, which
+    /// docutils keeps local to it — see [`hyperlink_target`].
+    pub hyperlink_targets: &'a hyperlink_target::DocumentHyperlinkTargets,
     pub original_doc_path: &'a str,
     pub broken_links: &'a mut Vec<BrokenLink>,
     pub object_type_mismatches: &'a mut Vec<ObjectTypeMismatch>,
@@ -287,6 +291,8 @@ pub fn render_with_assets(
     let math = MathRenderer::new();
     let highlighter = Highlighter::new();
     let section_ids = rinx_ast::allocate_section_ids(&doc.nodes);
+    let hyperlink_targets =
+        hyperlink_target::DocumentHyperlinkTargets::collect(doc, index, &section_ids);
     let mut contents_id_allocator = rinx_ast::SectionIdAllocator::new();
     for id in section_ids.values() {
         contents_id_allocator.seed(id);
@@ -304,6 +310,7 @@ pub fn render_with_assets(
         doc_path,
         anon_targets: &anon_targets,
         anon_index: &mut anon_index,
+        hyperlink_targets: &hyperlink_targets,
         original_doc_path: &doc.path,
         broken_links: &mut broken_links,
         object_type_mismatches: &mut object_type_mismatches,
@@ -706,7 +713,7 @@ mod tests {
         let mut index = ProjectIndex::default();
         index.targets.insert(
             TargetName::new("other-section"),
-            rinx_index::TargetLocation::Internal("other_file.rst".to_string()),
+            "other_file.rst".to_string(),
         );
 
         // When
@@ -733,7 +740,7 @@ mod tests {
         let mut index = ProjectIndex::default();
         index.targets.insert(
             TargetName::new("other-section"),
-            rinx_index::TargetLocation::Internal("other_file.rst".to_string()),
+            "other_file.rst".to_string(),
         );
 
         // When
@@ -800,7 +807,7 @@ mod tests {
         let mut index = ProjectIndex::default();
         index.targets.insert(
             TargetName::new("target-in-a"),
-            rinx_index::TargetLocation::Internal("examples/team_a/index.rst".to_string()),
+            "examples/team_a/index.rst".to_string(),
         );
 
         // When
@@ -817,23 +824,56 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Paragraph(vec![rinx_ast::InlineNode::Hyperlink {
-                text: "Python".to_string(),
-                target: "Python".to_string(),
-                span: None,
-            }])],
-        );
-        let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("Python"),
-            rinx_index::TargetLocation::External("https://python.org".to_string()),
+            vec![
+                Node::Paragraph(vec![rinx_ast::InlineNode::Hyperlink {
+                    text: "Python".to_string(),
+                    target: "Python".to_string(),
+                    span: None,
+                }]),
+                Node::Target {
+                    name: TargetName::new("Python"),
+                    uri: Some("https://python.org".to_string()),
+                },
+            ],
         );
 
         // When
-        let result = render(&doc, &index, &doc.path).html;
+        let result = render(&doc, &ProjectIndex::default(), &doc.path).html;
 
         // Then
         assert_eq!(result, "<p><a href=\"https://python.org\">Python</a></p>\n");
+    }
+    #[test]
+    fn test_render_links_each_documents_own_external_target() {
+        // Given — CPython's `Python Packaging User Guide`_, which two
+        // documents point at two different pages.
+        let page = |path: &str, url: &str| {
+            Document::new(
+                path.to_string(),
+                vec![
+                    Node::Paragraph(vec![rinx_ast::InlineNode::Hyperlink {
+                        text: "guide".to_string(),
+                        target: "Python Packaging User Guide".to_string(),
+                        span: None,
+                    }]),
+                    Node::Target {
+                        name: TargetName::new("Python Packaging User Guide"),
+                        uri: Some(url.to_string()),
+                    },
+                ],
+            )
+        };
+        let distributing = page("distributing.rst", "https://packaging.python.org/");
+        let mac = page("mac.rst", "https://packaging.python.org/tutorials/");
+        let index = ProjectIndex::default();
+
+        // When
+        let distributing_html = render(&distributing, &index, &distributing.path).html;
+        let mac_html = render(&mac, &index, &mac.path).html;
+
+        // Then
+        assert!(distributing_html.contains("href=\"https://packaging.python.org/\""));
+        assert!(mac_html.contains("href=\"https://packaging.python.org/tutorials/\""));
     }
     #[test]
     fn test_render_formats_direct_uri_hyperlink() {

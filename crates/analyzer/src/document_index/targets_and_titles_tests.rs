@@ -57,7 +57,7 @@ fn test_analyze_populates_targets_for_target_nodes() {
     assert_eq!(index.targets.len(), 1);
     assert_eq!(
         index.targets.get(&TargetName::new("section-1")).unwrap(),
-        &TargetLocation::Internal("docs/my-file.rst".to_string())
+        &"docs/my-file.rst".to_string()
     );
 }
 
@@ -223,7 +223,7 @@ fn test_analyze_registers_target_nested_in_table_cell() {
     // Then
     assert_eq!(
         index.targets.get(&TargetName::new("nested-target")),
-        Some(&TargetLocation::Internal("test.rst".to_string()))
+        Some(&"test.rst".to_string())
     );
 }
 
@@ -252,7 +252,7 @@ fn test_analyze_registers_list_table_name_as_target() {
     // Then
     assert_eq!(
         index.targets.get(&TargetName::new("fruit-table")),
-        Some(&TargetLocation::Internal("test.rst".to_string()))
+        Some(&"test.rst".to_string())
     );
 }
 
@@ -305,7 +305,7 @@ fn test_analyze_registers_table_directive_name_as_target() {
     // Then
     assert_eq!(
         index.targets.get(&TargetName::new("wrapped-table")),
-        Some(&TargetLocation::Internal("test.rst".to_string()))
+        Some(&"test.rst".to_string())
     );
 }
 
@@ -350,11 +350,11 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
     // Then
     assert_eq!(
         index.targets.get(&TargetName::new("in-header")),
-        Some(&TargetLocation::Internal("test.rst".to_string()))
+        Some(&"test.rst".to_string())
     );
     assert_eq!(
         index.targets.get(&TargetName::new("in-body")),
-        Some(&TargetLocation::Internal("test.rst".to_string()))
+        Some(&"test.rst".to_string())
     );
 }
 
@@ -389,7 +389,7 @@ fn test_analyze_registers_code_block_name_as_target() {
     // Then — a `:ref:` can reach it, exactly as it can reach a named table
     assert_eq!(
         index.targets.get(&TargetName::new("my-code")),
-        Some(&TargetLocation::Internal("test.rst".to_string()))
+        Some(&"test.rst".to_string())
     );
 }
 
@@ -433,7 +433,7 @@ fn test_analyze_registers_image_name_as_target() {
     // Then — a `:ref:` can reach it, exactly as it can reach a named table
     assert_eq!(
         index.targets.get(&TargetName::new("the-logo")),
-        Some(&TargetLocation::Internal("test.rst".to_string()))
+        Some(&"test.rst".to_string())
     );
 }
 
@@ -463,7 +463,7 @@ fn test_analyze_registers_figure_name_as_target() {
     // Then
     assert_eq!(
         index.targets.get(&TargetName::new("the-figure")),
-        Some(&TargetLocation::Internal("test.rst".to_string()))
+        Some(&"test.rst".to_string())
     );
 }
 
@@ -488,7 +488,7 @@ fn test_analyze_indexes_targets_inside_a_figure_legend() {
     // Then
     assert_eq!(
         index.targets.get(&TargetName::new("in-legend")),
-        Some(&TargetLocation::Internal("test.rst".to_string()))
+        Some(&"test.rst".to_string())
     );
 }
 
@@ -530,7 +530,7 @@ fn test_analyze_registers_a_diagram_name_as_target() {
     // Then
     assert_eq!(
         index.targets.get(&TargetName::new("retry-flow")),
-        Some(&TargetLocation::Internal("test.rst".to_string()))
+        Some(&"test.rst".to_string())
     );
 }
 
@@ -566,7 +566,7 @@ fn test_analyze_registers_a_diagram_name_nested_in_an_admonition() {
     // Then
     assert_eq!(
         index.targets.get(&TargetName::new("nested-flow")),
-        Some(&TargetLocation::Internal("test.rst".to_string()))
+        Some(&"test.rst".to_string())
     );
 }
 
@@ -584,7 +584,7 @@ fn test_analyze_registers_entity_table_name_as_target() {
     // Then
     assert_eq!(
         index.targets.get(&TargetName::new("every-requirement")),
-        Some(&TargetLocation::Internal("test.rst".to_string()))
+        Some(&"test.rst".to_string())
     );
 }
 
@@ -615,7 +615,7 @@ fn test_analyze_registers_dropdown_name_as_target() {
     // Then
     assert_eq!(
         index.targets.get(&TargetName::new("the-dropdown")),
-        Some(&TargetLocation::Internal("test.rst".to_string()))
+        Some(&"test.rst".to_string())
     );
 }
 
@@ -640,7 +640,7 @@ fn test_analyze_indexes_targets_inside_a_dropdown_body() {
     // Then
     assert_eq!(
         index.targets.get(&TargetName::new("in-dropdown")),
-        Some(&TargetLocation::Internal("test.rst".to_string()))
+        Some(&"test.rst".to_string())
     );
 }
 
@@ -669,7 +669,7 @@ fn test_analyze_registers_contents_name_as_target() {
     // Then — a `:ref:` can reach it, exactly as it can reach a named toctree
     assert_eq!(
         index.targets.get(&TargetName::new("main-toc")),
-        Some(&TargetLocation::Internal("test.rst".to_string()))
+        Some(&"test.rst".to_string())
     );
 }
 
@@ -940,6 +940,35 @@ fn test_analyze_records_no_title_for_an_external_hyperlink_target() {
 
     // Then
     assert!(index.target_titles.is_empty());
+}
+
+#[test]
+fn test_analyze_leaves_an_external_hyperlink_target_out_of_the_index() {
+    // Given — docutils keeps `.. _python: https://…` local to this document,
+    // so another document may give `python` a different URL.
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![
+            Node::Target {
+                name: TargetName::new("python"),
+                uri: Some("https://python.org".to_string()),
+            },
+            label("installing"),
+        ],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index
+            .targets
+            .keys()
+            .map(TargetName::as_str)
+            .collect::<Vec<_>>(),
+        ["installing"]
+    );
 }
 
 #[test]

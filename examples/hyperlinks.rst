@@ -40,6 +40,20 @@ Ordinary identifiers that merely contain underscores, such as
 treated as references, since they don't end in a trailing underscore at a
 word boundary.
 
+.. _hyperlinks-own-targets:
+
+Targets Belong to Their Page
+============================
+
+An external target is local to the page that writes it, as in docutils:
+the :doc:`seealso` page defines its own ``Sphinx`` target with a different
+URL, and each page's ``Sphinx_`` links use that page's definition. A named
+reference never reaches another page — that is what ``:ref:`` is for, as in
+:ref:`home-index`.
+
+Section titles are targets of their own page too: `Embedded URIs`_ links to
+the section above.
+
 Case Insensitivity and Normalization
 ====================================
 
