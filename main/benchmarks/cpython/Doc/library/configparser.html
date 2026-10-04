@@ -1175,9 +1175,8 @@ False</pre></div>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:configparser.configparser.optionxform"><code class="sig-name">ConfigParser.optionxform(option)</code></dt>
-  <dd><p>:noindex:</p>
-<p>This method transforms option names on every read, get, or set
+  <dt><code class="sig-name">ConfigParser.optionxform(option)</code></dt>
+  <dd><p>This method transforms option names on every read, get, or set
 operation.  The default converts the name to lowercase.  This also
 means that when a configuration file gets written, all keys will be
 lowercase.  Override this method if that's unsuitable.
@@ -1361,13 +1360,7 @@ interpolation if an option used is not defined elsewhere. :</p>
 <a id="configparser-objects"></a>
 <h2 id="configparser-objects">ConfigParser Objects</h2>
 <dl class="py class">
-  <dt id="py:class:configparser.configparser"><em class="property">class</em> <code class="sig-name">ConfigParser(defaults=None, dict_type=dict, allow_no_value=False, *, \</code></dt>
-  <dt id="py:class:configparser.delimiters="><em class="property">class</em> <code class="sig-name">delimiters=('=', ':'), comment_prefixes=('#', ';'), \</code></dt>
-  <dt id="py:class:configparser.\"><em class="property">class</em> <code class="sig-name">inline_comment_prefixes=None, strict=True, \</code></dt>
-  <dt id="py:class:configparser.\"><em class="property">class</em> <code class="sig-name">empty_lines_in_values=True, \</code></dt>
-  <dt id="py:class:configparser.\"><em class="property">class</em> <code class="sig-name">default_section=configparser.DEFAULTSECT, \</code></dt>
-  <dt id="py:class:configparser.interpolation=basicinterpolation"><em class="property">class</em> <code class="sig-name">interpolation=BasicInterpolation(), converters={}, \</code></dt>
-  <dt id="py:class:configparser.allow_unnamed_section=false)"><em class="property">class</em> <code class="sig-name">allow_unnamed_section=False)</code></dt>
+  <dt id="py:class:configparser.configparser"><em class="property">class</em> <code class="sig-name">ConfigParser(defaults=None, dict_type=dict, allow_no_value=False, *, delimiters=('=', ':'), comment_prefixes=('#', ';'), inline_comment_prefixes=None, strict=True, empty_lines_in_values=True, default_section=configparser.DEFAULTSECT, interpolation=BasicInterpolation(), converters={}, allow_unnamed_section=False)</code></dt>
   <dd><p>The main configuration parser.  When <em>defaults</em> is given, it is initialized
 into the dictionary of intrinsic defaults.  When <em>dict_type</em> is given, it
 will be used to create the dictionary objects for the list of sections, for
@@ -1723,14 +1716,7 @@ is used.</p>
 <a id="rawconfigparser-objects"></a>
 <h2 id="rawconfigparser-objects">RawConfigParser Objects</h2>
 <dl class="py class">
-  <dt id="py:class:configparser.rawconfigparser"><em class="property">class</em> <code class="sig-name">RawConfigParser(defaults=None, dict_type=dict, \</code></dt>
-  <dt id="py:class:configparser.delimiters="><em class="property">class</em> <code class="sig-name">allow_no_value=False, *, delimiters=('=', ':'), \</code></dt>
-  <dt id="py:class:configparser.comment_prefixes="><em class="property">class</em> <code class="sig-name">comment_prefixes=('#', ';'), \</code></dt>
-  <dt id="py:class:configparser.\"><em class="property">class</em> <code class="sig-name">inline_comment_prefixes=None, strict=True, \</code></dt>
-  <dt id="py:class:configparser.\"><em class="property">class</em> <code class="sig-name">empty_lines_in_values=True, \</code></dt>
-  <dt id="py:class:configparser.\"><em class="property">class</em> <code class="sig-name">default_section=configparser.DEFAULTSECT, \</code></dt>
-  <dt id="py:class:configparser.interpolation=basicinterpolation"><em class="property">class</em> <code class="sig-name">interpolation=BasicInterpolation(), converters={}, \</code></dt>
-  <dt id="py:class:configparser.allow_unnamed_section=false)"><em class="property">class</em> <code class="sig-name">allow_unnamed_section=False)</code></dt>
+  <dt id="py:class:configparser.rawconfigparser"><em class="property">class</em> <code class="sig-name">RawConfigParser(defaults=None, dict_type=dict, allow_no_value=False, *, delimiters=('=', ':'), comment_prefixes=('#', ';'), inline_comment_prefixes=None, strict=True, empty_lines_in_values=True, default_section=configparser.DEFAULTSECT, interpolation=BasicInterpolation(), converters={}, allow_unnamed_section=False)</code></dt>
   <dd><p>Legacy variant of the <a class="reference internal" href="configparser.html#py:class:configparser.configparser"><code class="xref py class docutils literal">ConfigParser</code></a>.  It has interpolation
 disabled by default and allows for non-string section names, option
 names, and values via its unsafe <code>add_section</code> and <code>set</code> methods,

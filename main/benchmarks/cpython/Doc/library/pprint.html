@@ -446,8 +446,7 @@ adjustable by the <em>width</em> parameter defaulting to 80 characters.</p>
 <a id="pprint-functions"></a>
 <h2 id="functions">Functions</h2>
 <dl class="py function">
-  <dt id="py:function:pprint.pp"><code class="sig-name">pp(object, stream=None, indent=1, width=80, depth=None, *, \</code></dt>
-  <dt id="py:function:pprint.underscore_numbers=false)"><code class="sig-name">compact=False, sort_dicts=False, underscore_numbers=False)</code></dt>
+  <dt id="py:function:pprint.pp"><code class="sig-name">pp(object, stream=None, indent=1, width=80, depth=None, *, compact=False, sort_dicts=False, underscore_numbers=False)</code></dt>
   <dd><p>Prints the formatted representation of <em>object</em>, followed by a newline.
 This function may be used in the interactive interpreter
 instead of the <a class="reference internal" href="functions.html#py:function:print"><code class="xref py function docutils literal">print</code></a> function for inspecting values.
@@ -517,16 +516,14 @@ otherwise underscores are not displayed (the default).</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:pprint.pprint"><code class="sig-name">pprint(object, stream=None, indent=1, width=80, depth=None, *, \</code></dt>
-  <dt id="py:function:pprint.underscore_numbers=false)"><code class="sig-name">compact=False, sort_dicts=True, underscore_numbers=False)</code></dt>
+  <dt id="py:function:pprint.pprint"><code class="sig-name">pprint(object, stream=None, indent=1, width=80, depth=None, *, compact=False, sort_dicts=True, underscore_numbers=False)</code></dt>
   <dd><p>Alias for <a class="reference internal" href="pprint.html#py:function:pprint.pp"><code class="xref py function docutils literal">pp</code></a> with <em>sort_dicts</em> set to <code>True</code> by default,
 which would automatically sort the dictionaries' keys,
 you might want to use <a class="reference internal" href="pprint.html#py:function:pprint.pp"><code class="xref py function docutils literal">pp</code></a> instead where it is <code>False</code> by default.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:pprint.pformat"><code class="sig-name">pformat(object, indent=1, width=80, depth=None, *, \</code></dt>
-  <dt id="py:function:pprint.underscore_numbers=false)"><code class="sig-name">compact=False, sort_dicts=True, underscore_numbers=False)</code></dt>
+  <dt id="py:function:pprint.pformat"><code class="sig-name">pformat(object, indent=1, width=80, depth=None, *, compact=False, sort_dicts=True, underscore_numbers=False)</code></dt>
   <dd><p>Return the formatted representation of <em>object</em> as a string.  <em>indent</em>,
 <em>width</em>, <em>depth</em>, <em>compact</em>, <em>sort_dicts</em> and <em>underscore_numbers</em> are
 passed to the <a class="reference internal" href="pprint.html#py:class:pprint.prettyprinter"><code class="xref py class docutils literal">PrettyPrinter</code></a> constructor as formatting parameters
@@ -570,8 +567,7 @@ representation is not otherwise formatted.</p>
 <h2 id="prettyprinter-objects">PrettyPrinter Objects</h2>
 <span id="index-1"></span>
 <dl class="py class">
-  <dt id="py:class:pprint.prettyprinter"><em class="property">class</em> <code class="sig-name">PrettyPrinter(indent=1, width=80, depth=None, stream=None, *, \</code></dt>
-  <dt id="py:class:pprint.underscore_numbers=false)"><em class="property">class</em> <code class="sig-name">compact=False, sort_dicts=True, underscore_numbers=False)</code></dt>
+  <dt id="py:class:pprint.prettyprinter"><em class="property">class</em> <code class="sig-name">PrettyPrinter(indent=1, width=80, depth=None, stream=None, *, compact=False, sort_dicts=True, underscore_numbers=False)</code></dt>
   <dd><p>Construct a <a class="reference internal" href="pprint.html#py:class:pprint.prettyprinter"><code class="xref py class docutils literal">PrettyPrinter</code></a> instance.</p>
 <p>Arguments have the same meaning as for <a class="reference internal" href="pprint.html#py:function:pprint.pp"><code class="xref py function docutils literal">pp</code></a>.
 Note that they are in a different order, and that <em>sort_dicts</em> defaults to <code>True</code>.</p>

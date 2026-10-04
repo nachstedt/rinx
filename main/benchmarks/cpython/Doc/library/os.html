@@ -667,11 +667,10 @@ while reloading, may return an empty result.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:os.chdir"><code class="sig-name">chdir(path)</code></dt>
-  <dt id="py:function:os.fchdir"><code class="sig-name">fchdir(fd)</code></dt>
-  <dt id="py:function:os.getcwd"><code class="sig-name">getcwd()</code></dt>
-  <dd><p>:noindex:</p>
-<p>These functions are described in <a href="os.html#os-file-dir">Files and Directories</a>.</p>
+  <dt><code class="sig-name">chdir(path)</code></dt>
+  <dt><code class="sig-name">fchdir(fd)</code></dt>
+  <dt><code class="sig-name">getcwd()</code></dt>
+  <dd><p>These functions are described in <a href="os.html#os-file-dir">Files and Directories</a>.</p>
 </dd>
 </dl>
 <dl class="py function">
@@ -5544,9 +5543,7 @@ write new code. The <a class="reference internal" href="subprocess.html#py:modul
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:os.posix_spawn"><code class="sig-name">posix_spawn(path, argv, env, *, file_actions=None, \</code></dt>
-  <dt id="py:function:os.setsigmask="><code class="sig-name">setpgroup=None, resetids=False, setsid=False, setsigmask=(), \</code></dt>
-  <dt id="py:function:os.setsigdef="><code class="sig-name">setsigdef=(), scheduler=None)</code></dt>
+  <dt id="py:function:os.posix_spawn"><code class="sig-name">posix_spawn(path, argv, env, *, file_actions=None, setpgroup=None, resetids=False, setsid=False, setsigmask=(), setsigdef=(), scheduler=None)</code></dt>
   <dd><p>Wraps the <code class="xref c function docutils literal">posix_spawn</code> C library API for use from Python.</p>
 <p>Most users should use <a class="reference internal" href="subprocess.html#py:function:subprocess.run"><code class="xref py function docutils literal">subprocess.run</code></a> instead of <a class="reference internal" href="os.html#py:function:os.posix_spawn"><code class="xref py function docutils literal">posix_spawn</code></a>.</p>
 <p>The positional-only arguments <em>path</em>, <em>args</em>, and <em>env</em> are similar to
@@ -5639,9 +5636,7 @@ flags.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:os.posix_spawnp"><code class="sig-name">posix_spawnp(path, argv, env, *, file_actions=None, \</code></dt>
-  <dt id="py:function:os.setsigmask="><code class="sig-name">setpgroup=None, resetids=False, setsid=False, setsigmask=(), \</code></dt>
-  <dt id="py:function:os.setsigdef="><code class="sig-name">setsigdef=(), scheduler=None)</code></dt>
+  <dt id="py:function:os.posix_spawnp"><code class="sig-name">posix_spawnp(path, argv, env, *, file_actions=None, setpgroup=None, resetids=False, setsid=False, setsigmask=(), setsigdef=(), scheduler=None)</code></dt>
   <dd><p>Wraps the <code class="xref c function docutils literal">posix_spawnp</code> C library API for use from Python.</p>
 <p>Similar to <a class="reference internal" href="os.html#py:function:os.posix_spawn"><code class="xref py function docutils literal">posix_spawn</code></a> except that the system searches
 for the <em>executable</em> file in the list of directories specified by the
@@ -5662,8 +5657,7 @@ for the <em>executable</em> file in the list of directories specified by the
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:os.register_at_fork"><code class="sig-name">register_at_fork(*, before=None, after_in_parent=None, \</code></dt>
-  <dt id="py:function:os.after_in_child=none)"><code class="sig-name">after_in_child=None)</code></dt>
+  <dt id="py:function:os.register_at_fork"><code class="sig-name">register_at_fork(*, before=None, after_in_parent=None, after_in_child=None)</code></dt>
   <dd><p>Register callables to be executed when a new child process is forked
 using <a class="reference internal" href="os.html#py:function:os.fork"><code class="xref py function docutils literal">os.fork</code></a> or similar process cloning APIs.
 The parameters are optional and keyword-only.

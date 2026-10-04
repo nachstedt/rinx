@@ -871,8 +871,7 @@ thread objects have limited functionality; they are always considered alive and
 daemonic, and cannot be <a href="threading.html#meth-thread-join">joined</a>.  They are never deleted,
 since it is impossible to detect the termination of alien threads.</p>
 <dl class="py class">
-  <dt id="py:class:threading.thread"><em class="property">class</em> <code class="sig-name">Thread(group=None, target=None, name=None, args=(), kwargs={}, *, \</code></dt>
-  <dt id="py:class:threading.context=none)"><em class="property">class</em> <code class="sig-name">daemon=None, context=None)</code></dt>
+  <dt id="py:class:threading.thread"><em class="property">class</em> <code class="sig-name">Thread(group=None, target=None, name=None, args=(), kwargs={}, *, daemon=None, context=None)</code></dt>
   <dd><p>This constructor should always be called with keyword arguments.  Arguments
 are:</p>
 <p><em>group</em> should be <code>None</code>; reserved for future extension when a

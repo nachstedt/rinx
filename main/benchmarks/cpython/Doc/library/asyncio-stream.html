@@ -500,14 +500,8 @@ streams:</p>
 <p>The following top-level asyncio functions can be used to create
 and work with streams:</p>
 <dl class="py function">
-  <dt id="py:function:asyncio.open_connection"><code class="sig-name">open_connection(host=None, port=None, *, \</code></dt>
-  <dt id="py:function:asyncio.\"><code class="sig-name">limit=None, ssl=None, family=0, proto=0, \</code></dt>
-  <dt id="py:function:asyncio.\"><code class="sig-name">flags=0, sock=None, local_addr=None, \</code></dt>
-  <dt id="py:function:asyncio.\"><code class="sig-name">server_hostname=None, ssl_handshake_timeout=None, \</code></dt>
-  <dt id="py:function:asyncio.\"><code class="sig-name">ssl_shutdown_timeout=None, \</code></dt>
-  <dt id="py:function:asyncio.interleave=none)"><code class="sig-name">happy_eyeballs_delay=None, interleave=None)</code></dt>
-  <dd><p>:async:</p>
-<p>Establish a network connection and return a pair of
+  <dt id="py:function:asyncio.open_connection"><em class="property">async</em> <code class="sig-name">open_connection(host=None, port=None, *, limit=None, ssl=None, family=0, proto=0, flags=0, sock=None, local_addr=None, server_hostname=None, ssl_handshake_timeout=None, ssl_shutdown_timeout=None, happy_eyeballs_delay=None, interleave=None)</code></dt>
+  <dd><p>Establish a network connection and return a pair of
 <code>(reader, writer)</code> objects.</p>
 <p>The returned <em>reader</em> and <em>writer</em> objects are instances of
 <a class="reference internal" href="asyncio-stream.html#py:class:asyncio.streamreader"><code class="xref py class docutils literal">StreamReader</code></a> and <a class="reference internal" href="asyncio-stream.html#py:class:asyncio.streamwriter"><code class="xref py class docutils literal">StreamWriter</code></a> classes.</p>
@@ -541,16 +535,8 @@ is set to 64 KiB.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:asyncio.start_server"><code class="sig-name">start_server(client_connected_cb, host=None, \</code></dt>
-  <dt id="py:function:asyncio.\"><code class="sig-name">port=None, *, limit=None, \</code></dt>
-  <dt id="py:function:asyncio.\"><code class="sig-name">family=socket.AF_UNSPEC, \</code></dt>
-  <dt id="py:function:asyncio.\"><code class="sig-name">flags=socket.AI_PASSIVE, sock=None, \</code></dt>
-  <dt id="py:function:asyncio.\"><code class="sig-name">backlog=100, ssl=None, reuse_address=None, \</code></dt>
-  <dt id="py:function:asyncio.\"><code class="sig-name">reuse_port=None, keep_alive=None, \</code></dt>
-  <dt id="py:function:asyncio.\"><code class="sig-name">ssl_handshake_timeout=None, \</code></dt>
-  <dt id="py:function:asyncio.start_serving=true)"><code class="sig-name">ssl_shutdown_timeout=None, start_serving=True)</code></dt>
-  <dd><p>:async:</p>
-<p>Start a socket server.</p>
+  <dt id="py:function:asyncio.start_server"><em class="property">async</em> <code class="sig-name">start_server(client_connected_cb, host=None, port=None, *, limit=None, family=socket.AF_UNSPEC, flags=socket.AI_PASSIVE, sock=None, backlog=100, ssl=None, reuse_address=None, reuse_port=None, keep_alive=None, ssl_handshake_timeout=None, ssl_shutdown_timeout=None, start_serving=True)</code></dt>
+  <dd><p>Start a socket server.</p>
 <p>The <em>client_connected_cb</em> callback is called whenever a new client
 connection is established.  It receives a <code>(reader, writer)</code> pair
 as two arguments, instances of the <a class="reference internal" href="asyncio-stream.html#py:class:asyncio.streamreader"><code class="xref py class docutils literal">StreamReader</code></a> and
@@ -592,11 +578,8 @@ server created. To close the socket, call the server's
 <pre class="directive-error-source">.. rubric:: Unix Sockets</pre>
 </div>
 <dl class="py function">
-  <dt id="py:function:asyncio.open_unix_connection"><code class="sig-name">open_unix_connection(path=None, *, limit=None, \</code></dt>
-  <dt id="py:function:asyncio.\"><code class="sig-name">ssl=None, sock=None, server_hostname=None, \</code></dt>
-  <dt id="py:function:asyncio.ssl_shutdown_timeout=none)"><code class="sig-name">ssl_handshake_timeout=None, ssl_shutdown_timeout=None)</code></dt>
-  <dd><p>:async:</p>
-<p>Establish a Unix socket connection and return a pair of
+  <dt id="py:function:asyncio.open_unix_connection"><em class="property">async</em> <code class="sig-name">open_unix_connection(path=None, *, limit=None, ssl=None, sock=None, server_hostname=None, ssl_handshake_timeout=None, ssl_shutdown_timeout=None)</code></dt>
+  <dd><p>Establish a Unix socket connection and return a pair of
 <code>(reader, writer)</code>.</p>
 <p>Similar to <a class="reference internal" href="asyncio-stream.html#py:function:asyncio.open_connection"><code class="xref py function docutils literal">open_connection</code></a> but operates on Unix sockets.</p>
 <p>See also the documentation of <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_unix_connection"><code class="xref py method docutils literal">loop.create_unix_connection</code></a>.</p>
@@ -626,12 +609,8 @@ The <em>path</em> parameter can now be a <a class="reference internal" href="../
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:asyncio.start_unix_server"><code class="sig-name">start_unix_server(client_connected_cb, path=None, \</code></dt>
-  <dt id="py:function:asyncio.\"><code class="sig-name">*, limit=None, sock=None, backlog=100, ssl=None, \</code></dt>
-  <dt id="py:function:asyncio.\"><code class="sig-name">ssl_handshake_timeout=None, \</code></dt>
-  <dt id="py:function:asyncio.cleanup_socket=true)"><code class="sig-name">ssl_shutdown_timeout=None, start_serving=True, cleanup_socket=True)</code></dt>
-  <dd><p>:async:</p>
-<p>Start a Unix socket server.</p>
+  <dt id="py:function:asyncio.start_unix_server"><em class="property">async</em> <code class="sig-name">start_unix_server(client_connected_cb, path=None, *, limit=None, sock=None, backlog=100, ssl=None, ssl_handshake_timeout=None, ssl_shutdown_timeout=None, start_serving=True, cleanup_socket=True)</code></dt>
+  <dd><p>Start a Unix socket server.</p>
 <p>Similar to <a class="reference internal" href="asyncio-stream.html#py:function:asyncio.start_server"><code class="xref py function docutils literal">start_server</code></a> but works with Unix sockets.</p>
 <p>If <em>cleanup_socket</em> is true then the Unix socket will automatically
 be removed from the filesystem when the server is closed, unless the
@@ -830,8 +809,7 @@ returns immediately.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:asyncio.streamwriter.start_tls"><em class="property">async</em> <code class="sig-name">start_tls(sslcontext, *, server_hostname=None, \</code></dt>
-  <dt id="py:method:asyncio.streamwriter.ssl_shutdown_timeout=none)"><em class="property">async</em> <code class="sig-name">ssl_handshake_timeout=None, ssl_shutdown_timeout=None)</code></dt>
+  <dt id="py:method:asyncio.streamwriter.start_tls"><em class="property">async</em> <code class="sig-name">start_tls(sslcontext, *, server_hostname=None, ssl_handshake_timeout=None, ssl_shutdown_timeout=None)</code></dt>
   <dd><p>Upgrade an existing stream-based connection to TLS.</p>
 <p>Parameters:</p>
 <ul>

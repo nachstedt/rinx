@@ -566,16 +566,9 @@ decoding the payload to unicode.  The default error handler is
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:email.contentmanager.set_content"><code class="sig-name">set_content(msg, &lt;'str'&gt;, subtype="plain", charset='utf-8', \</code></dt>
-  <dt id="py:method:email.contentmanager.\"><code class="sig-name">cte=None, \</code></dt>
-  <dt id="py:method:email.contentmanager.\"><code class="sig-name">disposition=None, filename=None, cid=None, \</code></dt>
-  <dt id="py:method:email.contentmanager.headers=none)"><code class="sig-name">params=None, headers=None)</code></dt>
-  <dt id="py:method:email.contentmanager.set_content"><code class="sig-name">set_content(msg, &lt;'bytes'&gt;, maintype, subtype, cte="base64", \</code></dt>
-  <dt id="py:method:email.contentmanager.\"><code class="sig-name">disposition=None, filename=None, cid=None, \</code></dt>
-  <dt id="py:method:email.contentmanager.headers=none)"><code class="sig-name">params=None, headers=None)</code></dt>
-  <dt id="py:method:email.contentmanager.set_content"><code class="sig-name">set_content(msg, &lt;'EmailMessage'&gt;, cte=None, \</code></dt>
-  <dt id="py:method:email.contentmanager.\"><code class="sig-name">disposition=None, filename=None, cid=None, \</code></dt>
-  <dt id="py:method:email.contentmanager.headers=none)"><code class="sig-name">params=None, headers=None)</code></dt>
+  <dt id="py:method:email.contentmanager.set_content"><code class="sig-name">set_content(msg, &lt;'str'&gt;, subtype="plain", charset='utf-8', cte=None, disposition=None, filename=None, cid=None, params=None, headers=None)</code></dt>
+  <dt id="py:method:email.contentmanager.set_content"><code class="sig-name">set_content(msg, &lt;'bytes'&gt;, maintype, subtype, cte="base64", disposition=None, filename=None, cid=None, params=None, headers=None)</code></dt>
+  <dt id="py:method:email.contentmanager.set_content"><code class="sig-name">set_content(msg, &lt;'EmailMessage'&gt;, cte=None, disposition=None, filename=None, cid=None, params=None, headers=None)</code></dt>
   <dd><p>Add headers and payload to <em>msg</em>:</p>
 <p>Add a :mailheader:`Content-Type` header with a <code>maintype/subtype</code>
 value.</p>

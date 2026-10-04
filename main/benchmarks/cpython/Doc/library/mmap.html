@@ -442,10 +442,8 @@ defaults to 0.  <em>offset</em> must be a multiple of the <a href="#" class="bro
 </dd>
 </dl>
 <dl class="py class">
-  <dt id="py:class:mmap.mmap"><em class="property">class</em> <code class="sig-name">mmap(fileno, length, flags=MAP_SHARED, prot=PROT_WRITE|PROT_READ, \</code></dt>
-  <dt id="py:class:mmap.trackfd=true)"><em class="property">class</em> <code class="sig-name">access=ACCESS_DEFAULT, offset=0, *, trackfd=True)</code></dt>
-  <dd><p>:noindex:</p>
-<p><strong>(Unix version)</strong> Maps <em>length</em> bytes from the file specified by the file
+  <dt><em class="property">class</em> <code class="sig-name">mmap(fileno, length, flags=MAP_SHARED, prot=PROT_WRITE|PROT_READ, access=ACCESS_DEFAULT, offset=0, *, trackfd=True)</code></dt>
+  <dd><p><strong>(Unix version)</strong> Maps <em>length</em> bytes from the file specified by the file
 descriptor <em>fileno</em>, and returns a mmap object.  If <em>length</em> is <code>0</code>, the
 maximum length of the map will be the current size of the file when
 <a class="reference internal" href="mmap.html#py:class:mmap.mmap"><code class="xref py class docutils literal">mmap</code></a> is called.</p>

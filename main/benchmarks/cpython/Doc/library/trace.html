@@ -504,8 +504,7 @@ The argument can be a list of directories separated by <a class="reference inter
 <a id="trace-api"></a>
 <h2 id="programmatic-interface">Programmatic Interface</h2>
 <dl class="py class">
-  <dt id="py:class:trace.trace"><em class="property">class</em> <code class="sig-name">Trace(count=1, trace=1, countfuncs=0, countcallers=0, ignoremods=(),\</code></dt>
-  <dt id="py:class:trace.ignoredirs="><em class="property">class</em> <code class="sig-name">ignoredirs=(), infile=None, outfile=None, timing=False)</code></dt>
+  <dt id="py:class:trace.trace"><em class="property">class</em> <code class="sig-name">Trace(count=1, trace=1, countfuncs=0, countcallers=0, ignoremods=(), ignoredirs=(), infile=None, outfile=None, timing=False)</code></dt>
   <dd><p>Create an object to trace execution of a single statement or expression.  All
 parameters are optional.  <em>count</em> enables counting of line numbers.  <em>trace</em>
 enables line execution tracing.  <em>countfuncs</em> enables listing of the
@@ -557,8 +556,7 @@ not be created directly by the user.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:trace.coverageresults.write_results"><code class="sig-name">write_results(show_missing=True, summary=False, coverdir=None,\</code></dt>
-  <dt id="py:method:trace.coverageresults.ignore_missing_files=false)"><code class="sig-name">*, ignore_missing_files=False)</code></dt>
+  <dt id="py:method:trace.coverageresults.write_results"><code class="sig-name">write_results(show_missing=True, summary=False, coverdir=None, *, ignore_missing_files=False)</code></dt>
   <dd><p>Write coverage results.  Set <em>show_missing</em> to show lines that had no
 hits.  Set <em>summary</em> to include in the output the coverage summary per
 module.  <em>coverdir</em> specifies the directory into which the coverage

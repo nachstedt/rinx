@@ -987,9 +987,8 @@ Task 1: done</pre></div>
 </div>
 <h2 id="sleeping"><a class="toc-backref" href="#toc-entry-6">Sleeping</a></h2>
 <dl class="py function">
-  <dt id="py:function:asyncio.sleep"><code class="sig-name">sleep(delay, result=None)</code></dt>
-  <dd><p>:async:</p>
-<p>Block for <em>delay</em> seconds.</p>
+  <dt id="py:function:asyncio.sleep"><em class="property">async</em> <code class="sig-name">sleep(delay, result=None)</code></dt>
+  <dd><p>Block for <em>delay</em> seconds.</p>
 <p>If <em>result</em> is provided, it is returned to the caller
 when the coroutine completes.</p>
 <p><code>sleep()</code> always suspends the current task, allowing other tasks
@@ -1336,9 +1335,8 @@ to stop waiting, or <code>None</code>.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:asyncio.wait_for"><code class="sig-name">wait_for(aw, timeout)</code></dt>
-  <dd><p>:async:</p>
-<p>Wait for the <em>aw</em> <a href="asyncio-task.html#asyncio-awaitables">awaitable</a>
+  <dt id="py:function:asyncio.wait_for"><em class="property">async</em> <code class="sig-name">wait_for(aw, timeout)</code></dt>
+  <dd><p>Wait for the <em>aw</em> <a href="asyncio-task.html#asyncio-awaitables">awaitable</a>
 to complete with a timeout.</p>
 <p>If <em>aw</em> is a coroutine it is automatically scheduled as a Task.</p>
 <p><em>timeout</em> can either be <code>None</code> or a float or int number of seconds
@@ -1394,9 +1392,8 @@ for <em>aw</em> to be cancelled.  Previously, it raised
 </dl>
 <h2 id="waiting-primitives"><a class="toc-backref" href="#toc-entry-11">Waiting Primitives</a></h2>
 <dl class="py function">
-  <dt id="py:function:asyncio.wait"><code class="sig-name">wait(aws, *, timeout=None, return_when=ALL_COMPLETED)</code></dt>
-  <dd><p>:async:</p>
-<p>Run <a class="reference internal" href="asyncio-future.html#py:class:asyncio.future"><code class="xref py class docutils literal">Future</code></a> and <a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">Task</code></a> instances in the <em>aws</em>
+  <dt id="py:function:asyncio.wait"><em class="property">async</em> <code class="sig-name">wait(aws, *, timeout=None, return_when=ALL_COMPLETED)</code></dt>
+  <dd><p>Run <a class="reference internal" href="asyncio-future.html#py:class:asyncio.future"><code class="xref py class docutils literal">Future</code></a> and <a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">Task</code></a> instances in the <em>aws</em>
 iterable concurrently and block until the condition specified
 by <em>return_when</em>.</p>
 <p>The <em>aws</em> iterable must not be empty.</p>
@@ -1537,9 +1534,8 @@ or as a plain <a class="reference internal" href="../glossary.html#term-iterator
 </dl>
 <h2 id="running-in-threads"><a class="toc-backref" href="#toc-entry-12">Running in Threads</a></h2>
 <dl class="py function">
-  <dt id="py:function:asyncio.to_thread"><code class="sig-name">to_thread(func, /, *args, **kwargs)</code></dt>
-  <dd><p>:async:</p>
-<p>Asynchronously run function <em>func</em> in a separate thread.</p>
+  <dt id="py:function:asyncio.to_thread"><em class="property">async</em> <code class="sig-name">to_thread(func, /, *args, **kwargs)</code></dt>
+  <dd><p>Asynchronously run function <em>func</em> in a separate thread.</p>
 <p>Any *args and **kwargs supplied for this function are directly passed
 to <em>func</em>. Also, the current <a class="reference internal" href="contextvars.html#py:class:contextvars.context"><code class="xref py class docutils literal">contextvars.Context</code></a> is propagated,
 allowing context variables from the event loop thread to be accessed in the

@@ -1771,9 +1771,8 @@ directly.</p>
 <p>The <code class="xref py module docutils literal">ctypes.util</code> module provides a function which can help to determine
 the library to load.</p>
 <dl class="py data">
-  <dt id="py:data:ctypes.util.find_library(name)"><code class="sig-name">find_library(name)</code></dt>
-  <dd><p>:noindex:</p>
-<p>Try to find a library and return a pathname.  <em>name</em> is the library name without
+  <dt><code class="sig-name">find_library(name)</code></dt>
+  <dd><p>Try to find a library and return a pathname.  <em>name</em> is the library name without
 any prefix like <em>lib</em>, suffix like <code>.so</code>, <code>.dylib</code> or version number (this
 is the form used for the posix linker option <a href="#" class="broken-link"><code class="xref std cmdoption docutils literal">!-l</code></a>).  If no library can
 be found, returns <code>None</code>.</p>
@@ -1951,23 +1950,20 @@ correct library and dependencies are loaded.</p>
 <p>Added <em>winmode</em> parameter.</p>
 </div>
 <dl class="py data">
-  <dt id="py:data:ctypes.rtld_global"><code class="sig-name">RTLD_GLOBAL</code></dt>
-  <dd><p>:noindex:</p>
-<p>Flag to use as <em>mode</em> parameter.  On platforms where this flag is not available,
+  <dt><code class="sig-name">RTLD_GLOBAL</code></dt>
+  <dd><p>Flag to use as <em>mode</em> parameter.  On platforms where this flag is not available,
 it is defined as the integer zero.</p>
 </dd>
 </dl>
 <dl class="py data">
-  <dt id="py:data:ctypes.rtld_local"><code class="sig-name">RTLD_LOCAL</code></dt>
-  <dd><p>:noindex:</p>
-<p>Flag to use as <em>mode</em> parameter.  On platforms where this is not available, it
+  <dt><code class="sig-name">RTLD_LOCAL</code></dt>
+  <dd><p>Flag to use as <em>mode</em> parameter.  On platforms where this is not available, it
 is the same as <em>RTLD_GLOBAL</em>.</p>
 </dd>
 </dl>
 <dl class="py data">
-  <dt id="py:data:ctypes.default_mode"><code class="sig-name">DEFAULT_MODE</code></dt>
-  <dd><p>:noindex:</p>
-<p>The default mode which is used to load shared libraries.  On OSX 10.3, this is
+  <dt><code class="sig-name">DEFAULT_MODE</code></dt>
+  <dd><p>The default mode which is used to load shared libraries.  On OSX 10.3, this is
 <em>RTLD_GLOBAL</em>, otherwise it is the same as <em>RTLD_LOCAL</em>.</p>
 </dd>
 </dl>
@@ -2017,15 +2013,13 @@ returns a new instance of the library.</p>
 </dl>
 <p>These prefabricated library loaders are available:</p>
 <dl class="py data">
-  <dt id="py:data:ctypes.cdll"><code class="sig-name">cdll</code></dt>
-  <dd><p>:noindex:</p>
-<p>Creates <a class="reference internal" href="ctypes.html#py:class:ctypes.cdll"><code class="xref py class docutils literal">CDLL</code></a> instances.</p>
+  <dt><code class="sig-name">cdll</code></dt>
+  <dd><p>Creates <a class="reference internal" href="ctypes.html#py:class:ctypes.cdll"><code class="xref py class docutils literal">CDLL</code></a> instances.</p>
 </dd>
 </dl>
 <dl class="py data">
-  <dt id="py:data:ctypes.windll"><code class="sig-name">windll</code></dt>
-  <dd><p>:noindex:</p>
-<p>Creates <a class="reference internal" href="ctypes.html#py:class:ctypes.windll"><code class="xref py class docutils literal">WinDLL</code></a> instances.</p>
+  <dt><code class="sig-name">windll</code></dt>
+  <dd><p>Creates <a class="reference internal" href="ctypes.html#py:class:ctypes.windll"><code class="xref py class docutils literal">WinDLL</code></a> instances.</p>
 <div class="directive-error">
 <p class="directive-error-message">unknown directive type 'availability'</p>
 <pre class="directive-error-source">.. availability:: Windows</pre>
@@ -2033,9 +2027,8 @@ returns a new instance of the library.</p>
 </dd>
 </dl>
 <dl class="py data">
-  <dt id="py:data:ctypes.oledll"><code class="sig-name">oledll</code></dt>
-  <dd><p>:noindex:</p>
-<p>Creates <a class="reference internal" href="ctypes.html#py:class:ctypes.oledll"><code class="xref py class docutils literal">OleDLL</code></a> instances.</p>
+  <dt><code class="sig-name">oledll</code></dt>
+  <dd><p>Creates <a class="reference internal" href="ctypes.html#py:class:ctypes.oledll"><code class="xref py class docutils literal">OleDLL</code></a> instances.</p>
 <div class="directive-error">
 <p class="directive-error-message">unknown directive type 'availability'</p>
 <pre class="directive-error-source">.. availability:: Windows</pre>
@@ -2043,17 +2036,15 @@ returns a new instance of the library.</p>
 </dd>
 </dl>
 <dl class="py data">
-  <dt id="py:data:ctypes.pydll"><code class="sig-name">pydll</code></dt>
-  <dd><p>:noindex:</p>
-<p>Creates <a class="reference internal" href="ctypes.html#py:class:ctypes.pydll"><code class="xref py class docutils literal">PyDLL</code></a> instances.</p>
+  <dt><code class="sig-name">pydll</code></dt>
+  <dd><p>Creates <a class="reference internal" href="ctypes.html#py:class:ctypes.pydll"><code class="xref py class docutils literal">PyDLL</code></a> instances.</p>
 </dd>
 </dl>
 <p>For accessing the C Python api directly, a ready-to-use Python shared library
 object is available:</p>
 <dl class="py data">
-  <dt id="py:data:ctypes.pythonapi"><code class="sig-name">pythonapi</code></dt>
-  <dd><p>:noindex:</p>
-<p>An instance of <a class="reference internal" href="ctypes.html#py:class:ctypes.pydll"><code class="xref py class docutils literal">PyDLL</code></a> that exposes Python C API functions as
+  <dt><code class="sig-name">pythonapi</code></dt>
+  <dd><p>An instance of <a class="reference internal" href="ctypes.html#py:class:ctypes.pydll"><code class="xref py class docutils literal">PyDLL</code></a> that exposes Python C API functions as
 attributes.  Note that all these functions are assumed to return C
 :c:expr:`int`, which is of course not always the truth, so you have to assign
 the correct <code class="xref py attribute docutils literal">restype</code> attribute to use these functions.</p>
@@ -2141,10 +2132,8 @@ defining adapters that can adapt custom objects as function parameters.</p>
   <dd><p>Assign a Python function or another callable to this attribute. The
 callable will be called with three or more arguments:</p>
 <dl class="py function">
-  <dt id="py:function:ctypes._cfuncptr.callable"><code class="sig-name">callable(result, func, arguments)</code></dt>
-  <dd><p>:noindex:
-:module:</p>
-<p><em>result</em> is what the foreign function returns, as specified by the
+  <dt><code class="sig-name">callable(result, func, arguments)</code></dt>
+  <dd><p><em>result</em> is what the foreign function returns, as specified by the
 <code class="xref py attribute docutils literal">restype</code> attribute.</p>
 <p><em>func</em> is the foreign function object itself, this allows reusing the
 same callable object to check or post process the results of several
@@ -2219,34 +2208,26 @@ convention.  The function will <em>not</em> release the GIL during the call.</p>
 <p>Function prototypes created by these factory functions can be instantiated in
 different ways, depending on the type and number of the parameters in the call:</p>
 <dl class="py function">
-  <dt id="py:function:ctypes.prototype"><code class="sig-name">prototype(address)</code></dt>
-  <dd><p>:noindex:
-:module:</p>
-<p>Returns a foreign function at the specified address which must be an integer.</p>
+  <dt><code class="sig-name">prototype(address)</code></dt>
+  <dd><p>Returns a foreign function at the specified address which must be an integer.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:ctypes.prototype"><code class="sig-name">prototype(callable)</code></dt>
-  <dd><p>:noindex:
-:module:</p>
-<p>Create a C callable function (a callback function) from a Python <em>callable</em>.</p>
+  <dt><code class="sig-name">prototype(callable)</code></dt>
+  <dd><p>Create a C callable function (a callback function) from a Python <em>callable</em>.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:ctypes.prototype"><code class="sig-name">prototype(func_spec[, paramflags])</code></dt>
-  <dd><p>:noindex:
-:module:</p>
-<p>Returns a foreign function exported by a shared library. <em>func_spec</em> must
+  <dt><code class="sig-name">prototype(func_spec[, paramflags])</code></dt>
+  <dd><p>Returns a foreign function exported by a shared library. <em>func_spec</em> must
 be a 2-tuple <code>(name_or_ordinal, library)</code>. The first item is the name of
 the exported function as string, or the ordinal of the exported function
 as small integer.  The second item is the shared library instance.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:ctypes.prototype"><code class="sig-name">prototype(vtbl_index, name[, paramflags[, iid]])</code></dt>
-  <dd><p>:noindex:
-:module:</p>
-<p>Returns a foreign function that will call a COM method. <em>vtbl_index</em> is
+  <dt><code class="sig-name">prototype(vtbl_index, name[, paramflags[, iid]])</code></dt>
+  <dd><p>Returns a foreign function that will call a COM method. <em>vtbl_index</em> is
 the index into the virtual function table, a small non-negative
 integer. <em>name</em> is name of the COM method. <em>iid</em> is an optional pointer to
 the interface identifier which is used in extended error reporting.</p>

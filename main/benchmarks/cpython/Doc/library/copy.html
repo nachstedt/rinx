@@ -473,15 +473,13 @@ pickle functions from the <a class="reference internal" href="copyreg.html#py:mo
 special methods <a class="reference internal" href="copy.html#py:method:object.__copy__"><code class="xref py method docutils literal">__copy__</code></a> and <a class="reference internal" href="copy.html#py:method:object.__deepcopy__"><code class="xref py method docutils literal">__deepcopy__</code></a>.</p>
 <dl class="py method">
   <dt id="py:method:object.__copy__"><code class="sig-name">object.__copy__(self)</code></dt>
-  <dd><p>:noindexentry:</p>
-<p>Called to implement the shallow copy operation;
+  <dd><p>Called to implement the shallow copy operation;
 no additional arguments are passed.</p>
 </dd>
 </dl>
 <dl class="py method">
   <dt id="py:method:object.__deepcopy__"><code class="sig-name">object.__deepcopy__(self, memo)</code></dt>
-  <dd><p>:noindexentry:</p>
-<p>Called to implement the deep copy operation; it is passed one
+  <dd><p>Called to implement the deep copy operation; it is passed one
 argument, the <em>memo</em> dictionary.  If the <code>__deepcopy__</code> implementation needs
 to make a deep copy of a component, it should call the <a class="reference internal" href="copy.html#py:function:copy.deepcopy"><code class="xref py function docutils literal">deepcopy</code></a> function
 with the component as first argument and the <em>memo</em> dictionary as second argument.
@@ -495,8 +493,7 @@ and only supports named tuples created by <a class="reference internal" href="co
 <a class="reference internal" href="dataclasses.html#py:module:dataclasses" title="dataclasses: Generate special methods on user-defined classes."><code class="xref py module docutils literal">dataclasses</code></a>, and other classes which define method <a class="reference internal" href="copy.html#py:method:object.__replace__"><code class="xref py method docutils literal">__replace__</code></a>.</p>
 <dl class="py method">
   <dt id="py:method:object.__replace__"><code class="sig-name">object.__replace__(self, /, **changes)</code></dt>
-  <dd><p>:noindexentry:</p>
-<p>This method should create a new object of the same type,
+  <dd><p>This method should create a new object of the same type,
 replacing fields with values from <em>changes</em>.</p>
 <div class="versionadded">
   <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>

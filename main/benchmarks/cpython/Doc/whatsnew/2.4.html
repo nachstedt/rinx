@@ -1065,7 +1065,7 @@ name-sorted order.</p>
 <p>(All changes to <a href="#" class="broken-link"><code class="xref py method docutils literal">sort</code></a> contributed by Raymond Hettinger.)</p>
 </li>
 <li><p>There is a new built-in function <code>sorted(iterable)</code> that works like the
-in-place <a class="reference internal" href="../tutorial/datastructures.html#py:method:list.sort"><code class="xref py method docutils literal">list.sort</code></a> method but can be used in expressions.  The
+in-place <a class="reference internal" href="../library/stdtypes.html#py:method:list.sort"><code class="xref py method docutils literal">list.sort</code></a> method but can be used in expressions.  The
 differences are:</p>
 </li>
 <li><p>the input may be any iterable;</p>
@@ -1145,7 +1145,7 @@ Raymond Hettinger.)</p>
 <li><p>The machinery for growing and shrinking lists was optimized for speed and for
 space efficiency.  Appending and popping from lists now runs faster due to more
 efficient code paths and less frequent use of the underlying system
-<a href="#" class="broken-link"><code class="xref c function docutils literal">realloc</code></a>.  List comprehensions also benefit.   <a class="reference internal" href="../tutorial/datastructures.html#py:method:list.extend"><code class="xref py method docutils literal">list.extend</code></a> was
+<a href="#" class="broken-link"><code class="xref c function docutils literal">realloc</code></a>.  List comprehensions also benefit.   <a class="reference internal" href="../library/stdtypes.html#py:method:list.extend"><code class="xref py method docutils literal">list.extend</code></a> was
 also optimized and no longer converts its argument into a temporary list before
 extending the base list.  (Contributed by Raymond Hettinger.)</p>
 </li>

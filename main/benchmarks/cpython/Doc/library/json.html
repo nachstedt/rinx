@@ -524,10 +524,7 @@ default.  Order is only lost if the underlying containers are unordered.</p>
 </div>
 <h2 id="basic-usage">Basic Usage</h2>
 <dl class="py function">
-  <dt id="py:function:json.dump"><code class="sig-name">dump(obj, fp, *, skipkeys=False, ensure_ascii=True, \</code></dt>
-  <dt id="py:function:json.\"><code class="sig-name">check_circular=True, allow_nan=True, cls=None, \</code></dt>
-  <dt id="py:function:json.\"><code class="sig-name">indent=None, separators=None, default=None, \</code></dt>
-  <dt id="py:function:json.**kw)"><code class="sig-name">sort_keys=False, **kw)</code></dt>
+  <dt id="py:function:json.dump"><code class="sig-name">dump(obj, fp, *, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, cls=None, indent=None, separators=None, default=None, sort_keys=False, **kw)</code></dt>
   <dd><p>Serialize <em>obj</em> as a JSON formatted stream to <em>fp</em> (a <code>.write()</code>-supporting
 <a class="reference internal" href="../glossary.html#term-file-like-object"><span class="xref std std-term">file-like object</span></a>) using this <a href="json.html#py-to-json-table">Python-to-JSON conversion table</a>.</p>
 <div class="admonition note">
@@ -632,10 +629,7 @@ Default <code>False</code>.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:json.dumps"><code class="sig-name">dumps(obj, *, skipkeys=False, ensure_ascii=True, \</code></dt>
-  <dt id="py:function:json.\"><code class="sig-name">check_circular=True, allow_nan=True, cls=None, \</code></dt>
-  <dt id="py:function:json.\"><code class="sig-name">indent=None, separators=None, default=None, \</code></dt>
-  <dt id="py:function:json.**kw)"><code class="sig-name">sort_keys=False, **kw)</code></dt>
+  <dt id="py:function:json.dumps"><code class="sig-name">dumps(obj, *, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, cls=None, indent=None, separators=None, default=None, sort_keys=False, **kw)</code></dt>
   <dd><p>Serialize <em>obj</em> to a JSON formatted <a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> using this <a href="json.html#py-to-json-table">conversion
 table</a>.  The arguments have the same meaning as in
 <a class="reference internal" href="json.html#py:function:json.dump"><code class="xref py function docutils literal">dump</code></a>.</p>
@@ -651,9 +645,7 @@ keys.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:json.load"><code class="sig-name">load(fp, *, cls=None, object_hook=None, parse_float=None, \</code></dt>
-  <dt id="py:function:json.\"><code class="sig-name">parse_int=None, parse_constant=None, \</code></dt>
-  <dt id="py:function:json.**kw)"><code class="sig-name">object_pairs_hook=None, **kw)</code></dt>
+  <dt id="py:function:json.load"><code class="sig-name">load(fp, *, cls=None, object_hook=None, parse_float=None, parse_int=None, parse_constant=None, object_pairs_hook=None, **kw)</code></dt>
   <dd><p>Deserialize <em>fp</em> to a Python object
 using the <a href="json.html#json-to-py-table">JSON-to-Python conversion table</a>.</p>
 <dl>

@@ -506,8 +506,7 @@ a positive <em>limit</em> value cannot be achieved with
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:traceback.print_exception"><code class="sig-name">print_exception(exc, /[, value, tb], limit=None, \</code></dt>
-  <dt id="py:function:traceback.chain=true)"><code class="sig-name">file=None, chain=True)</code></dt>
+  <dt id="py:function:traceback.print_exception"><code class="sig-name">print_exception(exc, /[, value, tb], limit=None, file=None, chain=True)</code></dt>
   <dd><p>Print exception information and stack trace entries from
 <a href="../reference/datamodel.html#traceback-objects">traceback object</a>
 <em>tb</em> to <em>file</em>. This differs from <a class="reference internal" href="traceback.html#py:function:traceback.print_tb"><code class="xref py function docutils literal">print_tb</code></a> in the following
@@ -974,9 +973,7 @@ frame is omitted from the output.</p>
 <p>A <code class="xref py class docutils literal">FrameSummary</code> object represents a single <a href="../reference/datamodel.html#frame-objects">frame</a>
 in a <a href="../reference/datamodel.html#traceback-objects">traceback</a>.</p>
 <dl class="py class">
-  <dt id="py:class:traceback.framesummary"><em class="property">class</em> <code class="sig-name">FrameSummary(filename, lineno, name, *,\</code></dt>
-  <dt id="py:class:traceback.locals=none,\"><em class="property">class</em> <code class="sig-name">lookup_line=True, locals=None,\</code></dt>
-  <dt id="py:class:traceback.end_colno=none)"><em class="property">class</em> <code class="sig-name">line=None, end_lineno=None, colno=None, end_colno=None)</code></dt>
+  <dt id="py:class:traceback.framesummary"><em class="property">class</em> <code class="sig-name">FrameSummary(filename, lineno, name, *, lookup_line=True, locals=None, line=None, end_lineno=None, colno=None, end_colno=None)</code></dt>
   <dd><p>Represents a single <a href="../reference/datamodel.html#frame-objects">frame</a> in the
 <a href="../reference/datamodel.html#traceback-objects">traceback</a> or stack that is being formatted
 or printed. It may optionally have a stringified version of the frame's

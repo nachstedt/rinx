@@ -277,7 +277,11 @@ entry its type cannot split is reported under the role's own codes, such as
 <code>c:struct</code>, <code>c:macro</code>, …) and the standard domain's <code>.. program::</code> and
 <code>.. option::</code>. A module's <code>:synopsis:</code> is shown in the Python Module
 Index, which a site enables with <code>domain_indices</code> (see <a href="rules.html#rules">Bazel rules</a>),
-and as the tooltip of every <code>:mod:</code> link.</p>
+and as the tooltip of every <code>:mod:</code> link. Every object takes
+<code>:no-index:</code> (for a second description of something documented
+elsewhere), <code>:no-index-entry:</code> and <code>:no-contents-entry:</code>, a signature
+may wrap with a trailing backslash, and an option the object does not take
+is reported as <code>directive.unknown-option</code>.</p>
 </li>
 <li><p>Linking to other sites through their <code>objects.inv</code>, and writing one; see
 <a href="intersphinx.html#intersphinx">Linking between documentation sites</a>.</p>

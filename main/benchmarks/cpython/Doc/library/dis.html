@@ -527,9 +527,7 @@ Otherwise, disassembly is performed on compiled source code received from stdin.
 <a class="reference internal" href="dis.html#py:class:dis.bytecode"><code class="xref py class docutils literal">Bytecode</code></a> object that provides easy access to details of the compiled
 code.</p>
 <dl class="py class">
-  <dt id="py:class:dis.bytecode"><em class="property">class</em> <code class="sig-name">Bytecode(x, *, first_line=None, current_offset=None,\</code></dt>
-  <dt id="py:class:dis.show_offsets=false,\"><em class="property">class</em> <code class="sig-name">show_caches=False, adaptive=False, show_offsets=False,\</code></dt>
-  <dt id="py:class:dis.show_positions=false)"><em class="property">class</em> <code class="sig-name">show_positions=False)</code></dt>
+  <dt id="py:class:dis.bytecode"><em class="property">class</em> <code class="sig-name">Bytecode(x, *, first_line=None, current_offset=None, show_caches=False, adaptive=False, show_offsets=False, show_positions=False)</code></dt>
   <dd><p>Analyse the bytecode corresponding to a function, generator, asynchronous
 generator, coroutine, method, string of source code, or a code object (as
 returned by <a class="reference internal" href="functions.html#py:function:compile"><code class="xref py function docutils literal">compile</code></a>).</p>
@@ -646,8 +644,7 @@ intended for interactive exploration at the interpreter prompt.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:dis.dis"><code class="sig-name">dis(x=None, *, file=None, depth=None, show_caches=False,\</code></dt>
-  <dt id="py:function:dis.show_positions=false)"><code class="sig-name">adaptive=False, show_offsets=False, show_positions=False)</code></dt>
+  <dt id="py:function:dis.dis"><code class="sig-name">dis(x=None, *, file=None, depth=None, show_caches=False, adaptive=False, show_offsets=False, show_positions=False)</code></dt>
   <dd><p>Disassemble the <em>x</em> object.  <em>x</em> can denote either a module, a class, a
 method, a function, a generator, an asynchronous generator, a coroutine,
 a code object, a string of source code or a byte sequence of raw bytecode.
@@ -695,8 +692,7 @@ that may be different from the original bytecode.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:dis.distb"><code class="sig-name">distb(tb=None, *, file=None, show_caches=False, adaptive=False,\</code></dt>
-  <dt id="py:function:dis.show_positions=false)"><code class="sig-name">show_offset=False, show_positions=False)</code></dt>
+  <dt id="py:function:dis.distb"><code class="sig-name">distb(tb=None, *, file=None, show_caches=False, adaptive=False, show_offset=False, show_positions=False)</code></dt>
   <dd><p>Disassemble the top-of-stack function of a traceback, using the last
 traceback if none was passed.  The instruction causing the exception is
 indicated.</p>
@@ -721,10 +717,8 @@ provided and to <code>sys.stdout</code> otherwise.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:dis.disassemble"><code class="sig-name">disassemble(code, lasti=-1, *, file=None, show_caches=False,\</code></dt>
-  <dt id="py:function:dis.show_positions=false)"><code class="sig-name">adaptive=False, show_offsets=False, show_positions=False)</code></dt>
-  <dt id="py:function:dis.disco"><code class="sig-name">disco(code, lasti=-1, *, file=None, show_caches=False, adaptive=False,\</code></dt>
-  <dt id="py:function:dis.show_positions=false)"><code class="sig-name">show_offsets=False, show_positions=False)</code></dt>
+  <dt id="py:function:dis.disassemble"><code class="sig-name">disassemble(code, lasti=-1, *, file=None, show_caches=False, adaptive=False, show_offsets=False, show_positions=False)</code></dt>
+  <dt id="py:function:dis.disco"><code class="sig-name">disco(code, lasti=-1, *, file=None, show_caches=False, adaptive=False, show_offsets=False, show_positions=False)</code></dt>
   <dd><p>Disassemble a code object, indicating the last instruction if <em>lasti</em> was
 provided.  The output is divided in the following columns:</p>
 <ol class="arabic period">

@@ -400,8 +400,7 @@ For tilde and shell variable expansion, use <a class="reference internal" href="
 For example, <code>'[?]'</code> matches the character <code>'?'</code>.</p>
 <p>The <code class="xref py module docutils literal">glob</code> module defines the following functions:</p>
 <dl class="py function">
-  <dt id="py:function:glob.glob"><code class="sig-name">glob(pathname, *, root_dir=None, dir_fd=None, recursive=False, \</code></dt>
-  <dt id="py:function:glob.include_hidden=false)"><code class="sig-name">include_hidden=False)</code></dt>
+  <dt id="py:function:glob.glob"><code class="sig-name">glob(pathname, *, root_dir=None, dir_fd=None, recursive=False, include_hidden=False)</code></dt>
   <dd><p>Return a possibly empty list of path names that match <em>pathname</em>, which must be
 a string containing a path specification. <em>pathname</em> can be either absolute
 (like :file:`/usr/src/Python-1.5/Makefile`) or relative (like
@@ -455,8 +454,7 @@ contains multiple "<code>**</code>" patterns and <em>recursive</em> is true.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:glob.iglob"><code class="sig-name">iglob(pathname, *, root_dir=None, dir_fd=None, recursive=False, \</code></dt>
-  <dt id="py:function:glob.include_hidden=false)"><code class="sig-name">include_hidden=False)</code></dt>
+  <dt id="py:function:glob.iglob"><code class="sig-name">iglob(pathname, *, root_dir=None, dir_fd=None, recursive=False, include_hidden=False)</code></dt>
   <dd><p>Return an <a class="reference internal" href="../glossary.html#term-iterator"><span class="xref std std-term">iterator</span></a> which yields the same values as <a class="reference internal" href="glob.html#py:function:glob.glob"><code class="xref py function docutils literal">glob</code></a>
 without actually storing them all simultaneously.</p>
 <div class="directive-error">

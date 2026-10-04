@@ -910,14 +910,7 @@ to task factories if it is <code>None</code>.</p>
 </dl>
 <h3 id="opening-network-connections"><a class="toc-backref" href="#toc-entry-5">Opening network connections</a></h3>
 <dl class="py method">
-  <dt id="py:method:asyncio.loop.create_connection"><em class="property">async</em> <code class="sig-name">loop.create_connection(protocol_factory, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">host=None, port=None, *, ssl=None, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">family=0, proto=0, flags=0, sock=None, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">local_addr=None, server_hostname=None, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">ssl_handshake_timeout=None, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">ssl_shutdown_timeout=None, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">happy_eyeballs_delay=None, interleave=None, \</code></dt>
-  <dt id="py:method:asyncio.all_errors=false)"><em class="property">async</em> <code class="sig-name">all_errors=False)</code></dt>
+  <dt id="py:method:asyncio.loop.create_connection"><em class="property">async</em> <code class="sig-name">loop.create_connection(protocol_factory, host=None, port=None, *, ssl=None, family=0, proto=0, flags=0, sock=None, local_addr=None, server_hostname=None, ssl_handshake_timeout=None, ssl_shutdown_timeout=None, happy_eyeballs_delay=None, interleave=None, all_errors=False)</code></dt>
   <dd><p>Open a streaming transport connection to a given
 address specified by <em>host</em> and <em>port</em>.</p>
 <p>The socket family can be either <a class="reference internal" href="socket.html#py:data:socket.af_inet"><code class="xref py data docutils literal">AF_INET</code></a> or
@@ -1061,11 +1054,7 @@ that can be used directly in async/await code.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:asyncio.loop.create_datagram_endpoint"><em class="property">async</em> <code class="sig-name">loop.create_datagram_endpoint(protocol_factory, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">local_addr=None, remote_addr=None, *, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">family=0, proto=0, flags=0, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">reuse_port=None, \</code></dt>
-  <dt id="py:method:asyncio.sock=none)"><em class="property">async</em> <code class="sig-name">allow_broadcast=None, sock=None)</code></dt>
+  <dt id="py:method:asyncio.loop.create_datagram_endpoint"><em class="property">async</em> <code class="sig-name">loop.create_datagram_endpoint(protocol_factory, local_addr=None, remote_addr=None, *, family=0, proto=0, flags=0, reuse_port=None, allow_broadcast=None, sock=None)</code></dt>
   <dd><p>Create a datagram connection.</p>
 <p>The socket family can be either <a class="reference internal" href="socket.html#py:data:socket.af_inet"><code class="xref py data docutils literal">AF_INET</code></a>,
 <a class="reference internal" href="socket.html#py:data:socket.af_inet6"><code class="xref py data docutils literal">AF_INET6</code></a>, or <a class="reference internal" href="socket.html#py:data:socket.af_unix"><code class="xref py data docutils literal">AF_UNIX</code></a>,
@@ -1151,10 +1140,7 @@ socket address.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:asyncio.loop.create_unix_connection"><em class="property">async</em> <code class="sig-name">loop.create_unix_connection(protocol_factory, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">path=None, *, ssl=None, sock=None, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">server_hostname=None, ssl_handshake_timeout=None, \</code></dt>
-  <dt id="py:method:asyncio.ssl_shutdown_timeout=none)"><em class="property">async</em> <code class="sig-name">ssl_shutdown_timeout=None)</code></dt>
+  <dt id="py:method:asyncio.loop.create_unix_connection"><em class="property">async</em> <code class="sig-name">loop.create_unix_connection(protocol_factory, path=None, *, ssl=None, sock=None, server_hostname=None, ssl_handshake_timeout=None, ssl_shutdown_timeout=None)</code></dt>
   <dd><p>Create a Unix connection.</p>
 <p>The socket family will be <a class="reference internal" href="socket.html#py:data:socket.af_unix"><code class="xref py data docutils literal">AF_UNIX</code></a>; socket
 type will be <a class="reference internal" href="socket.html#py:data:socket.sock_stream"><code class="xref py data docutils literal">SOCK_STREAM</code></a>.</p>
@@ -1183,16 +1169,7 @@ The <em>path</em> parameter can now be a <a class="reference internal" href="../
 <h3 id="creating-network-servers"><a class="toc-backref" href="#toc-entry-6">Creating network servers</a></h3>
 <a id="loop_create_server"></a>
 <dl class="py method">
-  <dt id="py:method:asyncio.loop.create_server"><em class="property">async</em> <code class="sig-name">loop.create_server(protocol_factory, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">host=None, port=None, *, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">family=socket.AF_UNSPEC, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">flags=socket.AI_PASSIVE, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">sock=None, backlog=100, ssl=None, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">reuse_address=None, reuse_port=None, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">keep_alive=None, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">ssl_handshake_timeout=None, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">ssl_shutdown_timeout=None, \</code></dt>
-  <dt id="py:method:asyncio.start_serving=true)"><em class="property">async</em> <code class="sig-name">start_serving=True)</code></dt>
+  <dt id="py:method:asyncio.loop.create_server"><em class="property">async</em> <code class="sig-name">loop.create_server(protocol_factory, host=None, port=None, *, family=socket.AF_UNSPEC, flags=socket.AI_PASSIVE, sock=None, backlog=100, ssl=None, reuse_address=None, reuse_port=None, keep_alive=None, ssl_handshake_timeout=None, ssl_shutdown_timeout=None, start_serving=True)</code></dt>
   <dd><p>Create a TCP server (socket type <a class="reference internal" href="socket.html#py:data:socket.sock_stream"><code class="xref py data docutils literal">SOCK_STREAM</code></a>) listening
 on <em>port</em> of the <em>host</em> address.</p>
 <p>Returns a <a class="reference internal" href="asyncio-eventloop.html#py:class:asyncio.server"><code class="xref py class docutils literal">Server</code></a> object.</p>
@@ -1304,11 +1281,7 @@ that can be used in an async/await code.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:asyncio.loop.create_unix_server"><em class="property">async</em> <code class="sig-name">loop.create_unix_server(protocol_factory, path=None, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">*, sock=None, backlog=100, ssl=None, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">ssl_handshake_timeout=None, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">ssl_shutdown_timeout=None, \</code></dt>
-  <dt id="py:method:asyncio.cleanup_socket=true)"><em class="property">async</em> <code class="sig-name">start_serving=True, cleanup_socket=True)</code></dt>
+  <dt id="py:method:asyncio.loop.create_unix_server"><em class="property">async</em> <code class="sig-name">loop.create_unix_server(protocol_factory, path=None, *, sock=None, backlog=100, ssl=None, ssl_handshake_timeout=None, ssl_shutdown_timeout=None, start_serving=True, cleanup_socket=True)</code></dt>
   <dd><p>Similar to <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_server"><code class="xref py method docutils literal">loop.create_server</code></a> but works with the
 <a class="reference internal" href="socket.html#py:data:socket.af_unix"><code class="xref py data docutils literal">AF_UNIX</code></a> socket family.</p>
 <p><em>path</em> is the name of a Unix domain socket, and is required,
@@ -1340,9 +1313,7 @@ The <em>path</em> parameter can now be a <a class="reference internal" href="pat
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:asyncio.loop.connect_accepted_socket"><em class="property">async</em> <code class="sig-name">loop.connect_accepted_socket(protocol_factory, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">sock, *, ssl=None, ssl_handshake_timeout=None, \</code></dt>
-  <dt id="py:method:asyncio.ssl_shutdown_timeout=none)"><em class="property">async</em> <code class="sig-name">ssl_shutdown_timeout=None)</code></dt>
+  <dt id="py:method:asyncio.loop.connect_accepted_socket"><em class="property">async</em> <code class="sig-name">loop.connect_accepted_socket(protocol_factory, sock, *, ssl=None, ssl_handshake_timeout=None, ssl_shutdown_timeout=None)</code></dt>
   <dd><p>Wrap an already accepted connection into a transport/protocol pair.</p>
 <p>This method can be used by servers that accept connections outside
 of asyncio but that use asyncio to handle them.</p>
@@ -1388,8 +1359,7 @@ to complete before aborting the connection. <code>30.0</code> seconds if <code>N
 </dl>
 <h3 id="transferring-files"><a class="toc-backref" href="#toc-entry-7">Transferring files</a></h3>
 <dl class="py method">
-  <dt id="py:method:asyncio.loop.sendfile"><em class="property">async</em> <code class="sig-name">loop.sendfile(transport, file, \</code></dt>
-  <dt id="py:method:asyncio.fallback=true)"><em class="property">async</em> <code class="sig-name">offset=0, count=None, *, fallback=True)</code></dt>
+  <dt id="py:method:asyncio.loop.sendfile"><em class="property">async</em> <code class="sig-name">loop.sendfile(transport, file, offset=0, count=None, *, fallback=True)</code></dt>
   <dd><p>Send a <em>file</em> over a <em>transport</em>.  Return the total number of bytes
 sent.</p>
 <p>The method uses high-performance <a href="#" class="broken-link"><code class="xref py method docutils literal">os.sendfile</code></a> if available.</p>
@@ -1412,10 +1382,7 @@ the <em>sendfile</em> syscall and <em>fallback</em> is <code>False</code>.</p>
 </dl>
 <h3 id="tls-upgrade"><a class="toc-backref" href="#toc-entry-8">TLS Upgrade</a></h3>
 <dl class="py method">
-  <dt id="py:method:asyncio.loop.start_tls"><em class="property">async</em> <code class="sig-name">loop.start_tls(transport, protocol, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">sslcontext, *, server_side=False, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">server_hostname=None, ssl_handshake_timeout=None, \</code></dt>
-  <dt id="py:method:asyncio.ssl_shutdown_timeout=none)"><em class="property">async</em> <code class="sig-name">ssl_shutdown_timeout=None)</code></dt>
+  <dt id="py:method:asyncio.loop.start_tls"><em class="property">async</em> <code class="sig-name">loop.start_tls(transport, protocol, sslcontext, *, server_side=False, server_hostname=None, ssl_handshake_timeout=None, ssl_shutdown_timeout=None)</code></dt>
   <dd><p>Upgrade an existing transport-based connection to TLS.</p>
 <p>Create a TLS coder/decoder instance and insert it between the <em>transport</em>
 and the <em>protocol</em>. The coder/decoder implements both <em>transport</em>-facing
@@ -1620,8 +1587,7 @@ Since Python 3.7, this is an <code>async def</code> method.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:asyncio.loop.sock_sendfile"><em class="property">async</em> <code class="sig-name">loop.sock_sendfile(sock, file, offset=0, count=None, \</code></dt>
-  <dt id="py:method:asyncio.fallback=true)"><em class="property">async</em> <code class="sig-name">*, fallback=True)</code></dt>
+  <dt id="py:method:asyncio.loop.sock_sendfile"><em class="property">async</em> <code class="sig-name">loop.sock_sendfile(sock, file, offset=0, count=None, *, fallback=True)</code></dt>
   <dd><p>Send a file using high-performance <a href="#" class="broken-link"><code class="xref py module docutils literal">os.sendfile</code></a> if possible.
 Return the total number of bytes sent.</p>
 <p>Asynchronous version of <a class="reference internal" href="socket.html#py:method:socket.socket.sendfile"><code class="xref py method docutils literal">socket.sendfile()</code></a>.</p>
@@ -1647,8 +1613,7 @@ the file when the platform does not support the sendfile syscall
 </dl>
 <h3 id="dns"><a class="toc-backref" href="#toc-entry-11">DNS</a></h3>
 <dl class="py method">
-  <dt id="py:method:asyncio.loop.getaddrinfo"><em class="property">async</em> <code class="sig-name">loop.getaddrinfo(host, port, *, family=0, \</code></dt>
-  <dt id="py:method:asyncio.flags=0)"><em class="property">async</em> <code class="sig-name">type=0, proto=0, flags=0)</code></dt>
+  <dt id="py:method:asyncio.loop.getaddrinfo"><em class="property">async</em> <code class="sig-name">loop.getaddrinfo(host, port, *, family=0, type=0, proto=0, flags=0)</code></dt>
   <dd><p>Asynchronous version of <a href="#" class="broken-link"><code class="xref py method docutils literal">socket.getaddrinfo</code></a>.</p>
 </dd>
 </dl>
@@ -1959,9 +1924,7 @@ details.</p>
 </div>
 <a id="loop_subprocess_exec"></a>
 <dl class="py method">
-  <dt id="py:method:asyncio.loop.subprocess_exec"><em class="property">async</em> <code class="sig-name">loop.subprocess_exec(protocol_factory, *args, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">stdin=subprocess.PIPE, stdout=subprocess.PIPE, \</code></dt>
-  <dt id="py:method:asyncio.**kwargs)"><em class="property">async</em> <code class="sig-name">stderr=subprocess.PIPE, **kwargs)</code></dt>
+  <dt id="py:method:asyncio.loop.subprocess_exec"><em class="property">async</em> <code class="sig-name">loop.subprocess_exec(protocol_factory, *args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)</code></dt>
   <dd><p>Create a subprocess from one or more string arguments specified by
 <em>args</em>.</p>
 <p><em>args</em> must be a list of strings represented by:</p>
@@ -2057,9 +2020,7 @@ is killed if it is still running.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:asyncio.loop.subprocess_shell"><em class="property">async</em> <code class="sig-name">loop.subprocess_shell(protocol_factory, cmd, *, \</code></dt>
-  <dt id="py:method:asyncio.\"><em class="property">async</em> <code class="sig-name">stdin=subprocess.PIPE, stdout=subprocess.PIPE, \</code></dt>
-  <dt id="py:method:asyncio.**kwargs)"><em class="property">async</em> <code class="sig-name">stderr=subprocess.PIPE, **kwargs)</code></dt>
+  <dt id="py:method:asyncio.loop.subprocess_shell"><em class="property">async</em> <code class="sig-name">loop.subprocess_shell(protocol_factory, cmd, *, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)</code></dt>
   <dd><p>Create a subprocess from <em>cmd</em>, which can be a <a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> or a
 <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> string encoded to the
 <a href="os.html#filesystem-encoding">filesystem encoding</a>,

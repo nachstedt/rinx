@@ -507,8 +507,7 @@ given, this becomes the new limit.</p>
 </dl>
 <p>The <a class="reference internal" href="csv.html#py:module:csv" title="csv: Write and read tabular data to and from delimited files."><code class="xref py module docutils literal">csv</code></a> module defines the following classes:</p>
 <dl class="py class">
-  <dt id="py:class:csv.dictreader"><em class="property">class</em> <code class="sig-name">DictReader(f, fieldnames=None, restkey=None, restval=None, \</code></dt>
-  <dt id="py:class:csv.**kwds)"><em class="property">class</em> <code class="sig-name">dialect='excel', *args, **kwds)</code></dt>
+  <dt id="py:class:csv.dictreader"><em class="property">class</em> <code class="sig-name">DictReader(f, fieldnames=None, restkey=None, restval=None, dialect='excel', *args, **kwds)</code></dt>
   <dd><p>Create an object that operates like a regular reader but maps the
 information in each row to a <a class="reference internal" href="stdtypes.html#py:class:dict"><code class="xref py class docutils literal">dict</code></a> whose keys are given by the
 optional <em>fieldnames</em> parameter.</p>
@@ -550,8 +549,7 @@ to <code>None</code>).</p>
 </dd>
 </dl>
 <dl class="py class">
-  <dt id="py:class:csv.dictwriter"><em class="property">class</em> <code class="sig-name">DictWriter(f, fieldnames, restval='', extrasaction='raise', \</code></dt>
-  <dt id="py:class:csv.**kwds)"><em class="property">class</em> <code class="sig-name">dialect='excel', *args, **kwds)</code></dt>
+  <dt id="py:class:csv.dictwriter"><em class="property">class</em> <code class="sig-name">DictWriter(f, fieldnames, restval='', extrasaction='raise', dialect='excel', *args, **kwds)</code></dt>
   <dd><p>Create an object which operates like a regular writer but maps dictionaries
 onto output rows.  The <em>fieldnames</em> parameter is a <a class="reference internal" href="collections.abc.html#py:module:collections.abc" title="collections.abc: Abstract base classes for containers"><code class="xref py module docutils literal">sequence</code></a> of keys that identify the order in which values in the
 dictionary passed to the <a class="reference internal" href="csv.html#py:method:csv.csvwriter.writerow"><code class="xref py method docutils literal">writerow</code></a> method are written to file

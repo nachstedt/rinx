@@ -525,8 +525,7 @@ settings.</p>
 <p>A convenience function helps create <a class="reference internal" href="ssl.html#py:class:ssl.sslcontext"><code class="xref py class docutils literal">SSLContext</code></a> objects for common
 purposes.</p>
 <dl class="py function">
-  <dt id="py:function:ssl.create_default_context"><code class="sig-name">create_default_context(purpose=Purpose.SERVER_AUTH, *,\</code></dt>
-  <dt id="py:function:ssl.cadata=none)"><code class="sig-name">cafile=None, capath=None, cadata=None)</code></dt>
+  <dt id="py:function:ssl.create_default_context"><code class="sig-name">create_default_context(purpose=Purpose.SERVER_AUTH, *, cafile=None, capath=None, cadata=None)</code></dt>
   <dd><p>Return a new <a class="reference internal" href="ssl.html#py:class:ssl.sslcontext"><code class="xref py class docutils literal">SSLContext</code></a> object with default settings for
 the given <em>purpose</em>.  The settings are chosen by the <a class="reference internal" href="ssl.html#py:module:ssl" title="ssl: TLS/SSL wrapper for socket objects"><code class="xref py module docutils literal">ssl</code></a> module,
 and usually represent a higher security level than when calling the
@@ -790,8 +789,7 @@ input format)</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:ssl.get_server_certificate"><code class="sig-name">get_server_certificate(addr, ssl_version=PROTOCOL_TLS_CLIENT, \</code></dt>
-  <dt id="py:function:ssl.timeout])"><code class="sig-name">ca_certs=None[, timeout])</code></dt>
+  <dt id="py:function:ssl.get_server_certificate"><code class="sig-name">get_server_certificate(addr, ssl_version=PROTOCOL_TLS_CLIENT, ca_certs=None[, timeout])</code></dt>
   <dd><p>Given the address <code>addr</code> of an SSL-protected server, as a (<em>hostname</em>,
 <em>port-number</em>) pair, fetches the server's certificate, and returns it as a
 PEM-encoded string.  If <code>ssl_version</code> is specified, uses that version of
@@ -2489,9 +2487,7 @@ supported curve.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:ssl.sslcontext.wrap_socket"><code class="sig-name">SSLContext.wrap_socket(sock, server_side=False, \</code></dt>
-  <dt id="py:method:ssl.\"><code class="sig-name">do_handshake_on_connect=True, suppress_ragged_eofs=True, \</code></dt>
-  <dt id="py:method:ssl.session=none)"><code class="sig-name">server_hostname=None, session=None)</code></dt>
+  <dt id="py:method:ssl.sslcontext.wrap_socket"><code class="sig-name">SSLContext.wrap_socket(sock, server_side=False, do_handshake_on_connect=True, suppress_ragged_eofs=True, server_hostname=None, session=None)</code></dt>
   <dd><p>Wrap an existing Python socket <em>sock</em> and return an instance of
 <a class="reference internal" href="ssl.html#py:attribute:ssl.sslcontext.sslsocket_class"><code class="xref py attribute docutils literal">SSLContext.sslsocket_class</code></a> (default <a class="reference internal" href="ssl.html#py:class:ssl.sslsocket"><code class="xref py class docutils literal">SSLSocket</code></a>). The
 returned SSL socket is tied to the context, its settings and certificates.
@@ -2554,8 +2550,7 @@ instead of hard-coded <a class="reference internal" href="ssl.html#py:class:ssl.
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:ssl.sslcontext.wrap_bio"><code class="sig-name">SSLContext.wrap_bio(incoming, outgoing, server_side=False, \</code></dt>
-  <dt id="py:method:ssl.session=none)"><code class="sig-name">server_hostname=None, session=None)</code></dt>
+  <dt id="py:method:ssl.sslcontext.wrap_bio"><code class="sig-name">SSLContext.wrap_bio(incoming, outgoing, server_side=False, server_hostname=None, session=None)</code></dt>
   <dd><p>Wrap the BIO objects <em>incoming</em> and <em>outgoing</em> and return an instance of
 <a class="reference internal" href="ssl.html#py:attribute:ssl.sslcontext.sslobject_class"><code class="xref py attribute docutils literal">SSLContext.sslobject_class</code></a> (default <a class="reference internal" href="ssl.html#py:class:ssl.sslobject"><code class="xref py class docutils literal">SSLObject</code></a>). The SSL
 routines will read input data from the incoming BIO and write data to the

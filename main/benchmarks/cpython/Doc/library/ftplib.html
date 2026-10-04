@@ -487,8 +487,7 @@ as mirroring other FTP servers.  It is also used by the module
 <a id="ftp-objects"></a>
 <h3 id="ftp-objects">FTP objects</h3>
 <dl class="py class">
-  <dt id="py:class:ftplib.ftp"><em class="property">class</em> <code class="sig-name">FTP(host='', user='', passwd='', acct='', timeout=None, \</code></dt>
-  <dt id="py:class:ftplib.encoding='utf-8')"><em class="property">class</em> <code class="sig-name">source_address=None, *, encoding='utf-8')</code></dt>
+  <dt id="py:class:ftplib.ftp"><em class="property">class</em> <code class="sig-name">FTP(host='', user='', passwd='', acct='', timeout=None, source_address=None, *, encoding='utf-8')</code></dt>
   <dd><p>Return a new instance of the <a class="reference internal" href="ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">FTP</code></a> class.</p>
 <dl>
 <dt>:param str host:</dt>
@@ -891,8 +890,7 @@ connection by issuing another <a class="reference internal" href="ftplib.html#py
 </dl>
 <h3 id="ftp-tls-objects">FTP_TLS objects</h3>
 <dl class="py class">
-  <dt id="py:class:ftplib.ftp_tls"><em class="property">class</em> <code class="sig-name">FTP_TLS(host='', user='', passwd='', acct='', *, context=None, \</code></dt>
-  <dt id="py:class:ftplib.encoding='utf-8')"><em class="property">class</em> <code class="sig-name">timeout=None, source_address=None, encoding='utf-8')</code></dt>
+  <dt id="py:class:ftplib.ftp_tls"><em class="property">class</em> <code class="sig-name">FTP_TLS(host='', user='', passwd='', acct='', *, context=None, timeout=None, source_address=None, encoding='utf-8')</code></dt>
   <dd><p>An <a class="reference internal" href="ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">FTP</code></a> subclass which adds TLS support to FTP as described in
 <span class="target" id="index-5"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4217.html"><strong>RFC 4217</strong></a>.
 Connect to port 21 implicitly securing the FTP control connection

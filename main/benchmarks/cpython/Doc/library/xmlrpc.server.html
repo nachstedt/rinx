@@ -489,9 +489,7 @@ see <a href="xml.html#xml-security">XML security</a>.</p>
    :ref:`wasm-availability` for more information.</pre>
 </div>
 <dl class="py class">
-  <dt id="py:class:xmlrpc.server.simplexmlrpcserver"><em class="property">class</em> <code class="sig-name">SimpleXMLRPCServer(addr, requestHandler=SimpleXMLRPCRequestHandler,\</code></dt>
-  <dt id="py:class:xmlrpc.server.encoding=none,\"><em class="property">class</em> <code class="sig-name">logRequests=True, allow_none=False, encoding=None,\</code></dt>
-  <dt id="py:class:xmlrpc.server.use_builtin_types=false)"><em class="property">class</em> <code class="sig-name">bind_and_activate=True, use_builtin_types=False)</code></dt>
+  <dt id="py:class:xmlrpc.server.simplexmlrpcserver"><em class="property">class</em> <code class="sig-name">SimpleXMLRPCServer(addr, requestHandler=SimpleXMLRPCRequestHandler, logRequests=True, allow_none=False, encoding=None, bind_and_activate=True, use_builtin_types=False)</code></dt>
   <dd><p>Create a new server instance.  This class provides methods for registration of
 functions that can be called by the XML-RPC protocol.  The <em>requestHandler</em>
 parameter should be a factory for request handler instances; it defaults to
@@ -514,8 +512,7 @@ when date/times values or binary data are received; it defaults to false.</p>
 </dd>
 </dl>
 <dl class="py class">
-  <dt id="py:class:xmlrpc.server.cgixmlrpcrequesthandler"><em class="property">class</em> <code class="sig-name">CGIXMLRPCRequestHandler(allow_none=False, encoding=None,\</code></dt>
-  <dt id="py:class:xmlrpc.server.use_builtin_types=false)"><em class="property">class</em> <code class="sig-name">use_builtin_types=False)</code></dt>
+  <dt id="py:class:xmlrpc.server.cgixmlrpcrequesthandler"><em class="property">class</em> <code class="sig-name">CGIXMLRPCRequestHandler(allow_none=False, encoding=None, use_builtin_types=False)</code></dt>
   <dd><p>Create a new instance to handle XML-RPC requests in a CGI environment.  The
 <em>allow_none</em> and <em>encoding</em> parameters are passed on to <a class="reference internal" href="xmlrpc.client.html#py:module:xmlrpc.client" title="xmlrpc.client: XML-RPC client access."><code class="xref py module docutils literal">xmlrpc.client</code></a>
 and control the XML-RPC responses that will be returned from the server.
@@ -819,9 +816,7 @@ to HTTP GET requests.  Servers can either be free standing, using
 <a class="reference internal" href="xmlrpc.server.html#py:class:xmlrpc.server.docxmlrpcserver"><code class="xref py class docutils literal">DocXMLRPCServer</code></a>, or embedded in a CGI environment, using
 <a class="reference internal" href="xmlrpc.server.html#py:class:xmlrpc.server.doccgixmlrpcrequesthandler"><code class="xref py class docutils literal">DocCGIXMLRPCRequestHandler</code></a>.</p>
 <dl class="py class">
-  <dt id="py:class:xmlrpc.server.docxmlrpcserver"><em class="property">class</em> <code class="sig-name">DocXMLRPCServer(addr, requestHandler=DocXMLRPCRequestHandler,\</code></dt>
-  <dt id="py:class:xmlrpc.server.encoding=none,\"><em class="property">class</em> <code class="sig-name">logRequests=True, allow_none=False, encoding=None,\</code></dt>
-  <dt id="py:class:xmlrpc.server.use_builtin_types=true)"><em class="property">class</em> <code class="sig-name">bind_and_activate=True, use_builtin_types=True)</code></dt>
+  <dt id="py:class:xmlrpc.server.docxmlrpcserver"><em class="property">class</em> <code class="sig-name">DocXMLRPCServer(addr, requestHandler=DocXMLRPCRequestHandler, logRequests=True, allow_none=False, encoding=None, bind_and_activate=True, use_builtin_types=True)</code></dt>
   <dd><p>Create a new server instance. All parameters have the same meaning as for
 <a class="reference internal" href="xmlrpc.server.html#py:class:xmlrpc.server.simplexmlrpcserver"><code class="xref py class docutils literal">SimpleXMLRPCServer</code></a>; <em>requestHandler</em> defaults to
 <a class="reference internal" href="xmlrpc.server.html#py:class:xmlrpc.server.docxmlrpcrequesthandler"><code class="xref py class docutils literal">DocXMLRPCRequestHandler</code></a>.</p>

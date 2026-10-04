@@ -2517,8 +2517,8 @@ index of 0. It is preferred, though, that you use
 for top-level modules. E.g. <code>__import__('sys', level=1)</code> is now an error.</p>
 </li>
 <li><p>Because <a class="reference internal" href="../library/sys.html#py:data:sys.meta_path"><code class="xref py data docutils literal">sys.meta_path</code></a> and <a class="reference internal" href="../library/sys.html#py:data:sys.path_hooks"><code class="xref py data docutils literal">sys.path_hooks</code></a> now have finders on
-them by default, you will most likely want to use <a class="reference internal" href="../tutorial/datastructures.html#py:method:list.insert"><code class="xref py method docutils literal">list.insert</code></a> instead
-of <a class="reference internal" href="../tutorial/datastructures.html#py:method:list.append"><code class="xref py method docutils literal">list.append</code></a> to add to those lists.</p>
+them by default, you will most likely want to use <a class="reference internal" href="../library/stdtypes.html#py:method:list.insert"><code class="xref py method docutils literal">list.insert</code></a> instead
+of <a class="reference internal" href="../library/stdtypes.html#py:method:list.append"><code class="xref py method docutils literal">list.append</code></a> to add to those lists.</p>
 </li>
 <li><p>Because <code>None</code> is now inserted into <a class="reference internal" href="../library/sys.html#py:data:sys.path_importer_cache"><code class="xref py data docutils literal">sys.path_importer_cache</code></a>, if you
 are clearing out entries in the dictionary of paths that do not have a

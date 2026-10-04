@@ -524,8 +524,7 @@ like this, the SMTP <code>QUIT</code> command is issued automatically when the
 </dd>
 </dl>
 <dl class="py class">
-  <dt id="py:class:smtplib.smtp_ssl"><em class="property">class</em> <code class="sig-name">SMTP_SSL(host='', port=0, local_hostname=None, * [, timeout], \</code></dt>
-  <dt id="py:class:smtplib.source_address=none)"><em class="property">class</em> <code class="sig-name">context=None, source_address=None)</code></dt>
+  <dt id="py:class:smtplib.smtp_ssl"><em class="property">class</em> <code class="sig-name">SMTP_SSL(host='', port=0, local_hostname=None, * [, timeout], context=None, source_address=None)</code></dt>
   <dd><p>An <a class="reference internal" href="smtplib.html#py:class:smtplib.smtp_ssl"><code class="xref py class docutils literal">SMTP_SSL</code></a> instance behaves exactly the same as instances of
 <a class="reference internal" href="smtplib.html#py:class:smtplib.smtp"><code class="xref py class docutils literal">SMTP</code></a>. <a class="reference internal" href="smtplib.html#py:class:smtplib.smtp_ssl"><code class="xref py class docutils literal">SMTP_SSL</code></a> should be used for situations where SSL is
 required from the beginning of the connection and using <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.starttls"><code class="xref py method docutils literal">starttls</code></a>
@@ -562,8 +561,7 @@ best practices.</p>
 </dd>
 </dl>
 <dl class="py class">
-  <dt id="py:class:smtplib.lmtp"><em class="property">class</em> <code class="sig-name">LMTP(host='', port=LMTP_PORT, local_hostname=None, \</code></dt>
-  <dt id="py:class:smtplib.timeout])"><em class="property">class</em> <code class="sig-name">source_address=None[, timeout])</code></dt>
+  <dt id="py:class:smtplib.lmtp"><em class="property">class</em> <code class="sig-name">LMTP(host='', port=LMTP_PORT, local_hostname=None, source_address=None[, timeout])</code></dt>
   <dd><p>The LMTP protocol, which is very similar to ESMTP, is heavily based on the
 standard SMTP client. It's common to use Unix sockets for LMTP, so our
 <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.connect"><code class="xref py method docutils literal">connect</code></a> method must support that as well as a regular host:port
@@ -956,8 +954,7 @@ raised if <code>SMTPUTF8</code> is specified but the server does not support it.
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:smtplib.smtp.send_message"><code class="sig-name">SMTP.send_message(msg, from_addr=None, to_addrs=None, \</code></dt>
-  <dt id="py:method:smtplib.mail_options="><code class="sig-name">mail_options=(), rcpt_options=())</code></dt>
+  <dt id="py:method:smtplib.smtp.send_message"><code class="sig-name">SMTP.send_message(msg, from_addr=None, to_addrs=None, mail_options=(), rcpt_options=())</code></dt>
   <dd><p>This is a convenience method for calling <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.sendmail"><code class="xref py method docutils literal">sendmail</code></a> with the message
 represented by an <a class="reference internal" href="email.compat32-message.html#py:class:email.message.message"><code class="xref py class docutils literal">email.message.Message</code></a> object.  The arguments have
 the same meaning as for <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.sendmail"><code class="xref py method docutils literal">sendmail</code></a>, except that <em>msg</em> is a <code>Message</code>

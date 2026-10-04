@@ -391,6 +391,31 @@ object each is a full signature:</p>
 environment variables.</p>
 </dd>
 </dl>
+<p>A signature too long for one line wraps with a trailing backslash, and stays
+one signature — the shape CPython's <code>library/asyncio-stream.rst</code> writes:</p>
+<dl class="py function">
+  <dt id="py:function:open_greeting_channel"><code class="sig-name">open_greeting_channel(host=None, port=None, *, limit=None, ssl=None)</code></dt>
+  <dd><p>Opens a channel greetings can be sent over. Only
+<code>open_greeting_channel</code> is indexed, not a name per wrapped line.</p>
+</dd>
+</dl>
+<p>An <code>:async:</code> function is shown as a coroutine function:</p>
+<dl class="py function">
+  <dt id="py:function:greet_later"><em class="property">async</em> <code class="sig-name">greet_later(name, delay)</code></dt>
+  <dd><p>Greets the given name once <code>delay</code> seconds have passed.</p>
+</dd>
+</dl>
+<h3 id="describing-an-object-twice">Describing an Object Twice</h3>
+<p>An object documented in a second place takes <code>:no-index:</code> (or its legacy
+spelling <code>:noindex:</code>) there, so that only its main description is a
+cross-reference target — as CPython's <code>library/functions.rst</code> does for the
+built-in types. It is still typeset, with no anchor:</p>
+<dl class="py function">
+  <dt><code class="sig-name">greet(name)</code></dt>
+  <dd><p>A short reminder of <a class="reference internal" href="domains.html#py:function:greet"><code class="xref py function docutils literal">greet</code></a>, which links to the description at
+the top of this page.</p>
+</dd>
+</dl>
 <h3 id="the-greeter-class">The <code>Greeter</code> Class</h3>
 <p>Nesting a <code>py:method</code> (or any domain object) directive inside a
 <code>py:class</code> body automatically qualifies its cross-reference name with the

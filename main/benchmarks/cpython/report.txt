@@ -54,9 +54,10 @@ Toctree Options Exercised Summary:
 Parser Diagnostics Summary:
 ---------------------------
 directive.unknown: 1888
-c-decl.unparsed: 168
+c-decl.unparsed: 108
 option.malformed-spec: 63
 substitution.undefined: 23
+directive.unknown-option: 17
 block-quote.unindent-no-blank-line: 4
 list.enumerated-start-not-one: 4
 table.grid.inconsistent-column-boundary: 1

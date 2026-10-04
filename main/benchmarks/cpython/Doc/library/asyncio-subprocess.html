@@ -510,10 +510,8 @@ to modify the above example to run several commands simultaneously:</p>
 <p>See also the <a href="#" class="broken-link">Examples</a> subsection.</p>
 <h2 id="creating-subprocesses">Creating Subprocesses</h2>
 <dl class="py function">
-  <dt id="py:function:asyncio.create_subprocess_exec"><code class="sig-name">create_subprocess_exec(program, *args, stdin=None, \</code></dt>
-  <dt id="py:function:asyncio.**kwds)"><code class="sig-name">stdout=None, stderr=None, limit=None, **kwds)</code></dt>
-  <dd><p>:async:</p>
-<p>Create a subprocess.</p>
+  <dt id="py:function:asyncio.create_subprocess_exec"><em class="property">async</em> <code class="sig-name">create_subprocess_exec(program, *args, stdin=None, stdout=None, stderr=None, limit=None, **kwds)</code></dt>
+  <dd><p>Create a subprocess.</p>
 <p>The <em>limit</em> argument sets the buffer limit for <a class="reference internal" href="asyncio-stream.html#py:class:asyncio.streamreader"><code class="xref py class docutils literal">StreamReader</code></a>
 wrappers for <a class="reference internal" href="asyncio-subprocess.html#py:attribute:asyncio.subprocess.process.stdout"><code class="xref py attribute docutils literal">stdout</code></a> and <a class="reference internal" href="asyncio-subprocess.html#py:attribute:asyncio.subprocess.process.stderr"><code class="xref py attribute docutils literal">stderr</code></a>
 (if <a class="reference internal" href="subprocess.html#py:data:subprocess.pipe"><code class="xref py data docutils literal">subprocess.PIPE</code></a> is passed to <em>stdout</em> and <em>stderr</em> arguments).</p>
@@ -529,10 +527,8 @@ running, the child process will be killed.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:asyncio.create_subprocess_shell"><code class="sig-name">create_subprocess_shell(cmd, stdin=None, \</code></dt>
-  <dt id="py:function:asyncio.**kwds)"><code class="sig-name">stdout=None, stderr=None, limit=None, **kwds)</code></dt>
-  <dd><p>:async:</p>
-<p>Run the <em>cmd</em> shell command.</p>
+  <dt id="py:function:asyncio.create_subprocess_shell"><em class="property">async</em> <code class="sig-name">create_subprocess_shell(cmd, stdin=None, stdout=None, stderr=None, limit=None, **kwds)</code></dt>
+  <dd><p>Run the <em>cmd</em> shell command.</p>
 <p>The <em>limit</em> argument sets the buffer limit for <a class="reference internal" href="asyncio-stream.html#py:class:asyncio.streamreader"><code class="xref py class docutils literal">StreamReader</code></a>
 wrappers for <a class="reference internal" href="asyncio-subprocess.html#py:attribute:asyncio.subprocess.process.stdout"><code class="xref py attribute docutils literal">stdout</code></a> and <a class="reference internal" href="asyncio-subprocess.html#py:attribute:asyncio.subprocess.process.stderr"><code class="xref py attribute docutils literal">stderr</code></a>
 (if <a class="reference internal" href="subprocess.html#py:data:subprocess.pipe"><code class="xref py data docutils literal">subprocess.PIPE</code></a> is passed to <em>stdout</em> and <em>stderr</em> arguments).</p>

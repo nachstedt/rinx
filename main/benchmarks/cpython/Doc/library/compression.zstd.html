@@ -446,8 +446,7 @@ decompression, or while initializing the (de)compressor state.</p>
 </dl>
 <h2 id="reading-and-writing-compressed-files">Reading and writing compressed files</h2>
 <dl class="py function">
-  <dt id="py:function:compression.zstd.open"><code class="sig-name">open(file, /, mode='rb', *, level=None, options=None, \</code></dt>
-  <dt id="py:function:compression.zstd.newline=none)"><code class="sig-name">zstd_dict=None, encoding=None, errors=None, newline=None)</code></dt>
+  <dt id="py:function:compression.zstd.open"><code class="sig-name">open(file, /, mode='rb', *, level=None, options=None, zstd_dict=None, encoding=None, errors=None, newline=None)</code></dt>
   <dd><p>Open a Zstandard-compressed file in binary or text mode, returning a
 <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file object</span></a>.</p>
 <p>The <em>file</em> argument can be either a file name (given as a
@@ -481,8 +480,7 @@ handling behavior, and line endings.</p>
 </dd>
 </dl>
 <dl class="py class">
-  <dt id="py:class:compression.zstd.zstdfile"><em class="property">class</em> <code class="sig-name">ZstdFile(file, /, mode='rb', *, level=None, options=None, \</code></dt>
-  <dt id="py:class:compression.zstd.zstd_dict=none)"><em class="property">class</em> <code class="sig-name">zstd_dict=None)</code></dt>
+  <dt id="py:class:compression.zstd.zstdfile"><em class="property">class</em> <code class="sig-name">ZstdFile(file, /, mode='rb', *, level=None, options=None, zstd_dict=None)</code></dt>
   <dd><p>Open a Zstandard-compressed file in binary mode.</p>
 <p>A <a class="reference internal" href="compression.zstd.html#py:class:compression.zstd.zstdfile"><code class="xref py class docutils literal">ZstdFile</code></a> can wrap an already-open <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file object</span></a>, or operate
 directly on a named file. The <em>file</em> argument specifies either the file

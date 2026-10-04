@@ -302,7 +302,7 @@
       <a id="sortinghowto"></a>
 <h1 id="sorting-techniques">Sorting Techniques</h1>
 <p>:Author: Andrew Dalke and Raymond Hettinger</p>
-<p>Python lists have a built-in <a class="reference internal" href="../tutorial/datastructures.html#py:method:list.sort"><code class="xref py method docutils literal">list.sort</code></a> method that modifies the list
+<p>Python lists have a built-in <a class="reference internal" href="../library/stdtypes.html#py:method:list.sort"><code class="xref py method docutils literal">list.sort</code></a> method that modifies the list
 in-place.  There is also a <a class="reference internal" href="../library/functions.html#py:function:sorted"><code class="xref py function docutils literal">sorted</code></a> built-in function that builds a new
 sorted list from an iterable.</p>
 <p>In this document, we explore the various techniques for sorting data using Python.</p>
@@ -312,7 +312,7 @@ returns a new sorted list:</p>
 <div class="highlight hl-code"><pre>
 &gt;&gt;&gt; sorted([5, 2, 3, 1, 4])
 [1, 2, 3, 4, 5]</pre></div>
-<p>You can also use the <a class="reference internal" href="../tutorial/datastructures.html#py:method:list.sort"><code class="xref py method docutils literal">list.sort</code></a> method. It modifies the list
+<p>You can also use the <a class="reference internal" href="../library/stdtypes.html#py:method:list.sort"><code class="xref py method docutils literal">list.sort</code></a> method. It modifies the list
 in-place (and returns <code>None</code> to avoid confusion). Usually it's less convenient
 than <a class="reference internal" href="../library/functions.html#py:function:sorted"><code class="xref py function docutils literal">sorted</code></a> - but if you don't need the original list, it's slightly
 more efficient.</p>
@@ -321,13 +321,13 @@ more efficient.</p>
 &gt;&gt;&gt; a.sort()
 &gt;&gt;&gt; a
 [1, 2, 3, 4, 5]</pre></div>
-<p>Another difference is that the <a class="reference internal" href="../tutorial/datastructures.html#py:method:list.sort"><code class="xref py method docutils literal">list.sort</code></a> method is only defined for
+<p>Another difference is that the <a class="reference internal" href="../library/stdtypes.html#py:method:list.sort"><code class="xref py method docutils literal">list.sort</code></a> method is only defined for
 lists. In contrast, the <a class="reference internal" href="../library/functions.html#py:function:sorted"><code class="xref py function docutils literal">sorted</code></a> function accepts any iterable.</p>
 <div class="highlight hl-code"><pre>
 &gt;&gt;&gt; sorted({1: 'D', 2: 'B', 3: 'B', 4: 'E', 5: 'A'})
 [1, 2, 3, 4, 5]</pre></div>
 <h2 id="key-functions">Key Functions</h2>
-<p>The <a class="reference internal" href="../tutorial/datastructures.html#py:method:list.sort"><code class="xref py method docutils literal">list.sort</code></a> method and the functions <a class="reference internal" href="../library/functions.html#py:function:sorted"><code class="xref py function docutils literal">sorted</code></a>,
+<p>The <a class="reference internal" href="../library/stdtypes.html#py:method:list.sort"><code class="xref py method docutils literal">list.sort</code></a> method and the functions <a class="reference internal" href="../library/functions.html#py:function:sorted"><code class="xref py function docutils literal">sorted</code></a>,
 <a class="reference internal" href="../library/functions.html#py:function:min"><code class="xref py function docutils literal">min</code></a>, <a class="reference internal" href="../library/functions.html#py:function:max"><code class="xref py function docutils literal">max</code></a>, <a class="reference internal" href="../library/heapq.html#py:function:heapq.nsmallest"><code class="xref py function docutils literal">heapq.nsmallest</code></a>, and
 <a class="reference internal" href="../library/heapq.html#py:function:heapq.nlargest"><code class="xref py function docutils literal">heapq.nlargest</code></a> have a <em>key</em> parameter to specify a function (or
 other callable) to be called on each list element prior to making
@@ -409,7 +409,7 @@ function making it suitable for use as a key-function.</p>
 &gt;&gt;&gt; sorted(names, key=partial(normalize, 'NFC'))
 ['Abe', 'Eloise', 'Nubia', 'Núñez', 'Zeke', 'Zoë', 'Åbjørn', 'Élana']</pre></div>
 <h2 id="ascending-and-descending">Ascending and Descending</h2>
-<p>Both <a class="reference internal" href="../tutorial/datastructures.html#py:method:list.sort"><code class="xref py method docutils literal">list.sort</code></a> and <a class="reference internal" href="../library/functions.html#py:function:sorted"><code class="xref py function docutils literal">sorted</code></a> accept a <em>reverse</em> parameter with a
+<p>Both <a class="reference internal" href="../library/stdtypes.html#py:method:list.sort"><code class="xref py method docutils literal">list.sort</code></a> and <a class="reference internal" href="../library/functions.html#py:function:sorted"><code class="xref py function docutils literal">sorted</code></a> accept a <em>reverse</em> parameter with a
 boolean value. This is used to flag descending sorts. For example, to get the
 student data in reverse <em>age</em> order:</p>
 <div class="highlight hl-code"><pre>

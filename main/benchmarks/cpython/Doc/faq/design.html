@@ -714,7 +714,7 @@ prepared to think hard about the requirements and the consequences of not
 meeting them correctly.  Consider yourself warned.</p>
 <h2 id="why-doesn-t-list-sort-return-the-sorted-list">Why doesn't list.sort() return the sorted list?</h2>
 <p>In situations where performance matters, making a copy of the list just to sort
-it would be wasteful. Therefore, <a class="reference internal" href="../tutorial/datastructures.html#py:method:list.sort"><code class="xref py method docutils literal">list.sort</code></a> sorts the list in place. In
+it would be wasteful. Therefore, <a class="reference internal" href="../library/stdtypes.html#py:method:list.sort"><code class="xref py method docutils literal">list.sort</code></a> sorts the list in place. In
 order to remind you of that fact, it does not return the sorted list.  This way,
 you won't be fooled into accidentally overwriting a list when you need a sorted
 copy but also need to keep the unsorted version around.</p>
@@ -748,9 +748,9 @@ exhaustive test suites that exercise every line of code in a module.</p>
 <p>An appropriate testing discipline can help build large complex applications in
 Python as well as having interface specifications would.  In fact, it can be
 better because an interface specification cannot test certain properties of a
-program.  For example, the <a class="reference internal" href="../tutorial/datastructures.html#py:method:list.append"><code class="xref py method docutils literal">list.append</code></a> method is expected to add new elements
+program.  For example, the <a class="reference internal" href="../library/stdtypes.html#py:method:list.append"><code class="xref py method docutils literal">list.append</code></a> method is expected to add new elements
 to the end of some internal list; an interface specification cannot test that
-your <a class="reference internal" href="../tutorial/datastructures.html#py:method:list.append"><code class="xref py method docutils literal">list.append</code></a> implementation will actually do this correctly, but it's
+your <a class="reference internal" href="../library/stdtypes.html#py:method:list.append"><code class="xref py method docutils literal">list.append</code></a> implementation will actually do this correctly, but it's
 trivial to check this property in a test suite.</p>
 <p>Writing test suites is very helpful, and you might want to design your code to
 make it easily tested. One increasingly popular technique, test-driven

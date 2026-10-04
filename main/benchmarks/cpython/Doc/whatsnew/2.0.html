@@ -868,7 +868,7 @@ break.</p>
 <p>The change which will probably break the most code is tightening up the
 arguments accepted by some methods.  Some methods would take multiple arguments
 and treat them as a tuple, particularly various list methods such as
-<a class="reference internal" href="../tutorial/datastructures.html#py:method:list.append"><code class="xref py method docutils literal">append</code></a> and <a class="reference internal" href="../tutorial/datastructures.html#py:method:list.insert"><code class="xref py method docutils literal">insert</code></a>.
+<a class="reference internal" href="../library/stdtypes.html#py:method:list.append"><code class="xref py method docutils literal">append</code></a> and <a class="reference internal" href="../library/stdtypes.html#py:method:list.insert"><code class="xref py method docutils literal">insert</code></a>.
 In earlier versions of Python, if <code>L</code> is
 a list, <code>L.append( 1,2 )</code> appends the tuple <code>(1,2)</code> to the list.  In Python
 2.0 this causes a <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> exception to be raised, with the message:

@@ -1272,10 +1272,10 @@ sequence of key-value pairs into a dictionary of lists:</p>
 </blockquote>
 <p>When each key is encountered for the first time, it is not already in the
 mapping; so an entry is automatically created using the <a class="reference internal" href="collections.html#py:attribute:collections.defaultdict.default_factory"><code class="xref py attribute docutils literal">default_factory</code></a>
-function which returns an empty <a class="reference internal" href="stdtypes.html#py:class:list"><code class="xref py class docutils literal">list</code></a>.  The <a class="reference internal" href="../tutorial/datastructures.html#py:method:list.append"><code class="xref py method docutils literal">list.append</code></a>
+function which returns an empty <a class="reference internal" href="stdtypes.html#py:class:list"><code class="xref py class docutils literal">list</code></a>.  The <a class="reference internal" href="stdtypes.html#py:method:list.append"><code class="xref py method docutils literal">list.append</code></a>
 operation then attaches the value to the new list.  When keys are encountered
 again, the look-up proceeds normally (returning the list for that key) and the
-<a class="reference internal" href="../tutorial/datastructures.html#py:method:list.append"><code class="xref py method docutils literal">list.append</code></a> operation adds another value to the list. This technique is
+<a class="reference internal" href="stdtypes.html#py:method:list.append"><code class="xref py method docutils literal">list.append</code></a> operation adds another value to the list. This technique is
 simpler and faster than an equivalent technique using <a class="reference internal" href="stdtypes.html#py:method:dict.setdefault"><code class="xref py method docutils literal">dict.setdefault</code></a>:</p>
 <blockquote>
 <div class="highlight hl-code"><pre>

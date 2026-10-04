@@ -253,52 +253,45 @@ and adds some new things as well.</p>
 <p>The <a href="../library/stdtypes.html#typesseq-list">list</a> data type has some more methods. Here are all
 of the methods of list objects:</p>
 <dl class="py method">
-  <dt id="py:method:list.append"><code class="sig-name">list.append(x)</code></dt>
-  <dd><p>:noindex:</p>
-<p>Add an item to the end of the list.  Similar to <code>a[len(a):] = [x]</code>.</p>
+  <dt><code class="sig-name">list.append(x)</code></dt>
+  <dd><p>Add an item to the end of the list.  Similar to <code>a[len(a):] = [x]</code>.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:list.extend"><code class="sig-name">list.extend(iterable)</code></dt>
-  <dd><p>:noindex:</p>
-<p>Extend the list by appending all the items from the iterable.  Similar to
+  <dt><code class="sig-name">list.extend(iterable)</code></dt>
+  <dd><p>Extend the list by appending all the items from the iterable.  Similar to
 <code>a[len(a):] = iterable</code>.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:list.insert"><code class="sig-name">list.insert(i, x)</code></dt>
-  <dd><p>:noindex:</p>
-<p>Insert an item at a given position.  The first argument is the index of the
+  <dt><code class="sig-name">list.insert(i, x)</code></dt>
+  <dd><p>Insert an item at a given position.  The first argument is the index of the
 element before which to insert, so <code>a.insert(0, x)</code> inserts at the front of
 the list, and <code>a.insert(len(a), x)</code> is equivalent to <code>a.append(x)</code>.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:list.remove"><code class="sig-name">list.remove(x)</code></dt>
-  <dd><p>:noindex:</p>
-<p>Remove the first item from the list whose value is equal to <em>x</em>.  It raises a
+  <dt><code class="sig-name">list.remove(x)</code></dt>
+  <dd><p>Remove the first item from the list whose value is equal to <em>x</em>.  It raises a
 <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> if there is no such item.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:list.pop"><code class="sig-name">list.pop([i])</code></dt>
-  <dd><p>:noindex:</p>
-<p>Remove the item at the given position in the list, and return it.  If no index
+  <dt><code class="sig-name">list.pop([i])</code></dt>
+  <dd><p>Remove the item at the given position in the list, and return it.  If no index
 is specified, <code>a.pop()</code> removes and returns the last item in the list.
 It raises an <a class="reference internal" href="../library/exceptions.html#py:exception:indexerror"><code class="xref py exception docutils literal">IndexError</code></a> if the list is empty or the index is
 outside the list range.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:list.clear"><code class="sig-name">list.clear()</code></dt>
-  <dd><p>:noindex:</p>
-<p>Remove all items from the list.  Similar to <code>del a[:]</code>.</p>
+  <dt><code class="sig-name">list.clear()</code></dt>
+  <dd><p>Remove all items from the list.  Similar to <code>del a[:]</code>.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:list.index"><code class="sig-name">list.index(x[, start[, end]])</code></dt>
-  <dd><p>:noindex:</p>
-<p>Return zero-based index of the first occurrence of <em>x</em> in the list.
+  <dt><code class="sig-name">list.index(x[, start[, end]])</code></dt>
+  <dd><p>Return zero-based index of the first occurrence of <em>x</em> in the list.
 Raises a <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> if there is no such item.</p>
 <p>The optional arguments <em>start</em> and <em>end</em> are interpreted as in the slice
 notation and are used to limit the search to a particular subsequence of
@@ -307,28 +300,24 @@ sequence rather than the <em>start</em> argument.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:list.count"><code class="sig-name">list.count(x)</code></dt>
-  <dd><p>:noindex:</p>
-<p>Return the number of times <em>x</em> appears in the list.</p>
+  <dt><code class="sig-name">list.count(x)</code></dt>
+  <dd><p>Return the number of times <em>x</em> appears in the list.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:list.sort"><code class="sig-name">list.sort(*, key=None, reverse=False)</code></dt>
-  <dd><p>:noindex:</p>
-<p>Sort the items of the list in place (the arguments can be used for sort
+  <dt><code class="sig-name">list.sort(*, key=None, reverse=False)</code></dt>
+  <dd><p>Sort the items of the list in place (the arguments can be used for sort
 customization, see <a class="reference internal" href="../library/functions.html#py:function:sorted"><code class="xref py function docutils literal">sorted</code></a> for their explanation).</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:list.reverse"><code class="sig-name">list.reverse()</code></dt>
-  <dd><p>:noindex:</p>
-<p>Reverse the elements of the list in place.</p>
+  <dt><code class="sig-name">list.reverse()</code></dt>
+  <dd><p>Reverse the elements of the list in place.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:list.copy"><code class="sig-name">list.copy()</code></dt>
-  <dd><p>:noindex:</p>
-<p>Return a shallow copy of the list.  Similar to <code>a[:]</code>.</p>
+  <dt><code class="sig-name">list.copy()</code></dt>
+  <dd><p>Return a shallow copy of the list.  Similar to <code>a[:]</code>.</p>
 </dd>
 </dl>
 <p>An example that uses most of the list methods:</p>
@@ -372,8 +361,8 @@ comparison.</p>
 </div>
 <p>The list methods make it very easy to use a list as a stack, where the last
 element added is the first element retrieved ("last-in, first-out").  To add an
-item to the top of the stack, use <a class="reference internal" href="datastructures.html#py:method:list.append"><code class="xref py method docutils literal">append</code></a>.  To retrieve an item from the
-top of the stack, use <a class="reference internal" href="datastructures.html#py:method:list.pop"><code class="xref py method docutils literal">pop</code></a> without an explicit index.  For example:</p>
+item to the top of the stack, use <a class="reference internal" href="../library/stdtypes.html#py:method:list.append"><code class="xref py method docutils literal">append</code></a>.  To retrieve an item from the
+top of the stack, use <a class="reference internal" href="../library/stdtypes.html#py:method:list.pop"><code class="xref py method docutils literal">pop</code></a> without an explicit index.  For example:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">stack</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">4</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">5</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span></span>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">stack</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">append</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">6</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
@@ -552,7 +541,7 @@ The <a class="reference internal" href="../library/functions.html#py:function:zi
 <a id="tut-del"></a>
 <h2 id="the-keyword-del-statement"><span class="section-number">5.2. </span>The :keyword:`!del` statement</h2>
 <p>There is a way to remove an item from a list given its index instead of its
-value: the :keyword:`del` statement.  This differs from the <a class="reference internal" href="datastructures.html#py:method:list.pop"><code class="xref py method docutils literal">pop</code></a> method
+value: the :keyword:`del` statement.  This differs from the <a class="reference internal" href="../library/stdtypes.html#py:method:list.pop"><code class="xref py method docutils literal">pop</code></a> method
 which returns a value.  The :keyword:`!del` statement can also be used to remove
 slices from a list or clear the entire list (which we did earlier by assignment
 of an empty list to the slice).  For example:</p>
@@ -698,8 +687,8 @@ any immutable type; strings and numbers can always be keys.  Tuples can be used
 as keys if they contain only strings, numbers, or tuples; if a tuple contains
 any mutable object either directly or indirectly, it cannot be used as a key.
 You can't use lists as keys, since lists can be modified in place using index
-assignments, slice assignments, or methods like <a class="reference internal" href="datastructures.html#py:method:list.append"><code class="xref py method docutils literal">append</code></a> and
-<a class="reference internal" href="datastructures.html#py:method:list.extend"><code class="xref py method docutils literal">extend</code></a>.</p>
+assignments, slice assignments, or methods like <a class="reference internal" href="../library/stdtypes.html#py:method:list.append"><code class="xref py method docutils literal">append</code></a> and
+<a class="reference internal" href="../library/stdtypes.html#py:method:list.extend"><code class="xref py method docutils literal">extend</code></a>.</p>
 <p>It is best to think of a dictionary as a set of <em>key: value</em> pairs,
 with the requirement that the keys are unique (within one dictionary). A pair of
 braces creates an empty dictionary: <code>{}</code>. Placing a comma-separated list of

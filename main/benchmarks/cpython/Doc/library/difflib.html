@@ -416,9 +416,8 @@ can be used for example, for comparing files, and can produce information
 about file differences in various formats, including HTML and context and unified
 diffs. For comparing directories and files, see also, the <a class="reference internal" href="filecmp.html#py:module:filecmp" title="filecmp: Compare files efficiently."><code class="xref py module docutils literal">filecmp</code></a> module.</p>
 <dl class="py class">
-  <dt id="py:class:difflib.sequencematcher"><em class="property">class</em> <code class="sig-name">SequenceMatcher</code></dt>
-  <dd><p>:noindex:</p>
-<p>This is a flexible class for comparing pairs of sequences of any type, so long
+  <dt><em class="property">class</em> <code class="sig-name">SequenceMatcher</code></dt>
+  <dd><p>This is a flexible class for comparing pairs of sequences of any type, so long
 as the sequence elements are <a class="reference internal" href="../glossary.html#term-hashable"><span class="xref std std-term">hashable</span></a>.  The basic algorithm predates, and is a
 little fancier than, an algorithm published in the late 1980's by Ratcliff and
 Obershelp under the hyperbolic name "gestalt pattern matching."  The idea is to
@@ -516,8 +515,7 @@ broken and wrapped, defaults to <code>None</code> where lines are not wrapped.</
 </dl>
 <p>The following methods are public:</p>
 <dl class="py method">
-  <dt id="py:method:difflib.htmldiff.make_file"><code class="sig-name">make_file(fromlines, tolines, fromdesc='', todesc='', context=False, \</code></dt>
-  <dt id="py:method:difflib.htmldiff.charset='utf-8')"><code class="sig-name">numlines=5, *, charset='utf-8')</code></dt>
+  <dt id="py:method:difflib.htmldiff.make_file"><code class="sig-name">make_file(fromlines, tolines, fromdesc='', todesc='', context=False, numlines=5, *, charset='utf-8')</code></dt>
   <dd><p>Compares <em>fromlines</em> and <em>tolines</em> (lists of strings) and returns a string which
 is a complete HTML file containing a table showing line by line differences with
 inter-line and intra-line changes highlighted.</p>
@@ -1054,9 +1052,8 @@ Restricting synch points to contiguous matches preserves some notion of
 locality, at the occasional cost of producing a longer diff.</p>
 <p>The <a class="reference internal" href="difflib.html#py:class:difflib.differ"><code class="xref py class docutils literal">Differ</code></a> class has this constructor:</p>
 <dl class="py class">
-  <dt id="py:class:difflib.differ"><em class="property">class</em> <code class="sig-name">Differ(linejunk=None, charjunk=None)</code></dt>
-  <dd><p>:noindex:</p>
-<p>Optional keyword parameters <em>linejunk</em> and <em>charjunk</em> are for filter functions
+  <dt><em class="property">class</em> <code class="sig-name">Differ(linejunk=None, charjunk=None)</code></dt>
+  <dd><p>Optional keyword parameters <em>linejunk</em> and <em>charjunk</em> are for filter functions
 (or <code>None</code>):</p>
 <p><em>linejunk</em>: A function that accepts a single string argument, and returns true
 if the string is junk.  The default is <code>None</code>, meaning that no line is

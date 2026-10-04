@@ -430,8 +430,7 @@ object in the "canonical" representation (not checked).</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_write"><code class="sig-name">void PyUnicode_WRITE(int kind, void *data, \</code></dt>
-  <dt id="c:function:value)"><code class="sig-name">Py_ssize_t index, Py_UCS4 value)</code></dt>
+  <dt id="c:function:pyunicode_write"><code class="sig-name">void PyUnicode_WRITE(int kind, void *data, Py_ssize_t index, Py_UCS4 value)</code></dt>
   <dd><p>Write the code point <em>value</em> to the given zero-based <em>index</em> in a string.</p>
 <p>The <em>kind</em> value and <em>data</em> pointer must have been obtained from a
 string using <a class="reference internal" href="unicode.html#c:function:pyunicode_kind"><code class="xref c function docutils literal">PyUnicode_KIND</code></a> and <a class="reference internal" href="unicode.html#c:function:pyunicode_data"><code class="xref c function docutils literal">PyUnicode_DATA</code></a>
@@ -446,8 +445,7 @@ and is intended for usage in loops.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_read"><code class="sig-name">Py_UCS4 PyUnicode_READ(int kind, void *data, \</code></dt>
-  <dt id="c:function:index)"><code class="sig-name">Py_ssize_t index)</code></dt>
+  <dt id="c:function:pyunicode_read"><code class="sig-name">Py_UCS4 PyUnicode_READ(int kind, void *data, Py_ssize_t index)</code></dt>
   <dd><p>Read a code point from a canonical representation <em>data</em> (as obtained with
 <a class="reference internal" href="unicode.html#c:function:pyunicode_data"><code class="xref c function docutils literal">PyUnicode_DATA</code></a>).  No checks or ready calls are performed.</p>
 <div class="versionadded">
@@ -662,8 +660,7 @@ functions below.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_fromkindanddata"><code class="sig-name">PyObject* PyUnicode_FromKindAndData(int kind, const void *buffer, \</code></dt>
-  <dt id="c:function:size)"><code class="sig-name">Py_ssize_t size)</code></dt>
+  <dt id="c:function:pyunicode_fromkindanddata"><code class="sig-name">PyObject* PyUnicode_FromKindAndData(int kind, const void *buffer, Py_ssize_t size)</code></dt>
   <dd><p>Create a new Unicode object with the given <em>kind</em> (possible values are
 <a class="reference internal" href="unicode.html#c:macro:pyunicode_1byte_kind"><code class="xref c macro docutils literal">PyUnicode_1BYTE_KIND</code></a> etc., as returned by
 <a class="reference internal" href="unicode.html#c:function:pyunicode_kind"><code class="xref c function docutils literal">PyUnicode_KIND</code></a>).  The <em>buffer</em> must point to an array of <em>size</em>
@@ -1051,8 +1048,7 @@ raised in the case it is not.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_fromencodedobject"><code class="sig-name">PyObject* PyUnicode_FromEncodedObject(PyObject *obj, \</code></dt>
-  <dt id="c:function:errors)"><code class="sig-name">const char *encoding, const char *errors)</code></dt>
+  <dt id="c:function:pyunicode_fromencodedobject"><code class="sig-name">PyObject* PyUnicode_FromEncodedObject(PyObject *obj, const char *encoding, const char *errors)</code></dt>
   <dd><p>Decode an encoded object <em>obj</em> to a Unicode object.</p>
 <p><a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>, <a class="reference internal" href="../library/stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a> and other
 <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like objects</span></a>
@@ -1110,11 +1106,7 @@ until interpreter shutdown.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_copycharacters"><code class="sig-name">Py_ssize_t PyUnicode_CopyCharacters(PyObject *to, \</code></dt>
-  <dt id="c:function:\"><code class="sig-name">Py_ssize_t to_start, \</code></dt>
-  <dt id="c:function:\"><code class="sig-name">PyObject *from, \</code></dt>
-  <dt id="c:function:\"><code class="sig-name">Py_ssize_t from_start, \</code></dt>
-  <dt id="c:function:how_many)"><code class="sig-name">Py_ssize_t how_many)</code></dt>
+  <dt id="c:function:pyunicode_copycharacters"><code class="sig-name">Py_ssize_t PyUnicode_CopyCharacters(PyObject *to, Py_ssize_t to_start, PyObject *from, Py_ssize_t from_start, Py_ssize_t how_many)</code></dt>
   <dd><p>Copy characters from one Unicode object into another.  This function performs
 character conversion when necessary and falls back to <code class="xref c function docutils literal">memcpy</code> if
 possible.  Returns <code>-1</code> and sets an exception on error, otherwise returns
@@ -1139,8 +1131,7 @@ string in canonical representation.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_fill"><code class="sig-name">Py_ssize_t PyUnicode_Fill(PyObject *unicode, Py_ssize_t start, \</code></dt>
-  <dt id="c:function:fill_char)"><code class="sig-name">Py_ssize_t length, Py_UCS4 fill_char)</code></dt>
+  <dt id="c:function:pyunicode_fill"><code class="sig-name">Py_ssize_t PyUnicode_Fill(PyObject *unicode, Py_ssize_t start, Py_ssize_t length, Py_UCS4 fill_char)</code></dt>
   <dd><p>Fill a string with a character: write <em>fill_char</em> into
 <code>unicode[start:start+length]</code>.</p>
 <p>Fail if <em>fill_char</em> is bigger than the string maximum character, or if the
@@ -1155,8 +1146,7 @@ exception on error.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_writechar"><code class="sig-name">int PyUnicode_WriteChar(PyObject *unicode, Py_ssize_t index, \</code></dt>
-  <dt id="c:function:character)"><code class="sig-name">Py_UCS4 character)</code></dt>
+  <dt id="c:function:pyunicode_writechar"><code class="sig-name">int PyUnicode_WriteChar(PyObject *unicode, Py_ssize_t index, Py_UCS4 character)</code></dt>
   <dd><p>Write a <em>character</em> to the string <em>unicode</em> at the zero-based <em>index</em>.
 Return <code>0</code> on success, <code>-1</code> on error with an exception set.</p>
 <p>This function checks that <em>unicode</em> is a Unicode object, that the index is
@@ -1182,8 +1172,7 @@ Unicode object and the index is not out of bounds, in contrast to
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_substring"><code class="sig-name">PyObject* PyUnicode_Substring(PyObject *unicode, Py_ssize_t start, \</code></dt>
-  <dt id="c:function:end)"><code class="sig-name">Py_ssize_t end)</code></dt>
+  <dt id="c:function:pyunicode_substring"><code class="sig-name">PyObject* PyUnicode_Substring(PyObject *unicode, Py_ssize_t start, Py_ssize_t end)</code></dt>
   <dd><p>Return a substring of <em>unicode</em>, from character index <em>start</em> (included) to
 character index <em>end</em> (excluded).  Negative indices are not supported.
 On error, set an exception and return <code>NULL</code>.</p>
@@ -1193,8 +1182,7 @@ On error, set an exception and return <code>NULL</code>.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_asucs4"><code class="sig-name">Py_UCS4* PyUnicode_AsUCS4(PyObject *unicode, Py_UCS4 *buffer, \</code></dt>
-  <dt id="c:function:copy_null)"><code class="sig-name">Py_ssize_t buflen, int copy_null)</code></dt>
+  <dt id="c:function:pyunicode_asucs4"><code class="sig-name">Py_UCS4* PyUnicode_AsUCS4(PyObject *unicode, Py_UCS4 *buffer, Py_ssize_t buflen, int copy_null)</code></dt>
   <dd><p>Copy the string <em>unicode</em> into a UCS4 buffer, including a null character, if
 <em>copy_null</em> is set.  Returns <code>NULL</code> and sets an exception on error (in
 particular, a <a class="reference internal" href="../library/exceptions.html#py:exception:systemerror"><code class="xref py exception docutils literal">SystemError</code></a> if <em>buflen</em> is smaller than the length of
@@ -1219,9 +1207,7 @@ null code point appended.</p>
 <p>The current locale encoding can be used to decode text from the operating
 system.</p>
 <dl class="c function">
-  <dt id="c:function:pyunicode_decodelocaleandsize"><code class="sig-name">PyObject* PyUnicode_DecodeLocaleAndSize(const char *str, \</code></dt>
-  <dt id="c:function:\"><code class="sig-name">Py_ssize_t length, \</code></dt>
-  <dt id="c:function:errors)"><code class="sig-name">const char *errors)</code></dt>
+  <dt id="c:function:pyunicode_decodelocaleandsize"><code class="sig-name">PyObject* PyUnicode_DecodeLocaleAndSize(const char *str, Py_ssize_t length, const char *errors)</code></dt>
   <dd><p>Decode a string from UTF-8 on Android and VxWorks, or from the current
 locale encoding on other platforms. The supported
 error handlers are <code>"strict"</code> and <code>"surrogateescape"</code>
@@ -1465,8 +1451,7 @@ decoding if the <em>errors</em> argument is set to "replace".</p>
 </dl>
 <p>These are the generic codec APIs:</p>
 <dl class="c function">
-  <dt id="c:function:pyunicode_decode"><code class="sig-name">PyObject* PyUnicode_Decode(const char *str, Py_ssize_t size, \</code></dt>
-  <dt id="c:function:errors)"><code class="sig-name">const char *encoding, const char *errors)</code></dt>
+  <dt id="c:function:pyunicode_decode"><code class="sig-name">PyObject* PyUnicode_Decode(const char *str, Py_ssize_t size, const char *encoding, const char *errors)</code></dt>
   <dd><p>Create a Unicode object by decoding <em>size</em> bytes of the encoded string <em>str</em>.
 <em>encoding</em> and <em>errors</em> have the same meaning as the parameters of the same name
 in the <a href="#" class="broken-link"><code class="xref py function docutils literal">str</code></a> built-in function.  The codec to be used is looked up
@@ -1475,8 +1460,7 @@ the codec.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_asencodedstring"><code class="sig-name">PyObject* PyUnicode_AsEncodedString(PyObject *unicode, \</code></dt>
-  <dt id="c:function:errors)"><code class="sig-name">const char *encoding, const char *errors)</code></dt>
+  <dt id="c:function:pyunicode_asencodedstring"><code class="sig-name">PyObject* PyUnicode_AsEncodedString(PyObject *unicode, const char *encoding, const char *errors)</code></dt>
   <dd><p>Encode a Unicode object and return the result as Python bytes object.
 <em>encoding</em> and <em>errors</em> have the same meaning as the parameters of the same
 name in the Unicode <a class="reference internal" href="../library/stdtypes.html#py:method:str.encode"><code class="xref py method docutils literal">encode</code></a> method. The codec to be used is looked up
@@ -1493,8 +1477,7 @@ the codec.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_decodeutf8stateful"><code class="sig-name">PyObject* PyUnicode_DecodeUTF8Stateful(const char *str, Py_ssize_t size, \</code></dt>
-  <dt id="c:function:consumed)"><code class="sig-name">const char *errors, Py_ssize_t *consumed)</code></dt>
+  <dt id="c:function:pyunicode_decodeutf8stateful"><code class="sig-name">PyObject* PyUnicode_DecodeUTF8Stateful(const char *str, Py_ssize_t size, const char *errors, Py_ssize_t *consumed)</code></dt>
   <dd><p>If <em>consumed</em> is <code>NULL</code>, behave like <a class="reference internal" href="unicode.html#c:function:pyunicode_decodeutf8"><code class="xref c function docutils literal">PyUnicode_DecodeUTF8</code></a>. If
 <em>consumed</em> is not <code>NULL</code>, trailing incomplete UTF-8 byte sequences will not be
 treated as an error. Those bytes will not be decoded and the number of bytes
@@ -1562,8 +1545,7 @@ instead.</p>
 <h3 id="utf-32-codecs">UTF-32 Codecs</h3>
 <p>These are the UTF-32 codec APIs:</p>
 <dl class="c function">
-  <dt id="c:function:pyunicode_decodeutf32"><code class="sig-name">PyObject* PyUnicode_DecodeUTF32(const char *str, Py_ssize_t size, \</code></dt>
-  <dt id="c:function:byteorder)"><code class="sig-name">const char *errors, int *byteorder)</code></dt>
+  <dt id="c:function:pyunicode_decodeutf32"><code class="sig-name">PyObject* PyUnicode_DecodeUTF32(const char *str, Py_ssize_t size, const char *errors, int *byteorder)</code></dt>
   <dd><p>Decode <em>size</em> bytes from a UTF-32 encoded buffer string and return the
 corresponding Unicode object.  <em>errors</em> (if non-<code>NULL</code>) defines the error
 handling. It defaults to "strict".</p>
@@ -1584,8 +1566,7 @@ of input data.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_decodeutf32stateful"><code class="sig-name">PyObject* PyUnicode_DecodeUTF32Stateful(const char *str, Py_ssize_t size, \</code></dt>
-  <dt id="c:function:consumed)"><code class="sig-name">const char *errors, int *byteorder, Py_ssize_t *consumed)</code></dt>
+  <dt id="c:function:pyunicode_decodeutf32stateful"><code class="sig-name">PyObject* PyUnicode_DecodeUTF32Stateful(const char *str, Py_ssize_t size, const char *errors, int *byteorder, Py_ssize_t *consumed)</code></dt>
   <dd><p>If <em>consumed</em> is <code>NULL</code>, behave like <a class="reference internal" href="unicode.html#c:function:pyunicode_decodeutf32"><code class="xref c function docutils literal">PyUnicode_DecodeUTF32</code></a>. If
 <em>consumed</em> is not <code>NULL</code>, <a class="reference internal" href="unicode.html#c:function:pyunicode_decodeutf32stateful"><code class="xref c function docutils literal">PyUnicode_DecodeUTF32Stateful</code></a> will not treat
 trailing incomplete UTF-32 byte sequences (such as a number of bytes not divisible
@@ -1603,8 +1584,7 @@ Return <code>NULL</code> if an exception was raised by the codec.</p>
 <h3 id="utf-16-codecs">UTF-16 Codecs</h3>
 <p>These are the UTF-16 codec APIs:</p>
 <dl class="c function">
-  <dt id="c:function:pyunicode_decodeutf16"><code class="sig-name">PyObject* PyUnicode_DecodeUTF16(const char *str, Py_ssize_t size, \</code></dt>
-  <dt id="c:function:byteorder)"><code class="sig-name">const char *errors, int *byteorder)</code></dt>
+  <dt id="c:function:pyunicode_decodeutf16"><code class="sig-name">PyObject* PyUnicode_DecodeUTF16(const char *str, Py_ssize_t size, const char *errors, int *byteorder)</code></dt>
   <dd><p>Decode <em>size</em> bytes from a UTF-16 encoded buffer string and return the
 corresponding Unicode object.  <em>errors</em> (if non-<code>NULL</code>) defines the error
 handling. It defaults to "strict".</p>
@@ -1626,8 +1606,7 @@ of input data.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_decodeutf16stateful"><code class="sig-name">PyObject* PyUnicode_DecodeUTF16Stateful(const char *str, Py_ssize_t size, \</code></dt>
-  <dt id="c:function:consumed)"><code class="sig-name">const char *errors, int *byteorder, Py_ssize_t *consumed)</code></dt>
+  <dt id="c:function:pyunicode_decodeutf16stateful"><code class="sig-name">PyObject* PyUnicode_DecodeUTF16Stateful(const char *str, Py_ssize_t size, const char *errors, int *byteorder, Py_ssize_t *consumed)</code></dt>
   <dd><p>If <em>consumed</em> is <code>NULL</code>, behave like <a class="reference internal" href="unicode.html#c:function:pyunicode_decodeutf16"><code class="xref c function docutils literal">PyUnicode_DecodeUTF16</code></a>. If
 <em>consumed</em> is not <code>NULL</code>, <a class="reference internal" href="unicode.html#c:function:pyunicode_decodeutf16stateful"><code class="xref c function docutils literal">PyUnicode_DecodeUTF16Stateful</code></a> will not treat
 trailing incomplete UTF-16 byte sequences (such as an odd number of bytes or a
@@ -1651,8 +1630,7 @@ Return <code>NULL</code> if an exception was raised by the codec.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_decodeutf7stateful"><code class="sig-name">PyObject* PyUnicode_DecodeUTF7Stateful(const char *str, Py_ssize_t size, \</code></dt>
-  <dt id="c:function:consumed)"><code class="sig-name">const char *errors, Py_ssize_t *consumed)</code></dt>
+  <dt id="c:function:pyunicode_decodeutf7stateful"><code class="sig-name">PyObject* PyUnicode_DecodeUTF7Stateful(const char *str, Py_ssize_t size, const char *errors, Py_ssize_t *consumed)</code></dt>
   <dd><p>If <em>consumed</em> is <code>NULL</code>, behave like <a class="reference internal" href="unicode.html#c:function:pyunicode_decodeutf7"><code class="xref c function docutils literal">PyUnicode_DecodeUTF7</code></a>.  If
 <em>consumed</em> is not <code>NULL</code>, trailing incomplete UTF-7 base-64 sections will not
 be treated as an error.  Those bytes will not be decoded and the number of
@@ -1662,8 +1640,7 @@ bytes that have been decoded will be stored in <em>consumed</em>.</p>
 <h3 id="unicode-escape-codecs">Unicode-Escape Codecs</h3>
 <p>These are the "Unicode Escape" codec APIs:</p>
 <dl class="c function">
-  <dt id="c:function:pyunicode_decodeunicodeescape"><code class="sig-name">PyObject* PyUnicode_DecodeUnicodeEscape(const char *str, \</code></dt>
-  <dt id="c:function:errors)"><code class="sig-name">Py_ssize_t size, const char *errors)</code></dt>
+  <dt id="c:function:pyunicode_decodeunicodeescape"><code class="sig-name">PyObject* PyUnicode_DecodeUnicodeEscape(const char *str, Py_ssize_t size, const char *errors)</code></dt>
   <dd><p>Create a Unicode object by decoding <em>size</em> bytes of the Unicode-Escape encoded
 string <em>str</em>.  Return <code>NULL</code> if an exception was raised by the codec.</p>
 </dd>
@@ -1678,8 +1655,7 @@ raised by the codec.</p>
 <h3 id="raw-unicode-escape-codecs">Raw-Unicode-Escape Codecs</h3>
 <p>These are the "Raw Unicode Escape" codec APIs:</p>
 <dl class="c function">
-  <dt id="c:function:pyunicode_decoderawunicodeescape"><code class="sig-name">PyObject* PyUnicode_DecodeRawUnicodeEscape(const char *str, \</code></dt>
-  <dt id="c:function:errors)"><code class="sig-name">Py_ssize_t size, const char *errors)</code></dt>
+  <dt id="c:function:pyunicode_decoderawunicodeescape"><code class="sig-name">PyObject* PyUnicode_DecodeRawUnicodeEscape(const char *str, Py_ssize_t size, const char *errors)</code></dt>
   <dd><p>Create a Unicode object by decoding <em>size</em> bytes of the Raw-Unicode-Escape
 encoded string <em>str</em>.  Return <code>NULL</code> if an exception was raised by the codec.</p>
 </dd>
@@ -1731,8 +1707,7 @@ decode characters.  The mapping objects provided must support the
 <a class="reference internal" href="../reference/datamodel.html#py:method:object.__getitem__"><code class="xref py method docutils literal">__getitem__</code></a> mapping interface; dictionaries and sequences work well.</p>
 <p>These are the mapping codec APIs:</p>
 <dl class="c function">
-  <dt id="c:function:pyunicode_decodecharmap"><code class="sig-name">PyObject* PyUnicode_DecodeCharmap(const char *str, Py_ssize_t length, \</code></dt>
-  <dt id="c:function:errors)"><code class="sig-name">PyObject *mapping, const char *errors)</code></dt>
+  <dt id="c:function:pyunicode_decodecharmap"><code class="sig-name">PyObject* PyUnicode_DecodeCharmap(const char *str, Py_ssize_t length, PyObject *mapping, const char *errors)</code></dt>
   <dd><p>Create a Unicode object by decoding <em>size</em> bytes of the encoded string <em>str</em>
 using the given <em>mapping</em> object.  Return <code>NULL</code> if an exception was raised
 by the codec.</p>
@@ -1783,8 +1758,7 @@ Return <code>NULL</code> if an exception was raised by the codec.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_decodembcsstateful"><code class="sig-name">PyObject* PyUnicode_DecodeMBCSStateful(const char *str, Py_ssize_t size, \</code></dt>
-  <dt id="c:function:consumed)"><code class="sig-name">const char *errors, Py_ssize_t *consumed)</code></dt>
+  <dt id="c:function:pyunicode_decodembcsstateful"><code class="sig-name">PyObject* PyUnicode_DecodeMBCSStateful(const char *str, Py_ssize_t size, const char *errors, Py_ssize_t *consumed)</code></dt>
   <dd><p>If <em>consumed</em> is <code>NULL</code>, behave like <a class="reference internal" href="unicode.html#c:function:pyunicode_decodembcs"><code class="xref c function docutils literal">PyUnicode_DecodeMBCS</code></a>. If
 <em>consumed</em> is not <code>NULL</code>, <a class="reference internal" href="unicode.html#c:function:pyunicode_decodembcsstateful"><code class="xref c function docutils literal">PyUnicode_DecodeMBCSStateful</code></a> will not decode
 trailing lead byte and the number of bytes that have been decoded will be stored
@@ -1792,8 +1766,7 @@ in <em>consumed</em>.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_decodecodepagestateful"><code class="sig-name">PyObject* PyUnicode_DecodeCodePageStateful(int code_page, const char *str, \</code></dt>
-  <dt id="c:function:consumed)"><code class="sig-name">Py_ssize_t size, const char *errors, Py_ssize_t *consumed)</code></dt>
+  <dt id="c:function:pyunicode_decodecodepagestateful"><code class="sig-name">PyObject* PyUnicode_DecodeCodePageStateful(int code_page, const char *str, Py_ssize_t size, const char *errors, Py_ssize_t *consumed)</code></dt>
   <dd><p>Similar to <a class="reference internal" href="unicode.html#c:function:pyunicode_decodembcsstateful"><code class="xref c function docutils literal">PyUnicode_DecodeMBCSStateful</code></a>, except uses the code page
 specified by <em>code_page</em>.</p>
 </dd>
@@ -1879,16 +1852,14 @@ Unicode string.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_tailmatch"><code class="sig-name">Py_ssize_t PyUnicode_Tailmatch(PyObject *unicode, PyObject *substr, \</code></dt>
-  <dt id="c:function:direction)"><code class="sig-name">Py_ssize_t start, Py_ssize_t end, int direction)</code></dt>
+  <dt id="c:function:pyunicode_tailmatch"><code class="sig-name">Py_ssize_t PyUnicode_Tailmatch(PyObject *unicode, PyObject *substr, Py_ssize_t start, Py_ssize_t end, int direction)</code></dt>
   <dd><p>Return <code>1</code> if <em>substr</em> matches <code>unicode[start:end]</code> at the given tail end
 (<em>direction</em> == <code>-1</code> means to do a prefix match, <em>direction</em> == <code>1</code> a suffix match),
 <code>0</code> otherwise. Return <code>-1</code> if an error occurred.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_find"><code class="sig-name">Py_ssize_t PyUnicode_Find(PyObject *unicode, PyObject *substr, \</code></dt>
-  <dt id="c:function:direction)"><code class="sig-name">Py_ssize_t start, Py_ssize_t end, int direction)</code></dt>
+  <dt id="c:function:pyunicode_find"><code class="sig-name">Py_ssize_t PyUnicode_Find(PyObject *unicode, PyObject *substr, Py_ssize_t start, Py_ssize_t end, int direction)</code></dt>
   <dd><p>Return the first position of <em>substr</em> in <code>unicode[start:end]</code> using the given
 <em>direction</em> (<em>direction</em> == <code>1</code> means to do a forward search, <em>direction</em> == <code>-1</code> a
 backward search).  The return value is the index of the first match; a value of
@@ -1897,8 +1868,7 @@ occurred and an exception has been set.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_findchar"><code class="sig-name">Py_ssize_t PyUnicode_FindChar(PyObject *unicode, Py_UCS4 ch, \</code></dt>
-  <dt id="c:function:direction)"><code class="sig-name">Py_ssize_t start, Py_ssize_t end, int direction)</code></dt>
+  <dt id="c:function:pyunicode_findchar"><code class="sig-name">Py_ssize_t PyUnicode_FindChar(PyObject *unicode, Py_UCS4 ch, Py_ssize_t start, Py_ssize_t end, int direction)</code></dt>
   <dd><p>Return the first position of the character <em>ch</em> in <code>unicode[start:end]</code> using
 the given <em>direction</em> (<em>direction</em> == <code>1</code> means to do a forward search,
 <em>direction</em> == <code>-1</code> a backward search).  The return value is the index of the
@@ -1914,15 +1884,13 @@ indicates that an error occurred and an exception has been set.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_count"><code class="sig-name">Py_ssize_t PyUnicode_Count(PyObject *unicode, PyObject *substr, \</code></dt>
-  <dt id="c:function:end)"><code class="sig-name">Py_ssize_t start, Py_ssize_t end)</code></dt>
+  <dt id="c:function:pyunicode_count"><code class="sig-name">Py_ssize_t PyUnicode_Count(PyObject *unicode, PyObject *substr, Py_ssize_t start, Py_ssize_t end)</code></dt>
   <dd><p>Return the number of non-overlapping occurrences of <em>substr</em> in
 <code>unicode[start:end]</code>.  Return <code>-1</code> if an error occurred.</p>
 </dd>
 </dl>
 <dl class="c function">
-  <dt id="c:function:pyunicode_replace"><code class="sig-name">PyObject* PyUnicode_Replace(PyObject *unicode, PyObject *substr, \</code></dt>
-  <dt id="c:function:maxcount)"><code class="sig-name">PyObject *replstr, Py_ssize_t maxcount)</code></dt>
+  <dt id="c:function:pyunicode_replace"><code class="sig-name">PyObject* PyUnicode_Replace(PyObject *unicode, PyObject *substr, PyObject *replstr, Py_ssize_t maxcount)</code></dt>
   <dd><p>Replace at most <em>maxcount</em> occurrences of <em>substr</em> in <em>unicode</em> with <em>replstr</em> and
 return the resulting Unicode object. <em>maxcount</em> == <code>-1</code> means replace all
 occurrences.</p>

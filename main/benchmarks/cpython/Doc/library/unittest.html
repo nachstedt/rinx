@@ -2879,9 +2879,7 @@ instead of repeatedly creating new instances.</p>
 </dd>
 </dl>
 <dl class="py class">
-  <dt id="py:class:unittest.texttestrunner"><em class="property">class</em> <code class="sig-name">TextTestRunner(stream=None, descriptions=True, verbosity=1, failfast=False, \</code></dt>
-  <dt id="py:class:unittest.\"><em class="property">class</em> <code class="sig-name">buffer=False, resultclass=None, warnings=None, *, \</code></dt>
-  <dt id="py:class:unittest.durations=none)"><em class="property">class</em> <code class="sig-name">tb_locals=False, durations=None)</code></dt>
+  <dt id="py:class:unittest.texttestrunner"><em class="property">class</em> <code class="sig-name">TextTestRunner(stream=None, descriptions=True, verbosity=1, failfast=False, buffer=False, resultclass=None, warnings=None, *, tb_locals=False, durations=None)</code></dt>
   <dd><p>A basic test runner implementation that outputs results to a stream. If <em>stream</em>
 is <code>None</code>, the default, <a class="reference internal" href="sys.html#py:data:sys.stderr"><code class="xref py data docutils literal">sys.stderr</code></a> is used as the output stream. This class
 has a few configurable parameters, but is essentially very simple.  Graphical
@@ -2936,9 +2934,7 @@ results printed to stdout.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:unittest.main"><code class="sig-name">main(module='__main__', defaultTest=None, argv=None, testRunner=None, \</code></dt>
-  <dt id="py:function:unittest.\"><code class="sig-name">testLoader=unittest.defaultTestLoader, exit=True, verbosity=1, \</code></dt>
-  <dt id="py:function:unittest.warnings=none)"><code class="sig-name">failfast=None, catchbreak=None, buffer=None, warnings=None)</code></dt>
+  <dt id="py:function:unittest.main"><code class="sig-name">main(module='__main__', defaultTest=None, argv=None, testRunner=None, testLoader=unittest.defaultTestLoader, exit=True, verbosity=1, failfast=None, catchbreak=None, buffer=None, warnings=None)</code></dt>
   <dd><p>A command-line program that loads a set of tests from <em>module</em> and runs them;
 this is primarily for making test modules conveniently executable.
 The simplest use for this function is to include the following line at the
@@ -3104,8 +3100,7 @@ instead of as an error.</p>
 <dl class="py function">
   <dt id="py:function:unittest.setupmodule"><code class="sig-name">setUpModule</code></dt>
   <dt id="py:function:unittest.teardownmodule"><code class="sig-name">tearDownModule</code></dt>
-  <dd><p>:no-typesetting:</p>
-</dd>
+  <dd></dd>
 </dl>
 <p>These should be implemented as functions:</p>
 <div class="highlight hl-code"><pre>

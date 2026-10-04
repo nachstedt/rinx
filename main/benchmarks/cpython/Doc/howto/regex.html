@@ -917,10 +917,9 @@ more cleanly and understandably.</p>
 </tbody>
 </table>
 <dl class="py data">
-  <dt id="py:data:re.i"><code class="sig-name">I</code></dt>
-  <dt id="py:data:re.ignorecase"><code class="sig-name">IGNORECASE</code></dt>
-  <dd><p>:noindex:</p>
-<p>Perform case-insensitive matching; character class and literal strings will
+  <dt><code class="sig-name">I</code></dt>
+  <dt><code class="sig-name">IGNORECASE</code></dt>
+  <dd><p>Perform case-insensitive matching; character class and literal strings will
 match letters by ignoring case.  For example, <code>[A-Z]</code> will match lowercase
 letters, too. Full Unicode matching also works unless the <a class="reference internal" href="../library/re.html#py:data:re.ascii"><code class="xref py data docutils literal">ASCII</code></a>
 flag is used to disable non-ASCII matches.  When the Unicode patterns
@@ -935,10 +934,9 @@ it will if you also set the <a class="reference internal" href="../library/re.ht
 </dd>
 </dl>
 <dl class="py data">
-  <dt id="py:data:re.l"><code class="sig-name">L</code></dt>
-  <dt id="py:data:re.locale"><code class="sig-name">LOCALE</code></dt>
-  <dd><p>:noindex:</p>
-<p>Make <code>\w</code>, <code>\W</code>, <code>\b</code>, <code>\B</code> and case-insensitive matching dependent
+  <dt><code class="sig-name">L</code></dt>
+  <dt><code class="sig-name">LOCALE</code></dt>
+  <dd><p>Make <code>\w</code>, <code>\W</code>, <code>\b</code>, <code>\B</code> and case-insensitive matching dependent
 on the current locale instead of the Unicode database.</p>
 <p>Locales are a feature of the C library intended to help in writing programs
 that take account of language differences.  For example, if you're
@@ -959,10 +957,9 @@ locales/languages.</p>
 </dd>
 </dl>
 <dl class="py data">
-  <dt id="py:data:re.m"><code class="sig-name">M</code></dt>
-  <dt id="py:data:re.multiline"><code class="sig-name">MULTILINE</code></dt>
-  <dd><p>:noindex:</p>
-<p>(<code>^</code> and <code>$</code> haven't been explained yet;  they'll be introduced in section
+  <dt><code class="sig-name">M</code></dt>
+  <dt><code class="sig-name">MULTILINE</code></dt>
+  <dd><p>(<code>^</code> and <code>$</code> haven't been explained yet;  they'll be introduced in section
 <a href="regex.html#more-metacharacters">More Metacharacters</a>.)</p>
 <p>Usually <code>^</code> matches only at the beginning of the string, and <code>$</code> matches
 only at the end of the string and immediately before the newline (if any) at the
@@ -974,27 +971,24 @@ newline).</p>
 </dd>
 </dl>
 <dl class="py data">
-  <dt id="py:data:re.s"><code class="sig-name">S</code></dt>
-  <dt id="py:data:re.dotall"><code class="sig-name">DOTALL</code></dt>
-  <dd><p>:noindex:</p>
-<p>Makes the <code>'.'</code> special character match any character at all, including a
+  <dt><code class="sig-name">S</code></dt>
+  <dt><code class="sig-name">DOTALL</code></dt>
+  <dd><p>Makes the <code>'.'</code> special character match any character at all, including a
 newline; without this flag, <code>'.'</code> will match anything <em>except</em> a newline.</p>
 </dd>
 </dl>
 <dl class="py data">
-  <dt id="py:data:re.a"><code class="sig-name">A</code></dt>
-  <dt id="py:data:re.ascii"><code class="sig-name">ASCII</code></dt>
-  <dd><p>:noindex:</p>
-<p>Make <code>\w</code>, <code>\W</code>, <code>\b</code>, <code>\B</code>, <code>\s</code> and <code>\S</code> perform ASCII-only
+  <dt><code class="sig-name">A</code></dt>
+  <dt><code class="sig-name">ASCII</code></dt>
+  <dd><p>Make <code>\w</code>, <code>\W</code>, <code>\b</code>, <code>\B</code>, <code>\s</code> and <code>\S</code> perform ASCII-only
 matching instead of full Unicode matching. This is only meaningful for
 Unicode patterns, and is ignored for byte patterns.</p>
 </dd>
 </dl>
 <dl class="py data">
-  <dt id="py:data:re.x"><code class="sig-name">X</code></dt>
-  <dt id="py:data:re.verbose"><code class="sig-name">VERBOSE</code></dt>
-  <dd><p>:noindex:</p>
-<p>This flag allows you to write regular expressions that are more readable by
+  <dt><code class="sig-name">X</code></dt>
+  <dt><code class="sig-name">VERBOSE</code></dt>
+  <dd><p>This flag allows you to write regular expressions that are more readable by
 granting you more flexibility in how you can format them.  When this flag has
 been specified, whitespace within the RE string is ignored, except when the
 whitespace is in a character class or preceded by an unescaped backslash; this
@@ -1407,9 +1401,8 @@ delimiters that you can split by; string <code class="xref py method docutils li
 whitespace or by a fixed string.  As you'd expect, there's a module-level
 <a class="reference internal" href="../library/re.html#py:function:re.split"><code class="xref py function docutils literal">re.split</code></a> function, too.</p>
 <dl class="py method">
-  <dt id="py:method:re..split"><code class="sig-name">.split(string [, maxsplit=0])</code></dt>
-  <dd><p>:noindex:</p>
-<p>Split <em>string</em> by the matches of the regular expression.  If capturing
+  <dt><code class="sig-name">.split(string [, maxsplit=0])</code></dt>
+  <dd><p>Split <em>string</em> by the matches of the regular expression.  If capturing
 parentheses are used in the RE, then their contents will also be returned as
 part of the resulting list.  If <em>maxsplit</em> is nonzero, at most <em>maxsplit</em> splits
 are performed.</p>
@@ -1451,9 +1444,8 @@ argument, but is otherwise the same.   :</p>
 with a different string.  The <a class="reference internal" href="../library/re.html#py:method:re.pattern.sub"><code class="xref py method docutils literal">sub</code></a> method takes a replacement value,
 which can be either a string or a function, and the string to be processed.</p>
 <dl class="py method">
-  <dt id="py:method:re..sub"><code class="sig-name">.sub(replacement, string[, count=0])</code></dt>
-  <dd><p>:noindex:</p>
-<p>Returns the string obtained by replacing the leftmost non-overlapping
+  <dt><code class="sig-name">.sub(replacement, string[, count=0])</code></dt>
+  <dd><p>Returns the string obtained by replacing the leftmost non-overlapping
 occurrences of the RE in <em>string</em> by the replacement <em>replacement</em>.  If the
 pattern isn't found, <em>string</em> is returned unchanged.</p>
 <p>The optional argument <em>count</em> is the maximum number of pattern occurrences to be

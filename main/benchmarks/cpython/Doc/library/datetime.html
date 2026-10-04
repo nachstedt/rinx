@@ -545,50 +545,44 @@ standard suitable for every application aside from UTC.</p>
 </dl>
 <h2 id="available-types">Available Types</h2>
 <dl class="py class">
-  <dt id="py:class:datetime.date"><em class="property">class</em> <code class="sig-name">date</code></dt>
-  <dd><p>:noindex:</p>
-<p>An idealized naive date, assuming the current Gregorian calendar always was, and
+  <dt><em class="property">class</em> <code class="sig-name">date</code></dt>
+  <dd><p>An idealized naive date, assuming the current Gregorian calendar always was, and
 always will be, in effect. Attributes: <a class="reference internal" href="datetime.html#py:attribute:datetime.date.year"><code class="xref py attribute docutils literal">year</code></a>, <a class="reference internal" href="datetime.html#py:attribute:datetime.date.month"><code class="xref py attribute docutils literal">month</code></a>, and
 <a class="reference internal" href="datetime.html#py:attribute:datetime.date.day"><code class="xref py attribute docutils literal">day</code></a>.</p>
 </dd>
 </dl>
 <dl class="py class">
-  <dt id="py:class:datetime.time"><em class="property">class</em> <code class="sig-name">time</code></dt>
-  <dd><p>:noindex:</p>
-<p>An idealized time, independent of any particular day, assuming that every day
+  <dt><em class="property">class</em> <code class="sig-name">time</code></dt>
+  <dd><p>An idealized time, independent of any particular day, assuming that every day
 has exactly 24*60*60 seconds.  (There is no notion of "leap seconds" here.)
 Attributes: <a class="reference internal" href="datetime.html#py:attribute:datetime.time.hour"><code class="xref py attribute docutils literal">hour</code></a>, <a class="reference internal" href="datetime.html#py:attribute:datetime.time.minute"><code class="xref py attribute docutils literal">minute</code></a>, <a class="reference internal" href="datetime.html#py:attribute:datetime.time.second"><code class="xref py attribute docutils literal">second</code></a>, <a class="reference internal" href="datetime.html#py:attribute:datetime.time.microsecond"><code class="xref py attribute docutils literal">microsecond</code></a>,
 and <a class="reference internal" href="datetime.html#py:attribute:datetime.time.tzinfo"><code class="xref py attribute docutils literal">tzinfo</code></a>.</p>
 </dd>
 </dl>
 <dl class="py class">
-  <dt id="py:class:datetime.datetime"><em class="property">class</em> <code class="sig-name">datetime</code></dt>
-  <dd><p>:noindex:</p>
-<p>A combination of a date and a time. Attributes: <a class="reference internal" href="datetime.html#py:attribute:datetime.datetime.year"><code class="xref py attribute docutils literal">year</code></a>, <a class="reference internal" href="datetime.html#py:attribute:datetime.datetime.month"><code class="xref py attribute docutils literal">month</code></a>,
+  <dt><em class="property">class</em> <code class="sig-name">datetime</code></dt>
+  <dd><p>A combination of a date and a time. Attributes: <a class="reference internal" href="datetime.html#py:attribute:datetime.datetime.year"><code class="xref py attribute docutils literal">year</code></a>, <a class="reference internal" href="datetime.html#py:attribute:datetime.datetime.month"><code class="xref py attribute docutils literal">month</code></a>,
 <a class="reference internal" href="datetime.html#py:attribute:datetime.datetime.day"><code class="xref py attribute docutils literal">day</code></a>, <a class="reference internal" href="datetime.html#py:attribute:datetime.datetime.hour"><code class="xref py attribute docutils literal">hour</code></a>, <a class="reference internal" href="datetime.html#py:attribute:datetime.datetime.minute"><code class="xref py attribute docutils literal">minute</code></a>, <a class="reference internal" href="datetime.html#py:attribute:datetime.datetime.second"><code class="xref py attribute docutils literal">second</code></a>, <a class="reference internal" href="datetime.html#py:attribute:datetime.datetime.microsecond"><code class="xref py attribute docutils literal">microsecond</code></a>,
 and <a class="reference internal" href="datetime.html#py:attribute:datetime.datetime.tzinfo"><code class="xref py attribute docutils literal">tzinfo</code></a>.</p>
 </dd>
 </dl>
 <dl class="py class">
-  <dt id="py:class:datetime.timedelta"><em class="property">class</em> <code class="sig-name">timedelta</code></dt>
-  <dd><p>:noindex:</p>
-<p>A duration expressing the difference between two <a class="reference internal" href="datetime.html#py:class:datetime.datetime"><code class="xref py class docutils literal">datetime</code></a>
+  <dt><em class="property">class</em> <code class="sig-name">timedelta</code></dt>
+  <dd><p>A duration expressing the difference between two <a class="reference internal" href="datetime.html#py:class:datetime.datetime"><code class="xref py class docutils literal">datetime</code></a>
 or <a class="reference internal" href="datetime.html#py:class:datetime.date"><code class="xref py class docutils literal">date</code></a> instances to microsecond resolution.</p>
 </dd>
 </dl>
 <dl class="py class">
-  <dt id="py:class:datetime.tzinfo"><em class="property">class</em> <code class="sig-name">tzinfo</code></dt>
-  <dd><p>:noindex:</p>
-<p>An abstract base class for time zone information objects. These are used by the
+  <dt><em class="property">class</em> <code class="sig-name">tzinfo</code></dt>
+  <dd><p>An abstract base class for time zone information objects. These are used by the
 <a class="reference internal" href="datetime.html#py:class:datetime.datetime"><code class="xref py class docutils literal">datetime</code></a> and <a class="reference internal" href="datetime.html#py:class:datetime.time"><code class="xref py class docutils literal">time</code></a> classes to provide a customizable notion of
 time adjustment (for example, to account for time zone and/or daylight saving
 time).</p>
 </dd>
 </dl>
 <dl class="py class">
-  <dt id="py:class:datetime.timezone"><em class="property">class</em> <code class="sig-name">timezone</code></dt>
-  <dd><p>:noindex:</p>
-<p>A class that implements the <a class="reference internal" href="datetime.html#py:class:datetime.tzinfo"><code class="xref py class docutils literal">tzinfo</code></a> abstract base class as a
+  <dt><em class="property">class</em> <code class="sig-name">timezone</code></dt>
+  <dd><p>A class that implements the <a class="reference internal" href="datetime.html#py:class:datetime.tzinfo"><code class="xref py class docutils literal">tzinfo</code></a> abstract base class as a
 fixed offset from the UTC.</p>
 <div class="versionadded">
   <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
@@ -1892,9 +1886,7 @@ tzinfo attributes. See also method <a class="reference internal" href="datetime.
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:datetime.datetime.replace"><code class="sig-name">datetime.replace(year=self.year, month=self.month, day=self.day, \</code></dt>
-  <dt id="py:method:datetime.\"><code class="sig-name">hour=self.hour, minute=self.minute, second=self.second, microsecond=self.microsecond, \</code></dt>
-  <dt id="py:method:datetime.fold=0)"><code class="sig-name">tzinfo=self.tzinfo, *, fold=0)</code></dt>
+  <dt id="py:method:datetime.datetime.replace"><code class="sig-name">datetime.replace(year=self.year, month=self.month, day=self.day, hour=self.hour, minute=self.minute, second=self.second, microsecond=self.microsecond, tzinfo=self.tzinfo, *, fold=0)</code></dt>
   <dd><p>Return a new <a class="reference internal" href="datetime.html#py:class:datetime.datetime"><code class="xref py class docutils literal">datetime</code></a> object with the same attributes, but with
 specified parameters updated. Note that <code>tzinfo=None</code> can be specified to
 create a naive datetime from an aware datetime with no conversion of date
@@ -2501,8 +2493,7 @@ time tuple.  See also <a href="datetime.html#strftime-strptime-behavior">strftim
 </dl>
 <p>Instance methods:</p>
 <dl class="py method">
-  <dt id="py:method:datetime.time.replace"><code class="sig-name">time.replace(hour=self.hour, minute=self.minute, second=self.second, \</code></dt>
-  <dt id="py:method:datetime.fold=0)"><code class="sig-name">microsecond=self.microsecond, tzinfo=self.tzinfo, *, fold=0)</code></dt>
+  <dt id="py:method:datetime.time.replace"><code class="sig-name">time.replace(hour=self.hour, minute=self.minute, second=self.second, microsecond=self.microsecond, tzinfo=self.tzinfo, *, fold=0)</code></dt>
   <dd><p>Return a new <a class="reference internal" href="datetime.html#py:class:datetime.time"><code class="xref py class docutils literal">time</code></a> with the same values, but with specified
 parameters updated. Note that <code>tzinfo=None</code> can be specified to create a
 naive <a class="reference internal" href="datetime.html#py:class:datetime.time"><code class="xref py class docutils literal">time</code></a> from an aware <a class="reference internal" href="datetime.html#py:class:datetime.time"><code class="xref py class docutils literal">time</code></a>, without conversion of the

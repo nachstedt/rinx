@@ -636,9 +636,7 @@ match one of the glob-style <em>patterns</em> provided.  See the example below.<
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:shutil.copytree"><code class="sig-name">copytree(src, dst, symlinks=False, ignore=None, \</code></dt>
-  <dt id="py:function:shutil.\"><code class="sig-name">copy_function=copy2, ignore_dangling_symlinks=False, \</code></dt>
-  <dt id="py:function:shutil.dirs_exist_ok=false)"><code class="sig-name">dirs_exist_ok=False)</code></dt>
+  <dt id="py:function:shutil.copytree"><code class="sig-name">copytree(src, dst, symlinks=False, ignore=None, copy_function=copy2, ignore_dangling_symlinks=False, dirs_exist_ok=False)</code></dt>
   <dd><p>Recursively copy an entire directory tree rooted at <em>src</em> to a directory
 named <em>dst</em> and return the destination directory.  All intermediate
 directories needed to contain <em>dst</em> will also be created by default.</p>
@@ -847,8 +845,7 @@ retrieve disk usage information from non-mounted filesystems.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:shutil.chown"><code class="sig-name">chown(path, user=None, group=None, *, dir_fd=None, \</code></dt>
-  <dt id="py:function:shutil.follow_symlinks=true)"><code class="sig-name">follow_symlinks=True)</code></dt>
+  <dt id="py:function:shutil.chown"><code class="sig-name">chown(path, user=None, group=None, *, dir_fd=None, follow_symlinks=True)</code></dt>
   <dd><p>Change owner <em>user</em> and/or <em>group</em> of the given <em>path</em>.</p>
 <p><em>user</em> can be a system user name or a uid; the same applies to <em>group</em>. At
 least one argument is required.</p>

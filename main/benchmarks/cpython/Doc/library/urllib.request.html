@@ -1236,9 +1236,8 @@ thing happens (for example, <a class="reference internal" href="exceptions.html#
 </dl>
 <a id="protocol_open"></a>
 <dl class="py method">
-  <dt id="py:method:urllib.request.basehandler.&lt;protocol&gt;_open"><code class="sig-name">BaseHandler.&lt;protocol&gt;_open(req)</code></dt>
-  <dd><p>:noindex:</p>
-<p>This method is <em>not</em> defined in <a class="reference internal" href="urllib.request.html#py:class:urllib.request.basehandler"><code class="xref py class docutils literal">BaseHandler</code></a>, but subclasses should
+  <dt><code class="sig-name">BaseHandler.&lt;protocol&gt;_open(req)</code></dt>
+  <dd><p>This method is <em>not</em> defined in <a class="reference internal" href="urllib.request.html#py:class:urllib.request.basehandler"><code class="xref py class docutils literal">BaseHandler</code></a>, but subclasses should
 define it if they want to handle URLs with the given protocol.</p>
 <p>This method, if defined, will be called by the parent <a class="reference internal" href="urllib.request.html#py:class:urllib.request.openerdirector"><code class="xref py class docutils literal">OpenerDirector</code></a>.
 Return values should be the same as for  <a class="reference internal" href="urllib.request.html#py:method:urllib.request.basehandler.default_open"><code class="xref py method docutils literal">default_open</code></a>.</p>
@@ -1290,9 +1289,8 @@ subclass, when an HTTP error with code <em>nnn</em> occurs.</p>
 </dl>
 <a id="protocol_request"></a>
 <dl class="py method">
-  <dt id="py:method:urllib.request.basehandler.&lt;protocol&gt;_request"><code class="sig-name">BaseHandler.&lt;protocol&gt;_request(req)</code></dt>
-  <dd><p>:noindex:</p>
-<p>This method is <em>not</em> defined in <a class="reference internal" href="urllib.request.html#py:class:urllib.request.basehandler"><code class="xref py class docutils literal">BaseHandler</code></a>, but subclasses should
+  <dt><code class="sig-name">BaseHandler.&lt;protocol&gt;_request(req)</code></dt>
+  <dd><p>This method is <em>not</em> defined in <a class="reference internal" href="urllib.request.html#py:class:urllib.request.basehandler"><code class="xref py class docutils literal">BaseHandler</code></a>, but subclasses should
 define it if they want to pre-process requests of the given protocol.</p>
 <p>This method, if defined, will be called by the parent <a class="reference internal" href="urllib.request.html#py:class:urllib.request.openerdirector"><code class="xref py class docutils literal">OpenerDirector</code></a>.
 <em>req</em> will be a <a class="reference internal" href="urllib.request.html#py:class:urllib.request.request"><code class="xref py class docutils literal">Request</code></a> object. The return value should be a
@@ -1301,9 +1299,8 @@ define it if they want to pre-process requests of the given protocol.</p>
 </dl>
 <a id="protocol_response"></a>
 <dl class="py method">
-  <dt id="py:method:urllib.request.basehandler.&lt;protocol&gt;_response"><code class="sig-name">BaseHandler.&lt;protocol&gt;_response(req, response)</code></dt>
-  <dd><p>:noindex:</p>
-<p>This method is <em>not</em> defined in <a class="reference internal" href="urllib.request.html#py:class:urllib.request.basehandler"><code class="xref py class docutils literal">BaseHandler</code></a>, but subclasses should
+  <dt><code class="sig-name">BaseHandler.&lt;protocol&gt;_response(req, response)</code></dt>
+  <dd><p>This method is <em>not</em> defined in <a class="reference internal" href="urllib.request.html#py:class:urllib.request.basehandler"><code class="xref py class docutils literal">BaseHandler</code></a>, but subclasses should
 define it if they want to post-process responses of the given protocol.</p>
 <p>This method, if defined, will be called by the parent <a class="reference internal" href="urllib.request.html#py:class:urllib.request.openerdirector"><code class="xref py class docutils literal">OpenerDirector</code></a>.
 <em>req</em> will be a <a class="reference internal" href="urllib.request.html#py:class:urllib.request.request"><code class="xref py class docutils literal">Request</code></a> object. <em>response</em> will be an object
@@ -1386,9 +1383,8 @@ to <code>GET</code>.</p>
 <a id="proxy-handler"></a>
 <h2 id="proxyhandler-objects">ProxyHandler Objects</h2>
 <dl class="py method">
-  <dt id="py:method:urllib.request.proxyhandler.&lt;protocol&gt;_open"><code class="sig-name">ProxyHandler.&lt;protocol&gt;_open(request)</code></dt>
-  <dd><p>:noindex:</p>
-<p>The <a class="reference internal" href="urllib.request.html#py:class:urllib.request.proxyhandler"><code class="xref py class docutils literal">ProxyHandler</code></a> will have a method <code class="xref py method docutils literal">&lt;protocol&gt;_open</code> for every
+  <dt><code class="sig-name">ProxyHandler.&lt;protocol&gt;_open(request)</code></dt>
+  <dd><p>The <a class="reference internal" href="urllib.request.html#py:class:urllib.request.proxyhandler"><code class="xref py class docutils literal">ProxyHandler</code></a> will have a method <code class="xref py method docutils literal">&lt;protocol&gt;_open</code> for every
 <em>protocol</em> which has a proxy in the <em>proxies</em> dictionary given in the
 constructor.  The method will modify requests to go through the proxy, by
 calling <code>request.set_proxy()</code>, and call the next handler in the chain to
@@ -1420,8 +1416,7 @@ searched if the given <em>realm</em> has no matching user/password.</p>
 <p>This password manager extends <a class="reference internal" href="urllib.request.html#py:class:urllib.request.httppasswordmgrwithdefaultrealm"><code class="xref py class docutils literal">HTTPPasswordMgrWithDefaultRealm</code></a> to support
 tracking URIs for which authentication credentials should always be sent.</p>
 <dl class="py method">
-  <dt id="py:method:urllib.request.httppasswordmgrwithpriorauth.add_password"><code class="sig-name">HTTPPasswordMgrWithPriorAuth.add_password(realm, uri, user, \</code></dt>
-  <dt id="py:method:urllib.request.is_authenticated=false)"><code class="sig-name">passwd, is_authenticated=False)</code></dt>
+  <dt id="py:method:urllib.request.httppasswordmgrwithpriorauth.add_password"><code class="sig-name">HTTPPasswordMgrWithPriorAuth.add_password(realm, uri, user, passwd, is_authenticated=False)</code></dt>
   <dd><p><em>realm</em>, <em>uri</em>, <em>user</em>, <em>passwd</em> are as for
 <a class="reference internal" href="urllib.request.html#py:method:urllib.request.httppasswordmgr.add_password"><code class="xref py method docutils literal">HTTPPasswordMgr.add_password</code></a>.  <em>is_authenticated</em> sets the initial
 value of the <code>is_authenticated</code> flag for the given URI or list of URIs.
@@ -1434,8 +1429,7 @@ If <em>is_authenticated</em> is specified as <code>True</code>, <em>realm</em> i
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:urllib.request.httppasswordmgrwithpriorauth.update_authenticated"><code class="sig-name">HTTPPasswordMgrWithPriorAuth.update_authenticated(self, uri, \</code></dt>
-  <dt id="py:method:urllib.request.is_authenticated=false)"><code class="sig-name">is_authenticated=False)</code></dt>
+  <dt id="py:method:urllib.request.httppasswordmgrwithpriorauth.update_authenticated"><code class="sig-name">HTTPPasswordMgrWithPriorAuth.update_authenticated(self, uri, is_authenticated=False)</code></dt>
   <dd><p>Update the <code>is_authenticated</code> flag for the given <em>uri</em> or list
 of URIs.</p>
 </dd>

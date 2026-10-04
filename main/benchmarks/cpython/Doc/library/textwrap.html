@@ -380,12 +380,7 @@ If you're just wrapping or filling one or two text strings, the convenience
 functions should be good enough; otherwise, you should use an instance of
 <a class="reference internal" href="textwrap.html#py:class:textwrap.textwrapper"><code class="xref py class docutils literal">TextWrapper</code></a> for efficiency.</p>
 <dl class="py function">
-  <dt id="py:function:textwrap.wrap"><code class="sig-name">wrap(text, width=70, *, initial_indent="", \</code></dt>
-  <dt id="py:function:textwrap.\"><code class="sig-name">subsequent_indent="", expand_tabs=True, \</code></dt>
-  <dt id="py:function:textwrap.\"><code class="sig-name">replace_whitespace=True, fix_sentence_endings=False, \</code></dt>
-  <dt id="py:function:textwrap.\"><code class="sig-name">break_long_words=True, drop_whitespace=True, \</code></dt>
-  <dt id="py:function:textwrap.\"><code class="sig-name">break_on_hyphens=True, tabsize=8, max_lines=None, \</code></dt>
-  <dt id="py:function:textwrap.[...]')"><code class="sig-name">placeholder=' [...]')</code></dt>
+  <dt id="py:function:textwrap.wrap"><code class="sig-name">wrap(text, width=70, *, initial_indent="", subsequent_indent="", expand_tabs=True, replace_whitespace=True, fix_sentence_endings=False, break_long_words=True, drop_whitespace=True, break_on_hyphens=True, tabsize=8, max_lines=None, placeholder=' [...]')</code></dt>
   <dd><p>Wraps the single paragraph in <em>text</em> (a string) so every line is at most
 <em>width</em> characters long.  Returns a list of output lines, without final
 newlines.</p>
@@ -396,12 +391,7 @@ newlines.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:textwrap.fill"><code class="sig-name">fill(text, width=70, *, initial_indent="", \</code></dt>
-  <dt id="py:function:textwrap.\"><code class="sig-name">subsequent_indent="", expand_tabs=True, \</code></dt>
-  <dt id="py:function:textwrap.\"><code class="sig-name">replace_whitespace=True, fix_sentence_endings=False, \</code></dt>
-  <dt id="py:function:textwrap.\"><code class="sig-name">break_long_words=True, drop_whitespace=True, \</code></dt>
-  <dt id="py:function:textwrap.\"><code class="sig-name">break_on_hyphens=True, tabsize=8, \</code></dt>
-  <dt id="py:function:textwrap.[...]')"><code class="sig-name">max_lines=None, placeholder=' [...]')</code></dt>
+  <dt id="py:function:textwrap.fill"><code class="sig-name">fill(text, width=70, *, initial_indent="", subsequent_indent="", expand_tabs=True, replace_whitespace=True, fix_sentence_endings=False, break_long_words=True, drop_whitespace=True, break_on_hyphens=True, tabsize=8, max_lines=None, placeholder=' [...]')</code></dt>
   <dd><p>Wraps the single paragraph in <em>text</em>, and returns a single string containing the
 wrapped paragraph.  <a class="reference internal" href="textwrap.html#py:function:textwrap.fill"><code class="xref py function docutils literal">fill</code></a> is shorthand for  :</p>
 <div class="highlight hl-code"><pre>
@@ -411,9 +401,7 @@ wrapped paragraph.  <a class="reference internal" href="textwrap.html#py:functio
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:textwrap.shorten"><code class="sig-name">shorten(text, width, *, fix_sentence_endings=False, \</code></dt>
-  <dt id="py:function:textwrap.\"><code class="sig-name">break_long_words=True, break_on_hyphens=True, \</code></dt>
-  <dt id="py:function:textwrap.[...]')"><code class="sig-name">placeholder=' [...]')</code></dt>
+  <dt id="py:function:textwrap.shorten"><code class="sig-name">shorten(text, width, *, fix_sentence_endings=False, break_long_words=True, break_on_hyphens=True, placeholder=' [...]')</code></dt>
   <dd><p>Collapse and truncate the given <em>text</em> to fit in the given <em>width</em>.</p>
 <p>First the whitespace in <em>text</em> is collapsed (all whitespace is replaced by
 single spaces).  If the result fits in the <em>width</em>, it is returned.

@@ -1528,6 +1528,68 @@ stay sections.</p>
 </table>
 <a id="compatibility-domains"></a>
 <h2 id="domains">Domains</h2>
+<h3 id="every-domain">Every domain</h3>
+<table class="list-table">
+<colgroup>
+<col style="width: 40.00%" />
+<col style="width: 8.00%" />
+<col style="width: 52.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Feature</p>
+</th>
+<th><p>Status</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>:no-index:</code>, <code>:no-index-entry:</code> and <code>:no-contents-entry:</code>
+(and <code>:noindex:</code>, <code>:noindexentry:</code>, <code>:nocontentsentry:</code>)</p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p><code>:no-contents-entry:</code> has no effect, since rinx lists no objects
+in a local table of contents.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:no-typesetting:</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td><ul>
+<li><p>Warns as an unknown option.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Signatures wrapped with a trailing backslash</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>An option an object does not take</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Warns, as Sphinx errors.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="python-py">Python (<code>py</code>)</h3>
 <table class="list-table">
 <colgroup>
@@ -1604,7 +1666,7 @@ a site without the index, where Sphinx links a page it never wrote.</p>
 <td><p>🔶</p>
 </td>
 <td><ul>
-<li><p><code>:property:</code> and <code>:no-index:</code> are not supported.</p>
+<li><p><code>:property:</code> and <code>:final:</code> are not supported.</p>
 </li>
 </ul>
 </td>
@@ -1622,8 +1684,7 @@ a site without the index, where Sphinx links a page it never wrote.</p>
 <td><p>🔶</p>
 </td>
 <td><ul>
-<li><p><code>:canonical:</code>, <code>:no-index:</code> and other options are not
-supported.</p>
+<li><p><code>:canonical:</code> and <code>:annotation:</code> are not supported.</p>
 </li>
 </ul>
 </td>
@@ -1707,15 +1768,9 @@ are not supported.</p>
 <td><p><code>.. c:struct::</code>, <code>.. c:union::</code>, <code>.. c:member::</code>,
 <code>.. c:var::</code> and their roles</p>
 </td>
-<td><p>🔶</p>
+<td><p>✅</p>
 </td>
-<td><ul>
-<li><p><code>:no-contents-entry:</code> has no effect.</p>
-</li>
-<li><p><code>:no-typesetting:</code> is not supported.</p>
-</li>
-</ul>
-</td>
+<td></td>
 </tr>
 <tr>
 <td><p><code>:data:</code> role</p>

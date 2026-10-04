@@ -691,10 +691,7 @@ detail (typically, a script or shell function will be used).</p>
 mechanisms for third-party virtual environment creators to customize environment
 creation according to their needs, the <a class="reference internal" href="venv.html#py:class:venv.envbuilder"><code class="xref py class docutils literal">EnvBuilder</code></a> class.</p>
 <dl class="py class">
-  <dt id="py:class:venv.envbuilder"><em class="property">class</em> <code class="sig-name">EnvBuilder(system_site_packages=False, clear=False, \</code></dt>
-  <dt id="py:class:venv.\"><em class="property">class</em> <code class="sig-name">symlinks=False, upgrade=False, with_pip=False, \</code></dt>
-  <dt id="py:class:venv.\"><em class="property">class</em> <code class="sig-name">prompt=None, upgrade_deps=False, \</code></dt>
-  <dt id="py:class:venv.scm_ignore_files=frozenset"><em class="property">class</em> <code class="sig-name">*, scm_ignore_files=frozenset())</code></dt>
+  <dt id="py:class:venv.envbuilder"><em class="property">class</em> <code class="sig-name">EnvBuilder(system_site_packages=False, clear=False, symlinks=False, upgrade=False, with_pip=False, prompt=None, upgrade_deps=False, *, scm_ignore_files=frozenset())</code></dt>
   <dd><p>The <a class="reference internal" href="venv.html#py:class:venv.envbuilder"><code class="xref py class docutils literal">EnvBuilder</code></a> class accepts the following keyword arguments on
 instantiation:</p>
 <ul>
@@ -923,9 +920,7 @@ When using symlinks, the original executables will be linked.</p>
 </dl>
 <p>There is also a module-level convenience function:</p>
 <dl class="py function">
-  <dt id="py:function:venv.create"><code class="sig-name">create(env_dir, system_site_packages=False, clear=False, \</code></dt>
-  <dt id="py:function:venv.\"><code class="sig-name">symlinks=False, with_pip=False, prompt=None, \</code></dt>
-  <dt id="py:function:venv.scm_ignore_files=frozenset"><code class="sig-name">upgrade_deps=False, *, scm_ignore_files=frozenset())</code></dt>
+  <dt id="py:function:venv.create"><code class="sig-name">create(env_dir, system_site_packages=False, clear=False, symlinks=False, with_pip=False, prompt=None, upgrade_deps=False, *, scm_ignore_files=frozenset())</code></dt>
   <dd><p>Create an <a class="reference internal" href="venv.html#py:class:venv.envbuilder"><code class="xref py class docutils literal">EnvBuilder</code></a> with the given keyword arguments, and call its
 <a class="reference internal" href="venv.html#py:method:venv.envbuilder.create"><code class="xref py method docutils literal">create</code></a> method with the <em>env_dir</em> argument.</p>
 <div class="versionadded">

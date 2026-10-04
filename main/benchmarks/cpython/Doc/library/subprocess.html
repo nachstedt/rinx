@@ -455,10 +455,7 @@ modules and functions can be found in the following sections.</p>
 function for all use cases it can handle. For more advanced use cases, the
 underlying <a class="reference internal" href="subprocess.html#py:class:subprocess.popen"><code class="xref py class docutils literal">Popen</code></a> interface can be used directly.</p>
 <dl class="py function">
-  <dt id="py:function:subprocess.run"><code class="sig-name">run(args, *, stdin=None, input=None, stdout=None, stderr=None,\</code></dt>
-  <dt id="py:function:subprocess.\"><code class="sig-name">capture_output=False, shell=False, cwd=None, timeout=None, \</code></dt>
-  <dt id="py:function:subprocess.\"><code class="sig-name">check=False, encoding=None, errors=None, text=None, env=None, \</code></dt>
-  <dt id="py:function:subprocess.**other_popen_kwargs)"><code class="sig-name">universal_newlines=None, **other_popen_kwargs)</code></dt>
+  <dt id="py:function:subprocess.run"><code class="sig-name">run(args, *, stdin=None, input=None, stdout=None, stderr=None, capture_output=False, shell=False, cwd=None, timeout=None, check=False, encoding=None, errors=None, text=None, env=None, universal_newlines=None, **other_popen_kwargs)</code></dt>
   <dd><p>Run the command described by <em>args</em>.  Wait for command to complete, then
 return a <a class="reference internal" href="subprocess.html#py:class:subprocess.completedprocess"><code class="xref py class docutils literal">CompletedProcess</code></a> instance.</p>
 <p>The arguments shown above are merely the most common ones, described below
@@ -778,14 +775,7 @@ the <a class="reference internal" href="subprocess.html#py:class:subprocess.pope
 are able to handle the less common cases not covered by the convenience
 functions.</p>
 <dl class="py class">
-  <dt id="py:class:subprocess.popen"><em class="property">class</em> <code class="sig-name">Popen(args, bufsize=-1, executable=None, stdin=None, stdout=None, \</code></dt>
-  <dt id="py:class:subprocess.\"><em class="property">class</em> <code class="sig-name">stderr=None, preexec_fn=None, close_fds=True, shell=False, \</code></dt>
-  <dt id="py:class:subprocess.\"><em class="property">class</em> <code class="sig-name">cwd=None, env=None, universal_newlines=None, \</code></dt>
-  <dt id="py:class:subprocess.\"><em class="property">class</em> <code class="sig-name">startupinfo=None, creationflags=0, restore_signals=True, \</code></dt>
-  <dt id="py:class:subprocess.pass_fds="><em class="property">class</em> <code class="sig-name">start_new_session=False, pass_fds=(), *, group=None, \</code></dt>
-  <dt id="py:class:subprocess.\"><em class="property">class</em> <code class="sig-name">extra_groups=None, user=None, umask=-1, \</code></dt>
-  <dt id="py:class:subprocess.\"><em class="property">class</em> <code class="sig-name">encoding=None, errors=None, text=None, pipesize=-1, \</code></dt>
-  <dt id="py:class:subprocess.process_group=none)"><em class="property">class</em> <code class="sig-name">process_group=None)</code></dt>
+  <dt id="py:class:subprocess.popen"><em class="property">class</em> <code class="sig-name">Popen(args, bufsize=-1, executable=None, stdin=None, stdout=None, stderr=None, preexec_fn=None, close_fds=True, shell=False, cwd=None, env=None, universal_newlines=None, startupinfo=None, creationflags=0, restore_signals=True, start_new_session=False, pass_fds=(), *, group=None, extra_groups=None, user=None, umask=-1, encoding=None, errors=None, text=None, pipesize=-1, process_group=None)</code></dt>
   <dd><p>Execute a child program in a new process.  On POSIX, the class uses
 <a href="#" class="broken-link"><code class="xref py method docutils literal">os.execvpe</code></a>-like behavior to execute the child program.  On Windows,
 the class uses the Windows <code>CreateProcess()</code> function.  The arguments to
@@ -1385,8 +1375,7 @@ time of the last method call.</p>
 <p>The <a class="reference internal" href="subprocess.html#py:class:subprocess.startupinfo"><code class="xref py class docutils literal">STARTUPINFO</code></a> class and following constants are only available
 on Windows.</p>
 <dl class="py class">
-  <dt id="py:class:subprocess.startupinfo"><em class="property">class</em> <code class="sig-name">STARTUPINFO(*, dwFlags=0, hStdInput=None, hStdOutput=None, \</code></dt>
-  <dt id="py:class:subprocess.lpattributelist=none)"><em class="property">class</em> <code class="sig-name">hStdError=None, wShowWindow=0, lpAttributeList=None)</code></dt>
+  <dt id="py:class:subprocess.startupinfo"><em class="property">class</em> <code class="sig-name">STARTUPINFO(*, dwFlags=0, hStdInput=None, hStdOutput=None, hStdError=None, wShowWindow=0, lpAttributeList=None)</code></dt>
   <dd><p>Partial support of the Windows
 <a href="https://msdn.microsoft.com/en-us/library/ms686331(v=vs.85).aspx">STARTUPINFO</a>
 structure is used for <a class="reference internal" href="subprocess.html#py:class:subprocess.popen"><code class="xref py class docutils literal">Popen</code></a> creation.  The following attributes can
@@ -1647,8 +1636,7 @@ is not associated with the job.</p>
 subprocess. You can now use <a class="reference internal" href="subprocess.html#py:function:subprocess.run"><code class="xref py function docutils literal">run</code></a> in many cases, but lots of existing code
 calls these functions.</p>
 <dl class="py function">
-  <dt id="py:function:subprocess.call"><code class="sig-name">call(args, *, stdin=None, stdout=None, stderr=None, \</code></dt>
-  <dt id="py:function:subprocess.**other_popen_kwargs)"><code class="sig-name">shell=False, cwd=None, timeout=None, **other_popen_kwargs)</code></dt>
+  <dt id="py:function:subprocess.call"><code class="sig-name">call(args, *, stdin=None, stdout=None, stderr=None, shell=False, cwd=None, timeout=None, **other_popen_kwargs)</code></dt>
   <dd><p>Run the command described by <em>args</em>.  Wait for command to complete, then
 return the <a class="reference internal" href="subprocess.html#py:attribute:subprocess.popen.returncode"><code class="xref py attribute docutils literal">returncode</code></a> attribute.</p>
 <p>Code needing to capture stdout or stderr should use <a class="reference internal" href="subprocess.html#py:function:subprocess.run"><code class="xref py function docutils literal">run</code></a> instead:</p>
@@ -1681,9 +1669,7 @@ longer works.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:subprocess.check_call"><code class="sig-name">check_call(args, *, stdin=None, stdout=None, stderr=None, \</code></dt>
-  <dt id="py:function:subprocess.\"><code class="sig-name">shell=False, cwd=None, timeout=None, \</code></dt>
-  <dt id="py:function:subprocess.**other_popen_kwargs)"><code class="sig-name">**other_popen_kwargs)</code></dt>
+  <dt id="py:function:subprocess.check_call"><code class="sig-name">check_call(args, *, stdin=None, stdout=None, stderr=None, shell=False, cwd=None, timeout=None, **other_popen_kwargs)</code></dt>
   <dd><p>Run command with arguments.  Wait for command to complete. If the return
 code was zero then return, otherwise raise <a class="reference internal" href="subprocess.html#py:exception:subprocess.calledprocesserror"><code class="xref py exception docutils literal">CalledProcessError</code></a>. The
 <a class="reference internal" href="subprocess.html#py:exception:subprocess.calledprocesserror"><code class="xref py exception docutils literal">CalledProcessError</code></a> object will have the return code in the
@@ -1720,10 +1706,7 @@ longer works.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:subprocess.check_output"><code class="sig-name">check_output(args, *, stdin=None, stderr=None, shell=False, \</code></dt>
-  <dt id="py:function:subprocess.\"><code class="sig-name">cwd=None, encoding=None, errors=None, \</code></dt>
-  <dt id="py:function:subprocess.\"><code class="sig-name">universal_newlines=None, timeout=None, text=None, \</code></dt>
-  <dt id="py:function:subprocess.**other_popen_kwargs)"><code class="sig-name">**other_popen_kwargs)</code></dt>
+  <dt id="py:function:subprocess.check_output"><code class="sig-name">check_output(args, *, stdin=None, stderr=None, shell=False, cwd=None, encoding=None, errors=None, universal_newlines=None, timeout=None, text=None, **other_popen_kwargs)</code></dt>
   <dd><p>Run command with arguments and return its output.</p>
 <p>If the return code was non-zero it raises a <a class="reference internal" href="subprocess.html#py:exception:subprocess.calledprocesserror"><code class="xref py exception docutils literal">CalledProcessError</code></a>. The
 <a class="reference internal" href="subprocess.html#py:exception:subprocess.calledprocesserror"><code class="xref py exception docutils literal">CalledProcessError</code></a> object will have the return code in the

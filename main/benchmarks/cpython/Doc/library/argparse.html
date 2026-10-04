@@ -459,13 +459,7 @@ to <code class="xref py module docutils literal">argparse</code>, see <a href=".
 </div>
 <h2 id="argumentparser-objects">ArgumentParser objects</h2>
 <dl class="py class">
-  <dt id="py:class:argparse.argumentparser"><em class="property">class</em> <code class="sig-name">ArgumentParser(prog=None, usage=None, description=None, \</code></dt>
-  <dt id="py:class:argparse.\"><em class="property">class</em> <code class="sig-name">epilog=None, parents=[], \</code></dt>
-  <dt id="py:class:argparse.\"><em class="property">class</em> <code class="sig-name">formatter_class=argparse.HelpFormatter, \</code></dt>
-  <dt id="py:class:argparse.\"><em class="property">class</em> <code class="sig-name">prefix_chars='-', fromfile_prefix_chars=None, \</code></dt>
-  <dt id="py:class:argparse.\"><em class="property">class</em> <code class="sig-name">argument_default=None, conflict_handler='error', \</code></dt>
-  <dt id="py:class:argparse.\"><em class="property">class</em> <code class="sig-name">add_help=True, allow_abbrev=True, exit_on_error=True, \</code></dt>
-  <dt id="py:class:argparse.color=true)"><em class="property">class</em> <code class="sig-name">*, suggest_on_error=False, color=True)</code></dt>
+  <dt id="py:class:argparse.argumentparser"><em class="property">class</em> <code class="sig-name">ArgumentParser(prog=None, usage=None, description=None, epilog=None, parents=[], formatter_class=argparse.HelpFormatter, prefix_chars='-', fromfile_prefix_chars=None, argument_default=None, conflict_handler='error', add_help=True, allow_abbrev=True, exit_on_error=True, *, suggest_on_error=False, color=True)</code></dt>
   <dd><p>Create a new <a class="reference internal" href="argparse.html#py:class:argparse.argumentparser"><code class="xref py class docutils literal">ArgumentParser</code></a> object. All parameters should be passed
 as keyword arguments. Each parameter has its own more detailed description
 below, but in short they are:</p>
@@ -967,9 +961,7 @@ are set.</p>
 </div>
 <h2 id="the-add-argument-method">The add_argument() method</h2>
 <dl class="py method">
-  <dt id="py:method:argparse.argumentparser.add_argument"><code class="sig-name">ArgumentParser.add_argument(name or flags..., *, [action], [nargs], \</code></dt>
-  <dt id="py:method:argparse.\"><code class="sig-name">[const], [default], [type], [choices], [required], \</code></dt>
-  <dt id="py:method:argparse.[deprecated])"><code class="sig-name">[help], [metavar], [dest], [deprecated])</code></dt>
+  <dt id="py:method:argparse.argumentparser.add_argument"><code class="sig-name">ArgumentParser.add_argument(name or flags..., *, [action], [nargs], [const], [default], [type], [choices], [required], [help], [metavar], [dest], [deprecated])</code></dt>
   <dd><p>Define how a single command-line argument should be parsed.  Each parameter
 has its own more detailed description below, but in short they are:</p>
 <ul>
@@ -1605,9 +1597,7 @@ which processes arguments from the command-line. Any object which follows
 this API may be passed as the <code>action</code> parameter to
 <a class="reference internal" href="argparse.html#py:method:argparse.argumentparser.add_argument"><code class="xref py method docutils literal">add_argument</code></a>.</p>
 <dl class="py class">
-  <dt id="py:class:argparse.action"><em class="property">class</em> <code class="sig-name">Action(option_strings, dest, nargs=None, const=None, default=None, \</code></dt>
-  <dt id="py:class:argparse.\"><em class="property">class</em> <code class="sig-name">type=None, choices=None, required=False, help=None, \</code></dt>
-  <dt id="py:class:argparse.metavar=none)"><em class="property">class</em> <code class="sig-name">metavar=None)</code></dt>
+  <dt id="py:class:argparse.action"><em class="property">class</em> <code class="sig-name">Action(option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None, required=False, help=None, metavar=None)</code></dt>
   <dd><p><code class="xref py class docutils literal">Action</code> objects are used by an <a class="reference internal" href="argparse.html#py:class:argparse.argumentparser"><code class="xref py class docutils literal">ArgumentParser</code></a> to represent the information
 needed to parse a single argument from one or more strings from the
 command line. The <code class="xref py class docutils literal">Action</code> class must accept the two positional arguments
@@ -1866,10 +1856,7 @@ be achieved by specifying the <code>namespace=</code> keyword argument:</p>
 <h2 id="other-utilities">Other utilities</h2>
 <h3 id="sub-commands">Sub-commands</h3>
 <dl class="py method">
-  <dt id="py:method:argparse.argumentparser.add_subparsers"><code class="sig-name">ArgumentParser.add_subparsers(*, [title], [description], [prog], \</code></dt>
-  <dt id="py:method:argparse.\"><code class="sig-name">[parser_class], [action], \</code></dt>
-  <dt id="py:method:argparse.\"><code class="sig-name">[dest], [required], \</code></dt>
-  <dt id="py:method:argparse.[metavar])"><code class="sig-name">[help], [metavar])</code></dt>
+  <dt id="py:method:argparse.argumentparser.add_subparsers"><code class="sig-name">ArgumentParser.add_subparsers(*, [title], [description], [prog], [parser_class], [action], [dest], [required], [help], [metavar])</code></dt>
   <dd><p>Many programs split up their functionality into a number of subcommands,
 for example, the <code>svn</code> program can invoke subcommands like <code>svn
 checkout</code>, <code>svn update</code>, and <code>svn commit</code>.  Splitting up functionality
@@ -2131,8 +2118,7 @@ run and then use the :keyword:`with`-statement to manage the files.</p>
 </dl>
 <h3 id="argument-groups">Argument groups</h3>
 <dl class="py method">
-  <dt id="py:method:argparse.argumentparser.add_argument_group"><code class="sig-name">ArgumentParser.add_argument_group(title=None, description=None, *, \</code></dt>
-  <dt id="py:method:argparse.[conflict_handler])"><code class="sig-name">[argument_default], [conflict_handler])</code></dt>
+  <dt id="py:method:argparse.argumentparser.add_argument_group"><code class="sig-name">ArgumentParser.add_argument_group(title=None, description=None, *, [argument_default], [conflict_handler])</code></dt>
   <dd><p>By default, <a class="reference internal" href="argparse.html#py:class:argparse.argumentparser"><code class="xref py class docutils literal">ArgumentParser</code></a> groups command-line arguments into
 "positional arguments" and "options" when displaying help
 messages. When there is a better conceptual grouping of arguments than this

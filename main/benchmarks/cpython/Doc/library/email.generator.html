@@ -467,8 +467,7 @@ over channels that are not "8 bit clean".</p>
 <a class="reference internal" href="email.generator.html#py:class:email.generator.generator"><code class="xref py class docutils literal">Generator</code></a> disables header folding for message parts of type
 <code>multipart/signed</code> and all subparts.</p>
 <dl class="py class">
-  <dt id="py:class:email.generator.bytesgenerator"><em class="property">class</em> <code class="sig-name">BytesGenerator(outfp, mangle_from_=None, maxheaderlen=None, *, \</code></dt>
-  <dt id="py:class:email.generator.policy=none)"><em class="property">class</em> <code class="sig-name">policy=None)</code></dt>
+  <dt id="py:class:email.generator.bytesgenerator"><em class="property">class</em> <code class="sig-name">BytesGenerator(outfp, mangle_from_=None, maxheaderlen=None, *, policy=None)</code></dt>
   <dd><p>Return a <a class="reference internal" href="email.generator.html#py:class:email.generator.bytesgenerator"><code class="xref py class docutils literal">BytesGenerator</code></a> object that will write any message provided
 to the <a class="reference internal" href="email.generator.html#py:method:email.generator.bytesgenerator.flatten"><code class="xref py method docutils literal">flatten</code></a> method, or any surrogateescape encoded text provided
 to the <a class="reference internal" href="email.generator.html#py:method:email.generator.bytesgenerator.write"><code class="xref py method docutils literal">write</code></a> method, to the <a class="reference internal" href="../glossary.html#term-file-like-object"><span class="xref std std-term">file-like object</span></a> <em>outfp</em>.
@@ -558,8 +557,7 @@ RFCs, you can think of this as <a class="reference internal" href="email.generat
 that is not "8 bit clean".  In other words, most applications will want
 to be using <a class="reference internal" href="email.generator.html#py:class:email.generator.bytesgenerator"><code class="xref py class docutils literal">BytesGenerator</code></a>, and not <a class="reference internal" href="email.generator.html#py:class:email.generator.generator"><code class="xref py class docutils literal">Generator</code></a>.</p>
 <dl class="py class">
-  <dt id="py:class:email.generator.generator"><em class="property">class</em> <code class="sig-name">Generator(outfp, mangle_from_=None, maxheaderlen=None, *, \</code></dt>
-  <dt id="py:class:email.generator.policy=none)"><em class="property">class</em> <code class="sig-name">policy=None)</code></dt>
+  <dt id="py:class:email.generator.generator"><em class="property">class</em> <code class="sig-name">Generator(outfp, mangle_from_=None, maxheaderlen=None, *, policy=None)</code></dt>
   <dd><p>Return a <a class="reference internal" href="email.generator.html#py:class:email.generator.generator"><code class="xref py class docutils literal">Generator</code></a> object that will write any message provided
 to the <a class="reference internal" href="email.generator.html#py:method:email.generator.generator.flatten"><code class="xref py method docutils literal">flatten</code></a> method, or any text provided to the <a class="reference internal" href="email.generator.html#py:method:email.generator.generator.write"><code class="xref py method docutils literal">write</code></a>
 method, to the <a class="reference internal" href="../glossary.html#term-file-like-object"><span class="xref std std-term">file-like object</span></a> <em>outfp</em>.  <em>outfp</em> must support a
@@ -647,8 +645,7 @@ except that non-:mimetype:`text` parts are not serialized, but are instead
 represented in the output stream by a string derived from a template filled
 in with information about the part.</p>
 <dl class="py class">
-  <dt id="py:class:email.generator.decodedgenerator"><em class="property">class</em> <code class="sig-name">DecodedGenerator(outfp, mangle_from_=None, maxheaderlen=None, \</code></dt>
-  <dt id="py:class:email.generator.policy=none)"><em class="property">class</em> <code class="sig-name">fmt=None, *, policy=None)</code></dt>
+  <dt id="py:class:email.generator.decodedgenerator"><em class="property">class</em> <code class="sig-name">DecodedGenerator(outfp, mangle_from_=None, maxheaderlen=None, fmt=None, *, policy=None)</code></dt>
   <dd><p>Act like <a class="reference internal" href="email.generator.html#py:class:email.generator.generator"><code class="xref py class docutils literal">Generator</code></a>, except that for any subpart of the message
 passed to <a class="reference internal" href="email.generator.html#py:method:email.generator.generator.flatten"><code class="xref py method docutils literal">Generator.flatten</code></a>, if the subpart is of main type
 :mimetype:`text`, print the decoded payload of the subpart, and if the main

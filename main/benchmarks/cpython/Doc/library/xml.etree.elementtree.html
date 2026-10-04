@@ -1140,9 +1140,7 @@ arguments.  Returns an element instance.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:xml.etree.elementtree.tostring"><code class="sig-name">tostring(element, encoding="us-ascii", method="xml", *, \</code></dt>
-  <dt id="py:function:xml.etree.elementtree.\"><code class="sig-name">xml_declaration=None, default_namespace=None, \</code></dt>
-  <dt id="py:function:xml.etree.elementtree.short_empty_elements=true)"><code class="sig-name">short_empty_elements=True)</code></dt>
+  <dt id="py:function:xml.etree.elementtree.tostring"><code class="sig-name">tostring(element, encoding="us-ascii", method="xml", *, xml_declaration=None, default_namespace=None, short_empty_elements=True)</code></dt>
   <dd><p>Generates a string representation of an XML element, including all
 subelements.  <em>element</em> is an <a class="reference internal" href="xml.etree.elementtree.html#py:class:xml.etree.elementtree.element"><code class="xref py class docutils literal">Element</code></a> instance.  <em>encoding</em> [1]_ is
 the output encoding (default is US-ASCII).  Use <code>encoding="unicode"</code> to
@@ -1167,9 +1165,7 @@ specified by the user.</p>
 </dd>
 </dl>
 <dl class="py function">
-  <dt id="py:function:xml.etree.elementtree.tostringlist"><code class="sig-name">tostringlist(element, encoding="us-ascii", method="xml", *, \</code></dt>
-  <dt id="py:function:xml.etree.elementtree.\"><code class="sig-name">xml_declaration=None, default_namespace=None, \</code></dt>
-  <dt id="py:function:xml.etree.elementtree.short_empty_elements=true)"><code class="sig-name">short_empty_elements=True)</code></dt>
+  <dt id="py:function:xml.etree.elementtree.tostringlist"><code class="sig-name">tostringlist(element, encoding="us-ascii", method="xml", *, xml_declaration=None, default_namespace=None, short_empty_elements=True)</code></dt>
   <dd><p>Generates a string representation of an XML element, including all
 subelements.  <em>element</em> is an <a class="reference internal" href="xml.etree.elementtree.html#py:class:xml.etree.elementtree.element"><code class="xref py class docutils literal">Element</code></a> instance.  <em>encoding</em> [1]_ is
 the output encoding (default is US-ASCII).  Use <code>encoding="unicode"</code> to
@@ -1585,9 +1581,7 @@ section root element.</p>
 </dd>
 </dl>
 <dl class="py method">
-  <dt id="py:method:xml.etree.elementtree.elementtree.write"><code class="sig-name">write(file, encoding="us-ascii", xml_declaration=None, \</code></dt>
-  <dt id="py:method:xml.etree.elementtree.elementtree.\"><code class="sig-name">default_namespace=None, method="xml", *, \</code></dt>
-  <dt id="py:method:xml.etree.elementtree.elementtree.short_empty_elements=true)"><code class="sig-name">short_empty_elements=True)</code></dt>
+  <dt id="py:method:xml.etree.elementtree.elementtree.write"><code class="sig-name">write(file, encoding="us-ascii", xml_declaration=None, default_namespace=None, method="xml", *, short_empty_elements=True)</code></dt>
   <dd><p>Writes the element tree to a file, as XML.  <em>file</em> is a file name, or a
 <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file object</span></a> opened for writing.  <em>encoding</em> [1]_ is the output
 encoding (default is US-ASCII).
@@ -1665,8 +1659,7 @@ interpreted as a URI, and this argument is interpreted as a local name.
 <a id="elementtree-treebuilder-objects"></a>
 <h3 id="treebuilder-objects">TreeBuilder Objects</h3>
 <dl class="py class">
-  <dt id="py:class:xml.etree.elementtree.treebuilder"><em class="property">class</em> <code class="sig-name">TreeBuilder(element_factory=None, *, comment_factory=None, \</code></dt>
-  <dt id="py:class:xml.etree.elementtree.insert_pis=false)"><em class="property">class</em> <code class="sig-name">pi_factory=None, insert_comments=False, insert_pis=False)</code></dt>
+  <dt id="py:class:xml.etree.elementtree.treebuilder"><em class="property">class</em> <code class="sig-name">TreeBuilder(element_factory=None, *, comment_factory=None, pi_factory=None, insert_comments=False, insert_pis=False)</code></dt>
   <dd><p>Generic element structure builder.  This builder converts a sequence of
 start, data, end, comment and pi method calls to a well-formed element
 structure.  You can use this class to build an element structure using
@@ -1758,10 +1751,7 @@ out of scope.</p>
 </dd>
 </dl>
 <dl class="py class">
-  <dt id="py:class:xml.etree.elementtree.c14nwritertarget"><em class="property">class</em> <code class="sig-name">C14NWriterTarget(write, *, \</code></dt>
-  <dt id="py:class:xml.etree.elementtree.\"><em class="property">class</em> <code class="sig-name">with_comments=False, strip_text=False, rewrite_prefixes=False, \</code></dt>
-  <dt id="py:class:xml.etree.elementtree.\"><em class="property">class</em> <code class="sig-name">qname_aware_tags=None, qname_aware_attrs=None, \</code></dt>
-  <dt id="py:class:xml.etree.elementtree.exclude_tags=none)"><em class="property">class</em> <code class="sig-name">exclude_attrs=None, exclude_tags=None)</code></dt>
+  <dt id="py:class:xml.etree.elementtree.c14nwritertarget"><em class="property">class</em> <code class="sig-name">C14NWriterTarget(write, *, with_comments=False, strip_text=False, rewrite_prefixes=False, qname_aware_tags=None, qname_aware_attrs=None, exclude_attrs=None, exclude_tags=None)</code></dt>
   <dd><p>A <a href="https://www.w3.org/TR/xml-c14n2/">C14N 2.0</a> writer.  Arguments are the
 same as for the <a class="reference internal" href="xml.etree.elementtree.html#py:function:xml.etree.elementtree.canonicalize"><code class="xref py function docutils literal">canonicalize</code></a> function.  This class does not build a
 tree but translates the callback events directly into a serialised form
