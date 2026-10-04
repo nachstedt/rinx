@@ -51,6 +51,36 @@ object each is a full signature:
    Spawn a new process. The ``e`` variant additionally takes a mapping of
    environment variables.
 
+A signature too long for one line wraps with a trailing backslash, and stays
+one signature — the shape CPython's ``library/asyncio-stream.rst`` writes:
+
+.. py:function:: open_greeting_channel(host=None, port=None, *, \
+                                       limit=None, ssl=None)
+
+   Opens a channel greetings can be sent over. Only
+   ``open_greeting_channel`` is indexed, not a name per wrapped line.
+
+An ``:async:`` function is shown as a coroutine function:
+
+.. py:function:: greet_later(name, delay)
+   :async:
+
+   Greets the given name once ``delay`` seconds have passed.
+
+Describing an Object Twice
+""""""""""""""""""""""""""
+
+An object documented in a second place takes ``:no-index:`` (or its legacy
+spelling ``:noindex:``) there, so that only its main description is a
+cross-reference target — as CPython's ``library/functions.rst`` does for the
+built-in types. It is still typeset, with no anchor:
+
+.. py:function:: greet(name)
+   :noindex:
+
+   A short reminder of :py:func:`greet`, which links to the description at
+   the top of this page.
+
 The ``Greeter`` Class
 """"""""""""""""""""""
 

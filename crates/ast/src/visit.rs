@@ -498,6 +498,7 @@ mod tests {
         // Given
         let nodes = vec![Node::Directive(Directive::DomainObject(
             DomainObjectBody::CFunction {
+                flags: crate::DescriptionFlags::default(),
                 signatures: NonEmptyVector::single("int add(int a, int b)".into()),
                 body: vec![diagram("nested-in-domain-object")],
             },

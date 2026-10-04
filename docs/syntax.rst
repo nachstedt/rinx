@@ -161,7 +161,11 @@ Supported:
   ``c:struct``, ``c:macro``, …) and the standard domain's ``.. program::`` and
   ``.. option::``. A module's ``:synopsis:`` is shown in the Python Module
   Index, which a site enables with ``domain_indices`` (see :ref:`rules`),
-  and as the tooltip of every ``:mod:`` link.
+  and as the tooltip of every ``:mod:`` link. Every object takes
+  ``:no-index:`` (for a second description of something documented
+  elsewhere), ``:no-index-entry:`` and ``:no-contents-entry:``, a signature
+  may wrap with a trailing backslash, and an option the object does not take
+  is reported as ``directive.unknown-option``.
 - Linking to other sites through their ``objects.inv``, and writing one; see
   :ref:`intersphinx`.
 

@@ -266,6 +266,7 @@ mod tests {
     fn test_cmdoption_object_type_is_std_cmdoption() {
         // Given
         let obj = DomainObjectBody::StdCmdoption {
+            flags: crate::DescriptionFlags::default(),
             signatures: NonEmptyVector::single("-h".to_string()),
             body: vec![],
         };
@@ -279,6 +280,7 @@ mod tests {
         // Given — one line with two comma-separated specs, and a second,
         // single-spec continuation line.
         let obj = DomainObjectBody::StdCmdoption {
+            flags: crate::DescriptionFlags::default(),
             signatures: NonEmptyVector::new(
                 "-c, --compress".to_string(),
                 vec!["--level <n>".to_string()],
@@ -305,6 +307,7 @@ mod tests {
         // Given — deliberately asymmetric with `names()` (see its doc
         // comment): one raw line yields two names but one display text.
         let obj = DomainObjectBody::StdCmdoption {
+            flags: crate::DescriptionFlags::default(),
             signatures: NonEmptyVector::single("-c, --compress".to_string()),
             body: vec![],
         };
@@ -320,6 +323,7 @@ mod tests {
     fn test_cmdoption_deduce_local_scope_lends_nothing() {
         // Given
         let obj = DomainObjectBody::StdCmdoption {
+            flags: crate::DescriptionFlags::default(),
             signatures: NonEmptyVector::single("-h".to_string()),
             body: vec![],
         };
@@ -335,6 +339,7 @@ mod tests {
     fn test_cmdoption_has_no_index_options_modeled() {
         // Given
         let obj = DomainObjectBody::StdCmdoption {
+            flags: crate::DescriptionFlags::default(),
             signatures: NonEmptyVector::single("-h".to_string()),
             body: vec![],
         };

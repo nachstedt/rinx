@@ -1,11 +1,12 @@
-use super::dispatch::parse_module_option_line;
-use crate::blocks::parse_blocks;
+use super::super::body::{ObjectOptions, parse_object_body};
+use super::dispatch::read_module_option;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::domains::object_type::DirectiveObjectType;
+use crate::directives::options::OptionLine;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 use rinx_ast::{DomainObjectBody, NonEmptyVector};
+use std::collections::BTreeSet;
 
 /// The `py:method`-alias directive-name flags that [`parse_py_method`]
 /// forces on regardless of the body's own option lines — one field per
@@ -53,9 +54,7 @@ impl ForcedMethodFlags {
     }
 }
 
-/// Parses a `.. py:method::` body: strips `:classmethod:`/`:staticmethod:`/
-/// `:abstractmethod:`/`:async:` flag lines off the front before parsing the
-/// rest as the docstring body.
+/// Parses a `.. py:method::` body: its option block, then its content.
 ///
 /// `forced.classmethod`/`forced.staticmethod` come from the legacy
 /// `.. classmethod::`/`.. staticmethod::` directive-name aliases (which are
@@ -74,157 +73,148 @@ pub(crate) fn parse_py_method(
     ctx: &ParseCtx<'_>,
     forced: ForcedMethodFlags,
 ) -> DomainObjectBody {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, module, options_consumed) =
-        extract_method_options(&unindented_lines);
-
-    let body_content: Vec<&str> = unindented_lines[options_consumed..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
-
+    let parsed = parse_object_body::<MethodOptions>(
+        "py:method",
+        body_lines,
+        adornment_order,
+        diagnostics,
+        ctx,
+    );
+    let options = parsed.options;
     DomainObjectBody::PyMethod {
-        module,
+        flags: parsed.flags,
+        is_classmethod: options.has(MethodFlag::Classmethod) || forced.classmethod,
+        is_staticmethod: options.has(MethodFlag::Staticmethod) || forced.staticmethod,
+        is_abstractmethod: options.has(MethodFlag::Abstractmethod),
+        is_async: options.has(MethodFlag::Async),
+        module: options.module,
         signatures,
-        is_classmethod: is_classmethod || forced.classmethod,
-        is_staticmethod: is_staticmethod || forced.staticmethod,
-        is_abstractmethod,
-        is_async,
         is_decorator: forced.decorator,
-        body,
+        body: parsed.content,
     }
 }
 
-/// Extracts `.. py:method::`-specific options: the flags `:classmethod:`,
-/// `:staticmethod:`, `:abstractmethod:`, `:async:`, plus `:module:` (shared
-/// with every other `py:*` object-description directive) from the leading
-/// lines of a domain object's body.
-///
-/// Scans from the start and stops at the first line that isn't one of these
-/// recognized options (e.g. a blank line or the start of the docstring body),
-/// returning how many leading lines were consumed as options so the caller
-/// can slice them off before parsing the remaining body content.
-fn extract_method_options(lines: &[String]) -> (bool, bool, bool, bool, Option<String>, usize) {
-    let mut is_classmethod = false;
-    let mut is_staticmethod = false;
-    let mut is_abstractmethod = false;
-    let mut is_async = false;
-    let mut module = None;
-    let mut consumed = 0;
+/// The options `.. py:method::` takes beyond the object-description flags:
+/// `:classmethod:`, `:staticmethod:`, `:abstractmethod:`, `:async:`, and the
+/// `:module:` every `py` object takes.
+#[derive(Debug, Default, PartialEq, Eq)]
+struct MethodOptions {
+    flags: BTreeSet<MethodFlag>,
+    module: Option<String>,
+}
 
-    for line in lines {
-        let trimmed = line.trim();
-        if let Some(module_value) = parse_module_option_line(trimmed) {
-            module = Some(module_value);
-        } else {
-            match trimmed {
-                ":classmethod:" => is_classmethod = true,
-                ":staticmethod:" => is_staticmethod = true,
-                ":abstractmethod:" => is_abstractmethod = true,
-                ":async:" => is_async = true,
-                _ => break,
-            }
-        }
-        consumed += 1;
+impl MethodOptions {
+    /// Whether the author wrote `flag`.
+    fn has(&self, flag: MethodFlag) -> bool {
+        self.flags.contains(&flag)
     }
+}
 
-    (
-        is_classmethod,
-        is_staticmethod,
-        is_abstractmethod,
-        is_async,
-        module,
-        consumed,
-    )
+/// One of `.. py:method::`'s own valueless options.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum MethodFlag {
+    Classmethod,
+    Staticmethod,
+    Abstractmethod,
+    Async,
+}
+
+impl ObjectOptions for MethodOptions {
+    fn read(&mut self, line: &OptionLine) -> bool {
+        let flag = match line.name.as_str() {
+            "classmethod" => MethodFlag::Classmethod,
+            "staticmethod" => MethodFlag::Staticmethod,
+            "abstractmethod" => MethodFlag::Abstractmethod,
+            "async" => MethodFlag::Async,
+            _ => return read_module_option(line, &mut self.module),
+        };
+        self.flags.insert(flag);
+        true
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::super::super::body::test_support::read_options;
     use super::*;
     use crate::parse;
     use rinx_ast::{Directive, Node};
 
     #[test]
-    fn test_extract_method_options_parses_all_four_flags() {
+    fn test_method_options_read_all_four_flags() {
         // Given
-        let lines = vec![
-            ":classmethod:".to_string(),
-            ":staticmethod:".to_string(),
-            ":abstractmethod:".to_string(),
-            ":async:".to_string(),
-            String::new(),
-            "Does the thing.".to_string(),
+        let body = [
+            ":classmethod:",
+            ":staticmethod:",
+            ":abstractmethod:",
+            ":async:",
+            "",
+            "Does it.",
         ];
 
         // When
-        let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, module, consumed) =
-            extract_method_options(&lines);
+        let (options, _, unrecognized) = read_options::<MethodOptions>(&body);
 
         // Then
-        assert!(is_classmethod);
-        assert!(is_staticmethod);
-        assert!(is_abstractmethod);
-        assert!(is_async);
-        assert_eq!(module, None);
-        assert_eq!(consumed, 4);
+        assert_eq!(
+            options,
+            MethodOptions {
+                flags: BTreeSet::from([
+                    MethodFlag::Classmethod,
+                    MethodFlag::Staticmethod,
+                    MethodFlag::Abstractmethod,
+                    MethodFlag::Async,
+                ]),
+                module: None,
+            }
+        );
+        assert!(unrecognized.is_empty());
     }
     #[test]
-    fn test_extract_method_options_stops_at_first_non_option_line() {
-        // Given
-        let lines = vec![":classmethod:".to_string(), "Does the thing.".to_string()];
-
-        // When
-        let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, module, consumed) =
-            extract_method_options(&lines);
-
-        // Then
-        assert!(is_classmethod);
-        assert!(!is_staticmethod);
-        assert!(!is_abstractmethod);
-        assert!(!is_async);
-        assert_eq!(module, None);
-        assert_eq!(consumed, 1);
-    }
-    #[test]
-    fn test_extract_method_options_returns_defaults_when_no_options_present() {
-        // Given
-        let lines = vec!["Does the thing.".to_string()];
-
-        // When
-        let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, module, consumed) =
-            extract_method_options(&lines);
-
-        // Then
-        assert!(!is_classmethod);
-        assert!(!is_staticmethod);
-        assert!(!is_abstractmethod);
-        assert!(!is_async);
-        assert_eq!(module, None);
-        assert_eq!(consumed, 0);
-    }
-    #[test]
-    fn test_extract_method_options_parses_module_option_alongside_flags() {
+    fn test_method_options_read_module_between_flags() {
         // Given — `:module:` interleaved with the flag options, proving both
         // recognition and order-independence.
-        let lines = vec![
-            ":classmethod:".to_string(),
-            ":module: multiprocessing.managers".to_string(),
-            ":async:".to_string(),
-            "Does the thing.".to_string(),
+        let body = [
+            ":classmethod:",
+            ":module: multiprocessing.managers",
+            ":async:",
+            "Does it.",
         ];
 
         // When
-        let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, module, consumed) =
-            extract_method_options(&lines);
+        let (options, _, _) = read_options::<MethodOptions>(&body);
 
         // Then
-        assert!(is_classmethod);
-        assert!(!is_staticmethod);
-        assert!(!is_abstractmethod);
-        assert!(is_async);
-        assert_eq!(module.as_deref(), Some("multiprocessing.managers"));
-        assert_eq!(consumed, 3);
+        assert_eq!(
+            options,
+            MethodOptions {
+                flags: BTreeSet::from([MethodFlag::Classmethod, MethodFlag::Async]),
+                module: Some("multiprocessing.managers".to_string()),
+            }
+        );
+    }
+    #[test]
+    fn test_method_options_read_nothing_from_a_plain_body() {
+        // Given
+        let body = ["Does the thing."];
+
+        // When
+        let (options, _, unrecognized) = read_options::<MethodOptions>(&body);
+
+        // Then
+        assert_eq!(options, MethodOptions::default());
+        assert!(unrecognized.is_empty());
+    }
+    #[test]
+    fn test_method_options_leave_an_option_sphinx_does_not_give_a_method() {
+        // Given
+        let body = [":type: int"];
+
+        // When
+        let (_, _, unrecognized) = read_options::<MethodOptions>(&body);
+
+        // Then
+        assert_eq!(unrecognized, ["type"]);
     }
     #[test]
     fn test_parse_creates_py_method_domain_object() {
@@ -237,6 +227,7 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyMethod {
+            flags: _,
             signatures,
             is_classmethod,
             is_staticmethod,
@@ -327,6 +318,7 @@ mod tests {
         // Then — it parses as a `py:method` with `is_classmethod` forced on
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyMethod {
+            flags: _,
             signatures,
             is_classmethod,
             is_staticmethod,
@@ -362,6 +354,7 @@ mod tests {
         // Then — it parses as a `py:method` with `is_staticmethod` forced on
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyMethod {
+            flags: _,
             signatures,
             is_classmethod,
             is_staticmethod,

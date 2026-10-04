@@ -1,13 +1,12 @@
-use super::dispatch::parse_module_option_line;
-use crate::blocks::parse_blocks;
+use super::super::body::{ObjectOptions, parse_object_body};
+use super::dispatch::read_module_option;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::options::OptionLine;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 use rinx_ast::{DomainObjectBody, NonEmptyVector};
 
-/// Parses a `.. py:data::` body: strips `:type:`/`:value:` option lines off
-/// the front before parsing the rest as the docstring body.
+/// Parses a `.. py:data::` body: its option block, then its content.
 pub(crate) fn parse_py_data(
     signatures: NonEmptyVector<String>,
     body_lines: &[&str],
@@ -15,132 +14,93 @@ pub(crate) fn parse_py_data(
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (type_, value, module, options_consumed) = extract_data_options(&unindented_lines);
-
-    let body_content: Vec<&str> = unindented_lines[options_consumed..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
-
+    let parsed =
+        parse_object_body::<DataOptions>("py:data", body_lines, adornment_order, diagnostics, ctx);
     DomainObjectBody::PyData {
-        module,
+        flags: parsed.flags,
+        module: parsed.options.module,
         signatures,
-        type_,
-        value,
-        body,
+        type_: parsed.options.type_,
+        value: parsed.options.value,
+        body: parsed.content,
     }
 }
 
-/// Extracts `.. py:data::`-specific options (`:type:`, `:value:`, `:module:`)
-/// from the leading lines of a domain object's body.
-///
-/// Scans from the start and stops at the first line that isn't one of these
-/// recognized options (e.g. a blank line or the start of the docstring body),
-/// returning how many leading lines were consumed as options so the caller
-/// can slice them off before parsing the remaining body content.
-fn extract_data_options(
-    lines: &[String],
-) -> (Option<String>, Option<String>, Option<String>, usize) {
-    let mut type_ = None;
-    let mut value = None;
-    let mut module = None;
-    let mut consumed = 0;
+/// The options `.. py:data::` takes beyond the object-description flags:
+/// `:type:`, `:value:`, and the `:module:` every `py` object takes.
+#[derive(Debug, Default, PartialEq, Eq)]
+struct DataOptions {
+    type_: Option<String>,
+    value: Option<String>,
+    module: Option<String>,
+}
 
-    for line in lines {
-        let trimmed = line.trim();
-        if let Some(rest) = trimmed.strip_prefix(":type:") {
-            type_ = Some(rest.trim().to_string());
-        } else if let Some(rest) = trimmed.strip_prefix(":value:") {
-            value = Some(rest.trim().to_string());
-        } else if let Some(module_value) = parse_module_option_line(trimmed) {
-            module = Some(module_value);
-        } else {
-            break;
-        }
-        consumed += 1;
+impl ObjectOptions for DataOptions {
+    fn read(&mut self, line: &OptionLine) -> bool {
+        let field = match line.name.as_str() {
+            "type" => &mut self.type_,
+            "value" => &mut self.value,
+            _ => return read_module_option(line, &mut self.module),
+        };
+        *field = Some(line.value.clone());
+        true
     }
-
-    (type_, value, module, consumed)
 }
 
 #[cfg(test)]
 mod tests {
+    use super::super::super::body::test_support::read_options;
     use super::*;
     use crate::parse;
     use rinx_ast::{Directive, Node};
 
     #[test]
-    fn test_extract_data_options_parses_both_options() {
+    fn test_data_options_read_type_value_and_module_in_any_order() {
         // Given
-        let lines = vec![
-            ":type: int".to_string(),
-            ":value: 30".to_string(),
-            String::new(),
-            "The default timeout in seconds.".to_string(),
+        let body = [
+            ":value: 30",
+            ":module: socket",
+            ":type: int",
+            "",
+            "The timeout.",
         ];
 
         // When
-        let (type_, value, module, consumed) = extract_data_options(&lines);
+        let (options, _, unrecognized) = read_options::<DataOptions>(&body);
 
         // Then
-        assert_eq!(type_.as_deref(), Some("int"));
-        assert_eq!(value.as_deref(), Some("30"));
-        assert_eq!(module, None);
-        assert_eq!(consumed, 2);
+        assert_eq!(
+            options,
+            DataOptions {
+                type_: Some("int".to_string()),
+                value: Some("30".to_string()),
+                module: Some("socket".to_string()),
+            }
+        );
+        assert!(unrecognized.is_empty());
     }
     #[test]
-    fn test_extract_data_options_stops_at_first_non_option_line() {
+    fn test_data_options_read_nothing_from_a_plain_body() {
         // Given
-        let lines = vec![
-            ":type: int".to_string(),
-            "The default timeout in seconds.".to_string(),
-        ];
+        let body = ["The default timeout in seconds."];
 
         // When
-        let (type_, value, module, consumed) = extract_data_options(&lines);
+        let (options, _, unrecognized) = read_options::<DataOptions>(&body);
 
         // Then
-        assert_eq!(type_.as_deref(), Some("int"));
-        assert_eq!(value, None);
-        assert_eq!(module, None);
-        assert_eq!(consumed, 1);
+        assert_eq!(options, DataOptions::default());
+        assert!(unrecognized.is_empty());
     }
     #[test]
-    fn test_extract_data_options_returns_defaults_when_no_options_present() {
+    fn test_data_options_leave_an_attribute_only_option() {
         // Given
-        let lines = vec!["The default timeout in seconds.".to_string()];
+        let body = [":canonical: pkg.VALUE"];
 
         // When
-        let (type_, value, module, consumed) = extract_data_options(&lines);
+        let (_, _, unrecognized) = read_options::<DataOptions>(&body);
 
         // Then
-        assert_eq!(type_, None);
-        assert_eq!(value, None);
-        assert_eq!(module, None);
-        assert_eq!(consumed, 0);
-    }
-    #[test]
-    fn test_extract_data_options_parses_module_option_alongside_others() {
-        // Given — the `docs/dev/known_bugs.md` shape: `ctypes.util`'s constants
-        // documented under a different module than the enclosing `.. module::`.
-        let lines = vec![
-            ":type: int".to_string(),
-            ":module: ctypes.util".to_string(),
-            ":value: 30".to_string(),
-            String::new(),
-            "The default timeout in seconds.".to_string(),
-        ];
-
-        // When
-        let (type_, value, module, consumed) = extract_data_options(&lines);
-
-        // Then — order-independent, like the other options.
-        assert_eq!(type_.as_deref(), Some("int"));
-        assert_eq!(value.as_deref(), Some("30"));
-        assert_eq!(module.as_deref(), Some("ctypes.util"));
-        assert_eq!(consumed, 3);
+        assert_eq!(unrecognized, ["canonical"]);
     }
     #[test]
     fn test_parse_creates_py_data_domain_object() {
@@ -153,6 +113,7 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyData {
+            flags: _,
             signatures,
             type_,
             value,

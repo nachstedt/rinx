@@ -30,11 +30,13 @@ fn test_analyze_qualifies_method_nested_in_class() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyClass {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("Greeter".to_string()),
                 is_final: false,
                 body: vec![Node::Directive(Directive::DomainObject(
                     rinx_ast::DomainObjectBody::PyMethod {
+                        flags: rinx_ast::DescriptionFlags::default(),
                         module: None,
                         is_decorator: false,
                         signatures: NonEmptyVector::single("greet(self, name)".to_string()),
@@ -65,11 +67,13 @@ fn test_analyze_qualifies_method_nested_in_exception() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyException {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("GreeterError".to_string()),
                 is_final: false,
                 body: vec![Node::Directive(Directive::DomainObject(
                     rinx_ast::DomainObjectBody::PyMethod {
+                        flags: rinx_ast::DescriptionFlags::default(),
                         module: None,
                         is_decorator: false,
                         signatures: NonEmptyVector::single("reason(self)".to_string()),
@@ -99,16 +103,19 @@ fn test_analyze_qualifies_nested_classes_two_levels_deep() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyClass {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("Outer".to_string()),
                 is_final: false,
                 body: vec![Node::Directive(Directive::DomainObject(
                     rinx_ast::DomainObjectBody::PyClass {
+                        flags: rinx_ast::DescriptionFlags::default(),
                         module: None,
                         signatures: NonEmptyVector::single("Inner".to_string()),
                         is_final: false,
                         body: vec![Node::Directive(Directive::DomainObject(
                             rinx_ast::DomainObjectBody::PyMethod {
+                                flags: rinx_ast::DescriptionFlags::default(),
                                 module: None,
                                 is_decorator: false,
                                 signatures: NonEmptyVector::single("method(self)".to_string()),
@@ -139,11 +146,13 @@ fn test_analyze_qualifies_non_method_object_nested_in_class() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyClass {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("Greeter".to_string()),
                 is_final: false,
                 body: vec![Node::Directive(Directive::DomainObject(
                     rinx_ast::DomainObjectBody::PyData {
+                        flags: rinx_ast::DescriptionFlags::default(),
                         module: None,
                         signatures: NonEmptyVector::single("DEFAULT_GREETING".to_string()),
                         type_: None,
@@ -173,6 +182,8 @@ fn test_analyze_qualifies_object_nested_in_module_domain_object() {
                 options: rinx_ast::ModuleOptions::default(),
                 body: vec![Node::Directive(Directive::DomainObject(
                     rinx_ast::DomainObjectBody::PyFunction {
+                        flags: rinx_ast::DescriptionFlags::default(),
+                        is_async: false,
                         module: None,
                         is_decorator: false,
                         signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -208,6 +219,8 @@ fn test_analyze_qualifies_sibling_object_after_module_domain_object() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyFunction {
+                    flags: rinx_ast::DescriptionFlags::default(),
+                    is_async: false,
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("coroutine(gen_func)".to_string()),
@@ -244,6 +257,7 @@ fn test_analyze_does_not_dedup_module_prefix_in_flat_sibling_signature() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyMethod {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single(
@@ -278,6 +292,7 @@ fn test_analyze_qualifies_object_after_current_module_directive() {
             }),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyClass {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     module: None,
                     signatures: NonEmptyVector::single("Enum".to_string()),
                     is_final: false,
@@ -310,6 +325,8 @@ fn test_analyze_current_module_none_resets_qualification_to_module_free() {
             Node::Directive(Directive::PyCurrentModule { module: None }),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyFunction {
+                    flags: rinx_ast::DescriptionFlags::default(),
+                    is_async: false,
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("example()".to_string()),
@@ -350,6 +367,7 @@ fn test_analyze_switches_current_module_on_second_module_directive() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyClass {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     module: None,
                     signatures: NonEmptyVector::single("MIMEText".to_string()),
                     is_final: false,
@@ -383,11 +401,13 @@ fn test_analyze_dedups_class_name_repeated_in_flat_nested_signature() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyClass {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     module: None,
                     signatures: NonEmptyVector::single("Random([seed])".to_string()),
                     is_final: false,
                     body: vec![Node::Directive(Directive::DomainObject(
                         rinx_ast::DomainObjectBody::PyMethod {
+                            flags: rinx_ast::DescriptionFlags::default(),
                             module: None,
                             is_decorator: false,
                             signatures: NonEmptyVector::single(
@@ -419,11 +439,13 @@ fn test_analyze_qualifies_genindex_entry_for_method_nested_in_class() {
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyClass {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("Greeter".to_string()),
                 is_final: false,
                 body: vec![Node::Directive(Directive::DomainObject(
                     rinx_ast::DomainObjectBody::PyMethod {
+                        flags: rinx_ast::DescriptionFlags::default(),
                         module: None,
                         is_decorator: false,
                         signatures: NonEmptyVector::single("greet(self, name)".to_string()),
@@ -473,6 +495,7 @@ fn test_analyze_module_option_overrides_the_enclosing_module() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyClass {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     module: Some("multiprocessing.managers".to_string()),
                     signatures: NonEmptyVector::single("SharedMemoryManager".to_string()),
                     is_final: false,
@@ -520,11 +543,13 @@ fn test_analyze_module_option_propagates_into_nested_body() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyClass {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     module: Some("multiprocessing.managers".to_string()),
                     signatures: NonEmptyVector::single("SharedMemoryManager".to_string()),
                     is_final: false,
                     body: vec![Node::Directive(Directive::DomainObject(
                         rinx_ast::DomainObjectBody::PyMethod {
+                            flags: rinx_ast::DescriptionFlags::default(),
                             module: None,
                             is_decorator: false,
                             signatures: NonEmptyVector::single("get_server()".to_string()),
@@ -570,6 +595,7 @@ fn test_analyze_module_option_is_restored_after_the_object_and_its_body() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyClass {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     module: Some("multiprocessing.managers".to_string()),
                     signatures: NonEmptyVector::single("SharedMemoryManager".to_string()),
                     is_final: false,
@@ -578,6 +604,8 @@ fn test_analyze_module_option_is_restored_after_the_object_and_its_body() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyFunction {
+                    flags: rinx_ast::DescriptionFlags::default(),
+                    is_async: false,
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("track(size)".to_string()),
@@ -613,6 +641,8 @@ fn test_analyze_module_option_with_empty_value_leaves_object_unqualified() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyFunction {
+                    flags: rinx_ast::DescriptionFlags::default(),
+                    is_async: false,
                     module: Some(String::new()),
                     is_decorator: false,
                     signatures: NonEmptyVector::single("standalone()".to_string()),

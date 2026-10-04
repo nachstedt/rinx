@@ -18,6 +18,8 @@ fn test_render_formats_py_function_domain_object() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyFunction {
+                flags: rinx_ast::DescriptionFlags::default(),
+                is_async: false,
                 module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -46,6 +48,8 @@ fn test_render_prefixes_decorator_signature_with_at_sign() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyFunction {
+                flags: rinx_ast::DescriptionFlags::default(),
+                is_async: false,
                 module: None,
                 is_decorator: true,
                 signatures: NonEmptyVector::single("classmethod".to_string()),
@@ -70,6 +74,7 @@ fn test_render_prefixes_decoratormethod_signature_with_at_sign() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyMethod {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("register(cls)".to_string()),
                 is_classmethod: false,
@@ -97,9 +102,7 @@ fn test_render_omits_id_attribute_when_no_index_is_set() {
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::CMember {
                 signatures: NonEmptyVector::single("int count".into()),
-                no_index: true,
-                no_index_entry: false,
-                no_contents_entry: false,
+                flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
                 body: vec![],
             },
         ))],
@@ -112,6 +115,32 @@ fn test_render_omits_id_attribute_when_no_index_is_set() {
     assert!(result.contains("<dt>"));
     assert!(!result.contains("id=\"c:member:count\""));
     assert!(result.contains("<code class=\"sig-name\">int count</code>"));
+}
+#[test]
+fn test_render_omits_id_attribute_for_a_no_index_python_class() {
+    // Given — `functions.rst`'s second description of `bytearray`.
+    let doc = Document::new(
+        "functions.rst".to_string(),
+        vec![Node::Directive(Directive::DomainObject(
+            rinx_ast::DomainObjectBody::PyClass {
+                flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
+                module: None,
+                signatures: NonEmptyVector::single("bytearray(source=b'')".into()),
+                is_final: false,
+                body: vec![],
+            },
+        ))],
+    );
+
+    // When
+    let result = render_doc(&doc);
+
+    // Then
+    assert!(
+        result.contains("<dt><em class=\"property\">class</em> "),
+        "{result}"
+    );
+    assert!(!result.contains("id="), "{result}");
 }
 #[test]
 fn test_render_formats_py_module_domain_object() {
@@ -144,6 +173,7 @@ fn test_render_formats_py_method_domain_object() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyMethod {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::single("greet(self, name)".to_string()),
@@ -174,6 +204,7 @@ fn test_render_py_method_modifier_prefixes_in_canonical_order() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyMethod {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::single("create(cls)".to_string()),
@@ -206,6 +237,7 @@ fn test_render_formats_py_class_domain_object() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyClass {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("greeter".to_string()),
                 is_final: false,
@@ -233,6 +265,7 @@ fn test_render_py_class_final_prefix_precedes_class_prefix() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyClass {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("greeter".to_string()),
                 is_final: true,
@@ -257,6 +290,7 @@ fn test_render_formats_py_exception_domain_object() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyException {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("greetererror".to_string()),
                 is_final: false,
@@ -284,6 +318,7 @@ fn test_render_py_exception_final_prefix_precedes_exception_prefix() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyException {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("greetererror".to_string()),
                 is_final: true,
@@ -308,6 +343,7 @@ fn test_render_formats_py_data_domain_object() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyData {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
                 type_: None,
@@ -334,6 +370,7 @@ fn test_render_formats_py_data_type_and_value() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyData {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
                 type_: Some("int".to_string()),
@@ -357,6 +394,7 @@ fn test_render_formats_py_attribute_domain_object() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyAttribute {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("Greeter.name".to_string()),
                 type_: None,
@@ -384,6 +422,7 @@ fn test_render_formats_py_attribute_type_value_and_canonical() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyAttribute {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("Greeter.name".to_string()),
                 type_: Some("str".to_string()),
@@ -411,6 +450,8 @@ fn test_render_domain_object_resolves_nested_anonymous_hyperlink_in_body() {
         vec![
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyFunction {
+                    flags: rinx_ast::DescriptionFlags::default(),
+                    is_async: false,
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("greet(name)".to_string()),

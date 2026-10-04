@@ -6,6 +6,8 @@ fn test_domain_object_body_body_returns_shared_body_for_every_variant() {
     // Given
     let paragraph = Node::Paragraph(vec![InlineNode::Text("hello".to_string())]);
     let function = DomainObjectBody::PyFunction {
+        is_async: false,
+        flags: crate::DescriptionFlags::default(),
         module: None,
         is_decorator: false,
         signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -17,6 +19,7 @@ fn test_domain_object_body_body_returns_shared_body_for_every_variant() {
         body: vec![paragraph.clone()],
     };
     let data = DomainObjectBody::PyData {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
         type_: None,
@@ -24,6 +27,7 @@ fn test_domain_object_body_body_returns_shared_body_for_every_variant() {
         body: vec![paragraph.clone()],
     };
     let attribute = DomainObjectBody::PyAttribute {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("Greeter.name".to_string()),
         type_: None,
@@ -32,14 +36,17 @@ fn test_domain_object_body_body_returns_shared_body_for_every_variant() {
         body: vec![paragraph.clone()],
     };
     let c_function = DomainObjectBody::CFunction {
+        flags: crate::DescriptionFlags::default(),
         signatures: NonEmptyVector::single("int add(int a, int b)".into()),
         body: vec![paragraph.clone()],
     };
     let c_macro = DomainObjectBody::CMacro {
+        flags: crate::DescriptionFlags::default(),
         signatures: NonEmptyVector::single("MAX(a, b)".into()),
         body: vec![paragraph.clone()],
     };
     let method = DomainObjectBody::PyMethod {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         is_decorator: false,
         signatures: NonEmptyVector::single("greet(self, name)".to_string()),
@@ -50,12 +57,14 @@ fn test_domain_object_body_body_returns_shared_body_for_every_variant() {
         body: vec![paragraph.clone()],
     };
     let class = DomainObjectBody::PyClass {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("Greeter".to_string()),
         is_final: false,
         body: vec![paragraph.clone()],
     };
     let exception = DomainObjectBody::PyException {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("GreeterError".to_string()),
         is_final: false,
@@ -78,6 +87,8 @@ fn test_domain_object_body_body_returns_shared_body_for_every_variant() {
 fn test_body_mut_allows_in_place_rewrite() {
     // Given
     let mut function = DomainObjectBody::PyFunction {
+        is_async: false,
+        flags: crate::DescriptionFlags::default(),
         module: None,
         is_decorator: false,
         signatures: NonEmptyVector::single("foo()".to_string()),
@@ -94,9 +105,7 @@ fn test_body_mut_allows_in_place_rewrite() {
 fn plain_c_member(signature: &str) -> DomainObjectBody {
     DomainObjectBody::CMember {
         signatures: NonEmptyVector::single(signature.into()),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::default(),
         body: vec![],
     }
 }
@@ -104,9 +113,7 @@ fn plain_c_member(signature: &str) -> DomainObjectBody {
 fn plain_c_struct(signature: &str) -> DomainObjectBody {
     DomainObjectBody::CStruct {
         signatures: NonEmptyVector::single(signature.into()),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::default(),
         body: vec![],
     }
 }
@@ -114,9 +121,7 @@ fn plain_c_struct(signature: &str) -> DomainObjectBody {
 fn plain_c_union(signature: &str) -> DomainObjectBody {
     DomainObjectBody::CUnion {
         signatures: NonEmptyVector::single(signature.into()),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::default(),
         body: vec![],
     }
 }
@@ -124,9 +129,7 @@ fn plain_c_union(signature: &str) -> DomainObjectBody {
 fn plain_c_type(signature: &str) -> DomainObjectBody {
     DomainObjectBody::CType {
         signatures: NonEmptyVector::single(signature.into()),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::default(),
         body: vec![],
     }
 }
@@ -237,23 +240,17 @@ fn test_domain_object_body_body_returns_shared_body_for_c_struct_union_member() 
     let paragraph = Node::Paragraph(vec![InlineNode::Text("hello".to_string())]);
     let struct_ = DomainObjectBody::CStruct {
         signatures: NonEmptyVector::single("Data".into()),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::default(),
         body: vec![paragraph.clone()],
     };
     let union_ = DomainObjectBody::CUnion {
         signatures: NonEmptyVector::single("Number".into()),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::default(),
         body: vec![paragraph.clone()],
     };
     let member = DomainObjectBody::CMember {
         signatures: NonEmptyVector::single("count".into()),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::default(),
         body: vec![paragraph.clone()],
     };
 
@@ -268,6 +265,7 @@ fn test_no_index_is_false_by_default_for_pre_existing_variants() {
     // Given / When / Then
     assert!(
         !DomainObjectBody::CFunction {
+            flags: crate::DescriptionFlags::default(),
             signatures: NonEmptyVector::single("int add(int a, int b)".into()),
             body: vec![],
         }
@@ -282,8 +280,8 @@ fn test_no_index_reflects_flag_for_c_member() {
 
     // When / Then
     assert!(!member.no_index());
-    if let DomainObjectBody::CMember { no_index, .. } = &mut member {
-        *no_index = true;
+    if let DomainObjectBody::CMember { flags, .. } = &mut member {
+        flags.set(crate::DescriptionFlag::NoIndex);
     }
     assert!(member.no_index());
 }
@@ -293,9 +291,7 @@ fn test_no_index_entry_is_true_when_no_index_entry_flag_set() {
     // Given
     let member = DomainObjectBody::CMember {
         signatures: NonEmptyVector::single("count".into()),
-        no_index: false,
-        no_index_entry: true,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::of([crate::DescriptionFlag::NoIndexEntry]),
         body: vec![],
     };
 
@@ -308,9 +304,7 @@ fn test_no_index_entry_is_implied_by_no_index() {
     // Given — real Sphinx's `no-index` implies `no-index-entry`.
     let member = DomainObjectBody::CMember {
         signatures: NonEmptyVector::single("count".into()),
-        no_index: true,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::of([crate::DescriptionFlag::NoIndex]),
         body: vec![],
     };
 
@@ -375,9 +369,7 @@ fn test_domain_object_body_body_returns_shared_body_for_c_type() {
     let paragraph = Node::Paragraph(vec![InlineNode::Text("hello".to_string())]);
     let type_ = DomainObjectBody::CType {
         signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::default(),
         body: vec![paragraph.clone()],
     };
 
@@ -392,8 +384,8 @@ fn test_no_index_reflects_flag_for_c_type() {
 
     // When / Then
     assert!(!type_.no_index());
-    if let DomainObjectBody::CType { no_index, .. } = &mut type_ {
-        *no_index = true;
+    if let DomainObjectBody::CType { flags, .. } = &mut type_ {
+        flags.set(crate::DescriptionFlag::NoIndex);
     }
     assert!(type_.no_index());
 }
@@ -403,9 +395,7 @@ fn test_no_index_entry_is_true_when_no_index_entry_flag_set_for_c_type() {
     // Given
     let type_ = DomainObjectBody::CType {
         signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
-        no_index: false,
-        no_index_entry: true,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::of([crate::DescriptionFlag::NoIndexEntry]),
         body: vec![],
     };
 
@@ -418,9 +408,7 @@ fn test_no_index_entry_is_implied_by_no_index_for_c_type() {
     // Given
     let type_ = DomainObjectBody::CType {
         signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
-        no_index: true,
-        no_index_entry: false,
-        no_contents_entry: false,
+        flags: crate::DescriptionFlags::of([crate::DescriptionFlag::NoIndex]),
         body: vec![],
     };
 
@@ -433,9 +421,7 @@ fn test_no_contents_entry_reflects_flag_for_c_type() {
     // Given
     let type_with_flag = DomainObjectBody::CType {
         signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: true,
+        flags: crate::DescriptionFlags::of([crate::DescriptionFlag::NoContentsEntry]),
         body: vec![],
     };
 
@@ -449,9 +435,7 @@ fn test_no_contents_entry_reflects_flag_for_c_struct() {
     // Given
     let struct_with_flag = DomainObjectBody::CStruct {
         signatures: NonEmptyVector::single("Data".into()),
-        no_index: false,
-        no_index_entry: false,
-        no_contents_entry: true,
+        flags: crate::DescriptionFlags::of([crate::DescriptionFlag::NoContentsEntry]),
         body: vec![],
     };
 
@@ -465,6 +449,8 @@ fn test_module_override_is_none_by_default_for_every_py_variant_that_carries_it(
     // Given / When / Then
     assert_eq!(
         DomainObjectBody::PyFunction {
+            is_async: false,
+            flags: crate::DescriptionFlags::default(),
             module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -475,6 +461,7 @@ fn test_module_override_is_none_by_default_for_every_py_variant_that_carries_it(
     );
     assert_eq!(
         DomainObjectBody::PyMethod {
+            flags: crate::DescriptionFlags::default(),
             module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("greet(self, name)".to_string()),
@@ -489,6 +476,7 @@ fn test_module_override_is_none_by_default_for_every_py_variant_that_carries_it(
     );
     assert_eq!(
         DomainObjectBody::PyClass {
+            flags: crate::DescriptionFlags::default(),
             module: None,
             signatures: NonEmptyVector::single("Greeter".to_string()),
             is_final: false,
@@ -499,6 +487,7 @@ fn test_module_override_is_none_by_default_for_every_py_variant_that_carries_it(
     );
     assert_eq!(
         DomainObjectBody::PyException {
+            flags: crate::DescriptionFlags::default(),
             module: None,
             signatures: NonEmptyVector::single("GreeterError".to_string()),
             is_final: false,
@@ -509,6 +498,7 @@ fn test_module_override_is_none_by_default_for_every_py_variant_that_carries_it(
     );
     assert_eq!(
         DomainObjectBody::PyData {
+            flags: crate::DescriptionFlags::default(),
             module: None,
             signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
             type_: None,
@@ -520,6 +510,7 @@ fn test_module_override_is_none_by_default_for_every_py_variant_that_carries_it(
     );
     assert_eq!(
         DomainObjectBody::PyAttribute {
+            flags: crate::DescriptionFlags::default(),
             module: None,
             signatures: NonEmptyVector::single("Greeter.name".to_string()),
             type_: None,
@@ -537,6 +528,8 @@ fn test_module_override_reflects_the_field_for_every_py_variant_that_carries_it(
     // Given / When / Then
     assert_eq!(
         DomainObjectBody::PyFunction {
+            is_async: false,
+            flags: crate::DescriptionFlags::default(),
             module: Some("ctypes.util".to_string()),
             is_decorator: false,
             signatures: NonEmptyVector::single("find_library(name)".to_string()),
@@ -547,6 +540,7 @@ fn test_module_override_reflects_the_field_for_every_py_variant_that_carries_it(
     );
     assert_eq!(
         DomainObjectBody::PyMethod {
+            flags: crate::DescriptionFlags::default(),
             module: Some("multiprocessing.managers".to_string()),
             is_decorator: false,
             signatures: NonEmptyVector::single("get_server()".to_string()),
@@ -561,6 +555,7 @@ fn test_module_override_reflects_the_field_for_every_py_variant_that_carries_it(
     );
     assert_eq!(
         DomainObjectBody::PyClass {
+            flags: crate::DescriptionFlags::default(),
             module: Some("multiprocessing.managers".to_string()),
             signatures: NonEmptyVector::single("SharedMemoryManager".to_string()),
             is_final: false,
@@ -571,6 +566,7 @@ fn test_module_override_reflects_the_field_for_every_py_variant_that_carries_it(
     );
     assert_eq!(
         DomainObjectBody::PyException {
+            flags: crate::DescriptionFlags::default(),
             module: Some("mymodule.other".to_string()),
             signatures: NonEmptyVector::single("GreeterError".to_string()),
             is_final: false,
@@ -581,6 +577,7 @@ fn test_module_override_reflects_the_field_for_every_py_variant_that_carries_it(
     );
     assert_eq!(
         DomainObjectBody::PyData {
+            flags: crate::DescriptionFlags::default(),
             module: Some("ctypes.util".to_string()),
             signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
             type_: None,
@@ -592,6 +589,7 @@ fn test_module_override_reflects_the_field_for_every_py_variant_that_carries_it(
     );
     assert_eq!(
         DomainObjectBody::PyAttribute {
+            flags: crate::DescriptionFlags::default(),
             module: Some("mymodule.other".to_string()),
             signatures: NonEmptyVector::single("Greeter.name".to_string()),
             type_: None,
@@ -619,6 +617,7 @@ fn test_module_override_is_always_none_for_py_module_and_every_c_variant() {
     assert_eq!(module.module_override(), None);
     assert_eq!(
         DomainObjectBody::CFunction {
+            flags: crate::DescriptionFlags::default(),
             signatures: NonEmptyVector::single("int add(int a, int b)".into()),
             body: vec![],
         }
@@ -627,6 +626,7 @@ fn test_module_override_is_always_none_for_py_module_and_every_c_variant() {
     );
     assert_eq!(
         DomainObjectBody::CMacro {
+            flags: crate::DescriptionFlags::default(),
             signatures: NonEmptyVector::single("MAX(a, b)".into()),
             body: vec![],
         }
@@ -637,4 +637,89 @@ fn test_module_override_is_always_none_for_py_module_and_every_c_variant() {
     assert_eq!(plain_c_union("Number").module_override(), None);
     assert_eq!(plain_c_member("count").module_override(), None);
     assert_eq!(plain_c_type("PyMemAllocatorDomain").module_override(), None);
+}
+
+/// A `py:class` written with `flags`.
+fn py_class_with(flags: crate::DescriptionFlags) -> DomainObjectBody {
+    DomainObjectBody::PyClass {
+        flags,
+        module: None,
+        signatures: NonEmptyVector::single("bytearray".to_string()),
+        is_final: false,
+        body: vec![],
+    }
+}
+
+#[test]
+fn test_no_index_reflects_the_flag_for_a_python_object() {
+    // Given — CPython's `functions.rst` documents `bytearray` a second time
+    // under `:noindex:`, leaving `stdtypes.rst`'s description the target.
+    let indexed = py_class_with(crate::DescriptionFlags::default());
+    let unindexed = py_class_with(crate::DescriptionFlags::of([
+        crate::DescriptionFlag::NoIndex,
+    ]));
+
+    // When / Then
+    assert!(!indexed.no_index());
+    assert!(unindexed.no_index());
+}
+
+#[test]
+fn test_no_index_implies_no_index_entry_for_a_python_object() {
+    // Given
+    let unindexed = py_class_with(crate::DescriptionFlags::of([
+        crate::DescriptionFlag::NoIndex,
+    ]));
+    let unlisted = py_class_with(crate::DescriptionFlags::of([
+        crate::DescriptionFlag::NoIndexEntry,
+    ]));
+
+    // When / Then
+    assert!(unindexed.no_index_entry());
+    assert!(unlisted.no_index_entry());
+    assert!(!unlisted.no_index());
+}
+
+#[test]
+fn test_no_index_reflects_the_flag_for_a_command_line_option() {
+    // Given
+    let option = DomainObjectBody::StdCmdoption {
+        flags: crate::DescriptionFlags::of([crate::DescriptionFlag::NoIndex]),
+        signatures: NonEmptyVector::single("-v".to_string()),
+        body: vec![],
+    };
+
+    // When / Then
+    assert!(option.no_index());
+    assert!(option.no_index_entry());
+}
+
+#[test]
+fn test_no_contents_entry_reflects_the_flag_for_a_python_object() {
+    // Given
+    let object = py_class_with(crate::DescriptionFlags::of([
+        crate::DescriptionFlag::NoContentsEntry,
+    ]));
+
+    // When / Then
+    assert!(object.no_contents_entry());
+    assert!(!object.no_index());
+}
+
+#[test]
+fn test_description_flags_is_none_only_for_a_module() {
+    // Given
+    let module = DomainObjectBody::PyModule {
+        name: "os".to_string(),
+        options: crate::ModuleOptions::default(),
+        body: vec![],
+    };
+    let class = py_class_with(crate::DescriptionFlags::default());
+
+    // When / Then
+    assert_eq!(module.description_flags(), None);
+    assert_eq!(
+        class.description_flags(),
+        Some(&crate::DescriptionFlags::default())
+    );
 }

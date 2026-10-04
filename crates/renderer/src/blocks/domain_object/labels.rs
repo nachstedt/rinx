@@ -4,7 +4,8 @@
 
 /// Canonical, deterministic prefix-label order for a domain object's `<dt>`
 /// (e.g. `abstractmethod`/`async`/`classmethod`/`staticmethod` for
-/// `py:method`, `final`/`class` for `py:class`) — independent of how the
+/// `py:method`, `async` for `py:function`, `final`/`class` for `py:class`) —
+/// independent of how the
 /// author wrote the option flags.
 pub(super) fn domain_object_prefix_labels(obj: &rinx_ast::DomainObjectBody) -> Vec<&'static str> {
     match obj {
@@ -23,6 +24,9 @@ pub(super) fn domain_object_prefix_labels(obj: &rinx_ast::DomainObjectBody) -> V
         .into_iter()
         .filter_map(|(active, label)| active.then_some(label))
         .collect(),
+        rinx_ast::DomainObjectBody::PyFunction { is_async, .. } => {
+            is_async.then_some("async").into_iter().collect()
+        }
         rinx_ast::DomainObjectBody::PyClass { is_final, .. } => {
             class_like_prefix_labels(*is_final, "class")
         }
@@ -71,6 +75,7 @@ mod tests {
     fn test_domain_object_prefix_labels_orders_method_flags_independent_of_input_order() {
         // Given — flags set in a different order than the canonical output order
         let obj = rinx_ast::DomainObjectBody::PyMethod {
+            flags: rinx_ast::DescriptionFlags::default(),
             module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("run()".to_string()),
@@ -94,6 +99,7 @@ mod tests {
     fn test_domain_object_prefix_labels_omits_inactive_method_flags() {
         // Given
         let obj = rinx_ast::DomainObjectBody::PyMethod {
+            flags: rinx_ast::DescriptionFlags::default(),
             module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("run()".to_string()),
@@ -114,6 +120,7 @@ mod tests {
     fn test_domain_object_prefix_labels_includes_final_before_class_label() {
         // Given
         let obj = rinx_ast::DomainObjectBody::PyClass {
+            flags: rinx_ast::DescriptionFlags::default(),
             module: None,
             signatures: NonEmptyVector::single("Greeter".to_string()),
             is_final: true,
@@ -130,6 +137,7 @@ mod tests {
     fn test_domain_object_prefix_labels_includes_final_before_exception_label() {
         // Given
         let obj = rinx_ast::DomainObjectBody::PyException {
+            flags: rinx_ast::DescriptionFlags::default(),
             module: None,
             signatures: NonEmptyVector::single("GreeterError".to_string()),
             is_final: true,
@@ -154,6 +162,8 @@ mod tests {
     fn test_domain_object_prefix_labels_is_empty_for_object_types_without_flags() {
         // Given
         let obj = rinx_ast::DomainObjectBody::PyFunction {
+            flags: rinx_ast::DescriptionFlags::default(),
+            is_async: false,
             module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -170,6 +180,8 @@ mod tests {
     fn test_is_decorator_signature_true_for_decorator_function() {
         // Given
         let obj = rinx_ast::DomainObjectBody::PyFunction {
+            flags: rinx_ast::DescriptionFlags::default(),
+            is_async: false,
             module: None,
             signatures: NonEmptyVector::single("classmethod".to_string()),
             is_decorator: true,
@@ -183,6 +195,7 @@ mod tests {
     fn test_is_decorator_signature_true_for_decoratormethod() {
         // Given
         let obj = rinx_ast::DomainObjectBody::PyMethod {
+            flags: rinx_ast::DescriptionFlags::default(),
             module: None,
             signatures: NonEmptyVector::single("register(cls)".to_string()),
             is_classmethod: false,
@@ -200,6 +213,8 @@ mod tests {
     fn test_is_decorator_signature_false_for_plain_function() {
         // Given
         let obj = rinx_ast::DomainObjectBody::PyFunction {
+            flags: rinx_ast::DescriptionFlags::default(),
+            is_async: false,
             module: None,
             signatures: NonEmptyVector::single("greet(name)".to_string()),
             is_decorator: false,
@@ -213,6 +228,7 @@ mod tests {
     fn test_is_decorator_signature_false_for_object_types_without_the_flag() {
         // Given — e.g. `py:class`, which has no `is_decorator` field at all.
         let obj = rinx_ast::DomainObjectBody::PyClass {
+            flags: rinx_ast::DescriptionFlags::default(),
             module: None,
             signatures: NonEmptyVector::single("Greeter".to_string()),
             is_final: false,
@@ -221,5 +237,23 @@ mod tests {
 
         // When / Then
         assert!(!is_decorator_signature(&obj));
+    }
+    #[test]
+    fn test_domain_object_prefix_labels_marks_an_async_function() {
+        // Given — `asyncio-task.rst`'s `.. function:: sleep(...)` with `:async:`.
+        let obj = rinx_ast::DomainObjectBody::PyFunction {
+            flags: rinx_ast::DescriptionFlags::default(),
+            is_async: true,
+            module: None,
+            is_decorator: false,
+            signatures: NonEmptyVector::single("sleep(delay)".to_string()),
+            body: vec![],
+        };
+
+        // When
+        let labels = domain_object_prefix_labels(&obj);
+
+        // Then
+        assert_eq!(labels, vec!["async"]);
     }
 }

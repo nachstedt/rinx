@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::c_signature::CSignature;
+use crate::description_flags::{DescriptionFlag, DescriptionFlags};
 use crate::module_options::{ModuleFlag, ModuleOptions};
 use crate::node::Node;
 use crate::non_empty_vector::NonEmptyVector;
@@ -36,10 +37,18 @@ pub enum DomainObjectBody {
         /// this — it's parser-derived intent, not something an author can
         /// set via a body option line the way `py:method`'s flags are.
         is_decorator: bool,
+        /// The `:async:` option: the function is a coroutine function, shown
+        /// with an `async` prefix as on a `py:method`.
+        #[serde(default)]
+        is_async: bool,
         /// The `:module:` option: overrides the ambient `py:module`/
         /// `py:currentmodule` context for this definition and its nested
         /// body only, restored afterward. See [`Self::module_override`].
         module: Option<String>,
+        /// The object-description flags (`:no-index:` and its siblings)
+        /// every variant but `PyModule` carries — see [`DescriptionFlags`].
+        #[serde(default)]
+        flags: DescriptionFlags,
         body: Vec<Node>,
     },
     PyModule {
@@ -58,6 +67,8 @@ pub enum DomainObjectBody {
         /// The `:module:` option — see [`PyFunction::module`] and
         /// [`Self::module_override`].
         module: Option<String>,
+        #[serde(default)]
+        flags: DescriptionFlags,
         body: Vec<Node>,
     },
     PyAttribute {
@@ -74,49 +85,44 @@ pub enum DomainObjectBody {
         /// The `:module:` option — see [`PyFunction::module`] and
         /// [`Self::module_override`].
         module: Option<String>,
+        #[serde(default)]
+        flags: DescriptionFlags,
         body: Vec<Node>,
     },
     CFunction {
         signatures: NonEmptyVector<CSignature>,
+        #[serde(default)]
+        flags: DescriptionFlags,
         body: Vec<Node>,
     },
     CMacro {
         signatures: NonEmptyVector<CSignature>,
+        #[serde(default)]
+        flags: DescriptionFlags,
         body: Vec<Node>,
     },
     CStruct {
         signatures: NonEmptyVector<CSignature>,
-        /// Suppresses the cross-reference target entirely (and, per real
-        /// Sphinx, implies `no_index_entry`).
-        no_index: bool,
-        /// Suppresses the general-index (`genindex.html`) entry only; the
-        /// cross-reference target is still created.
-        no_index_entry: bool,
-        /// Excludes this object from a local contents/TOC listing. Parsed
-        /// and stored for round-tripping, but rinx has no such
-        /// listing for domain objects yet, so it has no rendering effect.
-        no_contents_entry: bool,
+        #[serde(default)]
+        flags: DescriptionFlags,
         body: Vec<Node>,
     },
     CUnion {
         signatures: NonEmptyVector<CSignature>,
-        no_index: bool,
-        no_index_entry: bool,
-        no_contents_entry: bool,
+        #[serde(default)]
+        flags: DescriptionFlags,
         body: Vec<Node>,
     },
     CMember {
         signatures: NonEmptyVector<CSignature>,
-        no_index: bool,
-        no_index_entry: bool,
-        no_contents_entry: bool,
+        #[serde(default)]
+        flags: DescriptionFlags,
         body: Vec<Node>,
     },
     CType {
         signatures: NonEmptyVector<CSignature>,
-        no_index: bool,
-        no_index_entry: bool,
-        no_contents_entry: bool,
+        #[serde(default)]
+        flags: DescriptionFlags,
         body: Vec<Node>,
     },
     PyMethod {
@@ -131,6 +137,8 @@ pub enum DomainObjectBody {
         /// The `:module:` option — see [`PyFunction::module`] and
         /// [`Self::module_override`].
         module: Option<String>,
+        #[serde(default)]
+        flags: DescriptionFlags,
         body: Vec<Node>,
     },
     PyClass {
@@ -139,6 +147,8 @@ pub enum DomainObjectBody {
         /// The `:module:` option — see [`PyFunction::module`] and
         /// [`Self::module_override`].
         module: Option<String>,
+        #[serde(default)]
+        flags: DescriptionFlags,
         body: Vec<Node>,
     },
     PyException {
@@ -147,6 +157,8 @@ pub enum DomainObjectBody {
         /// The `:module:` option — see [`PyFunction::module`] and
         /// [`Self::module_override`].
         module: Option<String>,
+        #[serde(default)]
+        flags: DescriptionFlags,
         body: Vec<Node>,
     },
     /// `.. option::`/`.. cmdoption::` (the `std` domain's only object type
@@ -161,6 +173,8 @@ pub enum DomainObjectBody {
     /// `names()`-driven one-`<dt>`-per-name loop other variants share.
     StdCmdoption {
         signatures: NonEmptyVector<String>,
+        #[serde(default)]
+        flags: DescriptionFlags,
         body: Vec<Node>,
     },
 }
@@ -390,69 +404,54 @@ impl DomainObjectBody {
         }
     }
 
+    /// The object-description flags this object was written with, or `None`
+    /// for a `py:module`, which is not an object description and carries
+    /// [`ModuleFlag`]s instead.
+    #[must_use]
+    pub const fn description_flags(&self) -> Option<&DescriptionFlags> {
+        match self {
+            Self::PyFunction { flags, .. }
+            | Self::PyData { flags, .. }
+            | Self::PyAttribute { flags, .. }
+            | Self::CFunction { flags, .. }
+            | Self::CMacro { flags, .. }
+            | Self::CStruct { flags, .. }
+            | Self::CUnion { flags, .. }
+            | Self::CMember { flags, .. }
+            | Self::CType { flags, .. }
+            | Self::PyMethod { flags, .. }
+            | Self::PyClass { flags, .. }
+            | Self::PyException { flags, .. }
+            | Self::StdCmdoption { flags, .. } => Some(flags),
+            Self::PyModule { .. } => None,
+        }
+    }
+
     /// Whether this object's cross-reference target (and, per real Sphinx,
-    /// its general-index entry too) is suppressed. `false` for every object
-    /// type that doesn't model the option yet.
+    /// its general-index entry too) is suppressed.
     #[must_use]
     pub fn no_index(&self) -> bool {
-        match self {
-            Self::CStruct { no_index, .. }
-            | Self::CUnion { no_index, .. }
-            | Self::CMember { no_index, .. }
-            | Self::CType { no_index, .. } => *no_index,
-            Self::PyModule { options, .. } => options.has(ModuleFlag::NoIndex),
-            Self::PyFunction { .. }
-            | Self::PyData { .. }
-            | Self::PyAttribute { .. }
-            | Self::CFunction { .. }
-            | Self::CMacro { .. }
-            | Self::PyMethod { .. }
-            | Self::PyClass { .. }
-            | Self::PyException { .. }
-            | Self::StdCmdoption { .. } => false,
+        match self.description_flags() {
+            Some(flags) => flags.has(DescriptionFlag::NoIndex),
+            None => self.module_flag(ModuleFlag::NoIndex),
         }
     }
 
     /// Whether this object's general-index (`genindex.html`) entry is
-    /// suppressed — true either because `no_index_entry` was set directly,
-    /// or because `no_index` implies it. `false` for every object type that
-    /// doesn't model either option yet.
+    /// suppressed — true either because `:no-index-entry:` was written
+    /// directly, or because `:no-index:` implies it.
     #[must_use]
     pub fn no_index_entry(&self) -> bool {
-        match self {
-            Self::CStruct {
-                no_index,
-                no_index_entry,
-                ..
+        self.no_index()
+            || match self.description_flags() {
+                Some(flags) => flags.has(DescriptionFlag::NoIndexEntry),
+                None => self.module_flag(ModuleFlag::NoIndexEntry),
             }
-            | Self::CUnion {
-                no_index,
-                no_index_entry,
-                ..
-            }
-            | Self::CMember {
-                no_index,
-                no_index_entry,
-                ..
-            }
-            | Self::CType {
-                no_index,
-                no_index_entry,
-                ..
-            } => *no_index || *no_index_entry,
-            Self::PyModule { options, .. } => {
-                options.has(ModuleFlag::NoIndex) || options.has(ModuleFlag::NoIndexEntry)
-            }
-            Self::PyFunction { .. }
-            | Self::PyData { .. }
-            | Self::PyAttribute { .. }
-            | Self::CFunction { .. }
-            | Self::CMacro { .. }
-            | Self::PyMethod { .. }
-            | Self::PyClass { .. }
-            | Self::PyException { .. }
-            | Self::StdCmdoption { .. } => false,
-        }
+    }
+
+    /// Whether this is a `py:module` written with `flag`.
+    fn module_flag(&self, flag: ModuleFlag) -> bool {
+        matches!(self, Self::PyModule { options, .. } if options.has(flag))
     }
 
     /// The `:module:` option's override value: real Sphinx's `PyObject`
@@ -488,35 +487,12 @@ impl DomainObjectBody {
     }
 
     /// Whether this object is excluded from a local contents/TOC listing.
-    /// Parsed and stored for the three object types that model it, but
-    /// rinx has no such listing for domain objects yet, so this has
-    /// no rendering effect today.
+    /// Recorded for every object description, but rinx has no such
+    /// listing for domain objects yet, so this has no rendering effect today.
     #[must_use]
-    pub const fn no_contents_entry(&self) -> bool {
-        match self {
-            Self::CStruct {
-                no_contents_entry, ..
-            }
-            | Self::CUnion {
-                no_contents_entry, ..
-            }
-            | Self::CMember {
-                no_contents_entry, ..
-            }
-            | Self::CType {
-                no_contents_entry, ..
-            } => *no_contents_entry,
-            Self::PyFunction { .. }
-            | Self::PyModule { .. }
-            | Self::PyData { .. }
-            | Self::PyAttribute { .. }
-            | Self::CFunction { .. }
-            | Self::CMacro { .. }
-            | Self::PyMethod { .. }
-            | Self::PyClass { .. }
-            | Self::PyException { .. }
-            | Self::StdCmdoption { .. } => false,
-        }
+    pub fn no_contents_entry(&self) -> bool {
+        self.description_flags()
+            .is_some_and(|flags| flags.has(DescriptionFlag::NoContentsEntry))
     }
 }
 

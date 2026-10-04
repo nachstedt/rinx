@@ -42,7 +42,7 @@ pub(crate) fn parse_domain_object(
         continuations,
         span: signature_span,
     } = declared;
-    let signatures = NonEmptyVector::new(argument, continuations);
+    let signatures = join_escaped_line_breaks(argument, continuations);
     match object_type {
         DirectiveObjectType::CFunction
         | DirectiveObjectType::CMacro
@@ -77,6 +77,36 @@ pub(crate) fn parse_domain_object(
     }
 }
 
+/// The signatures a directive declares, with every line that ends in a
+/// backslash joined to the line below it.
+///
+/// Sphinx's `get_signatures` removes each backslash-newline from the argument
+/// before splitting it into one signature per line, so a long signature can
+/// wrap (`asyncio-stream.rst` wraps `start_unix_server` over three lines). Read
+/// line by line instead, each wrapped piece became a signature of its own, and
+/// a junk name such as `asyncio.\` was indexed. The pieces join with one
+/// space: the continuation's indentation is what Sphinx keeps between them,
+/// and a rendered signature shows any run of it as one.
+///
+/// A backslash ending the *last* line escapes no line break, so — as in
+/// Sphinx — it stays.
+fn join_escaped_line_breaks(
+    argument: String,
+    continuations: Vec<String>,
+) -> NonEmptyVector<String> {
+    let mut first = argument;
+    let mut rest: Vec<String> = Vec::new();
+    for line in continuations {
+        let previous = rest.last_mut().unwrap_or(&mut first);
+        if let Some(wrapped) = previous.strip_suffix('\\') {
+            *previous = format!("{} {line}", wrapped.trim_end());
+        } else {
+            rest.push(line);
+        }
+    }
+    NonEmptyVector::new(first, rest)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -109,6 +139,8 @@ mod tests {
 
         // Then
         if let DomainObjectBody::PyFunction {
+            is_async: _,
+            flags: _,
             signatures,
             is_decorator,
             module: _,
@@ -284,5 +316,70 @@ mod tests {
             "Expected Unknown directive, got {:?}",
             doc.nodes[0]
         );
+    }
+
+    #[test]
+    fn test_join_escaped_line_breaks_joins_a_wrapped_signature() {
+        // Given — `asyncio-stream.rst`'s `start_unix_server`, shortened.
+        let argument = "start_unix_server(client_connected_cb, path=None, \\".to_string();
+        let continuations = vec![
+            "*, limit=None, \\".to_string(),
+            "cleanup_socket=True)".to_string(),
+        ];
+
+        // When
+        let signatures = join_escaped_line_breaks(argument, continuations);
+
+        // Then
+        assert_eq!(
+            signatures.as_slice(),
+            [
+                "start_unix_server(client_connected_cb, path=None, *, limit=None, cleanup_socket=True)"
+            ]
+        );
+    }
+
+    #[test]
+    fn test_join_escaped_line_breaks_keeps_unescaped_lines_apart() {
+        // Given — two signatures, the first of them wrapped.
+        let argument = "spawnl(mode, \\".to_string();
+        let continuations = vec!["file)".to_string(), "spawnle(mode, file, env)".to_string()];
+
+        // When
+        let signatures = join_escaped_line_breaks(argument, continuations);
+
+        // Then
+        assert_eq!(
+            signatures.as_slice(),
+            ["spawnl(mode, file)", "spawnle(mode, file, env)"]
+        );
+    }
+
+    #[test]
+    fn test_join_escaped_line_breaks_keeps_a_backslash_ending_the_last_line() {
+        // Given
+        let argument = "f(a, \\".to_string();
+
+        // When
+        let signatures = join_escaped_line_breaks(argument, Vec::new());
+
+        // Then
+        assert_eq!(signatures.as_slice(), ["f(a, \\"]);
+    }
+
+    #[test]
+    fn test_parse_indexes_one_name_for_a_wrapped_signature() {
+        // Given
+        let input =
+            ".. function:: start_unix_server(cb, \\\n                 path=None)\n\n   Starts.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        let Some(Node::Directive(Directive::DomainObject(object))) = doc.nodes.first() else {
+            panic!("Expected a domain object, got {:?}", doc.nodes);
+        };
+        assert_eq!(object.names().as_slice(), ["start_unix_server"]);
     }
 }

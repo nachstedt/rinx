@@ -29,6 +29,7 @@ fn test_analyze_registers_every_declared_name_of_a_multi_signature_object() {
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyData {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::new(
                     "AF_UNIX".to_string(),
@@ -62,6 +63,7 @@ fn test_analyze_gives_every_declared_name_its_own_genindex_entry() {
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyData {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::new("A".to_string(), vec!["ASCII".to_string()]),
                 type_: None,
@@ -88,6 +90,7 @@ fn test_analyze_indexes_a_multi_signature_objects_body_only_once() {
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyData {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::new("AF_UNIX".to_string(), vec!["AF_INET".to_string()]),
                 type_: None,
@@ -125,6 +128,7 @@ fn test_analyze_qualifies_every_alias_of_a_multi_signature_object_by_module() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyData {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     module: None,
                     signatures: NonEmptyVector::new(
                         "AF_UNIX".to_string(),
@@ -162,11 +166,13 @@ fn test_analyze_does_not_double_qualify_already_qualified_nested_attribute() {
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyException {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("StopIteration".to_string()),
                 is_final: false,
                 body: vec![Node::Directive(Directive::DomainObject(
                     rinx_ast::DomainObjectBody::PyAttribute {
+                        flags: rinx_ast::DescriptionFlags::default(),
                         module: None,
                         signatures: NonEmptyVector::single("StopIteration.value".to_string()),
                         type_: None,
@@ -198,6 +204,8 @@ fn test_analyze_object_before_any_module_directive_stays_unqualified() {
         vec![
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyFunction {
+                    flags: rinx_ast::DescriptionFlags::default(),
+                    is_async: false,
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -238,11 +246,13 @@ fn test_analyze_composes_module_and_class_qualifiers() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyClass {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     module: None,
                     signatures: NonEmptyVector::single("DynamicClassAttribute".to_string()),
                     is_final: false,
                     body: vec![Node::Directive(Directive::DomainObject(
                         rinx_ast::DomainObjectBody::PyMethod {
+                            flags: rinx_ast::DescriptionFlags::default(),
                             module: None,
                             is_decorator: false,
                             signatures: NonEmptyVector::single(

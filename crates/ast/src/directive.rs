@@ -483,6 +483,7 @@ mod tests {
     fn test_domain_object_directive_serialization_roundtrip() {
         // Given
         let directive = Directive::DomainObject(DomainObjectBody::CFunction {
+            flags: crate::DescriptionFlags::default(),
             signatures: NonEmptyVector::single("int add(int a, int b)".into()),
             body: vec![Node::Paragraph(vec![InlineNode::Text(
                 "Adds two numbers.".to_string(),
@@ -526,6 +527,7 @@ mod tests {
     fn test_domain_object_directive_serialization_roundtrip_with_data_options() {
         // Given
         let directive = Directive::DomainObject(DomainObjectBody::PyData {
+            flags: crate::DescriptionFlags::default(),
             module: None,
             signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
             type_: Some("int".to_string()),
