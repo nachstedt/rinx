@@ -9,7 +9,10 @@ rust_library(
     deps = all_crate_deps(
         normal = True,
     ) + [
+        "//crates/analyzer:rinx_analyzer",
         "//crates/ast:rinx_ast",
+        "//crates/entity:rinx_entity",
+        "//crates/index:rinx_index",
         "//crates/parser:rinx_parser",
     ],
 )

@@ -1,5 +1,5 @@
 {
-  "checksum": "41bcef6593e88810a73391774356c1fc0644f47ee8f2867c75d7b40c979c12ca",
+  "checksum": "22de2b0869f11d9341e11bfc33da08aa359731a675b6b0841274419b6f65e82f",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -956,10 +956,113 @@
       ],
       "version": "0.5.17"
     },
+    "crossbeam-deque 0.8.8": {
+      "build_script_attrs": {},
+      "common_attrs": {
+        "crate_features": [
+          "default",
+          "std"
+        ],
+        "deps": [
+          {
+            "id": "crossbeam-epoch 0.9.21",
+            "target": "crossbeam_epoch"
+          },
+          {
+            "id": "crossbeam-utils 0.8.23",
+            "target": "crossbeam_utils"
+          }
+        ],
+        "edition": "2021",
+        "extra_deps": [
+          ":build_script_build"
+        ]
+      },
+      "library_target_name": "crossbeam_deque",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "crossbeam-deque",
+      "package_url": "https://github.com/crossbeam-rs/crossbeam",
+      "repository": {
+        "Http": {
+          "sha256": "622f3fc73690be383c7214310406f28a90e6edeadc3cea882f9d71e495b9711a",
+          "url": "https://static.crates.io/crates/crossbeam-deque/0.8.8/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "crossbeam_deque",
+            "crate_root": "src/lib.rs"
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs"
+          }
+        }
+      ],
+      "version": "0.8.8"
+    },
+    "crossbeam-epoch 0.9.21": {
+      "build_script_attrs": {},
+      "common_attrs": {
+        "crate_features": [
+          "alloc",
+          "std"
+        ],
+        "deps": [
+          {
+            "id": "crossbeam-utils 0.8.23",
+            "target": "crossbeam_utils"
+          }
+        ],
+        "edition": "2021",
+        "extra_deps": [
+          ":build_script_build"
+        ]
+      },
+      "library_target_name": "crossbeam_epoch",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "crossbeam-epoch",
+      "package_url": "https://github.com/crossbeam-rs/crossbeam",
+      "repository": {
+        "Http": {
+          "sha256": "dc74980687109a3b14c72fd458107bf0baa1da1a1a805e178d15501ba9b86d9d",
+          "url": "https://static.crates.io/crates/crossbeam-epoch/0.9.21/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "crossbeam_epoch",
+            "crate_root": "src/lib.rs"
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs"
+          }
+        }
+      ],
+      "version": "0.9.21"
+    },
     "crossbeam-utils 0.8.23": {
       "build_script_attrs": {},
       "common_attrs": {
         "crate_features": [
+          "default",
           "std"
         ],
         "edition": "2021",
@@ -1258,6 +1361,35 @@
         }
       ],
       "version": "1.0.20"
+    },
+    "either 1.18.0": {
+      "common_attrs": {
+        "edition": "2021"
+      },
+      "library_target_name": "either",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "either",
+      "package_url": "https://github.com/rayon-rs/either",
+      "repository": {
+        "Http": {
+          "sha256": "252afb9ae5eaa683babdc6a068b3f5726eb19e05070c731f9b2a23a7c3e8ed34",
+          "url": "https://static.crates.io/crates/either/1.18.0/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "either",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "1.18.0"
     },
     "email_address 0.2.9": {
       "common_attrs": {
@@ -2212,7 +2344,7 @@
       ],
       "version": "0.3.105"
     },
-    "jsonschema 0.57.0": {
+    "jsonschema 0.58.3": {
       "common_attrs": {
         "deps": {
           "common": [
@@ -2245,11 +2377,11 @@
               "target": "itoa"
             },
             {
-              "id": "jsonschema-regex 0.57.0",
+              "id": "jsonschema-regex 0.58.5",
               "target": "jsonschema_regex"
             },
             {
-              "id": "jsonschema-value 0.57.0",
+              "id": "jsonschema-value 0.58.5",
               "target": "jsonschema_value"
             },
             {
@@ -2265,7 +2397,7 @@
               "target": "percent_encoding"
             },
             {
-              "id": "referencing 0.57.0",
+              "id": "referencing 0.58.5",
               "target": "referencing"
             },
             {
@@ -2314,8 +2446,8 @@
       "package_url": "https://github.com/Stranger6667/jsonschema",
       "repository": {
         "Http": {
-          "sha256": "71160ed5f6dbe36a2d6be79f4ca03ee09a99d2866f340faed49458913449aefa",
-          "url": "https://static.crates.io/crates/jsonschema/0.57.0/download"
+          "sha256": "905edfa6eee835291d6efe33f733f7fcb40c2a24be93b78b74df95e56aef8611",
+          "url": "https://static.crates.io/crates/jsonschema/0.58.3/download"
         }
       },
       "targets": [
@@ -2326,9 +2458,9 @@
           }
         }
       ],
-      "version": "0.57.0"
+      "version": "0.58.3"
     },
-    "jsonschema-regex 0.57.0": {
+    "jsonschema-regex 0.58.5": {
       "common_attrs": {
         "deps": [
           {
@@ -2347,8 +2479,8 @@
       "package_url": "https://github.com/Stranger6667/jsonschema",
       "repository": {
         "Http": {
-          "sha256": "48d2120d8466ffcdc1b3be4b88ff0e9191bf5b6b09b1b1af1eef9aff8f465ea3",
-          "url": "https://static.crates.io/crates/jsonschema-regex/0.57.0/download"
+          "sha256": "854e9e22c420535035e95eed240cbfb4a5f4b7da74d122d63144e0c31926dbfd",
+          "url": "https://static.crates.io/crates/jsonschema-regex/0.58.5/download"
         }
       },
       "targets": [
@@ -2359,9 +2491,10 @@
           }
         }
       ],
-      "version": "0.57.0"
+      "version": "0.58.5"
     },
-    "jsonschema-value 0.57.0": {
+    "jsonschema-value 0.58.5": {
+      "build_script_attrs": {},
       "common_attrs": {
         "crate_features": [
           "default",
@@ -2407,7 +2540,10 @@
             ]
           }
         },
-        "edition": "2021"
+        "edition": "2021",
+        "extra_deps": [
+          ":build_script_build"
+        ]
       },
       "library_target_name": "jsonschema_value",
       "license": "MIT",
@@ -2418,8 +2554,8 @@
       "package_url": "https://github.com/Stranger6667/jsonschema",
       "repository": {
         "Http": {
-          "sha256": "3fbfa40a42415369d940b3848f3ce08099f1f1ac04d73e8580f4d652617c4f44",
-          "url": "https://static.crates.io/crates/jsonschema-value/0.57.0/download"
+          "sha256": "4e3bfac11ac357ec620880025757d38c67da8fd5b9ef5024d19f0f360002b4ca",
+          "url": "https://static.crates.io/crates/jsonschema-value/0.58.5/download"
         }
       },
       "targets": [
@@ -2428,9 +2564,15 @@
             "crate_name": "jsonschema_value",
             "crate_root": "src/lib.rs"
           }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs"
+          }
         }
       ],
-      "version": "0.57.0"
+      "version": "0.58.5"
     },
     "kstring 2.0.4": {
       "common_attrs": {
@@ -3378,7 +3520,7 @@
       ],
       "version": "0.2.19"
     },
-    "octicons-pack 19.36.0": {
+    "octicons-pack 19.38.0": {
       "common_attrs": {
         "edition": "2024"
       },
@@ -3392,8 +3534,8 @@
       "package_url": "https://github.com/2bndy5/redist-icons",
       "repository": {
         "Http": {
-          "sha256": "e5ba7baa806527b081e314d74c6df088fd66235daeb448278009dce0d462b6d7",
-          "url": "https://static.crates.io/crates/octicons-pack/19.36.0/download"
+          "sha256": "4d144ebd876a96b9535606f36e806343d0dc83937cb4f2e96c18710465c27e1e",
+          "url": "https://static.crates.io/crates/octicons-pack/19.38.0/download"
         }
       },
       "targets": [
@@ -3404,7 +3546,7 @@
           }
         }
       ],
-      "version": "19.36.0"
+      "version": "19.38.0"
     },
     "once_cell 1.21.4": {
       "common_attrs": {
@@ -4408,6 +4550,96 @@
       ],
       "version": "0.4.0"
     },
+    "rayon 1.12.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "either 1.18.0",
+            "target": "either"
+          },
+          {
+            "id": "rayon-core 1.13.0",
+            "target": "rayon_core"
+          }
+        ],
+        "edition": "2021"
+      },
+      "library_target_name": "rayon",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "rayon",
+      "package_url": "https://github.com/rayon-rs/rayon",
+      "repository": {
+        "Http": {
+          "sha256": "fb39b166781f92d482534ef4b4b1b2568f42613b53e5b6c160e24cfbfa30926d",
+          "url": "https://static.crates.io/crates/rayon/1.12.0/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rayon",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "1.12.0"
+    },
+    "rayon-core 1.13.0": {
+      "build_script_attrs": {
+        "links": "rayon-core"
+      },
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "crossbeam-deque 0.8.8",
+            "target": "crossbeam_deque"
+          },
+          {
+            "id": "crossbeam-utils 0.8.23",
+            "target": "crossbeam_utils"
+          }
+        ],
+        "edition": "2021",
+        "extra_deps": [
+          ":build_script_build"
+        ]
+      },
+      "library_target_name": "rayon_core",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "rayon-core",
+      "package_url": "https://github.com/rayon-rs/rayon",
+      "repository": {
+        "Http": {
+          "sha256": "22e18b0f0062d30d4230b2e85ff77fdfe4326feb054b9783a3460d8435c8ab91",
+          "url": "https://static.crates.io/crates/rayon-core/1.13.0/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rayon_core",
+            "crate_root": "src/lib.rs"
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs"
+          }
+        }
+      ],
+      "version": "1.13.0"
+    },
     "redox_syscall 0.5.18": {
       "common_attrs": {
         "deps": [
@@ -4530,7 +4762,7 @@
       ],
       "version": "1.0.27"
     },
-    "referencing 0.57.0": {
+    "referencing 0.58.5": {
       "common_attrs": {
         "crate_features": [
           "default"
@@ -4591,8 +4823,8 @@
       "package_url": "https://github.com/Stranger6667/jsonschema",
       "repository": {
         "Http": {
-          "sha256": "b06f6798be4fed305e74df8b1fb90cf59c6b8cc17aa3febeb1830c0c6b627b3e",
-          "url": "https://static.crates.io/crates/referencing/0.57.0/download"
+          "sha256": "590efadb0a669f1712c1e3ab810a55d4c3d20d0127c455f7236dd0710aba0346",
+          "url": "https://static.crates.io/crates/referencing/0.58.5/download"
         }
       },
       "targets": [
@@ -4603,7 +4835,7 @@
           }
         }
       ],
-      "version": "0.57.0"
+      "version": "0.58.5"
     },
     "regex 1.13.1": {
       "common_attrs": {
@@ -4958,7 +5190,7 @@
         ],
         "deps_dev": [
           {
-            "id": "jsonschema 0.57.0",
+            "id": "jsonschema 0.58.3",
             "target": "jsonschema"
           }
         ],
@@ -5108,12 +5340,24 @@
             "target": "anyhow"
           },
           {
+            "id": "crossbeam-channel 0.5.17",
+            "target": "crossbeam_channel"
+          },
+          {
             "id": "lsp-server 0.10.0",
             "target": "lsp_server"
           },
           {
             "id": "lsp-types 0.97.0",
             "target": "lsp_types"
+          },
+          {
+            "id": "rayon 1.12.0",
+            "target": "rayon"
+          },
+          {
+            "id": "serde 1.0.229",
+            "target": "serde"
           },
           {
             "id": "serde_json 1.0.151",
@@ -5155,7 +5399,7 @@
             "target": "csv"
           },
           {
-            "id": "octicons-pack 19.36.0",
+            "id": "octicons-pack 19.38.0",
             "target": "octicons_pack"
           },
           {
@@ -5208,7 +5452,7 @@
             "target": "minijinja"
           },
           {
-            "id": "octicons-pack 19.36.0",
+            "id": "octicons-pack 19.38.0",
             "target": "octicons_pack"
           },
           {
@@ -7936,6 +8180,7 @@
   "direct_deps": [
     "anyhow 1.0.104",
     "base64 0.23.1",
+    "crossbeam-channel 0.5.17",
     "csv 1.4.0",
     "flate2 1.1.10",
     "globset 0.4.20",
@@ -7944,9 +8189,10 @@
     "lsp-types 0.97.0",
     "math-core 0.8.2",
     "minijinja 2.24.0",
-    "octicons-pack 19.36.0",
+    "octicons-pack 19.38.0",
     "pathdiff 0.2.3",
     "plotters 0.3.7",
+    "rayon 1.12.0",
     "regex 1.13.1",
     "schemars 1.2.2",
     "serde 1.0.229",
@@ -7959,7 +8205,7 @@
     "unicode-width 0.2.2"
   ],
   "direct_dev_deps": [
-    "jsonschema 0.57.0",
+    "jsonschema 0.58.3",
     "proptest 1.11.0"
   ],
   "workspace_members": {

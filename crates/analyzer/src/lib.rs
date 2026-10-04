@@ -10,6 +10,7 @@
 //! `rinx_ast`'s `normalize_path`, re-exported below, resolves the
 //! `.`/`..` components in the document paths a toctree may name.
 
+mod document_analysis;
 mod document_index;
 mod domain_object_index;
 mod duplicate_definitions;
@@ -24,6 +25,7 @@ mod page_order;
 mod project_index;
 mod section_numbering;
 
+pub use document_analysis::DocumentAnalysis;
 pub use document_index::analyze;
 // `normalize_path` lives in `rinx_ast`, which is the only crate both
 // its callers — toctree entry resolution and image URI resolution — are
@@ -32,6 +34,7 @@ pub use document_index::analyze;
 pub use element_numbering::assign_element_numbers;
 pub use nav_diagnostics::DocumentDiagnostics;
 pub use project_index::{
-    IndexSettings, ProjectIndexBuild, build_project_index, build_project_index_reporting,
+    IndexSettings, ProjectIndexBuild, build_project_index, build_project_index_from_analyses,
+    build_project_index_reporting,
 };
 pub use rinx_toctree::normalize_path;

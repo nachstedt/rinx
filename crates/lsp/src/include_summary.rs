@@ -23,6 +23,7 @@ use rinx_ast::{Document, IncludeSite};
 
 use crate::diagnostics::{Placed, Placement, SOURCE};
 use crate::position::PositionEncoding;
+use crate::uri::file_path;
 
 /// A summary for every include site in `document` that brought in one of the
 /// diagnostics in `placed`, each with the URI of the file the `.. include::`
@@ -49,7 +50,7 @@ pub(crate) fn summarize_includes(
                     })
                     .collect();
             let first = related.first()?;
-            let name = included_name(site, document);
+            let name = included_name(site, document, file_path(placement.uri).as_deref());
             let message = match related.len() {
                 1 => format!("problem in included file '{name}': {}", first.message),
                 count => format!(
@@ -100,15 +101,25 @@ fn related_problems(
 /// The included file's path as its includer would write it: relative to the
 /// directory of the file the `.. include::` is in, or in full when it is not
 /// below it.
-fn included_name(site: &IncludeSite, document: &Document) -> String {
+///
+/// An include written in the document itself is placed by `location`, the
+/// document's file: the document's own path is its name within its source
+/// root, while an included file is named by where it is.
+fn included_name(site: &IncludeSite, document: &Document, location: Option<&Path>) -> String {
     let included = document
         .source_files
         .get(site.file.index())
         .map_or("", String::as_str);
-    let written_in = document
-        .span_path(site.directive)
-        .unwrap_or(document.path.as_str());
-    Path::new(written_in)
+    let written_in = match site.directive.and_then(|span| span.file) {
+        // In an included fragment, named by where it is.
+        Some(file) => document
+            .source_files
+            .get(file.index())
+            .map_or_else(|| Path::new(""), Path::new),
+        // In the document itself.
+        None => location.unwrap_or_else(|| Path::new(&document.path)),
+    };
+    written_in
         .parent()
         .and_then(|directory| Path::new(included).strip_prefix(directory).ok())
         .map_or_else(
@@ -322,8 +333,26 @@ mod tests {
 
         // When / Then
         assert_eq!(
-            included_name(&document.include_sites[0], &document),
+            included_name(&document.include_sites[0], &document, None),
             "/elsewhere/part.rst"
         );
+    }
+
+    #[test]
+    fn test_included_name_places_the_documents_own_include_by_its_file() {
+        // Given — the document named by its path within its source root, as a
+        // workspace document is, and the fragment by where it is.
+        let mut document = document(&["/work/docs/part.rst"], &[(1, None, 0)], Vec::new());
+        document.path = "index.rst".to_string();
+
+        // When
+        let name = included_name(
+            &document.include_sites[0],
+            &document,
+            Some(Path::new("/work/docs/index.rst")),
+        );
+
+        // Then
+        assert_eq!(name, "part.rst");
     }
 }

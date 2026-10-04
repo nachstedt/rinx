@@ -1,0 +1,3 @@
+Welcome to |name|.
+
+.. foo::

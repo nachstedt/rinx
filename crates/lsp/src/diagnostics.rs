@@ -45,9 +45,25 @@ pub struct DocumentDiagnosis {
     pub reads: BTreeSet<PathBuf>,
 }
 
-/// Parses `text`, the content of the document at `uri`, and converts what the
-/// parser reported. A file a directive reads is taken from `open` when the
-/// editor holds it, and from the disk otherwise.
+/// One parse of a document: its AST, every file it read, and its text as
+/// the parser saw it — the input both to its diagnostics and to its entry in
+/// the workspace index, so the two can never come from different parses.
+#[derive(Debug)]
+pub struct ParsedSource {
+    pub document: Document,
+    pub reads: FileReads,
+    /// The text with the protocol's line endings, which positions count in.
+    pub text: String,
+}
+
+/// Parses `text`, the content of the document at `uri`. A file a directive
+/// reads is taken from `open` when the editor holds it, and from the disk
+/// otherwise.
+///
+/// `doc_path` is the document's path within its source root, as the build
+/// names it — what its toctrees and labels are recorded under — when it lies
+/// in a workspace folder; otherwise the document is named by its location.
+/// Files are resolved from the document's real location either way.
 ///
 /// The text is parsed with its line endings as the protocol counts them (see
 /// [`protocol_line_endings`]), so every reported line is one the editor shows.
@@ -56,47 +72,60 @@ pub struct DocumentDiagnosis {
 /// as the default role, no entity schema, no Jinja — since nothing tells the
 /// server yet how the document's library is configured.
 #[must_use]
-pub fn document_diagnostics(
+pub fn parse_source(
     uri: &Uri,
+    doc_path: Option<&str>,
     text: &str,
     open: &DocumentStore,
-    encoding: PositionEncoding,
-) -> DocumentDiagnosis {
-    let text = protocol_line_endings(text);
-    let text = text.as_ref();
+) -> ParsedSource {
+    let text = protocol_line_endings(text).into_owned();
     let (document, reads) = match file_path(uri) {
         Some(path) => {
             let files = WorkspaceFiles::for_document(&path, open);
-            let document = rinx_parser::parse_with_ctx(
-                &path.to_string_lossy(),
-                text,
-                &ParseCtx::new(Domain::Py, &files),
-            );
+            let name = doc_path.map_or_else(|| path.to_string_lossy(), Cow::Borrowed);
+            let document =
+                rinx_parser::parse_with_ctx(&name, &text, &ParseCtx::new(Domain::Py, &files));
             (document, files.into_reads())
         }
         // An unsaved buffer has no directory to resolve a file against.
         None => (
             rinx_parser::parse_with_ctx(
                 uri.as_str(),
-                text,
+                &text,
                 &ParseCtx::new(Domain::Py, &RejectParseFiles),
             ),
             FileReads::default(),
         ),
     };
+    ParsedSource {
+        document,
+        reads,
+        text,
+    }
+}
+
+/// Converts what one parse of the document at `uri` reported into the
+/// diagnostics to publish, file by file.
+#[must_use]
+pub fn diagnose_source(
+    uri: &Uri,
+    parsed: &ParsedSource,
+    open: &DocumentStore,
+    encoding: PositionEncoding,
+) -> DocumentDiagnosis {
     let by_uri = to_lsp_diagnostics(
-        &document,
+        &parsed.document,
         &Placement {
             uri,
-            text,
-            reads: &reads,
+            text: &parsed.text,
+            reads: &parsed.reads,
             open,
         },
         encoding,
     );
     DocumentDiagnosis {
         by_uri,
-        reads: reads.paths,
+        reads: parsed.reads.paths.clone(),
     }
 }
 
@@ -243,6 +272,18 @@ fn code_description(code: DiagnosticCode) -> Option<CodeDescription> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    /// Parses `text`, the content of the document at `uri`, and converts what the
+    /// parser reported — [`parse_source`] then [`diagnose_source`], for a
+    /// document outside every workspace folder.
+    fn document_diagnostics(
+        uri: &Uri,
+        text: &str,
+        open: &DocumentStore,
+        encoding: PositionEncoding,
+    ) -> DocumentDiagnosis {
+        diagnose_source(uri, &parse_source(uri, None, text, open), open, encoding)
+    }
+
     use rinx_ast::{FileId, Position, Span, Suppression, SuppressionCodes};
 
     fn uri(text: &str) -> Uri {

@@ -76,7 +76,12 @@ impl Server {
     /// Performs the `initialize` handshake for a client announcing
     /// `capabilities`, returning the server's answer.
     pub(crate) fn initialize(&mut self, capabilities: &Value) -> Response {
-        self.request(1, "initialize", json!({ "capabilities": capabilities }));
+        self.initialize_with(json!({ "capabilities": capabilities }))
+    }
+
+    /// [`Self::initialize`], with whole initialize `params`.
+    pub(crate) fn initialize_with(&mut self, params: Value) -> Response {
+        self.request(1, "initialize", params);
         let Message::Response(response) = self.receive() else {
             panic!("expected the initialize response");
         };

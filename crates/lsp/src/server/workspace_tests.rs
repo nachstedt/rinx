@@ -1,0 +1,520 @@
+//! The server with a workspace: the scan's messages, an edit racing the scan,
+//! documents that include an open file without being open themselves, and the
+//! folded index staying what a fresh scan would build.
+
+use super::scan::ScanEvent;
+use super::test_support::*;
+use crate::progress::STATUS_METHOD;
+use crate::workspace::scan_folder;
+use std::path::{Path, PathBuf};
+use std::time::Duration;
+
+/// A workspace folder in a scratch directory, holding `files`.
+struct Workspace {
+    root: PathBuf,
+}
+
+impl Workspace {
+    fn new(name: &str, files: &[(&str, &str)]) -> Self {
+        let root = std::env::temp_dir().join(format!("rinx_lsp_workspace_{name}"));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root).expect("create the folder");
+        let workspace = Self { root };
+        for (file, text) in files {
+            workspace.write(file, text);
+        }
+        workspace
+    }
+
+    fn write(&self, file: &str, text: &str) {
+        let path = self.root.join(file);
+        std::fs::create_dir_all(path.parent().expect("a parent")).expect("mkdir");
+        std::fs::write(path, text).expect("write");
+    }
+
+    fn uri(&self, file: &str) -> Uri {
+        crate::uri::file_uri(&self.root.join(file)).expect("an absolute path")
+    }
+
+    /// A server indexing this folder, with the scan started but not run.
+    fn server(&self, progress: bool) -> (ServerState, Vec<Message>) {
+        let mut state = ServerState::new(PositionEncoding::Utf16)
+            .with_workspace(vec![self.root.clone()], progress);
+        let started = state.start_scan();
+        (state, started)
+    }
+
+    /// The scan of this folder as it stands on disk now, as the event the
+    /// scan thread would send.
+    fn scanned(&self) -> ScanEvent {
+        ScanEvent::Finished {
+            folder: 0,
+            documents: scan_folder(&self.root, &|_, _| {}),
+            elapsed: Duration::from_millis(800),
+        }
+    }
+
+    fn open(&self, file: &str, text: &str) -> Notification {
+        Notification::new(
+            DidOpenTextDocument::METHOD.to_string(),
+            DidOpenTextDocumentParams {
+                text_document: TextDocumentItem::new(
+                    self.uri(file),
+                    "restructuredtext".to_string(),
+                    1,
+                    text.to_string(),
+                ),
+            },
+        )
+    }
+
+    fn change(&self, file: &str, version: i32, text: &str) -> Notification {
+        Notification::new(
+            DidChangeTextDocument::METHOD.to_string(),
+            DidChangeTextDocumentParams {
+                text_document: VersionedTextDocumentIdentifier::new(self.uri(file), version),
+                content_changes: vec![TextDocumentContentChangeEvent {
+                    range: None,
+                    range_length: None,
+                    text: text.to_string(),
+                }],
+            },
+        )
+    }
+
+    fn close(&self, file: &str) -> Notification {
+        Notification::new(
+            DidCloseTextDocument::METHOD.to_string(),
+            DidCloseTextDocumentParams {
+                text_document: TextDocumentIdentifier::new(self.uri(file)),
+            },
+        )
+    }
+
+    /// The codes `replies` publish for `file`, in its last publish, or `None`
+    /// when nothing was published for it.
+    fn codes_for(&self, replies: &[Message], file: &str) -> Option<Vec<String>> {
+        let uri = self.uri(file);
+        replies
+            .iter()
+            .filter_map(|reply| match reply {
+                Message::Notification(notification)
+                    if notification.method == PublishDiagnostics::METHOD =>
+                {
+                    Some(published(reply))
+                }
+                _ => None,
+            })
+            .filter(|params| params.uri == uri)
+            .last()
+            .map(|params| codes(&params))
+    }
+}
+
+/// The labels the folder's index defines.
+fn labels(state: &mut ServerState) -> Vec<String> {
+    state.folders[0]
+        .project_index()
+        .targets
+        .keys()
+        .map(|name| name.as_str().to_string())
+        .collect()
+}
+
+/// The `rinx/status` parameters among `messages`, in order.
+fn statuses(messages: &[Message]) -> Vec<serde_json::Value> {
+    messages
+        .iter()
+        .filter_map(|message| match message {
+            Message::Notification(notification) if notification.method == STATUS_METHOD => {
+                Some(notification.params.clone())
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+const BROKEN: &str = "Fine.\n\n.. foo::\n";
+
+#[test]
+fn test_start_scan_says_indexing_and_asks_for_a_progress_token() {
+    // Given
+    let workspace = Workspace::new("start", &[("index.rst", "Home\n====\n")]);
+
+    // When
+    let (_, started) = workspace.server(true);
+
+    // Then
+    assert!(
+        matches!(&started[0], Message::Request(request) if request.method == "window/workDoneProgress/create")
+    );
+    assert_eq!(
+        statuses(&started),
+        [serde_json::json!({"state": "indexing", "documents": 0})]
+    );
+}
+
+#[test]
+fn test_start_scan_without_a_folder_sends_nothing() {
+    // Given
+    let mut state = ServerState::new(PositionEncoding::Utf16);
+
+    // When / Then
+    assert!(state.start_scan().is_empty());
+}
+
+#[test]
+fn test_a_finished_scan_reports_every_document_ready() {
+    // Given
+    let workspace = Workspace::new(
+        "ready",
+        &[
+            ("index.rst", "Home\n====\n"),
+            ("guide/setup.rst", "Setup\n=====\n"),
+        ],
+    );
+    let (mut state, _) = workspace.server(false);
+
+    // When
+    let finished = state.on_scan_event(workspace.scanned());
+
+    // Then
+    assert_eq!(
+        statuses(&finished),
+        [serde_json::json!({"state": "ready", "documents": 2, "elapsedMs": 800})]
+    );
+}
+
+#[test]
+fn test_an_edit_made_during_the_scan_survives_it() {
+    // Given — the scan reads `a.rst` from disk, but the author has already
+    // renamed its label in the editor.
+    let workspace = Workspace::new("race", &[("a.rst", ".. _saved:\n\nText.\n")]);
+    let (mut state, _) = workspace.server(false);
+    let scan = workspace.scanned();
+    handle_notification(
+        &mut state,
+        workspace.open("a.rst", ".. _edited:\n\nText.\n"),
+    );
+
+    // When
+    state.on_scan_event(scan);
+
+    // Then
+    assert_eq!(labels(&mut state), ["edited"]);
+}
+
+#[test]
+fn test_closing_a_document_returns_its_index_entry_to_the_saved_text() {
+    // Given
+    let workspace = Workspace::new("close", &[("a.rst", ".. _saved:\n\nText.\n")]);
+    let (mut state, _) = workspace.server(false);
+    state.on_scan_event(workspace.scanned());
+    handle_notification(&mut state, workspace.open("a.rst", ".. _saved:\n\nText.\n"));
+    handle_notification(
+        &mut state,
+        workspace.change("a.rst", 2, ".. _unsaved:\n\nText.\n"),
+    );
+    assert_eq!(labels(&mut state), ["unsaved"]);
+
+    // When — closed without saving.
+    handle_notification(&mut state, workspace.close("a.rst"));
+
+    // Then
+    assert_eq!(labels(&mut state), ["saved"]);
+}
+
+#[test]
+fn test_a_fragment_opened_alone_shows_what_its_closed_includer_finds() {
+    // Given — `index.rst` includes the fragment and is never opened.
+    let workspace = Workspace::new(
+        "closed_includer",
+        &[
+            ("index.rst", "Home\n====\n\n.. include:: _part.inc\n"),
+            ("_part.inc", BROKEN),
+        ],
+    );
+    let (mut state, _) = workspace.server(false);
+    state.on_scan_event(workspace.scanned());
+
+    // When
+    let opened = handle_notification(&mut state, workspace.open("_part.inc", BROKEN));
+
+    // Then — the fragment shows the mistake, and the closed includer nothing.
+    assert_eq!(
+        workspace.codes_for(&opened, "_part.inc"),
+        Some(vec!["directive.unknown".to_string()])
+    );
+    assert_eq!(workspace.codes_for(&opened, "index.rst"), None);
+}
+
+#[test]
+fn test_a_scan_finishing_after_a_fragment_opened_brings_in_its_closed_includer() {
+    // Given — the fragment opened before the scan knew who includes it.
+    let workspace = Workspace::new(
+        "late_includer",
+        &[
+            ("index.rst", "Home\n====\n\n.. include:: _part.inc\n"),
+            ("_part.inc", BROKEN),
+        ],
+    );
+    let (mut state, _) = workspace.server(false);
+    let scan = workspace.scanned();
+    handle_notification(&mut state, workspace.open("_part.inc", BROKEN));
+
+    // When
+    let finished = state.on_scan_event(scan);
+
+    // Then
+    assert_eq!(
+        workspace.codes_for(&finished, "_part.inc"),
+        Some(vec!["directive.unknown".to_string()])
+    );
+}
+
+#[test]
+fn test_editing_a_fragment_updates_what_its_closed_includer_finds() {
+    // Given
+    let workspace = Workspace::new(
+        "edit_fragment",
+        &[
+            ("index.rst", "Home\n====\n\n.. include:: _part.inc\n"),
+            ("_part.inc", BROKEN),
+        ],
+    );
+    let (mut state, _) = workspace.server(false);
+    state.on_scan_event(workspace.scanned());
+    handle_notification(&mut state, workspace.open("_part.inc", BROKEN));
+
+    // When — the mistake is fixed, unsaved.
+    let changed = handle_notification(&mut state, workspace.change("_part.inc", 2, "Fine.\n"));
+
+    // Then
+    assert_eq!(workspace.codes_for(&changed, "_part.inc"), Some(Vec::new()));
+}
+
+#[test]
+fn test_an_open_workspace_document_names_its_included_file_relatively() {
+    // Given — a workspace document, named by its path within the folder.
+    let workspace = Workspace::new(
+        "summary_name",
+        &[
+            ("index.rst", "Home\n====\n\n.. include:: _part.inc\n"),
+            ("_part.inc", BROKEN),
+        ],
+    );
+    let (mut state, _) = workspace.server(false);
+    state.on_scan_event(workspace.scanned());
+
+    // When
+    let opened = handle_notification(
+        &mut state,
+        workspace.open("index.rst", "Home\n====\n\n.. include:: _part.inc\n"),
+    );
+
+    // Then — the summary on the include quotes the file as written there.
+    let summary = opened
+        .iter()
+        .map(published)
+        .find(|params| params.uri == workspace.uri("index.rst"))
+        .and_then(|params| params.diagnostics.first().cloned())
+        .expect("a summary on the include");
+    assert!(
+        summary
+            .message
+            .starts_with("problem in included file '_part.inc'"),
+        "{}",
+        summary.message
+    );
+}
+
+#[test]
+fn test_a_label_in_a_fragment_belongs_to_its_closed_includer() {
+    // Given
+    let workspace = Workspace::new(
+        "fragment_label",
+        &[
+            ("index.rst", "Home\n====\n\n.. include:: _part.inc\n"),
+            ("_part.inc", ".. _old:\n\nText.\n"),
+        ],
+    );
+    let (mut state, _) = workspace.server(false);
+    state.on_scan_event(workspace.scanned());
+    handle_notification(
+        &mut state,
+        workspace.open("_part.inc", ".. _old:\n\nText.\n"),
+    );
+
+    // When — the fragment's label is renamed, unsaved.
+    handle_notification(
+        &mut state,
+        workspace.change("_part.inc", 2, ".. _new:\n\nText.\n"),
+    );
+
+    // Then — the includer's entry changed with it.
+    assert_eq!(labels(&mut state), ["new"]);
+}
+
+#[test]
+fn test_closing_the_fragment_lets_go_of_its_closed_includer() {
+    // Given
+    let workspace = Workspace::new(
+        "release_includer",
+        &[
+            ("index.rst", "Home\n====\n\n.. include:: _part.inc\n"),
+            ("_part.inc", BROKEN),
+        ],
+    );
+    let (mut state, _) = workspace.server(false);
+    state.on_scan_event(workspace.scanned());
+    handle_notification(&mut state, workspace.open("_part.inc", BROKEN));
+
+    // When
+    let closed = handle_notification(&mut state, workspace.close("_part.inc"));
+
+    // Then — nobody is looking at the fragment any more.
+    assert_eq!(workspace.codes_for(&closed, "_part.inc"), Some(Vec::new()));
+    assert!(
+        state
+            .graph
+            .includers_of(&workspace.root.join("_part.inc"))
+            .is_empty()
+    );
+}
+
+#[test]
+fn test_the_folded_index_after_edits_equals_a_fresh_scan() {
+    // Given — a workspace edited through the server, then saved as edited.
+    let workspace = Workspace::new(
+        "incremental",
+        &[
+            ("index.rst", "Home\n====\n\n.. toctree::\n\n   a\n   b\n"),
+            ("a.rst", ".. _a-label:\n\nA\n=\n"),
+            ("b.rst", ".. _b-label:\n\nB\n=\n\n.. include:: _part.inc\n"),
+            ("_part.inc", ".. _part-label:\n\nText.\n"),
+        ],
+    );
+    let (mut state, _) = workspace.server(false);
+    state.on_scan_event(workspace.scanned());
+    let edits = [
+        ("a.rst", ".. _renamed:\n\nA\n=\n"),
+        ("_part.inc", "No label any more.\n"),
+        ("index.rst", "Home\n====\n\n.. toctree::\n\n   b\n"),
+    ];
+    for (file, text) in edits {
+        handle_notification(&mut state, workspace.open(file, text));
+        workspace.write(file, text);
+        handle_notification(&mut state, workspace.close(file));
+    }
+
+    // When
+    let (mut fresh, _) = workspace.server(false);
+    fresh.on_scan_event(workspace.scanned());
+
+    // Then
+    assert_eq!(
+        state.folders[0].project_index(),
+        fresh.folders[0].project_index()
+    );
+    assert_eq!(labels(&mut state), ["b-label", "renamed"]);
+}
+
+#[test]
+fn test_the_folded_index_equals_build_project_index_on_the_examples() {
+    // Given — the repository's own example site and documentation, as the
+    // folder's scan reads them.
+    let repository = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    for folder in ["examples", "docs"] {
+        let root = repository
+            .join(folder)
+            .canonicalize()
+            .expect("the folder exists");
+        let mut state =
+            ServerState::new(PositionEncoding::Utf16).with_workspace(vec![root.clone()], false);
+        state.start_scan();
+        state.on_scan_event(ScanEvent::Finished {
+            folder: 0,
+            documents: scan_folder(&root, &|_, _| {}),
+            elapsed: Duration::ZERO,
+        });
+
+        // When
+        let documents = crate::workspace::parse_folder_documents(&root);
+        let built = rinx_analyzer::build_project_index(
+            &documents,
+            "index",
+            &rinx_entity::EntitySchema::empty(),
+        );
+
+        // Then
+        assert!(!documents.is_empty(), "{folder} holds documents");
+        assert_eq!(state.folders[0].project_index(), &built, "{folder}");
+    }
+}
+
+#[test]
+fn test_run_scans_the_workspace_and_reports_it_ready() {
+    // Given — a client with a workspace folder, taking progress reports.
+    let workspace = Workspace::new(
+        "session",
+        &[
+            ("index.rst", "Home\n====\n"),
+            ("guide.rst", "Guide\n=====\n"),
+        ],
+    );
+    let (server, client) = Connection::memory();
+    let handle = std::thread::spawn(move || run(&server));
+    let params = InitializeParams {
+        workspace_folders: Some(vec![lsp_types::WorkspaceFolder {
+            uri: crate::uri::file_uri(&workspace.root).expect("an absolute path"),
+            name: "docs".to_string(),
+        }]),
+        capabilities: lsp_types::ClientCapabilities {
+            window: Some(lsp_types::WindowClientCapabilities {
+                work_done_progress: Some(true),
+                ..lsp_types::WindowClientCapabilities::default()
+            }),
+            ..lsp_types::ClientCapabilities::default()
+        },
+        ..InitializeParams::default()
+    };
+    initialize_with(&client, params);
+
+    // When — reading until the index is ready, accepting the progress token.
+    let mut seen = Vec::new();
+    let ready = loop {
+        let message = client
+            .receiver
+            .recv_timeout(Duration::from_secs(10))
+            .expect("the server keeps talking");
+        if let Message::Request(request) = &message {
+            client
+                .sender
+                .send(Response::new_ok(request.id.clone(), serde_json::Value::Null).into())
+                .unwrap();
+        }
+        let status = statuses(std::slice::from_ref(&message));
+        seen.push(message);
+        if status
+            .first()
+            .is_some_and(|status| status["state"] == "ready")
+        {
+            break status[0].clone();
+        }
+    };
+    client
+        .sender
+        .send(Request::new(RequestId::from(2), Shutdown::METHOD.to_string(), ()).into())
+        .unwrap();
+    let _ = client.receiver.recv_timeout(Duration::from_secs(10));
+    client.sender.send(exit().into()).unwrap();
+
+    // Then
+    assert_eq!(ready["documents"], 2);
+    assert!(
+        matches!(&seen[0], Message::Request(request) if request.method == "window/workDoneProgress/create"),
+        "{seen:?}"
+    );
+    assert_eq!(statuses(&seen)[0]["state"], "indexing");
+    handle.join().expect("server thread").expect("clean exit");
+}

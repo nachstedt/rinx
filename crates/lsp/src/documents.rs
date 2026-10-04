@@ -61,6 +61,11 @@ impl DocumentStore {
         self.documents.get(uri)
     }
 
+    /// Every open document's URI.
+    pub fn uris(&self) -> impl Iterator<Item = &Uri> {
+        self.documents.keys()
+    }
+
     /// The URI under which the file at `path` is open, if it is.
     #[must_use]
     pub fn uri_of(&self, path: &Path) -> Option<&Uri> {

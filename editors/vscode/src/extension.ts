@@ -7,6 +7,7 @@ import { BazelScanner, DiscoveredConfig } from './bazel';
 import { chooseBinaryPath, explicitValue } from './binary';
 import { resolveServerBinary, startLanguageClient } from './client';
 import { errorMessage } from './errors';
+import { IndexStatus, IndexStatusItem, STATUS_METHOD } from './status';
 
 // A log channel rather than a plain one: the language client writes its own
 // messages and traces into it, and requires one. It also timestamps each line.
@@ -18,16 +19,28 @@ function log(msg: string) {
 
 let client: LanguageClient | undefined;
 
-export function activate(context: vscode.ExtensionContext) {
+/** What the extension offers other extensions — and its own end-to-end tests. */
+export interface RinxApi {
+    /** The last status the language server reported for its workspace index. */
+    indexStatus(): IndexStatus | undefined;
+}
+
+export function activate(context: vscode.ExtensionContext): RinxApi {
+    const statusItem = new IndexStatusItem();
     context.subscriptions.push(
         outputChannel,
+        statusItem,
         vscode.commands.registerCommand('rinx.showPreview', () => {
             PreviewPanel.createOrShow(context.extensionUri);
+        }),
+        vscode.commands.registerCommand('rinx.showLogs', () => {
+            outputChannel.show();
         }),
     );
     // Not awaited: finding the binary may build it with Bazel, and the
     // preview command must not wait for that.
-    void startServer();
+    void startServer(statusItem);
+    return { indexStatus: () => statusItem.last };
 }
 
 export async function deactivate(): Promise<void> {
@@ -36,11 +49,12 @@ export async function deactivate(): Promise<void> {
 }
 
 /** Starts the language server, reporting a failure rather than throwing. */
-async function startServer(): Promise<void> {
+async function startServer(statusItem: IndexStatusItem): Promise<void> {
     let binary = 'rinx';
     try {
         binary = await resolveServerBinary(new BazelScanner(log), log);
         client = await startLanguageClient(binary, outputChannel);
+        client.onNotification(STATUS_METHOD, (status: IndexStatus) => statusItem.update(status));
     } catch (error: unknown) {
         log(`Language server failed to start: ${errorMessage(error)}`);
         const action = await vscode.window.showWarningMessage(

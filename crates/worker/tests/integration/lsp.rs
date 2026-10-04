@@ -112,6 +112,45 @@ fn test_lsp_underlines_a_mistake_in_an_included_file_in_that_file() {
 }
 
 #[test]
+fn test_lsp_indexes_its_workspace_folder_and_reports_it_ready() {
+    // Given — a workspace folder with three documents, one of them hidden
+    // away where the scan must not look.
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_workspace");
+    let _ = std::fs::remove_dir_all(&root);
+    for (file, text) in [
+        ("index.rst", "Home\n====\n"),
+        ("guide/setup.rst", "Setup\n=====\n"),
+        ("guide/usage.rst", "Usage\n=====\n"),
+        (".venv/lib/readme.rst", "Not a document\n"),
+    ] {
+        let path = root.join(file);
+        std::fs::create_dir_all(path.parent().expect("a parent")).expect("mkdir");
+        std::fs::write(path, text).expect("write");
+    }
+    let mut server = Server::spawn();
+
+    // When
+    server.initialize_with(json!({
+        "capabilities": {},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+    let statuses: Vec<Value> = std::iter::from_fn(|| match server.receive() {
+        lsp_server::Message::Notification(notification) if notification.method == "rinx/status" => {
+            Some(notification.params)
+        }
+        other => panic!("expected rinx/status, got {other:?}"),
+    })
+    .take(2)
+    .collect();
+
+    // Then
+    assert_eq!(statuses[0], json!({"state": "indexing", "documents": 0}));
+    assert_eq!(statuses[1]["state"], "ready");
+    assert_eq!(statuses[1]["documents"], 3);
+    assert!(statuses[1]["elapsedMs"].is_u64(), "{statuses:?}");
+}
+
+#[test]
 fn test_lsp_exits_with_success_after_shutdown_and_exit() {
     // Given
     let mut server = Server::spawn();

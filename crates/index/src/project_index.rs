@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// A global symbol table built from all documents in the project.
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ProjectIndex {
     /// Maps every internal target — a `.. _label:`, a `:name:`, an entity —
     /// to the path of the document defining it.

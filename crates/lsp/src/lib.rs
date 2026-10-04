@@ -14,7 +14,8 @@
 //! - `include_summary` notes on an `.. include::` the problems it brought in;
 //! - `includes` decides what a file shows when open documents include it;
 //! - `files` is the loader a file-reading directive goes through;
-//! - `uri` converts between the protocol's `file:` URIs and paths.
+//! - `uri` converts between the protocol's `file:` URIs and paths;
+//! - `workspace` scans the workspace folders and keeps their project index.
 
 mod diagnostics;
 mod documents;
@@ -22,8 +23,10 @@ mod files;
 mod include_summary;
 mod includes;
 mod position;
+mod progress;
 mod server;
 mod uri;
+mod workspace;
 
 pub use position::PositionEncoding;
 pub use server::run;

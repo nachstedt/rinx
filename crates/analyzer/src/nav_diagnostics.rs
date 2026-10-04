@@ -13,13 +13,11 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use rinx_ast::{Diagnostic, DiagnosticCode, Document};
+use rinx_ast::{Diagnostic, DiagnosticCode};
 use rinx_index::ProjectIndex;
-use rinx_toctree::{TocTarget, UnmatchedKind, expand_toctree};
 
-/// The Sphinx metadata field an author writes to say a document is
-/// deliberately unreachable.
-const ORPHAN_FIELD: &str = "orphan";
+use super::document_analysis::DocumentAnalysis;
+use rinx_toctree::{TocTarget, UnmatchedKind, expand_toctree};
 
 /// One document's project-wide diagnostics.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -36,10 +34,10 @@ pub struct DocumentDiagnostics {
 /// filter each against that document's own `.. noqa:` suppressions.
 #[must_use]
 pub(super) fn collect_nav_diagnostics(
-    docs: &[Document],
+    analyses: &BTreeMap<String, DocumentAnalysis>,
     index: &ProjectIndex,
 ) -> Vec<DocumentDiagnostics> {
-    let universe: BTreeSet<String> = docs.iter().map(|doc| doc.path.clone()).collect();
+    let universe: BTreeSet<String> = analyses.keys().cloned().collect();
     let mut by_document: BTreeMap<String, Vec<Diagnostic>> = BTreeMap::new();
 
     // How many toctrees name each document, so a second one can be reported.
@@ -97,18 +95,17 @@ pub(super) fn collect_nav_diagnostics(
         }
     }
 
-    for doc in docs {
-        if is_orphan_warning_warranted(doc, index) {
+    for (path, analysis) in analyses {
+        if is_orphan_warning_warranted(path, analysis, index) {
             by_document
-                .entry(doc.path.clone())
+                .entry(path.clone())
                 .or_default()
                 .push(Diagnostic::at(
                     DiagnosticCode::ToctreeOrphanDocument,
                     format!(
-                        "Document '{}' is not included in any toctree, so it is unreachable \
+                        "Document '{path}' is not included in any toctree, so it is unreachable \
                          from the navigation. Add it to one, or write ':orphan:' at the top \
-                         of the file.",
-                        doc.path
+                         of the file."
                     ),
                     // The problem is the *absence* of a line, in a different
                     // file, so there is no position to point at. Reporting none
@@ -131,15 +128,18 @@ pub(super) fn collect_nav_diagnostics(
 ///
 /// A root document is reachable by definition, and an author who wrote
 /// `:orphan:` has already said the omission is deliberate.
-fn is_orphan_warning_warranted(doc: &Document, index: &ProjectIndex) -> bool {
-    !doc.metadata.contains_key(ORPHAN_FIELD)
-        && !index.root_documents.contains(&doc.path)
-        && !index.page_order.contains(&doc.path)
+fn is_orphan_warning_warranted(
+    path: &String,
+    analysis: &DocumentAnalysis,
+    index: &ProjectIndex,
+) -> bool {
+    !analysis.orphan && !index.root_documents.contains(path) && !index.page_order.contains(path)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rinx_ast::Document;
     use rinx_ast::{Directive, Node, TocEntry, Toctree, ToctreeFlag, ToctreeOptions};
 
     fn toctree_node(entries: Vec<TocEntry>, glob: bool) -> Node {
@@ -162,7 +162,11 @@ mod tests {
     fn diagnose(docs: &[Document]) -> Vec<DocumentDiagnostics> {
         let index =
             super::super::build_project_index(docs, "index", &rinx_entity::EntitySchema::empty());
-        collect_nav_diagnostics(docs, &index)
+        let analyses = docs
+            .iter()
+            .map(|doc| (doc.path.clone(), DocumentAnalysis::of(doc)))
+            .collect();
+        collect_nav_diagnostics(&analyses, &index)
     }
 
     fn codes(reported: &[DocumentDiagnostics]) -> Vec<DiagnosticCode> {
