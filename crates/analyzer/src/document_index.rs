@@ -224,7 +224,7 @@ pub(super) fn index_nodes(
             // An external target (`.. _name: https://…`) is local to its
             // document in docutils, so it stays out of the project index:
             // the renderer reads it from the document it is written in.
-            Node::Target { name, uri: None } => {
+            Node::Target { name, destination: None } => {
                 index.targets.insert(name.clone(), doc_path.to_string());
             }
             Node::Directive(Directive::Toctree(toctree)) => {
@@ -343,7 +343,11 @@ pub(super) fn index_nodes(
 fn record_target_titles(nodes: &[Node], index: &mut ProjectIndex) {
     let mut pending: Vec<&TargetName> = Vec::new();
     for node in nodes {
-        if let Node::Target { name, uri: None } = node {
+        if let Node::Target {
+            name,
+            destination: None,
+        } = node
+        {
             pending.push(name);
             continue;
         }

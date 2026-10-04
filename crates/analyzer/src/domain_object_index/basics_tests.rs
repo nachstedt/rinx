@@ -784,7 +784,7 @@ fn cmdoption_with(flags: rinx_ast::DescriptionFlags) -> Document {
                 signatures: NonEmptyVector::single("-v, --verbose".to_string()),
                 body: vec![Node::Target {
                     name: TargetName::new("verbosity"),
-                    uri: None,
+                    destination: None,
                 }],
             },
         ))],

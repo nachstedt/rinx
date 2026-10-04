@@ -2,7 +2,9 @@
 //! lists, and the directive dispatcher — everything [`render_nodes`] reaches
 //! while walking a document's node tree.
 
-use rinx_ast::{Directive, Enumerator, InlineNode, ListItem, Node, Toctree, ToctreeFlag};
+use rinx_ast::{
+    Directive, Enumerator, InlineNode, LinkDestination, ListItem, Node, Toctree, ToctreeFlag,
+};
 use std::fmt::Write as _;
 
 use super::admonitions::{render_admonition, render_seealso, render_version_change};
@@ -74,16 +76,17 @@ fn open_enumerated_list_tag(start: Enumerator) -> String {
     tag
 }
 
-/// Collects the URIs of anonymous hyperlink targets, in document order.
+/// Collects the destinations of anonymous hyperlink targets, in document
+/// order.
 ///
 /// The match is deliberately exhaustive: every block-level container has to be
 /// descended into, or an anonymous target written inside one silently fails to
 /// pair with its reference. Leaving a `_` arm here is what let list, table and
 /// definition-list bodies go unvisited for as long as they did.
-pub(crate) fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
+pub(crate) fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<LinkDestination>) {
     for node in nodes {
         match node {
-            Node::AnonymousTarget { uri } => targets.push(uri.clone()),
+            Node::AnonymousTarget { destination } => targets.push(destination.clone()),
             Node::Directive(
                 Directive::Admonition { body, .. }
                 | Directive::VersionChange { body, .. }
@@ -245,8 +248,8 @@ pub(crate) fn render_nodes_with_paragraph_class(
             Node::Paragraph(inlines) => {
                 render_paragraph(html, inlines, paragraph_class, ctx);
             }
-            Node::Target { name, uri } => {
-                if uri.is_none() {
+            Node::Target { name, destination } => {
+                if destination.is_none() {
                     let escaped_name = html_escape::encode_text(name.as_str());
                     let _ = writeln!(html, "<a id=\"{escaped_name}\"></a>");
                 }

@@ -145,6 +145,11 @@ fn unescape_node(mut node: InlineNode) -> InlineNode {
         // single backslash.
         | InlineNode::Code { text, .. }
         | InlineNode::AnonymousReference { text, .. }
+        // A hyperlink's target was unescaped while it was read, since only
+        // the escaped form shows whether a trailing underscore makes it an
+        // alias (see `link_destination`), so only the text is left.
+        | InlineNode::Hyperlink { text, .. }
+        | InlineNode::AnonymousHyperlink { text, .. }
         // A `:numref:` title was unescaped before it was parsed into a format
         // (see `roles::numref`), so only the label and a refusal's text are
         // left. A refusal's own fields were unescaped before it was refused.
@@ -177,15 +182,6 @@ fn unescape_node(mut node: InlineNode) -> InlineNode {
         }
         InlineNode::EntityReference {
             display, target, ..
-        }
-        | InlineNode::Hyperlink {
-            text: display,
-            target,
-            ..
-        }
-        | InlineNode::AnonymousHyperlink {
-            text: display,
-            target,
         }
         | InlineNode::TermReference {
             display,

@@ -129,7 +129,7 @@ mod tests {
     fn target(name: &str) -> Node {
         Node::Target {
             name: TargetName::new(name),
-            uri: None,
+            destination: None,
         }
     }
 

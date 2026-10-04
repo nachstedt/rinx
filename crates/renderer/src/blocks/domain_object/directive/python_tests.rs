@@ -462,7 +462,7 @@ fn test_render_domain_object_resolves_nested_anonymous_hyperlink_in_body() {
                 },
             )),
             Node::AnonymousTarget {
-                uri: "https://example.com".to_string(),
+                destination: rinx_ast::LinkDestination::Uri("https://example.com".to_string()),
             },
         ],
     );

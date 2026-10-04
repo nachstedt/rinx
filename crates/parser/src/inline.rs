@@ -8,6 +8,8 @@
 //! backquotes with no role before it: it reads the role written after, or
 //! the default role, and builds the node through that same dispatch. [`escapes`], [`punctuation`] and
 //! [`typography`] are the text-level primitives the rest is phrased in.
+//! [`link_destination`] reads what an embedded reference or a hyperlink
+//! target leads to, and is re-exported for the block-level target parser.
 //! [`source_map`] is what lets a matched role report where it was written:
 //! block-level parsing reflows text before the scan sees it, so the mapping
 //! back to the `.rst` has to be recorded while that reflow happens. The two
@@ -18,6 +20,7 @@
 mod dispatch;
 mod escapes;
 mod interpreted;
+mod link_destination;
 mod markup;
 mod punctuation;
 mod regexes;
@@ -40,6 +43,7 @@ mod registry_pipeline_tests;
 mod script_pipeline_tests;
 
 pub(crate) use interpreted::find_role_kind;
+pub(crate) use link_destination::read_target_destination;
 pub(crate) use regexes::{is_fixed_role_name, is_writable_role_name};
 pub(super) use source_map::SourceMap;
 pub(super) use text::parse_inline_text_mapped;

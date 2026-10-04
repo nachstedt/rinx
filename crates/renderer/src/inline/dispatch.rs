@@ -73,9 +73,6 @@ pub(crate) fn render_inline(
         rinx_ast::InlineNode::TitleReference(text) => {
             let _ = write!(html, "<cite>{}</cite>", html_escape::encode_text(text));
         }
-        rinx_ast::InlineNode::AnonymousHyperlink { text, target } => {
-            render_inline_anonymous_hyperlink(html, text, target);
-        }
         // Self-contained despite carrying a span: rendering an equation needs
         // the math backend, not the index.
         rinx_ast::InlineNode::Math { latex, span } => {
@@ -161,6 +158,7 @@ pub(crate) fn render_inline(
         | rinx_ast::InlineNode::DocReference { .. }
         | rinx_ast::InlineNode::Hyperlink { .. }
         | rinx_ast::InlineNode::AnonymousReference { .. }
+        | rinx_ast::InlineNode::AnonymousHyperlink { .. }
         | rinx_ast::InlineNode::TermReference { .. }
         | rinx_ast::InlineNode::DomainObjectReference { .. }
         | rinx_ast::InlineNode::OptionReference { .. }
@@ -241,8 +239,9 @@ fn render_inline_image(html: &mut String, options: &rinx_ast::ImageOptions, ctx:
     render_linked_image(html, options, &align_class, ctx);
 }
 
-/// Renders a hyperlink reference — `` `text`_ `` or `` `text`__ `` — which
-/// links a target the document or the project names, rather than a role's.
+/// Renders a hyperlink reference — `` `text`_ ``, `` `text`__ `` or
+/// `` `text <destination>`__ `` — which links a target of its own document
+/// rather than a role's.
 fn render_hyperlink_reference(
     html: &mut String,
     inline: &rinx_ast::InlineNode,
@@ -252,11 +251,9 @@ fn render_hyperlink_reference(
         rinx_ast::InlineNode::Hyperlink { text, target, span } => {
             render_inline_hyperlink(
                 html,
-                RefText {
-                    display: text,
-                    target,
-                    span: *span,
-                },
+                text,
+                target,
+                *span,
                 ctx.hyperlink_targets,
                 ctx.broken_links,
             );
@@ -268,6 +265,16 @@ fn render_hyperlink_reference(
                 *span,
                 ctx.anon_targets,
                 ctx.anon_index,
+                ctx.hyperlink_targets,
+                ctx.broken_links,
+            );
+        }
+        rinx_ast::InlineNode::AnonymousHyperlink { text, target } => {
+            render_inline_anonymous_hyperlink(
+                html,
+                text,
+                target,
+                ctx.hyperlink_targets,
                 ctx.broken_links,
             );
         }
@@ -303,7 +310,8 @@ fn render_cross_reference(
             );
         }
         rinx_ast::InlineNode::Hyperlink { .. }
-        | rinx_ast::InlineNode::AnonymousReference { .. } => {
+        | rinx_ast::InlineNode::AnonymousReference { .. }
+        | rinx_ast::InlineNode::AnonymousHyperlink { .. } => {
             render_hyperlink_reference(html, inline, ctx);
         }
         rinx_ast::InlineNode::DomainObjectReference { .. } => {
@@ -347,7 +355,6 @@ fn render_cross_reference(
             render_indexed_cross_reference(html, inline, ctx);
         }
         rinx_ast::InlineNode::Text(_)
-        | rinx_ast::InlineNode::AnonymousHyperlink { .. }
         | rinx_ast::InlineNode::Emphasis(_)
         | rinx_ast::InlineNode::Strong(_)
         | rinx_ast::InlineNode::Literal(_)

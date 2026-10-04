@@ -7,6 +7,7 @@ use crate::enumerator::Enumerator;
 use crate::hashed_content::HashedContent;
 use crate::inline_node::InlineNode;
 use crate::line_block::LineBlockItem;
+use crate::link_destination::LinkDestination;
 use crate::list_item::ListItem;
 use crate::option_list_item::OptionListItem;
 use crate::table::TableRow;
@@ -20,12 +21,15 @@ pub enum Node {
     },
     Paragraph(Vec<InlineNode>),
     Directive(Directive),
+    /// `.. _name:` — an internal target, labelling what follows — or
+    /// `.. _name: destination`, which is a URI or another target's name.
     Target {
         name: TargetName,
-        uri: Option<String>,
+        destination: Option<LinkDestination>,
     },
+    /// `.. __: destination`, consumed in order by anonymous references.
     AnonymousTarget {
-        uri: String,
+        destination: LinkDestination,
     },
     BulletList {
         bullet: char,

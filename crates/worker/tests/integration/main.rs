@@ -13,6 +13,7 @@ mod entity_update;
 mod lsp;
 mod lsp_client;
 mod lsp_parity;
+mod named_references;
 mod numref_role;
 mod pipeline_basics;
 mod reference_matching;

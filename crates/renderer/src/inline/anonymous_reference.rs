@@ -1,44 +1,96 @@
 //! Anonymous (`__`-suffixed) reference and hyperlink rendering.
 
-use rinx_ast::Span;
+use rinx_ast::{LinkDestination, Span};
 use std::fmt::Write as _;
 
+use crate::hyperlink_target::DocumentHyperlinkTargets;
 use crate::{BrokenLink, BrokenLinkKind};
 
-/// Renders an anonymous `__` reference by consuming the next URI from `anon_targets`.
-/// Emits a broken-link fallback if the anonymous target list is exhausted.
+/// Renders an anonymous `__` reference by consuming the next anonymous
+/// target from `anon_targets`. Emits a broken-link fallback if the anonymous
+/// target list is exhausted.
 pub(super) fn render_inline_anonymous_reference(
     html: &mut String,
     text: &str,
     span: Option<Span>,
-    anon_targets: &[String],
+    anon_targets: &[LinkDestination],
     anon_index: &mut usize,
+    document_targets: &DocumentHyperlinkTargets,
     broken_links: &mut Vec<BrokenLink>,
 ) {
-    let text_escaped = html_escape::encode_text(text);
-    if let Some(uri) = anon_targets.get(*anon_index) {
-        let uri_attr = html_escape::encode_double_quoted_attribute(uri);
-        let _ = write!(html, "<a href=\"{uri_attr}\">{text_escaped}</a>");
-        *anon_index += 1;
-    } else {
-        let _ = write!(
-            html,
-            "<a href=\"#\" class=\"broken-link\">{text_escaped}</a>"
-        );
+    let Some(destination) = anon_targets.get(*anon_index) else {
+        write_broken_link(html, text);
         broken_links.push(BrokenLink {
             kind: BrokenLinkKind::AnonymousReference,
             target: text.to_string(),
             span,
         });
-    }
+        return;
+    };
+    *anon_index += 1;
+    render_destination(
+        html,
+        text,
+        destination,
+        span,
+        document_targets,
+        broken_links,
+    );
 }
 
-/// Renders an anonymous hyperlink (`` `text <target>`__ ``) — no index lookup,
-/// since the target is written inline right there.
-pub(super) fn render_inline_anonymous_hyperlink(html: &mut String, text: &str, target: &str) {
+/// Renders an anonymous hyperlink (`` `text <destination>`__ ``), which
+/// carries its destination and so consumes no anonymous target.
+pub(super) fn render_inline_anonymous_hyperlink(
+    html: &mut String,
+    text: &str,
+    destination: &LinkDestination,
+    document_targets: &DocumentHyperlinkTargets,
+    broken_links: &mut Vec<BrokenLink>,
+) {
+    render_destination(
+        html,
+        text,
+        destination,
+        None,
+        document_targets,
+        broken_links,
+    );
+}
+
+/// Links `text` to `destination`, following an alias within the document —
+/// reported as a broken hyperlink when the name it aliases is not there.
+fn render_destination(
+    html: &mut String,
+    text: &str,
+    destination: &LinkDestination,
+    span: Option<Span>,
+    document_targets: &DocumentHyperlinkTargets,
+    broken_links: &mut Vec<BrokenLink>,
+) {
+    if let Some(href) = document_targets.destination_href(destination) {
+        let text_escaped = html_escape::encode_text(text);
+        let href_attr = html_escape::encode_double_quoted_attribute(href);
+        let _ = write!(html, "<a href=\"{href_attr}\">{text_escaped}</a>");
+        return;
+    }
+    write_broken_link(html, text);
+    let target = match destination {
+        LinkDestination::Uri(uri) => uri.clone(),
+        LinkDestination::Name(name) => name.as_str().to_string(),
+    };
+    broken_links.push(BrokenLink {
+        kind: BrokenLinkKind::Hyperlink,
+        target,
+        span,
+    });
+}
+
+fn write_broken_link(html: &mut String, text: &str) {
     let text_escaped = html_escape::encode_text(text);
-    let target_attr = html_escape::encode_double_quoted_attribute(target);
-    let _ = write!(html, "<a href=\"{target_attr}\">{text_escaped}</a>");
+    let _ = write!(
+        html,
+        "<a href=\"#\" class=\"broken-link\">{text_escaped}</a>"
+    );
 }
 
 #[cfg(test)]
@@ -48,7 +100,7 @@ mod tests {
     #[test]
     fn test_render_inline_anonymous_reference_resolved() {
         // Given
-        let anon_targets = vec!["https://example.com".to_string()];
+        let anon_targets = vec![LinkDestination::Uri("https://example.com".to_string())];
         let mut anon_index = 0;
         let mut html = String::new();
         let mut broken_links = Vec::new();
@@ -60,6 +112,7 @@ mod tests {
             None,
             &anon_targets,
             &mut anon_index,
+            &DocumentHyperlinkTargets::default(),
             &mut broken_links,
         );
 
@@ -71,7 +124,7 @@ mod tests {
     #[test]
     fn test_render_inline_anonymous_reference_broken_when_index_exhausted() {
         // Given — no anonymous targets available
-        let anon_targets: Vec<String> = vec![];
+        let anon_targets: Vec<LinkDestination> = vec![];
         let mut anon_index = 0;
         let mut html = String::new();
         let mut broken_links = Vec::new();
@@ -83,6 +136,7 @@ mod tests {
             None,
             &anon_targets,
             &mut anon_index,
+            &DocumentHyperlinkTargets::default(),
             &mut broken_links,
         );
 
@@ -103,8 +157,8 @@ mod tests {
     fn test_render_inline_anonymous_reference_advances_index_per_call() {
         // Given — two sequential calls consume targets in order
         let anon_targets = vec![
-            "https://first.com".to_string(),
-            "https://second.com".to_string(),
+            LinkDestination::Uri("https://first.com".to_string()),
+            LinkDestination::Uri("https://second.com".to_string()),
         ];
         let mut anon_index = 0;
         let mut html = String::new();
@@ -117,6 +171,7 @@ mod tests {
             None,
             &anon_targets,
             &mut anon_index,
+            &DocumentHyperlinkTargets::default(),
             &mut broken_links,
         );
         render_inline_anonymous_reference(
@@ -125,6 +180,7 @@ mod tests {
             None,
             &anon_targets,
             &mut anon_index,
+            &DocumentHyperlinkTargets::default(),
             &mut broken_links,
         );
 
