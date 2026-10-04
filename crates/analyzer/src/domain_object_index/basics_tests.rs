@@ -33,6 +33,8 @@ fn test_analyze_registers_domain_object() {
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyFunction {
+                flags: rinx_ast::DescriptionFlags::default(),
+                is_async: false,
                 module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -162,6 +164,8 @@ fn test_analyze_still_makes_a_no_index_module_current() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyFunction {
+                    flags: rinx_ast::DescriptionFlags::default(),
+                    is_async: false,
                     signatures: NonEmptyVector::single("greet()".to_string()),
                     is_decorator: false,
                     module: None,
@@ -181,6 +185,8 @@ fn test_analyze_still_makes_a_no_index_module_current() {
 fn test_record_module_records_nothing_for_another_object_type() {
     // Given
     let obj = rinx_ast::DomainObjectBody::PyFunction {
+        flags: rinx_ast::DescriptionFlags::default(),
+        is_async: false,
         signatures: NonEmptyVector::single("greet()".to_string()),
         is_decorator: false,
         module: None,
@@ -201,6 +207,7 @@ fn test_analyze_registers_data_domain_object() {
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyData {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
                 type_: Some("int".to_string()),
@@ -228,6 +235,7 @@ fn test_analyze_registers_cmdoption_domain_object_without_program() {
         "cmdline.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::StdCmdoption {
+                flags: rinx_ast::DescriptionFlags::default(),
                 signatures: NonEmptyVector::single("-m <module-name>".to_string()),
                 body: vec![],
             },
@@ -255,6 +263,7 @@ fn test_analyze_registers_cmdoption_domain_object_qualified_by_program() {
             }),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::StdCmdoption {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     signatures: NonEmptyVector::single("-O".to_string()),
                     body: vec![],
                 },
@@ -279,6 +288,7 @@ fn test_analyze_registers_each_flag_of_a_comma_separated_cmdoption_spec() {
         "zipapp.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::StdCmdoption {
+                flags: rinx_ast::DescriptionFlags::default(),
                 signatures: NonEmptyVector::single("-c, --compress".to_string()),
                 body: vec![],
             },
@@ -306,6 +316,7 @@ fn test_analyze_registers_each_flag_of_a_continuation_line_cmdoption() {
         "mimetypes.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::StdCmdoption {
+                flags: rinx_ast::DescriptionFlags::default(),
                 signatures: NonEmptyVector::new("-h".to_string(), vec!["--help".to_string()]),
                 body: vec![],
             },
@@ -333,6 +344,7 @@ fn test_analyze_registers_genindex_entry_for_each_cmdoption_flag() {
         "zipapp.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::StdCmdoption {
+                flags: rinx_ast::DescriptionFlags::default(),
                 signatures: NonEmptyVector::single("-c, --compress".to_string()),
                 body: vec![],
             },
@@ -355,6 +367,7 @@ fn test_analyze_indexes_a_cmdoptions_body_once_shared_across_flags() {
         "zipapp.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::StdCmdoption {
+                flags: rinx_ast::DescriptionFlags::default(),
                 signatures: NonEmptyVector::single("-c, --compress".to_string()),
                 body: vec![Node::Directive(Directive::Glossary {
                     entries: vec![rinx_ast::GlossaryEntry {
@@ -384,6 +397,7 @@ fn test_analyze_registers_exception_domain_object() {
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyException {
+                flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("GreeterError".to_string()),
                 is_final: false,
@@ -410,6 +424,8 @@ fn test_analyze_registers_distinct_keys_for_same_name_in_different_domains() {
         vec![
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyFunction {
+                    flags: rinx_ast::DescriptionFlags::default(),
+                    is_async: false,
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("add(a, b)".to_string()),
@@ -418,6 +434,7 @@ fn test_analyze_registers_distinct_keys_for_same_name_in_different_domains() {
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::CFunction {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     signatures: NonEmptyVector::single("int add(int a, int b)".into()),
                     body: vec![],
                 },
@@ -449,9 +466,7 @@ fn test_analyze_no_index_suppresses_target_and_genindex_entry() {
         vec![Node::Directive(Directive::DomainObject(
             DomainObjectBody::CMember {
                 signatures: NonEmptyVector::single("count".into()),
-                no_index: true,
-                no_index_entry: false,
-                no_contents_entry: false,
+                flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
                 body: vec![],
             },
         ))],
@@ -472,9 +487,7 @@ fn test_analyze_no_index_entry_keeps_target_but_suppresses_genindex_entry() {
         vec![Node::Directive(Directive::DomainObject(
             DomainObjectBody::CMember {
                 signatures: NonEmptyVector::single("count".into()),
-                no_index: false,
-                no_index_entry: true,
-                no_contents_entry: false,
+                flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndexEntry]),
                 body: vec![],
             },
         ))],
@@ -532,6 +545,8 @@ fn test_analyze_registers_genindex_entry_for_domain_object() {
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyFunction {
+                flags: rinx_ast::DescriptionFlags::default(),
+                is_async: false,
                 module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -566,6 +581,7 @@ fn test_analyze_registers_domain_object_nested_in_table_cell() {
                     rowspan: 1,
                     content: vec![Node::Directive(Directive::DomainObject(
                         rinx_ast::DomainObjectBody::PyData {
+                            flags: rinx_ast::DescriptionFlags::default(),
                             module: None,
                             signatures: NonEmptyVector::single("A_NORMAL".to_string()),
                             type_: None,
@@ -609,6 +625,7 @@ fn test_analyze_registers_domain_object_nested_in_list_table_cell() {
                     rowspan: 1,
                     content: vec![Node::Directive(Directive::DomainObject(
                         rinx_ast::DomainObjectBody::PyAttribute {
+                            flags: rinx_ast::DescriptionFlags::default(),
                             module: None,
                             signatures: NonEmptyVector::single("method.__self__".to_string()),
                             type_: None,
@@ -641,6 +658,8 @@ fn test_analyze_registers_domain_object_nested_in_bullet_list() {
             items: vec![rinx_ast::ListItem {
                 nodes: vec![Node::Directive(Directive::DomainObject(
                     rinx_ast::DomainObjectBody::PyFunction {
+                        flags: rinx_ast::DescriptionFlags::default(),
+                        is_async: false,
                         module: None,
                         is_decorator: false,
                         signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -670,6 +689,8 @@ fn test_analyze_registers_domain_object_nested_in_definition_list() {
                 term: vec![InlineNode::Text("term".to_string())],
                 definition: vec![Node::Directive(Directive::DomainObject(
                     rinx_ast::DomainObjectBody::PyFunction {
+                        flags: rinx_ast::DescriptionFlags::default(),
+                        is_async: false,
                         module: None,
                         is_decorator: false,
                         signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -700,6 +721,8 @@ fn test_analyze_registers_domain_object_nested_in_admonition_body() {
             collapsible: None,
             body: vec![Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyFunction {
+                    flags: rinx_ast::DescriptionFlags::default(),
+                    is_async: false,
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -729,6 +752,8 @@ fn test_analyze_registers_domain_object_nested_in_another_domain_objects_body() 
                 options: rinx_ast::ModuleOptions::default(),
                 body: vec![Node::Directive(Directive::DomainObject(
                     rinx_ast::DomainObjectBody::PyFunction {
+                        flags: rinx_ast::DescriptionFlags::default(),
+                        is_async: false,
                         module: None,
                         is_decorator: false,
                         signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -747,4 +772,81 @@ fn test_analyze_registers_domain_object_nested_in_another_domain_objects_body() 
     assert_eq!(index.domain_objects.len(), 2);
     assert!(lookup_domain_object(&index, "py:module:greetings").is_some());
     assert!(lookup_domain_object(&index, "py:function:greetings.greet").is_some());
+}
+
+/// A `.. option::` for `-v`, written with `flags`, whose body holds a label.
+fn cmdoption_with(flags: rinx_ast::DescriptionFlags) -> Document {
+    Document::new(
+        "cmdline.rst".to_string(),
+        vec![Node::Directive(Directive::DomainObject(
+            rinx_ast::DomainObjectBody::StdCmdoption {
+                flags,
+                signatures: NonEmptyVector::single("-v, --verbose".to_string()),
+                body: vec![Node::Target {
+                    name: TargetName::new("verbosity"),
+                    uri: None,
+                }],
+            },
+        ))],
+    )
+}
+
+#[test]
+fn test_analyze_skips_a_no_index_cmdoption_but_indexes_its_body() {
+    // Given
+    let doc = cmdoption_with(rinx_ast::DescriptionFlags::of([
+        rinx_ast::DescriptionFlag::NoIndex,
+    ]));
+
+    // When
+    let index = analyze(&doc);
+
+    // Then — neither a target nor an index entry, as in Sphinx, while what
+    // its description defines is still reachable.
+    assert!(index.domain_objects.is_empty());
+    assert!(index.genindex_entries.is_empty());
+    assert!(index.targets.contains_key(&TargetName::new("verbosity")));
+}
+
+#[test]
+fn test_analyze_keeps_a_no_index_entry_cmdoption_as_a_target_only() {
+    // Given
+    let doc = cmdoption_with(rinx_ast::DescriptionFlags::of([
+        rinx_ast::DescriptionFlag::NoIndexEntry,
+    ]));
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        lookup_domain_object(&index, "std:cmdoption:--verbose"),
+        Some(&"cmdline.rst".to_string())
+    );
+    assert!(index.genindex_entries.is_empty());
+}
+
+#[test]
+fn test_analyze_skips_a_no_index_python_class() {
+    // Given — CPython's `functions.rst` repeats `bytearray` under
+    // `:noindex:`; only `stdtypes.rst`'s description may define it.
+    let doc = Document::new(
+        "functions.rst".to_string(),
+        vec![Node::Directive(Directive::DomainObject(
+            rinx_ast::DomainObjectBody::PyClass {
+                flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
+                module: None,
+                signatures: NonEmptyVector::single("bytearray(source=b'')".to_string()),
+                is_final: false,
+                body: vec![],
+            },
+        ))],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.domain_objects.is_empty());
+    assert!(index.genindex_entries.is_empty());
 }

@@ -1,8 +1,9 @@
-//! The `py`-domain object-type dispatch, and the `:module:` option line
-//! every `py:*` object-description directive shares.
+//! The `py`-domain object-type dispatch, and the `:module:` option every
+//! `py` object description but `py:module` takes.
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::options::OptionLine;
 use rinx_ast::{DomainObjectBody, NonEmptyVector};
 
 use crate::headings::Adornment;
@@ -88,16 +89,48 @@ pub(crate) fn parse_py_domain_object(
     }
 }
 
-/// Parses a single leading option line as `:module:`, if it is one, e.g.
-/// `":module: multiprocessing.managers"` -> `Some("multiprocessing.managers")`
-/// (or `Some("")` for a bare `:module:` with no value). Shared by every
-/// per-object-type extractor in this domain, since real Sphinx's `:module:`
-/// option is common to every `py:*` object-description directive except
-/// `py:module` itself (which is not a `PyObject` and has its own, disjoint
-/// `platform`/`synopsis`/`deprecated` option set — see
-/// [`super::module::extract_module_options`]).
-pub(super) fn parse_module_option_line(trimmed: &str) -> Option<String> {
-    trimmed
-        .strip_prefix(":module:")
-        .map(|rest| rest.trim().to_string())
+/// Reads `line` into `module` if it is the `:module:` option every `py`
+/// object description but `py:module` itself takes, and says whether it was.
+///
+/// A bare `:module:` reads as `Some("")`, which is meaningful: Sphinx's
+/// falsy-`modname` check makes it un-qualify the object.
+pub(super) fn read_module_option(line: &OptionLine, module: &mut Option<String>) -> bool {
+    if line.name != "module" {
+        return false;
+    }
+    *module = Some(line.value.clone());
+    true
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::directives::options::scan_option_lines;
+
+    #[test]
+    fn test_read_module_option_reads_a_value_and_a_bare_option() {
+        // Given
+        let lines: Vec<String> = [":module: ctypes", ":module:", ":final:"]
+            .iter()
+            .map(ToString::to_string)
+            .collect();
+        let (option_lines, _) = scan_option_lines(&lines);
+        let mut module = None;
+
+        // When
+        let read: Vec<(bool, Option<String>)> = option_lines
+            .iter()
+            .map(|line| (read_module_option(line, &mut module), module.clone()))
+            .collect();
+
+        // Then
+        assert_eq!(
+            read,
+            [
+                (true, Some("ctypes".to_string())),
+                (true, Some(String::new())),
+                (false, Some(String::new())),
+            ]
+        );
+    }
 }

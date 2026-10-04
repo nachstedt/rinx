@@ -141,13 +141,12 @@ mod tests {
             vec![Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::CType {
                     signatures: rinx_ast::NonEmptyVector::single("PyMemAllocatorDomain".into()),
-                    no_index: false,
-                    no_index_entry: false,
-                    no_contents_entry: false,
+                    flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![
                         Node::Directive(Directive::CNamespace { namespace: None }),
                         Node::Directive(Directive::DomainObject(
                             rinx_ast::DomainObjectBody::CMacro {
+                                flags: rinx_ast::DescriptionFlags::default(),
                                 signatures: rinx_ast::NonEmptyVector::single(
                                     "PYMEM_DOMAIN_RAW".into(),
                                 ),

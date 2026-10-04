@@ -5,6 +5,7 @@ use crate::object_naming::build_domain_object_key;
 fn test_deduce_local_scope_lends_all_new_segments_for_classes() {
     // Given
     let class = DomainObjectBody::PyClass {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("zipimporter(archivepath)".to_string()),
         is_final: false,
@@ -23,6 +24,7 @@ fn test_deduce_local_scope_lends_all_new_segments_for_exceptions() {
     // Given — exceptions are classes in Python, so they scope their body
     // the same way.
     let exception = DomainObjectBody::PyException {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("ZipImportError".to_string()),
         is_final: false,
@@ -43,6 +45,7 @@ fn test_deduce_local_scope_lends_all_but_last_new_segment_for_dotted_method() {
     // `ZipFile`'s methods flat, with dotted signatures, so the method's
     // own name carries the class scope its body should resolve against.
     let method = DomainObjectBody::PyMethod {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         is_decorator: false,
         signatures: NonEmptyVector::single("ZipFile.open(name, mode='r')".to_string()),
@@ -64,6 +67,8 @@ fn test_deduce_local_scope_lends_all_but_last_new_segment_for_dotted_method() {
 fn test_deduce_local_scope_lends_all_but_last_new_segment_for_dotted_function() {
     // Given
     let function = DomainObjectBody::PyFunction {
+        is_async: false,
+        flags: crate::DescriptionFlags::default(),
         module: None,
         is_decorator: false,
         signatures: NonEmptyVector::single("path.join(a, *p)".to_string()),
@@ -81,6 +86,7 @@ fn test_deduce_local_scope_lends_all_but_last_new_segment_for_dotted_function() 
 fn test_deduce_local_scope_lends_all_but_last_new_segment_for_dotted_attribute() {
     // Given
     let attribute = DomainObjectBody::PyAttribute {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("ZipInfo.filename".to_string()),
         type_: None,
@@ -101,6 +107,7 @@ fn test_deduce_local_scope_lends_all_but_last_new_segment_for_dotted_attribute()
 fn test_deduce_local_scope_lends_all_but_last_new_segment_for_dotted_data() {
     // Given
     let data = DomainObjectBody::PyData {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         signatures: NonEmptyVector::single("ZipFile.DEFAULT_TIMEOUT".to_string()),
         type_: None,
@@ -119,6 +126,8 @@ fn test_deduce_local_scope_lends_all_but_last_new_segment_for_dotted_data() {
 fn test_deduce_local_scope_returns_empty_for_undotted_function() {
     // Given — an unqualified, module-less function has no prefix to lend.
     let function = DomainObjectBody::PyFunction {
+        is_async: false,
+        flags: crate::DescriptionFlags::default(),
         module: None,
         is_decorator: false,
         signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -136,6 +145,7 @@ fn test_deduce_local_scope_returns_empty_for_undotted_function() {
 fn test_deduce_local_scope_returns_empty_for_undotted_method() {
     // Given
     let method = DomainObjectBody::PyMethod {
+        flags: crate::DescriptionFlags::default(),
         module: None,
         is_decorator: false,
         signatures: NonEmptyVector::single("find_spec(fullname)".to_string()),
@@ -182,12 +192,14 @@ fn test_deduce_local_scope_returns_empty_for_modules() {
 fn test_deduce_local_scope_returns_empty_for_c_domain_objects() {
     // Given — the `py:class` context is a py-domain-only concept.
     let function = DomainObjectBody::CFunction {
+        flags: crate::DescriptionFlags::default(),
         signatures: NonEmptyVector::single(
             "int PyList_Append(PyObject *list, PyObject *item)".into(),
         ),
         body: vec![],
     };
     let macro_ = DomainObjectBody::CMacro {
+        flags: crate::DescriptionFlags::default(),
         signatures: NonEmptyVector::single("PY_SSIZE_T_MAX".into()),
         body: vec![],
     };

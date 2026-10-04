@@ -617,6 +617,31 @@ always available, and its name cannot be used by an entity schema.
 Domains
 -------
 
+Every domain
+~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 8 52
+
+   * - Feature
+     - Status
+     - Notes
+   * - ``:no-index:``, ``:no-index-entry:`` and ``:no-contents-entry:``
+       (and ``:noindex:``, ``:noindexentry:``, ``:nocontentsentry:``)
+     - 🔶
+     - - ``:no-contents-entry:`` has no effect, since rinx lists no objects
+         in a local table of contents.
+   * - ``:no-typesetting:``
+     - ❌
+     - - Warns as an unknown option.
+   * - Signatures wrapped with a trailing backslash
+     - ✅
+     -
+   * - An option an object does not take
+     - ✅ ℹ️
+     - - Warns, as Sphinx errors.
+
 Python (``py``)
 ~~~~~~~~~~~~~~~
 
@@ -651,14 +676,13 @@ Python (``py``)
      -
    * - ``.. py:method::`` and ``:meth:``
      - 🔶
-     - - ``:property:`` and ``:no-index:`` are not supported.
+     - - ``:property:`` and ``:final:`` are not supported.
    * - ``.. classmethod::`` / ``.. staticmethod::``
      - ✅
      -
    * - ``.. py:class::`` and ``:class:``
      - 🔶
-     - - ``:canonical:``, ``:no-index:`` and other options are not
-         supported.
+     - - ``:canonical:`` and ``:annotation:`` are not supported.
    * - ``.. py:attribute::`` and ``:attr:``
      - 🔶
      - - ``:canonical:`` is shown but creates no alias.
@@ -691,9 +715,8 @@ C (``c``)
      -
    * - ``.. c:struct::``, ``.. c:union::``, ``.. c:member::``,
        ``.. c:var::`` and their roles
-     - 🔶
-     - - ``:no-contents-entry:`` has no effect.
-       - ``:no-typesetting:`` is not supported.
+     - ✅
+     -
    * - ``:data:`` role
      - ✅
      -

@@ -1,13 +1,12 @@
-use super::dispatch::parse_module_option_line;
-use crate::blocks::parse_blocks;
+use super::super::body::{ObjectOptions, parse_object_body};
+use super::dispatch::read_module_option;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::options::OptionLine;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 use rinx_ast::{DomainObjectBody, NonEmptyVector};
 
-/// Parses a `.. py:attribute::` body: strips `:type:`/`:value:`/`:canonical:`
-/// option lines off the front before parsing the rest as the docstring body.
+/// Parses a `.. py:attribute::` body: its option block, then its content.
 pub(crate) fn parse_py_attribute(
     signatures: NonEmptyVector<String>,
     body_lines: &[&str],
@@ -15,161 +14,94 @@ pub(crate) fn parse_py_attribute(
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (type_, value, canonical, module, options_consumed) =
-        extract_attribute_options(&unindented_lines);
-
-    let body_content: Vec<&str> = unindented_lines[options_consumed..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
-
+    let parsed = parse_object_body::<AttributeOptions>(
+        "py:attribute",
+        body_lines,
+        adornment_order,
+        diagnostics,
+        ctx,
+    );
+    let options = parsed.options;
     DomainObjectBody::PyAttribute {
-        module,
+        flags: parsed.flags,
+        module: options.module,
         signatures,
-        type_,
-        value,
-        canonical,
-        body,
+        type_: options.type_,
+        value: options.value,
+        canonical: options.canonical,
+        body: parsed.content,
     }
 }
 
-/// Extracts `.. py:attribute::`-specific options (`:type:`, `:value:`,
-/// `:canonical:`) from the leading lines of a domain object's body.
-///
-/// Scans from the start and stops at the first line that isn't one of these
-/// recognized options (e.g. a blank line or the start of the docstring body),
-/// returning how many leading lines were consumed as options so the caller
-/// can slice them off before parsing the remaining body content.
-fn extract_attribute_options(
-    lines: &[String],
-) -> (
-    Option<String>,
-    Option<String>,
-    Option<String>,
-    Option<String>,
-    usize,
-) {
-    let mut type_ = None;
-    let mut value = None;
-    let mut canonical = None;
-    let mut module = None;
-    let mut consumed = 0;
+/// The options `.. py:attribute::` takes beyond the object-description
+/// flags: `:type:`, `:value:`, `:canonical:`, and the `:module:` every `py`
+/// object takes.
+#[derive(Debug, Default, PartialEq, Eq)]
+struct AttributeOptions {
+    type_: Option<String>,
+    value: Option<String>,
+    canonical: Option<String>,
+    module: Option<String>,
+}
 
-    for line in lines {
-        let trimmed = line.trim();
-        if let Some(rest) = trimmed.strip_prefix(":type:") {
-            type_ = Some(rest.trim().to_string());
-        } else if let Some(rest) = trimmed.strip_prefix(":value:") {
-            value = Some(rest.trim().to_string());
-        } else if let Some(rest) = trimmed.strip_prefix(":canonical:") {
-            canonical = Some(rest.trim().to_string());
-        } else if let Some(module_value) = parse_module_option_line(trimmed) {
-            module = Some(module_value);
-        } else {
-            break;
-        }
-        consumed += 1;
+impl ObjectOptions for AttributeOptions {
+    fn read(&mut self, line: &OptionLine) -> bool {
+        let field = match line.name.as_str() {
+            "type" => &mut self.type_,
+            "value" => &mut self.value,
+            "canonical" => &mut self.canonical,
+            _ => return read_module_option(line, &mut self.module),
+        };
+        *field = Some(line.value.clone());
+        true
     }
-
-    (type_, value, canonical, module, consumed)
 }
 
 #[cfg(test)]
 mod tests {
+    use super::super::super::body::test_support::read_options;
     use super::*;
     use crate::parse;
     use rinx_ast::{Directive, Node};
 
     #[test]
-    fn test_extract_attribute_options_parses_all_three_options() {
+    fn test_attribute_options_read_every_option_in_any_order() {
         // Given
-        let lines = vec![
-            ":type: str".to_string(),
-            ":value: \"anonymous\"".to_string(),
-            ":canonical: mymodule.MyClass.name".to_string(),
-            String::new(),
-            "The greeter's name.".to_string(),
+        let body = [
+            ":canonical: mymodule.MyClass.name",
+            ":module: mymodule.other",
+            ":value: \"anonymous\"",
+            ":type: str",
+            "",
+            "The greeter's name.",
         ];
 
         // When
-        let (type_, value, canonical, module, consumed) = extract_attribute_options(&lines);
+        let (options, _, unrecognized) = read_options::<AttributeOptions>(&body);
 
         // Then
-        assert_eq!(type_.as_deref(), Some("str"));
-        assert_eq!(value.as_deref(), Some("\"anonymous\""));
-        assert_eq!(canonical.as_deref(), Some("mymodule.MyClass.name"));
-        assert_eq!(module, None);
-        assert_eq!(consumed, 3);
+        assert_eq!(
+            options,
+            AttributeOptions {
+                type_: Some("str".to_string()),
+                value: Some("\"anonymous\"".to_string()),
+                canonical: Some("mymodule.MyClass.name".to_string()),
+                module: Some("mymodule.other".to_string()),
+            }
+        );
+        assert!(unrecognized.is_empty());
     }
     #[test]
-    fn test_extract_attribute_options_stops_at_first_non_option_line() {
+    fn test_attribute_options_read_nothing_from_a_plain_body() {
         // Given
-        let lines = vec![":type: str".to_string(), "The greeter's name.".to_string()];
+        let body = ["The greeter's name."];
 
         // When
-        let (type_, value, canonical, module, consumed) = extract_attribute_options(&lines);
+        let (options, _, unrecognized) = read_options::<AttributeOptions>(&body);
 
         // Then
-        assert_eq!(type_.as_deref(), Some("str"));
-        assert_eq!(value, None);
-        assert_eq!(canonical, None);
-        assert_eq!(module, None);
-        assert_eq!(consumed, 1);
-    }
-    #[test]
-    fn test_extract_attribute_options_returns_defaults_when_no_options_present() {
-        // Given
-        let lines = vec!["The greeter's name.".to_string()];
-
-        // When
-        let (type_, value, canonical, module, consumed) = extract_attribute_options(&lines);
-
-        // Then
-        assert_eq!(type_, None);
-        assert_eq!(value, None);
-        assert_eq!(canonical, None);
-        assert_eq!(module, None);
-        assert_eq!(consumed, 0);
-    }
-    #[test]
-    fn test_extract_attribute_options_parses_options_in_any_order() {
-        // Given
-        let lines = vec![
-            ":canonical: mymodule.MyClass.name".to_string(),
-            ":value: \"anonymous\"".to_string(),
-            ":type: str".to_string(),
-        ];
-
-        // When
-        let (type_, value, canonical, module, consumed) = extract_attribute_options(&lines);
-
-        // Then
-        assert_eq!(type_.as_deref(), Some("str"));
-        assert_eq!(value.as_deref(), Some("\"anonymous\""));
-        assert_eq!(canonical.as_deref(), Some("mymodule.MyClass.name"));
-        assert_eq!(module, None);
-        assert_eq!(consumed, 3);
-    }
-    #[test]
-    fn test_extract_attribute_options_parses_module_option_alongside_others() {
-        // Given
-        let lines = vec![
-            ":type: str".to_string(),
-            ":module: mymodule.other".to_string(),
-            ":value: \"anonymous\"".to_string(),
-        ];
-
-        // When
-        let (type_, value, canonical, module, consumed) = extract_attribute_options(&lines);
-
-        // Then
-        assert_eq!(type_.as_deref(), Some("str"));
-        assert_eq!(value.as_deref(), Some("\"anonymous\""));
-        assert_eq!(canonical, None);
-        assert_eq!(module.as_deref(), Some("mymodule.other"));
-        assert_eq!(consumed, 3);
+        assert_eq!(options, AttributeOptions::default());
+        assert!(unrecognized.is_empty());
     }
     #[test]
     fn test_parse_creates_py_attribute_domain_object() {
@@ -182,6 +114,7 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyAttribute {
+            flags: _,
             signatures,
             type_,
             value,

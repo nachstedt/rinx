@@ -31,8 +31,11 @@ pub(crate) fn render_domain_object(
     obj: &rinx_ast::DomainObjectBody,
     ctx: &mut RenderCtx<'_>,
 ) {
-    if let rinx_ast::DomainObjectBody::StdCmdoption { signatures, body } = obj {
-        render_cmdoption(html, signatures, body, ctx);
+    if let rinx_ast::DomainObjectBody::StdCmdoption {
+        signatures, body, ..
+    } = obj
+    {
+        render_cmdoption(html, signatures, obj.no_index(), body, ctx);
         return;
     }
 

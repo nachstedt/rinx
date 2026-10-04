@@ -1,5 +1,4 @@
-//! The `c`-domain object-type dispatch, up-front signature parsing, and the
-//! object-description flag options its container types share.
+//! The `c`-domain object-type dispatch and up-front signature parsing.
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -9,7 +8,7 @@ use rinx_ast::{
 
 use crate::headings::Adornment;
 
-use super::super::body::parse_body;
+use super::super::body::parse_object_body;
 use super::super::object_type::DirectiveObjectType;
 use super::member::parse_c_member;
 use super::struct_::parse_c_struct;
@@ -31,14 +30,29 @@ pub(crate) fn parse_c_domain_object(
 ) -> DomainObjectBody {
     let signatures = parse_c_signatures(signatures, diagnostics, signature_span);
     match object_type {
-        DirectiveObjectType::CFunction => DomainObjectBody::CFunction {
-            signatures,
-            body: parse_body(body_lines, adornment_order, diagnostics, ctx),
-        },
-        DirectiveObjectType::CMacro => DomainObjectBody::CMacro {
-            signatures,
-            body: parse_body(body_lines, adornment_order, diagnostics, ctx),
-        },
+        DirectiveObjectType::CFunction => {
+            let parsed = parse_object_body::<()>(
+                "c:function",
+                body_lines,
+                adornment_order,
+                diagnostics,
+                ctx,
+            );
+            DomainObjectBody::CFunction {
+                signatures,
+                flags: parsed.flags,
+                body: parsed.content,
+            }
+        }
+        DirectiveObjectType::CMacro => {
+            let parsed =
+                parse_object_body::<()>("c:macro", body_lines, adornment_order, diagnostics, ctx);
+            DomainObjectBody::CMacro {
+                signatures,
+                flags: parsed.flags,
+                body: parsed.content,
+            }
+        }
         DirectiveObjectType::CStruct => {
             parse_c_struct(signatures, body_lines, adornment_order, diagnostics, ctx)
         }
@@ -97,38 +111,6 @@ fn parse_c_signatures(
     parsed
 }
 
-/// Extracts the object-description flag options common across domains
-/// (`:no-index:`, `:no-index-entry:`, `:no-contents-entry:`, plus their
-/// legacy pre-Sphinx-7 spellings `:noindex:`/`:noindexentry:`/
-/// `:nocontentsentry:`) from the leading lines of a domain object's body.
-/// Currently only wired up for `c:struct`/`c:union`/`c:member`/`c:type`, the
-/// first object types in this codebase to model them.
-///
-/// Scans from the start and stops at the first line that isn't one of these
-/// recognized flags (e.g. a blank line or the start of the docstring body),
-/// returning how many leading lines were consumed as options so the caller
-/// can slice them off before parsing the remaining body content.
-pub(super) fn extract_common_object_description_options(
-    lines: &[String],
-) -> (bool, bool, bool, usize) {
-    let mut no_index = false;
-    let mut no_index_entry = false;
-    let mut no_contents_entry = false;
-    let mut consumed = 0;
-
-    for line in lines {
-        match line.trim() {
-            ":no-index:" | ":noindex:" => no_index = true,
-            ":no-index-entry:" | ":noindexentry:" => no_index_entry = true,
-            ":no-contents-entry:" | ":nocontentsentry:" => no_contents_entry = true,
-            _ => break,
-        }
-        consumed += 1;
-    }
-
-    (no_index, no_index_entry, no_contents_entry, consumed)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -143,77 +125,35 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_common_object_description_options_parses_hyphenated_spellings() {
-        // Given
-        let lines = vec![
-            ":no-index:".to_string(),
-            ":no-index-entry:".to_string(),
-            ":no-contents-entry:".to_string(),
-            String::new(),
-            "A struct.".to_string(),
-        ];
+    fn test_parse_c_function_reads_the_object_description_flags() {
+        // Given — `c-api/` writes these on functions documented twice.
+        let input = ".. c:function:: int add(int a, int b)\n   :no-index-entry:\n   :no-contents-entry:\n\n   Adds.";
 
         // When
-        let (no_index, no_index_entry, no_contents_entry, consumed) =
-            extract_common_object_description_options(&lines);
+        let doc = parse("test.rst", input);
 
         // Then
-        assert!(no_index);
-        assert!(no_index_entry);
-        assert!(no_contents_entry);
-        assert_eq!(consumed, 3);
+        let Some(Node::Directive(Directive::DomainObject(object))) = doc.nodes.first() else {
+            panic!("Expected a domain object, got {:?}", doc.nodes);
+        };
+        assert!(object.no_index_entry());
+        assert!(object.no_contents_entry());
+        assert!(!object.no_index());
+        assert_eq!(object.body().len(), 1);
     }
     #[test]
-    fn test_extract_common_object_description_options_parses_legacy_spellings() {
+    fn test_parse_c_macro_reads_no_index() {
         // Given
-        let lines = vec![
-            ":noindex:".to_string(),
-            ":noindexentry:".to_string(),
-            ":nocontentsentry:".to_string(),
-        ];
+        let input = ".. c:macro:: PY_SSIZE_T_MAX\n   :noindex:\n\n   The maximum.";
 
         // When
-        let (no_index, no_index_entry, no_contents_entry, consumed) =
-            extract_common_object_description_options(&lines);
+        let doc = parse("test.rst", input);
 
         // Then
-        assert!(no_index);
-        assert!(no_index_entry);
-        assert!(no_contents_entry);
-        assert_eq!(consumed, 3);
-    }
-    #[test]
-    fn test_extract_common_object_description_options_stops_at_first_non_option_line() {
-        // Given
-        let lines = vec![
-            ":no-index:".to_string(),
-            "A struct.".to_string(),
-            ":no-index-entry:".to_string(),
-        ];
-
-        // When
-        let (no_index, no_index_entry, _, consumed) =
-            extract_common_object_description_options(&lines);
-
-        // Then
-        assert!(no_index);
-        assert!(!no_index_entry);
-        assert_eq!(consumed, 1);
-    }
-    #[test]
-    fn test_extract_common_object_description_options_returns_defaults_when_no_options_present() {
-        // Given
-        let lines = vec!["A struct.".to_string()];
-
-        // When
-        let (no_index, no_index_entry, no_contents_entry, consumed) =
-            extract_common_object_description_options(&lines);
-
-        // Then
-        assert!(!no_index);
-        assert!(!no_index_entry);
-        assert!(!no_contents_entry);
-        assert_eq!(consumed, 0);
+        let Some(Node::Directive(Directive::DomainObject(object))) = doc.nodes.first() else {
+            panic!("Expected a domain object, got {:?}", doc.nodes);
+        };
+        assert!(object.no_index());
     }
     #[test]
     fn test_parse_creates_c_function_domain_object() {
@@ -246,6 +186,7 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::CMacro {
+            flags: _,
             signatures,
             body,
         })) = &doc.nodes[0]

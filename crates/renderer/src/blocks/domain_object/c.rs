@@ -32,6 +32,7 @@ use crate::RenderCtx;
 pub(super) fn render_cmdoption(
     html: &mut String,
     signatures: &rinx_ast::NonEmptyVector<String>,
+    no_index: bool,
     body: &[Node],
     ctx: &mut RenderCtx<'_>,
 ) {
@@ -43,7 +44,10 @@ pub(super) fn render_cmdoption(
         let line_escaped = html_escape::encode_text(line);
         let mut dt_open = String::from("  <dt");
         let mut secondary_anchors = String::new();
-        for (spec_index, spec) in specs.iter().enumerate() {
+        // `:no-index:` means no cross-reference target, so no anchor at all —
+        // as `render_domain_object` omits the `id` for every other type.
+        let anchored_specs = if no_index { &[][..] } else { &specs[..] };
+        for (spec_index, spec) in anchored_specs.iter().enumerate() {
             let optname = rinx_ast::extract_option_name(spec);
             let qualified_name = ctx.scope.program.qualify(&optname);
             let key = rinx_ast::build_domain_object_key(object_type, &qualified_name);
@@ -82,6 +86,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::CFunction {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     signatures: NonEmptyVector::single("int add(int a, int b)".into()),
                     body: vec![Node::Paragraph(vec![InlineNode::Text(
                         "Adds two numbers.".to_string(),
@@ -105,6 +110,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::CMacro {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     signatures: NonEmptyVector::single("MAX(a, b)".into()),
                     body: vec![Node::Paragraph(vec![InlineNode::Text(
                         "Expands to whichever of a or b is greater.".to_string(),
@@ -129,15 +135,11 @@ mod tests {
             vec![Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::CStruct {
                     signatures: NonEmptyVector::single("Data".into()),
-                    no_index: false,
-                    no_index_entry: false,
-                    no_contents_entry: false,
+                    flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![Node::Directive(Directive::DomainObject(
                         rinx_ast::DomainObjectBody::CMember {
                             signatures: NonEmptyVector::single("int count".into()),
-                            no_index: false,
-                            no_index_entry: false,
-                            no_contents_entry: false,
+                            flags: rinx_ast::DescriptionFlags::default(),
                             body: vec![],
                         },
                     ))],
@@ -164,9 +166,7 @@ mod tests {
             vec![Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::CUnion {
                     signatures: NonEmptyVector::single("Number".into()),
-                    no_index: false,
-                    no_index_entry: false,
-                    no_contents_entry: false,
+                    flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
             ))],
@@ -187,9 +187,7 @@ mod tests {
             vec![Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::CMember {
                     signatures: NonEmptyVector::single("PyObject *PyTypeObject.tp_bases".into()),
-                    no_index: false,
-                    no_index_entry: false,
-                    no_contents_entry: false,
+                    flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
             ))],
@@ -218,11 +216,10 @@ mod tests {
             vec![Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::CType {
                     signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
-                    no_index: false,
-                    no_index_entry: false,
-                    no_contents_entry: false,
+                    flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![Node::Directive(Directive::DomainObject(
                         rinx_ast::DomainObjectBody::CMacro {
+                            flags: rinx_ast::DescriptionFlags::default(),
                             signatures: NonEmptyVector::single("PYMEM_DOMAIN_RAW".into()),
                             body: vec![],
                         },
@@ -259,11 +256,13 @@ mod tests {
                 )),
                 Node::Directive(Directive::DomainObject(
                     rinx_ast::DomainObjectBody::PyClass {
+                        flags: rinx_ast::DescriptionFlags::default(),
                         module: None,
                         signatures: NonEmptyVector::single("Greeter".to_string()),
                         is_final: false,
                         body: vec![Node::Directive(Directive::DomainObject(
                             rinx_ast::DomainObjectBody::CFunction {
+                                flags: rinx_ast::DescriptionFlags::default(),
                                 signatures: NonEmptyVector::single("int helper(void)".into()),
                                 body: vec![],
                             },
@@ -290,15 +289,11 @@ mod tests {
             vec![Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::CType {
                     signatures: NonEmptyVector::single("Data".into()),
-                    no_index: false,
-                    no_index_entry: false,
-                    no_contents_entry: false,
+                    flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![Node::Directive(Directive::DomainObject(
                         rinx_ast::DomainObjectBody::CMember {
                             signatures: NonEmptyVector::single("int count".into()),
-                            no_index: false,
-                            no_index_entry: false,
-                            no_contents_entry: false,
+                            flags: rinx_ast::DescriptionFlags::default(),
                             body: vec![],
                         },
                     ))],
@@ -323,9 +318,7 @@ mod tests {
             vec![Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::CType {
                     signatures: NonEmptyVector::single("unsigned long ulong".into()),
-                    no_index: false,
-                    no_index_entry: false,
-                    no_contents_entry: false,
+                    flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
             ))],
@@ -350,9 +343,7 @@ mod tests {
                     signatures: NonEmptyVector::single(
                         "int (*Py_tracefunc)(PyObject *obj, int what)".into(),
                     ),
-                    no_index: false,
-                    no_index_entry: false,
-                    no_contents_entry: false,
+                    flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
             ))],
@@ -376,9 +367,7 @@ mod tests {
             vec![Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::CType {
                     signatures: NonEmptyVector::single("Hidden".into()),
-                    no_index: true,
-                    no_index_entry: false,
-                    no_contents_entry: false,
+                    flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
                     body: vec![],
                 },
             ))],
@@ -406,6 +395,7 @@ mod pipeline_tests {
             "cmdline.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::StdCmdoption {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     signatures: NonEmptyVector::single("-m <module-name>".to_string()),
                     body: vec![Node::Paragraph(vec![InlineNode::Text(
                         "Run a module.".to_string(),
@@ -432,6 +422,7 @@ mod pipeline_tests {
             "zipapp.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::StdCmdoption {
+                    flags: rinx_ast::DescriptionFlags::default(),
                     signatures: NonEmptyVector::single("-c, --compress".to_string()),
                     body: vec![],
                 },
@@ -459,6 +450,7 @@ mod pipeline_tests {
                 }),
                 Node::Directive(Directive::DomainObject(
                     rinx_ast::DomainObjectBody::StdCmdoption {
+                        flags: rinx_ast::DescriptionFlags::default(),
                         signatures: NonEmptyVector::single("-O".to_string()),
                         body: vec![],
                     },
@@ -472,5 +464,33 @@ mod pipeline_tests {
 
         // Then
         assert!(output.html.contains("<dt id=\"std:cmdoption:dis.-o\">"));
+    }
+    #[test]
+    fn test_render_cmdoption_with_no_index_has_no_anchor() {
+        // Given — the same flags documented a second time, under `:no-index:`.
+        let doc = Document::new(
+            "zipapp.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rinx_ast::DomainObjectBody::StdCmdoption {
+                    flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
+                    signatures: NonEmptyVector::single("-c, --compress".to_string()),
+                    body: vec![],
+                },
+            ))],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let output = render(&doc, &index, &doc.path);
+
+        // Then — neither the `<dt>`'s own `id` nor the second flag's anchor.
+        assert!(
+            output
+                .html
+                .contains("<dt><code class=\"sig-name\">-c, --compress</code></dt>"),
+            "{}",
+            output.html
+        );
+        assert!(!output.html.contains("id="), "{}", output.html);
     }
 }
