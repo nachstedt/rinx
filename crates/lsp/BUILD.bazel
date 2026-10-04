@@ -14,5 +14,6 @@ rust_library(
         "//crates/entity:rinx_entity",
         "//crates/index:rinx_index",
         "//crates/parser:rinx_parser",
+        "//crates/toctree:rinx_toctree",
     ],
 )

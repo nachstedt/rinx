@@ -1,5 +1,5 @@
 {
-  "checksum": "22de2b0869f11d9341e11bfc33da08aa359731a675b6b0841274419b6f65e82f",
+  "checksum": "e647584444b8a09252c1add2e5dfe56f7a4fae978c826dd52e5cd758e5bc538b",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -5350,6 +5350,10 @@
           {
             "id": "lsp-types 0.97.0",
             "target": "lsp_types"
+          },
+          {
+            "id": "pathdiff 0.2.3",
+            "target": "pathdiff"
           },
           {
             "id": "rayon 1.12.0",

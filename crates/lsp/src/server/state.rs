@@ -7,19 +7,23 @@
 //! and the index cannot read a document differently. A closed document is
 //! diagnosed only while it includes an open file, and then only for that
 //! file: its own squiggles would describe text nobody is looking at.
+//!
+//! A completion reads the same index: the open buffer's latest analysis is
+//! already in it, so a label typed a moment ago completes elsewhere.
 
 use lsp_server::{Message, RequestId, Response};
-use lsp_types::Uri;
+use lsp_types::{CompletionList, CompletionResponse, Uri};
 use std::collections::{BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use super::handlers::publish_diagnostics;
 use super::scan::ScanEvent;
+use crate::completion::{completion_items, role_at};
 use crate::diagnostics::{diagnose_source, parse_source};
 use crate::documents::DocumentStore;
 use crate::includes::IncludeGraph;
-use crate::position::PositionEncoding;
+use crate::position::{PositionEncoding, char_index_of, to_lsp_position};
 use crate::progress::{IndexState, IndexStatus, ScanProgress};
 use crate::uri::{file_path, file_uri};
 use crate::workspace::{IndexedDocument, WorkspaceFolder};
@@ -172,6 +176,39 @@ impl ServerState {
         messages.push(self.status(IndexState::Ready, Some(elapsed)).notification());
         messages.extend(self.diagnose_includers_of_open_documents());
         messages
+    }
+
+    /// The completion of the reference role at `position` in the open
+    /// document `uri`, from its workspace folder's index — or `None` when the
+    /// cursor is in no role completion answers for, or the document is not
+    /// open or lies in no workspace folder.
+    ///
+    /// The list is incomplete while the workspace scan runs, so the client
+    /// asks again rather than filtering a list missing most documents.
+    pub(super) fn complete(
+        &mut self,
+        uri: &Uri,
+        position: lsp_types::Position,
+    ) -> Option<CompletionResponse> {
+        let text = &self.documents.get(uri)?.text;
+        let line = text.lines().nth(position.line as usize).unwrap_or_default();
+        let context = role_at(line, char_index_of(line, position.character, self.encoding))?;
+        let (folder, doc_path) = self.locate(&file_path(uri)?)?;
+        let at = |index: usize| {
+            let column = u32::try_from(index + 1).unwrap_or(u32::MAX);
+            to_lsp_position(
+                rinx_ast::Position::new(position.line + 1, column),
+                line,
+                self.encoding,
+            )
+        };
+        let range = lsp_types::Range::new(at(context.replace.start), at(context.replace.end));
+        let is_incomplete = self.scan.is_some();
+        let index = self.folders[folder].project_index();
+        Some(CompletionResponse::List(CompletionList {
+            is_incomplete,
+            items: completion_items(index, &doc_path, &context, range),
+        }))
     }
 
     /// The status of the workspace index, `state` and `elapsed` given.

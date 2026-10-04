@@ -29,11 +29,11 @@ A finished step's heading is marked ✅ with its pull request, a partly
 finished one 🔶. A heading with no marker means the step has not started.
 
 - **Done:** #1 (PR #226), plus the testing and CI groundwork that came before #2
-  (PRs #238–#248, listed at the end of M0), #2 (PR #253), #3 (PR #255), and
-  #4 (PR #267, prepared by #259, #261–#263 and #266).
+  (PRs #238–#248, listed at the end of M0), #2 (PR #253), #3 (PR #255),
+  #4 (PR #267, prepared by #259, #261–#263 and #266), and #5.
 - **Done early:** most of #12, which is the packaging, the CI artifact and the
   installed-VSIX test.
-- **Next: #5, `:ref:` and `:doc:` completion.**
+- **Next: #6, broken-reference diagnostics.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -152,7 +152,7 @@ definition claimed by two documents defining nothing (#263, ADR-039).
 
 Measured on CPython's 528 documents: the scan takes 0.45 s, a fold 27 ms.
 
-### 5. `:ref:` and `:doc:` completion
+### 5. `:ref:` and `:doc:` completion ✅
 
 **You experience:** typing `` :ref:` `` lists every label with its title.
 
@@ -161,6 +161,10 @@ Measured on CPython's 528 documents: the scan takes 0.45 s, a fold 27 ms.
 - `:doc:` names relative to the current document, plus the `/`-absolute form
 - `Title <target>` form
 - Tests
+
+The list is marked incomplete while the scan runs, so the editor asks again.
+A document outside every workspace folder gets no completion, and a role whose
+text wraps onto the next line is not recognised.
 
 ### 6. Broken-reference diagnostics
 
@@ -403,6 +407,9 @@ relations.
 - `span` on `Heading`, `Target`, domain objects, entities and directives
 - Spans kept out of the `ProjectIndex` Bazel writes (server-side position map)
 - Test: a pure line shift leaves the index bytes unchanged
+- `:ref:` completion (#5) names the file a label was written in — the
+  `.. include::`d fragment, not the document including it, which is all
+  `targets` knows until then
 - `documentSymbol` handler
 - Tests
 

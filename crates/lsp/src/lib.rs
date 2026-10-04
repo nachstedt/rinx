@@ -7,6 +7,7 @@
 //! `lsp-server`, because the pipeline it drives is synchronous and CPU-bound.
 //!
 //! - `server` is the protocol loop and the pure handlers it dispatches to;
+//! - `completion` completes a `:ref:` or `:doc:` target from the index;
 //! - `diagnostics` parses an open document and converts what the parser found;
 //! - `position` converts rinx's 1-based character positions to the protocol's
 //!   0-based, negotiated-unit ones;
@@ -17,6 +18,7 @@
 //! - `uri` converts between the protocol's `file:` URIs and paths;
 //! - `workspace` scans the workspace folders and keeps their project index.
 
+mod completion;
 mod diagnostics;
 mod documents;
 mod files;

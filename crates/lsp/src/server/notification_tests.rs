@@ -448,6 +448,7 @@ fn test_a_change_without_content_changes_publishes_nothing() {
 #[test]
 fn test_handle_request_refuses_an_unsupported_method() {
     // Given
+    let mut state = ServerState::new(PositionEncoding::Utf16);
     let request = Request::new(
         RequestId::from(7),
         "textDocument/hover".to_string(),
@@ -455,7 +456,7 @@ fn test_handle_request_refuses_an_unsupported_method() {
     );
 
     // When
-    let response = handle_request(request);
+    let response = handle_request(&mut state, request);
 
     // Then
     assert_eq!(response.id, RequestId::from(7));

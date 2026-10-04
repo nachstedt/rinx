@@ -151,6 +151,62 @@ fn test_lsp_indexes_its_workspace_folder_and_reports_it_ready() {
 }
 
 #[test]
+fn test_lsp_completes_a_label_defined_in_another_document() {
+    // Given — a scanned folder whose `setup.rst` labels a section
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_completion");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    std::fs::write(
+        root.join("setup.rst"),
+        ".. _install:\n\nInstalling\n==========\n",
+    )
+    .expect("write");
+    let notes = format!("file://{}", root.join("notes.rst").display());
+    let mut server = Server::spawn();
+    let initialized = server.initialize_with(json!({
+        "capabilities": {},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+    while !matches!(
+        server.receive(),
+        Message::Notification(notification)
+            if notification.method == "rinx/status" && notification.params["state"] == "ready"
+    ) {}
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": notes, "languageId": "restructuredtext", "version": 1,
+            "text": "See :ref:`\n",
+        }}),
+    );
+    server.published_until(&notes);
+
+    // When
+    server.request(
+        2,
+        "textDocument/completion",
+        json!({
+            "textDocument": { "uri": notes },
+            "position": { "line": 0, "character": 10 },
+        }),
+    );
+    let Message::Response(completed) = server.receive() else {
+        panic!("expected the completion");
+    };
+
+    // Then
+    let capabilities = &initialized.response_result.expect("initialized")["capabilities"];
+    assert_eq!(
+        capabilities["completionProvider"]["triggerCharacters"],
+        json!(["`", "<", "/"])
+    );
+    let list = completed.response_result.expect("a completion");
+    assert_eq!(list["isIncomplete"], false);
+    assert_eq!(list["items"][0]["label"], "install");
+    assert_eq!(list["items"][0]["detail"], "Installing");
+}
+
+#[test]
 fn test_lsp_exits_with_success_after_shutdown_and_exit() {
     // Given
     let mut server = Server::spawn();

@@ -17,6 +17,8 @@ mod scan;
 mod state;
 
 #[cfg(test)]
+mod completion_tests;
+#[cfg(test)]
 mod notification_tests;
 #[cfg(test)]
 mod property_tests;

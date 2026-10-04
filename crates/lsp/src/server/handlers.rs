@@ -6,9 +6,11 @@ use lsp_types::notification::{
     DidChangeTextDocument, DidCloseTextDocument, DidOpenTextDocument, Notification as _,
     PublishDiagnostics,
 };
+use lsp_types::request::{Completion, Request as _};
 use lsp_types::{
-    ClientCapabilities, InitializeResult, PublishDiagnosticsParams, ServerCapabilities, ServerInfo,
-    TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
+    ClientCapabilities, CompletionOptions, CompletionParams, InitializeResult,
+    PublishDiagnosticsParams, ServerCapabilities, ServerInfo, TextDocumentSyncCapability,
+    TextDocumentSyncKind, Uri,
 };
 
 use super::state::ServerState;
@@ -25,6 +27,12 @@ pub fn initialize_result(
         capabilities: ServerCapabilities {
             position_encoding: Some(encoding.kind()),
             text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
+            // A role's target opens with a backtick, a titled one's with `<`,
+            // and a `:doc:` name turns absolute with `/`.
+            completion_provider: Some(CompletionOptions {
+                trigger_characters: Some(["`", "<", "/"].map(String::from).to_vec()),
+                ..CompletionOptions::default()
+            }),
             ..ServerCapabilities::default()
         },
         server_info: Some(ServerInfo {
@@ -89,14 +97,31 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
 }
 
 /// The response to a request other than `shutdown`, which the loop answers
-/// itself. No request is supported yet, so every one is refused by method.
-#[must_use]
-pub fn handle_request(request: Request) -> Response {
-    Response::new_err(
-        request.id,
-        ErrorCode::MethodNotFound as i32,
-        format!("rinx does not support '{}'", request.method),
-    )
+/// itself: a completion, or the refusal of a method rinx does not support or
+/// of parameters that do not parse.
+pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
+    let Request { id, method, params } = request;
+    match method.as_str() {
+        Completion::METHOD => match serde_json::from_value::<CompletionParams>(params) {
+            Ok(params) => {
+                let position = params.text_document_position;
+                Response::new_ok(
+                    id,
+                    state.complete(&position.text_document.uri, position.position),
+                )
+            }
+            Err(error) => Response::new_err(
+                id,
+                ErrorCode::InvalidParams as i32,
+                format!("invalid '{method}' parameters: {error}"),
+            ),
+        },
+        _ => Response::new_err(
+            id,
+            ErrorCode::MethodNotFound as i32,
+            format!("rinx does not support '{method}'"),
+        ),
+    }
 }
 
 /// A `textDocument/publishDiagnostics` notification.

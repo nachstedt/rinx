@@ -59,7 +59,7 @@ pub fn run(connection: &Connection) -> Result<()> {
                         if connection.handle_shutdown(&request)? {
                             return Ok(());
                         }
-                        vec![handle_request(request).into()]
+                        vec![handle_request(&mut state, request).into()]
                     }
                     // An `exit` after `shutdown` never reaches this loop: it
                     // is consumed by `handle_shutdown` above.
