@@ -75,6 +75,7 @@ pub(super) fn with_ctx_for<R>(
         doc_path,
         anon_targets: &anon_targets,
         anon_index: &mut anon_index,
+        hyperlink_targets: &crate::hyperlink_target::DocumentHyperlinkTargets::default(),
         original_doc_path: doc_path,
         broken_links: &mut Vec::new(),
         object_type_mismatches: &mut Vec::new(),

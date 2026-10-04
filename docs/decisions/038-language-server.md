@@ -25,7 +25,7 @@ much of the groundwork has been laid with it in mind:
 Four gaps stand between that and a language server:
 
 1. **Definitions have no position.** `Node::Heading` and `Node::Target` carry
-   no span, and neither do most block nodes. `TargetLocation::Internal` holds a
+   no span, and neither do most block nodes. `ProjectIndex::targets` holds a
    document path only. Go-to-definition could open a file but not find the
    line, and there is nothing to build a document outline from.
 2. **The index cannot forget.** `ProjectIndex::merge` only extends. If a label

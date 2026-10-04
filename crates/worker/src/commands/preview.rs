@@ -281,7 +281,7 @@ mod tests {
         // Given
         let rst = "Section A\n=========\n\nSee :ref:`section-b`";
         // Global index only knows about section-b in another file
-        let global_index = r#"{"targets":{"section-b":{"Internal":"other.rst"}},"document_titles":{"other.rst":"Other"},"nav_tree":[]}"#;
+        let global_index = r#"{"targets":{"section-b":"other.rst"},"document_titles":{"other.rst":"Other"},"nav_tree":[]}"#;
         let config = config::SiteConfig::default();
         let template = "<html>{{ body }}</html>";
 

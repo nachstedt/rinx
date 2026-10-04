@@ -12,7 +12,7 @@ use std::fs;
 use anyhow::{Context, Result};
 use rinx_ast::{ObjectType, PyObjectType};
 use rinx_index::DomainIndex;
-use rinx_index::{ProjectIndex, TargetLocation, relative_doc_href};
+use rinx_index::{ProjectIndex, relative_doc_href};
 use rinx_inventory::{EntryType, Inventory, InventoryEntry, write_inventory};
 use rinx_renderer::{MODINDEX_PATH, MODINDEX_TITLE, config};
 
@@ -100,20 +100,18 @@ fn document_entries(index: &ProjectIndex) -> Vec<InventoryEntry> {
 /// shows. Unlike Sphinx, a label with no title is listed too (showing its
 /// name): an entity or a `:name:`d directive is still worth linking to from
 /// another site, and the author of that link can always give it a title.
-/// A target with a URI names someone else's page, so it is not ours to list.
+/// An external target names someone else's page, and the index never holds
+/// one, so there is nothing of it to list.
 fn label_entries(index: &ProjectIndex) -> Vec<InventoryEntry> {
     index
         .targets
         .iter()
-        .filter_map(|(name, location)| match location {
-            TargetLocation::Internal(doc_path) => Some(InventoryEntry {
-                name: name.as_str().to_string(),
-                entry_type: entry_type("std:label"),
-                priority: HIDDEN_FROM_SEARCH,
-                uri: format!("{}#{}", page_uri(doc_path), index.target_anchor(name)),
-                display_name: index.target_titles.get(name).cloned(),
-            }),
-            TargetLocation::External(_) => None,
+        .map(|(name, doc_path)| InventoryEntry {
+            name: name.as_str().to_string(),
+            entry_type: entry_type("std:label"),
+            priority: HIDDEN_FROM_SEARCH,
+            uri: format!("{}#{}", page_uri(doc_path), index.target_anchor(name)),
+            display_name: index.target_titles.get(name).cloned(),
         })
         .collect()
 }
@@ -289,10 +287,9 @@ mod tests {
     fn test_build_inventory_lists_a_label_with_its_section_title() {
         // Given
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("install"),
-            TargetLocation::Internal("guide.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("install"), "guide.rst".to_string());
         index
             .target_titles
             .insert(TargetName::new("install"), "Installing".to_string());
@@ -310,10 +307,9 @@ mod tests {
     fn test_build_inventory_lists_a_label_at_its_recorded_anchor() {
         // Given — an entity, whose anchor is not its name
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("REQ_001"),
-            TargetLocation::Internal("reqs.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("REQ_001"), "reqs.rst".to_string());
         index
             .target_anchors
             .insert(TargetName::new("REQ_001"), "entity-REQ_001".to_string());
@@ -324,22 +320,6 @@ mod tests {
         // Then
         let entry = find(&inventory, "std:label", "req_001");
         assert_eq!(entry.uri, "reqs.html#entity-REQ_001");
-    }
-
-    #[test]
-    fn test_build_inventory_skips_an_external_hyperlink_target() {
-        // Given
-        let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("python"),
-            TargetLocation::External("https://python.org".to_string()),
-        );
-
-        // When
-        let inventory = build_inventory(&index, "Demo", "1.0");
-
-        // Then
-        assert!(!inventory.entries.iter().any(|entry| entry.name == "python"));
     }
 
     #[test]

@@ -20,7 +20,6 @@ mod module_entry;
 mod project_index;
 mod section_numbers;
 mod special_page;
-mod target_location;
 
 pub use document_outline::{DocumentOutline, DocumentToctree, OutlineSection};
 pub use domain_index::{DomainIndex, UnknownDomainIndex};
@@ -43,4 +42,3 @@ pub use module_entry::ModuleEntry;
 pub use project_index::{DuplicateEntityId, MergeConflicts, ProjectIndex};
 pub use section_numbers::DocumentNumbers;
 pub use special_page::SpecialPage;
-pub use target_location::TargetLocation;

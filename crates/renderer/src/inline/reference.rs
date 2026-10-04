@@ -4,7 +4,7 @@ use std::fmt::Write as _;
 
 use rinx_ast::{InventorySelector, Span, TargetName};
 use rinx_index::relative_doc_href;
-use rinx_index::{ProjectIndex, SpecialPage, TargetLocation};
+use rinx_index::{ProjectIndex, SpecialPage};
 
 use super::external_link::write_external_link;
 use crate::resolution::{resolve_external, unresolved_kind};
@@ -54,9 +54,7 @@ pub(super) fn render_inline_reference(
     } = reference;
     let target_name = TargetName::new(target);
     let local = match index.targets.get(&target_name) {
-        Some(TargetLocation::Internal(target_path)) if inventory.allows_local() => {
-            Some(target_path)
-        }
+        Some(target_path) if inventory.allows_local() => Some(target_path),
         _ => None,
     };
     // A page the build writes that no document is (`genindex`, and the module
@@ -160,10 +158,9 @@ mod tests {
     fn test_render_inline_reference_shows_the_section_title_for_a_bare_label() {
         // Given — a label written above a heading titled "Installing"
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("install"),
-            TargetLocation::Internal("guide.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("install"), "guide.rst".to_string());
         index
             .target_titles
             .insert(TargetName::new("install"), "Installing".to_string());
@@ -192,10 +189,9 @@ mod tests {
     fn test_render_inline_reference_prefers_an_explicit_title_over_the_section_title() {
         // Given
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("install"),
-            TargetLocation::Internal("guide.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("install"), "guide.rst".to_string());
         index
             .target_titles
             .insert(TargetName::new("install"), "Installing".to_string());
@@ -224,10 +220,9 @@ mod tests {
     fn test_render_inline_reference_links_to_a_recorded_anchor() {
         // Given — an entity, whose anchor is `entity-<id>` rather than its name
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("REQ_001"),
-            TargetLocation::Internal("reqs.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("REQ_001"), "reqs.rst".to_string());
         index
             .target_anchors
             .insert(TargetName::new("REQ_001"), "entity-REQ_001".to_string());
@@ -333,10 +328,9 @@ mod tests {
     fn test_render_inline_reference_prefers_a_local_label_over_an_external_one() {
         // Given — this site defines `tut-intro` too
         let mut index = crate::test_support::index_linking_into_python();
-        index.targets.insert(
-            TargetName::new("tut-intro"),
-            TargetLocation::Internal("tutorial.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("tut-intro"), "tutorial.rst".to_string());
 
         // When
         let (html, _) = render_against(&index, None, "tut-intro");
@@ -349,10 +343,9 @@ mod tests {
     fn test_render_inline_reference_skips_a_local_label_when_external() {
         // Given — this site defines `tut-intro`, but the role says `:external:`
         let mut index = crate::test_support::index_linking_into_python();
-        index.targets.insert(
-            TargetName::new("tut-intro"),
-            TargetLocation::Internal("tutorial.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("tut-intro"), "tutorial.rst".to_string());
 
         // When
         let (html, _) =
@@ -366,10 +359,9 @@ mod tests {
     fn test_render_inline_reference_reports_an_external_label_as_broken_without_local_fallback() {
         // Given — only this site defines `local-only`
         let mut index = crate::test_support::index_linking_into_python();
-        index.targets.insert(
-            TargetName::new("local-only"),
-            TargetLocation::Internal("here.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("local-only"), "here.rst".to_string());
 
         // When
         let (_, broken_links) =
@@ -411,10 +403,9 @@ mod tests {
     fn test_render_inline_reference_escapes_a_section_title() {
         // Given — a title holding markup-significant characters
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("cmp"),
-            TargetLocation::Internal("guide.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("cmp"), "guide.rst".to_string());
         index
             .target_titles
             .insert(TargetName::new("cmp"), "a < b".to_string());
@@ -443,10 +434,9 @@ mod tests {
     fn test_render_inline_reference_resolved_internal_target() {
         // Given
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("my-section"),
-            TargetLocation::Internal("other.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("my-section"), "other.rst".to_string());
         let mut html = String::new();
         let mut broken_links = Vec::new();
 
@@ -509,10 +499,9 @@ mod tests {
     fn test_render_inline_reference_resolves_cross_directory_path() {
         // Given — document in a subdir, target in another subdir
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("target-a"),
-            TargetLocation::Internal("team_a/index.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("target-a"), "team_a/index.rst".to_string());
         let mut html = String::new();
         let mut broken_links = Vec::new();
 
@@ -544,7 +533,7 @@ mod tests {
         let mut index = ProjectIndex::default();
         index.targets.insert(
             TargetName::new("types-genericalias"),
-            TargetLocation::Internal("stdtypes.rst".to_string()),
+            "stdtypes.rst".to_string(),
         );
         let mut html = String::new();
         let mut broken_links = Vec::new();
@@ -679,10 +668,9 @@ mod tests {
     fn test_render_inline_reference_prefers_a_label_a_document_defines() {
         // Given — a document defines its own `genindex` label
         let mut index = ProjectIndex::default();
-        index.targets.insert(
-            TargetName::new("genindex"),
-            TargetLocation::Internal("guide.rst".to_string()),
-        );
+        index
+            .targets
+            .insert(TargetName::new("genindex"), "guide.rst".to_string());
 
         // When
         let (html, _) = render_label(&index, None, "genindex", "intro.rst");
