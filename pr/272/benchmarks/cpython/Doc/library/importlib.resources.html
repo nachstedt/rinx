@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>importlib.resources – Package resource reading, opening and access — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="modules.html">Importing Modules</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Importing Modules"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="zipimport.html">zipimport — Import modules from Zip archives</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pkgutil.html">pkgutil — Package extension utility</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="modulefinder.html">modulefinder — Find modules used by a script</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="runpy.html">runpy — Locating and executing Python modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="importlib.html">importlib — The implementation of :keyword:`!import`</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="importlib.resources.html">importlib.resources – Package resource reading, opening and access</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle importlib.resources – Package resource reading, opening and access"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="importlib.resources.html#functional-api">Functional API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="importlib.resources.abc.html">importlib.resources.abc – Abstract base classes for resources</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="importlib.metadata.html">importlib.metadata – Accessing package metadata</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="sys_path_init.html">The initialization of the sys.path module search path</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="importlib.html">&larr; importlib — The implementation of :keyword:`!import`</a>
+        <a class="next" href="importlib.resources.abc.html">importlib.resources.abc – Abstract base classes for resources &rarr;</a>
+      </nav>
+      
+      <h1 id="importlib-resources-package-resource-reading-opening-and-access"><code class="xref py module docutils literal">importlib.resources</code> – Package resource reading, opening and access</h1>
+<dl class="py module">
+  <dt id="py:module:importlib.resources"><code class="sig-name">importlib.resources</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/importlib/resources/__init__.py`</p>
+<hr />
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+<p>This module leverages Python's import system to provide access to <em>resources</em>
+within <em>packages</em>.</p>
+<p>"Resources" are file-like resources associated with a module or package in
+Python. The resources may be contained directly in a package, within a
+subdirectory contained in that package, or adjacent to modules outside a
+package. Resources may be text or binary. As a result, a package's Python
+module sources (.py), compilation artifacts (pycache), and installation
+artifacts (like <a class="reference internal" href="os.path.html#py:function:os.path.isreserved"><code class="xref py function docutils literal">reserved filenames</code></a>
+in directories) are technically de-facto resources of that package.
+In practice, however, resources are primarily those non-Python artifacts
+exposed specifically by the package author.</p>
+<p>Resources can be opened or read in either binary or text mode.</p>
+<p>Resources are roughly akin to files inside directories, though it's important
+to keep in mind that this is just a metaphor.  Resources and packages <strong>do
+not</strong> have to exist as physical files and directories on the file system:
+for example, a package and its resources can be imported from a zip file using
+<a class="reference internal" href="zipimport.html#py:module:zipimport" title="zipimport: Support for importing Python modules from ZIP archives."><code class="xref py module docutils literal">zipimport</code></a>.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>This module provides functionality similar to <a href="https://setuptools.readthedocs.io/en/latest/pkg_resources.html">pkg_resources</a> <a href="https://setuptools.readthedocs.io/en/latest/pkg_resources.html#basic-resource-access">Basic
+Resource Access</a>
+without the performance overhead of that package.  This makes reading
+resources included in packages easier, with more stable and consistent
+semantics.</p>
+<p>The standalone backport of this module provides more information
+on <a href="https://importlib-resources.readthedocs.io/en/latest/using.html">using importlib.resources</a> and
+<a href="https://importlib-resources.readthedocs.io/en/latest/migration.html">migrating from pkg_resources to importlib.resources</a>.</p>
+</div>
+<p><a class="reference internal" href="importlib.html#py:class:importlib.abc.loader"><code class="xref py class docutils literal">Loaders</code></a> that wish to support resource reading should implement a
+<code>get_resource_reader(fullname)</code> method as specified by
+<a class="reference internal" href="importlib.resources.abc.html#py:class:importlib.resources.abc.resourcereader"><code class="xref py class docutils literal">importlib.resources.abc.ResourceReader</code></a>.</p>
+<dl class="py class">
+  <dt id="py:class:importlib.resources.anchor"><em class="property">class</em> <code class="sig-name">Anchor</code></dt>
+  <dd><p>Represents an anchor for resources, either a <a class="reference internal" href="types.html#py:class:types.moduletype"><code class="xref py class docutils literal">module object</code></a> or a module name as a string. Defined as
+<code>Union[str, ModuleType]</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:importlib.resources.files"><code class="sig-name">files(anchor: Optional[Anchor] = None)</code></dt>
+  <dd><p>Returns a <a class="reference internal" href="importlib.resources.abc.html#py:class:importlib.resources.abc.traversable"><code class="xref py class docutils literal">Traversable</code></a> object
+representing the resource container (think directory) and its resources
+(think files). A Traversable may contain other containers (think
+subdirectories).</p>
+<p><em>anchor</em> is an optional <a class="reference internal" href="importlib.resources.html#py:class:importlib.resources.anchor"><code class="xref py class docutils literal">Anchor</code></a>. If the anchor is a
+package, resources are resolved from that package. If a module,
+resources are resolved adjacent to that module (in the same package
+or the package root). If the anchor is omitted, the caller's module
+is used.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p><em>package</em> parameter was renamed to <em>anchor</em>. <em>anchor</em> can now
+be a non-package module and if omitted will default to the caller's
+module. <em>package</em> is still accepted for compatibility but will raise
+a <a class="reference internal" href="exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a>. Consider passing the anchor positionally or
+using <code>importlib_resources &gt;= 5.10</code> for a compatible interface
+on older Pythons.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:importlib.resources.as_file"><code class="sig-name">as_file(traversable)</code></dt>
+  <dd><p>Given a <a class="reference internal" href="importlib.resources.abc.html#py:class:importlib.resources.abc.traversable"><code class="xref py class docutils literal">Traversable</code></a> object representing
+a file or directory, typically from <a class="reference internal" href="importlib.resources.html#py:function:importlib.resources.files"><code class="xref py function docutils literal">importlib.resources.files</code></a>,
+return a context manager for use in a :keyword:`with` statement.
+The context manager provides a <a class="reference internal" href="pathlib.html#py:class:pathlib.path"><code class="xref py class docutils literal">pathlib.Path</code></a> object.</p>
+<p>Exiting the context manager cleans up any temporary file or directory
+created when the resource was extracted from e.g. a zip file.</p>
+<p>Use <code>as_file</code> when the Traversable methods
+(<code>read_text</code>, etc) are insufficient and an actual file or directory on
+the file system is required.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p>Added support for <em>traversable</em> representing a directory.</p>
+</div>
+</dd>
+</dl>
+<a id="importlib_resources_functional"></a>
+<h2 id="functional-api">Functional API</h2>
+<p>A set of simplified, backwards-compatible helpers is available.
+These allow common operations in a single function call.</p>
+<p>For all the following functions:</p>
+<ul>
+<li><p><em>anchor</em> is an <a class="reference internal" href="importlib.resources.html#py:class:importlib.resources.anchor"><code class="xref py class docutils literal">Anchor</code></a>,
+as in <a class="reference internal" href="importlib.resources.html#py:function:importlib.resources.files"><code class="xref py function docutils literal">files</code></a>.
+Unlike in <code>files</code>, it may not be omitted.</p>
+</li>
+<li><p><em>path_names</em> are components of a resource's path name, relative to
+the anchor.
+For example, to get the text of resource named <code>info.txt</code>, use:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">importlib</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">resources</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">read_text</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">my_module</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">info.txt<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>Like <a href="#" class="broken-link"><code class="xref py method docutils literal">Traversable.joinpath</code></a>,
+The individual components should use forward slashes (<code>/</code>)
+as path separators.
+For example, the following are equivalent:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">importlib</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">resources</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">read_binary</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">my_module</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">pics/painting.png<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">importlib</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">resources</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">read_binary</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">my_module</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">pics<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">painting.png<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>For backward compatibility reasons, functions that read text require
+an explicit <em>encoding</em> argument if multiple <em>path_names</em> are given.
+For example, to get the text of <code>info/chapter1.txt</code>, use:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">importlib</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">resources</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">read_text</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">my_module</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">info<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">chapter1.txt<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">                              <span class="hl-variable hl-parameter hl-python">encoding</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">utf-8<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+</li>
+</ul>
+<dl class="py function">
+  <dt id="py:function:importlib.resources.open_binary"><code class="sig-name">open_binary(anchor, *path_names)</code></dt>
+  <dd><p>Open the named resource for binary reading.</p>
+<p>See <a href="importlib.resources.html#importlib_resources_functional">the introduction</a> for
+details on <em>anchor</em> and <em>path_names</em>.</p>
+<p>This function returns a <a href="#" class="broken-link"><code class="xref py class docutils literal">BinaryIO</code></a> object,
+that is, a binary stream open for reading.</p>
+<p>This function is roughly equivalent to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">files</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">anchor</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">joinpath</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">path_names</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">rb<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Multiple <em>path_names</em> are accepted.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:importlib.resources.open_text"><code class="sig-name">open_text(anchor, *path_names, encoding='utf-8', errors='strict')</code></dt>
+  <dd><p>Open the named resource for text reading.
+By default, the contents are read as strict UTF-8.</p>
+<p>See <a href="importlib.resources.html#importlib_resources_functional">the introduction</a> for
+details on <em>anchor</em> and <em>path_names</em>.
+<em>encoding</em> and <em>errors</em> have the same meaning as in built-in <a class="reference internal" href="functions.html#py:function:open"><code class="xref py function docutils literal">open</code></a>.</p>
+<p>For backward compatibility reasons, the <em>encoding</em> argument must be given
+explicitly if there are multiple <em>path_names</em>.
+This limitation is scheduled to be removed in Python 3.15.</p>
+<p>This function returns a <a href="#" class="broken-link"><code class="xref py class docutils literal">TextIO</code></a> object,
+that is, a text stream open for reading.</p>
+<p>This function is roughly equivalent to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">files</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">anchor</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">joinpath</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">path_names</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">r<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">encoding</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">encoding</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Multiple <em>path_names</em> are accepted.
+<em>encoding</em> and <em>errors</em> must be given as keyword arguments.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:importlib.resources.read_binary"><code class="sig-name">read_binary(anchor, *path_names)</code></dt>
+  <dd><p>Read and return the contents of the named resource as <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>.</p>
+<p>See <a href="importlib.resources.html#importlib_resources_functional">the introduction</a> for
+details on <em>anchor</em> and <em>path_names</em>.</p>
+<p>This function is roughly equivalent to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">files</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">anchor</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">joinpath</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">path_names</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">read_bytes</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Multiple <em>path_names</em> are accepted.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:importlib.resources.read_text"><code class="sig-name">read_text(anchor, *path_names, encoding='utf-8', errors='strict')</code></dt>
+  <dd><p>Read and return the contents of the named resource as <a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a>.
+By default, the contents are read as strict UTF-8.</p>
+<p>See <a href="importlib.resources.html#importlib_resources_functional">the introduction</a> for
+details on <em>anchor</em> and <em>path_names</em>.
+<em>encoding</em> and <em>errors</em> have the same meaning as in built-in <a class="reference internal" href="functions.html#py:function:open"><code class="xref py function docutils literal">open</code></a>.</p>
+<p>For backward compatibility reasons, the <em>encoding</em> argument must be given
+explicitly if there are multiple <em>path_names</em>.
+This limitation is scheduled to be removed in Python 3.15.</p>
+<p>This function is roughly equivalent to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">files</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">anchor</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">joinpath</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">path_names</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">read_text</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">encoding</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">encoding</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Multiple <em>path_names</em> are accepted.
+<em>encoding</em> and <em>errors</em> must be given as keyword arguments.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:importlib.resources.path"><code class="sig-name">path(anchor, *path_names)</code></dt>
+  <dd><p>Provides the path to the <em>resource</em> as an actual file system path.  This
+function returns a context manager for use in a :keyword:`with` statement.
+The context manager provides a <a class="reference internal" href="pathlib.html#py:class:pathlib.path"><code class="xref py class docutils literal">pathlib.Path</code></a> object.</p>
+<p>Exiting the context manager cleans up any temporary files created, e.g.
+when the resource needs to be extracted from a zip file.</p>
+<p>For example, the <a class="reference internal" href="pathlib.html#py:method:pathlib.path.stat"><code class="xref py method docutils literal">stat</code></a> method requires
+an actual file system path; it can be used like this:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">importlib</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">resources</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">path</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">anchor</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">resource.txt<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">fspath</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">result</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fspath</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">stat</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>See <a href="importlib.resources.html#importlib_resources_functional">the introduction</a> for
+details on <em>anchor</em> and <em>path_names</em>.</p>
+<p>This function is roughly equivalent to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">as_file</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">files</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">anchor</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">joinpath</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">path_names</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Multiple <em>path_names</em> are accepted.
+<em>encoding</em> and <em>errors</em> must be given as keyword arguments.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:importlib.resources.is_resource"><code class="sig-name">is_resource(anchor, *path_names)</code></dt>
+  <dd><p>Return <code>True</code> if the named resource exists, otherwise <code>False</code>.
+This function does not consider directories to be resources.</p>
+<p>See <a href="importlib.resources.html#importlib_resources_functional">the introduction</a> for
+details on <em>anchor</em> and <em>path_names</em>.</p>
+<p>This function is roughly equivalent to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">files</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">anchor</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">joinpath</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">path_names</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">is_file</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Multiple <em>path_names</em> are accepted.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:importlib.resources.contents"><code class="sig-name">contents(anchor, *path_names)</code></dt>
+  <dd><p>Return an iterable over the named items within the package or path.
+The iterable returns names of resources (e.g. files) and non-resources
+(e.g. directories) as <a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a>.
+The iterable does not recurse into subdirectories.</p>
+<p>See <a href="importlib.resources.html#importlib_resources_functional">the introduction</a> for
+details on <em>anchor</em> and <em>path_names</em>.</p>
+<p>This function is roughly equivalent to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">resource</span> <span class="hl-keyword hl-control hl-loop hl-for hl-in hl-python">in</span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">files</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">anchor</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">joinpath</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">path_names</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">iterdir</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-punctuation hl-section hl-block hl-loop hl-for hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-yield hl-python">yield</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">resource</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">name</span></span></span></pre></div>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.11:</span></p>
+<p>Prefer <code>iterdir()</code> as above, which offers more control over the
+results and richer functionality.</p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="importlib.html">&larr; importlib — The implementation of :keyword:`!import`</a>
+        <a class="next" href="importlib.resources.abc.html">importlib.resources.abc – Abstract base classes for resources &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>tkinter.scrolledtext — Scrolled Text Widget — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Graphical user interfaces with Tk"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="tkinter.html">tkinter — Python interface to Tcl&#x2f;Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tkinter.colorchooser.html">tkinter.colorchooser — Color choosing dialog</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tkinter.font.html">tkinter.font — Tkinter font wrapper</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="dialog.html">Tkinter Dialogs</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tkinter.messagebox.html">tkinter.messagebox — Tkinter message prompts</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current">
+            <a href="tkinter.scrolledtext.html">tkinter.scrolledtext — Scrolled Text Widget</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tkinter.dnd.html">tkinter.dnd — Drag and drop support</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tkinter.ttk.html">tkinter.ttk — Tk themed widgets</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="idle.html">IDLE — Python editor and shell</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="turtle.html">turtle — Turtle graphics</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="tkinter.messagebox.html">&larr; tkinter.messagebox — Tkinter message prompts</a>
+        <a class="next" href="tkinter.dnd.html">tkinter.dnd — Drag and drop support &rarr;</a>
+      </nav>
+      
+      <h1 id="tkinter-scrolledtext-scrolled-text-widget"><code class="xref py module docutils literal">tkinter.scrolledtext</code> — Scrolled Text Widget</h1>
+<dl class="py module">
+  <dt id="py:module:tkinter.scrolledtext"><code class="sig-name">tkinter.scrolledtext</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Fred L. Drake, Jr. &lt;fdrake@acm.org&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/tkinter/scrolledtext.py`</p>
+<hr />
+<p>The <a class="reference internal" href="tkinter.scrolledtext.html#py:module:tkinter.scrolledtext" title="tkinter.scrolledtext: Text widget with a vertical scroll bar. (Tk)"><code class="xref py module docutils literal">tkinter.scrolledtext</code></a> module provides a class of the same name which
+implements a basic text widget which has a vertical scroll bar configured to do
+the "right thing."  Using the <a class="reference internal" href="tkinter.scrolledtext.html#py:class:tkinter.scrolledtext.scrolledtext"><code class="xref py class docutils literal">ScrolledText</code></a> class is a lot easier than
+setting up a text widget and scroll bar directly.</p>
+<p>The text widget and scrollbar are packed together in a <a href="#" class="broken-link"><code class="xref py class docutils literal">Frame</code></a>, and the
+methods of the <a href="#" class="broken-link"><code class="xref py class docutils literal">Grid</code></a> and <a href="#" class="broken-link"><code class="xref py class docutils literal">Pack</code></a> geometry managers are acquired
+from the <a href="#" class="broken-link"><code class="xref py class docutils literal">Frame</code></a> object.  This allows the <a class="reference internal" href="tkinter.scrolledtext.html#py:class:tkinter.scrolledtext.scrolledtext"><code class="xref py class docutils literal">ScrolledText</code></a> widget to
+be used directly to achieve most normal geometry management behavior.</p>
+<p>Should more specific control be necessary, the following attributes are
+available:</p>
+<dl class="py class">
+  <dt id="py:class:tkinter.scrolledtext.scrolledtext"><em class="property">class</em> <code class="sig-name">ScrolledText(master=None, **kw)</code></dt>
+  <dd><dl class="py attribute">
+  <dt id="py:attribute:tkinter.scrolledtext.scrolledtext.frame"><code class="sig-name">frame</code></dt>
+  <dd><p>The frame which surrounds the text and scroll bar widgets.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:tkinter.scrolledtext.scrolledtext.vbar"><code class="sig-name">vbar</code></dt>
+  <dd><p>The scroll bar widget.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="tkinter.messagebox.html">&larr; tkinter.messagebox — Tkinter message prompts</a>
+        <a class="next" href="tkinter.dnd.html">tkinter.dnd — Drag and drop support &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

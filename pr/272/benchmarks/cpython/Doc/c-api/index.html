@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python&#x2f;C API Reference Manual — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="index.html">Python&#x2f;C API Reference Manual</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python&#x2f;C API Reference Manual"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stable.html">C API Stability</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="veryhigh.html">The Very High Level Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="refcounting.html">Reference Counting</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Exception Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="extension-modules.html">Defining extension modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="utilities.html">Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="abstract.html">Abstract Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concrete.html">Concrete Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init.html">Initialization, Finalization, and Threads</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init_config.html">Python Initialization Configuration</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="memory.html">Memory Management</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="objimpl.html">Object Implementation Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="apiabiversion.html">API and ABI Versioning</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="monitoring.html">Monitoring C API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="../extending/embedding.html">&larr; Embedding Python in Another Application</a>
+        <a class="next" href="intro.html">Introduction &rarr;</a>
+      </nav>
+      
+      <a id="c-api-index"></a>
+<h1 id="python-c-api-reference-manual">Python/C API Reference Manual</h1>
+<p>This manual documents the API used by C and C++ programmers who want to write
+extension modules or embed Python.  It is a companion to <a href="../extending/index.html#extending-index">Extending and Embedding the Python Interpreter</a>,
+which describes the general principles of extension writing but does not
+document the API functions in detail.</p>
+<ul>
+  <li><a href="intro.html">Introduction</a>
+<ul>
+  <li><a href="intro.html#language-version-compatibility">Language version compatibility</a></li>
+  <li><a href="intro.html#coding-standards">Coding standards</a></li>
+  <li><a href="intro.html#include-files">Include Files</a></li>
+  <li><a href="intro.html#useful-macros">Useful macros</a></li>
+  <li><a href="intro.html#objects-types-and-reference-counts">Objects, Types and Reference Counts</a></li>
+  <li><a href="intro.html#exceptions">Exceptions</a></li>
+  <li><a href="intro.html#embedding-python">Embedding Python</a></li>
+  <li><a href="intro.html#debugging-builds">Debugging Builds</a></li>
+  <li><a href="intro.html#recommended-third-party-tools">Recommended third party tools</a></li>
+</ul>
+  </li>
+  <li><a href="stable.html">C API Stability</a>
+<ul>
+  <li><a href="stable.html#unstable-c-api">Unstable C API</a></li>
+  <li><a href="stable.html#stable-application-binary-interface">Stable Application Binary Interface</a></li>
+  <li><a href="stable.html#platform-considerations">Platform Considerations</a></li>
+  <li><a href="stable.html#contents-of-limited-api">Contents of Limited API</a></li>
+</ul>
+  </li>
+  <li><a href="veryhigh.html">The Very High Level Layer</a>
+<ul>
+  <li><a href="veryhigh.html#available-start-symbols">Available start symbols</a></li>
+  <li><a href="veryhigh.html#stack-effects">Stack Effects</a></li>
+</ul>
+  </li>
+  <li><a href="refcounting.html">Reference Counting</a></li>
+  <li><a href="exceptions.html">Exception Handling</a>
+<ul>
+  <li><a href="exceptions.html#printing-and-clearing">Printing and clearing</a></li>
+  <li><a href="exceptions.html#raising-exceptions">Raising exceptions</a></li>
+  <li><a href="exceptions.html#issuing-warnings">Issuing warnings</a></li>
+  <li><a href="exceptions.html#querying-the-error-indicator">Querying the error indicator</a></li>
+  <li><a href="exceptions.html#signal-handling">Signal Handling</a></li>
+  <li><a href="exceptions.html#exception-classes">Exception Classes</a></li>
+  <li><a href="exceptions.html#exception-objects">Exception Objects</a></li>
+  <li><a href="exceptions.html#unicode-exception-objects">Unicode Exception Objects</a></li>
+  <li><a href="exceptions.html#recursion-control">Recursion Control</a></li>
+  <li><a href="exceptions.html#exception-and-warning-types">Exception and warning types</a></li>
+  <li><a href="exceptions.html#tracebacks">Tracebacks</a></li>
+</ul>
+  </li>
+  <li><a href="extension-modules.html">Defining extension modules</a>
+<ul>
+  <li><a href="extension-modules.html#multiple-module-instances">Multiple module instances</a></li>
+  <li><a href="extension-modules.html#initialization-function">Initialization function</a></li>
+  <li><a href="extension-modules.html#multi-phase-initialization">Multi-phase initialization</a></li>
+  <li><a href="extension-modules.html#legacy-single-phase-initialization">Legacy single-phase initialization</a></li>
+</ul>
+  </li>
+  <li><a href="utilities.html">Utilities</a>
+<ul>
+  <li><a href="sys.html">Operating System Utilities</a></li>
+  <li><a href="import.html">Importing Modules</a></li>
+  <li><a href="marshal.html">Data marshalling support</a></li>
+  <li><a href="arg.html">Parsing arguments and building values</a></li>
+  <li><a href="conversion.html">String conversion and formatting</a></li>
+  <li><a href="hash.html">PyHash API</a></li>
+  <li><a href="reflection.html">Reflection</a></li>
+  <li><a href="codec.html">Codec registry and support functions</a></li>
+  <li><a href="time.html">PyTime C API</a></li>
+  <li><a href="perfmaps.html">Support for Perf Maps</a></li>
+</ul>
+  </li>
+  <li><a href="abstract.html">Abstract Objects Layer</a>
+<ul>
+  <li><a href="object.html">Object Protocol</a></li>
+  <li><a href="call.html">Call Protocol</a></li>
+  <li><a href="number.html">Number Protocol</a></li>
+  <li><a href="sequence.html">Sequence Protocol</a></li>
+  <li><a href="mapping.html">Mapping Protocol</a></li>
+  <li><a href="iter.html">Iterator Protocol</a></li>
+  <li><a href="buffer.html">Buffer Protocol</a></li>
+</ul>
+  </li>
+  <li><a href="concrete.html">Concrete Objects Layer</a>
+<ul>
+  <li><a href="concrete.html#fundamental-objects">Fundamental Objects</a></li>
+  <li><a href="concrete.html#numeric-objects">Numeric Objects</a></li>
+  <li><a href="concrete.html#sequence-objects">Sequence Objects</a></li>
+  <li><a href="concrete.html#container-objects">Container Objects</a></li>
+  <li><a href="concrete.html#function-objects">Function Objects</a></li>
+  <li><a href="concrete.html#other-objects">Other Objects</a></li>
+  <li><a href="concrete.html#c-api-for-extension-modules">C API for extension modules</a></li>
+</ul>
+  </li>
+  <li><a href="init.html">Initialization, Finalization, and Threads</a>
+<ul>
+  <li><a href="init.html#before-python-initialization">Before Python Initialization</a></li>
+  <li><a href="init.html#global-configuration-variables">Global configuration variables</a></li>
+  <li><a href="init.html#initializing-and-finalizing-the-interpreter">Initializing and finalizing the interpreter</a></li>
+  <li><a href="init.html#process-wide-parameters">Process-wide parameters</a></li>
+  <li><a href="init.html#thread-state-and-the-global-interpreter-lock">Thread State and the Global Interpreter Lock</a></li>
+  <li><a href="init.html#sub-interpreter-support">Sub-interpreter support</a></li>
+  <li><a href="init.html#asynchronous-notifications">Asynchronous Notifications</a></li>
+  <li><a href="init.html#profiling-and-tracing">Profiling and Tracing</a></li>
+  <li><a href="init.html#reference-tracing">Reference tracing</a></li>
+  <li><a href="init.html#advanced-debugger-support">Advanced Debugger Support</a></li>
+  <li><a href="init.html#thread-local-storage-support">Thread Local Storage Support</a></li>
+  <li><a href="init.html#synchronization-primitives">Synchronization Primitives</a></li>
+  <li><a href="init.html#operating-system-thread-apis">Operating System Thread APIs</a></li>
+</ul>
+  </li>
+  <li><a href="init_config.html">Python Initialization Configuration</a>
+<ul>
+  <li><a href="init_config.html#pyinitconfig-c-api">PyInitConfig C API</a></li>
+  <li><a href="init_config.html#configuration-options">Configuration Options</a></li>
+  <li><a href="init_config.html#runtime-python-configuration-api">Runtime Python configuration API</a></li>
+  <li><a href="init_config.html#pyconfig-c-api">PyConfig C API</a></li>
+  <li><a href="init_config.html#py-getargcargv">Py_GetArgcArgv()</a></li>
+  <li><a href="init_config.html#delaying-main-module-execution">Delaying main module execution</a></li>
+</ul>
+  </li>
+  <li><a href="memory.html">Memory Management</a>
+<ul>
+  <li><a href="memory.html#overview">Overview</a></li>
+  <li><a href="memory.html#allocator-domains">Allocator Domains</a></li>
+  <li><a href="memory.html#raw-memory-interface">Raw Memory Interface</a></li>
+  <li><a href="memory.html#memory-interface">Memory Interface</a></li>
+  <li><a href="memory.html#object-allocators">Object allocators</a></li>
+  <li><a href="memory.html#default-memory-allocators">Default Memory Allocators</a></li>
+  <li><a href="memory.html#customize-memory-allocators">Customize Memory Allocators</a></li>
+  <li><a href="memory.html#debug-hooks-on-the-python-memory-allocators">Debug hooks on the Python memory allocators</a></li>
+  <li><a href="memory.html#the-pymalloc-allocator">The pymalloc allocator</a></li>
+  <li><a href="memory.html#the-mimalloc-allocator">The mimalloc allocator</a></li>
+  <li><a href="memory.html#tracemalloc-c-api">tracemalloc C API</a></li>
+  <li><a href="memory.html#examples">Examples</a></li>
+</ul>
+  </li>
+  <li><a href="objimpl.html">Object Implementation Support</a>
+<ul>
+  <li><a href="allocation.html">Allocating Objects on the Heap</a></li>
+  <li><a href="lifecycle.html">Object Life Cycle</a></li>
+  <li><a href="structures.html">Common Object Structures</a></li>
+  <li><a href="typeobj.html">Type Object Structures</a></li>
+  <li><a href="gcsupport.html">Supporting Cyclic Garbage Collection</a></li>
+</ul>
+  </li>
+  <li><a href="apiabiversion.html">API and ABI Versioning</a>
+<ul>
+  <li><a href="apiabiversion.html#build-time-version-constants">Build-time version constants</a></li>
+  <li><a href="apiabiversion.html#run-time-version">Run-time version</a></li>
+  <li><a href="apiabiversion.html#bit-packing-macros">Bit-packing macros</a></li>
+</ul>
+  </li>
+  <li><a href="monitoring.html">Monitoring C API</a>
+<ul>
+  <li><a href="monitoring.html#monitoring-c-api">Monitoring C API</a></li>
+  <li><a href="monitoring.html#generating-execution-events">Generating Execution Events</a></li>
+</ul>
+  </li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="../extending/embedding.html">&larr; Embedding Python in Another Application</a>
+        <a class="next" href="intro.html">Introduction &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
