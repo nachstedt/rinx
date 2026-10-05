@@ -40,10 +40,12 @@ pub fn run(connection: &Connection) -> Result<()> {
     let (result, encoding) = initialize_result(&params.capabilities);
     connection.initialize_finish(initialize_id, serde_json::to_value(result)?)?;
 
-    let mut state = ServerState::new(encoding).with_workspace(
-        workspace_roots(&params),
-        supports_progress(&params.capabilities),
-    );
+    let mut state = ServerState::new(encoding)
+        .with_workspace(
+            workspace_roots(&params),
+            supports_progress(&params.capabilities),
+        )
+        .with_definition_links(supports_definition_links(&params.capabilities));
     let mut scan_events: Receiver<ScanEvent> = never();
     let roots = state.folder_roots();
     if !roots.is_empty() {
@@ -124,6 +126,17 @@ fn supports_progress(capabilities: &ClientCapabilities) -> bool {
         .unwrap_or(false)
 }
 
+/// Whether the client takes a definition as a link from the reference,
+/// rather than as a bare location.
+fn supports_definition_links(capabilities: &ClientCapabilities) -> bool {
+    capabilities
+        .text_document
+        .as_ref()
+        .and_then(|text_document| text_document.definition.as_ref())
+        .and_then(|definition| definition.link_support)
+        .unwrap_or(false)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -175,5 +188,24 @@ mod tests {
         // When / Then
         assert!(supports_progress(&capable));
         assert!(!supports_progress(&ClientCapabilities::default()));
+    }
+
+    #[test]
+    fn test_supports_definition_links_reads_the_definition_capability() {
+        // Given
+        let capable = ClientCapabilities {
+            text_document: Some(lsp_types::TextDocumentClientCapabilities {
+                definition: Some(lsp_types::GotoCapability {
+                    link_support: Some(true),
+                    ..lsp_types::GotoCapability::default()
+                }),
+                ..lsp_types::TextDocumentClientCapabilities::default()
+            }),
+            ..ClientCapabilities::default()
+        };
+
+        // When / Then
+        assert!(supports_definition_links(&capable));
+        assert!(!supports_definition_links(&ClientCapabilities::default()));
     }
 }
