@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Importing from sphinx-needs — Megacorp Documentation</title>
+  <link rel="stylesheet" href="../../default.css">
+  <script defer src="../../version_switcher.js"></script>
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">Megacorp Documentation</h2>
+        <p class="project-version">v2.0-beta</p>
+        <div class="version-switcher" data-json-url="https:&#x2f;&#x2f;nachstedt.github.io&#x2f;rinx&#x2f;versions.json" hidden></div>
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../headings.html">Section headings</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../hyperlinks.html">Hyperlinks and Targets</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../admonitions.html">Admonitions Showcase</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../inline_roles.html">Inline Roles</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../any_role.html">The :any: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../doc_role.html">The :doc: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../numref.html">The :numref: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../downloads.html">The :download: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../version_changes.html">Version Change Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../seealso.html">See Also Directive</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../literal_blocks.html">Literal Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../code_blocks.html">Code Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../definition_lists.html">Definition Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../enumerated_lists.html">Enumerated Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../option_lists.html">Option Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../block_quotes.html">Block Quotes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../line_blocks.html">Line Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../comments.html">Comments</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../domains.html">Domains</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../current_module.html">Current Module</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../transitions.html">Transitions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../typography.html">Smart Typography</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../escapes.html">Backslash Escapes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tables.html">Grid Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../simple_tables.html">Simple Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../list_table.html">List Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../csv_table.html">CSV Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../table_directive.html">The table Directive</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../math.html">Math</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../code_role.html">The :code: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../registry_roles.html">Registry Roles: :pep:, :rfc:, :cve: and :cwe:</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../images.html">Images</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../figures.html">Figures</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../substitutions.html">Substitutions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../includes.html">Includes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../index_entries.html">Index Entries</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../noqa.html">Suppressing diagnostics</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../unknown_directives.html">Unrecognized and malformed directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../if_builder.html">Conditional content by builder</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../doctests.html">Doctest Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Entities</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Entities"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="requirements.html">Requirements</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="audit_events.html">Audit events</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tables.html">Listing entities</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="charts.html">Charting the graph</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="imported.html">Importing from sphinx-needs</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Importing from sphinx-needs"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="imported.html#importing-a-whole-file">Importing a whole file</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="imported.html#imported-entities-are-ordinary-entities">Imported entities are ordinary entities</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="imported.html#importing-by-name">Importing by name</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="imported.html#choosing-a-version">Choosing a version</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="imported.html#narrowing-what-is-imported">Narrowing what is imported</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="imported.html#ids-the-project-does-not-own">Ids the project does not own</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="imported.html#tagging-an-import">Tagging an import</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="imported.html#what-is-not-supported">What is not supported</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="entity_update.html">Updating entities after the fact</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="diagrams.html">Diagrams over the entity graph</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../toctree/index.html">Toctree Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../contents/index.html">Contents Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../default_role/index.html">Interpreted Text</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../sectnum/index.html">Sectnum Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../dropdown/index.html">Dropdown Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../grid/index.html">Grid Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../button_link/index.html">Button Link Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../jinja/index.html">🧩 Templated Sources</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../intersphinx/index.html">Linking into other sites</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../team_a/index.html">Team A: Getting Started</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../team_b/index.html">Team B: Infrastructure Guide</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="charts.html">&larr; Charting the graph</a>
+        <a class="next" href="entity_update.html">Updating entities after the fact &rarr;</a>
+      </nav>
+      
+      <h1 id="importing-from-sphinx-needs">Importing from sphinx-needs</h1>
+<p><code>.. needimport::</code> reads a sphinx-needs <code>needs.json</code> and turns every need
+in it into an entity of <em>this</em> document. It is a migration bridge and nothing
+more: it keeps an existing project's import lines working while the rest of
+its documents move over. This build's own name, <code>entity-import</code>, is
+deliberately left unclaimed for a richer construct later — see
+<code>docs/decisions/016-needimport.md</code>.</p>
+<p>The file it reads is ordinary <code>parse_data</code>, like the source behind a
+<code>.. csv-table::</code>'s <code>:file:</code>. The name resolves relative to the document,
+or to the source root with a leading <code>/</code>. Nothing is ever fetched: an
+<code>http</code>/<code>https</code> argument is refused by name, since a sandboxed build action
+may only read files declared before it runs.</p>
+<h2 id="importing-a-whole-file">Importing a whole file</h2>
+<p><code>needs.json</code> beside this document is an export from an imaginary upstream
+platform project. With no options, every need of its <code>current_version</code>
+becomes an entity here — typed, indexed, cross-referenceable and rendered
+exactly like one written by hand.</p>
+<div class="entity entity-req" id="entity-PLAT_REQ_1"><p class="entity-header"><span class="entity-type">Requirement</span><span class="entity-title">The platform boots within one second</span><span class="entity-id">PLAT_REQ_1</span></p><div class="entity-content"><p>Measured from power-on to the first rendered frame.</p>
+<p>The upstream project owns this requirement; this site only shows it.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>closed</td></tr><tr><th>Tags</th><td>startup, performance</td></tr><tr><th>Owner</th><td>platform-team</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">Links to</p><ul class="entity-link-list"><li><a class="reference internal" href="imported.html#entity-PLAT_SPEC_1">PLAT_SPEC_1</a></li></ul></div></details></div><div class="entity entity-req" id="entity-PLAT_REQ_2"><p class="entity-header"><span class="entity-type">Requirement</span><span class="entity-title">The platform survives a power cut</span><span class="entity-id">PLAT_REQ_2</span></p><div class="entity-content"><p>No data written before the cut is lost.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>resilience</td></tr><tr><th>Owner</th><td>platform-team</td></tr></tbody></table></details></div><div class="entity entity-spec" id="entity-PLAT_SPEC_1"><p class="entity-header"><span class="entity-type">Specification</span><span class="entity-title">Boot sequence</span><span class="entity-id">PLAT_SPEC_1</span></p><div class="entity-content"><p>The loader starts three services in parallel.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>approved</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">Linked by</p><ul class="entity-link-list"><li><a class="reference internal" href="imported.html#entity-PLAT_REQ_1">PLAT_REQ_1</a></li></ul></div></details></div><p>The types the needs claim — <code>req</code> and <code>spec</code> — have to be declared in this
+project's own <code>entities.toml</code>; the schema is the authority over the file,
+not the other way round. sphinx-needs' own bookkeeping keys (<code>docname</code>,
+<code>lineno</code>, <code>is_need</code>, <code>type_color</code> and their family) are ignored by
+design, while a field that is neither bookkeeping nor a declared attribute or
+relation is reported rather than dropped.</p>
+<h2 id="imported-entities-are-ordinary-entities">Imported entities are ordinary entities</h2>
+<p>Nothing downstream of the parser knows an import happened, which is the whole
+point of reading the file while parsing. An imported entity is a <code>:ref:</code>
+target like any other — <a href="imported.html#entity-PLAT_REQ_1">PLAT_REQ_1</a> — and its relations join the project
+graph, so the back-link on <code>PLAT_SPEC_1</code> below was derived from an edge that
+arrived in a JSON file.</p>
+<table class="entity-table">
+<thead>
+<tr>
+<th class="head">ID</th>
+<th class="head">Title</th>
+<th class="head">Status</th>
+<th class="head">Linked by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="reference internal" href="imported.html#entity-PLAT_REQ_1">PLAT_REQ_1</a></td>
+<td><a class="reference internal" href="imported.html#entity-PLAT_REQ_1">The platform boots within one second</a></td>
+<td>closed</td>
+<td></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="imported.html#entity-PLAT_SPEC_1">PLAT_SPEC_1</a></td>
+<td><a class="reference internal" href="imported.html#entity-PLAT_SPEC_1">Boot sequence</a></td>
+<td>approved</td>
+<td><a class="reference internal" href="imported.html#entity-PLAT_REQ_1">The platform boots within one second</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="importing-by-name">Importing by name</h2>
+<p>An argument may also be a <em>name</em> rather than a path, which <code>entities.toml</code>
+maps to a file in its <code>[import_keys]</code> table — sphinx-needs spells the same
+thing <code>needs_import_keys</code> in its <code>conf.py</code>. The alias is written in the
+document, so its meaning belongs with the project's vocabulary rather than in
+the build file, and it travels with the documents.</p>
+<div class="entity entity-spec" id="entity-BYKEY_PLAT_SPEC_1"><p class="entity-header"><span class="entity-type">Specification</span><span class="entity-title">Boot sequence</span><span class="entity-id">BYKEY_PLAT_SPEC_1</span></p><div class="entity-content"><p>The loader starts three services in parallel.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>approved</td></tr></tbody></table></details></div><p>The name is looked up <em>before</em> the argument is treated as a path, which is the
+order sphinx-needs resolves in, so a key may be spelled with a <code>.json</code>
+suffix and still win over a file of that name. A name matching no declared key
+is reported rather than opened as a file — a missing declaration should not
+fail the build the way an undeclared <code>parse_data</code> entry does. The file the
+key names still needs its <code>parse_data</code> entry; here <code>needs.json</code> already
+has one.</p>
+<h2 id="choosing-a-version">Choosing a version</h2>
+<p>A <code>needs.json</code> holds one block per version and names a <code>current_version</code>.
+<code>:version:</code> takes a different one. Version <code>1.0</code> of this file holds a
+single, retired requirement under the same id as <code>2.0</code>'s first — so it is
+imported here under a prefix, which the next section explains.</p>
+<div class="entity entity-req" id="entity-OLD_PLAT_REQ_1"><p class="entity-header"><span class="entity-type">Requirement</span><span class="entity-title">Retired: the platform boots</span><span class="entity-id">OLD_PLAT_REQ_1</span></p><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>closed</td></tr><tr><th>Owner</th><td>platform-team</td></tr></tbody></table></details></div><h2 id="narrowing-what-is-imported">Narrowing what is imported</h2>
+<p><code>:ids:</code> imports only the needs it names.</p>
+<div class="entity entity-req" id="entity-BYID_PLAT_REQ_2"><p class="entity-header"><span class="entity-type">Requirement</span><span class="entity-title">The platform survives a power cut</span><span class="entity-id">BYID_PLAT_REQ_2</span></p><div class="entity-content"><p>No data written before the cut is lost.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>resilience</td></tr><tr><th>Owner</th><td>platform-team</td></tr></tbody></table></details></div><p><code>:filter:</code> is the same typed filter language an <code>.. entity-table::</code> and an
+<code>.. entity-flow::</code> are written in, so a question asked of the graph means
+the same thing wherever it is asked. It runs against the need as the schema
+will store it, which is why <code>"resilience" in tags</code> matches whether the file
+spelled the tags as a JSON array or as a comma-separated string.</p>
+<div class="entity entity-req" id="entity-BYFILTER_PLAT_REQ_2"><p class="entity-header"><span class="entity-type">Requirement</span><span class="entity-title">The platform survives a power cut</span><span class="entity-id">BYFILTER_PLAT_REQ_2</span></p><div class="entity-content"><p>No data written before the cut is lost.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>resilience</td></tr><tr><th>Owner</th><td>platform-team</td></tr></tbody></table></details></div><h2 id="ids-the-project-does-not-own">Ids the project does not own</h2>
+<p><code>:id_prefix:</code> prepends a prefix to every imported id, which is what makes
+the three imports above able to coexist with the first one. It also rewrites
+the relation targets that point at another need <em>in the same import</em>, so a
+prefixed copy links to its own siblings — and leaves a target naming anything
+else alone, since that is a reference to an entity the project already holds
+under its own id.</p>
+<p>An id that collides with an entity the project already declares is reported as
+<code>entity.duplicate-id</code>, the same diagnostic two hand-written entities would
+get. There is no separate notion of an "external" entity.</p>
+<h2 id="tagging-an-import">Tagging an import</h2>
+<p><code>:tags:</code> adds values to the imported entities' <code>tags</code> attribute. Nothing
+in this model privileges that name: it works because <code>req</code> declares a
+<code>list&lt;string&gt;</code> attribute called <code>tags</code>, and a type that declares no such
+attribute is reported rather than having the values quietly dropped.</p>
+<div class="entity entity-req" id="entity-TAGGED_PLAT_REQ_2"><p class="entity-header"><span class="entity-type">Requirement</span><span class="entity-title">The platform survives a power cut</span><span class="entity-id">TAGGED_PLAT_REQ_2</span></p><div class="entity-content"><p>No data written before the cut is lost.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>resilience, imported, upstream</td></tr><tr><th>Owner</th><td>platform-team</td></tr></tbody></table></details></div><h2 id="what-is-not-supported">What is not supported</h2>
+<p><code>:hide:</code>, <code>:collapse:</code>, <code>:layout:</code> and <code>:style:</code> are presentation,
+which this build takes from the schema's per-type <code>template</code> and the
+render-time site config rather than from an import line. <code>:setup:</code>,
+<code>:pre_template:</code> and <code>:post_template:</code> run Python, which this build does
+not. Each is refused <em>by name</em>, with what to reach for instead, rather than
+being ignored.</p>
+<p>Named sections cannot be imported either: a <code>needs.json</code> has no way to
+express one, so an imported entity's body is whatever its <code>content</code> field
+holds, parsed as reStructuredText into the unnamed content section. A
+diagnostic from inside that prose carries no position, because JSON has no
+line for it to point at.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="charts.html">&larr; Charting the graph</a>
+        <a class="next" href="entity_update.html">Updating entities after the fact &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
