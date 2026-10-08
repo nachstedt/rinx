@@ -31,10 +31,10 @@ finished one 🔶. A heading with no marker means the step has not started.
 - **Done:** #1 (PR #226), plus the testing and CI groundwork that came before #2
   (PRs #238–#248, listed at the end of M0), #2 (PR #253), #3 (PR #255),
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
-  #7 (PR #273, prepared by #272), and #8 (PR #275).
+  #7 (PR #273, prepared by #272), #8 (PR #275), and #9.
 - **Done early:** most of #12, which is the packaging, the CI artifact and the
   installed-VSIX test.
-- **Next: #9, file-system watching.**
+- **Next: #10, the static `conf.py` reader.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -236,7 +236,7 @@ to a page the build writes (`genindex`), has no definition: there is no
 source to open. The limits are hover's: the default site configuration, no
 inventories, and nothing inside an `.. include::`d fragment.
 
-### 9. File-system watching
+### 9. File-system watching ✅
 
 **You experience:** renaming a file in the Explorer immediately breaks its
 `:doc:` references.
@@ -245,6 +245,19 @@ inventories, and nothing inside an `.. include::`d fragment.
 - Add, remove or re-analyse documents
 - Re-diagnose affected open documents
 - Tests
+
+The server registers one watcher, `**/*`, and drops what touches no document
+itself: a fragment may have any extension, and a directory renamed or deleted
+arrives as one event naming the directory, which a `**/*.rst` watcher never
+sees. An event is an edit of every document it touches — a source under a
+folder (by the scan's rules), a file a document reads, or every document under
+a directory created or deleted — while an open file's event is ignored, its
+buffer being the truth. A document whose file is gone leaves the index, which
+also fixed one that was renamed while open staying indexed after `didClose`;
+one deleted while the scan ran is not brought back by its result. A batch is
+parsed in parallel: touching all 528 CPython documents takes 0.5 s, the
+scan's time. A client without dynamic registration for
+`didChangeWatchedFiles` is not watched.
 
 ---
 

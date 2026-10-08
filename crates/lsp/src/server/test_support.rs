@@ -147,6 +147,34 @@ impl Workspace {
         std::fs::write(path, text).expect("write");
     }
 
+    /// Deletes `file`, a file or a directory, from the disk.
+    pub(super) fn remove(&self, file: &str) {
+        let path = self.root.join(file);
+        if path.is_dir() {
+            std::fs::remove_dir_all(path).expect("remove a directory");
+        } else {
+            std::fs::remove_file(path).expect("remove a file");
+        }
+    }
+
+    /// Renames `from` to `to` on the disk.
+    pub(super) fn rename(&self, from: &str, to: &str) {
+        std::fs::rename(self.root.join(from), self.root.join(to)).expect("rename");
+    }
+
+    /// The `didChangeWatchedFiles` notification reporting `changes`.
+    pub(super) fn watched(&self, changes: &[(&str, lsp_types::FileChangeType)]) -> Notification {
+        Notification::new(
+            lsp_types::notification::DidChangeWatchedFiles::METHOD.to_string(),
+            lsp_types::DidChangeWatchedFilesParams {
+                changes: changes
+                    .iter()
+                    .map(|(file, typ)| lsp_types::FileEvent::new(self.uri(file), *typ))
+                    .collect(),
+            },
+        )
+    }
+
     pub(super) fn uri(&self, file: &str) -> Uri {
         crate::uri::file_uri(&self.root.join(file)).expect("an absolute path")
     }

@@ -7,6 +7,11 @@
 //! until a document changes, so a burst of edits pays for it once, when the
 //! index is next asked for.
 //!
+//! A document leaves the folder when its file is gone: deleted or renamed on
+//! the disk, as a file-system watcher reports it. The scan may have read it
+//! before that, so the folder remembers what it forgot until the scan's
+//! result is recorded, and does not let the scan bring it back.
+//!
 //! Until `conf.py` (roadmap #10) or a Bazel manifest (#18) says otherwise,
 //! the folder is the source root: a document is named by its path within the
 //! folder, `index` is the root document, and no entity schema applies.
@@ -20,6 +25,7 @@ use rinx_entity::EntitySchema;
 use rinx_index::ProjectIndex;
 
 use super::discover::is_source;
+use crate::files::reads_at_or_under;
 
 /// The root document of a folder with no configuration, as Sphinx defaults it.
 const ROOT_DOC: &str = "index";
@@ -54,6 +60,12 @@ pub struct WorkspaceFolder {
     /// Counts the changes to `documents`, so a render can tell whether the
     /// index it read is still the index.
     generation: u64,
+    /// The documents forgotten since the scan began, which its result must
+    /// not record again.
+    forgotten: BTreeSet<String>,
+    /// Whether the scan's result is recorded, after which nothing need be
+    /// remembered as forgotten.
+    scanned: bool,
 }
 
 impl WorkspaceFolder {
@@ -65,6 +77,8 @@ impl WorkspaceFolder {
             documents: BTreeMap::new(),
             index: None,
             generation: 0,
+            forgotten: BTreeSet::new(),
+            scanned: false,
         }
     }
 
@@ -99,6 +113,7 @@ impl WorkspaceFolder {
 
     /// Records `indexed` as the latest analysis of the document `doc_path`.
     pub fn record(&mut self, doc_path: String, indexed: IndexedDocument) {
+        self.forgotten.remove(&doc_path);
         if self.documents.get(&doc_path) != Some(&indexed) {
             self.documents.insert(doc_path, indexed);
             self.invalidate();
@@ -108,9 +123,15 @@ impl WorkspaceFolder {
     /// Records each scanned document the folder does not know yet. A
     /// document already recorded was analysed after the scan read it from
     /// the disk — from its open buffer, or as the includer of an open file —
-    /// so it is the more recent of the two.
+    /// so it is the more recent of the two. A document forgotten meanwhile is
+    /// gone from the disk, so it is not recorded either.
     pub fn record_scanned(&mut self, scanned: impl IntoIterator<Item = (String, IndexedDocument)>) {
+        let forgotten = std::mem::take(&mut self.forgotten);
+        self.scanned = true;
         for (doc_path, indexed) in scanned {
+            if forgotten.contains(&doc_path) {
+                continue;
+            }
             if let std::collections::btree_map::Entry::Vacant(entry) =
                 self.documents.entry(doc_path)
             {
@@ -118,6 +139,27 @@ impl WorkspaceFolder {
                 self.invalidate();
             }
         }
+    }
+
+    /// Forgets the document `doc_path`, whose file is gone.
+    pub fn forget(&mut self, doc_path: &str) {
+        if self.documents.remove(doc_path).is_some() {
+            self.invalidate();
+        }
+        if !self.scanned {
+            self.forgotten.insert(doc_path.to_string());
+        }
+    }
+
+    /// The documents recorded at or under `path` — a document, or a directory
+    /// holding documents.
+    #[must_use]
+    pub fn documents_under(&self, path: &Path) -> Vec<String> {
+        self.documents
+            .keys()
+            .filter(|doc_path| self.path_of(doc_path).starts_with(path))
+            .cloned()
+            .collect()
     }
 
     /// Which version of the folder's documents the project index folds: it
@@ -133,12 +175,13 @@ impl WorkspaceFolder {
         self.generation += 1;
     }
 
-    /// The documents whose latest parse read the file at `path`.
+    /// The documents whose latest parse read the file at `path`, or a file
+    /// under it when `path` is a directory.
     #[must_use]
     pub fn includers_of(&self, path: &Path) -> Vec<String> {
         self.documents
             .iter()
-            .filter(|(_, indexed)| indexed.reads.contains(path))
+            .filter(|(_, indexed)| reads_at_or_under(&indexed.reads, path))
             .map(|(doc_path, _)| doc_path.clone())
             .collect()
     }
@@ -280,6 +323,88 @@ mod tests {
     }
 
     #[test]
+    fn test_forget_drops_a_document_from_the_index() {
+        // Given
+        let mut folder = folder();
+        folder.record("a.rst".to_string(), labelled("a.rst", "setup"));
+        let before = folder.generation();
+
+        // When
+        folder.forget("a.rst");
+
+        // Then
+        assert!(folder.project_index().targets.is_empty());
+        assert_eq!(folder.document_count(), 0);
+        assert_ne!(folder.generation(), before);
+    }
+
+    #[test]
+    fn test_forget_of_an_unknown_document_changes_nothing() {
+        // Given
+        let mut folder = folder();
+        let before = folder.generation();
+
+        // When
+        folder.forget("a.rst");
+
+        // Then
+        assert_eq!(folder.generation(), before);
+    }
+
+    #[test]
+    fn test_record_scanned_does_not_bring_back_a_forgotten_document() {
+        // Given — `a.rst` deleted while the scan, which had read it, ran
+        let mut folder = folder();
+        folder.forget("a.rst");
+
+        // When
+        folder.record_scanned([
+            ("a.rst".to_string(), labelled("a.rst", "stale")),
+            ("b.rst".to_string(), labelled("b.rst", "other")),
+        ]);
+
+        // Then
+        let index = folder.project_index();
+        assert!(!index.targets.contains_key(&TargetName::new("stale")));
+        assert!(index.targets.contains_key(&TargetName::new("other")));
+    }
+
+    #[test]
+    fn test_record_after_forget_lets_the_scan_keep_its_rule() {
+        // Given — `a.rst` deleted, then created again, during the scan
+        let mut folder = folder();
+        folder.forget("a.rst");
+        folder.record("a.rst".to_string(), labelled("a.rst", "recreated"));
+
+        // When
+        folder.record_scanned([("a.rst".to_string(), labelled("a.rst", "stale"))]);
+
+        // Then — the newer analysis stays
+        let index = folder.project_index();
+        assert!(index.targets.contains_key(&TargetName::new("recreated")));
+        assert!(!index.targets.contains_key(&TargetName::new("stale")));
+    }
+
+    #[test]
+    fn test_documents_under_lists_a_directory_and_a_document() {
+        // Given
+        let mut folder = folder();
+        folder.record("guide/a.rst".to_string(), labelled("guide/a.rst", "a"));
+        folder.record("guide/b.rst".to_string(), labelled("guide/b.rst", "b"));
+        folder.record("guides.rst".to_string(), labelled("guides.rst", "c"));
+
+        // When / Then — `guides.rst` is not under `guide`
+        assert_eq!(
+            folder.documents_under(Path::new("/work/docs/guide")),
+            ["guide/a.rst", "guide/b.rst"]
+        );
+        assert_eq!(
+            folder.documents_under(Path::new("/work/docs/guides.rst")),
+            ["guides.rst"]
+        );
+    }
+
+    #[test]
     fn test_includers_of_lists_the_documents_that_read_a_file() {
         // Given
         let mut folder = folder();
@@ -289,7 +414,11 @@ mod tests {
         folder.record("a.rst".to_string(), includer);
         folder.record("b.rst".to_string(), labelled("b.rst", "b"));
 
-        // When / Then
+        // When / Then — by the file, and by the directory holding it
         assert_eq!(folder.includers_of(&fragment), ["a.rst"]);
+        assert_eq!(
+            folder.includers_of(Path::new("/work/docs/_shared")),
+            ["a.rst"]
+        );
     }
 }

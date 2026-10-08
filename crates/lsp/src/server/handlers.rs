@@ -3,8 +3,8 @@
 
 use lsp_server::{ErrorCode, Message, Notification, Request, RequestId, Response};
 use lsp_types::notification::{
-    DidChangeTextDocument, DidCloseTextDocument, DidOpenTextDocument, Notification as _,
-    PublishDiagnostics,
+    DidChangeTextDocument, DidChangeWatchedFiles, DidCloseTextDocument, DidOpenTextDocument,
+    Notification as _, PublishDiagnostics,
 };
 use lsp_types::request::{Completion, GotoDefinition, HoverRequest, Request as _};
 use lsp_types::{
@@ -93,6 +93,14 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
             // open includer finds in it stays, and its includers now read it
             // from the disk.
             state.refresh(&uri)
+        }
+        DidChangeWatchedFiles::METHOD => {
+            let Ok(params) = notification
+                .extract::<lsp_types::DidChangeWatchedFilesParams>(DidChangeWatchedFiles::METHOD)
+            else {
+                return Vec::new();
+            };
+            state.on_watched_files(&params.changes)
         }
         _ => Vec::new(),
     }

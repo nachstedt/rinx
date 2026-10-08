@@ -21,9 +21,25 @@
 //! than recorded: a document is due when its parse or its folder's index has
 //! changed since it was last rendered, so a label added in one document
 //! re-renders every other one shown, and nothing has to remember to say so.
+//!
+//! The disk changes too, outside the editor: a file renamed in the Explorer,
+//! a branch checked out. A client announcing dynamic registration is asked to
+//! watch every file of the workspace, and an event is treated as an edit of
+//! each document it touches — a source under a folder, a file a document
+//! reads, or every document under a directory created or deleted — while an
+//! open file's event is ignored, its buffer being the truth. Everything else
+//! the client reports (build output, above all) is dropped. A document whose
+//! file is gone leaves its folder's index, so the references to it render
+//! broken. A client without dynamic registration sees none of this until the
+//! document is opened.
 
-use lsp_server::{Message, RequestId, Response};
-use lsp_types::{CompletionList, CompletionResponse, GotoDefinitionResponse, Hover, Range, Uri};
+use lsp_server::{Message, Request, RequestId, Response};
+use lsp_types::request::{RegisterCapability, Request as _};
+use lsp_types::{
+    CompletionList, CompletionResponse, DidChangeWatchedFilesRegistrationOptions, FileChangeType,
+    FileEvent, FileSystemWatcher, GlobPattern, GotoDefinitionResponse, Hover, Range, Registration,
+    RegistrationParams, Uri,
+};
 use rinx_ast::Diagnostic;
 use rinx_entity::EntitySchema;
 use rinx_renderer::config::SiteConfig;
@@ -31,6 +47,8 @@ use rinx_renderer::{ReferenceResolver, ReferenceTarget};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
+
+use rayon::prelude::*;
 
 use super::handlers::publish_diagnostics;
 use super::scan::ScanEvent;
@@ -45,7 +63,12 @@ use crate::progress::{IndexState, IndexStatus, ScanProgress};
 use crate::reference_at::reference_at;
 use crate::render::render_diagnostics;
 use crate::uri::{file_path, file_uri};
-use crate::workspace::{IndexedDocument, WorkspaceFolder};
+use crate::workspace::{
+    IndexedDocument, WorkspaceFolder, discover_sources, is_discoverable, is_visible_under,
+};
+
+/// The id the file watcher is registered under.
+const WATCH_REGISTRATION: &str = "rinx/watch";
 
 /// Everything the server remembers between messages.
 #[derive(Debug)]
@@ -69,6 +92,8 @@ pub struct ServerState {
     progress_supported: bool,
     /// Whether the client takes a definition as a link from the reference.
     definition_links: bool,
+    /// Whether the client watches files for the server when asked to.
+    watched_files: bool,
     /// The scan's progress while one runs.
     scan: Option<RunningScan>,
     /// The id the next request the server sends will carry.
@@ -103,6 +128,18 @@ struct RenderKey {
     generation: u64,
 }
 
+/// What reading one document found.
+#[derive(Debug)]
+struct Reading {
+    /// The folder holding the document and its name there, if any.
+    located: Option<(usize, String)>,
+    /// The parse, or `None` with no text to parse: a workspace document whose
+    /// file is gone, or a file that is no document at all.
+    parsed: Option<ParsedSource>,
+    /// Whether the text parsed was the document's open buffer.
+    open: bool,
+}
+
 /// A workspace scan under way.
 #[derive(Debug)]
 struct RunningScan {
@@ -128,6 +165,7 @@ impl ServerState {
             folders: Vec::new(),
             progress_supported: false,
             definition_links: false,
+            watched_files: false,
             scan: None,
             next_request_id: 1,
         }
@@ -152,6 +190,15 @@ impl ServerState {
         self
     }
 
+    /// This server, asking the client to watch the workspace's files when
+    /// `watched_files`, as a client announcing
+    /// `workspace.didChangeWatchedFiles.dynamicRegistration` does on request.
+    #[must_use]
+    pub fn with_watched_files(mut self, watched_files: bool) -> Self {
+        self.watched_files = watched_files;
+        self
+    }
+
     /// The root of every workspace folder, in the order scan events name
     /// them by.
     #[must_use]
@@ -169,8 +216,7 @@ impl ServerState {
         if self.folders.is_empty() {
             return Vec::new();
         }
-        let request_id = RequestId::from(self.next_request_id);
-        self.next_request_id += 1;
+        let request_id = self.next_request_id();
         let (progress, mut messages) = ScanProgress::start(self.progress_supported, request_id);
         self.scan = Some(RunningScan {
             progress,
@@ -179,6 +225,42 @@ impl ServerState {
         });
         messages.push(self.status(IndexState::Indexing, None).notification());
         messages
+    }
+
+    /// The request asking the client to watch every file of the workspace —
+    /// or nothing, for a client that cannot be asked or a server with no
+    /// workspace folder.
+    ///
+    /// Every file rather than the sources alone: an `.. include::`d fragment
+    /// may have any extension, and a directory renamed or deleted is reported
+    /// as one event naming the directory, which a `**/*.rst` watcher would
+    /// never see. [`Self::on_watched_files`] drops what touches no document.
+    pub(super) fn watch_files(&mut self) -> Vec<Message> {
+        if !self.watched_files || self.folders.is_empty() {
+            return Vec::new();
+        }
+        let options = DidChangeWatchedFilesRegistrationOptions {
+            watchers: vec![FileSystemWatcher {
+                glob_pattern: GlobPattern::String("**/*".to_string()),
+                kind: None,
+            }],
+        };
+        let params = RegistrationParams {
+            registrations: vec![Registration {
+                id: WATCH_REGISTRATION.to_string(),
+                method: "workspace/didChangeWatchedFiles".to_string(),
+                register_options: serde_json::to_value(options).ok(),
+            }],
+        };
+        let id = self.next_request_id();
+        vec![Request::new(id, RegisterCapability::METHOD.to_string(), params).into()]
+    }
+
+    /// The id for the next request the server sends.
+    fn next_request_id(&mut self) -> RequestId {
+        let id = RequestId::from(self.next_request_id);
+        self.next_request_id += 1;
+        id
     }
 
     /// The messages a reply from the client brings about.
@@ -368,16 +450,7 @@ impl ServerState {
     /// report — so a client waiting for it knows every other publish this
     /// change caused came first.
     pub(super) fn refresh(&mut self, changed: &Uri) -> Vec<Message> {
-        let mut includers: BTreeSet<Uri> = BTreeSet::new();
-        if let Some(path) = file_path(changed) {
-            includers.extend(self.graph.includers_of(&path));
-            includers.extend(self.workspace_includers_of(&path));
-        }
-        includers.remove(changed);
-        let mut affected = self.diagnose(changed);
-        for includer in &includers {
-            affected.extend(self.diagnose(includer));
-        }
+        let mut affected = self.rediagnose(&BTreeSet::from([changed.clone()]));
         affected.remove(changed);
         let mut messages: Vec<Message> = affected
             .into_iter()
@@ -385,6 +458,100 @@ impl ServerState {
             .collect();
         messages.extend(self.publish(changed.clone(), true));
         messages
+    }
+
+    /// Re-diagnoses the documents every file-system event in `changes`
+    /// touches, as the notifications to send. Each is re-read once, however
+    /// many events name it, and only what changed is published.
+    pub(super) fn on_watched_files(&mut self, changes: &[FileEvent]) -> Vec<Message> {
+        let touched: BTreeSet<Uri> = changes
+            .iter()
+            .flat_map(|event| self.touched_by(event))
+            .collect();
+        if touched.is_empty() {
+            return Vec::new();
+        }
+        self.rediagnose(&touched)
+            .into_iter()
+            .filter_map(|uri| self.publish(uri, false))
+            .collect()
+    }
+
+    /// The URIs a file-system `event` makes worth re-reading: the file itself
+    /// when it is a document or some document reads it (or a file under it),
+    /// and every document under a directory created or deleted. Nothing for
+    /// an open file, whose buffer the disk does not change.
+    fn touched_by(&self, event: &FileEvent) -> Vec<Uri> {
+        let Some(path) = file_path(&event.uri) else {
+            return Vec::new();
+        };
+        if self.documents.uri_of(&path).is_some() {
+            return Vec::new();
+        }
+        let mut touched = Vec::new();
+        let is_document = self
+            .folders
+            .iter()
+            .any(|folder| is_discoverable(folder.root(), &path));
+        let is_read = !self.graph.includers_of(&path).is_empty()
+            || !self.workspace_includers_of(&path).is_empty();
+        if is_document || is_read {
+            touched.extend(self.uri_of_path(&path));
+        }
+        let under: Vec<PathBuf> = if event.typ == FileChangeType::CREATED && is_directory(&path) {
+            self.folders
+                .iter()
+                .filter(|folder| is_visible_under(folder.root(), &path))
+                .flat_map(|_| discover_sources(&path))
+                .collect()
+        } else if event.typ == FileChangeType::DELETED {
+            self.folders
+                .iter()
+                .flat_map(|folder| {
+                    folder
+                        .documents_under(&path)
+                        .into_iter()
+                        .map(|doc_path| folder.path_of(&doc_path))
+                })
+                .collect()
+        } else {
+            Vec::new()
+        };
+        touched.extend(
+            under
+                .iter()
+                .filter(|document| self.documents.uri_of(document).is_none())
+                .filter_map(|document| self.uri_of_path(document)),
+        );
+        touched
+    }
+
+    /// Re-diagnoses every document in `changed` and every document that
+    /// reads one of their files, each once, returning the URIs whose
+    /// published diagnostics may have changed.
+    fn rediagnose(&mut self, changed: &BTreeSet<Uri>) -> BTreeSet<Uri> {
+        let mut includers: BTreeSet<Uri> = BTreeSet::new();
+        for uri in changed {
+            if let Some(path) = file_path(uri) {
+                includers.extend(self.graph.includers_of(&path));
+                includers.extend(self.workspace_includers_of(&path));
+            }
+        }
+        let documents: Vec<&Uri> = changed
+            .iter()
+            .chain(includers.difference(changed))
+            .collect();
+        // Reading is the expensive part and changes nothing, so a batch — a
+        // branch checked out — is read in parallel; recording stays in order.
+        let readings: Vec<Reading> = documents
+            .par_iter()
+            .map(|uri| self.read_document(uri))
+            .collect();
+        let mut affected = BTreeSet::new();
+        for (uri, reading) in documents.into_iter().zip(readings) {
+            affected.extend(self.record_reading(uri, reading));
+        }
+        affected
     }
 
     /// Diagnoses every closed document that includes an open file and is not
@@ -456,31 +623,55 @@ impl ServerState {
             .map(|(index, doc_path, _)| (index, doc_path))
     }
 
+    /// Parses the document at `uri` and records what it found: see
+    /// [`Self::read_document`] and [`Self::record_reading`]. Returns the URIs
+    /// whose published diagnostics may have changed.
+    fn diagnose(&mut self, uri: &Uri) -> BTreeSet<Uri> {
+        let reading = self.read_document(uri);
+        self.record_reading(uri, reading)
+    }
+
     /// Parses the document at `uri` — its buffer when open, else the file
-    /// when it is a workspace document — records it in its folder's index,
-    /// and records its diagnosis while it is open or includes an open file.
+    /// when it is a workspace document. Reads the server's state and the disk
+    /// but changes nothing, so a batch of documents is read in parallel.
+    fn read_document(&self, uri: &Uri) -> Reading {
+        let path = file_path(uri);
+        let located = path.as_deref().and_then(|path| self.locate(path));
+        let buffer = self.documents.get(uri);
+        let text = match (buffer, &located, &path) {
+            (Some(document), _, _) => Some(document.text.clone()),
+            (None, Some(_), Some(path)) => std::fs::read_to_string(path).ok(),
+            _ => None,
+        };
+        let doc_path = located.as_ref().map(|(_, doc_path)| doc_path.as_str());
+        let parsed = text.map(|text| parse_source(uri, doc_path, &text, &self.documents));
+        Reading {
+            located,
+            parsed,
+            open: buffer.is_some(),
+        }
+    }
+
+    /// Records what reading the document at `uri` found: its analysis in its
+    /// folder's index, and its diagnosis while it is open or includes an open
+    /// file. A closed workspace document whose file is gone leaves the index.
     /// Returns the URIs whose published diagnostics may have changed.
     ///
     /// What the last render found is dropped with the parse it was found in:
     /// its positions count in the old text. It returns when the document is
     /// rendered again.
-    fn diagnose(&mut self, uri: &Uri) -> BTreeSet<Uri> {
-        let path = file_path(uri);
-        let located = path.as_deref().and_then(|path| self.locate(path));
-        let open = self
-            .documents
-            .get(uri)
-            .map(|document| document.text.clone());
-        let text = match (&open, &located, &path) {
-            (Some(text), _, _) => text.clone(),
-            (None, Some(_), Some(path)) => match std::fs::read_to_string(path) {
-                Ok(text) => text,
-                Err(_) => return self.untrack(uri),
-            },
-            _ => return self.untrack(uri),
+    fn record_reading(&mut self, uri: &Uri, reading: Reading) -> BTreeSet<Uri> {
+        let Reading {
+            located,
+            parsed,
+            open,
+        } = reading;
+        let Some(parsed) = parsed else {
+            if let Some((folder, doc_path)) = located {
+                self.folders[folder].forget(&doc_path);
+            }
+            return self.untrack(uri);
         };
-        let doc_path = located.as_ref().map(|(_, doc_path)| doc_path.as_str());
-        let parsed = parse_source(uri, doc_path, &text, &self.documents);
         let folder = located.as_ref().map(|(folder, _)| *folder);
         if let Some((folder, doc_path)) = located {
             let indexed = IndexedDocument::of(&parsed.document, parsed.reads.paths.clone());
@@ -491,7 +682,7 @@ impl ServerState {
             .paths
             .iter()
             .any(|read| self.documents.uri_of(read).is_some());
-        if open.is_none() && !reads_open {
+        if !open && !reads_open {
             return self.untrack(uri);
         }
         self.parses += 1;
@@ -604,4 +795,10 @@ impl ServerState {
         let version = self.documents.get(&uri).map(|document| document.version);
         Some(publish_diagnostics(uri, diagnostics, version))
     }
+}
+
+/// Whether `path` is a directory itself, not a link to one — a symlinked
+/// directory is not followed, as the scan does not follow one.
+fn is_directory(path: &Path) -> bool {
+    std::fs::symlink_metadata(path).is_ok_and(|metadata| metadata.is_dir())
 }

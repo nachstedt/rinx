@@ -45,7 +45,8 @@ pub fn run(connection: &Connection) -> Result<()> {
             workspace_roots(&params),
             supports_progress(&params.capabilities),
         )
-        .with_definition_links(supports_definition_links(&params.capabilities));
+        .with_definition_links(supports_definition_links(&params.capabilities))
+        .with_watched_files(supports_watched_files(&params.capabilities));
     let mut scan_events: Receiver<ScanEvent> = never();
     let roots = state.folder_roots();
     if !roots.is_empty() {
@@ -53,7 +54,9 @@ pub fn run(connection: &Connection) -> Result<()> {
         spawn_scan(roots, sender);
         scan_events = receiver;
     }
-    for message in state.start_scan() {
+    // `initialize_finish` waited for `initialized`, so the server may now
+    // send requests of its own.
+    for message in state.watch_files().into_iter().chain(state.start_scan()) {
         connection.sender.send(message)?;
     }
 
@@ -137,6 +140,16 @@ fn supports_definition_links(capabilities: &ClientCapabilities) -> bool {
         .unwrap_or(false)
 }
 
+/// Whether the client registers a file watcher when the server asks it to.
+fn supports_watched_files(capabilities: &ClientCapabilities) -> bool {
+    capabilities
+        .workspace
+        .as_ref()
+        .and_then(|workspace| workspace.did_change_watched_files.as_ref())
+        .and_then(|watched| watched.dynamic_registration)
+        .unwrap_or(false)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -207,5 +220,26 @@ mod tests {
         // When / Then
         assert!(supports_definition_links(&capable));
         assert!(!supports_definition_links(&ClientCapabilities::default()));
+    }
+
+    #[test]
+    fn test_supports_watched_files_reads_the_dynamic_registration_capability() {
+        // Given
+        let capable = ClientCapabilities {
+            workspace: Some(lsp_types::WorkspaceClientCapabilities {
+                did_change_watched_files: Some(
+                    lsp_types::DidChangeWatchedFilesClientCapabilities {
+                        dynamic_registration: Some(true),
+                        ..lsp_types::DidChangeWatchedFilesClientCapabilities::default()
+                    },
+                ),
+                ..lsp_types::WorkspaceClientCapabilities::default()
+            }),
+            ..ClientCapabilities::default()
+        };
+
+        // When / Then
+        assert!(supports_watched_files(&capable));
+        assert!(!supports_watched_files(&ClientCapabilities::default()));
     }
 }

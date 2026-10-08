@@ -372,6 +372,72 @@ fn test_lsp_underlines_a_reference_to_a_label_no_document_defines() {
 }
 
 #[test]
+fn test_lsp_watches_the_workspace_and_breaks_a_reference_to_a_deleted_file() {
+    // Given — a scanned folder whose open `index.rst` refers to `setup.rst`,
+    // and a client that registers file watchers on request
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_watched_files");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    std::fs::write(root.join("setup.rst"), "Setup\n=====\n").expect("write");
+    let text = "Home\n====\n\nSee :doc:`setup`.\n";
+    std::fs::write(root.join("index.rst"), text).expect("write");
+    let index = format!("file://{}", root.join("index.rst").display());
+    let mut server = Server::spawn();
+    server.initialize_with(json!({
+        "capabilities": {
+            "workspace": { "didChangeWatchedFiles": { "dynamicRegistration": true } },
+        },
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+    let registration = std::iter::from_fn(|| Some(server.receive()))
+        .find_map(|message| match message {
+            Message::Request(request) if request.method == "client/registerCapability" => {
+                Some(request)
+            }
+            _ => None,
+        })
+        .expect("the watcher's registration");
+    while !matches!(
+        server.receive(),
+        Message::Notification(notification)
+            if notification.method == "rinx/status" && notification.params["state"] == "ready"
+    ) {}
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": index, "languageId": "restructuredtext", "version": 1, "text": text,
+        }}),
+    );
+    server.published_until(&index);
+
+    // When — the file is deleted, and the client's watcher reports it
+    std::fs::remove_file(root.join("setup.rst")).expect("remove");
+    server.notify(
+        "workspace/didChangeWatchedFiles",
+        json!({ "changes": [{
+            "uri": format!("file://{}", root.join("setup.rst").display()),
+            "type": 3,
+        }]}),
+    );
+    let rendered = std::iter::from_fn(|| match server.receive() {
+        Message::Notification(notification) => Some(notification),
+        _ => None,
+    })
+    .filter(|notification| notification.method == "textDocument/publishDiagnostics")
+    .map(|notification| notification.params)
+    .find(|published| !codes(published).is_empty())
+    .expect("a publish with diagnostics");
+
+    // Then
+    assert_eq!(
+        registration.params["registrations"][0]["method"],
+        "workspace/didChangeWatchedFiles"
+    );
+    assert_eq!(rendered["uri"], index.as_str());
+    assert_eq!(codes(&rendered), vec!["link.broken-doc"]);
+}
+
+#[test]
 fn test_lsp_exits_with_success_after_shutdown_and_exit() {
     // Given
     let mut server = Server::spawn();

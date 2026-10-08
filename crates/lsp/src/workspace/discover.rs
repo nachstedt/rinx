@@ -60,6 +60,26 @@ pub(super) fn is_source(path: &Path) -> bool {
         .is_some_and(|extension| extension == SOURCE_EXTENSION)
 }
 
+/// Whether `path` is a document [`discover_sources`] would find under
+/// `root`: a source with no hidden directory between `root` and it. Whether a
+/// directory on the way is a symlink is not asked — a file-system watcher does
+/// not follow one either, so no event arrives from behind it.
+#[must_use]
+pub fn is_discoverable(root: &Path, path: &Path) -> bool {
+    is_source(path) && is_visible_under(root, path)
+}
+
+/// Whether `path` lies under `root` with no hidden component in between,
+/// itself included.
+#[must_use]
+pub fn is_visible_under(root: &Path, path: &Path) -> bool {
+    path.strip_prefix(root).is_ok_and(|relative| {
+        !relative
+            .components()
+            .any(|component| component.as_os_str().to_string_lossy().starts_with('.'))
+    })
+}
+
 /// Whether the last component of `path` starts with a dot.
 fn is_hidden(path: &Path) -> bool {
     path.file_name()
@@ -160,6 +180,41 @@ mod tests {
 
         // Then
         assert_eq!(relative(&root, &sources), ["api.rst", "generated/api.rst"]);
+    }
+
+    #[test]
+    fn test_is_discoverable_agrees_with_the_scan_on_what_a_document_is() {
+        // Given
+        let root = Path::new("/work/docs");
+
+        // When / Then
+        assert!(is_discoverable(
+            root,
+            Path::new("/work/docs/guide/setup.rst")
+        ));
+        assert!(!is_discoverable(
+            root,
+            Path::new("/work/docs/.venv/lib/readme.rst")
+        ));
+        assert!(!is_discoverable(root, Path::new("/work/docs/data.csv")));
+        assert!(!is_discoverable(root, Path::new("/elsewhere/setup.rst")));
+    }
+
+    #[test]
+    fn test_is_visible_under_refuses_a_hidden_path_and_one_outside() {
+        // Given
+        let root = Path::new("/work/.config/docs");
+
+        // When / Then — the root's own hidden ancestors do not count
+        assert!(is_visible_under(
+            root,
+            Path::new("/work/.config/docs/guide")
+        ));
+        assert!(!is_visible_under(
+            root,
+            Path::new("/work/.config/docs/.git")
+        ));
+        assert!(!is_visible_under(root, Path::new("/work/other")));
     }
 
     #[test]

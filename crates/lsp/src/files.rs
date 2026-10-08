@@ -35,6 +35,20 @@ pub struct FileReads {
     pub texts: BTreeMap<PathBuf, String>,
 }
 
+/// Whether any of `reads` is the file at `path`, or lies under it when `path`
+/// is a directory — which is how a deleted or created directory reaches the
+/// documents that read a file inside it.
+///
+/// Paths order component by component, so everything under `path` sorts
+/// directly after it, and the first read from `path` on decides.
+#[must_use]
+pub fn reads_at_or_under(reads: &BTreeSet<PathBuf>, path: &Path) -> bool {
+    reads
+        .range(path.to_path_buf()..)
+        .next()
+        .is_some_and(|read| read.starts_with(path))
+}
+
 /// Reads paths relative to the document at an absolute filesystem path,
 /// open buffers first and the disk second.
 pub struct WorkspaceFiles<'a> {
@@ -112,6 +126,25 @@ mod tests {
             std::fs::write(target, contents).expect("write temp file");
         }
         dir
+    }
+
+    #[test]
+    fn test_reads_at_or_under_finds_a_file_and_a_directory_holding_one() {
+        // Given
+        let reads: BTreeSet<PathBuf> = ["/docs/_shared/note.rst", "/docs/data.csv"]
+            .into_iter()
+            .map(PathBuf::from)
+            .collect();
+
+        // When / Then
+        assert!(reads_at_or_under(&reads, Path::new("/docs/data.csv")));
+        assert!(reads_at_or_under(&reads, Path::new("/docs/_shared")));
+        assert!(!reads_at_or_under(
+            &reads,
+            Path::new("/docs/_shared/other.rst")
+        ));
+        assert!(!reads_at_or_under(&reads, Path::new("/docs/_share")));
+        assert!(!reads_at_or_under(&reads, Path::new("/elsewhere")));
     }
 
     #[test]

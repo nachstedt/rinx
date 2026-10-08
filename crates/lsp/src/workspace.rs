@@ -10,6 +10,7 @@ mod discover;
 mod folder;
 mod scan;
 
+pub use discover::{discover_sources, is_discoverable, is_visible_under};
 pub use folder::{IndexedDocument, WorkspaceFolder};
 #[cfg(test)]
 pub use scan::parse_folder_documents;
