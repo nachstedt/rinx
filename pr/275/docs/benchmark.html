@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Benchmarking Rinx — rinx</title>
+  <link rel="stylesheet" href="../default.css">
+  <script defer src="../version_switcher.js"></script>
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">rinx</h2>
+        
+        <div class="version-switcher" data-json-url="https:&#x2f;&#x2f;nachstedt.github.io&#x2f;rinx&#x2f;versions.json" hidden></div>
+        
+        
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="getting_started.html">Getting started</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="rules.html">Bazel rules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="syntax.html">Supported syntax</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="compatibility.html">Compatibility status</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="entities.html">Entities</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="intersphinx.html">Linking between documentation sites</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="vscode.html">VS Code Extension Architecture for Rinx</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="benchmark.html">Benchmarking Rinx</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Benchmarking Rinx"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="benchmark.html#benchmarking-rinx">Benchmarking Rinx</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="benchmark.html#in-ci">In CI</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="benchmark.html#the-cpython-benchmark">The CPython benchmark</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="benchmark.html#benchmarking-the-entity-model">Benchmarking the entity model</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="diagnostics.html">Diagnostic codes</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="vscode.html">&larr; VS Code Extension Architecture for Rinx</a>
+        <a class="next" href="diagnostics.html">Diagnostic codes &rarr;</a>
+      </nav>
+      
+      <a id="benchmark"></a>
+<h1 id="benchmarking-rinx">Benchmarking Rinx</h1>
+<p>This document explains how to benchmark the <code>rinx</code> documentation generator against real-world Sphinx projects.</p>
+<p>There are two benchmarks, measuring different things:</p>
+<table class="list-table">
+<thead>
+<tr>
+<th><p>Command</p>
+</th>
+<th><p>Corpus</p>
+</th>
+<th><p>Measures</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>bazel run //scripts:benchmark</code></p>
+</td>
+<td><p>CPython documentation</p>
+</td>
+<td><p>Throughput, and general RST/Sphinx coverage</p>
+</td>
+</tr>
+<tr>
+<td><p><code>bazel run //scripts:benchmark_entities</code></p>
+</td>
+<td><p>useblocks' sphinx-needs demo</p>
+</td>
+<td><p>Entity-model coverage against a real sphinx-needs project</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The corpus-agnostic half of both lives in <code>scripts/benchmark_common.py</code>: cloning a pinned tag, generating the warm-up site, timing a <code>bazel build</code>, and diffing the resulting warnings against a hand-authored whitelist. Everything below the "Benchmarking the entity model" heading is specific to the second one.</p>
+<h1 id="in-ci">In CI</h1>
+<p>Both benchmarks run in every CI run — on each pull request, on <code>main</code> and for a release — as the reusable <code>.github/workflows/benchmarks.yml</code>, and their rendered sites are published beside the documentation for the versions worth comparing against:</p>
+<ul>
+<li><p><code>pr/&lt;N&gt;/benchmarks/</code> for a pull request, linked from its preview comment,</p>
+</li>
+<li><p>https://nachstedt.github.io/rinx/main/benchmarks/index.html for <code>main</code>,</p>
+</li>
+<li><p><code>vX.Y.Z/benchmarks/</code> for the newest release only; publishing a release removes the previous one's, while its documentation stays.</p>
+</li>
+</ul>
+<p>Each has a landing page linking both sites and their full reports.</p>
+<p>The workflow's first step, <code>bazel run //scripts:benchmark_warmup</code>, compiles rinx into the disk cache the two benchmarks share, in a generated workspace declared exactly as theirs are. The benchmark steps find the binary there, so each step's duration on the Actions page is close to its site build; the job summary's <em>Corpus build</em> line is the exact figure, with the benchmark's own warm-up already subtracted.</p>
+<p><strong>Only a corpus that no longer builds fails CI.</strong> New warnings, whitelist entries that went stale and the timings are reported in the job's summary on the Actions page, never gated: the corpora are someone else's documentation, and a warning in them is a finding to triage rather than a regression. Timings on shared runners are too noisy to compare between runs.</p>
+<p>Two flags make that possible, and work locally too:</p>
+<dl>
+<dt><code>--site-out DIR</code></dt>
+<dd><p>Once the corpus has built, copy its rendered site into <code>DIR</code> (replacing what is there), with the full report as <code>report.txt</code> and the site's front page named in <code>entry.txt</code> — which is all <code>scripts/publish_pages.py</code> needs to publish it.</p>
+</dd>
+<dt><code>--summary-markdown FILE</code></dt>
+<dd><p>Append the summary as a Markdown table to <code>FILE</code> — in CI, <code>$GITHUB_STEP_SUMMARY</code>.</p>
+</dd>
+</dl>
+<p>The published sites have to fit GitHub Pages' 1 GB limit together with every other version — the reason only the newest release keeps its benchmarks, and what made the sidebar collapse by default (<code>docs/decisions/031-collapsed-navigation.md</code>): before it, CPython's site alone was 612 MB. The summary's <em>Site size</em> line is there to keep an eye on that budget.</p>
+<h1 id="the-cpython-benchmark">The CPython benchmark</h1>
+<p>We use the <strong>CPython Documentation</strong> as our primary benchmark target because of its size, complexity, and widespread use of various Sphinx extensions and syntax.</p>
+<h2 id="running-the-benchmark">Running the Benchmark</h2>
+<p>The benchmark is managed by a Python script integrated into the Bazel workspace.</p>
+<p>You can execute it by running:</p>
+<div class="highlight-bash notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">bazel</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> run //scripts:benchmark</span></span></pre></div>
+</div>
+<h3 id="what-happens-under-the-hood">What happens under the hood?</h3>
+<ol class="arabic period">
+<li><p><strong>Cloning</strong>: The script automatically performs a shallow clone of the CPython repository into a temporary directory (<code>rinx_benchmark_cpython</code> under the system temp dir), at the <strong>release tag</strong> named by <code>PYTHON_VERSION</code> in <code>scripts/benchmark.py</code> — not at <code>main</code>.</p>
+</li>
+</ol>
+<h3 id="why-the-version-is-pinned">Why the version is pinned</h3>
+<p><code>PYTHON_VERSION</code> is the single place the benchmark's Python version is decided, and it pins <em>both</em> halves of the corpus so they cannot drift apart:</p>
+<ul>
+<li><p>the CPython release tag whose <code>Doc/</code> tree is cloned (<code>v3.14.2</code>), and</p>
+</li>
+<li><p>the interpreter the generated workspace resolves, via a <code>python.toolchain(python_version = ...)</code> written into the injected <code>MODULE.bazel</code>.</p>
+</li>
+</ul>
+<p>This matters for two reasons. First, <strong>doctests</strong>: the script used to clone <code>main</code> while the interpreter came from rinx's own <code>MODULE.bazel</code>, so the documentation described a development version whose APIs the interpreter did not have. Every doctest exercising a newly added API failed for a reason that had nothing to do with rinx (<code>re.Pattern.prefixmatch</code>, <code>IPv4Network.next_network</code>, <code>PrettyPrinter(expand=...)</code>, <code>shlex.quote(force=...)</code> were all seen). Second, <strong>reproducibility</strong>: a benchmark against a moving branch produces numbers that change on their own, so a delta in <code>benchmark_result.txt</code> could never be attributed to a local change with confidence. A tag makes the corpus fixed.</p>
+<p>Overriding it for a one-off comparison:</p>
+<div class="highlight-bash notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">bazel</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> run //scripts:benchmark<span class="hl-keyword hl-operator hl-end-of-options hl-shell"> --</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> --python-version 3.13.11</span></span></pre></div>
+</div>
+<p>A version must exist on <strong>both</strong> sides to be usable: as a <code>v&lt;version&gt;</code> tag in the CPython repository, and as an entry in rules_python's <code>TOOL_VERSIONS</code> (<code>python/versions.bzl</code>) for the rules_python release this workspace depends on. CPython ships later 3.14.x tags than rules_python 2.0.0 has interpreters for, which is why the default is 3.14.2 rather than the newest patch release.</p>
+<p>Note that <code>scripts/domain_warnings_whitelist.json</code> is tied to the pinned corpus: entries for documents that do not exist at that tag are pruned automatically. Changing <code>PYTHON_VERSION</code> will therefore churn the whitelist.
+2. <strong>Bazel Project Generation</strong>: A <code>BUILD.bazel</code> file is generated on the fly inside the <code>Doc/</code> directory of the clone, utilizing a <code>glob(["**/*.rst"])</code> statement to automatically capture all reStructuredText files into a single <code>rinx_library</code> target. It also generates a <code>rinx_site</code> target to assemble the HTML.
+3. <strong>Warm-up build</strong>: A second, one-document site (<code>bench_warmup/</code>, generated beside <code>Doc/</code>) is built first. Its only purpose is to compile the <code>rinx</code> binary and resolve the Rust, Java and Python toolchains <em>before</em> the clock starts on the documentation build — see "Rendering Time" below for why this is a separate build rather than a <code>bazel build @rinx//:rinx</code>.
+4. <strong>Execution</strong>: The script then runs <code>bazel build //Doc:site</code>. This triggers <code>rinx</code> to parse, validate, and render every <code>.rst</code> file into HTML in parallel. The build currently succeeds outright against CPython's docs — toctree validation passes and HTML is produced for every page.
+5. <strong>Analysis</strong>: Once the build completes, the script traverses the generated Abstract Syntax Tree (<code>.ast</code>) JSON files located in <code>bazel-bin/</code>. It tallies up <code>Directive::Unknown</code> nodes (directives the parser doesn't recognize), <code>Toctree.ignored_options</code> (recognized toctree options the parser doesn't yet act on, e.g. <code>:caption:</code>), and per-document parser diagnostics, and prints each as a frequency map.</p>
+<h2 id="interpreting-results">Interpreting Results</h2>
+<p>The full analysis is far too long for a terminal, so the script writes it to <code>benchmark_result.txt</code> in the workspace root and prints only a compact summary (the two timings, then distinct/occurrence counts per category) to the screen, headed by the corpus and its version, after a pointer to that file. Everything described below — the frequency tables and the domain-object listings — lives in <code>benchmark_result.txt</code>; the terminal shows just the counts. (<code>benchmark_result.txt</code> is git-ignored.)</p>
+<h3 id="rendering-time">1. Rendering Time</h3>
+<p>You will see two timings, one per <code>bazel build</code>:
+:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Dependency</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">build</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">finished</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Y</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">YY</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">seconds</span></span>.</span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Documentation</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">build</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">succeeded</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">X</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">XX</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">seconds</span></span>.</span>
+<span class="hl-source hl-python"><span class="hl-meta hl-group hl-python"><span class="hl-punctuation hl-section hl-group hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Excludes</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Y</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">YY</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">seconds</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">spent</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">building</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rinx</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">itself</span></span>.<span class="hl-punctuation hl-section hl-group hl-end hl-python">)</span></span></span></pre></div>
+<p><code>X.XX</code> is the number the benchmark is about: the raw time taken by Bazel to execute the <code>rinx</code> pipeline across the entire CPython documentation suite. Since Bazel runs these in parallel, this highlights the concurrency benefits of our architecture. <code>Y.YY</code> is the cost of compiling <code>rinx</code> and fetching its toolchains, which says nothing about documentation throughput and varies wildly with how warm the Bazel cache happened to be (it dominates everything after a <code>--clean</code>).</p>
+<p>Keeping the two apart is why the warm-up site exists. Building <code>@rinx//:rinx</code> directly would not do: build tools are compiled in Bazel's <em>exec</em> configuration, so that would warm a differently-configured binary and leave the real one to be compiled inside the timed step. Building a trivial site warms exactly the configurations the corpus build reuses, at the cost of one tiny document.</p>
+<p>Each build's output is captured (so the script can time and parse it), which means neither log is streamed to your terminal. They are written to <code>bazel_deps_build.log</code> and <code>bazel_build.log</code> in the generated workspace (<code>$TMPDIR/rinx_benchmark_cpython/</code>), on both success and failure — inspect them there to see exactly what the inner builds printed. The Bazel timing profile is written alongside it as <code>profile.json.gz</code> (drop it into https://ui.perfetto.dev/ or <code>chrome://tracing</code>).</p>
+<h3 id="unsupported-directives-summary">2. Unsupported Directives Summary</h3>
+<p>A sorted list of Sphinx directives that <code>rinx</code> encountered but doesn't yet recognize (surfaced as <code>Directive::Unknown</code> nodes in the AST).</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Unsupported</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Directives</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Summary</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">doctest</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">472</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">availability</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">394</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">option</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">356</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">audit</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">event</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">191</span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span></span></pre></div>
+<p>This list serves as a prioritized roadmap for feature implementation. Implementing the most frequent missing directives will rapidly increase our compatibility with real-world Sphinx codebases.</p>
+<p>Every one of these also reports <code>directive.unknown</code> and renders as a visible error block quoting its source, so the tally below and the corpus' own pages agree about what is missing.</p>
+<h3 id="malformed-directives-summary">3. Malformed Directives Summary</h3>
+<p>The same shape, for directives <code>rinx</code> <em>does</em> implement whose content it had to refuse (<code>Directive::Malformed</code> nodes) — a <code>.. figure::</code> with no image path, a <code>.. csv-table::</code> whose data would not parse. These used to inflate the unsupported tally above, which made a document's mistake look like a gap in coverage. Each one has already reported its own diagnostic under the summary below, so this is a count rather than a roadmap.</p>
+<h3 id="ignored-toctree-options-parser-diagnostics-summaries">4. Ignored Toctree Options / Parser Diagnostics Summaries</h3>
+<p>Two smaller summaries follow: options seen on <code>.. toctree::</code> directives that are recognized but not yet acted upon (e.g. <code>:caption:</code>, <code>:numbered:</code>, <code>:hidden:</code>), and aggregated parser diagnostics (e.g. malformed grid tables) emitted per document. Both are minor compared to the unsupported-directives list, but flag smaller gaps worth closing.</p>
+<h3 id="domain-object-warnings-vs-the-whitelist">5. Domain-Object Warnings vs. the Whitelist</h3>
+<p>The render step reports <strong>domain-object</strong> cross-references (<code>:func:</code>, <code>:py:class:</code>, <code>:c:type:</code>, …) that either fail to resolve or resolve only via an object-type alias fallback. Against a large corpus like CPython these number in the hundreds, and most are <em>expected</em> — references to stdlib/C-API symbols this doc set doesn't index. To separate those from genuine regressions, the benchmark diffs them against a checked-in whitelist.</p>
+<p><strong>How it's wired:</strong> each <code>render</code> action writes a machine-readable sidecar (<code>--warnings-output</code>, one <code>*.warnings.json</code> per document) into <code>bazel-bin/Doc/site_warnings/</code>. These are a non-default output group (<code>domain_warnings</code>) — they never land in the published site bundle, but they're produced on every build. <code>scripts/benchmark.py</code> globs them and compares against the whitelist.</p>
+<p><strong>The whitelist</strong> lives at <code>scripts/domain_warnings_whitelist.json</code> and is <strong>hand-authored</strong> — there is no record/regenerate mode. Its shape:</p>
+<div class="highlight-json notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-json"><span class="hl-meta hl-mapping hl-json"><span class="hl-punctuation hl-section hl-mapping hl-begin hl-json">{</span></span></span>
+<span class="hl-source hl-json"><span class="hl-meta hl-mapping hl-json">  </span><span class="hl-meta hl-mapping hl-key hl-json"><span class="hl-string hl-quoted hl-double hl-json"><span class="hl-punctuation hl-definition hl-string hl-begin hl-json">&quot;</span>entries<span class="hl-punctuation hl-definition hl-string hl-end hl-json">&quot;</span></span></span><span class="hl-meta hl-mapping hl-json"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-json">:</span> </span><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-meta hl-sequence hl-json"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-json">[</span></span></span></span>
+<span class="hl-source hl-json"><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-meta hl-sequence hl-json">    <span class="hl-meta hl-mapping hl-json"><span class="hl-punctuation hl-section hl-mapping hl-begin hl-json">{</span></span></span></span></span>
+<span class="hl-source hl-json"><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-meta hl-sequence hl-json"><span class="hl-meta hl-mapping hl-json">      </span><span class="hl-meta hl-mapping hl-key hl-json"><span class="hl-string hl-quoted hl-double hl-json"><span class="hl-punctuation hl-definition hl-string hl-begin hl-json">&quot;</span>doc_path<span class="hl-punctuation hl-definition hl-string hl-end hl-json">&quot;</span></span></span><span class="hl-meta hl-mapping hl-json"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-json">:</span> </span><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-string hl-quoted hl-double hl-json"><span class="hl-punctuation hl-definition hl-string hl-begin hl-json">&quot;</span>Doc/library/xmlrpc.client<span class="hl-punctuation hl-definition hl-string hl-end hl-json">&quot;</span></span><span class="hl-punctuation hl-separator hl-mapping hl-pair hl-json">,</span></span></span></span></span>
+<span class="hl-source hl-json"><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-meta hl-sequence hl-json"><span class="hl-meta hl-mapping hl-value hl-json">      </span><span class="hl-meta hl-mapping hl-key hl-json"><span class="hl-string hl-quoted hl-double hl-json"><span class="hl-punctuation hl-definition hl-string hl-begin hl-json">&quot;</span>kind<span class="hl-punctuation hl-definition hl-string hl-end hl-json">&quot;</span></span></span><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-json">:</span> </span><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-string hl-quoted hl-double hl-json"><span class="hl-punctuation hl-definition hl-string hl-begin hl-json">&quot;</span>object_type_mismatch<span class="hl-punctuation hl-definition hl-string hl-end hl-json">&quot;</span></span><span class="hl-punctuation hl-separator hl-mapping hl-pair hl-json">,</span></span></span></span></span>
+<span class="hl-source hl-json"><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-meta hl-sequence hl-json"><span class="hl-meta hl-mapping hl-value hl-json">      </span><span class="hl-meta hl-mapping hl-key hl-json"><span class="hl-string hl-quoted hl-double hl-json"><span class="hl-punctuation hl-definition hl-string hl-begin hl-json">&quot;</span>target<span class="hl-punctuation hl-definition hl-string hl-end hl-json">&quot;</span></span></span><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-json">:</span> </span><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-string hl-quoted hl-double hl-json"><span class="hl-punctuation hl-definition hl-string hl-begin hl-json">&quot;</span>Fault<span class="hl-punctuation hl-definition hl-string hl-end hl-json">&quot;</span></span><span class="hl-punctuation hl-separator hl-mapping hl-pair hl-json">,</span></span></span></span></span>
+<span class="hl-source hl-json"><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-meta hl-sequence hl-json"><span class="hl-meta hl-mapping hl-value hl-json">      </span><span class="hl-meta hl-mapping hl-key hl-json"><span class="hl-string hl-quoted hl-double hl-json"><span class="hl-punctuation hl-definition hl-string hl-begin hl-json">&quot;</span>comment<span class="hl-punctuation hl-definition hl-string hl-end hl-json">&quot;</span></span></span><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-json">:</span> </span><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-string hl-quoted hl-double hl-json"><span class="hl-punctuation hl-definition hl-string hl-begin hl-json">&quot;</span>Referenced as :exc: but defined as a class upstream; expected.<span class="hl-punctuation hl-definition hl-string hl-end hl-json">&quot;</span></span></span></span></span></span>
+<span class="hl-source hl-json"><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-meta hl-sequence hl-json"><span class="hl-meta hl-mapping hl-value hl-json">    <span class="hl-punctuation hl-section hl-mapping hl-end hl-json">}</span></span></span></span></span>
+<span class="hl-source hl-json"><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-meta hl-sequence hl-json">  <span class="hl-punctuation hl-section hl-sequence hl-end hl-json">]</span></span></span></span>
+<span class="hl-source hl-json"><span class="hl-meta hl-mapping hl-value hl-json"><span class="hl-punctuation hl-section hl-mapping hl-end hl-json">}</span></span></span></pre></div>
+</div>
+<p>The two <code>kind</code> values distinguish the two failure modes:
+- <code>domain_object_reference</code> — the reference <strong>didn't resolve at all</strong>. Its <code>requested_type</code> records the object type the role asked for (the "missed type"), e.g. <code>py:class</code>.
+- <code>object_type_mismatch</code> — the reference <strong>did</strong> resolve, but to a different object type than the role asked for (via the alias fallback, e.g. <code>class</code>/<code>exception</code> or <code>c</code>'s <code>function</code>/<code>macro</code>). It carries both <code>requested_type</code> and <code>resolved_type</code>.</p>
+<p>An entry is matched to a warning by the exact triple <code>(doc_path, kind, target)</code> — the <code>requested_type</code>/<code>resolved_type</code> fields are informational, not part of the identity. <code>comment</code> is a free-text note explaining why the warning is accepted; it's yours to write and is preserved across runs.</p>
+<p>The benchmark prints the new (non-whitelisted) warnings as two separate, most-frequent-first sections so the two failure modes don't drown each other out — the leading number on each line is that warning's occurrence count across the corpus:
+- <strong>Unresolved Domain-Object References</strong> — <code>domain_object_reference</code> warnings, shown as <code>doc: 'target' (referenced as &lt;missed type&gt;)</code>.
+- <strong>Domain-Object Type Mismatches</strong> — <code>object_type_mismatch</code> warnings, shown as <code>doc: 'target' (&lt;requested&gt; -&gt; &lt;resolved&gt;)</code>.</p>
+<p>It then prints a count of occurrences suppressed by the whitelist, and a <strong>Stale Whitelist Entries</strong> list (entries that no longer match any emitted warning).</p>
+<p><strong>Auto-pruning:</strong> stale entries are removed from the whitelist file automatically, but only when the warning data is trustworthy — the Bazel build succeeded <strong>and</strong> at least one sidecar was found. Otherwise pruning is skipped (and says why), so a broken or empty build can never silently delete your accepted entries along with their comments. This is why the build no longer runs under <code>--keep_going</code>: a failed render must fail the whole build rather than under-report a document's warnings and get its whitelist entries pruned as "stale".</p>
+<p>The benchmark always exits 0 — it reports and prunes, but never gates the build on new warnings.</p>
+<h1 id="benchmarking-the-entity-model">Benchmarking the entity model</h1>
+<p><code>bazel run //scripts:benchmark_entities</code> builds a real sphinx-needs project — <strong>useblocks' own `sphinx-needs demo &lt;https://github.com/useblocks/sphinx-needs-demo&gt;`__</strong>, pinned at tag <code>v0.1.5</code> — against rinx's entity model, and reports everything the pipeline did not understand.</p>
+<p>It is deliberately <em>not</em> a throughput measurement. 39 documents will not stress the pipeline the way CPython's 500-odd do. What it produces is a triage list: every line is either a bug in the conversion or a genuine gap in the entity model.</p>
+<h2 id="why-this-corpus">Why this corpus</h2>
+<p>The entity feature exists mostly to replace sphinx-needs, and until this benchmark existed it was exercised only by <code>examples/entities/</code> — a schema we wrote ourselves against documents we wrote ourselves, which cannot tell us what a real sphinx-needs project writes.</p>
+<p>Three public corpora were considered:</p>
+<table class="list-table">
+<thead>
+<tr>
+<th><p>Corpus</p>
+</th>
+<th><p>Size</p>
+</th>
+<th><p>Where its vocabulary is declared</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><strong>useblocks/sphinx-needs-demo</strong></p>
+</td>
+<td><p>39 <code>.rst</code>, 180 KB; 20 need types, 14 link types, ~30 custom fields</p>
+</td>
+<td><p><code>docs/ubproject.toml</code> + <code>docs/schemas.json</code></p>
+</td>
+</tr>
+<tr>
+<td><p>eclipse-score/score</p>
+</td>
+<td><p>292 <code>.rst</code>, 1.6 MB</p>
+</td>
+<td><p><code>metamodel.yaml</code> in the separate <code>eclipse-score/docs-as-code</code> repository — 55 need types, 28 link types</p>
+</td>
+</tr>
+<tr>
+<td><p>eclipse-score/process_description</p>
+</td>
+<td><p>304 <code>.rst</code>, 1.4 MB</p>
+</td>
+<td><p>the same metamodel</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The Eclipse S-CORE pair is the larger and more demanding target — Apache-2.0, tagged, already Bazel-native, with real <code>:derived_from:</code>/<code>:satisfied_by:</code>/<code>:safety: ASIL_B</code> traceability — and is the obvious scale-up once the demo builds clean. It is not the starting point because its vocabulary lives in a third repository in a YAML dialect of its own, whereas the demo's is a declarative TOML written by the people who define sphinx-needs' semantics, which converts mechanically.</p>
+<h2 id="the-schema-conversion-scripts-needs-schema-py">The schema conversion (<code>scripts/needs_schema.py</code>)</h2>
+<p>A sphinx-needs project using ubCode keeps its configuration in <code>ubproject.toml</code> (announced to Sphinx by <code>needs_from_toml</code>). That file is data, so the vocabulary it declares converts into an <code>entities.toml</code>:</p>
+<table class="list-table">
+<thead>
+<tr>
+<th><p>sphinx-needs</p>
+</th>
+<th><p>rinx</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>[[needs.types]]</code> <code>directive</code>/<code>title</code>/<code>prefix</code></p>
+</td>
+<td><p><code>[[entity_type]]</code> <code>name</code>/<code>label</code>/<code>id = { prefix }</code>, with <code>argument = { fields = ["title"] }</code></p>
+</td>
+</tr>
+<tr>
+<td><p><code>[needs.fields.&lt;n&gt;]</code>, plus sphinx-needs' own built-in options</p>
+</td>
+<td><p><code>[[entity_type.attribute]]</code> on <strong>every</strong> type — sphinx-needs scopes fields to no type</p>
+</td>
+</tr>
+<tr>
+<td><p><code>[needs.fields.&lt;n&gt;.schema]</code> <code>type</code>/<code>enum</code></p>
+</td>
+<td><p>the attribute's <code>type</code> (<code>string</code>, <code>int</code>, <code>bool</code>, <code>enum</code>, <code>list&lt;string&gt;</code>, <code>list&lt;enum&gt;</code>) and <code>values</code></p>
+</td>
+</tr>
+<tr>
+<td><p><code>[needs.links.&lt;n&gt;]</code></p>
+</td>
+<td><p><code>[[entity_type.relation]]</code>, with sphinx-needs' derived <code>&lt;n&gt;_back</code> as the <code>incoming</code> option and its <code>outgoing</code>/<code>incoming</code> strings as the two labels. <code>to</code> is left off: a sphinx-needs link accepts any type</p>
+</td>
+</tr>
+<tr>
+<td><p>each <code>directive</code></p>
+</td>
+<td><p>a <code>[[role]]</code> of that name, plus one <code>need</code> role over every type</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The generated file lands in the clone (<code>&lt;workspace&gt;/entities.toml</code>), never in this repository — it is derived data, rewritten on every run.</p>
+<p><code>schemas.json</code> is read for one thing only: an option that a rule makes <em>unconditionally</em> required on one need type is narrowed onto that type. Everything else — id patterns, <code>allOf</code> conditional selects, <code>network</code> constraints across linked entities — is reported instead. Honouring the <code>required</code> half of a conditional rule would be worse than not honouring it at all.</p>
+<p>Everything the conversion cannot carry over is collected into a report rather than dropped, and printed under <strong>"Sphinx-Needs Constructs Without An Entity-Model Equivalent"</strong>. That section is as much the point of the benchmark as the diagnostics are: each entry is a question about the entity meta-model.</p>
+<h2 id="what-the-generated-workspace-looks-like">What the generated workspace looks like</h2>
+<p>Two things differ from the CPython benchmark's generated project, both forced by the corpus rather than chosen:</p>
+<ul>
+<li><p><strong>The corpus is the root package.</strong> rinx resolves a source-root-relative path (<code>/_images/logo.png</code>, and the <code>--doc-path</code> every phase keys off) against the Bazel workspace root, so a corpus whose Sphinx <code>srcdir</code> is a subdirectory would have every absolute image path miss by that prefix. The clone's <code>docs/</code> therefore <em>becomes</em> the workspace root, and the corpus lives in <code>//:demo_docs</code>. The generated <code>assets</code> and warm-up packages need no glob exclusions — a Bazel glob never crosses a package boundary.</p>
+</li>
+<li><p><strong>Every glob excludes</strong> <code>bazel-*/**</code>. A consequence of the point above: Bazel's convenience symlinks (<code>bazel-bin</code>, <code>bazel-out</code>, …) are created in the workspace root, which here is also the globbed package, so without the exclusion <code>/*.jpg</code> matches the <em>previous run's</em> <code>site_site_out/_images/</code> and makes the site's own output an input to the action that writes it — the image bundling then fails on a path Bazel cannot materialize. It hides while that action is an action-cache hit and surfaces as soon as anything re-keys it, such as a change to the rinx binary, which is the one thing this benchmark exists to measure. <code>discard_stale_corpus_outputs</code> is not a substitute: Bazel leaves its output directories read-only, so clearing them is best-effort. The CPython benchmark needs none of this — its corpus is the <code>Doc/</code> subdirectory, so the symlinks fall outside the globbed package.</p>
+</li>
+<li><p><strong>Sources spliced in from outside the source root are copied in.</strong> The parser resolves <code>..</code> by popping, so a <code>.. literalinclude:: ../pharaoh.toml</code> written in a root-level document is looked for at <code>pharaoh.toml</code>. The script copies the real file to that path in the generated workspace and declares it in <code>parse_data</code>. The alternative would be editing the corpus' own directives, which would make the benchmark measure a document set nobody wrote.</p>
+</li>
+<li><p><strong>The corpus's sources are Jinja templates.</strong> Its <code>conf.py</code> connects the
+<code>source-read</code> event and runs every document through Jinja2; 24 of the 31 open
+with a <code>{% set %}</code> naming the page and an <code>{% include %}</code> pulling in a shared
+header. The generated library therefore sets <code>jinja = True</code>, and
+<code>transclusion_targets</code> collects Jinja include targets alongside the
+<code>.. include::</code> ones so each template is declared in <code>parse_data</code> and kept out
+of <code>srcs</code>. Without it the two lines parse as the prose they literally are and
+the header reaches no page — see <code>docs/decisions/013-source-templating.md</code>.</p>
+</li>
+</ul>
+<p><code>entity_schema</code> is declared on the library <em>and</em> on the site: it is a parse-time input (it is what makes <code>.. req::</code> a directive) and an index/render-time one, and a mismatch between the two is <code>entity.schema-mismatch</code>.</p>
+<h2 id="reading-the-report">Reading the report</h2>
+<p>The full listing goes to <code>benchmark_entities_result.txt</code> in the workspace root (git-ignored); the terminal shows counts only.</p>
+<ol class="arabic period">
+<li><p><strong>Entities Parsed By Type</strong> — the positive signal. A declared type with zero instances means either the corpus never used it, or its directives sit somewhere the parser never reached (nested inside a directive we do not recognize, for instance).</p>
+</li>
+<li><p><strong>Unsupported Directives Summary</strong> — what remains of sphinx-needs and its neighbours that the entity model does not attempt — <code>needservice</code> is refused by name and so is counted in its own <code>needservice.unsupported</code> section below instead, and <code>needtable</code>, <code>needflow</code>, <code>needsequence</code>, <code>needpie</code>, <code>needbar</code>, <code>needuml</code>, <code>needarch</code>, <code>needimport</code> and <code>needextend</code> are supported and no longer appear there. Counting them is how we find out what a migrating project would lose.</p>
+</li>
+<li><p><strong>Sphinx-Needs Constructs Without An Entity-Model Equivalent</strong> — the converter's report, grouped by category.</p>
+</li>
+<li><p><strong>One section per diagnostic code</strong> (<code>entity.unknown-target</code>, <code>entity.role-type-mismatch</code>, <code>entity.invalid-attribute-value</code>, …), most frequent first, diffed against <code>scripts/entity_warnings_whitelist.json</code>.</p>
+</li>
+</ol>
+<p>The sections are built from the codes actually seen rather than hard-coded, so a diagnostic code added on the Rust side appears without this script being touched.</p>
+<h3 id="where-the-warnings-come-from">Where the warnings come from</h3>
+<p>Unlike the CPython benchmark, which reads the machine-readable <code>*.warnings.json</code> sidecars, this one parses the diagnostics out of the captured <code>bazel_build.log</code>. The sidecar carries domain-object warnings only, and the render-time entity diagnostics — a <code>:req:</code> pointing at an id no document declares — exist nowhere else.</p>
+<p>Two consequences worth knowing:</p>
+<ul>
+<li><p>The log is only complete because <strong>every corpus action re-runs on every run</strong>: the workspace is re-cloned and <code>discard_stale_corpus_outputs</code> drops the previous outputs, so no warning is lost to a cached action. It keeps <code>external/</code> (where the compiled rinx binary lives) and the generated packages, so the toolchain stays warm.</p>
+</li>
+<li><p>A warning's identity is <code>(document, code, message)</code> — <strong>the line and column are dropped</strong>. A diagnostic found while <em>indexing</em> (a derived back-link pointing at an unknown id) belongs to a document but to no line of it, and a position in the key would also make the whitelist churn whenever text above a warning moves.</p>
+</li>
+</ul>
+<p>The whitelist works exactly like <code>scripts/domain_warnings_whitelist.json</code>: hand-authored, matched on that triple, with a free-text <code>comment</code> explaining why an entry is accepted, and stale entries auto-pruned only when the build succeeded and there was output to read. The benchmark always exits 0.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="vscode.html">&larr; VS Code Extension Architecture for Rinx</a>
+        <a class="next" href="diagnostics.html">Diagnostic codes &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

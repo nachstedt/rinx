@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>struct — Interpret bytes as packed binary data — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="binary.html">Binary Data Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Binary Data Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 current has-children">
+            <a href="struct.html">struct — Interpret bytes as packed binary data</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle struct — Interpret bytes as packed binary data"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="struct.html#functions-and-exceptions">Functions and Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="struct.html#format-strings">Format Strings</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="struct.html#applications">Applications</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="struct.html#classes">Classes</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="codecs.html">codecs — Codec registry and base classes</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="binary.html">&larr; Binary Data Services</a>
+        <a class="next" href="codecs.html">codecs — Codec registry and base classes &rarr;</a>
+      </nav>
+      
+      <h1 id="struct-interpret-bytes-as-packed-binary-data"><code class="xref py module docutils literal">struct</code> — Interpret bytes as packed binary data</h1>
+<dl class="py module">
+  <dt id="py:module:struct"><code class="sig-name">struct</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/struct.py`</p>
+<span id="index-0"></span>
+<hr />
+<p>This module converts between Python values and C structs represented
+as Python <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> objects.  Compact <a href="struct.html#struct-format-strings">format strings</a>
+describe the intended conversions to/from Python values.
+The module's functions and objects can be used for two largely
+distinct applications, data exchange with external sources (files or
+network connections), or data transfer between the Python application
+and the C layer.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>When no prefix character is given, native mode is the default. It
+packs or unpacks data based on the platform and compiler on which
+the Python interpreter was built.
+The result of packing a given C struct includes pad bytes which
+maintain proper alignment for the C types involved; similarly,
+alignment is taken into account when unpacking.  In contrast, when
+communicating data between external sources, the programmer is
+responsible for defining byte ordering and padding between elements.
+See <a href="struct.html#struct-alignment">Byte Order, Size, and Alignment</a> for details.</p>
+</div>
+<p>Several <a class="reference internal" href="struct.html#py:module:struct" title="struct: Interpret bytes as packed binary data."><code class="xref py module docutils literal">struct</code></a> functions (and methods of <a class="reference internal" href="struct.html#py:class:struct.struct"><code class="xref py class docutils literal">Struct</code></a>) take a <em>buffer</em>
+argument.  This refers to objects that implement the <a href="../c-api/buffer.html#bufferobjects">Buffer Protocol</a> and
+provide either a readable or read-writable buffer.  The most common types used
+for that purpose are <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> and <a class="reference internal" href="stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a>, but many other types
+that can be viewed as an array of bytes implement the buffer protocol, so that
+they can be read/filled without additional copying from a <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> object.</p>
+<h2 id="functions-and-exceptions">Functions and Exceptions</h2>
+<p>The module defines the following exception and functions:</p>
+<dl class="py exception">
+  <dt id="py:exception:struct.error"><em class="property">exception</em> <code class="sig-name">error</code></dt>
+  <dd><p>Exception raised on various occasions; argument is a string describing what
+is wrong.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:struct.pack"><code class="sig-name">pack(format, v1, v2, ...)</code></dt>
+  <dd><p>Return a bytes object containing the values <em>v1</em>, <em>v2</em>, … packed according
+to the format string <em>format</em>.  The arguments must match the values required by
+the format exactly.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:struct.pack_into"><code class="sig-name">pack_into(format, buffer, offset, v1, v2, ...)</code></dt>
+  <dd><p>Pack the values <em>v1</em>, <em>v2</em>, … according to the format string <em>format</em> and
+write the packed bytes into the writable buffer <em>buffer</em> starting at
+position <em>offset</em>.  Note that <em>offset</em> is a required argument.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:struct.unpack"><code class="sig-name">unpack(format, buffer)</code></dt>
+  <dd><p>Unpack from the buffer <em>buffer</em> (presumably packed by <code>pack(format, ...)</code>)
+according to the format string <em>format</em>.  The result is a tuple even if it
+contains exactly one item.  The buffer's size in bytes must match the
+size required by the format, as reflected by <a class="reference internal" href="struct.html#py:function:struct.calcsize"><code class="xref py function docutils literal">calcsize</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:struct.unpack_from"><code class="sig-name">unpack_from(format, /, buffer, offset=0)</code></dt>
+  <dd><p>Unpack from <em>buffer</em> starting at position <em>offset</em>, according to the format
+string <em>format</em>.  The result is a tuple even if it contains exactly one
+item.  The buffer's size in bytes, starting at position <em>offset</em>, must be at
+least the size required by the format, as reflected by <a class="reference internal" href="struct.html#py:function:struct.calcsize"><code class="xref py function docutils literal">calcsize</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:struct.iter_unpack"><code class="sig-name">iter_unpack(format, buffer)</code></dt>
+  <dd><p>Iteratively unpack from the buffer <em>buffer</em> according to the format
+string <em>format</em>.  This function returns an iterator which will read
+equally sized chunks from the buffer until all its contents have been
+consumed.  The buffer's size in bytes must be a multiple of the size
+required by the format, as reflected by <a class="reference internal" href="struct.html#py:function:struct.calcsize"><code class="xref py function docutils literal">calcsize</code></a>.</p>
+<p>Each iteration yields a tuple as specified by the format string.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:struct.calcsize"><code class="sig-name">calcsize(format)</code></dt>
+  <dd><p>Return the size of the struct (and hence of the bytes object produced by
+<code>pack(format, ...)</code>) corresponding to the format string <em>format</em>.</p>
+</dd>
+</dl>
+<a id="struct-format-strings"></a>
+<h2 id="format-strings">Format Strings</h2>
+<p>Format strings describe the data layout when
+packing and unpacking data.  They are built up from <a href="struct.html#format-characters">format characters</a>,
+which specify the type of data being packed/unpacked.  In addition,
+special characters control the <a href="struct.html#struct-alignment">byte order, size and alignment</a>.
+Each format string consists of an optional prefix character which
+describes the overall properties of the data and one or more format
+characters which describe the actual data values and padding.</p>
+<a id="struct-alignment"></a>
+<h3 id="byte-order-size-and-alignment">Byte Order, Size, and Alignment</h3>
+<p>By default, C types are represented in the machine's native format and byte
+order, and properly aligned by skipping pad bytes if necessary (according to the
+rules used by the C compiler).
+This behavior is chosen so
+that the bytes of a packed struct correspond exactly to the memory layout
+of the corresponding C struct.
+Whether to use native byte ordering
+and padding or standard formats depends on the application.</p>
+<span id="index-1"></span>
+<p>Alternatively, the first character of the format string can be used to indicate
+the byte order, size and alignment of the packed data, according to the
+following table:</p>
+<table>
+<thead>
+<tr>
+<th><p>Character</p>
+</th>
+<th><p>Byte order</p>
+</th>
+<th><p>Size</p>
+</th>
+<th><p>Alignment</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>@</code></p>
+</td>
+<td><p>native</p>
+</td>
+<td><p>native</p>
+</td>
+<td><p>native</p>
+</td>
+</tr>
+<tr>
+<td><p><code>=</code></p>
+</td>
+<td><p>native</p>
+</td>
+<td><p>standard</p>
+</td>
+<td><p>none</p>
+</td>
+</tr>
+<tr>
+<td><p><code>&lt;</code></p>
+</td>
+<td><p>little-endian</p>
+</td>
+<td><p>standard</p>
+</td>
+<td><p>none</p>
+</td>
+</tr>
+<tr>
+<td><p><code>&gt;</code></p>
+</td>
+<td><p>big-endian</p>
+</td>
+<td><p>standard</p>
+</td>
+<td><p>none</p>
+</td>
+</tr>
+<tr>
+<td><p><code>!</code></p>
+</td>
+<td><p>network (= big-endian)</p>
+</td>
+<td><p>standard</p>
+</td>
+<td><p>none</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>If the first character is not one of these, <code>'@'</code> is assumed.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>The number 1023 (<code>0x3ff</code> in hexadecimal) has the following byte representations:</p>
+<ul>
+<li><p><code>03 ff</code> in big-endian (<code>&gt;</code>)</p>
+</li>
+<li><p><code>ff 03</code> in little-endian (<code>&lt;</code>)</p>
+</li>
+</ul>
+<p>Python example:</p>
+<blockquote>
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; import struct
+&gt;&gt;&gt; struct.pack('&gt;h', 1023)
+b'\x03\xff'
+&gt;&gt;&gt; struct.pack('&lt;h', 1023)
+b'\xff\x03'</pre></div>
+</blockquote>
+</div>
+<p>Native byte order is big-endian or little-endian, depending on the
+host system. For example, Intel x86, AMD64 (x86-64), and Apple M1 are
+little-endian; IBM z and many legacy architectures are big-endian.
+Use <a class="reference internal" href="sys.html#py:data:sys.byteorder"><code class="xref py data docutils literal">sys.byteorder</code></a> to check the endianness of your system.</p>
+<p>Native size and alignment are determined using the C compiler's
+<code>sizeof</code> expression.  This is always combined with native byte order.</p>
+<p>Standard size depends only on the format character;  see the table in
+the <a href="struct.html#format-characters">Format Characters</a> section.</p>
+<p>Note the difference between <code>'@'</code> and <code>'='</code>: both use native byte order, but
+the size and alignment of the latter is standardized.</p>
+<p>The form <code>'!'</code> represents the network byte order which is always big-endian
+as defined in <a href="#" class="broken-link">IETF RFC 1700</a>.</p>
+<p>There is no way to indicate non-native byte order (force byte-swapping); use the
+appropriate choice of <code>'&lt;'</code> or <code>'&gt;'</code>.</p>
+<p>Notes:</p>
+<ol class="arabic parens" style="counter-reset: rsl 0">
+<li><p>Padding is only automatically added between successive structure members.
+No padding is added at the beginning or the end of the encoded struct.</p>
+</li>
+<li><p>No padding is added when using non-native size and alignment, e.g.
+with '&lt;', '&gt;', '=', and '!'.</p>
+</li>
+<li><p>To align the end of a structure to the alignment requirement of a
+particular type, end the format with the code for that type with a repeat
+count of zero.  See <a href="struct.html#struct-examples">Examples</a>.</p>
+</li>
+</ol>
+<a id="format-characters"></a>
+<h3 id="format-characters">Format Characters</h3>
+<p>Format characters have the following meaning; the conversion between C and
+Python values should be obvious given their types.  The 'Standard size' column
+refers to the size of the packed value in bytes when using standard size; that
+is, when the format string starts with one of <code>'&lt;'</code>, <code>'&gt;'</code>, <code>'!'</code> or
+<code>'='</code>.  When using native size, the size of the packed value is
+platform-dependent.</p>
+<table>
+<thead>
+<tr>
+<th><p>Format</p>
+</th>
+<th><p>C Type</p>
+</th>
+<th><p>Python type</p>
+</th>
+<th><p>Standard size</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>x</code></p>
+</td>
+<td><p>pad byte</p>
+</td>
+<td><p>no value</p>
+</td>
+<td></td>
+<td><p>(7)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>c</code></p>
+</td>
+<td><p>:c:expr:`char`</p>
+</td>
+<td><p>bytes of length 1</p>
+</td>
+<td><p>1</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>b</code></p>
+</td>
+<td><p>:c:expr:`signed char`</p>
+</td>
+<td><p>integer</p>
+</td>
+<td><p>1</p>
+</td>
+<td><p>(1), (2)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>B</code></p>
+</td>
+<td><p>:c:expr:`unsigned char`</p>
+</td>
+<td><p>integer</p>
+</td>
+<td><p>1</p>
+</td>
+<td><p>(2)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>?</code></p>
+</td>
+<td><p>:c:expr:`_Bool`</p>
+</td>
+<td><p>bool</p>
+</td>
+<td><p>1</p>
+</td>
+<td><p>(1)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>h</code></p>
+</td>
+<td><p>:c:expr:`short`</p>
+</td>
+<td><p>integer</p>
+</td>
+<td><p>2</p>
+</td>
+<td><p>(2)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>H</code></p>
+</td>
+<td><p>:c:expr:`unsigned short`</p>
+</td>
+<td><p>integer</p>
+</td>
+<td><p>2</p>
+</td>
+<td><p>(2)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>i</code></p>
+</td>
+<td><p>:c:expr:`int`</p>
+</td>
+<td><p>integer</p>
+</td>
+<td><p>4</p>
+</td>
+<td><p>(2)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>I</code></p>
+</td>
+<td><p>:c:expr:`unsigned int`</p>
+</td>
+<td><p>integer</p>
+</td>
+<td><p>4</p>
+</td>
+<td><p>(2)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>l</code></p>
+</td>
+<td><p>:c:expr:`long`</p>
+</td>
+<td><p>integer</p>
+</td>
+<td><p>4</p>
+</td>
+<td><p>(2)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>L</code></p>
+</td>
+<td><p>:c:expr:`unsigned long`</p>
+</td>
+<td><p>integer</p>
+</td>
+<td><p>4</p>
+</td>
+<td><p>(2)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>q</code></p>
+</td>
+<td><p>:c:expr:`long long`</p>
+</td>
+<td><p>integer</p>
+</td>
+<td><p>8</p>
+</td>
+<td><p>(2)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>Q</code></p>
+</td>
+<td><p>:c:expr:`unsigned long
+long`</p>
+</td>
+<td><p>integer</p>
+</td>
+<td><p>8</p>
+</td>
+<td><p>(2)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>n</code></p>
+</td>
+<td><p><a href="#" class="broken-link"><code class="xref c type docutils literal">ssize_t</code></a></p>
+</td>
+<td><p>integer</p>
+</td>
+<td></td>
+<td><p>(3)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>N</code></p>
+</td>
+<td><p><a href="#" class="broken-link"><code class="xref c type docutils literal">size_t</code></a></p>
+</td>
+<td><p>integer</p>
+</td>
+<td></td>
+<td><p>(3)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>e</code></p>
+</td>
+<td><p>(6)</p>
+</td>
+<td><p>float</p>
+</td>
+<td><p>2</p>
+</td>
+<td><p>(4)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>f</code></p>
+</td>
+<td><p>:c:expr:`float`</p>
+</td>
+<td><p>float</p>
+</td>
+<td><p>4</p>
+</td>
+<td><p>(4)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>d</code></p>
+</td>
+<td><p>:c:expr:`double`</p>
+</td>
+<td><p>float</p>
+</td>
+<td><p>8</p>
+</td>
+<td><p>(4)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>F</code></p>
+</td>
+<td><p>:c:expr:`float complex`</p>
+</td>
+<td><p>complex</p>
+</td>
+<td><p>8</p>
+</td>
+<td><p>(10)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>D</code></p>
+</td>
+<td><p>:c:expr:`double complex`</p>
+</td>
+<td><p>complex</p>
+</td>
+<td><p>16</p>
+</td>
+<td><p>(10)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>s</code></p>
+</td>
+<td><p>:c:expr:`char[]`</p>
+</td>
+<td><p>bytes</p>
+</td>
+<td></td>
+<td><p>(9)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>p</code></p>
+</td>
+<td><p>:c:expr:`char[]`</p>
+</td>
+<td><p>bytes</p>
+</td>
+<td></td>
+<td><p>(8)</p>
+</td>
+</tr>
+<tr>
+<td><p><code>P</code></p>
+</td>
+<td><p>:c:expr:`void *`</p>
+</td>
+<td><p>integer</p>
+</td>
+<td></td>
+<td><p>(5)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Added support for the <code>'n'</code> and <code>'N'</code> formats.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>Added support for the <code>'e'</code> format.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>Added support for the <code>'F'</code> and <code>'D'</code> formats.</p>
+</div>
+<p>Notes:</p>
+<ol class="arabic parens" style="counter-reset: rsl 0">
+<li><span id="index-2"></span>
+<p>The <code>'?'</code> conversion code corresponds to the :c:expr:`_Bool` type
+defined by C standards since C99.  In standard mode, it is
+represented by one byte.</p>
+</li>
+<li><p>When attempting to pack a non-integer using any of the integer conversion
+codes, if the non-integer has a <a class="reference internal" href="../reference/datamodel.html#py:method:object.__index__"><code class="xref py method docutils literal">__index__</code></a> method then that method is
+called to convert the argument to an integer before packing.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p>Added use of the <a class="reference internal" href="../reference/datamodel.html#py:method:object.__index__"><code class="xref py method docutils literal">__index__</code></a> method for non-integers.</p>
+</div>
+</li>
+<li><p>The <code>'n'</code> and <code>'N'</code> conversion codes are only available for the native
+size (selected as the default or with the <code>'@'</code> byte order character).
+For the standard size, you can use whichever of the other integer formats
+fits your application.</p>
+</li>
+<li><p>For the <code>'f'</code>, <code>'d'</code> and <code>'e'</code> conversion codes, the packed
+representation uses the IEEE 754 binary32, binary64 or binary16 format (for
+<code>'f'</code>, <code>'d'</code> or <code>'e'</code> respectively), regardless of the floating-point
+format used by the platform.</p>
+</li>
+<li><p>The <code>'P'</code> format character is only available for the native byte ordering
+(selected as the default or with the <code>'@'</code> byte order character). The byte
+order character <code>'='</code> chooses to use little- or big-endian ordering based
+on the host system. The struct module does not interpret this as native
+ordering, so the <code>'P'</code> format is not available.</p>
+</li>
+<li><p>The IEEE 754 binary16 "half precision" type was introduced in the 2008
+revision of the <a href="#" class="broken-link">IEEE 754 standard</a>. It has a sign
+bit, a 5-bit exponent and 11-bit precision (with 10 bits explicitly stored),
+and can represent numbers between approximately <code>6.1e-05</code> and <code>6.5e+04</code>
+at full precision. This type is not widely supported by C compilers: on a
+typical machine, an unsigned short can be used for storage, but not for math
+operations. See the Wikipedia page on the <a href="https://en.wikipedia.org/wiki/Half-precision_floating-point_format">half-precision floating-point
+format</a> for more information.</p>
+</li>
+<li><p>When packing, <code>'x'</code> inserts one NUL byte.</p>
+</li>
+<li><p>The <code>'p'</code> format character encodes a "Pascal string", meaning a short
+variable-length string stored in a <em>fixed number of bytes</em>, given by the count.
+The first byte stored is the length of the string, or 255, whichever is
+smaller.  The bytes of the string follow.  If the string passed in to
+<a class="reference internal" href="struct.html#py:function:struct.pack"><code class="xref py function docutils literal">pack</code></a> is too long (longer than the count minus 1), only the leading
+<code>count-1</code> bytes of the string are stored.  If the string is shorter than
+<code>count-1</code>, it is padded with null bytes so that exactly count bytes in all
+are used.  Note that for <a class="reference internal" href="struct.html#py:function:struct.unpack"><code class="xref py function docutils literal">unpack</code></a>, the <code>'p'</code> format character consumes
+<code>count</code> bytes, but that the string returned can never contain more than 255
+bytes.</p>
+</li>
+<li><p>For the <code>'s'</code> format character, the count is interpreted as the length of the
+bytes, not a repeat count like for the other format characters; for example,
+<code>'10s'</code> means a single 10-byte string mapping to or from a single
+Python byte string, while <code>'10c'</code> means 10
+separate one byte character elements (e.g., <code>cccccccccc</code>) mapping
+to or from ten different Python byte objects. (See <a href="struct.html#struct-examples">Examples</a>
+for a concrete demonstration of the difference.)
+If a count is not given, it defaults to 1.  For packing, the string is
+truncated or padded with null bytes as appropriate to make it fit. For
+unpacking, the resulting bytes object always has exactly the specified number
+of bytes.  As a special case, <code>'0s'</code> means a single, empty string (while
+<code>'0c'</code> means 0 characters).</p>
+</li>
+<li><p>For the <code>'F'</code> and <code>'D'</code> format characters, the packed representation uses
+the IEEE 754 binary32 and binary64 format for components of the complex
+number, regardless of the floating-point format used by the platform.
+Note that complex types (<code>F</code> and <code>D</code>) are available unconditionally,
+despite complex types being an optional feature in C.
+As specified in the C11 standard, each complex type is represented by a
+two-element C array containing, respectively, the real and imaginary parts.</p>
+</li>
+</ol>
+<p>A format character may be preceded by an integral repeat count.  For example,
+the format string <code>'4h'</code> means exactly the same as <code>'hhhh'</code>.</p>
+<p>Whitespace characters between formats are ignored; a count and its format must
+not contain whitespace though.</p>
+<p>When packing a value <code>x</code> using one of the integer formats (<code>'b'</code>,
+<code>'B'</code>, <code>'h'</code>, <code>'H'</code>, <code>'i'</code>, <code>'I'</code>, <code>'l'</code>, <code>'L'</code>,
+<code>'q'</code>, <code>'Q'</code>), if <code>x</code> is outside the valid range for that format
+then <a class="reference internal" href="struct.html#py:exception:struct.error"><code class="xref py exception docutils literal">struct.error</code></a> is raised.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.1:</span></p>
+<p>Previously, some of the integer formats wrapped out-of-range values and
+raised <a class="reference internal" href="exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> instead of <a class="reference internal" href="struct.html#py:exception:struct.error"><code class="xref py exception docutils literal">struct.error</code></a>.</p>
+</div>
+<span id="index-3"></span>
+<p>For the <code>'?'</code> format character, the return value is either <a class="reference internal" href="constants.html#py:data:true"><code class="xref py data docutils literal">True</code></a> or
+<a class="reference internal" href="constants.html#py:data:false"><code class="xref py data docutils literal">False</code></a>. When packing, the truth value of the argument object is used.
+Either 0 or 1 in the native or standard bool representation will be packed, and
+any non-zero value will be <code>True</code> when unpacking.</p>
+<a id="struct-examples"></a>
+<h3 id="examples">Examples</h3>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Native byte order examples (designated by the <code>'@'</code> format prefix or
+lack of any prefix character) may not match what the reader's
+machine produces as
+that depends on the platform and compiler.</p>
+</div>
+<p>Pack and unpack integers of three different sizes, using big endian
+ordering:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">struct</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-constant hl-language hl-import-all hl-python">*</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&gt;bhl<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x01</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x02</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x03</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">unpack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&gt;bhl<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x01</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x02</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x03</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">calcsize</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&gt;bhl<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">7</span></span></pre></div>
+<p>Attempt to pack an integer which is too large for the defined field:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&gt;h<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">99999</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Traceback</span></span></span> </span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">most</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">recent</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">call</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">last</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python">  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;stdin&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-keyword hl-operator hl-comparison hl-python">&lt;</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">module</span></span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">struct</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">error</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">h<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-function hl-builtin hl-python">format</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">requires</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">32768</span> <span class="hl-keyword hl-operator hl-comparison hl-python">&lt;=</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">number</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">&lt;=</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">32767</span></span></pre></div>
+<p>Demonstrate the difference between <code>'s'</code> and <code>'c'</code> format
+characters:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">@ccc<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">1<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">2<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">3<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">123<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">@3s<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">123<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">123<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
+<p>Unpacked fields can be named by assigning them to variables or by wrapping
+the result in a named tuple:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">record</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">raymond   <span class="hl-constant hl-character hl-escape hl-hex hl-python">\x32</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x12</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x08</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x01</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x08</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">name</span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">serialnum</span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">school</span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">gradelevel</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">unpack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&lt;10sHHb<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">record</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">collections</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">namedtuple</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Student</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">namedtuple</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Student<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">name serialnum school gradelevel<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Student</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">_make</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">unpack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&lt;10sHHb<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">record</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Student</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">name</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">raymond   <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">serialnum</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">4658</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">school</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">264</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">gradelevel</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">8</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>The ordering of format characters may have an impact on size in native
+mode since padding is implicit. In standard mode, the user is
+responsible for inserting any desired padding.
+Note in
+the first <code>pack</code> call below that three NUL bytes were added after the
+packed <code>'#'</code> to align the following integer on a four-byte boundary.
+In this example, the output was produced on a little endian machine:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">@ci<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">#<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0x</span>12131415</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">#<span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x15</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x14</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x13</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x12</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">@ic<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0x</span>12131415</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">#<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x15</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x14</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x13</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x12</span>#<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">calcsize</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">@ci<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">8</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">calcsize</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">@ic<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">5</span></span></pre></div>
+<p>The following format <code>'llh0l'</code> results in two pad bytes being added
+at the end, assuming the platform's longs are aligned on 4-byte boundaries:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">@llh0l<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x01</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x02</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x03</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>Module <a class="reference internal" href="array.html#py:module:array" title="array: Space efficient arrays of uniformly typed numeric values."><code class="xref py module docutils literal">array</code></a></dt>
+<dd><p>Packed binary storage of homogeneous data.</p>
+</dd>
+<dt>Module <a class="reference internal" href="json.html#py:module:json" title="json: Encode and decode the JSON format."><code class="xref py module docutils literal">json</code></a></dt>
+<dd><p>JSON encoder and decoder.</p>
+</dd>
+<dt>Module <a class="reference internal" href="pickle.html#py:module:pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py module docutils literal">pickle</code></a></dt>
+<dd><p>Python object serialization.</p>
+</dd>
+</dl>
+</div>
+<a id="applications"></a>
+<h2 id="applications">Applications</h2>
+<p>Two main applications for the <a class="reference internal" href="struct.html#py:module:struct" title="struct: Interpret bytes as packed binary data."><code class="xref py module docutils literal">struct</code></a> module exist, data
+interchange between Python and C code within an application or another
+application compiled using the same compiler (<a href="struct.html#struct-native-formats">native formats</a>), and
+data interchange between applications using agreed upon data layout
+(<a href="struct.html#struct-standard-formats">standard formats</a>).  Generally speaking, the format strings
+constructed for these two domains are distinct.</p>
+<a id="struct-native-formats"></a>
+<h3 id="native-formats">Native Formats</h3>
+<p>When constructing format strings which mimic native layouts, the
+compiler and machine architecture determine byte ordering and padding.
+In such cases, the <code>@</code> format character should be used to specify
+native byte ordering and data sizes.  Internal pad bytes are normally inserted
+automatically.  It is possible that a zero-repeat format code will be
+needed at the end of a format string to round up to the correct
+byte boundary for proper alignment of consecutive chunks of data.</p>
+<p>Consider these two simple examples (on a 64-bit, little-endian
+machine):</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">calcsize</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">@lhl<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">24</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">calcsize</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">@llh<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">18</span></span></pre></div>
+<p>Data is not padded to an 8-byte boundary at the end of the second
+format string without the use of extra padding.  A zero-repeat format
+code solves that problem:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">calcsize</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">@llh0l<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">24</span></span></pre></div>
+<p>The <code>'x'</code> format code can be used to specify the repeat, but for
+native formats it is better to use a zero-repeat format like <code>'0l'</code>.</p>
+<p>By default, native byte ordering and alignment is used, but it is
+better to be explicit and use the <code>'@'</code> prefix character.</p>
+<a id="struct-standard-formats"></a>
+<h3 id="standard-formats">Standard Formats</h3>
+<p>When exchanging data beyond your process such as networking or storage,
+be precise.  Specify the exact byte order, size, and alignment.  Do
+not assume they match the native order of a particular machine.
+For example, network byte order is big-endian, while many popular CPUs
+are little-endian.  By defining this explicitly, the user need not
+care about the specifics of the platform their code is running on.
+The first character should typically be <code>&lt;</code> or <code>&gt;</code>
+(or <code>!</code>).  Padding is the responsibility of the programmer.  The
+zero-repeat format character won't work.  Instead, the user must
+explicitly add <code>'x'</code> pad bytes where needed.  Revisiting the
+examples from the previous section, we have:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">calcsize</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&lt;qh6xq<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">24</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&lt;qh6xq<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">@lhl<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">True</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">calcsize</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">@llh<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">18</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">@llh<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&lt;qqh<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">True</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">calcsize</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&lt;qqh6x<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">24</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">calcsize</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">@llh0l<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">24</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">@llh0l<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&lt;qqh6x<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">True</span></span></pre></div>
+<p>The above results (executed on a 64-bit machine) aren't guaranteed to
+match when executed on different machines.  For example, the examples
+below were executed on a 32-bit machine:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">calcsize</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&lt;qqh6x<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">24</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">calcsize</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">@llh0l<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">12</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">@llh0l<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&lt;qqh6x<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">False</span></span></pre></div>
+<a id="struct-objects"></a>
+<h2 id="classes">Classes</h2>
+<p>The <a class="reference internal" href="struct.html#py:module:struct" title="struct: Interpret bytes as packed binary data."><code class="xref py module docutils literal">struct</code></a> module also defines the following type:</p>
+<dl class="py class">
+  <dt id="py:class:struct.struct"><em class="property">class</em> <code class="sig-name">Struct(format)</code></dt>
+  <dd><p>Return a new Struct object which writes and reads binary data according to
+the format string <em>format</em>.  Creating a <code>Struct</code> object once and calling its
+methods is more efficient than calling module-level functions with the
+same format since the format string is only compiled once.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>The compiled versions of the most recent format strings passed to
+the module-level functions are cached, so programs that use only a few
+format strings needn't worry about reusing a single <a class="reference internal" href="struct.html#py:class:struct.struct"><code class="xref py class docutils literal">Struct</code></a>
+instance.</p>
+</div>
+<p>Compiled Struct objects support the following methods and attributes:</p>
+<dl class="py method">
+  <dt id="py:method:struct.struct.pack"><code class="sig-name">pack(v1, v2, ...)</code></dt>
+  <dd><p>Identical to the <a class="reference internal" href="struct.html#py:function:struct.pack"><code class="xref py function docutils literal">pack</code></a> function, using the compiled format.
+(<code>len(result)</code> will equal <a class="reference internal" href="struct.html#py:attribute:struct.struct.size"><code class="xref py attribute docutils literal">size</code></a>.)</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:struct.struct.pack_into"><code class="sig-name">pack_into(buffer, offset, v1, v2, ...)</code></dt>
+  <dd><p>Identical to the <a class="reference internal" href="struct.html#py:function:struct.pack_into"><code class="xref py function docutils literal">pack_into</code></a> function, using the compiled format.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:struct.struct.unpack"><code class="sig-name">unpack(buffer)</code></dt>
+  <dd><p>Identical to the <a class="reference internal" href="struct.html#py:function:struct.unpack"><code class="xref py function docutils literal">unpack</code></a> function, using the compiled format.
+The buffer's size in bytes must equal <a class="reference internal" href="struct.html#py:attribute:struct.struct.size"><code class="xref py attribute docutils literal">size</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:struct.struct.unpack_from"><code class="sig-name">unpack_from(buffer, offset=0)</code></dt>
+  <dd><p>Identical to the <a class="reference internal" href="struct.html#py:function:struct.unpack_from"><code class="xref py function docutils literal">unpack_from</code></a> function, using the compiled format.
+The buffer's size in bytes, starting at position <em>offset</em>, must be at least
+<a class="reference internal" href="struct.html#py:attribute:struct.struct.size"><code class="xref py attribute docutils literal">size</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:struct.struct.iter_unpack"><code class="sig-name">iter_unpack(buffer)</code></dt>
+  <dd><p>Identical to the <a class="reference internal" href="struct.html#py:function:struct.iter_unpack"><code class="xref py function docutils literal">iter_unpack</code></a> function, using the compiled format.
+The buffer's size in bytes must be a multiple of <a class="reference internal" href="struct.html#py:attribute:struct.struct.size"><code class="xref py attribute docutils literal">size</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:struct.struct.format"><code class="sig-name">format</code></dt>
+  <dd><p>The format string used to construct this Struct object.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>The format string type is now <a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> instead of <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:struct.struct.size"><code class="sig-name">size</code></dt>
+  <dd><p>The calculated size of the struct (and hence of the bytes object produced
+by the <a class="reference internal" href="struct.html#py:method:struct.struct.pack"><code class="xref py method docutils literal">pack</code></a> method) corresponding to <a class="reference internal" href="struct.html#py:attribute:struct.struct.format"><code class="xref py attribute docutils literal">format</code></a>.</p>
+</dd>
+</dl>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>The <em>repr()</em> of structs has changed.  It
+is now:</p>
+<blockquote>
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; Struct('i')
+Struct('i')</pre></div>
+</blockquote>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="binary.html">&larr; Binary Data Services</a>
+        <a class="next" href="codecs.html">codecs — Codec registry and base classes &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
