@@ -10,8 +10,9 @@
 //!
 //! A completion reads the same index: the open buffer's latest analysis is
 //! already in it, so a label typed a moment ago completes elsewhere. A hover
-//! reads it too, resolving the reference under the cursor in the document's
-//! latest parse through the renderer's own resolution.
+//! and a go-to-definition read it too, resolving the reference under the
+//! cursor in the document's latest parse through the renderer's own
+//! resolution.
 //!
 //! What only a render finds — a broken reference above all — is a second
 //! tier (ADR-038 §9). It is computed for the documents the graph diagnoses,
@@ -22,11 +23,11 @@
 //! re-renders every other one shown, and nothing has to remember to say so.
 
 use lsp_server::{Message, RequestId, Response};
-use lsp_types::{CompletionList, CompletionResponse, Hover, Uri};
+use lsp_types::{CompletionList, CompletionResponse, GotoDefinitionResponse, Hover, Range, Uri};
 use rinx_ast::Diagnostic;
 use rinx_entity::EntitySchema;
-use rinx_renderer::ReferenceResolver;
 use rinx_renderer::config::SiteConfig;
+use rinx_renderer::{ReferenceResolver, ReferenceTarget};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -34,6 +35,7 @@ use std::time::Duration;
 use super::handlers::publish_diagnostics;
 use super::scan::ScanEvent;
 use crate::completion::{completion_items, role_at};
+use crate::definition::reference_definition;
 use crate::diagnostics::{ParsedSource, diagnose_source, parse_source};
 use crate::documents::DocumentStore;
 use crate::hover::reference_hover;
@@ -65,6 +67,8 @@ pub struct ServerState {
     pub(super) folders: Vec<WorkspaceFolder>,
     /// Whether the client accepts `$/progress` reports.
     progress_supported: bool,
+    /// Whether the client takes a definition as a link from the reference.
+    definition_links: bool,
     /// The scan's progress while one runs.
     scan: Option<RunningScan>,
     /// The id the next request the server sends will carry.
@@ -123,6 +127,7 @@ impl ServerState {
             parses: 0,
             folders: Vec::new(),
             progress_supported: false,
+            definition_links: false,
             scan: None,
             next_request_id: 1,
         }
@@ -135,6 +140,15 @@ impl ServerState {
     pub fn with_workspace(mut self, roots: Vec<PathBuf>, progress_supported: bool) -> Self {
         self.folders = roots.into_iter().map(WorkspaceFolder::new).collect();
         self.progress_supported = progress_supported;
+        self
+    }
+
+    /// This server, answering a go-to-definition with links from the whole
+    /// reference when `definition_links`, as a client announcing
+    /// `textDocument.definition.linkSupport` takes them.
+    #[must_use]
+    pub fn with_definition_links(mut self, definition_links: bool) -> Self {
+        self.definition_links = definition_links;
         self
     }
 
@@ -268,11 +282,47 @@ impl ServerState {
     /// — or `None` when the cursor is on no reference, the reference would be
     /// drawn broken, or the document is not open or lies in no workspace
     /// folder.
+    pub(super) fn hover(&mut self, uri: &Uri, position: lsp_types::Position) -> Option<Hover> {
+        let (range, target, folder) = self.reference_target_at(uri, position)?;
+        let folder = &self.folders[folder];
+        Some(reference_hover(&target, range, |doc_path| {
+            file_uri(&folder.path_of(doc_path))
+        }))
+    }
+
+    /// The definition of the reference at `position` in the open document
+    /// `uri`: the file of the document the built page would link it to — or
+    /// `None` wherever [`Self::hover`] has none, and for a reference leading
+    /// to no document of the folder.
+    pub(super) fn definition(
+        &mut self,
+        uri: &Uri,
+        position: lsp_types::Position,
+    ) -> Option<GotoDefinitionResponse> {
+        let (range, target, folder) = self.reference_target_at(uri, position)?;
+        let folder = &self.folders[folder];
+        reference_definition(
+            &target,
+            range,
+            |doc_path| file_uri(&folder.path_of(doc_path)),
+            self.definition_links,
+        )
+    }
+
+    /// The reference at `position` in the open document `uri` — its range,
+    /// where it leads and the workspace folder whose index resolved it — or
+    /// `None` when the cursor is on no reference, the reference would be
+    /// drawn broken, or the document is not open or lies in no workspace
+    /// folder.
     ///
     /// Read from the document's latest parse, which every change brings up
-    /// to date before the next message is handled, so a hover never waits for
-    /// the render tier.
-    pub(super) fn hover(&mut self, uri: &Uri, position: lsp_types::Position) -> Option<Hover> {
+    /// to date before the next message is handled, so neither a hover nor a
+    /// go-to-definition waits for the render tier.
+    fn reference_target_at(
+        &mut self,
+        uri: &Uri,
+        position: lsp_types::Position,
+    ) -> Option<(Range, ReferenceTarget, usize)> {
         let text = &self.documents.get(uri)?.text;
         let line = text.lines().nth(position.line as usize).unwrap_or_default();
         let column = char_index_of(line, position.character, self.encoding) + 1;
@@ -289,10 +339,7 @@ impl ServerState {
         let index = self.folders[folder].project_index();
         let target = ReferenceResolver::new(document, index, &config, EntitySchema::empty_ref())
             .resolve(reference)?;
-        let folder = &self.folders[folder];
-        Some(reference_hover(&target, range, |doc_path| {
-            file_uri(&folder.path_of(doc_path))
-        }))
+        Some((range, target, folder))
     }
 
     /// The status of the workspace index, `state` and `elapsed` given.

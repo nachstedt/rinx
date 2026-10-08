@@ -31,10 +31,10 @@ finished one 🔶. A heading with no marker means the step has not started.
 - **Done:** #1 (PR #226), plus the testing and CI groundwork that came before #2
   (PRs #238–#248, listed at the end of M0), #2 (PR #253), #3 (PR #255),
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
-  and #7 (PR #273, prepared by #272).
+  #7 (PR #273, prepared by #272), and #8 (PR #275).
 - **Done early:** most of #12, which is the packaging, the CI artifact and the
   installed-VSIX test.
-- **Next: #8, go to definition (file level).**
+- **Next: #9, file-system watching.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -218,13 +218,23 @@ wait for the render tier, and resolves under the default site configuration
 with no inventories until #10/#13/#18. A reference inside an `.. include::`d
 fragment has no hover in the fragment yet.
 
-### 8. Go to definition (file level)
+### 8. Go to definition (file level) ✅ (#275)
 
 **You experience:** F12 opens the target document.
 
 - `node_at` + resolution → document path → URI
 - Cover `:doc:`, `:ref:`, `:numref:`, domain roles, `:any:`
 - Tests
+
+The definition reads the `ReferenceTarget` hover shows, through one lookup
+the two share, so every role hover covers has a definition too, and a
+reference drawn broken has neither. It is the start of the target
+document's file; a client announcing `linkSupport` gets a `LocationLink`
+whose origin is the whole reference, so Ctrl+hover underlines the role
+rather than one word of it. A reference into another site's inventory, or
+to a page the build writes (`genindex`), has no definition: there is no
+source to open. The limits are hover's: the default site configuration, no
+inventories, and nothing inside an `.. include::`d fragment.
 
 ### 9. File-system watching
 

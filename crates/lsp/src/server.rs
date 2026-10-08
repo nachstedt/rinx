@@ -19,6 +19,8 @@ mod state;
 #[cfg(test)]
 mod completion_tests;
 #[cfg(test)]
+mod definition_tests;
+#[cfg(test)]
 mod hover_tests;
 #[cfg(test)]
 mod notification_tests;

@@ -6,11 +6,11 @@ use lsp_types::notification::{
     DidChangeTextDocument, DidCloseTextDocument, DidOpenTextDocument, Notification as _,
     PublishDiagnostics,
 };
-use lsp_types::request::{Completion, HoverRequest, Request as _};
+use lsp_types::request::{Completion, GotoDefinition, HoverRequest, Request as _};
 use lsp_types::{
-    ClientCapabilities, CompletionOptions, CompletionParams, HoverParams, HoverProviderCapability,
-    InitializeResult, PublishDiagnosticsParams, ServerCapabilities, ServerInfo,
-    TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
+    ClientCapabilities, CompletionOptions, CompletionParams, GotoDefinitionParams, HoverParams,
+    HoverProviderCapability, InitializeResult, OneOf, PublishDiagnosticsParams, ServerCapabilities,
+    ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
 };
 
 use super::state::ServerState;
@@ -34,6 +34,7 @@ pub fn initialize_result(
                 ..CompletionOptions::default()
             }),
             hover_provider: Some(HoverProviderCapability::Simple(true)),
+            definition_provider: Some(OneOf::Left(true)),
             ..ServerCapabilities::default()
         },
         server_info: Some(ServerInfo {
@@ -98,8 +99,8 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
 }
 
 /// The response to a request other than `shutdown`, which the loop answers
-/// itself: a completion or a hover, or the refusal of a method rinx does not
-/// support or of parameters that do not parse.
+/// itself: a completion, a hover or a definition, or the refusal of a method
+/// rinx does not support or of parameters that do not parse.
 pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
     let Request { id, method, params } = request;
     match method.as_str() {
@@ -109,6 +110,16 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
                 Response::new_ok(
                     id,
                     state.hover(&position.text_document.uri, position.position),
+                )
+            }
+            Err(error) => invalid_params(id, &method, &error),
+        },
+        GotoDefinition::METHOD => match serde_json::from_value::<GotoDefinitionParams>(params) {
+            Ok(params) => {
+                let position = params.text_document_position_params;
+                Response::new_ok(
+                    id,
+                    state.definition(&position.text_document.uri, position.position),
                 )
             }
             Err(error) => invalid_params(id, &method, &error),

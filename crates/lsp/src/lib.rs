@@ -8,8 +8,8 @@
 //!
 //! - `server` is the protocol loop and the pure handlers it dispatches to;
 //! - `completion` completes a `:ref:` or `:doc:` target from the index;
-//! - `reference_at` finds the reference under the cursor, and `hover` shows
-//!   where it leads;
+//! - `reference_at` finds the reference under the cursor, `hover` shows where
+//!   it leads, and `definition` opens the document it leads to;
 //! - `diagnostics` parses an open document and converts what the parser found;
 //! - `render` renders a document for the diagnostics only a render finds;
 //! - `position` converts rinx's 1-based character positions to the protocol's
@@ -22,6 +22,7 @@
 //! - `workspace` scans the workspace folders and keeps their project index.
 
 mod completion;
+mod definition;
 mod diagnostics;
 mod documents;
 mod files;

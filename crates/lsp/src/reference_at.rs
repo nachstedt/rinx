@@ -3,7 +3,7 @@
 //! Every reference role keeps the span it was written at (ADR-003), so the
 //! reference at a position is the one whose span contains it — found by
 //! walking the parsed document's inline content, without re-reading the
-//! text. Hover asks this first, and go-to-definition (roadmap #8) will too.
+//! text. Hover and go-to-definition both ask this first.
 
 use rinx_ast::{Child, Document, InlineNode, Position, for_each_child, walk_nodes};
 
