@@ -6,7 +6,7 @@ pub(super) use super::run::run;
 pub(super) use super::scan::ScanEvent;
 pub(super) use super::state::*;
 pub(super) use crate::position::PositionEncoding;
-pub(super) use crate::workspace::scan_folder;
+pub(super) use crate::project::scan_folder;
 pub(super) use lsp_server::RequestId;
 pub(super) use lsp_server::{Connection, ErrorCode, Message, Notification, Request, Response};
 pub(super) use lsp_types::notification::{
@@ -25,6 +25,15 @@ pub(super) use lsp_types::{
 };
 pub(super) use std::path::PathBuf;
 pub(super) use std::time::Duration;
+
+/// The `index`th project the server keeps, in the order they were found.
+pub(super) fn project(state: &mut ServerState, index: usize) -> &mut crate::project::Project {
+    state
+        .projects
+        .values_mut()
+        .nth(index)
+        .expect("the server keeps that many projects")
+}
 
 pub(super) fn uri() -> Uri {
     "file:///docs/index.rst".parse().expect("valid uri")
@@ -124,6 +133,49 @@ pub(super) fn exit() -> Notification {
     )
 }
 
+/// Every render the server has pending, run to the end, as the messages it
+/// sends.
+pub(super) fn render_all(state: &mut ServerState) -> Vec<Message> {
+    let mut messages = Vec::new();
+    while state.has_pending_renders() {
+        messages.extend(state.render_next());
+    }
+    messages
+}
+
+/// A scanned server over `files`, with nothing open.
+pub(super) fn scanned(name: &str, files: &[(&str, &str)]) -> (Workspace, ServerState) {
+    let workspace = Workspace::new(name, files);
+    let (mut state, _) = workspace.server(false);
+    state.on_scan_event(workspace.scanned());
+    (workspace, state)
+}
+
+/// The labels the `index`th project's index defines.
+pub(super) fn project_labels(state: &mut ServerState, index: usize) -> Vec<String> {
+    project(state, index)
+        .project_index()
+        .targets
+        .keys()
+        .map(|name| name.as_str().to_string())
+        .collect()
+}
+
+/// The `rinx/status` parameters among `messages`, in order.
+pub(super) fn statuses(messages: &[Message]) -> Vec<serde_json::Value> {
+    messages
+        .iter()
+        .filter_map(|message| match message {
+            Message::Notification(notification)
+                if notification.method == crate::progress::STATUS_METHOD =>
+            {
+                Some(notification.params.clone())
+            }
+            _ => None,
+        })
+        .collect()
+}
+
 /// A workspace folder in a scratch directory, holding `files`.
 pub(super) struct Workspace {
     pub(super) root: PathBuf,
@@ -192,7 +244,7 @@ impl Workspace {
     pub(super) fn scanned(&self) -> ScanEvent {
         ScanEvent::Finished {
             folder: 0,
-            documents: scan_folder(&self.root, &|_, _| {}),
+            projects: scan_folder(&self.root, &|_, _| {}),
             elapsed: Duration::from_millis(800),
         }
     }

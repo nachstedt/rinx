@@ -22,6 +22,11 @@
 //! changed since it was last rendered, so a label added in one document
 //! re-renders every other one shown, and nothing has to remember to say so.
 //!
+//! Each document belongs to a project — the nearest `conf.py` above it, or
+//! its workspace folder — whose model says how it is named, parsed, indexed
+//! and rendered (see [`super::projects`]). Until the scan has found a
+//! folder's projects, the folder is one project with no configuration.
+//!
 //! The disk changes too, outside the editor: a file renamed in the Explorer,
 //! a branch checked out. A client announcing dynamic registration is asked to
 //! watch every file of the workspace, and an event is treated as an edit of
@@ -29,8 +34,9 @@
 //! reads, or every document under a directory created or deleted — while an
 //! open file's event is ignored, its buffer being the truth. Everything else
 //! the client reports (build output, above all) is dropped. A document whose
-//! file is gone leaves its folder's index, so the references to it render
-//! broken. A client without dynamic registration sees none of this until the
+//! file is gone leaves its project's index, so the references to it render
+//! broken. An event touching a `conf.py` finds the folder's projects again.
+//! A client without dynamic registration sees none of this until the
 //! document is opened.
 
 use lsp_server::{Message, Request, RequestId, Response};
@@ -42,15 +48,15 @@ use lsp_types::{
 };
 use rinx_ast::Diagnostic;
 use rinx_entity::EntitySchema;
-use rinx_renderer::config::SiteConfig;
 use rinx_renderer::{ReferenceResolver, ReferenceTarget};
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use rayon::prelude::*;
 
 use super::handlers::publish_diagnostics;
+use super::projects::ProjectId;
 use super::scan::ScanEvent;
 use crate::completion::{completion_items, role_at};
 use crate::definition::reference_definition;
@@ -59,13 +65,14 @@ use crate::documents::DocumentStore;
 use crate::hover::reference_hover;
 use crate::includes::IncludeGraph;
 use crate::position::{PositionEncoding, char_index_of, to_lsp_position, to_lsp_range};
-use crate::progress::{IndexState, IndexStatus, ScanProgress};
+use crate::progress::{IndexState, ScanProgress};
+use crate::project::{
+    DiscoveredProject, IndexedDocument, ParseSettings, Project, ScannedProject, is_visible_under,
+    sources_under,
+};
 use crate::reference_at::reference_at;
 use crate::render::render_diagnostics;
 use crate::uri::{file_path, file_uri};
-use crate::workspace::{
-    IndexedDocument, WorkspaceFolder, discover_sources, is_discoverable, is_visible_under,
-};
 
 /// The id the file watcher is registered under.
 const WATCH_REGISTRATION: &str = "rinx/watch";
@@ -86,8 +93,16 @@ pub struct ServerState {
     tracked: HashMap<Uri, TrackedDocument>,
     /// How many parses the server has recorded, which orders them.
     parses: u64,
-    /// The workspace folders, each a project of its own.
-    pub(super) folders: Vec<WorkspaceFolder>,
+    /// The root of every workspace folder.
+    pub(super) folders: Vec<PathBuf>,
+    /// The folders whose projects have been found, by the scan or since.
+    pub(super) discovered: BTreeSet<usize>,
+    /// Every project of every folder, by an id no other project ever has.
+    pub(super) projects: BTreeMap<ProjectId, Project>,
+    /// The id the next project found gets.
+    pub(super) next_project: u64,
+    /// How long the last workspace scan took, once it has finished.
+    pub(super) scan_elapsed: Option<Duration>,
     /// Whether the client accepts `$/progress` reports.
     progress_supported: bool,
     /// Whether the client takes a definition as a link from the reference.
@@ -95,7 +110,7 @@ pub struct ServerState {
     /// Whether the client watches files for the server when asked to.
     watched_files: bool,
     /// The scan's progress while one runs.
-    scan: Option<RunningScan>,
+    pub(super) scan: Option<RunningScan>,
     /// The id the next request the server sends will carry.
     next_request_id: i32,
 }
@@ -105,9 +120,9 @@ pub struct ServerState {
 #[derive(Debug)]
 struct TrackedDocument {
     parsed: ParsedSource,
-    /// The workspace folder the document is in, whose index it renders
-    /// against — `None` for one in no folder, which is never rendered.
-    folder: Option<usize>,
+    /// The project the document is in, whose index it renders against —
+    /// `None` for one in no project, which is never rendered.
+    project: Option<ProjectId>,
     /// Which parse this is, counted over every document.
     parse: u64,
     rendered: Option<Rendered>,
@@ -131,8 +146,10 @@ struct RenderKey {
 /// What reading one document found.
 #[derive(Debug)]
 struct Reading {
-    /// The folder holding the document and its name there, if any.
-    located: Option<(usize, String)>,
+    /// The document's file, if it has one.
+    path: Option<PathBuf>,
+    /// The project holding the document and its name there, if any.
+    located: Option<(ProjectId, String)>,
     /// The parse, or `None` with no text to parse: a workspace document whose
     /// file is gone, or a file that is no document at all.
     parsed: Option<ParsedSource>,
@@ -142,7 +159,7 @@ struct Reading {
 
 /// A workspace scan under way.
 #[derive(Debug)]
-struct RunningScan {
+pub(super) struct RunningScan {
     progress: ScanProgress,
     /// The folders whose scan has not finished yet.
     pending: BTreeSet<usize>,
@@ -163,6 +180,10 @@ impl ServerState {
             tracked: HashMap::new(),
             parses: 0,
             folders: Vec::new(),
+            discovered: BTreeSet::new(),
+            projects: BTreeMap::new(),
+            next_project: 0,
+            scan_elapsed: None,
             progress_supported: false,
             definition_links: false,
             watched_files: false,
@@ -173,10 +194,14 @@ impl ServerState {
 
     /// This server, indexing a workspace folder at each of `roots`, absolute
     /// paths; `progress_supported` says whether the client takes
-    /// `$/progress` reports.
+    /// `$/progress` reports. Each folder is one project with no
+    /// configuration until the scan finds its projects.
     #[must_use]
     pub fn with_workspace(mut self, roots: Vec<PathBuf>, progress_supported: bool) -> Self {
-        self.folders = roots.into_iter().map(WorkspaceFolder::new).collect();
+        for (folder, root) in roots.iter().enumerate() {
+            self.add_project(folder, DiscoveredProject::folder(root.clone()));
+        }
+        self.folders = roots;
         self.progress_supported = progress_supported;
         self
     }
@@ -203,10 +228,7 @@ impl ServerState {
     /// them by.
     #[must_use]
     pub fn folder_roots(&self) -> Vec<PathBuf> {
-        self.folders
-            .iter()
-            .map(|folder| folder.root().to_path_buf())
-            .collect()
+        self.folders.clone()
     }
 
     /// Starts the workspace scan, as the messages announcing it: a status
@@ -274,6 +296,12 @@ impl ServerState {
     /// The messages one event of the workspace scan brings about.
     pub(super) fn on_scan_event(&mut self, event: ScanEvent) -> Vec<Message> {
         match event {
+            ScanEvent::Projects { folder, projects } => {
+                if self.discovered.contains(&folder) {
+                    return Vec::new();
+                }
+                self.install_projects(folder, projects)
+            }
             ScanEvent::Progress {
                 folder,
                 done,
@@ -285,51 +313,65 @@ impl ServerState {
                 .unwrap_or_default(),
             ScanEvent::Finished {
                 folder,
-                documents,
+                projects,
                 elapsed,
-            } => self.finish_folder(folder, documents, elapsed),
+            } => self.finish_folder(folder, projects, elapsed),
         }
     }
 
-    /// Records a finished folder's documents, and once every folder is done
-    /// ends the scan: the final progress report, the ready status, and the
-    /// diagnostics of the open files a newly known document includes.
+    /// Records a finished folder's documents — into the projects the scan
+    /// found, unless the folder's projects were found again since, in which
+    /// case a project the folder no longer has the same way is left alone —
+    /// and once every folder is done ends the scan: the final progress
+    /// report, the ready status, and the diagnostics of the open files a
+    /// newly known document includes.
     fn finish_folder(
         &mut self,
         folder: usize,
-        documents: Vec<(String, IndexedDocument)>,
+        scanned: Vec<ScannedProject>,
         elapsed: Duration,
     ) -> Vec<Message> {
-        if let Some(scanned) = self.folders.get_mut(folder) {
-            scanned.record_scanned(documents);
+        let mut messages = Vec::new();
+        if !self.discovered.contains(&folder) {
+            let found = scanned
+                .iter()
+                .map(|project| project.discovered.clone())
+                .collect();
+            messages.extend(self.install_projects(folder, found));
+        }
+        for project in scanned {
+            if let Some(recorded) = self.project_with_model(folder, &project.discovered) {
+                recorded.record_scanned(project.documents);
+            }
         }
         let Some(scan) = self.scan.as_mut() else {
-            return Vec::new();
+            return messages;
         };
         scan.pending.remove(&folder);
         scan.elapsed = scan.elapsed.max(elapsed);
         if !scan.pending.is_empty() {
-            return Vec::new();
+            return messages;
         }
         let elapsed = scan.elapsed;
         let Some(mut scan) = self.scan.take() else {
-            return Vec::new();
+            return messages;
         };
+        self.scan_elapsed = Some(elapsed);
         // "Indexed" means the project index exists: folded once here, it is
         // cached until a document changes.
-        for folder in &mut self.folders {
-            folder.project_index();
+        for project in self.projects.values_mut() {
+            project.project_index();
         }
-        let mut messages = scan.progress.finish(self.document_count(), elapsed);
+        messages.extend(scan.progress.finish(self.document_count(), elapsed));
         messages.push(self.status(IndexState::Ready, Some(elapsed)).notification());
         messages.extend(self.diagnose_includers_of_open_documents());
         messages
     }
 
     /// The completion of the reference role at `position` in the open
-    /// document `uri`, from its workspace folder's index — or `None` when the
-    /// cursor is in no role completion answers for, or the document is not
-    /// open or lies in no workspace folder.
+    /// document `uri`, from its project's index — or `None` when the cursor
+    /// is in no role completion answers for, or the document is not open or
+    /// is in no project.
     ///
     /// The list is incomplete while the workspace scan runs, so the client
     /// asks again rather than filtering a list missing most documents.
@@ -341,7 +383,7 @@ impl ServerState {
         let text = &self.documents.get(uri)?.text;
         let line = text.lines().nth(position.line as usize).unwrap_or_default();
         let context = role_at(line, char_index_of(line, position.character, self.encoding))?;
-        let (folder, doc_path) = self.locate(&file_path(uri)?)?;
+        let (project, doc_path) = self.locate(&file_path(uri)?)?;
         let at = |index: usize| {
             let column = u32::try_from(index + 1).unwrap_or(u32::MAX);
             to_lsp_position(
@@ -352,7 +394,7 @@ impl ServerState {
         };
         let range = lsp_types::Range::new(at(context.replace.start), at(context.replace.end));
         let is_incomplete = self.scan.is_some();
-        let index = self.folders[folder].project_index();
+        let index = self.projects.get_mut(&project)?.project_index();
         Some(CompletionResponse::List(CompletionList {
             is_incomplete,
             items: completion_items(index, &doc_path, &context, range),
@@ -360,42 +402,40 @@ impl ServerState {
     }
 
     /// The hover for the reference at `position` in the open document `uri`:
-    /// where the built page would link it, from its workspace folder's index
-    /// — or `None` when the cursor is on no reference, the reference would be
-    /// drawn broken, or the document is not open or lies in no workspace
-    /// folder.
+    /// where the built page would link it, from its project's index — or
+    /// `None` when the cursor is on no reference, the reference would be
+    /// drawn broken, or the document is not open or is in no project.
     pub(super) fn hover(&mut self, uri: &Uri, position: lsp_types::Position) -> Option<Hover> {
-        let (range, target, folder) = self.reference_target_at(uri, position)?;
-        let folder = &self.folders[folder];
+        let (range, target, project) = self.reference_target_at(uri, position)?;
+        let project = self.projects.get(&project)?;
         Some(reference_hover(&target, range, |doc_path| {
-            file_uri(&folder.path_of(doc_path))
+            file_uri(&project.path_of(doc_path))
         }))
     }
 
     /// The definition of the reference at `position` in the open document
     /// `uri`: the file of the document the built page would link it to — or
     /// `None` wherever [`Self::hover`] has none, and for a reference leading
-    /// to no document of the folder.
+    /// to no document of the project.
     pub(super) fn definition(
         &mut self,
         uri: &Uri,
         position: lsp_types::Position,
     ) -> Option<GotoDefinitionResponse> {
-        let (range, target, folder) = self.reference_target_at(uri, position)?;
-        let folder = &self.folders[folder];
+        let (range, target, project) = self.reference_target_at(uri, position)?;
+        let project = self.projects.get(&project)?;
         reference_definition(
             &target,
             range,
-            |doc_path| file_uri(&folder.path_of(doc_path)),
+            |doc_path| file_uri(&project.path_of(doc_path)),
             self.definition_links,
         )
     }
 
     /// The reference at `position` in the open document `uri` — its range,
-    /// where it leads and the workspace folder whose index resolved it — or
-    /// `None` when the cursor is on no reference, the reference would be
-    /// drawn broken, or the document is not open or lies in no workspace
-    /// folder.
+    /// where it leads and the project whose index resolved it — or `None`
+    /// when the cursor is on no reference, the reference would be drawn
+    /// broken, or the document is not open or is in no project.
     ///
     /// Read from the document's latest parse, which every change brings up
     /// to date before the next message is handled, so neither a hover nor a
@@ -404,42 +444,24 @@ impl ServerState {
         &mut self,
         uri: &Uri,
         position: lsp_types::Position,
-    ) -> Option<(Range, ReferenceTarget, usize)> {
+    ) -> Option<(Range, ReferenceTarget, ProjectId)> {
         let text = &self.documents.get(uri)?.text;
         let line = text.lines().nth(position.line as usize).unwrap_or_default();
         let column = char_index_of(line, position.character, self.encoding) + 1;
         let at = rinx_ast::Position::new(position.line + 1, u32::try_from(column).ok()?);
         let tracked = self.tracked.get(uri)?;
-        let folder = tracked.folder?;
+        let id = tracked.project?;
         let document = &tracked.parsed.document;
         let reference = reference_at(document, at)?;
         let range = to_lsp_range(reference.span()?, text, self.encoding);
-        // Until the server reads a project's configuration (roadmap #10,
-        // #18), it resolves as a site with no `rinx.toml` and no entity
-        // schema would, as the render tier does.
-        let config = SiteConfig::default();
-        let index = self.folders[folder].project_index();
+        // With the project's configuration, as the render tier resolves; no
+        // entity schema applies until roadmap #15 and #18.
+        let project = self.projects.get_mut(&id)?;
+        let config = project.site_config();
+        let index = project.project_index();
         let target = ReferenceResolver::new(document, index, &config, EntitySchema::empty_ref())
             .resolve(reference)?;
-        Some((range, target, folder))
-    }
-
-    /// The status of the workspace index, `state` and `elapsed` given.
-    fn status(&self, state: IndexState, elapsed: Option<Duration>) -> IndexStatus {
-        IndexStatus {
-            state,
-            documents: self.document_count(),
-            elapsed_ms: elapsed
-                .map(|elapsed| u64::try_from(elapsed.as_millis()).unwrap_or(u64::MAX)),
-        }
-    }
-
-    /// The documents indexed, over every workspace folder.
-    fn document_count(&self) -> usize {
-        self.folders
-            .iter()
-            .map(WorkspaceFolder::document_count)
-            .sum()
+        Some((range, target, id))
     }
 
     /// Re-diagnoses the document at `changed`, which was just opened, edited
@@ -463,18 +485,33 @@ impl ServerState {
     /// Re-diagnoses the documents every file-system event in `changes`
     /// touches, as the notifications to send. Each is re-read once, however
     /// many events name it, and only what changed is published.
+    ///
+    /// An event touching a `conf.py` — the file itself, or a directory
+    /// created or deleted with one inside — finds its folder's projects
+    /// again first, since which files are documents may have changed.
     pub(super) fn on_watched_files(&mut self, changes: &[FileEvent]) -> Vec<Message> {
+        let reconfigured: BTreeSet<usize> = changes
+            .iter()
+            .filter_map(|event| self.folder_reconfigured_by(event))
+            .collect();
+        let mut messages: Vec<Message> = reconfigured
+            .into_iter()
+            .flat_map(|folder| self.reload_folder(folder))
+            .collect();
         let touched: BTreeSet<Uri> = changes
             .iter()
             .flat_map(|event| self.touched_by(event))
             .collect();
         if touched.is_empty() {
-            return Vec::new();
+            return messages;
         }
-        self.rediagnose(&touched)
-            .into_iter()
-            .filter_map(|uri| self.publish(uri, false))
-            .collect()
+        let affected = self.rediagnose(&touched);
+        messages.extend(
+            affected
+                .into_iter()
+                .filter_map(|uri| self.publish(uri, false)),
+        );
+        messages
     }
 
     /// The URIs a file-system `event` makes worth re-reading: the file itself
@@ -489,29 +526,32 @@ impl ServerState {
             return Vec::new();
         }
         let mut touched = Vec::new();
-        let is_document = self
-            .folders
-            .iter()
-            .any(|folder| is_discoverable(folder.root(), &path));
+        let is_document = self.locate(&path).is_some();
         let is_read = !self.graph.includers_of(&path).is_empty()
             || !self.workspace_includers_of(&path).is_empty();
         if is_document || is_read {
             touched.extend(self.uri_of_path(&path));
         }
         let under: Vec<PathBuf> = if event.typ == FileChangeType::CREATED && is_directory(&path) {
-            self.folders
+            let visible = self
+                .folders
                 .iter()
-                .filter(|folder| is_visible_under(folder.root(), &path))
-                .flat_map(|_| discover_sources(&path))
+                .any(|root| is_visible_under(root, &path));
+            self.project_holding(&path)
+                .filter(|_| visible)
+                .map(|project| sources_under(project.model(), &path))
+                .unwrap_or_default()
+                .into_iter()
+                .map(|(_, source)| source)
                 .collect()
         } else if event.typ == FileChangeType::DELETED {
-            self.folders
-                .iter()
-                .flat_map(|folder| {
-                    folder
+            self.projects
+                .values()
+                .flat_map(|project| {
+                    project
                         .documents_under(&path)
                         .into_iter()
-                        .map(|doc_path| folder.path_of(&doc_path))
+                        .map(|doc_path| project.path_of(&doc_path))
                 })
                 .collect()
         } else {
@@ -557,11 +597,11 @@ impl ServerState {
     /// Diagnoses every closed document that includes an open file and is not
     /// diagnosed yet — what a finished scan makes known — as the
     /// notifications to send.
-    fn diagnose_includers_of_open_documents(&mut self) -> Vec<Message> {
+    pub(super) fn diagnose_includers_of_open_documents(&mut self) -> Vec<Message> {
         let open: Vec<PathBuf> = self
             .folders
             .iter()
-            .flat_map(|folder| self.open_paths_under(folder.root()))
+            .flat_map(|root| self.open_paths_under(root))
             .collect();
         let mut includers: BTreeSet<Uri> = BTreeSet::new();
         for path in &open {
@@ -580,7 +620,7 @@ impl ServerState {
     }
 
     /// The location of every open document under `root`.
-    fn open_paths_under(&self, root: &Path) -> Vec<PathBuf> {
+    pub(super) fn open_paths_under(&self, root: &Path) -> Vec<PathBuf> {
         self.documents
             .uris()
             .filter_map(file_path)
@@ -591,13 +631,13 @@ impl ServerState {
     /// The URI of every workspace document whose latest parse read the file
     /// at `path`.
     fn workspace_includers_of(&self, path: &Path) -> Vec<Uri> {
-        self.folders
-            .iter()
-            .flat_map(|folder| {
-                folder
+        self.projects
+            .values()
+            .flat_map(|project| {
+                project
                     .includers_of(path)
                     .into_iter()
-                    .map(|doc_path| folder.path_of(&doc_path))
+                    .map(|doc_path| project.path_of(&doc_path))
             })
             .filter_map(|includer| self.uri_of_path(&includer))
             .collect()
@@ -605,28 +645,17 @@ impl ServerState {
 
     /// The URI the file at `path` goes by: the client's own when it is open,
     /// so a publish reaches the buffer the client knows.
-    fn uri_of_path(&self, path: &Path) -> Option<Uri> {
+    pub(super) fn uri_of_path(&self, path: &Path) -> Option<Uri> {
         self.documents
             .uri_of(path)
             .cloned()
             .or_else(|| file_uri(path))
     }
 
-    /// The workspace folder holding the document at `path`, by index, and the
-    /// document's name in it. The innermost folder wins when folders nest.
-    fn locate(&self, path: &Path) -> Option<(usize, String)> {
-        self.folders
-            .iter()
-            .enumerate()
-            .filter_map(|(index, folder)| Some((index, folder.doc_path_of(path)?, folder.root())))
-            .max_by_key(|(_, _, root)| root.components().count())
-            .map(|(index, doc_path, _)| (index, doc_path))
-    }
-
     /// Parses the document at `uri` and records what it found: see
     /// [`Self::read_document`] and [`Self::record_reading`]. Returns the URIs
     /// whose published diagnostics may have changed.
-    fn diagnose(&mut self, uri: &Uri) -> BTreeSet<Uri> {
+    pub(super) fn diagnose(&mut self, uri: &Uri) -> BTreeSet<Uri> {
         let reading = self.read_document(uri);
         self.record_reading(uri, reading)
     }
@@ -644,8 +673,14 @@ impl ServerState {
             _ => None,
         };
         let doc_path = located.as_ref().map(|(_, doc_path)| doc_path.as_str());
-        let parsed = text.map(|text| parse_source(uri, doc_path, &text, &self.documents));
+        let default_settings = ParseSettings::default();
+        let settings = located
+            .as_ref()
+            .and_then(|(project, _)| self.projects.get(project))
+            .map_or(&default_settings, |project| &project.model().settings.parse);
+        let parsed = text.map(|text| parse_source(uri, doc_path, &text, settings, &self.documents));
         Reading {
+            path,
             located,
             parsed,
             open: buffer.is_some(),
@@ -653,8 +688,9 @@ impl ServerState {
     }
 
     /// Records what reading the document at `uri` found: its analysis in its
-    /// folder's index, and its diagnosis while it is open or includes an open
-    /// file. A closed workspace document whose file is gone leaves the index.
+    /// project's index, and its diagnosis while it is open or includes an
+    /// open file. A closed workspace document whose file is gone leaves the
+    /// index.
     /// Returns the URIs whose published diagnostics may have changed.
     ///
     /// What the last render found is dropped with the parse it was found in:
@@ -662,20 +698,25 @@ impl ServerState {
     /// rendered again.
     fn record_reading(&mut self, uri: &Uri, reading: Reading) -> BTreeSet<Uri> {
         let Reading {
+            path,
             located,
             parsed,
             open,
         } = reading;
         let Some(parsed) = parsed else {
-            if let Some((folder, doc_path)) = located {
-                self.folders[folder].forget(&doc_path);
+            if let Some((project, doc_path)) = located
+                && let Some(project) = self.projects.get_mut(&project)
+            {
+                project.forget(&doc_path);
             }
             return self.untrack(uri);
         };
-        let folder = located.as_ref().map(|(folder, _)| *folder);
-        if let Some((folder, doc_path)) = located {
-            let indexed = IndexedDocument::of(&parsed.document, parsed.reads.paths.clone());
-            self.folders[folder].record(doc_path, indexed);
+        let project = located.as_ref().map(|(project, _)| *project);
+        if let (Some((id, doc_path)), Some(path)) = (located, path)
+            && let Some(project) = self.projects.get_mut(&id)
+        {
+            let indexed = IndexedDocument::of(path, &parsed.document, parsed.reads.paths.clone());
+            project.record(doc_path, indexed);
         }
         let reads_open = parsed
             .reads
@@ -690,12 +731,33 @@ impl ServerState {
             uri.clone(),
             TrackedDocument {
                 parsed,
-                folder,
+                project,
                 parse: self.parses,
                 rendered: None,
             },
         );
         self.record_diagnosis(uri)
+    }
+
+    /// The documents the graph diagnoses whose file is under `root`.
+    pub(super) fn tracked_under(&self, root: &Path) -> Vec<Uri> {
+        self.tracked
+            .keys()
+            .filter(|uri| file_path(uri).is_some_and(|path| path.starts_with(root)))
+            .cloned()
+            .collect()
+    }
+
+    /// Re-diagnoses every document in `uris` and what reads them, as the
+    /// notifications to send.
+    pub(super) fn rediagnose_and_publish(&mut self, uris: &BTreeSet<Uri>) -> Vec<Message> {
+        if uris.is_empty() {
+            return Vec::new();
+        }
+        self.rediagnose(uris)
+            .into_iter()
+            .filter_map(|uri| self.publish(uri, false))
+            .collect()
     }
 
     /// Stops diagnosing the document at `uri`, returning the URIs whose
@@ -733,7 +795,7 @@ impl ServerState {
     }
 
     /// Whether a document the server shows has not been rendered against its
-    /// latest parse and its folder's current index.
+    /// latest parse and its project's current index.
     pub(super) fn has_pending_renders(&self) -> bool {
         self.pending_render().is_some()
     }
@@ -745,14 +807,18 @@ impl ServerState {
     /// renders: a render reads the current parse and index whenever it runs,
     /// so no render's result can be stale when it is recorded.
     pub(super) fn render_next(&mut self) -> Vec<Message> {
-        let Some((uri, folder, key)) = self.pending_render() else {
+        let Some((uri, project, key)) = self.pending_render() else {
             return Vec::new();
         };
-        let index = self.folders[folder].project_index();
+        let Some(project) = self.projects.get_mut(&project) else {
+            return Vec::new();
+        };
+        let config = project.site_config();
+        let index = project.project_index();
         let Some(tracked) = self.tracked.get_mut(&uri) else {
             return Vec::new();
         };
-        let diagnostics = render_diagnostics(&tracked.parsed.document, index);
+        let diagnostics = render_diagnostics(&tracked.parsed.document, index, &config);
         tracked.rendered = Some(Rendered { key, diagnostics });
         self.record_diagnosis(&uri)
             .into_iter()
@@ -760,31 +826,33 @@ impl ServerState {
             .collect()
     }
 
-    /// The document due to be rendered next, with its folder and what the
+    /// The document due to be rendered next, with its project and what the
     /// render would read: the one most recently parsed, which is the one the
     /// author is most likely looking at.
-    fn pending_render(&self) -> Option<(Uri, usize, RenderKey)> {
+    fn pending_render(&self) -> Option<(Uri, ProjectId, RenderKey)> {
         self.tracked
             .iter()
             .filter_map(|(uri, tracked)| {
-                let folder = tracked.folder?;
+                let id = tracked.project?;
                 let key = RenderKey {
                     parse: tracked.parse,
-                    generation: self.folders[folder].generation(),
+                    generation: self.projects.get(&id)?.generation(),
                 };
                 let due = tracked
                     .rendered
                     .as_ref()
                     .is_none_or(|rendered| rendered.key != key);
-                due.then(|| (uri.clone(), folder, key))
+                due.then(|| (uri.clone(), id, key))
             })
             .max_by_key(|(_, _, key)| key.parse)
     }
 
     /// The notification publishing what `uri` shows now — or nothing, when it
-    /// shows nothing and showed nothing before, unless `always`.
-    fn publish(&mut self, uri: Uri, always: bool) -> Option<Message> {
-        let diagnostics = self.graph.diagnostics_for(&uri);
+    /// shows nothing and showed nothing before, unless `always`. A `conf.py`
+    /// shows what reading it found.
+    pub(super) fn publish(&mut self, uri: Uri, always: bool) -> Option<Message> {
+        let mut diagnostics = self.graph.diagnostics_for(&uri);
+        diagnostics.extend(self.conf_diagnostics_for(&uri));
         if diagnostics.is_empty() {
             if !self.shown.remove(&uri) && !always {
                 return None;

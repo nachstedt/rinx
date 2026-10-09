@@ -122,10 +122,18 @@ query graph with one level of caching.
 `conf.py` is Python. By default the server **does not execute it**. Instead,
 it reads the top-level assignments whose right-hand side is a literal:
 strings, numbers, booleans, lists, tuples, dicts, string concatenation. The
-reader is a small one of our own, in the manner of `rinx_cdecl` and
-`rinx_filter`, rather than a full Python parser. Anything else (an import, a
-computed value, a conditional, `extensions += [...]`) is **reported** as
-unread, naming the setting, and is never guessed at.
+reader is a small one of our own, `rinx_pyconf`, in the manner of
+`rinx_cdecl` and `rinx_filter`, rather than a full Python parser. A value that
+is no literal (an import, a computed value, a name bound only inside an `if`)
+is **reported** as unread, naming the setting, and the setting keeps its
+default; it is never guessed at.
+
+A literal changed afterwards — `extensions += [...]`, or CPython's
+`exclude_patterns.append(...)` inside an `if` — keeps the literal, and the
+change is reported where it is made as not applied. Discarding the literal
+instead would be the larger error: CPython's excluded files would all be
+indexed for the sake of one conditional entry. The reports are diagnostics
+in `conf.py` itself, under a `conf.*` family of codes.
 
 As an opt-in, available only in a VS Code trusted workspace, the server runs
 `conf.py` in the project's interpreter and dumps a whitelist of names as
@@ -291,6 +299,17 @@ itself would not give.
   reader of `BUILD` files.
 - **Executing `conf.py` by default.** Rejected: it needs the project's Python
   environment and runs workspace code before the user has trusted it.
+- **An existing Python parser or interpreter for the static reader.**
+  Rejected when step #10 was built. Ruff's `ruff_python_parser` is on
+  crates.io, but as an internal crate re-released with breaking changes every
+  week, and it pulls in a C toolchain (`stacker` → `psm`) the Bazel build has
+  never needed. `rustpython-parser` is unmaintained, replaced by Ruff's. An
+  embedded interpreter (RustPython, or CPython through PyO3) would *run*
+  `conf.py`, which the point above rejects, and without the project's own
+  Sphinx and extensions most `conf.py` files fail at their first import. A
+  parser would also save only the tokenizer and the statement skipping: the
+  literal evaluation, the modification tracking and the reporting are ours
+  either way.
 - **Running real Sphinx, as esbonio does.** That is esbonio's niche: exact,
   but slow, and it needs the project's environment. rinx's case is the
   opposite: instant and dependency-free, and approximate only where it says

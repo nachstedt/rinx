@@ -1273,6 +1273,32 @@ diagnostic_codes! {
     /// mistake on the branch that was selected.
     IfBuilderEmptyBody => "if-builder.empty-body",
 
+    // --- A Sphinx project's `conf.py`, read by the language server ---------
+    /// A setting the language server reads from `conf.py` whose value is not
+    /// a literal — computed, imported, or bound only inside an `if` — so the
+    /// editor uses the setting's default. The server reads `conf.py` without
+    /// running it.
+    ConfUnreadSetting => "conf.unread-setting",
+    /// A statement changing a setting after its literal value — `+=`,
+    /// `.append(…)`, an assignment inside an `if` — which the editor does
+    /// not run: the literal applies, and this change does not.
+    ConfModifiedSetting => "conf.modified-setting",
+    /// A setting whose literal value is not one the setting takes, or not
+    /// one rinx supports: the wrong type, a role or a domain rinx does not
+    /// know, a source suffix read by a parser other than reStructuredText's.
+    /// The editor uses the setting's default, or leaves the entry out.
+    ConfInvalidValue => "conf.invalid-value",
+    /// A `from … import *` in `conf.py`, which may set any setting without
+    /// the editor seeing it.
+    ConfWildcardImport => "conf.wildcard-import",
+    /// Two files that are one document under two source suffixes
+    /// (`intro.rst` and `intro.txt`); as in Sphinx, the first in name order
+    /// is the document and the other is ignored.
+    ConfDuplicateSource => "conf.duplicate-source",
+    /// Where the editor stopped reading `conf.py`, which Python could not
+    /// run either: the settings after it keep their defaults.
+    ConfSyntaxError => "conf.syntax-error",
+
     // --- The suppression mechanism itself ----------------------------------
     /// A `.. noqa:` comment naming an id that is not a diagnostic code. Never
     /// suppressible: a suppression that silences the report of its own typo

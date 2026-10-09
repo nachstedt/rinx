@@ -24,8 +24,14 @@ target-version = "py311"
 line-length = 100
 # So the scripts' flat imports sort as first-party.
 src = ["scripts"]
-# A real `sphinx-build` project, kept byte-for-byte as the inventory fixture.
-extend-exclude = ["crates/inventory/testdata"]
+# Fixtures, not code of ours: a real `sphinx-build` project kept byte-for-byte
+# as the inventory fixture, real `conf.py` files the `conf.py` reader is
+# checked against, and the editor tests' Sphinx project.
+extend-exclude = [
+    "crates/inventory/testdata",
+    "crates/pyconf/testdata",
+    "editors/vscode/test-fixtures",
+]
 # Python only: ruff would otherwise also reformat the ```python blocks in the
 # Markdown docs, most of which are Starlark written to Bazel's own style.
 include = ["*.py", "*.pyi"]
@@ -114,3 +120,12 @@ skip_covered = true
 # (cloning, `bazel build`) are exercised by running them, not by unit tests,
 # which is most of what is missing.
 fail_under = 80
+
+[tool.ty.src]
+# The same fixtures as ruff's `extend-exclude`: CPython's `conf.py` imports
+# modules only its own checkout has.
+exclude = [
+    "crates/inventory/testdata",
+    "crates/pyconf/testdata",
+    "editors/vscode/test-fixtures",
+]

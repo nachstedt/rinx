@@ -12,21 +12,28 @@ use std::time::{Duration, Instant};
 
 use crossbeam_channel::Sender;
 
-use crate::workspace::{IndexedDocument, scan_folder};
+use crate::project::{DiscoveredProject, ScannedProject, discover_projects, scan_projects};
 
 /// What the scan tells the protocol loop.
 #[derive(Debug)]
 pub enum ScanEvent {
+    /// Folder `folder`'s projects are found, before any document is parsed,
+    /// so a document opened meanwhile is parsed as its project says.
+    Projects {
+        folder: usize,
+        projects: Vec<DiscoveredProject>,
+    },
     /// `done` of the `total` documents of folder `folder` are scanned.
     Progress {
         folder: usize,
         done: usize,
         total: usize,
     },
-    /// Folder `folder` is scanned, `elapsed` after the scan began.
+    /// Folder `folder` is scanned, `elapsed` after the scan began. It names
+    /// the projects again, so it stands on its own.
     Finished {
         folder: usize,
-        documents: Vec<(String, IndexedDocument)>,
+        projects: Vec<ScannedProject>,
         elapsed: Duration,
     },
 }
@@ -42,7 +49,15 @@ pub fn spawn_scan(roots: Vec<PathBuf>, events: Sender<ScanEvent>) -> thread::Joi
     thread::spawn(move || {
         let started = Instant::now();
         for (folder, root) in roots.iter().enumerate() {
-            let documents = scan_folder(root, &|done, total| {
+            let projects = discover_projects(root);
+            let found = ScanEvent::Projects {
+                folder,
+                projects: projects.clone(),
+            };
+            if events.send(found).is_err() {
+                return;
+            }
+            let projects = scan_projects(projects, &|done, total| {
                 if is_report_due(done, total) {
                     let _ = events.send(ScanEvent::Progress {
                         folder,
@@ -53,7 +68,7 @@ pub fn spawn_scan(roots: Vec<PathBuf>, events: Sender<ScanEvent>) -> thread::Joi
             });
             let finished = ScanEvent::Finished {
                 folder,
-                documents,
+                projects,
                 elapsed: started.elapsed(),
             };
             if events.send(finished).is_err() {
@@ -95,7 +110,7 @@ mod tests {
     }
 
     #[test]
-    fn test_spawn_scan_reports_each_folder_finished_in_order() {
+    fn test_spawn_scan_reports_each_folders_projects_then_documents_in_order() {
         // Given
         let first = std::env::temp_dir().join("rinx_lsp_spawn_scan_first");
         let second = std::env::temp_dir().join("rinx_lsp_spawn_scan_second");
@@ -111,24 +126,41 @@ mod tests {
             .join()
             .expect("scan thread");
 
-        // Then
-        let finished: Vec<(usize, Vec<String>)> = receiver
+        // Then — each folder's projects first, then its documents
+        let events: Vec<(usize, &str, Vec<String>)> = receiver
             .try_iter()
             .filter_map(|event| match event {
+                ScanEvent::Projects { folder, projects } => Some((
+                    folder,
+                    "projects",
+                    projects
+                        .into_iter()
+                        .flat_map(|project| project.sources)
+                        .map(|(name, _)| name)
+                        .collect(),
+                )),
                 ScanEvent::Finished {
-                    folder, documents, ..
+                    folder, projects, ..
                 } => Some((
                     folder,
-                    documents.into_iter().map(|(name, _)| name).collect(),
+                    "finished",
+                    projects
+                        .into_iter()
+                        .flat_map(|project| project.documents)
+                        .map(|(name, _)| name)
+                        .collect(),
                 )),
                 ScanEvent::Progress { .. } => None,
             })
             .collect();
+        let names = |name: &str| vec![name.to_string()];
         assert_eq!(
-            finished,
+            events,
             [
-                (0, vec!["a.rst".to_string()]),
-                (1, vec!["b.rst".to_string()])
+                (0, "projects", names("a.rst")),
+                (0, "finished", names("a.rst")),
+                (1, "projects", names("b.rst")),
+                (1, "finished", names("b.rst"))
             ]
         );
     }

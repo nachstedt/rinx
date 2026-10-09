@@ -11,9 +11,10 @@
 //! pause (ADR-038 §9). No `PlantUML` is ever compiled: a diagram's template is
 //! expanded, which is all its diagnostics need.
 //!
-//! The site's configuration is the default until the server reads a project's
-//! (roadmap #10, #18), so a finding that depends on it — `numfig`, an
-//! inventory — is what a site with no `rinx.toml` would report.
+//! The site's configuration is the project's, as far as the server reads it:
+//! a Sphinx project's `root_doc`, `numfig` and `highlight_language` from its
+//! `conf.py`. Inventories come with roadmap #13 and #18, so until then an
+//! intersphinx reference is reported as a site with none would.
 
 use rinx_ast::{Diagnostic, Document};
 use rinx_index::ProjectIndex;
@@ -23,9 +24,12 @@ use rinx_renderer::config::SiteConfig;
 /// before any `.. noqa:` is applied — the conversion to the protocol filters
 /// these together with the parse's own.
 #[must_use]
-pub fn render_diagnostics(document: &Document, index: &ProjectIndex) -> Vec<Diagnostic> {
-    rinx_renderer::render_with_config(document, index, &document.path, &SiteConfig::default())
-        .diagnostics()
+pub fn render_diagnostics(
+    document: &Document,
+    index: &ProjectIndex,
+    config: &SiteConfig,
+) -> Vec<Diagnostic> {
+    rinx_renderer::render_with_config(document, index, &document.path, config).diagnostics()
 }
 
 #[cfg(test)]
@@ -62,7 +66,7 @@ mod tests {
         let index = index_of(&[("index.rst", REFERENCING)]);
 
         // When
-        let found = render_diagnostics(&document, &index);
+        let found = render_diagnostics(&document, &index, &SiteConfig::default());
 
         // Then
         let codes: Vec<DiagnosticCode> = found.iter().map(|diagnostic| diagnostic.code).collect();
@@ -80,7 +84,10 @@ mod tests {
         ]);
 
         // When / Then
-        assert_eq!(render_diagnostics(&document, &index), Vec::new());
+        assert_eq!(
+            render_diagnostics(&document, &index, &SiteConfig::default()),
+            Vec::new()
+        );
     }
 
     #[test]
@@ -91,7 +98,7 @@ mod tests {
         let index = index_of(&[("guide/intro.rst", text), ("setup.rst", "Setup\n=====\n")]);
 
         // When
-        let found = render_diagnostics(&document, &index);
+        let found = render_diagnostics(&document, &index, &SiteConfig::default());
 
         // Then
         let messages: Vec<&str> = found

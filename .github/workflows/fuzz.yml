@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [parse, lsp_session]
+        target: [parse, lsp_session, pyconf]
     defaults:
       run:
         working-directory: fuzz

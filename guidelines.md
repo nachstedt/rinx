@@ -82,6 +82,7 @@ entry under the heading it belongs to, as a single short sentence.
 - When several phases need the same state derived from a document, compute it once in an in-memory pre-pass answering by node, rather than replaying the rules in each phase's own walk.
 - When implementing a subset of a language a reference implementation embeds whole, recognise the constructs outside the subset and reject each *by name*, since the common failure is an unsupported feature rather than a typo.
 - Choose a parsing library for what it produces, not for what it saves: one that hands back a token tree still leaves the tree-building, the error wording and the panic-freedom to write by hand.
+- Before hand-writing a parser or an interpreter, check whether a maintained library already does the job, and record in the ADR why each candidate was rejected.
 - Weigh a library against the features still to come, not only the one at hand: accepting a vendored asset and a larger output is worth it when the next construct in the same family reuses the library's harder parts instead of hand-rolling them too.
 - Pin a rendering library to an asset-free, host-independent configuration and vendor whatever it then needs, since anything it resolves from the build host makes a cached artefact differ between machines.
 
@@ -134,6 +135,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Distinguish "this build does not know that name" from "it knows the name and had to refuse the content", since one diagnostic for both blames the wrong thing.
 - Build the node a reader sees and the diagnostic a log records from one message, so the page and the build log cannot explain the same failure differently.
 - Check a configuration invariant in both directions: the mistake of declaring something in one place and forgetting it in another is likelier than declaring it wrongly twice.
+- When a static reader meets code it cannot run, apply what it could read and report exactly what it skipped, rather than discarding the whole value.
 
 ## Testing
 

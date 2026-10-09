@@ -1,38 +1,43 @@
-//! One workspace folder's documents and the project index they fold into.
+//! One project's documents and the project index they fold into.
 //!
-//! The folder holds one [`DocumentAnalysis`] per document rather than a
+//! The project holds one [`DocumentAnalysis`] per document rather than a
 //! merged index, because an index cannot forget: a label deleted in the
 //! editor would stay resolvable. Replacing one document's analysis and
 //! folding the map again forgets it for free (ADR-038 §3). The fold is cached
 //! until a document changes, so a burst of edits pays for it once, when the
 //! index is next asked for.
 //!
-//! A document leaves the folder when its file is gone: deleted or renamed on
+//! A document leaves the project when its file is gone: deleted or renamed on
 //! the disk, as a file-system watcher reports it. The scan may have read it
-//! before that, so the folder remembers what it forgot until the scan's
+//! before that, so the project remembers what it forgot until the scan's
 //! result is recorded, and does not let the scan bring it back.
 //!
-//! Until `conf.py` (roadmap #10) or a Bazel manifest (#18) says otherwise,
-//! the folder is the source root: a document is named by its path within the
-//! folder, `index` is the root document, and no entity schema applies.
+//! Which files are documents, what they are named and how the index is built
+//! is the project's [`ProjectModel`]'s to say; no entity schema applies until
+//! a Bazel manifest (roadmap #18) or the sphinx-needs settings (#15) name one.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-use rinx_analyzer::{DocumentAnalysis, IndexSettings, build_project_index_from_analyses};
-use rinx_ast::Document;
+use rinx_analyzer::{DocumentAnalysis, build_project_index_from_analyses};
+use rinx_ast::{Diagnostic, Document};
 use rinx_entity::EntitySchema;
 use rinx_index::ProjectIndex;
+use rinx_renderer::config::SiteConfig;
 
-use super::discover::is_source;
+use super::discover::DiscoveredProject;
+use super::model::{DEFAULT_ROOT_DOC, ProjectModel, ProjectSource, RST_SUFFIX};
 use crate::files::reads_at_or_under;
 
-/// The root document of a folder with no configuration, as Sphinx defaults it.
-const ROOT_DOC: &str = "index";
+/// The root document Sphinx falls back to when `index` is missing
+/// (`sphinx.config.check_master_doc`, its pre-2.0 default).
+const OLD_ROOT_DOC: &str = "contents";
 
-/// What the folder knows about one document.
+/// What the project knows about one document.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IndexedDocument {
+    /// The document's file.
+    pub path: PathBuf,
     pub analysis: DocumentAnalysis,
     /// Every file the document's latest parse read, so an edit to one of
     /// them re-analyses the document.
@@ -40,20 +45,27 @@ pub struct IndexedDocument {
 }
 
 impl IndexedDocument {
-    /// What the folder records for `document`, whose parse read `reads`.
+    /// What the project records for `document`, the file at `path`, whose
+    /// parse read `reads`.
     #[must_use]
-    pub fn of(document: &Document, reads: BTreeSet<PathBuf>) -> Self {
+    pub fn of(path: PathBuf, document: &Document, reads: BTreeSet<PathBuf>) -> Self {
         Self {
+            path,
             analysis: DocumentAnalysis::of(document),
             reads,
         }
     }
 }
 
-/// A workspace folder the server indexes.
+/// A project the server indexes.
 #[derive(Debug)]
-pub struct WorkspaceFolder {
-    root: PathBuf,
+pub struct Project {
+    model: ProjectModel,
+    /// What reading `conf.py` found, positioned in [`Self::conf_text`].
+    findings: Vec<Diagnostic>,
+    conf_text: String,
+    /// The workspace folder the project was found in, by index.
+    folder: usize,
     documents: BTreeMap<String, IndexedDocument>,
     /// The fold of `documents`, until one of them changes.
     index: Option<ProjectIndex>,
@@ -68,12 +80,22 @@ pub struct WorkspaceFolder {
     scanned: bool,
 }
 
-impl WorkspaceFolder {
-    /// An empty folder at `root`, an absolute path.
+impl Project {
+    /// The project `discovered` in workspace folder `folder`, with none of
+    /// its documents recorded yet.
     #[must_use]
-    pub fn new(root: PathBuf) -> Self {
+    pub fn new(folder: usize, discovered: DiscoveredProject) -> Self {
+        let DiscoveredProject {
+            model,
+            findings,
+            conf_text,
+            sources: _,
+        } = discovered;
         Self {
-            root,
+            model,
+            findings,
+            conf_text,
+            folder,
             documents: BTreeMap::new(),
             index: None,
             generation: 0,
@@ -83,32 +105,63 @@ impl WorkspaceFolder {
     }
 
     #[must_use]
-    pub fn root(&self) -> &Path {
-        &self.root
+    pub fn model(&self) -> &ProjectModel {
+        &self.model
     }
 
-    /// The name of the document at `path` within this folder — its path
-    /// relative to the root, `/`-separated as the build names it — or `None`
-    /// when `path` is not a document under this folder.
+    #[must_use]
+    pub fn root(&self) -> &Path {
+        &self.model.source_root
+    }
+
+    /// The workspace folder the project was found in.
+    #[must_use]
+    pub fn folder(&self) -> usize {
+        self.folder
+    }
+
+    /// The `conf.py` configuring the project, if it is a Sphinx project.
+    #[must_use]
+    pub fn conf_path(&self) -> Option<&Path> {
+        match &self.model.source {
+            ProjectSource::SphinxConf { conf } => Some(conf),
+            ProjectSource::Folder => None,
+        }
+    }
+
+    /// What reading `conf.py` found, and the text its positions count in.
+    #[must_use]
+    pub fn conf_findings(&self) -> (&[Diagnostic], &str) {
+        (&self.findings, &self.conf_text)
+    }
+
+    /// Takes `findings`, and the `conf.py` text they are positioned in, as
+    /// what reading the project's `conf.py` now finds.
+    pub fn set_conf_findings(&mut self, findings: Vec<Diagnostic>, conf_text: String) {
+        self.findings = findings;
+        self.conf_text = conf_text;
+    }
+
+    /// The name of the document at `path` in this project, or `None` when
+    /// `path` is no document of it — by its model's rules, or because
+    /// another file is already the document of that name: of two files one
+    /// document under two suffixes, the first by name is, as in Sphinx.
     #[must_use]
     pub fn doc_path_of(&self, path: &Path) -> Option<String> {
-        if !is_source(path) {
-            return None;
+        let doc_path = self.model.doc_path_of(path)?;
+        match self.documents.get(&doc_path) {
+            Some(recorded) if recorded.path.as_path() < path => None,
+            _ => Some(doc_path),
         }
-        let relative = path.strip_prefix(&self.root).ok()?;
-        let components: Vec<String> = relative
-            .components()
-            .map(|component| component.as_os_str().to_string_lossy().into_owned())
-            .collect();
-        Some(components.join("/"))
     }
 
-    /// The location of the document named `doc_path`.
+    /// The file of the document named `doc_path`.
     #[must_use]
     pub fn path_of(&self, doc_path: &str) -> PathBuf {
-        doc_path
-            .split('/')
-            .fold(self.root.clone(), |path, component| path.join(component))
+        self.documents.get(doc_path).map_or_else(
+            || self.model.source_path(doc_path),
+            |recorded| recorded.path.clone(),
+        )
     }
 
     /// Records `indexed` as the latest analysis of the document `doc_path`.
@@ -120,7 +173,7 @@ impl WorkspaceFolder {
         }
     }
 
-    /// Records each scanned document the folder does not know yet. A
+    /// Records each scanned document the project does not know yet. A
     /// document already recorded was analysed after the scan read it from
     /// the disk — from its open buffer, or as the includer of an open file —
     /// so it is the more recent of the two. A document forgotten meanwhile is
@@ -151,18 +204,25 @@ impl WorkspaceFolder {
         }
     }
 
+    /// Every document recorded, by its name, with its file.
+    pub fn documents(&self) -> impl Iterator<Item = (&str, &Path)> {
+        self.documents
+            .iter()
+            .map(|(doc_path, recorded)| (doc_path.as_str(), recorded.path.as_path()))
+    }
+
     /// The documents recorded at or under `path` — a document, or a directory
     /// holding documents.
     #[must_use]
     pub fn documents_under(&self, path: &Path) -> Vec<String> {
         self.documents
-            .keys()
-            .filter(|doc_path| self.path_of(doc_path).starts_with(path))
-            .cloned()
+            .iter()
+            .filter(|(_, recorded)| recorded.path.starts_with(path))
+            .map(|(doc_path, _)| doc_path.clone())
             .collect()
     }
 
-    /// Which version of the folder's documents the project index folds: it
+    /// Which version of the project's documents the project index folds: it
     /// changes whenever a document's analysis does, and only then.
     #[must_use]
     pub fn generation(&self) -> u64 {
@@ -186,15 +246,40 @@ impl WorkspaceFolder {
             .collect()
     }
 
-    /// How many documents the folder has recorded.
+    /// How many documents the project has recorded.
     #[must_use]
     pub fn document_count(&self) -> usize {
         self.documents.len()
     }
 
-    /// The project index the folder's documents fold into.
+    /// The root document the project is indexed and rendered with: the
+    /// configured one — except that a Sphinx project left at `index` with no
+    /// such document but a `contents` one uses that, as Sphinx does.
+    #[must_use]
+    pub fn root_doc(&self) -> &str {
+        let configured = self.model.settings.root_doc.as_str();
+        let has = |name: &str| self.documents.contains_key(&format!("{name}{RST_SUFFIX}"));
+        if matches!(self.model.source, ProjectSource::SphinxConf { .. })
+            && configured == DEFAULT_ROOT_DOC
+            && !has(DEFAULT_ROOT_DOC)
+            && has(OLD_ROOT_DOC)
+        {
+            OLD_ROOT_DOC
+        } else {
+            configured
+        }
+    }
+
+    /// The configuration the project's documents are rendered with.
+    #[must_use]
+    pub fn site_config(&self) -> SiteConfig {
+        self.model.site_config(self.root_doc())
+    }
+
+    /// The project index the project's documents fold into.
     pub fn project_index(&mut self) -> &ProjectIndex {
-        let documents = &self.documents;
+        let root_doc = self.root_doc().to_string();
+        let (documents, model) = (&self.documents, &self.model);
         self.index.get_or_insert_with(|| {
             let analyses: BTreeMap<String, DocumentAnalysis> = documents
                 .iter()
@@ -202,7 +287,7 @@ impl WorkspaceFolder {
                 .collect();
             build_project_index_from_analyses(
                 &analyses,
-                &IndexSettings::new(ROOT_DOC),
+                &model.index_settings(&root_doc),
                 &EntitySchema::empty(),
             )
             .index
@@ -215,14 +300,18 @@ mod tests {
     use super::*;
     use rinx_ast::TargetName;
 
-    fn folder() -> WorkspaceFolder {
-        WorkspaceFolder::new(PathBuf::from("/work/docs"))
+    fn folder() -> Project {
+        Project::new(0, DiscoveredProject::folder(PathBuf::from("/work/docs")))
     }
 
     /// The analysis of a document named `doc_path` defining the label `label`.
     fn labelled(doc_path: &str, label: &str) -> IndexedDocument {
         let document = rinx_parser::parse(doc_path, &format!(".. _{label}:\n\nText.\n"));
-        IndexedDocument::of(&document, BTreeSet::new())
+        IndexedDocument::of(
+            Path::new("/work/docs").join(doc_path),
+            &document,
+            BTreeSet::new(),
+        )
     }
 
     #[test]
@@ -420,5 +509,109 @@ mod tests {
             folder.includers_of(Path::new("/work/docs/_shared")),
             ["a.rst"]
         );
+    }
+
+    /// A Sphinx project at `/work/docs` whose `conf.py` says `conf`.
+    fn sphinx(conf: &str) -> Project {
+        let reading = crate::project::sphinx_conf::read_sphinx_conf(conf);
+        Project::new(
+            1,
+            DiscoveredProject {
+                model: ProjectModel {
+                    source_root: PathBuf::from("/work/docs"),
+                    source: ProjectSource::SphinxConf {
+                        conf: PathBuf::from("/work/docs/conf.py"),
+                    },
+                    settings: reading.settings,
+                },
+                findings: reading.findings,
+                conf_text: conf.to_string(),
+                sources: Vec::new(),
+            },
+        )
+    }
+
+    #[test]
+    fn test_doc_path_of_keeps_the_first_file_of_a_document() {
+        // Given — `intro` recorded from `intro.rst`
+        let mut project = sphinx("source_suffix = ['.rst', '.txt']\n");
+        project.record("intro.rst".to_string(), labelled("intro.rst", "a"));
+
+        // When / Then — `intro.txt` comes after it by name
+        assert_eq!(project.doc_path_of(Path::new("/work/docs/intro.txt")), None);
+        assert_eq!(
+            project.doc_path_of(Path::new("/work/docs/intro.rst")),
+            Some("intro.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_path_of_finds_a_recorded_documents_own_file() {
+        // Given
+        let mut project = sphinx("source_suffix = '.txt'\n");
+        let document = rinx_parser::parse("intro.rst", "Text.\n");
+        project.record(
+            "intro.rst".to_string(),
+            IndexedDocument::of(
+                PathBuf::from("/work/docs/intro.txt"),
+                &document,
+                BTreeSet::new(),
+            ),
+        );
+
+        // When / Then
+        assert_eq!(
+            project.path_of("intro.rst"),
+            PathBuf::from("/work/docs/intro.txt")
+        );
+        assert_eq!(
+            project.path_of("other.rst"),
+            PathBuf::from("/work/docs/other.txt")
+        );
+    }
+
+    #[test]
+    fn test_root_doc_falls_back_to_contents_as_sphinx_does() {
+        // Given — no `index`, but a `contents`
+        let mut project = sphinx("project = 'P'\n");
+        project.record("contents.rst".to_string(), labelled("contents.rst", "a"));
+
+        // When / Then
+        assert_eq!(project.root_doc(), "contents");
+        assert_eq!(project.site_config().root_doc, "contents");
+        assert_eq!(project.project_index().root_documents, ["contents.rst"]);
+    }
+
+    #[test]
+    fn test_root_doc_keeps_index_when_it_exists_or_is_not_sphinxs() {
+        // Given
+        let mut project = sphinx("project = 'P'\n");
+        project.record("contents.rst".to_string(), labelled("contents.rst", "a"));
+        project.record("index.rst".to_string(), labelled("index.rst", "b"));
+        let mut plain = folder();
+        plain.record("contents.rst".to_string(), labelled("contents.rst", "a"));
+
+        // When / Then
+        assert_eq!(project.root_doc(), "index");
+        assert_eq!(plain.root_doc(), "index");
+        assert_eq!(sphinx("root_doc = 'start'\n").root_doc(), "start");
+    }
+
+    #[test]
+    fn test_a_projects_conf_and_folder_are_its_own() {
+        // Given
+        let project = sphinx("root_doc = os.getenv('X')\n");
+
+        // When
+        let (findings, text) = project.conf_findings();
+
+        // Then
+        assert_eq!(project.folder(), 1);
+        assert_eq!(project.root(), Path::new("/work/docs"));
+        assert_eq!(project.conf_path(), Some(Path::new("/work/docs/conf.py")));
+        assert_eq!(findings.len(), 1);
+        assert!(text.starts_with("root_doc"));
+        assert_eq!(folder().conf_path(), None);
+        assert_eq!(project.model().settings.root_doc, "index");
     }
 }

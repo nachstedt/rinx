@@ -19,7 +19,8 @@
 //! - `includes` decides what a file shows when open documents include it;
 //! - `files` is the loader a file-reading directive goes through;
 //! - `uri` converts between the protocol's `file:` URIs and paths;
-//! - `workspace` scans the workspace folders and keeps their project index.
+//! - `project` finds the workspace's projects, reads their `conf.py`, and
+//!   scans and keeps each one's project index.
 
 mod completion;
 mod definition;
@@ -31,11 +32,11 @@ mod include_summary;
 mod includes;
 mod position;
 mod progress;
+mod project;
 mod reference_at;
 mod render;
 mod server;
 mod uri;
-mod workspace;
 
 pub use position::PositionEncoding;
 pub use server::run;

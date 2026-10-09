@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/cdecl", "crates/filter", "crates/inventory", "crates/template", "crates/ast", "crates/scope",
+members = ["crates/cdecl", "crates/filter", "crates/inventory", "crates/pyconf", "crates/template", "crates/ast", "crates/scope",
     "crates/toctree", "crates/entity", "crates/index", "crates/parser", "crates/analyzer", "crates/uml", "crates/renderer", "crates/lsp", "crates/worker"]
 # Fuzzing needs nightly, so its crate keeps a workspace of its own.
 exclude = ["fuzz"]
@@ -28,6 +28,7 @@ rinx_index = { path = "crates/index", version = "0.1.0" }
 rinx_inventory = { path = "crates/inventory", version = "0.1.0" }
 rinx_lsp = { path = "crates/lsp", version = "0.1.0" }
 rinx_parser = { path = "crates/parser", version = "0.1.0" }
+rinx_pyconf = { path = "crates/pyconf", version = "0.1.0" }
 rinx_renderer = { path = "crates/renderer", version = "0.1.0" }
 rinx_scope = { path = "crates/scope", version = "0.1.0" }
 rinx_template = { path = "crates/template", version = "0.1.0" }

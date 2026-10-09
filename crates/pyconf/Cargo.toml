@@ -1,0 +1,21 @@
+[package]
+name = "rinx_pyconf"
+description = "A static reader of the literal settings in a Python module, used by rinx for Sphinx's conf.py. Internal to rinx; no stability guarantees."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+keywords.workspace = true
+
+[dependencies]
+
+[dev-dependencies]
+# Without the default `fork`/`timeout` features, which spawn a process per case
+# and are not needed for tests that cannot hang.
+proptest = { version = "1", default-features = false, features = ["std"] }
+
+[lints]
+workspace = true

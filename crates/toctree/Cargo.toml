@@ -12,7 +12,7 @@ keywords.workspace = true
 
 [dependencies]
 rinx_ast.workspace = true
-globset = "0.4"
+regex = "1.10"
 
 [lints]
 workspace = true

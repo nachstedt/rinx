@@ -12,25 +12,6 @@ const DELETED: FileChangeType = FileChangeType::DELETED;
 const REFERRING: &str = "Home\n====\n\nSee :doc:`setup`.\n";
 const SETUP: &str = ".. _install:\n\nSetup\n=====\n";
 
-/// The labels the folder's index defines.
-fn labels(state: &mut ServerState) -> Vec<String> {
-    state.folders[0]
-        .project_index()
-        .targets
-        .keys()
-        .map(|name| name.as_str().to_string())
-        .collect()
-}
-
-/// Every render the server has pending, run to the end.
-fn render_all(state: &mut ServerState) -> Vec<Message> {
-    let mut messages = Vec::new();
-    while state.has_pending_renders() {
-        messages.extend(state.render_next());
-    }
-    messages
-}
-
 /// A scanned server over `files`, with nothing open.
 fn scanned(name: &str, files: &[(&str, &str)]) -> (Workspace, ServerState) {
     let workspace = Workspace::new(name, files);
@@ -102,7 +83,7 @@ fn test_a_deleted_document_leaves_the_index_and_breaks_its_references() {
     let rendered = render_all(&mut state);
 
     // Then
-    assert!(labels(&mut state).is_empty());
+    assert!(project_labels(&mut state, 0).is_empty());
     assert_eq!(
         workspace.codes_for(&rendered, "index.rst"),
         Some(broken_doc())
@@ -125,7 +106,7 @@ fn test_a_created_document_joins_the_index_and_mends_its_references() {
     let rendered = render_all(&mut state);
 
     // Then
-    assert_eq!(labels(&mut state), ["install"]);
+    assert_eq!(project_labels(&mut state, 0), ["install"]);
     assert_eq!(
         workspace.codes_for(&rendered, "index.rst"),
         Some(Vec::new())
@@ -150,7 +131,7 @@ fn test_a_renamed_document_is_known_by_its_new_name_only() {
         workspace.codes_for(&rendered, "index.rst"),
         Some(broken_doc())
     );
-    let index = state.folders[0].project_index();
+    let index = project(&mut state, 0).project_index();
     assert!(index.documents.contains("install.rst"));
     assert!(!index.documents.contains("setup.rst"));
 }
@@ -165,7 +146,7 @@ fn test_a_closed_document_changed_on_disk_is_read_again() {
     handle_notification(&mut state, workspace.watched(&[("setup.rst", CHANGED)]));
 
     // Then
-    assert_eq!(labels(&mut state), ["configure"]);
+    assert_eq!(project_labels(&mut state, 0), ["configure"]);
 }
 
 #[test]
@@ -176,7 +157,7 @@ fn test_an_open_document_changed_on_disk_keeps_its_buffer() {
         &mut state,
         workspace.open("setup.rst", ".. _edited:\n\nSetup\n=====\n"),
     );
-    let generation = state.folders[0].generation();
+    let generation = project(&mut state, 0).generation();
 
     // When
     workspace.write("setup.rst", ".. _saved:\n\nSetup\n=====\n");
@@ -184,8 +165,8 @@ fn test_an_open_document_changed_on_disk_keeps_its_buffer() {
 
     // Then
     assert!(replies.is_empty());
-    assert_eq!(state.folders[0].generation(), generation);
-    assert_eq!(labels(&mut state), ["edited"]);
+    assert_eq!(project(&mut state, 0).generation(), generation);
+    assert_eq!(project_labels(&mut state, 0), ["edited"]);
 }
 
 #[test]
@@ -245,7 +226,7 @@ fn test_a_deleted_directory_forgets_every_document_under_it() {
     handle_notification(&mut state, workspace.watched(&[("guide", DELETED)]));
 
     // Then
-    assert_eq!(labels(&mut state), ["home"]);
+    assert_eq!(project_labels(&mut state, 0), ["home"]);
 }
 
 #[test]
@@ -259,14 +240,14 @@ fn test_a_created_directory_indexes_every_document_in_it() {
     handle_notification(&mut state, workspace.watched(&[("guide", CREATED)]));
 
     // Then — what the scan would have found, and no more
-    assert_eq!(labels(&mut state), ["a"]);
+    assert_eq!(project_labels(&mut state, 0), ["a"]);
 }
 
 #[test]
 fn test_a_file_no_document_reads_changes_nothing() {
     // Given
     let (workspace, mut state) = scanned("watch_unrelated", &[("index.rst", SETUP)]);
-    let generation = state.folders[0].generation();
+    let generation = project(&mut state, 0).generation();
 
     // When — build output, and a document hidden from the scan
     workspace.write("target/out.o", "binary");
@@ -282,7 +263,7 @@ fn test_a_file_no_document_reads_changes_nothing() {
 
     // Then
     assert!(replies.is_empty());
-    assert_eq!(state.folders[0].generation(), generation);
+    assert_eq!(project(&mut state, 0).generation(), generation);
 }
 
 #[test]
@@ -298,7 +279,7 @@ fn test_a_document_deleted_during_the_scan_is_not_brought_back() {
     state.on_scan_event(scan);
 
     // Then
-    assert!(labels(&mut state).is_empty());
+    assert!(project_labels(&mut state, 0).is_empty());
 }
 
 #[test]
@@ -312,7 +293,7 @@ fn test_closing_a_document_deleted_on_disk_drops_it_from_the_index() {
     handle_notification(&mut state, workspace.close("setup.rst"));
 
     // Then
-    assert!(labels(&mut state).is_empty());
+    assert!(project_labels(&mut state, 0).is_empty());
 }
 
 #[test]
