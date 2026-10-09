@@ -21,6 +21,7 @@ use std::path::Path;
 use lsp_types::Uri;
 
 use crate::diagnostics::DocumentDiagnosis;
+use crate::files::reads_at_or_under;
 use crate::uri::file_path;
 
 /// The latest diagnosis of every open document.
@@ -49,12 +50,13 @@ impl IncludeGraph {
             .unwrap_or_default()
     }
 
-    /// The open documents whose latest parse read the file at `path`.
+    /// The open documents whose latest parse read the file at `path`, or a
+    /// file under it when `path` is a directory.
     #[must_use]
     pub fn includers_of(&self, path: &Path) -> Vec<Uri> {
         self.diagnoses
             .iter()
-            .filter(|(_, diagnosis)| diagnosis.reads.contains(path))
+            .filter(|(_, diagnosis)| reads_at_or_under(&diagnosis.reads, path))
             .map(|(producer, _)| producer.clone())
             .collect()
     }

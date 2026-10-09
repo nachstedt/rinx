@@ -9,7 +9,8 @@
 //! [`state`] holds what the server remembers and turns a change into the
 //! diagnostics to publish, [`handlers`] are the pure functions from one
 //! message to the replies, and [`run`] is the loop around them. [`scan`] is
-//! the thread scanning the workspace beside the loop.
+//! the thread scanning the workspace beside the loop; the file-system
+//! events the client reports reach [`state`] like any other notification.
 
 mod handlers;
 mod run;
@@ -32,6 +33,8 @@ mod render_tests;
 mod session_tests;
 #[cfg(test)]
 mod test_support;
+#[cfg(test)]
+mod watch_tests;
 #[cfg(test)]
 mod workspace_tests;
 
