@@ -1152,6 +1152,30 @@ exclusion and deletes content with nothing to grep for.</p>
 contributes nothing where it was written to contribute something. A
 non-matching block is silent — emptiness only means a mistake on the branch
 that was selected.</p>
+<h2 id="conf">conf</h2>
+<h3 id="conf-unread-setting">conf.unread-setting</h3>
+<p>A setting the language server reads from <code>conf.py</code> whose value is not a
+literal — computed, imported, or bound only inside an <code>if</code> — so the editor
+uses the setting's default. The server reads <code>conf.py</code> without running it.</p>
+<h3 id="conf-modified-setting">conf.modified-setting</h3>
+<p>A statement changing a setting after its literal value — <code>+=</code>,
+<code>.append(…)</code>, an assignment inside an <code>if</code> — which the editor does not run:
+the literal applies, and this change does not.</p>
+<h3 id="conf-invalid-value">conf.invalid-value</h3>
+<p>A setting whose literal value is not one the setting takes, or not one rinx
+supports: the wrong type, a role or a domain rinx does not know, a source
+suffix read by a parser other than reStructuredText's. The editor uses the
+setting's default, or leaves the entry out.</p>
+<h3 id="conf-wildcard-import">conf.wildcard-import</h3>
+<p>A <code>from … import *</code> in <code>conf.py</code>, which may set any setting without the
+editor seeing it.</p>
+<h3 id="conf-duplicate-source">conf.duplicate-source</h3>
+<p>Two files that are one document under two source suffixes (<code>intro.rst</code> and
+<code>intro.txt</code>); as in Sphinx, the first in name order is the document and the
+other is ignored.</p>
+<h3 id="conf-syntax-error">conf.syntax-error</h3>
+<p>Where the editor stopped reading <code>conf.py</code>, which Python could not run
+either: the settings after it keep their defaults.</p>
 <h2 id="noqa">noqa</h2>
 <h3 id="noqa-unknown-code">noqa.unknown-code</h3>
 <p>A <code>.. noqa:</code> comment naming an id that is not a diagnostic code. Never
