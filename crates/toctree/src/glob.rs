@@ -1,36 +1,12 @@
 //! Matching a `:glob:` entry's pattern against the project's document names.
 //!
-//! Sphinx globs with `sphinx.util.matching.patmatch`, whose translation gives
-//! `*` and `?` no power to cross a `/` while `**` does. That is exactly
-//! `globset`'s `literal_separator(true)`, so the matching is delegated rather
-//! than hand-rolled.
-//!
-//! Two places where `globset` is *wider* than Sphinx are deliberately narrowed
-//! here, so a pattern cannot mean one thing to each tool:
-//!
-//! - `globset` supports `{a,b}` alternation and Sphinx does not, so braces are
-//!   escaped to stay literal.
-//! - `globset` would let a pattern match the document that wrote it; Sphinx
-//!   excludes the owner, and so does [`matching_docnames`].
-//!
-//! Do not widen either without checking what Sphinx does first.
+//! Sphinx globs with `sphinx.util.matching.patfilter`, whose translation is
+//! [`SphinxPattern`]'s — the one this crate shares with the editor's
+//! `exclude_patterns`, so a pattern means one thing wherever it is written.
+//! On top of it, [`matching_docnames`] excludes the document the toctree is
+//! written in, as Sphinx does.
 
-use globset::{Glob, GlobBuilder};
-
-/// Compiles one toctree glob pattern.
-///
-/// Returns `None` for a pattern `globset` rejects outright (an unclosed
-/// character class, say); the caller reports that as a pattern matching
-/// nothing, which is the same outcome the author sees either way.
-fn compile(pattern: &str) -> Option<Glob> {
-    // Escaping the braces keeps `{a,b}` a literal three-character sequence, as
-    // it is in Sphinx, rather than an alternation `globset` would expand.
-    let escaped = pattern.replace('{', "[{]").replace('}', "[}]");
-    GlobBuilder::new(&escaped)
-        .literal_separator(true)
-        .build()
-        .ok()
-}
+use crate::pattern::SphinxPattern;
 
 /// Every docname in `universe` that `pattern` matches, sorted, excluding
 /// `owner`.
@@ -48,10 +24,7 @@ pub(crate) fn matching_docnames<'a>(
     universe: impl IntoIterator<Item = &'a str>,
     owner: &str,
 ) -> Vec<String> {
-    let Some(glob) = compile(pattern) else {
-        return Vec::new();
-    };
-    let matcher = glob.compile_matcher();
+    let matcher = SphinxPattern::new(pattern);
 
     let mut hits: Vec<String> = universe
         .into_iter()
@@ -168,12 +141,23 @@ mod tests {
     }
 
     #[test]
-    fn test_an_uncompilable_pattern_matches_nothing() {
-        // Given — an unclosed character class.
-        let matched = matches("api/[unclosed");
+    fn test_an_unclosed_class_matches_a_literal_bracket() {
+        // Given — an unclosed character class, which Sphinx reads literally.
+        let matched = matching_docnames("api/[unclosed", ["api/[unclosed", "api/u"], "index");
 
-        // Then — reported to the author as a pattern matching nothing, which
-        // is what they observe either way.
-        assert!(matched.is_empty());
+        // Then
+        assert_eq!(matched, vec!["api/[unclosed"]);
+    }
+
+    #[test]
+    fn test_double_star_matches_inside_a_component() {
+        // Given — `globset` refuses this pattern; Sphinx reads `**` as `.*`.
+        let matched = matching_docnames("api**", UNIVERSE, "index");
+
+        // Then
+        assert_eq!(
+            matched,
+            vec!["api/client", "api/deep/internals", "api/server"]
+        );
     }
 }

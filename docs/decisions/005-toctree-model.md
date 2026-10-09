@@ -80,10 +80,13 @@ This is why `rinx_toctree` is its own crate. It cannot live in the
 analyzer: the renderer would then depend on the whole analyzer crate, which is
 exactly what splitting `rinx_index` out was meant to stop.
 
-Matching delegates to `globset` with `literal_separator(true)`, which is
-Sphinx's `*`-does-not-cross-`/` rule. Two deliberate narrowings are commented in
-place: `{a,b}` is escaped to stay literal (Sphinx has no alternation), and the
-owning document is excluded from its own pattern.
+Matching is `SphinxPattern`, a port of Sphinx's own `_translate_pattern`:
+`*` does not cross a `/`, `**` does in any position, and `{a,b}` stays literal
+(Sphinx has no alternation). The owning document is excluded from its own
+pattern. It began as `globset` with `literal_separator(true)`, which refuses
+a `**` inside a component; the port replaced it when the language server
+needed the same patterns for a `conf.py`'s `exclude_patterns`, where
+`**.ipynb_checkpoints` is common, so the two cannot mean different things.
 
 ### 3. Section ids are derived once, in `rinx_ast`
 

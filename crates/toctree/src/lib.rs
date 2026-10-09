@@ -15,13 +15,16 @@
 //! its own narrower list, or not checking globs at all.
 //!
 //! [`resolve`] holds the entry resolution itself; [`glob`] holds the pattern
-//! matching it delegates to, and the two places that matching is deliberately
-//! narrower than the library performing it. [`normalize_path`] is re-exported
+//! matching it delegates to, and [`pattern`] Sphinx's glob translation, which
+//! the language server also matches a `conf.py`'s `exclude_patterns` with. [`normalize_path`] is re-exported
 //! from `rinx_ast`, where it moved once image URIs needed the same
 //! `.`/`..` resolution.
 
 mod glob;
+mod pattern;
 mod resolve;
+
+pub use pattern::SphinxPattern;
 
 // Re-exported rather than defined here: resolving `.`/`..` is a plain path
 // operation with no toctree in it, and `rinx_ast` needs the same
