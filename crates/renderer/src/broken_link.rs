@@ -2,7 +2,7 @@
 //! failed to resolve against the [`ProjectIndex`](rinx_index::ProjectIndex),
 //! and references that resolved only through an object-type fallback.
 
-use rinx_ast::{DiagnosticCode, InventoryName, ObjectType, Span};
+use rinx_ast::{DiagnosticCode, DiagnosticSubject, Domain, InventoryName, ObjectType, Span};
 
 /// The kind of cross-reference role that produced a [`BrokenLink`].
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -119,6 +119,22 @@ impl BrokenLinkKind {
             Self::NumberingDisabled => DiagnosticCode::NumrefDisabled,
             Self::UnnumberedReference => DiagnosticCode::NumrefUnnumbered,
             Self::UncaptionedReference => DiagnosticCode::NumrefNoCaption,
+        }
+    }
+
+    /// What a reference of this kind was about, for the language server's
+    /// strictness filter: the domain a missed object would have been defined
+    /// in. Only a plain miss has one — an ambiguous reference found several
+    /// definitions, which no unanalysed extension explains away.
+    #[must_use]
+    pub fn subject(&self) -> Option<DiagnosticSubject> {
+        match self {
+            Self::DomainObjectReference(object_type) => {
+                Some(DiagnosticSubject::DomainReference(object_type.domain()))
+            }
+            Self::OptionReference => Some(DiagnosticSubject::DomainReference(Domain::Std)),
+            Self::AnyReference => Some(DiagnosticSubject::AnyReference),
+            _ => None,
         }
     }
 
@@ -276,6 +292,70 @@ mod tests {
             target: target.to_string(),
             span: None,
         }
+    }
+
+    #[test]
+    fn test_subject_names_the_domain_a_domain_object_reference_missed() {
+        // Given
+        let kind = BrokenLinkKind::DomainObjectReference(ObjectType::Py(PyObjectType::Function));
+
+        // When / Then
+        assert_eq!(
+            kind.subject(),
+            Some(DiagnosticSubject::DomainReference(Domain::Py))
+        );
+    }
+
+    #[test]
+    fn test_subject_puts_an_option_reference_in_the_std_domain() {
+        // Given / When / Then
+        assert_eq!(
+            BrokenLinkKind::OptionReference.subject(),
+            Some(DiagnosticSubject::DomainReference(Domain::Std))
+        );
+    }
+
+    #[test]
+    fn test_subject_of_an_any_reference_is_any_domain() {
+        // Given / When / Then
+        assert_eq!(
+            BrokenLinkKind::AnyReference.subject(),
+            Some(DiagnosticSubject::AnyReference)
+        );
+    }
+
+    #[test]
+    fn test_subject_is_absent_for_ambiguous_and_label_references() {
+        // Given — an ambiguity is a real finding, and labels and documents are
+        // never an extension's to define
+        let kinds = [
+            BrokenLinkKind::Reference,
+            BrokenLinkKind::DocReference,
+            BrokenLinkKind::AmbiguousDomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Function),
+                candidates: vec!["a.f".to_string(), "b.f".to_string()],
+            },
+        ];
+
+        // When / Then
+        for kind in kinds {
+            assert_eq!(kind.subject(), None, "{kind:?}");
+        }
+    }
+
+    #[test]
+    fn test_a_broken_links_diagnostic_carries_its_subject() {
+        // Given
+        let broken = link(BrokenLinkKind::OptionReference, "--verbose");
+
+        // When
+        let diagnostic = rinx_ast::Reported::to_diagnostic(&broken);
+
+        // Then
+        assert_eq!(
+            diagnostic.subject,
+            Some(DiagnosticSubject::DomainReference(Domain::Std))
+        );
     }
 
     #[test]

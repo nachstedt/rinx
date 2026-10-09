@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::diagnostic_code::DiagnosticCode;
+use crate::diagnostic_subject::DiagnosticSubject;
 use crate::span::Span;
 
 /// One problem found in a document, recorded rather than raised.
@@ -33,6 +34,10 @@ pub struct Diagnostic {
     /// against.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub span: Option<Span>,
+    /// What this is about, for the findings a front end treats by subject —
+    /// see [`DiagnosticSubject`]. `None` for every other finding.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subject: Option<DiagnosticSubject>,
 }
 
 impl Diagnostic {
@@ -43,6 +48,7 @@ impl Diagnostic {
             code,
             message: message.into(),
             span: Some(span),
+            subject: None,
         }
     }
 
@@ -54,6 +60,7 @@ impl Diagnostic {
             code,
             message: message.into(),
             span: None,
+            subject: None,
         }
     }
 
@@ -67,6 +74,16 @@ impl Diagnostic {
             code,
             message: message.into(),
             span,
+            subject: None,
+        }
+    }
+
+    /// This diagnostic, recorded as being about `subject`.
+    #[must_use]
+    pub fn about(self, subject: DiagnosticSubject) -> Self {
+        Self {
+            subject: Some(subject),
+            ..self
         }
     }
 }
@@ -135,6 +152,47 @@ mod tests {
     fn test_serialization_roundtrip_with_a_span() {
         // Given
         let diagnostic = Diagnostic::new(DiagnosticCode::LinkBrokenRef, "broken ref", a_span());
+
+        // When
+        let json = serde_json::to_string(&diagnostic).expect("Failed to serialize");
+        let deserialized: Diagnostic = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(diagnostic, deserialized);
+    }
+
+    #[test]
+    fn test_about_records_the_subject() {
+        // Given
+        let diagnostic = Diagnostic::new(DiagnosticCode::DirectiveUnknown, "unknown", a_span());
+
+        // When
+        let diagnostic = diagnostic.about(DiagnosticSubject::Directive("automodule".to_string()));
+
+        // Then
+        assert_eq!(
+            diagnostic.subject,
+            Some(DiagnosticSubject::Directive("automodule".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_serialization_omits_an_absent_subject() {
+        // Given
+        let diagnostic = Diagnostic::new(DiagnosticCode::LinkBrokenRef, "broken ref", a_span());
+
+        // When
+        let json = serde_json::to_string(&diagnostic).expect("Failed to serialize");
+
+        // Then — an `.ast` holding no subject is byte-for-byte what it was
+        assert!(!json.contains("subject"), "{json}");
+    }
+
+    #[test]
+    fn test_serialization_roundtrip_with_a_subject() {
+        // Given
+        let diagnostic = Diagnostic::new(DiagnosticCode::DirectiveUnknown, "unknown", a_span())
+            .about(DiagnosticSubject::Directive("automodule".to_string()));
 
         // When
         let json = serde_json::to_string(&diagnostic).expect("Failed to serialize");
