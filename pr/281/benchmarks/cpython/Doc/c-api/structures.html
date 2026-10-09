@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Common Object Structures — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python&#x2f;C API Reference Manual</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python&#x2f;C API Reference Manual"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stable.html">C API Stability</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="veryhigh.html">The Very High Level Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="refcounting.html">Reference Counting</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Exception Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="extension-modules.html">Defining extension modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="utilities.html">Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="abstract.html">Abstract Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concrete.html">Concrete Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init.html">Initialization, Finalization, and Threads</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init_config.html">Python Initialization Configuration</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="memory.html">Memory Management</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="objimpl.html">Object Implementation Support</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Object Implementation Support"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="allocation.html">Allocating Objects on the Heap</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="lifecycle.html">Object Life Cycle</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="structures.html">Common Object Structures</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Common Object Structures"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="structures.html#base-object-types-and-macros">Base object types and macros</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="structures.html#implementing-functions-and-methods">Implementing functions and methods</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="structures.html#accessing-attributes-of-extension-types">Accessing attributes of extension types</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="typeobj.html">Type Object Structures</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="gcsupport.html">Supporting Cyclic Garbage Collection</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="apiabiversion.html">API and ABI Versioning</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="monitoring.html">Monitoring C API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="lifecycle.html">&larr; Object Life Cycle</a>
+        <a class="next" href="typeobj.html">Type Object Structures &rarr;</a>
+      </nav>
+      
+      <a id="common-structs"></a>
+<h1 id="common-object-structures">Common Object Structures</h1>
+<p>There are a large number of structures which are used in the definition of
+object types for Python.  This section describes these structures and how they
+are used.</p>
+<h2 id="base-object-types-and-macros">Base object types and macros</h2>
+<p>All Python objects ultimately share a small number of fields at the beginning
+of the object's representation in memory.  These are represented by the
+<a class="reference internal" href="structures.html#c:type:pyobject"><code class="xref c type docutils literal">PyObject</code></a> and <a class="reference internal" href="structures.html#c:type:pyvarobject"><code class="xref c type docutils literal">PyVarObject</code></a> types, which are defined, in turn,
+by the expansions of some macros also used, whether directly or indirectly, in
+the definition of all other Python objects.  Additional macros can be found
+under <a href="refcounting.html#countingrefs">reference counting</a>.</p>
+<dl class="c type">
+  <dt id="c:type:pyobject"><code class="sig-name">PyObject</code></dt>
+  <dd><p>All object types are extensions of this type.  This is a type which
+contains the information Python needs to treat a pointer to an object as an
+object.  In a normal "release" build, it contains only the object's
+reference count and a pointer to the corresponding type object.
+Nothing is actually declared to be a <a class="reference internal" href="structures.html#c:type:pyobject"><code class="xref c type docutils literal">PyObject</code></a>, but every pointer
+to a Python object can be cast to a :c:expr:`PyObject*`.</p>
+<p>The members must not be accessed directly; instead use macros such as
+<a class="reference internal" href="refcounting.html#c:function:py_refcnt"><code class="xref c macro docutils literal">Py_REFCNT</code></a> and <a class="reference internal" href="structures.html#c:function:py_type"><code class="xref c macro docutils literal">Py_TYPE</code></a>.</p>
+<dl class="c member">
+  <dt id="c:member:pyobject.ob_refcnt"><code class="sig-name">Py_ssize_t ob_refcnt</code></dt>
+  <dd><p>The object's reference count, as returned by <a class="reference internal" href="refcounting.html#c:function:py_refcnt"><code class="xref c macro docutils literal">Py_REFCNT</code></a>.
+Do not use this field directly; instead use functions and macros such as
+<code class="xref c macro docutils literal">Py_REFCNT</code>, <a class="reference internal" href="refcounting.html#c:function:py_incref"><code class="xref c function docutils literal">Py_INCREF</code></a> and <a class="reference internal" href="refcounting.html#c:function:py_decref"><code class="xref c function docutils literal">Py_DecRef</code></a>.</p>
+<p>The field type may be different from <code>Py_ssize_t</code>, depending on
+build configuration and platform.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pyobject.ob_type"><code class="sig-name">PyTypeObject* ob_type</code></dt>
+  <dd><p>The object's type.
+Do not use this field directly; use <a class="reference internal" href="structures.html#c:function:py_type"><code class="xref c macro docutils literal">Py_TYPE</code></a> and
+<a class="reference internal" href="structures.html#c:function:py_set_type"><code class="xref c function docutils literal">Py_SET_TYPE</code></a> instead.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="c type">
+  <dt id="c:type:pyvarobject"><code class="sig-name">PyVarObject</code></dt>
+  <dd><p>An extension of <a class="reference internal" href="structures.html#c:type:pyobject"><code class="xref c type docutils literal">PyObject</code></a> that adds the
+<a class="reference internal" href="structures.html#c:member:pyvarobject.ob_size"><code class="xref c member docutils literal">ob_size</code></a> field.
+This is intended for objects that have some notion of <em>length</em>.</p>
+<p>As with <code class="xref c type docutils literal">PyObject</code>, the members must not be accessed directly;
+instead use macros such as <a class="reference internal" href="structures.html#c:function:py_size"><code class="xref c macro docutils literal">Py_SIZE</code></a>, <a class="reference internal" href="refcounting.html#c:function:py_refcnt"><code class="xref c macro docutils literal">Py_REFCNT</code></a> and
+<a class="reference internal" href="structures.html#c:function:py_type"><code class="xref c macro docutils literal">Py_TYPE</code></a>.</p>
+<dl class="c member">
+  <dt id="c:member:pyvarobject.ob_size"><code class="sig-name">Py_ssize_t ob_size</code></dt>
+  <dd><p>A size field, whose contents should be considered an object's internal
+implementation detail.</p>
+<p>Do not use this field directly; use <a class="reference internal" href="structures.html#c:function:py_size"><code class="xref c macro docutils literal">Py_SIZE</code></a> instead.</p>
+<p>Object creation functions such as <a class="reference internal" href="allocation.html#c:macro:pyobject_newvar"><code class="xref c function docutils literal">PyObject_NewVar</code></a> will
+generally set this field to the requested size (number of items).
+After creation, arbitrary values can be stored in <code class="xref c member docutils literal">ob_size</code>
+using <a class="reference internal" href="structures.html#c:function:py_set_size"><code class="xref c macro docutils literal">Py_SET_SIZE</code></a>.</p>
+<p>To get an object's publicly exposed length, as returned by
+the Python function <a class="reference internal" href="../library/functions.html#py:function:len"><code class="xref py function docutils literal">len</code></a>, use <a class="reference internal" href="object.html#c:function:pyobject_length"><code class="xref c function docutils literal">PyObject_Length</code></a>
+instead.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:pyobject_head"><code class="sig-name">PyObject_HEAD</code></dt>
+  <dd><p>This is a macro used when declaring new types which represent objects
+without a varying length.  The PyObject_HEAD macro expands to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">PyObject ob_base<span class="hl-punctuation hl-terminator hl-c">;</span></span></pre></div>
+<p>See documentation of <a class="reference internal" href="structures.html#c:type:pyobject"><code class="xref c type docutils literal">PyObject</code></a> above.</p>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:pyobject_var_head"><code class="sig-name">PyObject_VAR_HEAD</code></dt>
+  <dd><p>This is a macro used when declaring new types which represent objects
+with a length that varies from instance to instance.
+The PyObject_VAR_HEAD macro expands to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">PyVarObject ob_base<span class="hl-punctuation hl-terminator hl-c">;</span></span></pre></div>
+<p>See documentation of <a class="reference internal" href="structures.html#c:type:pyvarobject"><code class="xref c type docutils literal">PyVarObject</code></a> above.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pybaseobject_type"><code class="sig-name">PyTypeObject PyBaseObject_Type</code></dt>
+  <dd><p>The base class of all other objects, the same as <a class="reference internal" href="../library/functions.html#py:class:object"><code class="xref py class docutils literal">object</code></a> in Python.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_is"><code class="sig-name">int Py_Is(PyObject *x, PyObject *y)</code></dt>
+  <dd><p>Test if the <em>x</em> object is the <em>y</em> object, the same as <code>x is y</code> in Python.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.10:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_isnone"><code class="sig-name">int Py_IsNone(PyObject *x)</code></dt>
+  <dd><p>Test if an object is the <code>None</code> singleton,
+the same as <code>x is None</code> in Python.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.10:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_istrue"><code class="sig-name">int Py_IsTrue(PyObject *x)</code></dt>
+  <dd><p>Test if an object is the <code>True</code> singleton,
+the same as <code>x is True</code> in Python.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.10:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_isfalse"><code class="sig-name">int Py_IsFalse(PyObject *x)</code></dt>
+  <dd><p>Test if an object is the <code>False</code> singleton,
+the same as <code>x is False</code> in Python.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.10:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_type"><code class="sig-name">PyTypeObject* Py_TYPE(PyObject *o)</code></dt>
+  <dd><p>Get the type of the Python object <em>o</em>.</p>
+<p>The returned reference is <a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">borrowed</span></a> from <em>o</em>.
+Do not release it with <a class="reference internal" href="refcounting.html#c:function:py_decref"><code class="xref c function docutils literal">Py_DECREF</code></a> or similar.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p><a class="reference internal" href="structures.html#c:function:py_type"><code class="xref c function docutils literal">Py_TYPE()</code></a> is changed to an inline static function.
+The parameter type is no longer :c:expr:`const PyObject*`.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_is_type"><code class="sig-name">int Py_IS_TYPE(PyObject *o, PyTypeObject *type)</code></dt>
+  <dd><p>Return non-zero if the object <em>o</em> type is <em>type</em>. Return zero otherwise.
+Equivalent to: <code>Py_TYPE(o) == type</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_set_type"><code class="sig-name">void Py_SET_TYPE(PyObject *o, PyTypeObject *type)</code></dt>
+  <dd><p>Set the type of object <em>o</em> to <em>type</em>, without any checking or reference
+counting.</p>
+<p>This is a very low-level operation.
+Consider instead setting the Python attribute <a class="reference internal" href="../reference/datamodel.html#py:attribute:object.__class__"><code class="xref py attribute docutils literal">__class__</code></a>
+using <a class="reference internal" href="object.html#c:function:pyobject_setattrstring"><code class="xref c function docutils literal">PyObject_SetAttrString</code></a> or similar.</p>
+<p>Note that assigning an incompatible type can lead to undefined behavior.</p>
+<p>If <em>type</em> is a <a href="typeobj.html#heap-types">heap type</a>, the caller must create a
+new reference to it.
+Similarly, if the old type of <em>o</em> is a heap type, the caller must release
+a reference to that type.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_size"><code class="sig-name">Py_ssize_t Py_SIZE(PyVarObject *o)</code></dt>
+  <dd><p>Get the <a class="reference internal" href="structures.html#c:member:pyvarobject.ob_size"><code class="xref c member docutils literal">ob_size</code></a> field of <em>o</em>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p><a class="reference internal" href="structures.html#c:function:py_size"><code class="xref c function docutils literal">Py_SIZE()</code></a> is changed to an inline static function.
+The parameter type is no longer :c:expr:`const PyVarObject*`.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_set_size"><code class="sig-name">void Py_SET_SIZE(PyVarObject *o, Py_ssize_t size)</code></dt>
+  <dd><p>Set the <a class="reference internal" href="structures.html#c:member:pyvarobject.ob_size"><code class="xref c member docutils literal">ob_size</code></a> field of <em>o</em> to <em>size</em>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:pyobject_head_init"><code class="sig-name">PyObject_HEAD_INIT(type)</code></dt>
+  <dd><p>This is a macro which expands to initialization values for a new
+<a class="reference internal" href="structures.html#c:type:pyobject"><code class="xref c type docutils literal">PyObject</code></a> type.  This macro expands to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">_PyObject_EXTRA_INIT</span>
+<span class="hl-source hl-c"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span><span class="hl-punctuation hl-separator hl-c">,</span> type<span class="hl-punctuation hl-separator hl-c">,</span></span></pre></div>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:pyvarobject_head_init"><code class="sig-name">PyVarObject_HEAD_INIT(type, size)</code></dt>
+  <dd><p>This is a macro which expands to initialization values for a new
+<a class="reference internal" href="structures.html#c:type:pyvarobject"><code class="xref c type docutils literal">PyVarObject</code></a> type, including the <a class="reference internal" href="structures.html#c:member:pyvarobject.ob_size"><code class="xref c member docutils literal">ob_size</code></a> field.
+This macro expands to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">_PyObject_EXTRA_INIT</span>
+<span class="hl-source hl-c"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span><span class="hl-punctuation hl-separator hl-c">,</span> type<span class="hl-punctuation hl-separator hl-c">,</span> size<span class="hl-punctuation hl-separator hl-c">,</span></span></pre></div>
+</dd>
+</dl>
+<h2 id="implementing-functions-and-methods">Implementing functions and methods</h2>
+<dl class="c type">
+  <dt id="c:type:pycfunction"><code class="sig-name">PyCFunction</code></dt>
+  <dd><p>Type of the functions used to implement most Python callables in C.
+Functions of this type take two :c:expr:`PyObject*` parameters and return
+one such value.  If the return value is <code>NULL</code>, an exception shall have
+been set.  If not <code>NULL</code>, the return value is interpreted as the return
+value of the function as exposed in Python.  The function must return a new
+reference.</p>
+<p>The function signature is:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">PyCFunction</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">self</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">                      PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">args</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></pre></div>
+</dd>
+</dl>
+<dl class="c type">
+  <dt id="c:type:pycfunctionwithkeywords"><code class="sig-name">PyCFunctionWithKeywords</code></dt>
+  <dd><p>Type of the functions used to implement Python callables in C
+with signature <a href="structures.html#meth_varargs-meth_keywords">METH_VARARGS | METH_KEYWORDS</a>.
+The function signature is:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">PyCFunctionWithKeywords</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">self</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">                                  PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">args</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">                                  PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">kwargs</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></pre></div>
+</dd>
+</dl>
+<dl class="c type">
+  <dt id="c:type:pycfunctionfast"><code class="sig-name">PyCFunctionFast</code></dt>
+  <dd><p>Type of the functions used to implement Python callables in C
+with signature <a class="reference internal" href="structures.html#c:macro:meth_fastcall"><code class="xref c macro docutils literal">METH_FASTCALL</code></a>.
+The function signature is:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">PyCFunctionFast</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">self</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">                          PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-storage hl-modifier hl-c">const</span> <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">args</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">                          Py_ssize_t <span class="hl-variable hl-parameter hl-c">nargs</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></pre></div>
+</dd>
+</dl>
+<dl class="c type">
+  <dt id="c:type:pycfunctionfastwithkeywords"><code class="sig-name">PyCFunctionFastWithKeywords</code></dt>
+  <dd><p>Type of the functions used to implement Python callables in C
+with signature <a href="structures.html#meth_fastcall-meth_keywords">METH_FASTCALL | METH_KEYWORDS</a>.
+The function signature is:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">PyCFunctionFastWithKeywords</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">self</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">                                      PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-storage hl-modifier hl-c">const</span> <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">args</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">                                      Py_ssize_t <span class="hl-variable hl-parameter hl-c">nargs</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">                                      PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">kwnames</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></pre></div>
+</dd>
+</dl>
+<dl class="c type">
+  <dt id="c:type:pycmethod"><code class="sig-name">PyCMethod</code></dt>
+  <dd><p>Type of the functions used to implement Python callables in C
+with signature <a href="structures.html#meth_method-meth_fastcall-meth_keywords">METH_METHOD | METH_FASTCALL | METH_KEYWORDS</a>.
+The function signature is:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">PyCMethod</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">self</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">                    PyTypeObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">defining_class</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">                    PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-storage hl-modifier hl-c">const</span> <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">args</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">                    Py_ssize_t <span class="hl-variable hl-parameter hl-c">nargs</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">                    PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">kwnames</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-meta hl-function hl-c"></span></span></pre></div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c type">
+  <dt id="c:type:pymethoddef"><code class="sig-name">PyMethodDef</code></dt>
+  <dd><p>Structure used to describe a method of an extension type.  This structure has
+four fields:</p>
+<dl class="c member">
+  <dt id="c:member:pymethoddef.ml_name"><code class="sig-name">const char *ml_name</code></dt>
+  <dd><p>Name of the method.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pymethoddef.ml_meth"><code class="sig-name">PyCFunction ml_meth</code></dt>
+  <dd><p>Pointer to the C implementation.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pymethoddef.ml_flags"><code class="sig-name">int ml_flags</code></dt>
+  <dd><p>Flags bits indicating how the call should be constructed.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pymethoddef.ml_doc"><code class="sig-name">const char *ml_doc</code></dt>
+  <dd><p>Points to the contents of the docstring.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>The <a class="reference internal" href="structures.html#c:member:pymethoddef.ml_meth"><code class="xref c member docutils literal">ml_meth</code></a> is a C function pointer.
+The functions may be of different
+types, but they always return :c:expr:`PyObject*`.  If the function is not of
+the <a class="reference internal" href="structures.html#c:type:pycfunction"><code class="xref c type docutils literal">PyCFunction</code></a>, the compiler will require a cast in the method table.
+Even though <a class="reference internal" href="structures.html#c:type:pycfunction"><code class="xref c type docutils literal">PyCFunction</code></a> defines the first parameter as
+:c:expr:`PyObject*`, it is common that the method implementation uses the
+specific C type of the <em>self</em> object.</p>
+<p>The <a class="reference internal" href="structures.html#c:member:pymethoddef.ml_flags"><code class="xref c member docutils literal">ml_flags</code></a> field is a bitfield which can include
+the following flags.
+The individual flags indicate either a calling convention or a binding
+convention.</p>
+<p>There are these calling conventions:</p>
+<dl class="c macro">
+  <dt id="c:macro:meth_varargs"><code class="sig-name">METH_VARARGS</code></dt>
+  <dd><p>This is the typical calling convention, where the methods have the type
+<a class="reference internal" href="structures.html#c:type:pycfunction"><code class="xref c type docutils literal">PyCFunction</code></a>. The function expects two :c:expr:`PyObject*` values.
+The first one is the <em>self</em> object for methods; for module functions, it is
+the module object.  The second parameter (often called <em>args</em>) is a tuple
+object representing all arguments. This parameter is typically processed
+using <a class="reference internal" href="arg.html#c:function:pyarg_parsetuple"><code class="xref c function docutils literal">PyArg_ParseTuple</code></a> or <a class="reference internal" href="arg.html#c:function:pyarg_unpacktuple"><code class="xref c function docutils literal">PyArg_UnpackTuple</code></a>.</p>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:meth_keywords"><code class="sig-name">METH_KEYWORDS</code></dt>
+  <dd><p>Can only be used in certain combinations with other flags:
+<a href="structures.html#meth_varargs-meth_keywords">METH_VARARGS | METH_KEYWORDS</a>,
+<a href="structures.html#meth_fastcall-meth_keywords">METH_FASTCALL | METH_KEYWORDS</a> and
+<a href="structures.html#meth_method-meth_fastcall-meth_keywords">METH_METHOD | METH_FASTCALL | METH_KEYWORDS</a>.</p>
+</dd>
+</dl>
+<a id="meth_varargs-meth_keywords"></a>
+<dl>
+<dt>:c:expr:`METH_VARARGS | METH_KEYWORDS`</dt>
+<dd><p>Methods with these flags must be of type <a class="reference internal" href="structures.html#c:type:pycfunctionwithkeywords"><code class="xref c type docutils literal">PyCFunctionWithKeywords</code></a>.
+The function expects three parameters: <em>self</em>, <em>args</em>, <em>kwargs</em> where
+<em>kwargs</em> is a dictionary of all the keyword arguments or possibly <code>NULL</code>
+if there are no keyword arguments.  The parameters are typically processed
+using <a class="reference internal" href="arg.html#c:function:pyarg_parsetupleandkeywords"><code class="xref c function docutils literal">PyArg_ParseTupleAndKeywords</code></a>.</p>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:meth_fastcall"><code class="sig-name">METH_FASTCALL</code></dt>
+  <dd><p>Fast calling convention supporting only positional arguments.
+The methods have the type <a class="reference internal" href="structures.html#c:type:pycfunctionfast"><code class="xref c type docutils literal">PyCFunctionFast</code></a>.
+The first parameter is <em>self</em>, the second parameter is a C array
+of :c:expr:`PyObject*` values indicating the arguments and the third
+parameter is the number of arguments (the length of the array).</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p><code>METH_FASTCALL</code> is now part of the <a href="stable.html#stable-abi">stable ABI</a>.</p>
+</div>
+</dd>
+</dl>
+<a id="meth_fastcall-meth_keywords"></a>
+<dl>
+<dt>:c:expr:`METH_FASTCALL | METH_KEYWORDS`</dt>
+<dd><p>Extension of <a class="reference internal" href="structures.html#c:macro:meth_fastcall"><code class="xref c macro docutils literal">METH_FASTCALL</code></a> supporting also keyword arguments,
+with methods of type <a class="reference internal" href="structures.html#c:type:pycfunctionfastwithkeywords"><code class="xref c type docutils literal">PyCFunctionFastWithKeywords</code></a>.
+Keyword arguments are passed the same way as in the
+<a href="call.html#vectorcall">vectorcall protocol</a>:
+there is an additional fourth :c:expr:`PyObject*` parameter
+which is a tuple representing the names of the keyword arguments
+(which are guaranteed to be strings)
+or possibly <code>NULL</code> if there are no keywords.  The values of the keyword
+arguments are stored in the <em>args</em> array, after the positional arguments.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:meth_method"><code class="sig-name">METH_METHOD</code></dt>
+  <dd><p>Can only be used in the combination with other flags:
+<a href="structures.html#meth_method-meth_fastcall-meth_keywords">METH_METHOD | METH_FASTCALL | METH_KEYWORDS</a>.</p>
+</dd>
+</dl>
+<a id="meth_method-meth_fastcall-meth_keywords"></a>
+<dl>
+<dt>:c:expr:`METH_METHOD | METH_FASTCALL | METH_KEYWORDS`</dt>
+<dd><p>Extension of <a href="structures.html#meth_fastcall-meth_keywords">METH_FASTCALL | METH_KEYWORDS</a>
+supporting the <em>defining class</em>, that is,
+the class that contains the method in question.
+The defining class might be a superclass of <code>Py_TYPE(self)</code>.</p>
+<p>The method needs to be of type <a class="reference internal" href="structures.html#c:type:pycmethod"><code class="xref c type docutils literal">PyCMethod</code></a>, the same as for
+<code>METH_FASTCALL | METH_KEYWORDS</code> with <code>defining_class</code> argument added after
+<code>self</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:meth_noargs"><code class="sig-name">METH_NOARGS</code></dt>
+  <dd><p>Methods without parameters don't need to check whether arguments are given if
+they are listed with the <a class="reference internal" href="structures.html#c:macro:meth_noargs"><code class="xref c macro docutils literal">METH_NOARGS</code></a> flag.  They need to be of type
+<a class="reference internal" href="structures.html#c:type:pycfunction"><code class="xref c type docutils literal">PyCFunction</code></a>.  The first parameter is typically named <em>self</em> and will
+hold a reference to the module or object instance.  In all cases the second
+parameter will be <code>NULL</code>.</p>
+<p>The function must have 2 parameters. Since the second parameter is unused,
+<a class="reference internal" href="intro.html#c:macro:py_unused"><code class="xref c macro docutils literal">Py_UNUSED</code></a> can be used to prevent a compiler warning.</p>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:meth_o"><code class="sig-name">METH_O</code></dt>
+  <dd><p>Methods with a single object argument can be listed with the <a class="reference internal" href="structures.html#c:macro:meth_o"><code class="xref c macro docutils literal">METH_O</code></a>
+flag, instead of invoking <a class="reference internal" href="arg.html#c:function:pyarg_parsetuple"><code class="xref c function docutils literal">PyArg_ParseTuple</code></a> with a <code>"O"</code> argument.
+They have the type <a class="reference internal" href="structures.html#c:type:pycfunction"><code class="xref c type docutils literal">PyCFunction</code></a>, with the <em>self</em> parameter, and a
+:c:expr:`PyObject*` parameter representing the single argument.</p>
+</dd>
+</dl>
+<p>These two constants are not used to indicate the calling convention but the
+binding when use with methods of classes.  These may not be used for functions
+defined for modules.  At most one of these flags may be set for any given
+method.</p>
+<dl class="c macro">
+  <dt id="c:macro:meth_class"><code class="sig-name">METH_CLASS</code></dt>
+  <dd><span id="index-0"></span>
+<p>The method will be passed the type object as the first parameter rather
+than an instance of the type.  This is used to create <em>class methods</em>,
+similar to what is created when using the <a class="reference internal" href="../library/functions.html#py:function:classmethod"><code class="xref py function docutils literal">classmethod</code></a> built-in
+function.</p>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:meth_static"><code class="sig-name">METH_STATIC</code></dt>
+  <dd><span id="index-1"></span>
+<p>The method will be passed <code>NULL</code> as the first parameter rather than an
+instance of the type.  This is used to create <em>static methods</em>, similar to
+what is created when using the <a class="reference internal" href="../library/functions.html#py:function:staticmethod"><code class="xref py function docutils literal">staticmethod</code></a> built-in function.</p>
+</dd>
+</dl>
+<p>One other constant controls whether a method is loaded in place of another
+definition with the same method name.</p>
+<dl class="c macro">
+  <dt id="c:macro:meth_coexist"><code class="sig-name">METH_COEXIST</code></dt>
+  <dd><p>The method will be loaded in place of existing definitions.  Without
+<em>METH_COEXIST</em>, the default is to skip repeated definitions.  Since slot
+wrappers are loaded before the method table, the existence of a
+<em>sq_contains</em> slot, for example, would generate a wrapped method named
+<a class="reference internal" href="../reference/datamodel.html#py:method:object.__contains__"><code class="xref py method docutils literal">__contains__</code></a> and preclude the loading of a corresponding
+PyCFunction with the same name.  With the flag defined, the PyCFunction
+will be loaded in place of the wrapper object and will co-exist with the
+slot.  This is helpful because calls to PyCFunctions are optimized more
+than wrapper object calls.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pycmethod_type"><code class="sig-name">PyTypeObject PyCMethod_Type</code></dt>
+  <dd><p>The type object corresponding to Python C method objects. This is
+available as <a href="#" class="broken-link"><code class="xref py class docutils literal">types.BuiltinMethodType</code></a> in the Python layer.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycmethod_check"><code class="sig-name">int PyCMethod_Check(PyObject *op)</code></dt>
+  <dd><p>Return true if <em>op</em> is an instance of the <a href="#" class="broken-link"><code class="xref c type docutils literal">PyCMethod_Type</code></a> type
+or a subtype of it. This function always succeeds.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycmethod_checkexact"><code class="sig-name">int PyCMethod_CheckExact(PyObject *op)</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="structures.html#c:function:pycmethod_check"><code class="xref c function docutils literal">PyCMethod_Check</code></a>, but does not account for
+subtypes.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycmethod_new"><code class="sig-name">PyObject * PyCMethod_New(PyMethodDef *ml, PyObject *self, PyObject *module, PyTypeObject *cls)</code></dt>
+  <dd><p>Turn <em>ml</em> into a Python <a class="reference internal" href="../glossary.html#term-callable"><span class="xref std std-term">callable</span></a> object.
+The caller must ensure that <em>ml</em> outlives the <a class="reference internal" href="../glossary.html#term-callable"><span class="xref std std-term">callable</span></a>.
+Typically, <em>ml</em> is defined as a static variable.</p>
+<p>The <em>self</em> parameter will be passed as the <em>self</em> argument
+to the C function in <code>ml-&gt;ml_meth</code> when invoked.
+<em>self</em> can be <code>NULL</code>.</p>
+<p>The <a class="reference internal" href="../glossary.html#term-callable"><span class="xref std std-term">callable</span></a> object's <code>__module__</code> attribute
+can be set from the given <em>module</em> argument.
+<em>module</em> should be a Python string,
+which will be used as name of the module the function is defined in.
+If unavailable, it can be set to <a class="reference internal" href="../library/constants.html#py:data:none"><code class="xref py data docutils literal">None</code></a> or <code>NULL</code>.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../reference/datamodel.html#py:attribute:function.__module__"><code class="xref py attribute docutils literal">function.__module__</code></a></p>
+</div>
+<p>The <em>cls</em> parameter will be passed as the <em>defining_class</em>
+argument to the C function.
+Must be set if <a class="reference internal" href="structures.html#c:macro:meth_method"><code class="xref c macro docutils literal">METH_METHOD</code></a> is set on <code>ml-&gt;ml_flags</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pycfunction_type"><code class="sig-name">PyTypeObject PyCFunction_Type</code></dt>
+  <dd><p>The type object corresponding to Python C function objects. This is
+available as <a href="#" class="broken-link"><code class="xref py class docutils literal">types.BuiltinFunctionType</code></a> in the Python layer.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycfunction_check"><code class="sig-name">int PyCFunction_Check(PyObject *op)</code></dt>
+  <dd><p>Return true if <em>op</em> is an instance of the <a href="#" class="broken-link"><code class="xref c type docutils literal">PyCFunction_Type</code></a> type
+or a subtype of it. This function always succeeds.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycfunction_checkexact"><code class="sig-name">int PyCFunction_CheckExact(PyObject *op)</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="structures.html#c:function:pycfunction_check"><code class="xref c function docutils literal">PyCFunction_Check</code></a>, but does not account for
+subtypes.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycfunction_newex"><code class="sig-name">PyObject * PyCFunction_NewEx(PyMethodDef *ml, PyObject *self, PyObject *module)</code></dt>
+  <dd><p>Equivalent to <code>PyCMethod_New(ml, self, module, NULL)</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycfunction_new"><code class="sig-name">PyObject * PyCFunction_New(PyMethodDef *ml, PyObject *self)</code></dt>
+  <dd><p>Equivalent to <code>PyCMethod_New(ml, self, NULL, NULL)</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycfunction_getflags"><code class="sig-name">int PyCFunction_GetFlags(PyObject *func)</code></dt>
+  <dd><p>Get the function's flags on <em>func</em> as they were passed to
+<a class="reference internal" href="structures.html#c:member:pymethoddef.ml_flags"><code class="xref c member docutils literal">ml_flags</code></a>.</p>
+<p>If <em>func</em> is not a C function object, this fails with an exception.
+<em>func</em> must not be <code>NULL</code>.</p>
+<p>This function returns the function's flags on success, and <code>-1</code> with an
+exception set on failure.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycfunction_get_flags"><code class="sig-name">int PyCFunction_GET_FLAGS(PyObject *func)</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="structures.html#c:function:pycfunction_getflags"><code class="xref c function docutils literal">PyCFunction_GetFlags</code></a>, but without error
+or type checking.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycfunction_getfunction"><code class="sig-name">PyCFunction PyCFunction_GetFunction(PyObject *func)</code></dt>
+  <dd><p>Get the function pointer on <em>func</em> as it was passed to
+<a class="reference internal" href="structures.html#c:member:pymethoddef.ml_meth"><code class="xref c member docutils literal">ml_meth</code></a>.</p>
+<p>If <em>func</em> is not a C function object, this fails with an exception.
+<em>func</em> must not be <code>NULL</code>.</p>
+<p>This function returns the function pointer on success, and <code>NULL</code> with an
+exception set on failure.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycfunction_get_function"><code class="sig-name">int PyCFunction_GET_FUNCTION(PyObject *func)</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="structures.html#c:function:pycfunction_getfunction"><code class="xref c function docutils literal">PyCFunction_GetFunction</code></a>, but without error
+or type checking.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycfunction_getself"><code class="sig-name">PyObject *PyCFunction_GetSelf(PyObject *func)</code></dt>
+  <dd><p>Get the "self" object on <em>func</em>. This is the object that would be passed
+to the first argument of a <a class="reference internal" href="structures.html#c:type:pycfunction"><code class="xref c type docutils literal">PyCFunction</code></a>. For C function objects
+created through a <a class="reference internal" href="structures.html#c:type:pymethoddef"><code class="xref c type docutils literal">PyMethodDef</code></a> on a <a class="reference internal" href="module.html#c:type:pymoduledef"><code class="xref c type docutils literal">PyModuleDef</code></a>, this
+is the resulting module object.</p>
+<p>If <em>func</em> is not a C function object, this fails with an exception.
+<em>func</em> must not be <code>NULL</code>.</p>
+<p>This function returns a <a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">borrowed reference</span></a> to the "self" object
+on success, and <code>NULL</code> with an exception set on failure.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycfunction_get_self"><code class="sig-name">PyObject *PyCFunction_GET_SELF(PyObject *func)</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="structures.html#c:function:pycfunction_getself"><code class="xref c function docutils literal">PyCFunction_GetSelf</code></a>, but without error or
+type checking.</p>
+</dd>
+</dl>
+<h2 id="accessing-attributes-of-extension-types">Accessing attributes of extension types</h2>
+<dl class="c type">
+  <dt id="c:type:pymemberdef"><code class="sig-name">PyMemberDef</code></dt>
+  <dd><p>Structure which describes an attribute of a type which corresponds to a C
+struct member.
+When defining a class, put a NULL-terminated array of these
+structures in the <a class="reference internal" href="typeobj.html#c:member:pytypeobject.tp_members"><code class="xref c member docutils literal">tp_members</code></a> slot.</p>
+<p>Its fields are, in order:</p>
+<dl class="c member">
+  <dt id="c:member:pymemberdef.name"><code class="sig-name">const char* name</code></dt>
+  <dd><p>Name of the member.
+A NULL value marks the end of a <code>PyMemberDef[]</code> array.</p>
+<p>The string should be static, no copy is made of it.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pymemberdef.type"><code class="sig-name">int type</code></dt>
+  <dd><p>The type of the member in the C struct.
+See <a href="structures.html#pymemberdef-types">Member types</a> for the possible values.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pymemberdef.offset"><code class="sig-name">Py_ssize_t offset</code></dt>
+  <dd><p>The offset in bytes that the member is located on the type’s object struct.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pymemberdef.flags"><code class="sig-name">int flags</code></dt>
+  <dd><p>Zero or more of the <a href="structures.html#pymemberdef-flags">Member flags</a>, combined using bitwise OR.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pymemberdef.doc"><code class="sig-name">const char* doc</code></dt>
+  <dd><p>The docstring, or NULL.
+The string should be static, no copy is made of it.
+Typically, it is defined using <a class="reference internal" href="intro.html#c:macro:pydoc_str"><code class="xref c macro docutils literal">PyDoc_STR</code></a>.</p>
+</dd>
+</dl>
+<p>By default (when <a class="reference internal" href="structures.html#c:member:pymemberdef.flags"><code class="xref c member docutils literal">flags</code></a> is <code>0</code>), members allow
+both read and write access.
+Use the <a class="reference internal" href="structures.html#c:macro:py_readonly"><code class="xref c macro docutils literal">Py_READONLY</code></a> flag for read-only access.
+Certain types, like <a class="reference internal" href="structures.html#c:macro:py_t_string"><code class="xref c macro docutils literal">Py_T_STRING</code></a>, imply <a class="reference internal" href="structures.html#c:macro:py_readonly"><code class="xref c macro docutils literal">Py_READONLY</code></a>.
+Only <a class="reference internal" href="structures.html#c:macro:py_t_object_ex"><code class="xref c macro docutils literal">Py_T_OBJECT_EX</code></a> (and legacy <a class="reference internal" href="structures.html#c:macro:t_object"><code class="xref c macro docutils literal">T_OBJECT</code></a>) members can
+be deleted.</p>
+<a id="pymemberdef-offsets"></a>
+<p>For heap-allocated types (created using <a class="reference internal" href="type.html#c:function:pytype_fromspec"><code class="xref c function docutils literal">PyType_FromSpec</code></a> or similar),
+<code>PyMemberDef</code> may contain a definition for the special member
+<code>"__vectorcalloffset__"</code>, corresponding to
+<a class="reference internal" href="typeobj.html#c:member:pytypeobject.tp_vectorcall_offset"><code class="xref c member docutils literal">tp_vectorcall_offset</code></a> in type objects.
+This member must be defined with <code>Py_T_PYSSIZET</code>, and either
+<code>Py_READONLY</code> or <code>Py_READONLY | Py_RELATIVE_OFFSET</code>. For example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-storage hl-modifier hl-c">static</span> PyMemberDef spam_type_members<span class="hl-meta hl-brackets hl-c"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-c">[</span><span class="hl-punctuation hl-section hl-brackets hl-end hl-c">]</span></span> <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span><span class="hl-string hl-quoted hl-double hl-c"><span class="hl-punctuation hl-definition hl-string hl-begin hl-c">&quot;</span>__vectorcalloffset__<span class="hl-punctuation hl-definition hl-string hl-end hl-c">&quot;</span></span><span class="hl-punctuation hl-separator hl-c">,</span> Py_T_PYSSIZET<span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">     <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">offsetof</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">Spam_object<span class="hl-punctuation hl-separator hl-c">,</span> vectorcall</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-separator hl-c">,</span> Py_READONLY<span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span><span class="hl-punctuation hl-separator hl-c">,</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span><span class="hl-constant hl-language hl-c">NULL</span><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span>  <span class="hl-comment hl-block hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">/*</span> Sentinel <span class="hl-punctuation hl-definition hl-comment hl-c">*/</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></pre></div>
+<p>(You may need to <code>#include &lt;stddef.h&gt;</code> for <code class="xref c function docutils literal">offsetof</code>.)</p>
+<p>The legacy offsets <a class="reference internal" href="typeobj.html#c:member:pytypeobject.tp_dictoffset"><code class="xref c member docutils literal">tp_dictoffset</code></a> and
+<a class="reference internal" href="typeobj.html#c:member:pytypeobject.tp_weaklistoffset"><code class="xref c member docutils literal">tp_weaklistoffset</code></a> can be defined similarly using
+<code>"__dictoffset__"</code> and <code>"__weaklistoffset__"</code> members, but extensions
+are strongly encouraged to use <a class="reference internal" href="typeobj.html#c:macro:py_tpflags_managed_dict"><code class="xref c macro docutils literal">Py_TPFLAGS_MANAGED_DICT</code></a> and
+<a class="reference internal" href="typeobj.html#c:macro:py_tpflags_managed_weakref"><code class="xref c macro docutils literal">Py_TPFLAGS_MANAGED_WEAKREF</code></a> instead.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p><code>PyMemberDef</code> is always available.
+Previously, it required including <code>"structmember.h"</code>.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p><a class="reference internal" href="structures.html#c:macro:py_relative_offset"><code class="xref c macro docutils literal">Py_RELATIVE_OFFSET</code></a> is now allowed for
+<code>"__vectorcalloffset__"</code>, <code>"__dictoffset__"</code> and
+<code>"__weaklistoffset__"</code>.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pymember_getone"><code class="sig-name">PyObject* PyMember_GetOne(const char *obj_addr, struct PyMemberDef *m)</code></dt>
+  <dd><p>Get an attribute belonging to the object at address <em>obj_addr</em>.  The
+attribute is described by <code>PyMemberDef</code> <em>m</em>.  Returns <code>NULL</code>
+on error.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p><code>PyMember_GetOne</code> is always available.
+Previously, it required including <code>"structmember.h"</code>.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pymember_setone"><code class="sig-name">int PyMember_SetOne(char *obj_addr, struct PyMemberDef *m, PyObject *o)</code></dt>
+  <dd><p>Set an attribute belonging to the object at address <em>obj_addr</em> to object <em>o</em>.
+The attribute to set is described by <code>PyMemberDef</code> <em>m</em>.  Returns <code>0</code>
+if successful and a negative value on failure.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p><code>PyMember_SetOne</code> is always available.
+Previously, it required including <code>"structmember.h"</code>.</p>
+</div>
+</dd>
+</dl>
+<a id="pymemberdef-flags"></a>
+<h3 id="member-flags">Member flags</h3>
+<p>The following flags can be used with <a class="reference internal" href="structures.html#c:member:pymemberdef.flags"><code class="xref c member docutils literal">PyMemberDef.flags</code></a>:</p>
+<dl class="c macro">
+  <dt id="c:macro:py_readonly"><code class="sig-name">Py_READONLY</code></dt>
+  <dd><p>Not writable.</p>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:py_audit_read"><code class="sig-name">Py_AUDIT_READ</code></dt>
+  <dd><p>Emit an <code>object.__getattr__</code> <a href="../library/audit_events.html#audit-events">audit event</a>
+before reading.</p>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:py_relative_offset"><code class="sig-name">Py_RELATIVE_OFFSET</code></dt>
+  <dd><p>Indicates that the <a class="reference internal" href="structures.html#c:member:pymemberdef.offset"><code class="xref c member docutils literal">offset</code></a> of this <code>PyMemberDef</code>
+entry indicates an offset from the subclass-specific data, rather than
+from <code>PyObject</code>.</p>
+<p>Can only be used as part of the <a href="#" class="broken-link"><code class="xref c member docutils literal">Py_tp_members</code></a>
+<a class="reference internal" href="type.html#c:type:pytype_slot"><code class="xref c type docutils literal">slot</code></a> when creating a class using negative
+<a class="reference internal" href="type.html#c:member:pytype_spec.basicsize"><code class="xref c member docutils literal">basicsize</code></a>.
+It is mandatory in that case.
+When setting <a class="reference internal" href="typeobj.html#c:member:pytypeobject.tp_members"><code class="xref c member docutils literal">tp_members</code></a> from the slot during
+class creation, Python clears the flag and sets
+<a class="reference internal" href="structures.html#c:member:pymemberdef.offset"><code class="xref c member docutils literal">PyMemberDef.offset</code></a> to the offset from the <code>PyObject</code> struct.</p>
+</dd>
+</dl>
+<span id="index-2"></span>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>The <code class="xref c macro docutils literal">RESTRICTED</code>, <code class="xref c macro docutils literal">READ_RESTRICTED</code> and
+<code class="xref c macro docutils literal">WRITE_RESTRICTED</code> macros available with
+<code>#include "structmember.h"</code> are deprecated.
+<code class="xref c macro docutils literal">READ_RESTRICTED</code> and <code class="xref c macro docutils literal">RESTRICTED</code> are equivalent to
+<a class="reference internal" href="structures.html#c:macro:py_audit_read"><code class="xref c macro docutils literal">Py_AUDIT_READ</code></a>; <code class="xref c macro docutils literal">WRITE_RESTRICTED</code> does nothing.</p>
+</div>
+<span id="index-3"></span>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p>The <code class="xref c macro docutils literal">READONLY</code> macro was renamed to <a class="reference internal" href="structures.html#c:macro:py_readonly"><code class="xref c macro docutils literal">Py_READONLY</code></a>.
+The <code class="xref c macro docutils literal">PY_AUDIT_READ</code> macro was renamed with the <code>Py_</code> prefix.
+The new names are now always available.
+Previously, these required <code>#include "structmember.h"</code>.
+The header is still available and it provides the old names.</p>
+</div>
+<a id="pymemberdef-types"></a>
+<h3 id="member-types">Member types</h3>
+<p><a class="reference internal" href="structures.html#c:member:pymemberdef.type"><code class="xref c member docutils literal">PyMemberDef.type</code></a> can be one of the following macros corresponding
+to various C types.
+When the member is accessed in Python, it will be converted to the
+equivalent Python type.
+When it is set from Python, it will be converted back to the C type.
+If that is not possible, an exception such as <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> or
+<a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> is raised.</p>
+<p>Unless marked (D), attributes defined this way cannot be deleted
+using e.g. :keyword:`del` or <a class="reference internal" href="../library/functions.html#py:function:delattr"><code class="xref py function docutils literal">delattr</code></a>.</p>
+<table>
+<thead>
+<tr>
+<th><p>Macro name</p>
+</th>
+<th><p>C type</p>
+</th>
+<th><p>Python type</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_byte"><code class="sig-name">Py_T_BYTE</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`char`</p>
+</td>
+<td><p><a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_short"><code class="sig-name">Py_T_SHORT</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`short`</p>
+</td>
+<td><p><a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_int"><code class="sig-name">Py_T_INT</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`int`</p>
+</td>
+<td><p><a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_long"><code class="sig-name">Py_T_LONG</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`long`</p>
+</td>
+<td><p><a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_longlong"><code class="sig-name">Py_T_LONGLONG</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`long long`</p>
+</td>
+<td><p><a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_ubyte"><code class="sig-name">Py_T_UBYTE</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`unsigned char`</p>
+</td>
+<td><p><a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_uint"><code class="sig-name">Py_T_UINT</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`unsigned int`</p>
+</td>
+<td><p><a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_ushort"><code class="sig-name">Py_T_USHORT</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`unsigned short`</p>
+</td>
+<td><p><a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_ulong"><code class="sig-name">Py_T_ULONG</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`unsigned long`</p>
+</td>
+<td><p><a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_ulonglong"><code class="sig-name">Py_T_ULONGLONG</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`unsigned long long`</p>
+</td>
+<td><p><a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_pyssizet"><code class="sig-name">Py_T_PYSSIZET</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`Py_ssize_t`</p>
+</td>
+<td><p><a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_float"><code class="sig-name">Py_T_FLOAT</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`float`</p>
+</td>
+<td><p><a class="reference internal" href="../library/functions.html#py:class:float"><code class="xref py class docutils literal">float</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_double"><code class="sig-name">Py_T_DOUBLE</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`double`</p>
+</td>
+<td><p><a class="reference internal" href="../library/functions.html#py:class:float"><code class="xref py class docutils literal">float</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_bool"><code class="sig-name">Py_T_BOOL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`char`
+(written as 0 or 1)</p>
+</td>
+<td><p><a class="reference internal" href="../library/functions.html#py:class:bool"><code class="xref py class docutils literal">bool</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_string"><code class="sig-name">Py_T_STRING</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`const char *` (*)</p>
+</td>
+<td><p><a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> (RO)</p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_string_inplace"><code class="sig-name">Py_T_STRING_INPLACE</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`const char[]` (*)</p>
+</td>
+<td><p><a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> (RO)</p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_char"><code class="sig-name">Py_T_CHAR</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`char` (0-127)</p>
+</td>
+<td><p><a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> (**)</p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_t_object_ex"><code class="sig-name">Py_T_OBJECT_EX</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>:c:expr:`PyObject *`</p>
+</td>
+<td><p><a class="reference internal" href="../library/functions.html#py:class:object"><code class="xref py class docutils literal">object</code></a> (D)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>(*): Zero-terminated, UTF8-encoded C string.
+With <code class="xref c macro docutils literal">Py_T_STRING</code> the C representation is a pointer;
+with <code class="xref c macro docutils literal">Py_T_STRING_INPLACE</code> the string is stored directly
+in the structure.</p>
+<p>(**): String of length 1. Only ASCII is accepted.</p>
+<p>(RO): Implies <a class="reference internal" href="structures.html#c:macro:py_readonly"><code class="xref c macro docutils literal">Py_READONLY</code></a>.</p>
+<p>(D): Can be deleted, in which case the pointer is set to <code>NULL</code>.
+Reading a <code>NULL</code> pointer raises <a class="reference internal" href="../library/exceptions.html#py:exception:attributeerror"><code class="xref py exception docutils literal">AttributeError</code></a>.</p>
+</blockquote>
+<span id="index-4"></span>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+<p>In previous versions, the macros were only available with
+<code>#include "structmember.h"</code> and were named without the <code>Py_</code> prefix
+(e.g. as <code>T_INT</code>).
+The header is still available and contains the old names, along with
+the following deprecated types:</p>
+<dl class="c macro">
+  <dt id="c:macro:t_object"><code class="sig-name">T_OBJECT</code></dt>
+  <dd><p>Like <code>Py_T_OBJECT_EX</code>, but <code>NULL</code> is converted to <code>None</code>.
+This results in surprising behavior in Python: deleting the attribute
+effectively sets it to <code>None</code>.</p>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:t_none"><code class="sig-name">T_NONE</code></dt>
+  <dd><p>Always <code>None</code>. Must be used with <a class="reference internal" href="structures.html#c:macro:py_readonly"><code class="xref c macro docutils literal">Py_READONLY</code></a>.</p>
+</dd>
+</dl>
+</div>
+<h3 id="defining-getters-and-setters">Defining Getters and Setters</h3>
+<dl class="c type">
+  <dt id="c:type:pygetsetdef"><code class="sig-name">PyGetSetDef</code></dt>
+  <dd><p>Structure to define property-like access for a type. See also description of
+the <a class="reference internal" href="typeobj.html#c:member:pytypeobject.tp_getset"><code class="xref c member docutils literal">PyTypeObject.tp_getset</code></a> slot.</p>
+<dl class="c member">
+  <dt id="c:member:pygetsetdef.name"><code class="sig-name">const char* name</code></dt>
+  <dd><p>attribute name</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pygetsetdef.get"><code class="sig-name">getter get</code></dt>
+  <dd><p>C function to get the attribute.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pygetsetdef.set"><code class="sig-name">setter set</code></dt>
+  <dd><p>Optional C function to set or delete the attribute.
+If <code>NULL</code>, the attribute is read-only.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pygetsetdef.doc"><code class="sig-name">const char* doc</code></dt>
+  <dd><p>optional docstring</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pygetsetdef.closure"><code class="sig-name">void* closure</code></dt>
+  <dd><p>Optional user data pointer, providing additional data for getter and setter.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="c type">
+  <dt id="c:type:getter"><code class="sig-name">PyObject *(*getter)(PyObject *, void *)</code></dt>
+  <dd><p>The <code>get</code> function takes one :c:expr:`PyObject*` parameter (the
+instance) and a user data pointer (the associated <code>closure</code>):</p>
+<p>It should return a new reference on success or <code>NULL</code> with a set exception
+on failure.</p>
+</dd>
+</dl>
+<dl class="c type">
+  <dt id="c:type:setter"><code class="sig-name">int (*setter)(PyObject *, PyObject *, void *)</code></dt>
+  <dd><p><code>set</code> functions take two :c:expr:`PyObject*` parameters (the instance and
+the value to be set) and a user data pointer (the associated <code>closure</code>):</p>
+<p>In case the attribute should be deleted the second parameter is <code>NULL</code>.
+Should return <code>0</code> on success or <code>-1</code> with a set exception on failure.</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="lifecycle.html">&larr; Object Life Cycle</a>
+        <a class="next" href="typeobj.html">Type Object Structures &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
