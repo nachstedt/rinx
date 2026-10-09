@@ -18,6 +18,7 @@ from typing import Any, TextIO
 
 import benchmark_common
 from benchmark_common import (
+    BUILD_CONFIG_FLAGS,
     WARMUP_PACKAGE,
     BuildResult,
     ReportLayout,
@@ -68,6 +69,16 @@ CORPUS_PACKAGE = "Doc"
 # its full report (relative to the workspace root, like WHITELIST_PATH).
 SITE_DIR = TARGET_DIR / "bazel-bin" / CORPUS_PACKAGE / "site_site_out"
 RESULT_PATH = Path("benchmark_result.txt")
+
+# The language server's regression bar (roadmap #11): how many warnings
+# `rinx lsp --check` may show across CPython's documents, all open, before the
+# benchmark fails. Measured at 2564 when introduced — nearly all of them
+# directives CPython's own extensions add, or that rinx lacks — with a small
+# margin. Lower it as rinx implements what CPython uses.
+MAX_LSP_WARNINGS = 2600
+
+# The protocol's `DiagnosticSeverity`, as the summary names each.
+LSP_SEVERITIES = {1: "errors", 2: "warnings", 3: "information", 4: "hints"}
 
 
 def clone_repo(python_version: str) -> None:
@@ -383,7 +394,127 @@ class AstTally:
             self.parser_diagnostics[code] += 1
 
 
-def analyze_results(*, build_succeeded: bool = False) -> list[SummaryRow]:
+@dataclass(frozen=True)
+class LspCounts:
+    """What `rinx lsp --check` showed across the corpus."""
+
+    documents: int
+    # By the names in LSP_SEVERITIES; a severity nothing had is absent.
+    by_severity: Counter[str]
+    # The warnings by their code, for the full report.
+    warnings_by_code: Counter[str]
+
+    @property
+    def warnings(self) -> int:
+        """How many warnings were shown — the count the bar is about."""
+        return self.by_severity["warnings"]
+
+
+def count_lsp_check(check: dict[str, Any]) -> LspCounts:
+    """Counts what one `rinx lsp --check` printed, by severity and warnings by code."""
+    by_severity: Counter[str] = Counter()
+    warnings_by_code: Counter[str] = Counter()
+    for diagnostics in check.get("published", {}).values():
+        for diagnostic in diagnostics:
+            severity = LSP_SEVERITIES.get(diagnostic.get("severity", 1), "errors")
+            by_severity[severity] += 1
+            if severity == "warnings":
+                warnings_by_code[diagnostic.get("code", "(no code)")] += 1
+    return LspCounts(check.get("documents", 0), by_severity, warnings_by_code)
+
+
+def lsp_rows(counts: LspCounts | None) -> list[SummaryRow]:
+    """The summary's line for the language server, or why there is none."""
+    if counts is None:
+        return [SummaryRow("Language server:", "not run")]
+    shown = ", ".join(
+        f"{counts.by_severity[name]} {name}"
+        for name in LSP_SEVERITIES.values()
+        if counts.by_severity[name]
+    )
+    return [
+        SummaryRow(
+            "Language server:",
+            f"{shown or 'nothing'} over {counts.documents} documents "
+            f"(at most {MAX_LSP_WARNINGS} warnings)",
+        )
+    ]
+
+
+def lsp_failures(counts: LspCounts | None, limit: int = MAX_LSP_WARNINGS) -> list[str]:
+    """The language server's crossed bar, if it was: more warnings than `limit`.
+
+    Not running at all is no failure of the server's, but of the build that
+    should have produced it, which fails the run on its own.
+    """
+    if counts is None or counts.warnings <= limit:
+        return []
+    return [
+        (
+            f"the language server shows {counts.warnings} warnings on CPython's documents, "
+            f"more than the {limit} MAX_LSP_WARNINGS allows (see {RESULT_PATH})"
+        )
+    ]
+
+
+def find_server_binary() -> Path | None:
+    """The `rinx` binary the corpus build ran, or None when it cannot be found.
+
+    The build runs it in Bazel's exec configuration, so the binary is asked
+    for among the warmup site's dependencies: `bazel build @rinx//:rinx`
+    would compile a second one in another configuration.
+    """
+    result = subprocess.run(
+        [
+            "bazel",
+            "cquery",
+            *BUILD_CONFIG_FLAGS,
+            "--output=files",
+            f'filter("crates/worker:rinx$", deps(//{WARMUP_PACKAGE}:site))',
+        ],
+        cwd=str(TARGET_DIR),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return first_executable(result.stdout.splitlines(), TARGET_DIR)
+
+
+def first_executable(paths: list[str], root: Path) -> Path | None:
+    """The first of `paths`, relative to `root`, that is an executable file."""
+    for path in paths:
+        candidate = root / path.strip()
+        if path.strip() and candidate.is_file() and os.access(candidate, os.X_OK):
+            return candidate
+    return None
+
+
+def run_lsp_check() -> LspCounts | None:
+    """What the language server shows for CPython's documents, all open.
+
+    Runs `rinx lsp --check` over `Doc/`, the folder an editor would open:
+    `conf.py` decides what is a document, as it does for an author.
+    """
+    binary = find_server_binary()
+    if binary is None:
+        print("Could not find the rinx binary the build ran; skipping the language server.")
+        return None
+    print("\nChecking CPython's documents with the language server...")
+    result = subprocess.run(
+        [str(binary), "lsp", "--check", str(TARGET_DIR / CORPUS_PACKAGE)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        print(f"rinx lsp --check failed:\n{result.stderr}")
+        return None
+    return count_lsp_check(json.loads(result.stdout))
+
+
+def analyze_results(
+    *, build_succeeded: bool = False, lsp: LspCounts | None = None
+) -> list[SummaryRow]:
     """Tally the corpus' `.ast` files and warnings into the report, returning the summary's rows."""
     print("Analyzing AST output for unsupported constructs...")
 
@@ -414,12 +545,17 @@ def analyze_results(*, build_succeeded: bool = False) -> list[SummaryRow]:
             key_suffix=":",
         )
         write_frequency_summary(out, "Parser Diagnostics Summary", tally.parser_diagnostics)
+        write_frequency_summary(
+            out,
+            "Language Server Warnings Summary",
+            lsp.warnings_by_code if lsp is not None else {},
+        )
         domain = report_domain_warnings(
             TARGET_DIR / "bazel-bin", WHITELIST_PATH, build_succeeded=build_succeeded, out=out
         )
 
     print(f"Full report written to: {RESULT_PATH}")
-    return summary_rows(tally, domain)
+    return [*summary_rows(tally, domain), *lsp_rows(lsp)]
 
 
 def summary_rows(tally: AstTally, domain: DomainSummary) -> list[SummaryRow]:
@@ -474,7 +610,8 @@ def main() -> int:
     clone_repo(args.python_version)
     generate_bazel_project(workspace_dir, args.python_version)
     result = run_benchmark(clean=args.clean)
-    rows = analyze_results(build_succeeded=result.succeeded)
+    lsp = run_lsp_check() if result.succeeded else None
+    rows = analyze_results(build_succeeded=result.succeeded, lsp=lsp)
     outcome = benchmark_common.RunOutcome(
         title=f"CPython {args.python_version}",
         build=result,
@@ -483,6 +620,7 @@ def main() -> int:
         # CPython's root document is `contents`, not `index` (`root_doc` in its conf.py).
         entry=f"{CORPUS_PACKAGE}/contents.html",
         report=RESULT_PATH,
+        failures=lsp_failures(lsp),
     )
     return benchmark_common.finish_run(outcome, benchmark_common.RunOutputs.from_args(args))
 
