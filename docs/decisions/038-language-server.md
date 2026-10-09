@@ -186,13 +186,18 @@ Under `Strictness::Legacy`:
 - **An unknown directive or role from a declared extension** is reported as
   *Information*: "rinx does not analyse `sphinx.ext.autodoc`; contents not
   checked". One from no declared extension stays a warning, since it is
-  probably a typo.
+  probably a typo. Roles are listed in the table but not yet filtered on:
+  the parser does not report an unknown role at all, leaving its text as
+  written.
 - **An unresolved reference** into a domain that an unsupported extension
   produces targets for is reported as a *Hint*. `:ref:` and `:doc:` stay
   warnings.
 - **An extension missing from the table** is assumed to produce
-  `Everything`. The server says so once, naming the extensions it could not
-  model.
+  `Everything`, so every unresolved domain reference is a Hint. It explains
+  no directive, though: nothing says which directives are its, and lowering
+  every unknown one would hide the typos the first rule keeps. The server
+  says so once, in a `window/showMessage`, naming the extensions it could
+  not model.
 - **The toctree strict-deps check is off.** Every document under the source
   root is allowed, as in Sphinx.
 - **Images, downloads and parse-time files** are checked for existence on
@@ -206,7 +211,10 @@ Under `Strictness::Legacy`:
 build reports.
 
 The filter runs in `rinx_lsp`, in one place, keyed on `DiagnosticCode` plus
-the project model. The parser and renderer stay unaware of modes. The `.. noqa:`
+the project model. What a finding is about — the directive's name, the domain
+a reference missed — travels on the diagnostic as a `DiagnosticSubject`, set
+where it is found, so the filter never parses a message. The table is
+`crates/lsp/src/project/extension_profiles.toml`, compiled in. The parser and renderer stay unaware of modes. The `.. noqa:`
 filtering both modes need (`commands/suppression.rs`'s `retain_reportable*`) is
 lifted out of the worker into a crate both front ends call. Otherwise the
 editor and CI would disagree about what is suppressed.
@@ -324,5 +332,7 @@ itself would not give.
   "undefined substitution" they cause.
 - **A file under two `conf.py`s or two libraries.** The nearest model wins.
   Whether the second should be reported is undecided.
-- **Severity names.** Should the legacy downgrades be configurable per
-  `DiagnosticCode`, or is the table in §5 enough?
+- ~~**Severity names.** Should the legacy downgrades be configurable per
+  `DiagnosticCode`, or is the table in §5 enough?~~ The table is enough
+  (roadmap #11): a downgrade follows from what a declared extension explains,
+  and a `.. noqa:` silences the rest.

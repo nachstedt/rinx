@@ -136,6 +136,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Build the node a reader sees and the diagnostic a log records from one message, so the page and the build log cannot explain the same failure differently.
 - Check a configuration invariant in both directions: the mistake of declaring something in one place and forgetting it in another is likelier than declaring it wrongly twice.
 - When a static reader meets code it cannot run, apply what it could read and report exactly what it skipped, rather than discarding the whole value.
+- Lower an unknown construct's severity only when a known source explains it; keep it a warning otherwise, and never ship one project's own vocabulary in the repository to quiet it.
 
 ## Testing
 
