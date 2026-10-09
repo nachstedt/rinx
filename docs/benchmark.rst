@@ -35,7 +35,7 @@ Each has a landing page linking both sites and their full reports.
 
 The workflow's first step, ``bazel run //scripts:benchmark_warmup``, compiles rinx into the disk cache the two benchmarks share, in a generated workspace declared exactly as theirs are. The benchmark steps find the binary there, so each step's duration on the Actions page is close to its site build; the job summary's *Corpus build* line is the exact figure, with the benchmark's own warm-up already subtracted.
 
-**Only a corpus that no longer builds fails CI.** New warnings, whitelist entries that went stale and the timings are reported in the job's summary on the Actions page, never gated: the corpora are someone else's documentation, and a warning in them is a finding to triage rather than a regression. Timings on shared runners are too noisy to compare between runs.
+**A corpus that no longer builds fails CI, and so does one bar.** New warnings, whitelist entries that went stale and the timings are reported in the job's summary on the Actions page, never gated: the corpora are someone else's documentation, and a warning in them is a finding to triage rather than a regression. Timings on shared runners are too noisy to compare between runs. The bar is the language server's: how many warnings it shows across CPython's documents, all open, may not exceed ``MAX_LSP_WARNINGS`` in ``scripts/benchmark.py`` (see "6. Language Server Warnings" below).
 
 Two flags make that possible, and work locally too:
 
@@ -91,6 +91,7 @@ Note that ``scripts/domain_warnings_whitelist.json`` is tied to the pinned corpu
 3. **Warm-up build**: A second, one-document site (``bench_warmup/``, generated beside ``Doc/``) is built first. Its only purpose is to compile the ``rinx`` binary and resolve the Rust, Java and Python toolchains *before* the clock starts on the documentation build — see "Rendering Time" below for why this is a separate build rather than a ``bazel build @rinx//:rinx``.
 4. **Execution**: The script then runs ``bazel build //Doc:site``. This triggers ``rinx`` to parse, validate, and render every ``.rst`` file into HTML in parallel. The build currently succeeds outright against CPython's docs — toctree validation passes and HTML is produced for every page.
 5. **Analysis**: Once the build completes, the script traverses the generated Abstract Syntax Tree (``.ast``) JSON files located in ``bazel-bin/``. It tallies up ``Directive::Unknown`` nodes (directives the parser doesn't recognize), ``Toctree.ignored_options`` (recognized toctree options the parser doesn't yet act on, e.g. ``:caption:``), and per-document parser diagnostics, and prints each as a frequency map.
+6. **Language server**: Once the build has succeeded, and before the analysis writes its report, the script runs ``rinx lsp --check Doc/`` with the binary the build ran — found by ``bazel cquery`` among the warm-up site's dependencies, since it is built in the exec configuration. That is the language server driven in-process: it reads ``Doc/conf.py`` as an editor opening ``Doc/`` would, opens every document the project indexes, renders each one, and prints, as JSON, what it would show for every file. The script counts it by severity for the summary, and the warnings by code for the full report.
 
 Interpreting Results
 --------------------
@@ -172,6 +173,12 @@ The benchmark prints the new (non-whitelisted) warnings as two separate, most-fr
 It then prints a count of occurrences suppressed by the whitelist, and a **Stale Whitelist Entries** list (entries that no longer match any emitted warning).
 
 **Auto-pruning:** stale entries are removed from the whitelist file automatically, but only when the warning data is trustworthy — the Bazel build succeeded **and** at least one sidecar was found. Otherwise pruning is skipped (and says why), so a broken or empty build can never silently delete your accepted entries along with their comments. This is why the build no longer runs under ``--keep_going``: a failed render must fail the whole build rather than under-report a document's warnings and get its whitelist entries pruned as "stale".
+
+6. Language Server Warnings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The summary's *Language server* line counts what ``rinx lsp --check`` showed across CPython's documents, by severity, and ``benchmark_result.txt`` lists the warnings by code. It is the bar roadmap step #11 set (``docs/dev/lsp-roadmap.md``): CPython's own documentation, read by its own ``conf.py``, should not drown an author in warnings. Its extensions lower what they explain (see the editor guide's "Sphinx projects"), so most of what remains are directives CPython's local extensions add (``availability``, ``audit-event``, …) and Sphinx directives rinx does not implement yet (``sectionauthor``, ``rubric``, …).
+
+More warnings than ``MAX_LSP_WARNINGS`` fail the run. When a change implements something CPython uses, the count drops: lower the constant with it, so the gain cannot quietly be given back.
 
 The benchmark always exits 0 — it reports and prunes, but never gates the build on new warnings.
 
