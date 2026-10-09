@@ -12,7 +12,10 @@
 //! message to the replies, and [`run`] is the loop around them. [`scan`] is
 //! the thread scanning the workspace beside the loop; the file-system
 //! events the client reports reach [`state`] like any other notification.
+//! [`check`] drives the same state in-process over a whole folder, for
+//! measuring a corpus rather than serving an editor.
 
+mod check;
 mod handlers;
 mod projects;
 mod run;

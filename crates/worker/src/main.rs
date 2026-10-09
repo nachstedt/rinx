@@ -15,7 +15,7 @@
 //! rinx inventory --index <project.index> --output <objects.inv> --config <config.toml>
 //! rinx extract_doctests --input <file.ast> --output <file.doctests.json>
 //! rinx embed_assets --input <file.ast> --output <file.embeds.json>
-//! rinx lsp [--stdio]
+//! rinx lsp [--stdio | --check <folder>]
 //! rinx validate_assets [--image-dir <dir>] [--download-dir <dir>] [--diagram-dirs <puml_dir>...] --inputs <a.ast> [<b.ast> ...]
 //! ```
 //!
@@ -88,7 +88,7 @@ fn run(args: &[String]) -> Result<()> {
                    {program} modindex --index <project.index> --output <py-modindex.html> --config <config.toml> --template <template.html>\n\
                    {program} inventory --index <project.index> --output <objects.inv> --config <config.toml>\n\
                    {program} preview --doc-path <rel_path> --config <config.toml> --template <template.html> [--index <project.index>] [--default-domain <py|c>]\n\
-                   {program} lsp [--stdio]\n\
+                   {program} lsp [--stdio | --check <folder>]\n\
                    {program} validate_assets [--image-dir <dir>] [--download-dir <dir>] [--diagram-dirs <puml_dir>...] --inputs <a.ast> [<b.ast> ...]"
             );
             Err(anyhow!(msg))

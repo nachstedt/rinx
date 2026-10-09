@@ -677,6 +677,9 @@ class RunOutcome:
     # The site's front page, relative to `site_dir`.
     entry: str
     report: Path
+    # The regression bars the run crossed, each worded for the log — what
+    # fails a run whose corpus built.
+    failures: Sequence[str] = ()
 
 
 @dataclass(frozen=True)
@@ -707,12 +710,17 @@ def finish_run(outcome: RunOutcome, outputs: RunOutputs) -> int:
     print("\n" + render_terminal_summary(outcome.title, rows))
     if outputs.summary_markdown is not None:
         append_markdown_summary(outputs.summary_markdown, outcome.title, rows)
-    return exit_status(build_succeeded=outcome.build.succeeded)
+    for failure in outcome.failures:
+        print(f"FAILED: {failure}")
+    return exit_status(build_succeeded=outcome.build.succeeded, failures=outcome.failures)
 
 
-def exit_status(*, build_succeeded: bool) -> int:
-    """The benchmark's exit status: failing only when the corpus did not build.
+def exit_status(*, build_succeeded: bool, failures: Sequence[str] = ()) -> int:
+    """The benchmark's exit status: failing when the corpus did not build or crossed a bar.
 
-    New warnings never fail it; they are what the report is for.
+    New warnings in the build's report never fail it; they are what the
+    report is for. A bar is a count the benchmark promises to keep under, such
+    as the warnings the language server shows (`benchmark.py`'s
+    `MAX_LSP_WARNINGS`).
     """
-    return 0 if build_succeeded else 1
+    return 0 if build_succeeded and not failures else 1
