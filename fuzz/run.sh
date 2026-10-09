@@ -4,6 +4,7 @@
 #
 #   ./run.sh parse 60
 #   ./run.sh lsp_session 600
+#   ./run.sh pyconf 60
 #
 # New inputs collect in corpus/<target>; a crashing one lands in
 # artifacts/<target>/, and `cargo fuzz run <target> <file>` replays it.
@@ -25,6 +26,12 @@ case "$target" in
     ;;
   lsp_session)
     exec cargo fuzz run --target "$host" lsp_session "corpus/lsp_session" -- -max_total_time="$seconds"
+    ;;
+  # Real `conf.py` files as seeds, so the reader starts from the shapes
+  # projects write.
+  pyconf)
+    exec cargo fuzz run --target "$host" pyconf "corpus/pyconf" ../crates/pyconf/testdata -- \
+      -max_len=8192 -max_total_time="$seconds"
     ;;
   *)
     echo "unknown fuzz target '$target'" >&2

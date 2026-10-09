@@ -180,6 +180,9 @@ jobs:
     - name: Fuzz the language server
       run: ./run.sh lsp_session 60
 
+    - name: Fuzz the conf.py reader
+      run: ./run.sh pyconf 60
+
     - name: Upload the crashing inputs
       if: failure()
       uses: actions/upload-artifact@v7

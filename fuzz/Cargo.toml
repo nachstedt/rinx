@@ -23,6 +23,7 @@ libfuzzer-sys = "0.4"
 lsp-server = "0.10"
 rinx_lsp = { path = "../crates/lsp" }
 rinx_parser = { path = "../crates/parser" }
+rinx_pyconf = { path = "../crates/pyconf" }
 serde_json = "1"
 
 [workspace]
@@ -45,6 +46,13 @@ bench = false
 [[bin]]
 name = "lsp_session"
 path = "fuzz_targets/lsp_session.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "pyconf"
+path = "fuzz_targets/pyconf.rs"
 test = false
 doc = false
 bench = false
