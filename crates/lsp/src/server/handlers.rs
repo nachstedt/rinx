@@ -4,13 +4,14 @@
 use lsp_server::{ErrorCode, Message, Notification, Request, RequestId, Response};
 use lsp_types::notification::{
     DidChangeTextDocument, DidChangeWatchedFiles, DidCloseTextDocument, DidOpenTextDocument,
-    Notification as _, PublishDiagnostics,
+    Notification as _, PublishDiagnostics, ShowMessage,
 };
 use lsp_types::request::{Completion, GotoDefinition, HoverRequest, Request as _};
 use lsp_types::{
     ClientCapabilities, CompletionOptions, CompletionParams, GotoDefinitionParams, HoverParams,
-    HoverProviderCapability, InitializeResult, OneOf, PublishDiagnosticsParams, ServerCapabilities,
-    ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
+    HoverProviderCapability, InitializeResult, MessageType, OneOf, PublishDiagnosticsParams,
+    ServerCapabilities, ServerInfo, ShowMessageParams, TextDocumentSyncCapability,
+    TextDocumentSyncKind, Uri,
 };
 
 use super::state::ServerState;
@@ -157,6 +158,19 @@ fn invalid_params(id: RequestId, method: &str, error: &serde_json::Error) -> Res
         ErrorCode::InvalidParams as i32,
         format!("invalid '{method}' parameters: {error}"),
     )
+}
+
+/// A `window/showMessage` notification telling the user `message`, as
+/// information rather than a warning or an error.
+pub(super) fn show_information(message: String) -> Message {
+    Notification::new(
+        ShowMessage::METHOD.to_string(),
+        ShowMessageParams {
+            typ: MessageType::INFO,
+            message,
+        },
+    )
+    .into()
 }
 
 /// A `textDocument/publishDiagnostics` notification.

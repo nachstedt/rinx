@@ -36,10 +36,13 @@ mod render_tests;
 #[cfg(test)]
 mod session_tests;
 #[cfg(test)]
+mod strictness_tests;
+#[cfg(test)]
 mod test_support;
 #[cfg(test)]
 mod watch_tests;
 #[cfg(test)]
 mod workspace_tests;
 
+pub use check::{FolderCheck, check_folder};
 pub use run::run;

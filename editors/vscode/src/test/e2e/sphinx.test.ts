@@ -18,12 +18,15 @@ async function rinx(): Promise<RinxApi> {
     return extension.isActive ? extension.exports : await extension.activate();
 }
 
+/** The code of `diagnostic`, as the server sent it. */
+function codeOf(diagnostic: vscode.Diagnostic): string {
+    const code = diagnostic.code;
+    return typeof code === 'object' ? String(code.value) : String(code);
+}
+
 /** The codes of what the editor shows for `uri`. */
 function codesFor(uri: vscode.Uri): string[] {
-    return vscode.languages.getDiagnostics(uri).map((diagnostic) => {
-        const code = diagnostic.code;
-        return typeof code === 'object' ? String(code.value) : String(code);
-    });
+    return vscode.languages.getDiagnostics(uri).map(codeOf);
 }
 
 suite('Sphinx project (e2e)', () => {
@@ -54,6 +57,20 @@ suite('Sphinx project (e2e)', () => {
         await waitFor('the reference to render broken', () =>
             codesFor(project('index.rst')).includes('link.broken-ref'),
         );
+    });
+
+    test('a directive of a declared extension is information, not a warning', async () => {
+        // When
+        await vscode.window.showTextDocument(project('api.rst'));
+
+        // Then
+        const automodule = await waitFor('the automodule directive to be diagnosed', () =>
+            vscode.languages
+                .getDiagnostics(project('api.rst'))
+                .find((diagnostic) => codeOf(diagnostic) === 'directive.unknown'),
+        );
+        assert.strictEqual(automodule.severity, vscode.DiagnosticSeverity.Information);
+        assert.match(automodule.message, /sphinx\.ext\.autodoc/);
     });
 
     test('what the server could not read in conf.py is underlined there', async () => {
