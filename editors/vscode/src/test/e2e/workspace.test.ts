@@ -39,8 +39,11 @@ suite('Workspace index (e2e)', () => {
             return reported?.state === 'ready' && reported;
         });
 
-        // Then
-        const documents = fs.readdirSync(workspaceRoot()).filter((name) => name.endsWith('.rst'));
+        // Then — every document of the folder and of its Sphinx project,
+        // whose `drafts/` its `conf.py` excludes
+        const documents = fs
+            .readdirSync(workspaceRoot(), { recursive: true, encoding: 'utf8' })
+            .filter((name) => name.endsWith('.rst') && !name.split(path.sep).includes('drafts'));
         assert.strictEqual(status.documents, documents.length);
     });
 
