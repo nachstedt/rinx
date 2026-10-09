@@ -67,8 +67,8 @@ use crate::includes::IncludeGraph;
 use crate::position::{PositionEncoding, char_index_of, to_lsp_position, to_lsp_range};
 use crate::progress::{IndexState, ScanProgress};
 use crate::project::{
-    DiscoveredProject, IndexedDocument, ParseSettings, Project, ScannedProject, is_visible_under,
-    sources_under,
+    DiscoveredProject, IndexedDocument, ParseSettings, Project, ScannedProject, Strictness,
+    is_visible_under, sources_under,
 };
 use crate::reference_at::reference_at;
 use crate::render::render_diagnostics;
@@ -101,6 +101,10 @@ pub struct ServerState {
     pub(super) projects: BTreeMap<ProjectId, Project>,
     /// The id the next project found gets.
     pub(super) next_project: u64,
+    /// Each `conf.py` whose unmodelled extensions the user has been told
+    /// about, with the extensions named — so a project found again says
+    /// nothing new, and one declaring others says so.
+    pub(super) announced: BTreeSet<(PathBuf, Vec<String>)>,
     /// How long the last workspace scan took, once it has finished.
     pub(super) scan_elapsed: Option<Duration>,
     /// Whether the client accepts `$/progress` reports.
@@ -183,6 +187,7 @@ impl ServerState {
             discovered: BTreeSet::new(),
             projects: BTreeMap::new(),
             next_project: 0,
+            announced: BTreeSet::new(),
             scan_elapsed: None,
             progress_supported: false,
             definition_links: false,
@@ -781,10 +786,20 @@ impl ServerState {
             .rendered
             .as_ref()
             .map_or(&[][..], |rendered| rendered.diagnostics.as_slice());
+        // A document in no project declares no extensions, so nothing about
+        // it is lowered.
+        let default_strictness = Strictness::default();
+        let strictness = tracked
+            .project
+            .and_then(|project| self.projects.get(&project))
+            .map_or(&default_strictness, |project| {
+                &project.model().settings.strictness
+            });
         let mut diagnosis = diagnose_source(
             uri,
             &tracked.parsed,
             rendered,
+            strictness,
             &self.documents,
             self.encoding,
         );
