@@ -31,10 +31,10 @@ finished one 🔶. A heading with no marker means the step has not started.
 - **Done:** #1 (PR #226), plus the testing and CI groundwork that came before #2
   (PRs #238–#248, listed at the end of M0), #2 (PR #253), #3 (PR #255),
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
-  #7 (PR #273, prepared by #272), #8 (PR #275), and #9 (PR #276).
+  #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), and #10.
 - **Done early:** most of #12, which is the packaging, the CI artifact and the
   installed-VSIX test.
-- **Next: #10, the static `conf.py` reader.**
+- **Next: #11, extension profiles and the strictness filter.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -263,7 +263,7 @@ scan's time. A client without dynamic registration for
 
 ## M2: Plain Sphinx projects (legacy mode)
 
-### 10. Static `conf.py` reader
+### 10. Static `conf.py` reader ✅
 
 **You experience:** the status bar shows `Sphinx project (docs/conf.py)`,
 excluded files are not indexed, and the default role works.
@@ -274,6 +274,26 @@ excluded files are not indexed, and the default role works.
 - Route each file to the nearest `conf.py`; multi-root workspaces
 - Apply `root_doc`, `source_suffix`, `exclude_patterns`, `default_role`, `primary_domain`
 - Tests, including CPython's `conf.py` as a fixture
+
+The reader is `rinx_pyconf`, our own, after Ruff's parser, `rustpython-parser`
+and an embedded interpreter were considered (ADR-038 lists why each was
+rejected). What it cannot take as written is reported in `conf.py` itself,
+as `conf.*` diagnostics. A literal changed afterwards keeps the literal, so
+CPython's conditional `exclude_patterns.append(...)` costs one warning rather
+than its exclusions. Projects are found in the scan's own walk, which never
+enters an excluded directory. Each `conf.py` is a project, with the folder
+itself for what lies under none, and a file belongs to the nearest one.
+Every document is named `.rst` whatever its suffix. Changing, creating or
+deleting a `conf.py` finds the folder's projects again, re-scanning only the
+documents that changed project. `numfig`, `numfig_secnum_depth` and
+`highlight_language` are read too, since #6 left them to this step.
+`exclude_patterns` match through toctree's glob translation, now a port of
+Sphinx's own, because `globset` refused `**.ipynb_checkpoints`. `conf.py` is
+read from the disk, so its diagnostics update on save.
+
+Measured on CPython: the scan finds 524 documents in 0.40 s, the three
+`includes/` fragments and `README.rst` excluded, and `conf.py` shows one
+warning, the conditional `exclude_patterns.append` on line 119.
 
 ### 11. Extension profiles + strictness filter
 
