@@ -32,7 +32,7 @@ finished one 🔶. A heading with no marker means the step has not started.
   (PRs #238–#248, listed at the end of M0), #2 (PR #253), #3 (PR #255),
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
-  and #11.
+  and #11 (PR #286).
 - **Done early:** most of #12, which is the packaging, the CI artifact and the
   installed-VSIX test.
 - **Next: #13, intersphinx.**
@@ -296,7 +296,7 @@ Measured on CPython: the scan finds 524 documents in 0.40 s, the three
 `includes/` fragments and `README.rst` excluded, and `conf.py` shows one
 warning, the conditional `exclude_patterns.append` on line 119.
 
-### 11. Extension profiles + strictness filter ✅
+### 11. Extension profiles + strictness filter ✅ (#286)
 
 **You experience:** CPython's `Doc/` is quiet, and `automodule` is
 *Information*, not an error.
