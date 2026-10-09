@@ -227,11 +227,7 @@ pub(crate) fn collect_schema_mismatches(
 /// to report none rather than a wrong one — and the message names the entity,
 /// which is what an author searches for.
 fn entity_diagnostic(code: DiagnosticCode, message: String) -> Diagnostic {
-    Diagnostic {
-        code,
-        message,
-        span: None,
-    }
+    Diagnostic::without_span(code, message)
 }
 
 #[cfg(test)]

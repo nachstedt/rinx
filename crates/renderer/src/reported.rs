@@ -9,7 +9,7 @@
 
 use std::borrow::Cow;
 
-use rinx_ast::{Diagnostic, DiagnosticCode, Reported, Span};
+use rinx_ast::{Diagnostic, DiagnosticCode, DiagnosticSubject, Reported, Span};
 
 use crate::{
     BrokenLink, DiagramError, EmptyListingError, HighlightError, ImageError, MathError,
@@ -38,13 +38,31 @@ macro_rules! reported_by_code_and_span {
 }
 
 reported_by_code_and_span!(
-    BrokenLink => |link| Cow::Owned(BrokenLink::message(link)),
     MathError => |error| Cow::Owned(format!("invalid math: {}", error.message)),
     EmptyListingError => |error| Cow::Owned(EmptyListingError::message(error)),
     DiagramError => |error| Cow::Owned(DiagramError::message(error)),
     HighlightError => |error| Cow::Borrowed(&error.message),
     ImageError => |error| Cow::Borrowed(&error.message),
 );
+
+/// A broken link is the one finding with a subject: the domain it missed.
+impl Reported for BrokenLink {
+    fn code(&self) -> DiagnosticCode {
+        BrokenLink::code(self)
+    }
+
+    fn span(&self) -> Option<Span> {
+        self.span
+    }
+
+    fn message(&self) -> Cow<'_, str> {
+        Cow::Owned(BrokenLink::message(self))
+    }
+
+    fn subject(&self) -> Option<DiagnosticSubject> {
+        self.kind.subject()
+    }
+}
 
 /// A mismatch has no code of its own to delegate to: there is one kind.
 impl Reported for ObjectTypeMismatch {
