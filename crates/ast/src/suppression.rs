@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::diagnostic::Diagnostic;
 use crate::diagnostic_code::DiagnosticCode;
+use crate::diagnostic_subject::DiagnosticSubject;
 use crate::span::{FileId, Span};
 
 /// Something a phase reported that a `.. noqa:` may silence: a parse
@@ -37,11 +38,20 @@ pub trait Reported {
     /// What was found, for the document's author — without the code or the
     /// position, which the reporting layer writes around it.
     fn message(&self) -> Cow<'_, str>;
+    /// What this is about, when a front end may treat it by subject — see
+    /// [`DiagnosticSubject`]. Most findings have none.
+    fn subject(&self) -> Option<DiagnosticSubject> {
+        None
+    }
 
     /// This finding as a plain [`Diagnostic`], for a front end that needs
     /// nothing beyond what any diagnostic carries.
     fn to_diagnostic(&self) -> Diagnostic {
-        Diagnostic::at(self.code(), self.message(), self.span())
+        let diagnostic = Diagnostic::at(self.code(), self.message(), self.span());
+        match self.subject() {
+            Some(subject) => diagnostic.about(subject),
+            None => diagnostic,
+        }
     }
 }
 
@@ -56,6 +66,10 @@ impl Reported for Diagnostic {
 
     fn message(&self) -> Cow<'_, str> {
         Cow::Borrowed(&self.message)
+    }
+
+    fn subject(&self) -> Option<DiagnosticSubject> {
+        self.subject.clone()
     }
 }
 
@@ -211,6 +225,16 @@ mod tests {
     fn test_to_diagnostic_keeps_code_message_and_span() {
         // Given
         let diagnostic = Diagnostic::new(DiagnosticCode::CsvNoData, "no data", span_on(4));
+
+        // When / Then
+        assert_eq!(diagnostic.to_diagnostic(), diagnostic);
+    }
+
+    #[test]
+    fn test_to_diagnostic_keeps_the_subject() {
+        // Given
+        let diagnostic = Diagnostic::new(DiagnosticCode::DirectiveUnknown, "unknown", span_on(4))
+            .about(DiagnosticSubject::Directive("todo".to_string()));
 
         // When / Then
         assert_eq!(diagnostic.to_diagnostic(), diagnostic);

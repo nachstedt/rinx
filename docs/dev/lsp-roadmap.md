@@ -31,10 +31,11 @@ finished one 🔶. A heading with no marker means the step has not started.
 - **Done:** #1 (PR #226), plus the testing and CI groundwork that came before #2
   (PRs #238–#248, listed at the end of M0), #2 (PR #253), #3 (PR #255),
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
-  #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), and #10 (PR #281).
+  #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
+  and #11 (PR #286).
 - **Done early:** most of #12, which is the packaging, the CI artifact and the
   installed-VSIX test.
-- **Next: #11, extension profiles and the strictness filter.**
+- **Next: #13, intersphinx.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -295,7 +296,7 @@ Measured on CPython: the scan finds 524 documents in 0.40 s, the three
 `includes/` fragments and `README.rst` excluded, and `conf.py` shows one
 warning, the conditional `exclude_patterns.append` on line 119.
 
-### 11. Extension profiles + strictness filter
+### 11. Extension profiles + strictness filter ✅ (#286)
 
 **You experience:** CPython's `Doc/` is quiet, and `automodule` is
 *Information*, not an error.
@@ -305,6 +306,32 @@ warning, the conditional `exclude_patterns.append` on line 119.
 - Filter keyed on code, directive or role name, and domain
 - One-time notice naming the extensions it couldn't model
 - Regression test: CPython diagnostic count stays under a threshold
+
+The table is `crates/lsp/src/project/extension_profiles.toml`, and the filter
+is `rinx_lsp`'s `Strictness`, which `conf.py`'s `extensions` decide. An
+unknown directive that a declared extension provides is *Information*. A
+domain reference resolving nowhere is a *Hint* when a declared extension may
+define it. Everything else stays a warning. What a finding is about now
+travels on the diagnostic as a `DiagnosticSubject`, so the filter never
+reads a message.
+
+An extension the table does not model is assumed to define every domain's
+objects, as ADR-038 says, but it explains no directive. CPython's own
+directives (`availability`, `audit-event`, …) therefore stay warnings, as do
+Sphinx's that rinx lacks (`sectionauthor`, `rubric`, …). So "quiet" is a
+bar rather than zero. Roles are listed but not filtered on, since the parser
+reports no unknown role yet. The notice naming the unmodelled extensions is a
+`window/showMessage`, sent once per `conf.py` and set of names.
+
+The bar is measured by `rinx lsp --check <folder>`. It is the server driven
+in-process: scanned, every document opened and rendered, and what it shows
+printed as JSON. Over stdio, only a timeout could tell when the render tier is
+done, since a render that changes nothing publishes nothing. The CPython
+benchmark runs it and fails above `MAX_LSP_WARNINGS`.
+
+Measured on CPython's 524 documents, `--check` takes 9 s. It shows 2564
+warnings (1857 of them unknown directives), 2882 hints and 33 include
+summaries.
 
 ### 12. Local packaging 🔶 partly done (#248)
 

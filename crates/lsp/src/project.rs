@@ -10,10 +10,12 @@
 
 mod discover;
 mod exclusion;
+mod extension_profile;
 mod index;
 mod model;
 mod scan;
 mod sphinx_conf;
+mod strictness;
 
 pub use discover::{
     DiscoveredProject, contains_conf, discover_projects, is_conf, is_visible_under, sources_under,
@@ -25,3 +27,4 @@ pub use scan::{ScannedProject, scan_projects};
 pub use scan::{parse_project_documents, scan_folder};
 #[cfg(test)]
 pub use sphinx_conf::read_sphinx_conf;
+pub use strictness::{Judgement, Strictness};

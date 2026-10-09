@@ -530,6 +530,10 @@ class TestExitStatus:
         # Given / When / Then
         assert benchmark_common.exit_status(build_succeeded=False) == 1
 
+    def test_a_corpus_that_crossed_a_bar_exits_non_zero(self) -> None:
+        # Given / When / Then
+        assert benchmark_common.exit_status(build_succeeded=True, failures=["too many"]) == 1
+
 
 def _whitelist_summary(
     *, stale_count: int, stale_pruned: bool
@@ -601,6 +605,33 @@ class TestFinishRun:
         # Then
         assert status == 1
         assert not (tmp_path / "out").exists()
+
+    def test_a_crossed_bar_fails_a_built_corpus_and_says_why(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        # Given
+        site, report = self._site(tmp_path)
+        result = benchmark_common.BuildResult(
+            succeeded=True, warmup_seconds=1.0, corpus_seconds=2.0
+        )
+
+        # When
+        status = benchmark_common.finish_run(
+            benchmark_common.RunOutcome(
+                "CPython",
+                result,
+                [],
+                site_dir=site,
+                entry="index.html",
+                report=report,
+                failures=["the language server shows 9 warnings, more than 5"],
+            ),
+            benchmark_common.RunOutputs(),
+        )
+
+        # Then
+        assert status == 1
+        assert "FAILED: the language server shows 9 warnings" in capsys.readouterr().out
 
 
 class TestRunOutputs:

@@ -39,7 +39,7 @@ mod server;
 mod uri;
 
 pub use position::PositionEncoding;
-pub use server::run;
+pub use server::{FolderCheck, check_folder, run};
 
 use anyhow::Result;
 use lsp_server::Connection;

@@ -219,6 +219,71 @@ fn test_lsp_reads_a_sphinx_projects_conf_py() {
 }
 
 #[test]
+fn test_lsp_lowers_what_a_sphinx_projects_extensions_explain() {
+    // Given — a project declaring autodoc, and an extension no profile models
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_extensions");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    std::fs::write(
+        root.join("conf.py"),
+        "extensions = ['sphinx.ext.autodoc', 'my_ext']\n",
+    )
+    .expect("write");
+    let text = "Home\n====\n\n.. automodule:: spam\n";
+    std::fs::write(root.join("index.rst"), text).expect("write");
+    let mut server = Server::spawn();
+    server.initialize_with(json!({
+        "capabilities": {},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+
+    // When — reading up to the ready status, then opening the document
+    let mut shown = Vec::new();
+    loop {
+        match server.receive() {
+            Message::Notification(notification)
+                if notification.method == "rinx/status"
+                    && notification.params["state"] == "ready" =>
+            {
+                break;
+            }
+            Message::Notification(notification) if notification.method == "window/showMessage" => {
+                shown.push(notification.params);
+            }
+            _ => {}
+        }
+    }
+    let uri = format!("file://{}", root.join("index.rst").display());
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": uri, "languageId": "restructuredtext", "version": 1, "text": text,
+        }}),
+    );
+    let published = std::iter::from_fn(|| match server.receive() {
+        Message::Notification(notification) => Some(notification),
+        _ => None,
+    })
+    .filter(|notification| notification.method == "textDocument/publishDiagnostics")
+    .map(|notification| notification.params)
+    .find(|published| published["uri"] == uri.as_str())
+    .expect("the document is published");
+
+    // Then — the unmodelled extension is named once, as information, and the
+    // directive autodoc provides is information too
+    assert_eq!(shown.len(), 1, "{shown:?}");
+    assert_eq!(shown[0]["type"], 3);
+    assert!(
+        shown[0]["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("`my_ext`")),
+        "{shown:?}"
+    );
+    assert_eq!(published["diagnostics"][0]["code"], "directive.unknown");
+    assert_eq!(published["diagnostics"][0]["severity"], 3);
+}
+
+#[test]
 fn test_lsp_completes_a_label_defined_in_another_document() {
     // Given — a scanned folder whose `setup.rst` labels a section
     let root = std::env::temp_dir().join("rinx_lsp_stdio_completion");

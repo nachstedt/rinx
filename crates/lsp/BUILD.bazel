@@ -4,6 +4,8 @@ load("@rules_rust//rust:defs.bzl", "rust_library")
 rust_library(
     name = "rinx_lsp",
     srcs = glob(["src/**/*.rs"]),
+    # Read by `include_str!`, and outside the `.rs` glob above.
+    compile_data = ["src/project/extension_profiles.toml"],
     edition = "2024",
     visibility = ["//visibility:public"],
     deps = all_crate_deps(

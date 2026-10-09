@@ -13,7 +13,7 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-use lsp_types::{CodeDescription, DiagnosticSeverity, NumberOrString, Range, Uri};
+use lsp_types::{CodeDescription, NumberOrString, Range, Uri};
 use rinx_ast::{Diagnostic, DiagnosticCode, Document, Span, retain_reportable, section_slug};
 use rinx_parser::{ParseCtx, RejectParseFiles};
 
@@ -21,7 +21,7 @@ use crate::documents::DocumentStore;
 use crate::files::{FileReads, WorkspaceFiles};
 use crate::include_summary::summarize_includes;
 use crate::position::{PositionEncoding, to_lsp_range};
-use crate::project::ParseSettings;
+use crate::project::{Judgement, ParseSettings, Strictness};
 use crate::uri::{file_path, file_uri};
 
 /// What every published diagnostic names as its producer.
@@ -103,18 +103,21 @@ pub fn parse_source(
 
 /// Converts what one parse of the document at `uri` reported, and what
 /// rendering that parse found (`rendered`, empty until it is rendered), into
-/// the diagnostics to publish, file by file.
+/// the diagnostics to publish, file by file, each as `strictness` — its
+/// project's — reports it.
 #[must_use]
 pub fn diagnose_source(
     uri: &Uri,
     parsed: &ParsedSource,
     rendered: &[Diagnostic],
+    strictness: &Strictness,
     open: &DocumentStore,
     encoding: PositionEncoding,
 ) -> DocumentDiagnosis {
     let by_uri = to_lsp_diagnostics(
         &parsed.document,
         rendered,
+        strictness,
         &Placement {
             uri,
             text: &parsed.text,
@@ -201,9 +204,10 @@ impl Placement<'_> {
 }
 
 /// One diagnostic the editor shows, and where: the file's URI and the range
-/// in it.
+/// in it — and how it is shown.
 pub(crate) struct Placed<'a> {
     pub diagnostic: &'a Diagnostic,
+    pub judgement: Judgement,
     pub uri: Uri,
     pub range: Range,
 }
@@ -216,11 +220,14 @@ pub(crate) struct Placed<'a> {
 ///
 /// The filter is the build's own [`rinx_ast::retain_reportable`], so the
 /// editor and CI cannot disagree about what a comment silences — and since a
-/// suppression records its file, a comment only silences its own file.
+/// suppression records its file, a comment only silences its own file. What
+/// survives it is then judged by `strictness`, the one place a diagnostic's
+/// severity is decided.
 #[must_use]
 pub fn to_lsp_diagnostics(
     document: &Document,
     rendered: &[Diagnostic],
+    strictness: &Strictness,
     placement: &Placement<'_>,
     encoding: PositionEncoding,
 ) -> BTreeMap<Uri, Vec<lsp_types::Diagnostic>> {
@@ -230,6 +237,7 @@ pub fn to_lsp_diagnostics(
             let (uri, range) = placement.place(document, diagnostic.span, encoding);
             Placed {
                 diagnostic,
+                judgement: strictness.judge(diagnostic),
                 uri,
                 range,
             }
@@ -241,7 +249,11 @@ pub fn to_lsp_diagnostics(
         by_uri
             .entry(found.uri.clone())
             .or_default()
-            .push(to_lsp_diagnostic(found.diagnostic, found.range));
+            .push(to_lsp_diagnostic(
+                found.diagnostic,
+                &found.judgement,
+                found.range,
+            ));
     }
     for (uri, summary) in summarize_includes(document, &placed, placement, encoding) {
         by_uri.entry(uri).or_default().push(summary);
@@ -265,20 +277,24 @@ pub fn conf_diagnostics(
             let range = finding
                 .span
                 .map_or_else(Range::default, |span| to_lsp_range(span, &text, encoding));
-            to_lsp_diagnostic(finding, range)
+            to_lsp_diagnostic(finding, &Judgement::as_reported(finding), range)
         })
         .collect()
 }
 
-/// Converts one diagnostic, placed at `range`.
-fn to_lsp_diagnostic(diagnostic: &Diagnostic, range: Range) -> lsp_types::Diagnostic {
+/// Converts one diagnostic, placed at `range`, shown as `judgement` says.
+fn to_lsp_diagnostic(
+    diagnostic: &Diagnostic,
+    judgement: &Judgement,
+    range: Range,
+) -> lsp_types::Diagnostic {
     lsp_types::Diagnostic {
         range,
-        severity: Some(DiagnosticSeverity::WARNING),
+        severity: Some(judgement.severity),
         code: Some(NumberOrString::String(diagnostic.code.as_str().to_string())),
         code_description: code_description(diagnostic.code),
         source: Some(SOURCE.to_string()),
-        message: diagnostic.message.clone(),
+        message: judgement.message.clone(),
         ..lsp_types::Diagnostic::default()
     }
 }
@@ -296,6 +312,7 @@ fn code_description(code: DiagnosticCode) -> Option<CodeDescription> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use lsp_types::DiagnosticSeverity;
     /// Parses `text`, the content of the document at `uri`, and converts what the
     /// parser reported — [`parse_source`] then [`diagnose_source`], for a
     /// document outside every workspace folder.
@@ -309,6 +326,7 @@ mod tests {
             uri,
             &parse_source(uri, None, text, &ParseSettings::default(), open),
             &[],
+            &Strictness::default(),
             open,
             encoding,
         )
@@ -478,6 +496,30 @@ mod tests {
         convert_with_rendered(diagnostics, &[], suppressions, text, included, open)
     }
 
+    /// [`convert`] of `diagnostics` found in a document of a project with
+    /// `strictness`.
+    fn convert_under(
+        diagnostics: Vec<Diagnostic>,
+        strictness: &Strictness,
+    ) -> Vec<lsp_types::Diagnostic> {
+        let mut document = Document::new("/docs/index.rst".to_string(), Vec::new());
+        document.diagnostics = diagnostics;
+        let index = uri("file:///docs/index.rst");
+        let mut converted = to_lsp_diagnostics(
+            &document,
+            &[],
+            strictness,
+            &Placement {
+                uri: &index,
+                text: "a\nb\nc\n",
+                reads: &FileReads::default(),
+                open: &DocumentStore::default(),
+            },
+            PositionEncoding::Utf16,
+        );
+        converted.remove(&index).unwrap_or_default()
+    }
+
     /// [`convert`], with `rendered` found by rendering the document.
     fn convert_with_rendered(
         diagnostics: Vec<Diagnostic>,
@@ -501,6 +543,7 @@ mod tests {
         to_lsp_diagnostics(
             &document,
             rendered,
+            &Strictness::default(),
             &Placement {
                 uri: &uri("file:///docs/index.rst"),
                 text,
@@ -746,7 +789,7 @@ mod tests {
         let range = to_lsp_range(span, "π abc\n", PositionEncoding::Utf16);
 
         // When
-        let converted = to_lsp_diagnostic(&diagnostic, range);
+        let converted = to_lsp_diagnostic(&diagnostic, &Judgement::as_reported(&diagnostic), range);
 
         // Then
         assert_eq!(
@@ -766,6 +809,58 @@ mod tests {
         assert_eq!(
             converted.code_description,
             code_description(DiagnosticCode::CsvNoData)
+        );
+    }
+
+    #[test]
+    fn test_to_lsp_diagnostic_shows_the_severity_and_message_it_is_judged_with() {
+        // Given
+        let diagnostic = Diagnostic::new(
+            DiagnosticCode::LinkBrokenObject,
+            "broken",
+            Span::new(Position::new(1, 1), Position::new(1, 2)),
+        );
+        let judgement = Judgement {
+            severity: DiagnosticSeverity::HINT,
+            message: "broken; it may be defined elsewhere".to_string(),
+        };
+
+        // When
+        let converted = to_lsp_diagnostic(&diagnostic, &judgement, Range::default());
+
+        // Then — the code still names what the build reports
+        assert_eq!(converted.severity, Some(DiagnosticSeverity::HINT));
+        assert_eq!(converted.message, "broken; it may be defined elsewhere");
+        assert_eq!(
+            converted.code,
+            Some(NumberOrString::String("link.broken-object".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_to_lsp_diagnostics_judges_each_diagnostic_by_the_projects_strictness() {
+        // Given an autodoc project, a directive autodoc provides and a typo
+        let strictness = Strictness::legacy(&["sphinx.ext.autodoc".to_string()]);
+        let found = ["automodule", "automodul"].map(|name| {
+            Diagnostic::new(
+                DiagnosticCode::DirectiveUnknown,
+                format!("unknown directive type '{name}'"),
+                Span::new(Position::new(1, 1), Position::new(1, 2)),
+            )
+            .about(rinx_ast::DiagnosticSubject::Directive(name.to_string()))
+        });
+
+        // When
+        let converted = convert_under(found.to_vec(), &strictness);
+
+        // Then
+        let severities: Vec<_> = converted.iter().map(|d| d.severity).collect();
+        assert_eq!(
+            severities,
+            [
+                Some(DiagnosticSeverity::INFORMATION),
+                Some(DiagnosticSeverity::WARNING)
+            ]
         );
     }
 

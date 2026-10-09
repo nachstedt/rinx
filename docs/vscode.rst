@@ -82,8 +82,16 @@ These are the settings read:
 - ``default_role``: the role a bare `` `text` `` is read as.
 - ``primary_domain``: ``py`` or ``c``. Any other domain, or ``None``, is reported, and ``py`` is used.
 - ``numfig``, ``numfig_secnum_depth`` and ``highlight_language``: how pages are rendered.
+- ``extensions``: how strictly the project's findings are reported (see below).
 
-Every other setting is ignored, and not reported. ``extensions``, ``intersphinx_mapping``, ``rst_prolog`` and the sphinx-needs settings are read by later steps. Saving ``conf.py``, or creating or deleting one, reads the folder's projects again.
+Every other setting is ignored, and not reported. ``intersphinx_mapping``, ``rst_prolog`` and the sphinx-needs settings are read by later steps. Saving ``conf.py``, or creating or deleting one, reads the folder's projects again.
+
+A Sphinx project leans on extensions rinx does not run, such as autodoc. Reported as warnings, everything they explain would drown the findings you can fix, so the server lowers what a declared extension accounts for:
+
+- An unknown directive that a declared extension provides, such as ``.. automodule::`` under ``sphinx.ext.autodoc``, is *Information*: its contents are not checked. Any other unknown directive stays a warning, since it may be a typo.
+- A domain reference that resolves to nothing, such as ``:py:func:`spam.eggs```, is a *Hint* when a declared extension may define it: autodoc defines ``py`` objects. ``:ref:``, ``:doc:`` and every other reference stay warnings.
+
+Which extensions rinx knows, and what each one adds, is a table in the repository, ``crates/lsp/src/project/extension_profiles.toml``; teaching it another extension needs no Rust. An extension missing from the table is assumed to define objects of every domain, so it lowers every broken domain reference to a hint, but it explains no directive: nothing says which are its. The server names those extensions once, in a notification, when it first finds the project. The code of a lowered diagnostic is unchanged, so a ``.. noqa:`` still names it, and the build still reports it as a warning.
 
 4. Change Detection & Background Reconcile
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

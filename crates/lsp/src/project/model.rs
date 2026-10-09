@@ -14,6 +14,7 @@ use rinx_parser::DefaultRole;
 use rinx_renderer::config::SiteConfig;
 
 use super::exclusion::Exclusion;
+use super::strictness::Strictness;
 
 /// Where a project's configuration comes from.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -71,6 +72,8 @@ pub struct ProjectSettings {
     pub numfig_secnum_depth: usize,
     /// The language a code block with none of its own is highlighted as.
     pub highlight_language: ResolvedLanguage,
+    /// How findings are reported, by what the declared `extensions` explain.
+    pub strictness: Strictness,
 }
 
 /// Sphinx's default root document.
@@ -92,6 +95,7 @@ impl Default for ProjectSettings {
             numfig: false,
             numfig_secnum_depth: rinx_index::DEFAULT_NUMFIG_SECNUM_DEPTH,
             highlight_language: ResolvedLanguage::default(),
+            strictness: Strictness::default(),
         }
     }
 }

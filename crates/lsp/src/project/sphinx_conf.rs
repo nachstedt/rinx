@@ -23,6 +23,7 @@ use rinx_pyconf::{BoundValue, ModuleReading, Value, ValueKind, read_module};
 
 use super::exclusion::{Exclusion, INCLUDE_EVERYTHING};
 use super::model::{ParseSettings, ProjectSettings};
+use super::strictness::Strictness;
 
 /// What reading one `conf.py` found: the settings, and every way the reading
 /// fell short of running it.
@@ -93,6 +94,7 @@ impl<'a> Reader<'a> {
             highlight_language: self
                 .highlight_language()
                 .unwrap_or(defaults.highlight_language),
+            strictness: self.strictness(),
         }
     }
 
@@ -160,6 +162,12 @@ impl<'a> Reader<'a> {
         }
         self.invalid(value, format!("`{name}` must be a whole number, 0 or more"));
         None
+    }
+
+    /// The strictness the declared `extensions` imply, against the table
+    /// this server was built with.
+    fn strictness(&mut self) -> Strictness {
+        Strictness::legacy(&self.strings("extensions").unwrap_or_default())
     }
 
     /// The strings of the list or tuple `name` is bound to, each other
@@ -501,8 +509,33 @@ mod tests {
     fn test_read_sphinx_conf_does_not_report_settings_it_does_not_read() {
         // When / Then
         assert!(
-            findings("import os\nhtml_theme = os.getenv('T')\nextensions += ['x']\n").is_empty()
+            findings("import os\nhtml_theme = os.getenv('T')\nnitpick_ignore += ['x']\n")
+                .is_empty()
         );
+    }
+
+    #[test]
+    fn test_read_sphinx_conf_reads_the_declared_extensions() {
+        // Given
+        let text = "extensions = ['sphinx.ext.autodoc', 'my_ext']\n";
+
+        // When
+        let reading = read_sphinx_conf(text);
+
+        // Then — what the table models is not named as unmodelled
+        assert_eq!(
+            reading.settings.strictness.unmodelled_extensions(),
+            ["my_ext"]
+        );
+    }
+
+    #[test]
+    fn test_read_sphinx_conf_declares_no_extensions_by_default() {
+        // When
+        let reading = read_sphinx_conf("project = 'x'\n");
+
+        // Then
+        assert_eq!(reading.settings.strictness, Strictness::default());
     }
 
     #[test]
@@ -639,7 +672,31 @@ mod tests {
                 .excludes_directory("tools/templates")
         );
         assert!(considers(&reading.settings, "library/os.rst"));
-        // `extensions` and `nitpick_ignore` change too, but are not read.
-        assert_eq!(findings(text), [("conf.modified-setting", 119)]);
+        // The optional extensions appended on line 51; `nitpick_ignore`
+        // changes too, but is not read.
+        assert_eq!(
+            findings(text),
+            [
+                ("conf.modified-setting", 51),
+                ("conf.modified-setting", 119)
+            ]
+        );
+        assert_eq!(
+            reading.settings.strictness.unmodelled_extensions(),
+            [
+                "audit_events",
+                "availability",
+                "c_annotations",
+                "changes",
+                "glossary_search",
+                "grammar_snippet",
+                "implementation_detail",
+                "issue_role",
+                "lexers",
+                "misc_news",
+                "pydoc_topics",
+                "pyspecific",
+            ]
+        );
     }
 }

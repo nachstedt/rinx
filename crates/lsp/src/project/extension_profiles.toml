@@ -1,0 +1,137 @@
+# What the Sphinx extensions rinx knows contribute to a document, for the
+# language server's strictness filter (ADR-038 §5). A project's `conf.py`
+# declares its `extensions`; for one listed here, an unknown directive it
+# provides is reported as *Information* rather than as a warning, and a broken
+# reference into a domain it fills with targets as a *Hint*. An extension
+# missing from this table is assumed to produce targets in every domain, but
+# its directives stay warnings, since nothing says which they are.
+#
+# One `[[extension]]` table per extension, keyed by the module name a
+# `conf.py` writes:
+#
+# - `directives`: the directive names it adds that rinx does not implement.
+#   A directive rinx implements is never unknown, so listing one is refused.
+# - `roles`: the role names it adds. Recorded, but not yet filtered on: rinx
+#   does not report an unknown role.
+# - `produces_targets`: which domains' objects it defines — `"none"` (the
+#   default), `"everything"`, or `{ domains = ["py", "c", "std"] }`.
+#
+# An extension rinx supports entirely is listed with nothing, so that
+# declaring it is not reported as unmodelled.
+
+# Sphinx's own extensions.
+
+[[extension]]
+name = "sphinx.ext.autodoc"
+directives = [
+    "automodule",
+    "autoclass",
+    "autoexception",
+    "autofunction",
+    "autodecorator",
+    "autodata",
+    "automethod",
+    "autoattribute",
+    "autoproperty",
+    "autotypevar",
+    "autonewtype",
+]
+produces_targets = { domains = ["py"] }
+
+[[extension]]
+name = "sphinx.ext.autosummary"
+directives = ["autosummary"]
+produces_targets = { domains = ["py"] }
+
+[[extension]]
+name = "sphinx.ext.napoleon"
+
+[[extension]]
+name = "sphinx.ext.viewcode"
+
+[[extension]]
+name = "sphinx.ext.coverage"
+
+[[extension]]
+name = "sphinx.ext.doctest"
+
+[[extension]]
+name = "sphinx.ext.duration"
+
+[[extension]]
+name = "sphinx.ext.githubpages"
+
+[[extension]]
+name = "sphinx.ext.mathjax"
+
+[[extension]]
+name = "sphinx.ext.imgmath"
+
+# Its roles are named by the project's own `extlinks` setting.
+[[extension]]
+name = "sphinx.ext.extlinks"
+
+# Inventories are roadmap step #13; until then its references are reported as
+# a site with none would report them.
+[[extension]]
+name = "sphinx.ext.intersphinx"
+
+[[extension]]
+name = "sphinx.ext.todo"
+directives = ["todo", "todolist"]
+
+[[extension]]
+name = "sphinx.ext.graphviz"
+directives = ["graphviz", "graph", "digraph"]
+
+[[extension]]
+name = "sphinx.ext.inheritance_diagram"
+directives = ["inheritance-diagram"]
+
+[[extension]]
+name = "sphinx.ext.ifconfig"
+directives = ["ifconfig"]
+
+# Third-party extensions.
+
+[[extension]]
+name = "sphinx_design"
+directives = [
+    "card",
+    "card-carousel",
+    "grid-item-card",
+    "tab-set",
+    "tab-item",
+    "tab-set-code",
+    "button-ref",
+    "article-info",
+]
+roles = ["octicon", "fab", "fas", "far", "bdg", "bdg-primary", "bdg-secondary", "bdg-link-primary", "bdg-ref-primary"]
+
+[[extension]]
+name = "sphinx_tabs.tabs"
+directives = ["tabs", "tab", "group-tab", "code-tab"]
+
+[[extension]]
+name = "sphinx_copybutton"
+
+[[extension]]
+name = "sphinx_autodoc_typehints"
+
+[[extension]]
+name = "sphinxcontrib.plantuml"
+
+[[extension]]
+name = "sphinxcontrib.mermaid"
+directives = ["mermaid", "autoclasstree"]
+
+[[extension]]
+name = "sphinxcontrib.bibtex"
+directives = ["bibliography", "footbibliography"]
+roles = ["cite", "cite:p", "cite:t", "footcite", "footcite:p", "footcite:t"]
+
+[[extension]]
+name = "sphinxext.opengraph"
+
+[[extension]]
+name = "notfound.extension"
