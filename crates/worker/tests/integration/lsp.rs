@@ -144,10 +144,78 @@ fn test_lsp_indexes_its_workspace_folder_and_reports_it_ready() {
     .collect();
 
     // Then
-    assert_eq!(statuses[0], json!({"state": "indexing", "documents": 0}));
+    assert_eq!(
+        statuses[0],
+        json!({"state": "indexing", "documents": 0, "projects": []})
+    );
     assert_eq!(statuses[1]["state"], "ready");
     assert_eq!(statuses[1]["documents"], 3);
     assert!(statuses[1]["elapsedMs"].is_u64(), "{statuses:?}");
+    assert_eq!(
+        statuses[1]["projects"],
+        json!([{"kind": "folder", "root": "rinx_lsp_stdio_workspace"}])
+    );
+}
+
+#[test]
+fn test_lsp_reads_a_sphinx_projects_conf_py() {
+    // Given — a Sphinx project excluding one document, and computing a
+    // setting the server reads
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_sphinx");
+    let _ = std::fs::remove_dir_all(&root);
+    for (file, text) in [
+        (
+            "docs/conf.py",
+            "import os\nexclude_patterns = ['drafts']\nroot_doc = os.getenv('ROOT')\n",
+        ),
+        ("docs/index.rst", "Home\n====\n"),
+        ("docs/drafts/wip.rst", "Draft\n=====\n"),
+    ] {
+        let path = root.join(file);
+        std::fs::create_dir_all(path.parent().expect("a parent")).expect("mkdir");
+        std::fs::write(path, text).expect("write");
+    }
+    let mut server = Server::spawn();
+
+    // When — reading up to the ready status
+    server.initialize_with(json!({
+        "capabilities": {},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+    let mut published = Vec::new();
+    let ready = loop {
+        match server.receive() {
+            lsp_server::Message::Notification(notification)
+                if notification.method == "rinx/status"
+                    && notification.params["state"] == "ready" =>
+            {
+                break notification.params;
+            }
+            lsp_server::Message::Notification(notification)
+                if notification.method == "textDocument/publishDiagnostics" =>
+            {
+                published.push(notification.params);
+            }
+            _ => {}
+        }
+    };
+
+    // Then
+    assert_eq!(ready["documents"], 1);
+    assert_eq!(
+        ready["projects"],
+        json!([{"kind": "sphinx", "conf": "docs/conf.py"}])
+    );
+    let conf = published
+        .iter()
+        .find(|params| {
+            params["uri"]
+                .as_str()
+                .is_some_and(|uri| uri.ends_with("docs/conf.py"))
+        })
+        .expect("conf.py is published");
+    assert_eq!(conf["diagnostics"][0]["code"], "conf.unread-setting");
+    assert_eq!(conf["diagnostics"][0]["range"]["start"]["line"], 2);
 }
 
 #[test]

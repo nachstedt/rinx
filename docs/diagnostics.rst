@@ -2197,6 +2197,50 @@ contributes nothing where it was written to contribute something. A
 non-matching block is silent — emptiness only means a mistake on the branch
 that was selected.
 
+conf
+----
+
+conf.unread-setting
+~~~~~~~~~~~~~~~~~~~
+
+A setting the language server reads from ``conf.py`` whose value is not a
+literal — computed, imported, or bound only inside an ``if`` — so the editor
+uses the setting's default. The server reads ``conf.py`` without running it.
+
+conf.modified-setting
+~~~~~~~~~~~~~~~~~~~~~
+
+A statement changing a setting after its literal value — ``+=``,
+``.append(…)``, an assignment inside an ``if`` — which the editor does not run:
+the literal applies, and this change does not.
+
+conf.invalid-value
+~~~~~~~~~~~~~~~~~~
+
+A setting whose literal value is not one the setting takes, or not one rinx
+supports: the wrong type, a role or a domain rinx does not know, a source
+suffix read by a parser other than reStructuredText's. The editor uses the
+setting's default, or leaves the entry out.
+
+conf.wildcard-import
+~~~~~~~~~~~~~~~~~~~~
+
+A ``from … import *`` in ``conf.py``, which may set any setting without the
+editor seeing it.
+
+conf.duplicate-source
+~~~~~~~~~~~~~~~~~~~~~
+
+Two files that are one document under two source suffixes (``intro.rst`` and
+``intro.txt``); as in Sphinx, the first in name order is the document and the
+other is ignored.
+
+conf.syntax-error
+~~~~~~~~~~~~~~~~~
+
+Where the editor stopped reading ``conf.py``, which Python could not run
+either: the settings after it keep their defaults.
+
 noqa
 ----
 

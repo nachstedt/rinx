@@ -14,15 +14,14 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use lsp_types::{CodeDescription, DiagnosticSeverity, NumberOrString, Range, Uri};
-use rinx_ast::{
-    Diagnostic, DiagnosticCode, Document, Domain, Span, retain_reportable, section_slug,
-};
+use rinx_ast::{Diagnostic, DiagnosticCode, Document, Span, retain_reportable, section_slug};
 use rinx_parser::{ParseCtx, RejectParseFiles};
 
 use crate::documents::DocumentStore;
 use crate::files::{FileReads, WorkspaceFiles};
 use crate::include_summary::summarize_includes;
 use crate::position::{PositionEncoding, to_lsp_range};
+use crate::project::ParseSettings;
 use crate::uri::{file_path, file_uri};
 
 /// What every published diagnostic names as its producer.
@@ -68,34 +67,32 @@ pub struct ParsedSource {
 /// The text is parsed with its line endings as the protocol counts them (see
 /// [`protocol_line_endings`]), so every reported line is one the editor shows.
 ///
-/// The parse uses the build's defaults — the `py` domain, `title-reference`
-/// as the default role, no entity schema, no Jinja — since nothing tells the
-/// server yet how the document's library is configured.
+/// The parse uses `settings`, the document's project's — its default domain
+/// and default role — and no entity schema and no Jinja, which nothing tells
+/// the server about yet (roadmap #15, #18, #20).
 #[must_use]
 pub fn parse_source(
     uri: &Uri,
     doc_path: Option<&str>,
     text: &str,
+    settings: &ParseSettings,
     open: &DocumentStore,
 ) -> ParsedSource {
     let text = protocol_line_endings(text).into_owned();
-    let (document, reads) = match file_path(uri) {
-        Some(path) => {
-            let files = WorkspaceFiles::for_document(&path, open);
-            let name = doc_path.map_or_else(|| path.to_string_lossy(), Cow::Borrowed);
-            let document =
-                rinx_parser::parse_with_ctx(&name, &text, &ParseCtx::new(Domain::Py, &files));
-            (document, files.into_reads())
-        }
+    let (document, reads) = if let Some(path) = file_path(uri) {
+        let files = WorkspaceFiles::for_document(&path, open);
+        let name = doc_path.map_or_else(|| path.to_string_lossy(), Cow::Borrowed);
+        let ctx = ParseCtx::new(settings.domain, &files).with_default_role(&settings.default_role);
+        let document = rinx_parser::parse_with_ctx(&name, &text, &ctx);
+        (document, files.into_reads())
+    } else {
         // An unsaved buffer has no directory to resolve a file against.
-        None => (
-            rinx_parser::parse_with_ctx(
-                uri.as_str(),
-                &text,
-                &ParseCtx::new(Domain::Py, &RejectParseFiles),
-            ),
+        let ctx = ParseCtx::new(settings.domain, &RejectParseFiles)
+            .with_default_role(&settings.default_role);
+        (
+            rinx_parser::parse_with_ctx(uri.as_str(), &text, &ctx),
             FileReads::default(),
-        ),
+        )
     };
     ParsedSource {
         document,
@@ -252,6 +249,27 @@ pub fn to_lsp_diagnostics(
     by_uri
 }
 
+/// The diagnostics to publish for a project's `conf.py`, whose text is
+/// `text`, from what reading it found. No `.. noqa:` applies: a fault in the
+/// project's configuration is no document's to silence.
+#[must_use]
+pub fn conf_diagnostics(
+    findings: &[Diagnostic],
+    text: &str,
+    encoding: PositionEncoding,
+) -> Vec<lsp_types::Diagnostic> {
+    let text = protocol_line_endings(text);
+    findings
+        .iter()
+        .map(|finding| {
+            let range = finding
+                .span
+                .map_or_else(Range::default, |span| to_lsp_range(span, &text, encoding));
+            to_lsp_diagnostic(finding, range)
+        })
+        .collect()
+}
+
 /// Converts one diagnostic, placed at `range`.
 fn to_lsp_diagnostic(diagnostic: &Diagnostic, range: Range) -> lsp_types::Diagnostic {
     lsp_types::Diagnostic {
@@ -289,7 +307,7 @@ mod tests {
     ) -> DocumentDiagnosis {
         diagnose_source(
             uri,
-            &parse_source(uri, None, text, open),
+            &parse_source(uri, None, text, &ParseSettings::default(), open),
             &[],
             open,
             encoding,
@@ -956,5 +974,39 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_conf_diagnostics_places_each_finding_in_conf_py() {
+        // Given
+        let text = "# é\nroot_doc = compute()\n";
+        let findings = crate::project::read_sphinx_conf(text).findings;
+
+        // When
+        let diagnostics = conf_diagnostics(&findings, text, PositionEncoding::Utf16);
+
+        // Then
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].range.start, lsp_types::Position::new(1, 11));
+        assert_eq!(
+            diagnostics[0].code,
+            Some(NumberOrString::String("conf.unread-setting".to_string()))
+        );
+        assert!(diagnostics[0].code_description.is_some());
+    }
+
+    #[test]
+    fn test_conf_diagnostics_places_a_finding_without_a_position_at_the_start() {
+        // Given
+        let findings = [Diagnostic::without_span(
+            DiagnosticCode::ConfDuplicateSource,
+            "two",
+        )];
+
+        // When
+        let diagnostics = conf_diagnostics(&findings, "", PositionEncoding::Utf16);
+
+        // Then
+        assert_eq!(diagnostics[0].range, Range::default());
     }
 }

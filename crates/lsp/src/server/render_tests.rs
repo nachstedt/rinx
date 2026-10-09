@@ -6,24 +6,6 @@ use super::test_support::*;
 const REFERENCING: &str = "Title\n=====\n\nSee :ref:`install`.\n";
 const DEFINING: &str = ".. _install:\n\nInstalling\n==========\n";
 
-/// Every render the server has pending, run to the end, as the messages it
-/// sends.
-fn render_all(state: &mut ServerState) -> Vec<Message> {
-    let mut messages = Vec::new();
-    while state.has_pending_renders() {
-        messages.extend(state.render_next());
-    }
-    messages
-}
-
-/// A scanned server over `files`, with nothing open.
-fn scanned(name: &str, files: &[(&str, &str)]) -> (Workspace, ServerState) {
-    let workspace = Workspace::new(name, files);
-    let (mut state, _) = workspace.server(false);
-    state.on_scan_event(workspace.scanned());
-    (workspace, state)
-}
-
 #[test]
 fn test_a_reference_to_no_label_is_reported_once_rendered() {
     // Given

@@ -7,12 +7,14 @@
 //! logic worth testing beyond the one end-to-end conversation below.
 //!
 //! [`state`] holds what the server remembers and turns a change into the
-//! diagnostics to publish, [`handlers`] are the pure functions from one
+//! diagnostics to publish, with [`projects`] keeping the workspace's projects
+//! and routing each file to one; [`handlers`] are the pure functions from one
 //! message to the replies, and [`run`] is the loop around them. [`scan`] is
 //! the thread scanning the workspace beside the loop; the file-system
 //! events the client reports reach [`state`] like any other notification.
 
 mod handlers;
+mod projects;
 mod run;
 mod scan;
 mod state;
@@ -25,6 +27,8 @@ mod definition_tests;
 mod hover_tests;
 #[cfg(test)]
 mod notification_tests;
+#[cfg(test)]
+mod project_tests;
 #[cfg(test)]
 mod property_tests;
 #[cfg(test)]

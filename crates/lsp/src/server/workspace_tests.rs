@@ -3,31 +3,7 @@
 //! folded index staying what a fresh scan would build.
 
 use super::test_support::*;
-use crate::progress::STATUS_METHOD;
 use std::path::Path;
-
-/// The labels the folder's index defines.
-fn labels(state: &mut ServerState) -> Vec<String> {
-    state.folders[0]
-        .project_index()
-        .targets
-        .keys()
-        .map(|name| name.as_str().to_string())
-        .collect()
-}
-
-/// The `rinx/status` parameters among `messages`, in order.
-fn statuses(messages: &[Message]) -> Vec<serde_json::Value> {
-    messages
-        .iter()
-        .filter_map(|message| match message {
-            Message::Notification(notification) if notification.method == STATUS_METHOD => {
-                Some(notification.params.clone())
-            }
-            _ => None,
-        })
-        .collect()
-}
 
 const BROKEN: &str = "Fine.\n\n.. foo::\n";
 
@@ -45,7 +21,7 @@ fn test_start_scan_says_indexing_and_asks_for_a_progress_token() {
     );
     assert_eq!(
         statuses(&started),
-        [serde_json::json!({"state": "indexing", "documents": 0})]
+        [serde_json::json!({"state": "indexing", "documents": 0, "projects": []})]
     );
 }
 
@@ -76,7 +52,12 @@ fn test_a_finished_scan_reports_every_document_ready() {
     // Then
     assert_eq!(
         statuses(&finished),
-        [serde_json::json!({"state": "ready", "documents": 2, "elapsedMs": 800})]
+        [serde_json::json!({
+            "state": "ready",
+            "documents": 2,
+            "elapsedMs": 800,
+            "projects": [{"kind": "folder", "root": "rinx_lsp_workspace_ready"}],
+        })]
     );
 }
 
@@ -96,7 +77,7 @@ fn test_an_edit_made_during_the_scan_survives_it() {
     state.on_scan_event(scan);
 
     // Then
-    assert_eq!(labels(&mut state), ["edited"]);
+    assert_eq!(project_labels(&mut state, 0), ["edited"]);
 }
 
 #[test]
@@ -110,13 +91,13 @@ fn test_closing_a_document_returns_its_index_entry_to_the_saved_text() {
         &mut state,
         workspace.change("a.rst", 2, ".. _unsaved:\n\nText.\n"),
     );
-    assert_eq!(labels(&mut state), ["unsaved"]);
+    assert_eq!(project_labels(&mut state, 0), ["unsaved"]);
 
     // When — closed without saving.
     handle_notification(&mut state, workspace.close("a.rst"));
 
     // Then
-    assert_eq!(labels(&mut state), ["saved"]);
+    assert_eq!(project_labels(&mut state, 0), ["saved"]);
 }
 
 #[test]
@@ -247,7 +228,7 @@ fn test_a_label_in_a_fragment_belongs_to_its_closed_includer() {
     );
 
     // Then — the includer's entry changed with it.
-    assert_eq!(labels(&mut state), ["new"]);
+    assert_eq!(project_labels(&mut state, 0), ["new"]);
 }
 
 #[test]
@@ -308,10 +289,10 @@ fn test_the_folded_index_after_edits_equals_a_fresh_scan() {
 
     // Then
     assert_eq!(
-        state.folders[0].project_index(),
-        fresh.folders[0].project_index()
+        project(&mut state, 0).project_index(),
+        project(&mut fresh, 0).project_index()
     );
-    assert_eq!(labels(&mut state), ["b-label", "renamed"]);
+    assert_eq!(project_labels(&mut state, 0), ["b-label", "renamed"]);
 }
 
 #[test]
@@ -327,14 +308,16 @@ fn test_the_folded_index_equals_build_project_index_on_the_examples() {
         let mut state =
             ServerState::new(PositionEncoding::Utf16).with_workspace(vec![root.clone()], false);
         state.start_scan();
+        let scanned = scan_folder(&root, &|_, _| {});
+        let discovered = scanned[0].discovered.clone();
         state.on_scan_event(ScanEvent::Finished {
             folder: 0,
-            documents: scan_folder(&root, &|_, _| {}),
+            projects: scanned,
             elapsed: Duration::ZERO,
         });
 
         // When
-        let documents = crate::workspace::parse_folder_documents(&root);
+        let documents = crate::project::parse_project_documents(&discovered);
         let built = rinx_analyzer::build_project_index(
             &documents,
             "index",
@@ -343,7 +326,7 @@ fn test_the_folded_index_equals_build_project_index_on_the_examples() {
 
         // Then
         assert!(!documents.is_empty(), "{folder} holds documents");
-        assert_eq!(state.folders[0].project_index(), &built, "{folder}");
+        assert_eq!(project(&mut state, 0).project_index(), &built, "{folder}");
     }
 }
 

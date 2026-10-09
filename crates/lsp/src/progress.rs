@@ -47,6 +47,21 @@ pub struct IndexStatus {
     /// How long the scan took, once ready.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub elapsed_ms: Option<u64>,
+    /// The projects found so far, every Sphinx project and each folder with
+    /// documents outside them.
+    pub projects: Vec<ProjectStatus>,
+}
+
+/// One project, as `rinx/status` names it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum ProjectStatus {
+    /// A Sphinx project, named by its `conf.py`'s path within its workspace
+    /// folder (`docs/conf.py`).
+    Sphinx { conf: String },
+    /// The documents of a workspace folder under no `conf.py`, the folder
+    /// named by its path's last component.
+    Folder { root: String },
 }
 
 impl IndexStatus {
@@ -341,6 +356,14 @@ mod tests {
             state: IndexState::Ready,
             documents: 512,
             elapsed_ms: Some(800),
+            projects: vec![
+                ProjectStatus::Sphinx {
+                    conf: "docs/conf.py".to_string(),
+                },
+                ProjectStatus::Folder {
+                    root: "rinx".to_string(),
+                },
+            ],
         };
 
         // When
@@ -349,7 +372,15 @@ mod tests {
         // Then
         assert_eq!(
             json,
-            serde_json::json!({"state": "ready", "documents": 512, "elapsedMs": 800})
+            serde_json::json!({
+                "state": "ready",
+                "documents": 512,
+                "elapsedMs": 800,
+                "projects": [
+                    {"kind": "sphinx", "conf": "docs/conf.py"},
+                    {"kind": "folder", "root": "rinx"},
+                ],
+            })
         );
     }
 }
