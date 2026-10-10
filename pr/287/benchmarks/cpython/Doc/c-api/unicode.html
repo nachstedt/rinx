@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unicode Objects and Codecs — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python&#x2f;C API Reference Manual</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python&#x2f;C API Reference Manual"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stable.html">C API Stability</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="veryhigh.html">The Very High Level Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="refcounting.html">Reference Counting</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Exception Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="extension-modules.html">Defining extension modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="utilities.html">Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="abstract.html">Abstract Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="concrete.html">Concrete Objects Layer</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Concrete Objects Layer"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="concrete.html#fundamental-objects">Fundamental Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#numeric-objects">Numeric Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3 ancestor has-children">
+            <a href="concrete.html#sequence-objects">Sequence Objects</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Sequence Objects"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="bytes.html">Bytes Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="bytearray.html">Byte Array Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4 current has-children">
+            <a href="unicode.html">Unicode Objects and Codecs</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Unicode Objects and Codecs"></span></summary>
+              <ul>
+                
+          <li class="toctree-l5">
+            <a href="unicode.html#unicode-objects">Unicode Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="unicode.html#built-in-codecs">Built-in Codecs</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="unicode.html#methods-and-slot-functions">Methods and Slot Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="unicode.html#pyunicodewriter">PyUnicodeWriter</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="unicode.html#deprecated-api">Deprecated API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="tuple.html">Tuple Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="list.html">List Objects</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#container-objects">Container Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#function-objects">Function Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#other-objects">Other Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#c-api-for-extension-modules">C API for extension modules</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init.html">Initialization, Finalization, and Threads</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init_config.html">Python Initialization Configuration</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="memory.html">Memory Management</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="objimpl.html">Object Implementation Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="apiabiversion.html">API and ABI Versioning</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="monitoring.html">Monitoring C API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="bytearray.html">&larr; Byte Array Objects</a>
+        <a class="next" href="tuple.html">Tuple Objects &rarr;</a>
+      </nav>
+      
+      <a id="unicodeobjects"></a>
+<h1 id="unicode-objects-and-codecs">Unicode Objects and Codecs</h1>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Marc-André Lemburg &lt;mal@lemburg.com&gt;</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Georg Brandl &lt;georg@python.org&gt;</pre>
+</div>
+<h2 id="unicode-objects">Unicode Objects</h2>
+<p>Since the implementation of <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0393/"><strong>PEP 393</strong></a> in Python 3.3, Unicode objects internally
+use a variety of representations, in order to allow handling the complete range
+of Unicode characters while staying memory efficient.  There are special cases
+for strings where all code points are below 128, 256, or 65536; otherwise, code
+points must be below 1114112 (which is the full Unicode range).</p>
+<p>UTF-8 representation is created on demand and cached in the Unicode object.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>The <a class="reference internal" href="unicode.html#c:type:py_unicode"><code class="xref c type docutils literal">Py_UNICODE</code></a> representation has been removed since Python 3.12
+with deprecated APIs.
+See <span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0623/"><strong>PEP 623</strong></a> for more information.</p>
+</div>
+<h3 id="unicode-type">Unicode Type</h3>
+<p>These are the basic Unicode object types used for the Unicode implementation in
+Python:</p>
+<dl class="c member">
+  <dt id="c:member:pyunicode_type"><code class="sig-name">PyTypeObject PyUnicode_Type</code></dt>
+  <dd><p>This instance of <a class="reference internal" href="type.html#c:type:pytypeobject"><code class="xref c type docutils literal">PyTypeObject</code></a> represents the Python Unicode type.
+It is exposed to Python code as <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a>.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pyunicodeiter_type"><code class="sig-name">PyTypeObject PyUnicodeIter_Type</code></dt>
+  <dd><p>This instance of <a class="reference internal" href="type.html#c:type:pytypeobject"><code class="xref c type docutils literal">PyTypeObject</code></a> represents the Python Unicode
+iterator type. It is used to iterate over Unicode string objects.</p>
+</dd>
+</dl>
+<dl class="c type">
+  <dt id="c:type:py_ucs4"><code class="sig-name">Py_UCS4</code></dt>
+  <dt id="c:type:py_ucs2"><code class="sig-name">Py_UCS2</code></dt>
+  <dt id="c:type:py_ucs1"><code class="sig-name">Py_UCS1</code></dt>
+  <dd><p>These types are typedefs for unsigned integer types wide enough to contain
+characters of 32 bits, 16 bits and 8 bits, respectively.  When dealing with
+single Unicode characters, use <a class="reference internal" href="unicode.html#c:type:py_ucs4"><code class="xref c type docutils literal">Py_UCS4</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c type">
+  <dt id="c:type:pyasciiobject"><code class="sig-name">PyASCIIObject</code></dt>
+  <dt id="c:type:pycompactunicodeobject"><code class="sig-name">PyCompactUnicodeObject</code></dt>
+  <dt id="c:type:pyunicodeobject"><code class="sig-name">PyUnicodeObject</code></dt>
+  <dd><p>These subtypes of <a class="reference internal" href="structures.html#c:type:pyobject"><code class="xref c type docutils literal">PyObject</code></a> represent a Python Unicode object.  In
+almost all cases, they shouldn't be used directly, since all API functions
+that deal with Unicode objects take and return <a class="reference internal" href="structures.html#c:type:pyobject"><code class="xref c type docutils literal">PyObject</code></a> pointers.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<p>The following APIs are C macros and static inlined functions for fast checks and
+access to internal read-only data of Unicode objects:</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_check"><code class="sig-name">int PyUnicode_Check(PyObject *obj)</code></dt>
+  <dd><p>Return true if the object <em>obj</em> is a Unicode object or an instance of a Unicode
+subtype.  This function always succeeds.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_checkexact"><code class="sig-name">int PyUnicode_CheckExact(PyObject *obj)</code></dt>
+  <dd><p>Return true if the object <em>obj</em> is a Unicode object, but not an instance of a
+subtype.  This function always succeeds.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_get_length"><code class="sig-name">Py_ssize_t PyUnicode_GET_LENGTH(PyObject *unicode)</code></dt>
+  <dd><p>Return the length of the Unicode string, in code points.  <em>unicode</em> has to be a
+Unicode object in the "canonical" representation (not checked).</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_1byte_data"><code class="sig-name">Py_UCS1* PyUnicode_1BYTE_DATA(PyObject *unicode)</code></dt>
+  <dt id="c:function:pyunicode_2byte_data"><code class="sig-name">Py_UCS2* PyUnicode_2BYTE_DATA(PyObject *unicode)</code></dt>
+  <dt id="c:function:pyunicode_4byte_data"><code class="sig-name">Py_UCS4* PyUnicode_4BYTE_DATA(PyObject *unicode)</code></dt>
+  <dd><p>Return a pointer to the canonical representation cast to UCS1, UCS2 or UCS4
+integer types for direct character access.  No checks are performed if the
+canonical representation has the correct character size; use
+<a class="reference internal" href="unicode.html#c:function:pyunicode_kind"><code class="xref c function docutils literal">PyUnicode_KIND</code></a> to select the right function.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:pyunicode_1byte_kind"><code class="sig-name">PyUnicode_1BYTE_KIND</code></dt>
+  <dt id="c:macro:pyunicode_2byte_kind"><code class="sig-name">PyUnicode_2BYTE_KIND</code></dt>
+  <dt id="c:macro:pyunicode_4byte_kind"><code class="sig-name">PyUnicode_4BYTE_KIND</code></dt>
+  <dd><p>Return values of the <a class="reference internal" href="unicode.html#c:function:pyunicode_kind"><code class="xref c function docutils literal">PyUnicode_KIND</code></a> macro.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p><code>PyUnicode_WCHAR_KIND</code> has been removed.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_kind"><code class="sig-name">int PyUnicode_KIND(PyObject *unicode)</code></dt>
+  <dd><p>Return one of the PyUnicode kind constants (see above) that indicate how many
+bytes per character this Unicode object uses to store its data.  <em>unicode</em> has to
+be a Unicode object in the "canonical" representation (not checked).</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_data"><code class="sig-name">void* PyUnicode_DATA(PyObject *unicode)</code></dt>
+  <dd><p>Return a void pointer to the raw Unicode buffer.  <em>unicode</em> has to be a Unicode
+object in the "canonical" representation (not checked).</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_write"><code class="sig-name">void PyUnicode_WRITE(int kind, void *data, Py_ssize_t index, Py_UCS4 value)</code></dt>
+  <dd><p>Write the code point <em>value</em> to the given zero-based <em>index</em> in a string.</p>
+<p>The <em>kind</em> value and <em>data</em> pointer must have been obtained from a
+string using <a class="reference internal" href="unicode.html#c:function:pyunicode_kind"><code class="xref c function docutils literal">PyUnicode_KIND</code></a> and <a class="reference internal" href="unicode.html#c:function:pyunicode_data"><code class="xref c function docutils literal">PyUnicode_DATA</code></a>
+respectively. You must hold a reference to that string while calling
+<code class="xref c function docutils literal">PyUnicode_WRITE</code>. All requirements of
+<a class="reference internal" href="unicode.html#c:function:pyunicode_writechar"><code class="xref c function docutils literal">PyUnicode_WriteChar</code></a> also apply.</p>
+<p>The function performs no checks for any of its requirements,
+and is intended for usage in loops.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_read"><code class="sig-name">Py_UCS4 PyUnicode_READ(int kind, void *data, Py_ssize_t index)</code></dt>
+  <dd><p>Read a code point from a canonical representation <em>data</em> (as obtained with
+<a class="reference internal" href="unicode.html#c:function:pyunicode_data"><code class="xref c function docutils literal">PyUnicode_DATA</code></a>).  No checks or ready calls are performed.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_read_char"><code class="sig-name">Py_UCS4 PyUnicode_READ_CHAR(PyObject *unicode, Py_ssize_t index)</code></dt>
+  <dd><p>Read a character from a Unicode object <em>unicode</em>, which must be in the "canonical"
+representation.  This is less efficient than <a class="reference internal" href="unicode.html#c:function:pyunicode_read"><code class="xref c function docutils literal">PyUnicode_READ</code></a> if you
+do multiple consecutive reads.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_max_char_value"><code class="sig-name">Py_UCS4 PyUnicode_MAX_CHAR_VALUE(PyObject *unicode)</code></dt>
+  <dd><p>Return the maximum code point that is suitable for creating another string
+based on <em>unicode</em>, which must be in the "canonical" representation.  This is
+always an approximation but more efficient than iterating over the string.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_isidentifier"><code class="sig-name">int PyUnicode_IsIdentifier(PyObject *unicode)</code></dt>
+  <dd><p>Return <code>1</code> if the string is a valid identifier according to the language
+definition, section <a href="../reference/lexical_analysis.html#identifiers">Names (identifiers and keywords)</a>. Return <code>0</code> otherwise.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.9:</span></p>
+<p>The function does not call <a class="reference internal" href="sys.html#c:function:py_fatalerror"><code class="xref c function docutils literal">Py_FatalError</code></a> anymore if the string
+is not ready.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_is_ascii"><code class="sig-name">unsigned int PyUnicode_IS_ASCII(PyObject *unicode)</code></dt>
+  <dd><p>Return true if the string only contains ASCII characters.
+Equivalent to <a class="reference internal" href="../library/stdtypes.html#py:method:str.isascii"><code class="xref py method docutils literal">str.isascii</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<h3 id="unicode-character-properties">Unicode Character Properties</h3>
+<p>Unicode provides many different character properties. The most often needed ones
+are available through these macros which are mapped to C functions depending on
+the Python configuration.</p>
+<dl class="c function">
+  <dt id="c:function:py_unicode_isspace"><code class="sig-name">int Py_UNICODE_ISSPACE(Py_UCS4 ch)</code></dt>
+  <dd><p>Return <code>1</code> or <code>0</code> depending on whether <em>ch</em> is a whitespace character.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_islower"><code class="sig-name">int Py_UNICODE_ISLOWER(Py_UCS4 ch)</code></dt>
+  <dd><p>Return <code>1</code> or <code>0</code> depending on whether <em>ch</em> is a lowercase character.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_isupper"><code class="sig-name">int Py_UNICODE_ISUPPER(Py_UCS4 ch)</code></dt>
+  <dd><p>Return <code>1</code> or <code>0</code> depending on whether <em>ch</em> is an uppercase character.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_istitle"><code class="sig-name">int Py_UNICODE_ISTITLE(Py_UCS4 ch)</code></dt>
+  <dd><p>Return <code>1</code> or <code>0</code> depending on whether <em>ch</em> is a titlecase character.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_islinebreak"><code class="sig-name">int Py_UNICODE_ISLINEBREAK(Py_UCS4 ch)</code></dt>
+  <dd><p>Return <code>1</code> or <code>0</code> depending on whether <em>ch</em> is a linebreak character.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_isdecimal"><code class="sig-name">int Py_UNICODE_ISDECIMAL(Py_UCS4 ch)</code></dt>
+  <dd><p>Return <code>1</code> or <code>0</code> depending on whether <em>ch</em> is a decimal character.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_isdigit"><code class="sig-name">int Py_UNICODE_ISDIGIT(Py_UCS4 ch)</code></dt>
+  <dd><p>Return <code>1</code> or <code>0</code> depending on whether <em>ch</em> is a digit character.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_isnumeric"><code class="sig-name">int Py_UNICODE_ISNUMERIC(Py_UCS4 ch)</code></dt>
+  <dd><p>Return <code>1</code> or <code>0</code> depending on whether <em>ch</em> is a numeric character.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_isalpha"><code class="sig-name">int Py_UNICODE_ISALPHA(Py_UCS4 ch)</code></dt>
+  <dd><p>Return <code>1</code> or <code>0</code> depending on whether <em>ch</em> is an alphabetic character.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_isalnum"><code class="sig-name">int Py_UNICODE_ISALNUM(Py_UCS4 ch)</code></dt>
+  <dd><p>Return <code>1</code> or <code>0</code> depending on whether <em>ch</em> is an alphanumeric character.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_isprintable"><code class="sig-name">int Py_UNICODE_ISPRINTABLE(Py_UCS4 ch)</code></dt>
+  <dd><p>Return <code>1</code> or <code>0</code> depending on whether <em>ch</em> is a printable character,
+in the sense of <a class="reference internal" href="../library/stdtypes.html#py:method:str.isprintable"><code class="xref py method docutils literal">str.isprintable</code></a>.</p>
+</dd>
+</dl>
+<p>These APIs can be used for fast direct character conversions:</p>
+<dl class="c function">
+  <dt id="c:function:py_unicode_tolower"><code class="sig-name">Py_UCS4 Py_UNICODE_TOLOWER(Py_UCS4 ch)</code></dt>
+  <dd><p>Return the character <em>ch</em> converted to lower case.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_toupper"><code class="sig-name">Py_UCS4 Py_UNICODE_TOUPPER(Py_UCS4 ch)</code></dt>
+  <dd><p>Return the character <em>ch</em> converted to upper case.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_totitle"><code class="sig-name">Py_UCS4 Py_UNICODE_TOTITLE(Py_UCS4 ch)</code></dt>
+  <dd><p>Return the character <em>ch</em> converted to title case.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_todecimal"><code class="sig-name">int Py_UNICODE_TODECIMAL(Py_UCS4 ch)</code></dt>
+  <dd><p>Return the character <em>ch</em> converted to a decimal positive integer.  Return
+<code>-1</code> if this is not possible.  This function does not raise exceptions.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_todigit"><code class="sig-name">int Py_UNICODE_TODIGIT(Py_UCS4 ch)</code></dt>
+  <dd><p>Return the character <em>ch</em> converted to a single digit integer. Return <code>-1</code> if
+this is not possible.  This function does not raise exceptions.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_tonumeric"><code class="sig-name">double Py_UNICODE_TONUMERIC(Py_UCS4 ch)</code></dt>
+  <dd><p>Return the character <em>ch</em> converted to a double. Return <code>-1.0</code> if this is not
+possible.  This function does not raise exceptions.</p>
+</dd>
+</dl>
+<p>These APIs can be used to work with surrogates:</p>
+<dl class="c function">
+  <dt id="c:function:py_unicode_is_surrogate"><code class="sig-name">int Py_UNICODE_IS_SURROGATE(Py_UCS4 ch)</code></dt>
+  <dd><p>Check if <em>ch</em> is a surrogate (<code>0xD800 &lt;= ch &lt;= 0xDFFF</code>).</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_is_high_surrogate"><code class="sig-name">int Py_UNICODE_IS_HIGH_SURROGATE(Py_UCS4 ch)</code></dt>
+  <dd><p>Check if <em>ch</em> is a high surrogate (<code>0xD800 &lt;= ch &lt;= 0xDBFF</code>).</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_is_low_surrogate"><code class="sig-name">int Py_UNICODE_IS_LOW_SURROGATE(Py_UCS4 ch)</code></dt>
+  <dd><p>Check if <em>ch</em> is a low surrogate (<code>0xDC00 &lt;= ch &lt;= 0xDFFF</code>).</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_high_surrogate"><code class="sig-name">Py_UCS4 Py_UNICODE_HIGH_SURROGATE(Py_UCS4 ch)</code></dt>
+  <dd><p>Return the high UTF-16 surrogate (<code>0xD800</code> to <code>0xDBFF</code>) for a Unicode
+code point in the range <code>[0x10000; 0x10FFFF]</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_low_surrogate"><code class="sig-name">Py_UCS4 Py_UNICODE_LOW_SURROGATE(Py_UCS4 ch)</code></dt>
+  <dd><p>Return the low UTF-16 surrogate (<code>0xDC00</code> to <code>0xDFFF</code>) for a Unicode
+code point in the range <code>[0x10000; 0x10FFFF]</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_unicode_join_surrogates"><code class="sig-name">Py_UCS4 Py_UNICODE_JOIN_SURROGATES(Py_UCS4 high, Py_UCS4 low)</code></dt>
+  <dd><p>Join two surrogate code points and return a single <a class="reference internal" href="unicode.html#c:type:py_ucs4"><code class="xref c type docutils literal">Py_UCS4</code></a> value.
+<em>high</em> and <em>low</em> are respectively the leading and trailing surrogates in a
+surrogate pair. <em>high</em> must be in the range <code>[0xD800; 0xDBFF]</code> and <em>low</em> must
+be in the range <code>[0xDC00; 0xDFFF]</code>.</p>
+</dd>
+</dl>
+<h3 id="creating-and-accessing-unicode-strings">Creating and accessing Unicode strings</h3>
+<p>To create Unicode objects and access their basic sequence properties, use these
+APIs:</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_new"><code class="sig-name">PyObject* PyUnicode_New(Py_ssize_t size, Py_UCS4 maxchar)</code></dt>
+  <dd><p>Create a new Unicode object.  <em>maxchar</em> should be the true maximum code point
+to be placed in the string.  As an approximation, it can be rounded up to the
+nearest value in the sequence 127, 255, 65535, 1114111.</p>
+<p>On error, set an exception and return <code>NULL</code>.</p>
+<p>After creation, the string can be filled by <a class="reference internal" href="unicode.html#c:function:pyunicode_writechar"><code class="xref c function docutils literal">PyUnicode_WriteChar</code></a>,
+<a class="reference internal" href="unicode.html#c:function:pyunicode_copycharacters"><code class="xref c function docutils literal">PyUnicode_CopyCharacters</code></a>, <a class="reference internal" href="unicode.html#c:function:pyunicode_fill"><code class="xref c function docutils literal">PyUnicode_Fill</code></a>,
+<a class="reference internal" href="unicode.html#c:function:pyunicode_write"><code class="xref c function docutils literal">PyUnicode_WRITE</code></a> or similar.
+Since strings are supposed to be immutable, take care to not “use” the
+result while it is being modified. In particular, before it's filled
+with its final contents, a string:</p>
+<ul>
+<li><p>must not be hashed,</p>
+</li>
+<li><p>must not be <a class="reference internal" href="unicode.html#c:function:pyunicode_asutf8andsize"><code class="xref c function docutils literal">converted to UTF-8</code></a>,
+or another non-"canonical" representation,</p>
+</li>
+<li><p>must not have its reference count changed,</p>
+</li>
+<li><p>must not be shared with code that might do one of the above.</p>
+</li>
+</ul>
+<p>This list is not exhaustive. Avoiding these uses is your responsibility;
+Python does not always check these requirements.</p>
+<p>To avoid accidentally exposing a partially-written string object, prefer
+using the <a class="reference internal" href="unicode.html#c:type:pyunicodewriter"><code class="xref c type docutils literal">PyUnicodeWriter</code></a> API, or one of the <code>PyUnicode_From*</code>
+functions below.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_fromkindanddata"><code class="sig-name">PyObject* PyUnicode_FromKindAndData(int kind, const void *buffer, Py_ssize_t size)</code></dt>
+  <dd><p>Create a new Unicode object with the given <em>kind</em> (possible values are
+<a class="reference internal" href="unicode.html#c:macro:pyunicode_1byte_kind"><code class="xref c macro docutils literal">PyUnicode_1BYTE_KIND</code></a> etc., as returned by
+<a class="reference internal" href="unicode.html#c:function:pyunicode_kind"><code class="xref c function docutils literal">PyUnicode_KIND</code></a>).  The <em>buffer</em> must point to an array of <em>size</em>
+units of 1, 2 or 4 bytes per character, as given by the kind.</p>
+<p>If necessary, the input <em>buffer</em> is copied and transformed into the
+canonical representation.  For example, if the <em>buffer</em> is a UCS4 string
+(<a class="reference internal" href="unicode.html#c:macro:pyunicode_4byte_kind"><code class="xref c macro docutils literal">PyUnicode_4BYTE_KIND</code></a>) and it consists only of codepoints in
+the UCS1 range, it will be transformed into UCS1
+(<a class="reference internal" href="unicode.html#c:macro:pyunicode_1byte_kind"><code class="xref c macro docutils literal">PyUnicode_1BYTE_KIND</code></a>).</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_fromstringandsize"><code class="sig-name">PyObject* PyUnicode_FromStringAndSize(const char *str, Py_ssize_t size)</code></dt>
+  <dd><p>Create a Unicode object from the char buffer <em>str</em>.  The bytes will be
+interpreted as being UTF-8 encoded.  The buffer is copied into the new
+object.
+The return value might be a shared object, i.e. modification of the data is
+not allowed.</p>
+<p>This function raises <a class="reference internal" href="../library/exceptions.html#py:exception:systemerror"><code class="xref py exception docutils literal">SystemError</code></a> when:</p>
+<ul>
+<li><p><em>size</em> &lt; 0,</p>
+</li>
+<li><p><em>str</em> is <code>NULL</code> and <em>size</em> &gt; 0</p>
+</li>
+</ul>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p><em>str</em> == <code>NULL</code> with <em>size</em> &gt; 0 is not allowed anymore.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_fromstring"><code class="sig-name">PyObject *PyUnicode_FromString(const char *str)</code></dt>
+  <dd><p>Create a Unicode object from a UTF-8 encoded null-terminated char buffer
+<em>str</em>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_fromformat"><code class="sig-name">PyObject* PyUnicode_FromFormat(const char *format, ...)</code></dt>
+  <dd><p>Take a C <a href="#" class="broken-link"><code class="xref c function docutils literal">printf</code></a>-style <em>format</em> string and a variable number of
+arguments, calculate the size of the resulting Python Unicode string and return
+a string with the values formatted into it.  The variable arguments must be C
+types and must correspond exactly to the format characters in the <em>format</em>
+ASCII-encoded string.</p>
+<p>A conversion specifier contains two or more characters and has the following
+components, which must occur in this order:</p>
+<ol class="arabic period">
+<li><p>The <code>'%'</code> character, which marks the start of the specifier.</p>
+</li>
+<li><p>Conversion flags (optional), which affect the result of some conversion
+types.</p>
+</li>
+<li><p>Minimum field width (optional).
+If specified as an <code>'*'</code> (asterisk), the actual width is given in the
+next argument, which must be of type :c:expr:`int`, and the object to
+convert comes after the minimum field width and optional precision.</p>
+</li>
+<li><p>Precision (optional), given as a <code>'.'</code> (dot) followed by the precision.
+If specified as <code>'*'</code> (an asterisk), the actual precision is given in
+the next argument, which must be of type :c:expr:`int`, and the value to
+convert comes after the precision.</p>
+</li>
+<li><p>Length modifier (optional).</p>
+</li>
+<li><p>Conversion type.</p>
+</li>
+</ol>
+<p>The conversion flag characters are:</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'tabularcolumns'</p>
+<pre class="directive-error-source">.. tabularcolumns:: |l|L|</pre>
+</div>
+<table>
+<thead>
+<tr>
+<th><p>Flag</p>
+</th>
+<th><p>Meaning</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>0</code></p>
+</td>
+<td><p>The conversion will be zero padded for numeric values.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>-</code></p>
+</td>
+<td><p>The converted value is left adjusted (overrides the <code>0</code>
+flag if both are given).</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The length modifiers for following integer conversions (<code>d</code>, <code>i</code>,
+<code>o</code>, <code>u</code>, <code>x</code>, or <code>X</code>) specify the type of the argument
+(:c:expr:`int` by default):</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'tabularcolumns'</p>
+<pre class="directive-error-source">.. tabularcolumns:: |l|L|</pre>
+</div>
+<table>
+<thead>
+<tr>
+<th><p>Modifier</p>
+</th>
+<th><p>Types</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>l</code></p>
+</td>
+<td><p>:c:expr:`long` or :c:expr:`unsigned long`</p>
+</td>
+</tr>
+<tr>
+<td><p><code>ll</code></p>
+</td>
+<td><p>:c:expr:`long long` or :c:expr:`unsigned long long`</p>
+</td>
+</tr>
+<tr>
+<td><p><code>j</code></p>
+</td>
+<td><p><a href="#" class="broken-link"><code class="xref c type docutils literal">intmax_t</code></a> or <a href="#" class="broken-link"><code class="xref c type docutils literal">uintmax_t</code></a></p>
+</td>
+</tr>
+<tr>
+<td><p><code>z</code></p>
+</td>
+<td><p><a href="#" class="broken-link"><code class="xref c type docutils literal">size_t</code></a> or <a href="#" class="broken-link"><code class="xref c type docutils literal">ssize_t</code></a></p>
+</td>
+</tr>
+<tr>
+<td><p><code>t</code></p>
+</td>
+<td><p><a href="#" class="broken-link"><code class="xref c type docutils literal">ptrdiff_t</code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The length modifier <code>l</code> for following conversions <code>s</code> or <code>V</code> specify
+that the type of the argument is :c:expr:`const wchar_t*`.</p>
+<p>The conversion specifiers are:</p>
+<table class="list-table">
+<thead>
+<tr>
+<th><p>Conversion Specifier</p>
+</th>
+<th><p>Type</p>
+</th>
+<th><p>Comment</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>%</code></p>
+</td>
+<td><p><em>n/a</em></p>
+</td>
+<td><p>The literal <code>%</code> character.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>d</code>, <code>i</code></p>
+</td>
+<td><p>Specified by the length modifier</p>
+</td>
+<td><p>The decimal representation of a signed C integer.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>u</code></p>
+</td>
+<td><p>Specified by the length modifier</p>
+</td>
+<td><p>The decimal representation of an unsigned C integer.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>o</code></p>
+</td>
+<td><p>Specified by the length modifier</p>
+</td>
+<td><p>The octal representation of an unsigned C integer.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>x</code></p>
+</td>
+<td><p>Specified by the length modifier</p>
+</td>
+<td><p>The hexadecimal representation of an unsigned C integer (lowercase).</p>
+</td>
+</tr>
+<tr>
+<td><p><code>X</code></p>
+</td>
+<td><p>Specified by the length modifier</p>
+</td>
+<td><p>The hexadecimal representation of an unsigned C integer (uppercase).</p>
+</td>
+</tr>
+<tr>
+<td><p><code>c</code></p>
+</td>
+<td><p>:c:expr:`int`</p>
+</td>
+<td><p>A single character.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>s</code></p>
+</td>
+<td><p>:c:expr:`const char*` or :c:expr:`const wchar_t*`</p>
+</td>
+<td><p>A null-terminated C character array.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>p</code></p>
+</td>
+<td><p>:c:expr:`const void*`</p>
+</td>
+<td><p>The hex representation of a C  pointer.
+Mostly equivalent to <code>printf("%p")</code> except that it is guaranteed to
+start with the literal <code>0x</code> regardless of what the platform's
+<code>printf</code> yields.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>A</code></p>
+</td>
+<td><p>:c:expr:`PyObject*`</p>
+</td>
+<td><p>The result of calling <a class="reference internal" href="../library/functions.html#py:function:ascii"><code class="xref py function docutils literal">ascii</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>U</code></p>
+</td>
+<td><p>:c:expr:`PyObject*`</p>
+</td>
+<td><p>A Unicode object.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>V</code></p>
+</td>
+<td><p>:c:expr:`PyObject*`, :c:expr:`const char*` or :c:expr:`const wchar_t*`</p>
+</td>
+<td><p>A Unicode object (which may be <code>NULL</code>) and a null-terminated
+C character array as a second parameter (which will be used,
+if the first parameter is <code>NULL</code>).</p>
+</td>
+</tr>
+<tr>
+<td><p><code>S</code></p>
+</td>
+<td><p>:c:expr:`PyObject*`</p>
+</td>
+<td><p>The result of calling <a class="reference internal" href="object.html#c:function:pyobject_str"><code class="xref c function docutils literal">PyObject_Str</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>R</code></p>
+</td>
+<td><p>:c:expr:`PyObject*`</p>
+</td>
+<td><p>The result of calling <a class="reference internal" href="object.html#c:function:pyobject_repr"><code class="xref c function docutils literal">PyObject_Repr</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>T</code></p>
+</td>
+<td><p>:c:expr:`PyObject*`</p>
+</td>
+<td><p>Get the fully qualified name of an object type;
+call <a class="reference internal" href="type.html#c:function:pytype_getfullyqualifiedname"><code class="xref c function docutils literal">PyType_GetFullyQualifiedName</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>#T</code></p>
+</td>
+<td><p>:c:expr:`PyObject*`</p>
+</td>
+<td><p>Similar to <code>T</code> format, but use a colon (<code>:</code>) as separator between
+the module name and the qualified name.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>N</code></p>
+</td>
+<td><p>:c:expr:`PyTypeObject*`</p>
+</td>
+<td><p>Get the fully qualified name of a type;
+call <a class="reference internal" href="type.html#c:function:pytype_getfullyqualifiedname"><code class="xref c function docutils literal">PyType_GetFullyQualifiedName</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>#N</code></p>
+</td>
+<td><p>:c:expr:`PyTypeObject*`</p>
+</td>
+<td><p>Similar to <code>N</code> format, but use a colon (<code>:</code>) as separator between
+the module name and the qualified name.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>The width formatter unit is number of characters rather than bytes.
+The precision formatter unit is number of bytes or <a href="#" class="broken-link"><code class="xref c type docutils literal">wchar_t</code></a>
+items (if the length modifier <code>l</code> is used) for <code>"%s"</code> and
+<code>"%V"</code> (if the <code>PyObject*</code> argument is <code>NULL</code>), and a number of
+characters for <code>"%A"</code>, <code>"%U"</code>, <code>"%S"</code>, <code>"%R"</code> and <code>"%V"</code>
+(if the <code>PyObject*</code> argument is not <code>NULL</code>).</p>
+</div>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Unlike to C <a href="#" class="broken-link"><code class="xref c function docutils literal">printf</code></a> the <code>0</code> flag has effect even when
+a precision is given for integer conversions (<code>d</code>, <code>i</code>, <code>u</code>, <code>o</code>,
+<code>x</code>, or <code>X</code>).</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p>Support for <code>"%lld"</code> and <code>"%llu"</code> added.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Support for <code>"%li"</code>, <code>"%lli"</code> and <code>"%zi"</code> added.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>Support width and precision formatter for <code>"%s"</code>, <code>"%A"</code>, <code>"%U"</code>,
+<code>"%V"</code>, <code>"%S"</code>, <code>"%R"</code> added.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p>Support for conversion specifiers <code>o</code> and <code>X</code>.
+Support for length modifiers <code>j</code> and <code>t</code>.
+Length modifiers are now applied to all integer conversions.
+Length modifier <code>l</code> is now applied to conversion specifiers <code>s</code> and <code>V</code>.
+Support for variable width and precision <code>*</code>.
+Support for flag <code>-</code>.</p>
+<p>An unrecognized format character now sets a <a class="reference internal" href="../library/exceptions.html#py:exception:systemerror"><code class="xref py exception docutils literal">SystemError</code></a>.
+In previous versions it caused all the rest of the format string to be
+copied as-is to the result string, and any extra arguments discarded.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Support for <code>%T</code>, <code>%#T</code>, <code>%N</code> and <code>%#N</code> formats added.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_fromformatv"><code class="sig-name">PyObject* PyUnicode_FromFormatV(const char *format, va_list vargs)</code></dt>
+  <dd><p>Identical to <a class="reference internal" href="unicode.html#c:function:pyunicode_fromformat"><code class="xref c function docutils literal">PyUnicode_FromFormat</code></a> except that it takes exactly two
+arguments.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_fromobject"><code class="sig-name">PyObject* PyUnicode_FromObject(PyObject *obj)</code></dt>
+  <dd><p>Copy an instance of a Unicode subtype to a new true Unicode object if
+necessary. If <em>obj</em> is already a true Unicode object (not a subtype),
+return a new <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to the object.</p>
+<p>Objects other than Unicode or its subtypes will cause a <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_fromordinal"><code class="sig-name">PyObject* PyUnicode_FromOrdinal(int ordinal)</code></dt>
+  <dd><p>Create a Unicode Object from the given Unicode code point <em>ordinal</em>.</p>
+<p>The ordinal must be in <code>range(0x110000)</code>. A <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> is
+raised in the case it is not.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_fromencodedobject"><code class="sig-name">PyObject* PyUnicode_FromEncodedObject(PyObject *obj, const char *encoding, const char *errors)</code></dt>
+  <dd><p>Decode an encoded object <em>obj</em> to a Unicode object.</p>
+<p><a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>, <a class="reference internal" href="../library/stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a> and other
+<a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like objects</span></a>
+are decoded according to the given <em>encoding</em> and using the error handling
+defined by <em>errors</em>. Both can be <code>NULL</code> to have the interface use the default
+values (see <a href="unicode.html#builtincodecs">Built-in Codecs</a> for details).</p>
+<p>All other objects, including Unicode objects, cause a <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> to be
+set.</p>
+<p>The API returns <code>NULL</code> if there was an error.  The caller is responsible for
+decref'ing the returned objects.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_append"><code class="sig-name">void PyUnicode_Append(PyObject **p_left, PyObject *right)</code></dt>
+  <dd><p>Append the string <em>right</em> to the end of <em>p_left</em>.
+<em>p_left</em> must point to a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to a Unicode object;
+<code class="xref c function docutils literal">PyUnicode_Append</code> releases ("steals") this reference.</p>
+<p>On error, set <em>*p_left</em> to <code>NULL</code> and set an exception.</p>
+<p>On success, set <em>*p_left</em> to a new strong reference to the result.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_appendanddel"><code class="sig-name">void PyUnicode_AppendAndDel(PyObject **p_left, PyObject *right)</code></dt>
+  <dd><p>The function is similar to <a class="reference internal" href="unicode.html#c:function:pyunicode_append"><code class="xref c function docutils literal">PyUnicode_Append</code></a>, with the only
+difference being that it decrements the reference count of <em>right</em> by one.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_buildencodingmap"><code class="sig-name">PyObject* PyUnicode_BuildEncodingMap(PyObject* string)</code></dt>
+  <dd><p>Return a mapping suitable for decoding a custom single-byte encoding.
+Given a Unicode string <em>string</em> of up to 256 characters representing an encoding
+table, returns either a compact internal mapping object or a dictionary
+mapping character ordinals to byte values. Raises a <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> and
+return <code>NULL</code> on invalid input.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_getdefaultencoding"><code class="sig-name">const char* PyUnicode_GetDefaultEncoding(void)</code></dt>
+  <dd><p>Return the name of the default string encoding, <code>"utf-8"</code>.
+See <a class="reference internal" href="../library/sys.html#py:function:sys.getdefaultencoding"><code class="xref py function docutils literal">sys.getdefaultencoding</code></a>.</p>
+<p>The returned string does not need to be freed, and is valid
+until interpreter shutdown.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_getlength"><code class="sig-name">Py_ssize_t PyUnicode_GetLength(PyObject *unicode)</code></dt>
+  <dd><p>Return the length of the Unicode object, in code points.</p>
+<p>On error, set an exception and return <code>-1</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_copycharacters"><code class="sig-name">Py_ssize_t PyUnicode_CopyCharacters(PyObject *to, Py_ssize_t to_start, PyObject *from, Py_ssize_t from_start, Py_ssize_t how_many)</code></dt>
+  <dd><p>Copy characters from one Unicode object into another.  This function performs
+character conversion when necessary and falls back to <code class="xref c function docutils literal">memcpy</code> if
+possible.  Returns <code>-1</code> and sets an exception on error, otherwise returns
+the number of copied characters.</p>
+<p>The string must not have been “used” yet.
+See <a class="reference internal" href="unicode.html#c:function:pyunicode_new"><code class="xref c function docutils literal">PyUnicode_New</code></a> for details.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_resize"><code class="sig-name">int PyUnicode_Resize(PyObject **unicode, Py_ssize_t length);</code></dt>
+  <dd><p>Resize a Unicode object <em>*unicode</em> to the new <em>length</em> in code points.</p>
+<p>Try to resize the string in place (which is usually faster than allocating
+a new string and copying characters), or create a new string.</p>
+<p><em>*unicode</em> is modified to point to the new (resized) object and <code>0</code> is
+returned on success. Otherwise, <code>-1</code> is returned and an exception is set,
+and <em>*unicode</em> is left untouched.</p>
+<p>The function doesn't check string content, the result may not be a
+string in canonical representation.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_fill"><code class="sig-name">Py_ssize_t PyUnicode_Fill(PyObject *unicode, Py_ssize_t start, Py_ssize_t length, Py_UCS4 fill_char)</code></dt>
+  <dd><p>Fill a string with a character: write <em>fill_char</em> into
+<code>unicode[start:start+length]</code>.</p>
+<p>Fail if <em>fill_char</em> is bigger than the string maximum character, or if the
+string has more than 1 reference.</p>
+<p>The string must not have been “used” yet.
+See <a class="reference internal" href="unicode.html#c:function:pyunicode_new"><code class="xref c function docutils literal">PyUnicode_New</code></a> for details.</p>
+<p>Return the number of written character, or return <code>-1</code> and raise an
+exception on error.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_writechar"><code class="sig-name">int PyUnicode_WriteChar(PyObject *unicode, Py_ssize_t index, Py_UCS4 character)</code></dt>
+  <dd><p>Write a <em>character</em> to the string <em>unicode</em> at the zero-based <em>index</em>.
+Return <code>0</code> on success, <code>-1</code> on error with an exception set.</p>
+<p>This function checks that <em>unicode</em> is a Unicode object, that the index is
+not out of bounds, and that the object's reference count is one.
+See <a class="reference internal" href="unicode.html#c:function:pyunicode_write"><code class="xref c function docutils literal">PyUnicode_WRITE</code></a> for a version that skips these checks,
+making them your responsibility.</p>
+<p>The string must not have been “used” yet.
+See <a class="reference internal" href="unicode.html#c:function:pyunicode_new"><code class="xref c function docutils literal">PyUnicode_New</code></a> for details.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_readchar"><code class="sig-name">Py_UCS4 PyUnicode_ReadChar(PyObject *unicode, Py_ssize_t index)</code></dt>
+  <dd><p>Read a character from a string.  This function checks that <em>unicode</em> is a
+Unicode object and the index is not out of bounds, in contrast to
+<a class="reference internal" href="unicode.html#c:function:pyunicode_read_char"><code class="xref c function docutils literal">PyUnicode_READ_CHAR</code></a>, which performs no error checking.</p>
+<p>Return character on success, <code>-1</code> on error with an exception set.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_substring"><code class="sig-name">PyObject* PyUnicode_Substring(PyObject *unicode, Py_ssize_t start, Py_ssize_t end)</code></dt>
+  <dd><p>Return a substring of <em>unicode</em>, from character index <em>start</em> (included) to
+character index <em>end</em> (excluded).  Negative indices are not supported.
+On error, set an exception and return <code>NULL</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_asucs4"><code class="sig-name">Py_UCS4* PyUnicode_AsUCS4(PyObject *unicode, Py_UCS4 *buffer, Py_ssize_t buflen, int copy_null)</code></dt>
+  <dd><p>Copy the string <em>unicode</em> into a UCS4 buffer, including a null character, if
+<em>copy_null</em> is set.  Returns <code>NULL</code> and sets an exception on error (in
+particular, a <a class="reference internal" href="../library/exceptions.html#py:exception:systemerror"><code class="xref py exception docutils literal">SystemError</code></a> if <em>buflen</em> is smaller than the length of
+<em>unicode</em>).  <em>buffer</em> is returned on success.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_asucs4copy"><code class="sig-name">Py_UCS4* PyUnicode_AsUCS4Copy(PyObject *unicode)</code></dt>
+  <dd><p>Copy the string <em>unicode</em> into a new UCS4 buffer that is allocated using
+<a class="reference internal" href="memory.html#c:function:pymem_malloc"><code class="xref c function docutils literal">PyMem_Malloc</code></a>.  If this fails, <code>NULL</code> is returned with a
+<a class="reference internal" href="../library/exceptions.html#py:exception:memoryerror"><code class="xref py exception docutils literal">MemoryError</code></a> set.  The returned buffer always has an extra
+null code point appended.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<h3 id="locale-encoding">Locale Encoding</h3>
+<p>The current locale encoding can be used to decode text from the operating
+system.</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodelocaleandsize"><code class="sig-name">PyObject* PyUnicode_DecodeLocaleAndSize(const char *str, Py_ssize_t length, const char *errors)</code></dt>
+  <dd><p>Decode a string from UTF-8 on Android and VxWorks, or from the current
+locale encoding on other platforms. The supported
+error handlers are <code>"strict"</code> and <code>"surrogateescape"</code>
+(<span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0383/"><strong>PEP 383</strong></a>). The decoder uses <code>"strict"</code> error handler if
+<em>errors</em> is <code>NULL</code>.  <em>str</em> must end with a null character but
+cannot contain embedded null characters.</p>
+<p>Use <a class="reference internal" href="unicode.html#c:function:pyunicode_decodefsdefaultandsize"><code class="xref c function docutils literal">PyUnicode_DecodeFSDefaultAndSize</code></a> to decode a string from
+the <a class="reference internal" href="../glossary.html#term-filesystem-encoding-and-error-handler"><span class="xref std std-term">filesystem encoding and error handler</span></a>.</p>
+<p>This function ignores the <a href="../library/os.html#utf8-mode">Python UTF-8 Mode</a>.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p>The <a class="reference internal" href="sys.html#c:function:py_decodelocale"><code class="xref c function docutils literal">Py_DecodeLocale</code></a> function.</p>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>The function now also uses the current locale encoding for the
+<code>surrogateescape</code> error handler, except on Android. Previously, <a class="reference internal" href="sys.html#c:function:py_decodelocale"><code class="xref c function docutils literal">Py_DecodeLocale</code></a>
+was used for the <code>surrogateescape</code>, and the current locale encoding was
+used for <code>strict</code>.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodelocale"><code class="sig-name">PyObject* PyUnicode_DecodeLocale(const char *str, const char *errors)</code></dt>
+  <dd><p>Similar to <a class="reference internal" href="unicode.html#c:function:pyunicode_decodelocaleandsize"><code class="xref c function docutils literal">PyUnicode_DecodeLocaleAndSize</code></a>, but compute the string
+length using <code class="xref c function docutils literal">strlen</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_encodelocale"><code class="sig-name">PyObject* PyUnicode_EncodeLocale(PyObject *unicode, const char *errors)</code></dt>
+  <dd><p>Encode a Unicode object to UTF-8 on Android and VxWorks, or to the current
+locale encoding on other platforms. The
+supported error handlers are <code>"strict"</code> and <code>"surrogateescape"</code>
+(<span class="target" id="index-3"></span><a class="pep reference external" href="https://peps.python.org/pep-0383/"><strong>PEP 383</strong></a>). The encoder uses <code>"strict"</code> error handler if
+<em>errors</em> is <code>NULL</code>. Return a <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> object. <em>unicode</em> cannot
+contain embedded null characters.</p>
+<p>Use <a class="reference internal" href="unicode.html#c:function:pyunicode_encodefsdefault"><code class="xref c function docutils literal">PyUnicode_EncodeFSDefault</code></a> to encode a string to the
+<a class="reference internal" href="../glossary.html#term-filesystem-encoding-and-error-handler"><span class="xref std std-term">filesystem encoding and error handler</span></a>.</p>
+<p>This function ignores the <a href="../library/os.html#utf8-mode">Python UTF-8 Mode</a>.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p>The <a class="reference internal" href="sys.html#c:function:py_encodelocale"><code class="xref c function docutils literal">Py_EncodeLocale</code></a> function.</p>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>The function now also uses the current locale encoding for the
+<code>surrogateescape</code> error handler, except on Android. Previously,
+<a class="reference internal" href="sys.html#c:function:py_encodelocale"><code class="xref c function docutils literal">Py_EncodeLocale</code></a>
+was used for the <code>surrogateescape</code>, and the current locale encoding was
+used for <code>strict</code>.</p>
+</div>
+</dd>
+</dl>
+<h3 id="file-system-encoding">File System Encoding</h3>
+<p>Functions encoding to and decoding from the <a class="reference internal" href="../glossary.html#term-filesystem-encoding-and-error-handler"><span class="xref std std-term">filesystem encoding and
+error handler</span></a> (<span class="target" id="index-4"></span><a class="pep reference external" href="https://peps.python.org/pep-0383/"><strong>PEP 383</strong></a> and <span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0529/"><strong>PEP 529</strong></a>).</p>
+<p>To encode file names to <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> during argument parsing, the <code>"O&amp;"</code>
+converter should be used, passing <code class="xref c function docutils literal">PyUnicode_FSConverter</code> as the
+conversion function:</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_fsconverter"><code class="sig-name">int PyUnicode_FSConverter(PyObject* obj, void* result)</code></dt>
+  <dd><p><a href="arg.html#arg-parsing">PyArg_Parse* converter</a>: encode <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> objects – obtained directly or
+through the <a class="reference internal" href="../library/os.html#py:class:os.pathlike"><code class="xref py class docutils literal">os.PathLike</code></a> interface – to <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> using
+<a class="reference internal" href="unicode.html#c:function:pyunicode_encodefsdefault"><code class="xref c function docutils literal">PyUnicode_EncodeFSDefault</code></a>; <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> objects are output as-is.
+<em>result</em> must be an address of a C variable of type :c:expr:`PyObject*`
+(or :c:expr:`PyBytesObject*`).
+On success, set the variable to a new <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to
+a <a href="bytes.html#bytesobjects">bytes object</a> which must be released
+when it is no longer used and return a non-zero value
+(<a class="reference internal" href="arg.html#c:macro:py_cleanup_supported"><code class="xref c macro docutils literal">Py_CLEANUP_SUPPORTED</code></a>).
+Embedded null bytes are not allowed in the result.
+On failure, return <code>0</code> with an exception set.</p>
+<p>If <em>obj</em> is <code>NULL</code>, the function releases a strong reference
+stored in the variable referred by <em>result</em> and returns <code>1</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.1:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>Accepts a <a class="reference internal" href="../glossary.html#term-path-like-object"><span class="xref std std-term">path-like object</span></a>.</p>
+</div>
+</dd>
+</dl>
+<p>To decode file names to <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> during argument parsing, the <code>"O&amp;"</code>
+converter should be used, passing <code class="xref c function docutils literal">PyUnicode_FSDecoder</code> as the
+conversion function:</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_fsdecoder"><code class="sig-name">int PyUnicode_FSDecoder(PyObject* obj, void* result)</code></dt>
+  <dd><p><a href="arg.html#arg-parsing">PyArg_Parse* converter</a>: decode <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> objects – obtained either
+directly or indirectly through the <a class="reference internal" href="../library/os.html#py:class:os.pathlike"><code class="xref py class docutils literal">os.PathLike</code></a> interface – to
+<a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> using <a class="reference internal" href="unicode.html#c:function:pyunicode_decodefsdefaultandsize"><code class="xref c function docutils literal">PyUnicode_DecodeFSDefaultAndSize</code></a>; <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a>
+objects are output as-is.
+<em>result</em> must be an address of a C variable of type :c:expr:`PyObject*`
+(or :c:expr:`PyUnicodeObject*`).
+On success, set the variable to a new <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to
+a <a href="unicode.html#unicodeobjects">Unicode object</a> which must be released
+when it is no longer used and return a non-zero value
+(<a class="reference internal" href="arg.html#c:macro:py_cleanup_supported"><code class="xref c macro docutils literal">Py_CLEANUP_SUPPORTED</code></a>).
+Embedded null characters are not allowed in the result.
+On failure, return <code>0</code> with an exception set.</p>
+<p>If <em>obj</em> is <code>NULL</code>, release the strong reference
+to the object referred to by <em>result</em> and return <code>1</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>Accepts a <a class="reference internal" href="../glossary.html#term-path-like-object"><span class="xref std std-term">path-like object</span></a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodefsdefaultandsize"><code class="sig-name">PyObject* PyUnicode_DecodeFSDefaultAndSize(const char *str, Py_ssize_t size)</code></dt>
+  <dd><p>Decode a string from the <a class="reference internal" href="../glossary.html#term-filesystem-encoding-and-error-handler"><span class="xref std std-term">filesystem encoding and error handler</span></a>.</p>
+<p>If you need to decode a string from the current locale encoding, use
+<a class="reference internal" href="unicode.html#c:function:pyunicode_decodelocaleandsize"><code class="xref c function docutils literal">PyUnicode_DecodeLocaleAndSize</code></a>.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p>The <a class="reference internal" href="sys.html#c:function:py_decodelocale"><code class="xref c function docutils literal">Py_DecodeLocale</code></a> function.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>The <a class="reference internal" href="../glossary.html#term-filesystem-encoding-and-error-handler"><span class="xref std std-term">filesystem error handler</span></a> is now used.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodefsdefault"><code class="sig-name">PyObject* PyUnicode_DecodeFSDefault(const char *str)</code></dt>
+  <dd><p>Decode a null-terminated string from the <a class="reference internal" href="../glossary.html#term-filesystem-encoding-and-error-handler"><span class="xref std std-term">filesystem encoding and
+error handler</span></a>.</p>
+<p>If the string length is known, use
+<a class="reference internal" href="unicode.html#c:function:pyunicode_decodefsdefaultandsize"><code class="xref c function docutils literal">PyUnicode_DecodeFSDefaultAndSize</code></a>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>The <a class="reference internal" href="../glossary.html#term-filesystem-encoding-and-error-handler"><span class="xref std std-term">filesystem error handler</span></a> is now used.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_encodefsdefault"><code class="sig-name">PyObject* PyUnicode_EncodeFSDefault(PyObject *unicode)</code></dt>
+  <dd><p>Encode a Unicode object to the <a class="reference internal" href="../glossary.html#term-filesystem-encoding-and-error-handler"><span class="xref std std-term">filesystem encoding and error
+handler</span></a>, and return <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>. Note that the resulting <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>
+object can contain null bytes.</p>
+<p>If you need to encode a string to the current locale encoding, use
+<a class="reference internal" href="unicode.html#c:function:pyunicode_encodelocale"><code class="xref c function docutils literal">PyUnicode_EncodeLocale</code></a>.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p>The <a class="reference internal" href="sys.html#c:function:py_encodelocale"><code class="xref c function docutils literal">Py_EncodeLocale</code></a> function.</p>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>The <a class="reference internal" href="../glossary.html#term-filesystem-encoding-and-error-handler"><span class="xref std std-term">filesystem error handler</span></a> is now used.</p>
+</div>
+</dd>
+</dl>
+<h3 id="wchar-t-support">wchar_t Support</h3>
+<p><a href="#" class="broken-link"><code class="xref c type docutils literal">wchar_t</code></a> support for platforms which support it:</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_fromwidechar"><code class="sig-name">PyObject* PyUnicode_FromWideChar(const wchar_t *wstr, Py_ssize_t size)</code></dt>
+  <dd><p>Create a Unicode object from the <a href="#" class="broken-link"><code class="xref c type docutils literal">wchar_t</code></a> buffer <em>wstr</em> of the given <em>size</em>.
+Passing <code>-1</code> as the <em>size</em> indicates that the function must itself compute the length,
+using <code class="xref c function docutils literal">wcslen</code>.
+Return <code>NULL</code> on failure.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_aswidechar"><code class="sig-name">Py_ssize_t PyUnicode_AsWideChar(PyObject *unicode, wchar_t *wstr, Py_ssize_t size)</code></dt>
+  <dd><p>Copy the Unicode object contents into the <a href="#" class="broken-link"><code class="xref c type docutils literal">wchar_t</code></a> buffer <em>wstr</em>.  At most
+<em>size</em> <a href="#" class="broken-link"><code class="xref c type docutils literal">wchar_t</code></a> characters are copied (excluding a possibly trailing
+null termination character).  Return the number of <a href="#" class="broken-link"><code class="xref c type docutils literal">wchar_t</code></a> characters
+copied or <code>-1</code> in case of an error.</p>
+<p>When <em>wstr</em> is <code>NULL</code>, instead return the <em>size</em> that would be required
+to store all of <em>unicode</em> including a terminating null.</p>
+<p>Note that the resulting :c:expr:`wchar_t*`
+string may or may not be null-terminated.  It is the responsibility of the caller
+to make sure that the :c:expr:`wchar_t*` string is null-terminated in case this is
+required by the application. Also, note that the :c:expr:`wchar_t*` string
+might contain null characters, which would cause the string to be truncated
+when used with most C functions.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_aswidecharstring"><code class="sig-name">wchar_t* PyUnicode_AsWideCharString(PyObject *unicode, Py_ssize_t *size)</code></dt>
+  <dd><p>Convert the Unicode object to a wide character string. The output string
+always ends with a null character. If <em>size</em> is not <code>NULL</code>, write the number
+of wide characters (excluding the trailing null termination character) into
+<em>*size</em>. Note that the resulting <a href="#" class="broken-link"><code class="xref c type docutils literal">wchar_t</code></a> string might contain
+null characters, which would cause the string to be truncated when used with
+most C functions. If <em>size</em> is <code>NULL</code> and the :c:expr:`wchar_t*` string
+contains null characters a <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> is raised.</p>
+<p>Returns a buffer allocated by <a class="reference internal" href="memory.html#c:macro:pymem_new"><code class="xref c macro docutils literal">PyMem_New</code></a> (use
+<a class="reference internal" href="memory.html#c:function:pymem_free"><code class="xref c function docutils literal">PyMem_Free</code></a> to free it) on success. On error, returns <code>NULL</code>
+and <em>*size</em> is undefined. Raises a <a class="reference internal" href="../library/exceptions.html#py:exception:memoryerror"><code class="xref py exception docutils literal">MemoryError</code></a> if memory allocation
+is failed.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>Raises a <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> if <em>size</em> is <code>NULL</code> and the :c:expr:`wchar_t*`
+string contains null characters.</p>
+</div>
+</dd>
+</dl>
+<a id="builtincodecs"></a>
+<h2 id="built-in-codecs">Built-in Codecs</h2>
+<p>Python provides a set of built-in codecs which are written in C for speed. All of
+these codecs are directly usable via the following functions.</p>
+<p>Many of the following APIs take two arguments encoding and errors, and they
+have the same semantics as the ones of the built-in <a href="#" class="broken-link"><code class="xref py function docutils literal">str</code></a> string object
+constructor.</p>
+<p>Setting encoding to <code>NULL</code> causes the default encoding to be used
+which is UTF-8.  The file system calls should use
+<a class="reference internal" href="unicode.html#c:function:pyunicode_fsconverter"><code class="xref c function docutils literal">PyUnicode_FSConverter</code></a> for encoding file names. This uses the
+<a class="reference internal" href="../glossary.html#term-filesystem-encoding-and-error-handler"><span class="xref std std-term">filesystem encoding and error handler</span></a> internally.</p>
+<p>Error handling is set by errors which may also be set to <code>NULL</code> meaning to use
+the default handling defined for the codec.  Default error handling for all
+built-in codecs is "strict" (<a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> is raised).</p>
+<p>The codecs all use a similar interface.  Only deviations from the following
+generic ones are documented for simplicity.</p>
+<h3 id="generic-codecs">Generic Codecs</h3>
+<p>The following macro is provided:</p>
+<dl class="c macro">
+  <dt id="c:macro:py_unicode_replacement_character"><code class="sig-name">Py_UNICODE_REPLACEMENT_CHARACTER</code></dt>
+  <dd><p>The Unicode code point <code>U+FFFD</code> (replacement character).</p>
+<p>This Unicode character is used as the replacement character during
+decoding if the <em>errors</em> argument is set to "replace".</p>
+</dd>
+</dl>
+<p>These are the generic codec APIs:</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decode"><code class="sig-name">PyObject* PyUnicode_Decode(const char *str, Py_ssize_t size, const char *encoding, const char *errors)</code></dt>
+  <dd><p>Create a Unicode object by decoding <em>size</em> bytes of the encoded string <em>str</em>.
+<em>encoding</em> and <em>errors</em> have the same meaning as the parameters of the same name
+in the <a href="#" class="broken-link"><code class="xref py function docutils literal">str</code></a> built-in function.  The codec to be used is looked up
+using the Python codec registry.  Return <code>NULL</code> if an exception was raised by
+the codec.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_asencodedstring"><code class="sig-name">PyObject* PyUnicode_AsEncodedString(PyObject *unicode, const char *encoding, const char *errors)</code></dt>
+  <dd><p>Encode a Unicode object and return the result as Python bytes object.
+<em>encoding</em> and <em>errors</em> have the same meaning as the parameters of the same
+name in the Unicode <a class="reference internal" href="../library/stdtypes.html#py:method:str.encode"><code class="xref py method docutils literal">encode</code></a> method. The codec to be used is looked up
+using the Python codec registry. Return <code>NULL</code> if an exception was raised by
+the codec.</p>
+</dd>
+</dl>
+<h3 id="utf-8-codecs">UTF-8 Codecs</h3>
+<p>These are the UTF-8 codec APIs:</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodeutf8"><code class="sig-name">PyObject* PyUnicode_DecodeUTF8(const char *str, Py_ssize_t size, const char *errors)</code></dt>
+  <dd><p>Create a Unicode object by decoding <em>size</em> bytes of the UTF-8 encoded string
+<em>str</em>. Return <code>NULL</code> if an exception was raised by the codec.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodeutf8stateful"><code class="sig-name">PyObject* PyUnicode_DecodeUTF8Stateful(const char *str, Py_ssize_t size, const char *errors, Py_ssize_t *consumed)</code></dt>
+  <dd><p>If <em>consumed</em> is <code>NULL</code>, behave like <a class="reference internal" href="unicode.html#c:function:pyunicode_decodeutf8"><code class="xref c function docutils literal">PyUnicode_DecodeUTF8</code></a>. If
+<em>consumed</em> is not <code>NULL</code>, trailing incomplete UTF-8 byte sequences will not be
+treated as an error. Those bytes will not be decoded and the number of bytes
+that have been decoded will be stored in <em>consumed</em>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_asutf8string"><code class="sig-name">PyObject* PyUnicode_AsUTF8String(PyObject *unicode)</code></dt>
+  <dd><p>Encode a Unicode object using UTF-8 and return the result as Python bytes
+object.  Error handling is "strict".  Return <code>NULL</code> if an exception was
+raised by the codec.</p>
+<p>The function fails if the string contains surrogate code points
+(<code>U+D800</code> - <code>U+DFFF</code>).</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_asutf8andsize"><code class="sig-name">const char* PyUnicode_AsUTF8AndSize(PyObject *unicode, Py_ssize_t *size)</code></dt>
+  <dd><p>Return a pointer to the UTF-8 encoding of the Unicode object, and
+store the size of the encoded representation (in bytes) in <em>size</em>.  The
+<em>size</em> argument can be <code>NULL</code>; in this case no size will be stored.  The
+returned buffer always has an extra null byte appended (not included in
+<em>size</em>), regardless of whether there are any other null code points.</p>
+<p>On error, set an exception, set <em>size</em> to <code>-1</code> (if it's not NULL) and
+return <code>NULL</code>.</p>
+<p>The function fails if the string contains surrogate code points
+(<code>U+D800</code> - <code>U+DFFF</code>).</p>
+<p>This caches the UTF-8 representation of the string in the Unicode object, and
+subsequent calls will return a pointer to the same buffer.  The caller is not
+responsible for deallocating the buffer. The buffer is deallocated and
+pointers to it become invalid when the Unicode object is garbage collected.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>The return type is now <code>const char *</code> rather of <code>char *</code>.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>This function is a part of the <a href="stable.html#limited-c-api">limited API</a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_asutf8"><code class="sig-name">const char* PyUnicode_AsUTF8(PyObject *unicode)</code></dt>
+  <dd><p>As <a class="reference internal" href="unicode.html#c:function:pyunicode_asutf8andsize"><code class="xref c function docutils literal">PyUnicode_AsUTF8AndSize</code></a>, but does not store the size.</p>
+<div class="admonition warning">
+  <p class="admonition-title">Warning</p>
+<p>This function does not have any special behavior for
+<a href="https://en.wikipedia.org/wiki/Null_character">null characters</a> embedded within
+<em>unicode</em>. As a result, strings containing null characters will remain in the returned
+string, which some C functions might interpret as the end of the string, leading to
+truncation. If truncation is an issue, it is recommended to use <a class="reference internal" href="unicode.html#c:function:pyunicode_asutf8andsize"><code class="xref c function docutils literal">PyUnicode_AsUTF8AndSize</code></a>
+instead.</p>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>The return type is now <code>const char *</code> rather of <code>char *</code>.</p>
+</div>
+</dd>
+</dl>
+<h3 id="utf-32-codecs">UTF-32 Codecs</h3>
+<p>These are the UTF-32 codec APIs:</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodeutf32"><code class="sig-name">PyObject* PyUnicode_DecodeUTF32(const char *str, Py_ssize_t size, const char *errors, int *byteorder)</code></dt>
+  <dd><p>Decode <em>size</em> bytes from a UTF-32 encoded buffer string and return the
+corresponding Unicode object.  <em>errors</em> (if non-<code>NULL</code>) defines the error
+handling. It defaults to "strict".</p>
+<p>If <em>byteorder</em> is non-<code>NULL</code>, the decoder starts decoding using the given byte
+order:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-keyword hl-operator hl-c">*</span>byteorder <span class="hl-keyword hl-operator hl-comparison hl-c">==</span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span><span class="hl-keyword hl-operator hl-ternary hl-c">:</span> little endian</span>
+<span class="hl-source hl-c"><span class="hl-keyword hl-operator hl-c">*</span>byteorder <span class="hl-keyword hl-operator hl-comparison hl-c">==</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">0</span><span class="hl-keyword hl-operator hl-ternary hl-c">:</span>  native order</span>
+<span class="hl-source hl-c"><span class="hl-keyword hl-operator hl-c">*</span>byteorder <span class="hl-keyword hl-operator hl-comparison hl-c">==</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span><span class="hl-keyword hl-operator hl-ternary hl-c">:</span>  big endian</span></pre></div>
+<p>If <code>*byteorder</code> is zero, and the first four bytes of the input data are a
+byte order mark (BOM), the decoder switches to this byte order and the BOM is
+not copied into the resulting Unicode string.  If <code>*byteorder</code> is <code>-1</code> or
+<code>1</code>, any byte order mark is copied to the output.</p>
+<p>After completion, <em>*byteorder</em> is set to the current byte order at the end
+of input data.</p>
+<p>If <em>byteorder</em> is <code>NULL</code>, the codec starts in native order mode.</p>
+<p>Return <code>NULL</code> if an exception was raised by the codec.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodeutf32stateful"><code class="sig-name">PyObject* PyUnicode_DecodeUTF32Stateful(const char *str, Py_ssize_t size, const char *errors, int *byteorder, Py_ssize_t *consumed)</code></dt>
+  <dd><p>If <em>consumed</em> is <code>NULL</code>, behave like <a class="reference internal" href="unicode.html#c:function:pyunicode_decodeutf32"><code class="xref c function docutils literal">PyUnicode_DecodeUTF32</code></a>. If
+<em>consumed</em> is not <code>NULL</code>, <a class="reference internal" href="unicode.html#c:function:pyunicode_decodeutf32stateful"><code class="xref c function docutils literal">PyUnicode_DecodeUTF32Stateful</code></a> will not treat
+trailing incomplete UTF-32 byte sequences (such as a number of bytes not divisible
+by four) as an error. Those bytes will not be decoded and the number of bytes
+that have been decoded will be stored in <em>consumed</em>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_asutf32string"><code class="sig-name">PyObject* PyUnicode_AsUTF32String(PyObject *unicode)</code></dt>
+  <dd><p>Return a Python byte string using the UTF-32 encoding in native byte
+order. The string always starts with a BOM mark.  Error handling is "strict".
+Return <code>NULL</code> if an exception was raised by the codec.</p>
+</dd>
+</dl>
+<h3 id="utf-16-codecs">UTF-16 Codecs</h3>
+<p>These are the UTF-16 codec APIs:</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodeutf16"><code class="sig-name">PyObject* PyUnicode_DecodeUTF16(const char *str, Py_ssize_t size, const char *errors, int *byteorder)</code></dt>
+  <dd><p>Decode <em>size</em> bytes from a UTF-16 encoded buffer string and return the
+corresponding Unicode object.  <em>errors</em> (if non-<code>NULL</code>) defines the error
+handling. It defaults to "strict".</p>
+<p>If <em>byteorder</em> is non-<code>NULL</code>, the decoder starts decoding using the given byte
+order:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-keyword hl-operator hl-c">*</span>byteorder <span class="hl-keyword hl-operator hl-comparison hl-c">==</span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span><span class="hl-keyword hl-operator hl-ternary hl-c">:</span> little endian</span>
+<span class="hl-source hl-c"><span class="hl-keyword hl-operator hl-c">*</span>byteorder <span class="hl-keyword hl-operator hl-comparison hl-c">==</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">0</span><span class="hl-keyword hl-operator hl-ternary hl-c">:</span>  native order</span>
+<span class="hl-source hl-c"><span class="hl-keyword hl-operator hl-c">*</span>byteorder <span class="hl-keyword hl-operator hl-comparison hl-c">==</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span><span class="hl-keyword hl-operator hl-ternary hl-c">:</span>  big endian</span></pre></div>
+<p>If <code>*byteorder</code> is zero, and the first two bytes of the input data are a
+byte order mark (BOM), the decoder switches to this byte order and the BOM is
+not copied into the resulting Unicode string.  If <code>*byteorder</code> is <code>-1</code> or
+<code>1</code>, any byte order mark is copied to the output (where it will result in
+either a <code>\ufeff</code> or a <code>\ufffe</code> character).</p>
+<p>After completion, <code>*byteorder</code> is set to the current byte order at the end
+of input data.</p>
+<p>If <em>byteorder</em> is <code>NULL</code>, the codec starts in native order mode.</p>
+<p>Return <code>NULL</code> if an exception was raised by the codec.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodeutf16stateful"><code class="sig-name">PyObject* PyUnicode_DecodeUTF16Stateful(const char *str, Py_ssize_t size, const char *errors, int *byteorder, Py_ssize_t *consumed)</code></dt>
+  <dd><p>If <em>consumed</em> is <code>NULL</code>, behave like <a class="reference internal" href="unicode.html#c:function:pyunicode_decodeutf16"><code class="xref c function docutils literal">PyUnicode_DecodeUTF16</code></a>. If
+<em>consumed</em> is not <code>NULL</code>, <a class="reference internal" href="unicode.html#c:function:pyunicode_decodeutf16stateful"><code class="xref c function docutils literal">PyUnicode_DecodeUTF16Stateful</code></a> will not treat
+trailing incomplete UTF-16 byte sequences (such as an odd number of bytes or a
+split surrogate pair) as an error. Those bytes will not be decoded and the
+number of bytes that have been decoded will be stored in <em>consumed</em>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_asutf16string"><code class="sig-name">PyObject* PyUnicode_AsUTF16String(PyObject *unicode)</code></dt>
+  <dd><p>Return a Python byte string using the UTF-16 encoding in native byte
+order. The string always starts with a BOM mark.  Error handling is "strict".
+Return <code>NULL</code> if an exception was raised by the codec.</p>
+</dd>
+</dl>
+<h3 id="utf-7-codecs">UTF-7 Codecs</h3>
+<p>These are the UTF-7 codec APIs:</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodeutf7"><code class="sig-name">PyObject* PyUnicode_DecodeUTF7(const char *str, Py_ssize_t size, const char *errors)</code></dt>
+  <dd><p>Create a Unicode object by decoding <em>size</em> bytes of the UTF-7 encoded string
+<em>str</em>.  Return <code>NULL</code> if an exception was raised by the codec.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodeutf7stateful"><code class="sig-name">PyObject* PyUnicode_DecodeUTF7Stateful(const char *str, Py_ssize_t size, const char *errors, Py_ssize_t *consumed)</code></dt>
+  <dd><p>If <em>consumed</em> is <code>NULL</code>, behave like <a class="reference internal" href="unicode.html#c:function:pyunicode_decodeutf7"><code class="xref c function docutils literal">PyUnicode_DecodeUTF7</code></a>.  If
+<em>consumed</em> is not <code>NULL</code>, trailing incomplete UTF-7 base-64 sections will not
+be treated as an error.  Those bytes will not be decoded and the number of
+bytes that have been decoded will be stored in <em>consumed</em>.</p>
+</dd>
+</dl>
+<h3 id="unicode-escape-codecs">Unicode-Escape Codecs</h3>
+<p>These are the "Unicode Escape" codec APIs:</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodeunicodeescape"><code class="sig-name">PyObject* PyUnicode_DecodeUnicodeEscape(const char *str, Py_ssize_t size, const char *errors)</code></dt>
+  <dd><p>Create a Unicode object by decoding <em>size</em> bytes of the Unicode-Escape encoded
+string <em>str</em>.  Return <code>NULL</code> if an exception was raised by the codec.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_asunicodeescapestring"><code class="sig-name">PyObject* PyUnicode_AsUnicodeEscapeString(PyObject *unicode)</code></dt>
+  <dd><p>Encode a Unicode object using Unicode-Escape and return the result as a
+bytes object.  Error handling is "strict".  Return <code>NULL</code> if an exception was
+raised by the codec.</p>
+</dd>
+</dl>
+<h3 id="raw-unicode-escape-codecs">Raw-Unicode-Escape Codecs</h3>
+<p>These are the "Raw Unicode Escape" codec APIs:</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decoderawunicodeescape"><code class="sig-name">PyObject* PyUnicode_DecodeRawUnicodeEscape(const char *str, Py_ssize_t size, const char *errors)</code></dt>
+  <dd><p>Create a Unicode object by decoding <em>size</em> bytes of the Raw-Unicode-Escape
+encoded string <em>str</em>.  Return <code>NULL</code> if an exception was raised by the codec.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_asrawunicodeescapestring"><code class="sig-name">PyObject* PyUnicode_AsRawUnicodeEscapeString(PyObject *unicode)</code></dt>
+  <dd><p>Encode a Unicode object using Raw-Unicode-Escape and return the result as
+a bytes object.  Error handling is "strict".  Return <code>NULL</code> if an exception
+was raised by the codec.</p>
+</dd>
+</dl>
+<h3 id="latin-1-codecs">Latin-1 Codecs</h3>
+<p>These are the Latin-1 codec APIs: Latin-1 corresponds to the first 256 Unicode
+ordinals and only these are accepted by the codecs during encoding.</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodelatin1"><code class="sig-name">PyObject* PyUnicode_DecodeLatin1(const char *str, Py_ssize_t size, const char *errors)</code></dt>
+  <dd><p>Create a Unicode object by decoding <em>size</em> bytes of the Latin-1 encoded string
+<em>str</em>.  Return <code>NULL</code> if an exception was raised by the codec.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_aslatin1string"><code class="sig-name">PyObject* PyUnicode_AsLatin1String(PyObject *unicode)</code></dt>
+  <dd><p>Encode a Unicode object using Latin-1 and return the result as Python bytes
+object.  Error handling is "strict".  Return <code>NULL</code> if an exception was
+raised by the codec.</p>
+</dd>
+</dl>
+<h3 id="ascii-codecs">ASCII Codecs</h3>
+<p>These are the ASCII codec APIs.  Only 7-bit ASCII data is accepted. All other
+codes generate errors.</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodeascii"><code class="sig-name">PyObject* PyUnicode_DecodeASCII(const char *str, Py_ssize_t size, const char *errors)</code></dt>
+  <dd><p>Create a Unicode object by decoding <em>size</em> bytes of the ASCII encoded string
+<em>str</em>.  Return <code>NULL</code> if an exception was raised by the codec.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_asasciistring"><code class="sig-name">PyObject* PyUnicode_AsASCIIString(PyObject *unicode)</code></dt>
+  <dd><p>Encode a Unicode object using ASCII and return the result as Python bytes
+object.  Error handling is "strict".  Return <code>NULL</code> if an exception was
+raised by the codec.</p>
+</dd>
+</dl>
+<h3 id="character-map-codecs">Character Map Codecs</h3>
+<p>This codec is special in that it can be used to implement many different codecs
+(and this is in fact what was done to obtain most of the standard codecs
+included in the <code class="xref py module docutils literal">encodings</code> package). The codec uses mappings to encode and
+decode characters.  The mapping objects provided must support the
+<a class="reference internal" href="../reference/datamodel.html#py:method:object.__getitem__"><code class="xref py method docutils literal">__getitem__</code></a> mapping interface; dictionaries and sequences work well.</p>
+<p>These are the mapping codec APIs:</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodecharmap"><code class="sig-name">PyObject* PyUnicode_DecodeCharmap(const char *str, Py_ssize_t length, PyObject *mapping, const char *errors)</code></dt>
+  <dd><p>Create a Unicode object by decoding <em>size</em> bytes of the encoded string <em>str</em>
+using the given <em>mapping</em> object.  Return <code>NULL</code> if an exception was raised
+by the codec.</p>
+<p>If <em>mapping</em> is <code>NULL</code>, Latin-1 decoding will be applied.  Else
+<em>mapping</em> must map bytes ordinals (integers in the range from 0 to 255)
+to Unicode strings, integers (which are then interpreted as Unicode
+ordinals) or <code>None</code>.  Unmapped data bytes – ones which cause a
+<a class="reference internal" href="../library/exceptions.html#py:exception:lookuperror"><code class="xref py exception docutils literal">LookupError</code></a>, as well as ones which get mapped to <code>None</code>,
+<code>0xFFFE</code> or <code>'\ufffe'</code>, are treated as undefined mappings and cause
+an error.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_ascharmapstring"><code class="sig-name">PyObject* PyUnicode_AsCharmapString(PyObject *unicode, PyObject *mapping)</code></dt>
+  <dd><p>Encode a Unicode object using the given <em>mapping</em> object and return the
+result as a bytes object.  Error handling is "strict".  Return <code>NULL</code> if an
+exception was raised by the codec.</p>
+<p>The <em>mapping</em> object must map Unicode ordinal integers to bytes objects,
+integers in the range from 0 to 255 or <code>None</code>.  Unmapped character
+ordinals (ones which cause a <a class="reference internal" href="../library/exceptions.html#py:exception:lookuperror"><code class="xref py exception docutils literal">LookupError</code></a>) as well as mapped to
+<code>None</code> are treated as "undefined mapping" and cause an error.</p>
+</dd>
+</dl>
+<p>The following codec API is special in that maps Unicode to Unicode.</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_translate"><code class="sig-name">PyObject* PyUnicode_Translate(PyObject *unicode, PyObject *table, const char *errors)</code></dt>
+  <dd><p>Translate a string by applying a character mapping table to it and return the
+resulting Unicode object. Return <code>NULL</code> if an exception was raised by the
+codec.</p>
+<p>The mapping table must map Unicode ordinal integers to Unicode ordinal integers
+or <code>None</code> (causing deletion of the character).</p>
+<p>Mapping tables need only provide the <a class="reference internal" href="../reference/datamodel.html#py:method:object.__getitem__"><code class="xref py method docutils literal">__getitem__</code></a> interface; dictionaries
+and sequences work well.  Unmapped character ordinals (ones which cause a
+<a class="reference internal" href="../library/exceptions.html#py:exception:lookuperror"><code class="xref py exception docutils literal">LookupError</code></a>) are left untouched and are copied as-is.</p>
+<p><em>errors</em> has the usual meaning for codecs. It may be <code>NULL</code> which indicates to
+use the default error handling.</p>
+</dd>
+</dl>
+<h3 id="mbcs-codecs-for-windows">MBCS codecs for Windows</h3>
+<p>These are the MBCS codec APIs. They are currently only available on Windows and
+use the Win32 MBCS converters to implement the conversions.  Note that MBCS (or
+DBCS) is a class of encodings, not just one.  The target encoding is defined by
+the user settings on the machine running the codec.</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodembcs"><code class="sig-name">PyObject* PyUnicode_DecodeMBCS(const char *str, Py_ssize_t size, const char *errors)</code></dt>
+  <dd><p>Create a Unicode object by decoding <em>size</em> bytes of the MBCS encoded string <em>str</em>.
+Return <code>NULL</code> if an exception was raised by the codec.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodembcsstateful"><code class="sig-name">PyObject* PyUnicode_DecodeMBCSStateful(const char *str, Py_ssize_t size, const char *errors, Py_ssize_t *consumed)</code></dt>
+  <dd><p>If <em>consumed</em> is <code>NULL</code>, behave like <a class="reference internal" href="unicode.html#c:function:pyunicode_decodembcs"><code class="xref c function docutils literal">PyUnicode_DecodeMBCS</code></a>. If
+<em>consumed</em> is not <code>NULL</code>, <a class="reference internal" href="unicode.html#c:function:pyunicode_decodembcsstateful"><code class="xref c function docutils literal">PyUnicode_DecodeMBCSStateful</code></a> will not decode
+trailing lead byte and the number of bytes that have been decoded will be stored
+in <em>consumed</em>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_decodecodepagestateful"><code class="sig-name">PyObject* PyUnicode_DecodeCodePageStateful(int code_page, const char *str, Py_ssize_t size, const char *errors, Py_ssize_t *consumed)</code></dt>
+  <dd><p>Similar to <a class="reference internal" href="unicode.html#c:function:pyunicode_decodembcsstateful"><code class="xref c function docutils literal">PyUnicode_DecodeMBCSStateful</code></a>, except uses the code page
+specified by <em>code_page</em>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_asmbcsstring"><code class="sig-name">PyObject* PyUnicode_AsMBCSString(PyObject *unicode)</code></dt>
+  <dd><p>Encode a Unicode object using MBCS and return the result as Python bytes
+object.  Error handling is "strict".  Return <code>NULL</code> if an exception was
+raised by the codec.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_encodecodepage"><code class="sig-name">PyObject* PyUnicode_EncodeCodePage(int code_page, PyObject *unicode, const char *errors)</code></dt>
+  <dd><p>Encode the Unicode object using the specified code page and return a Python
+bytes object.  Return <code>NULL</code> if an exception was raised by the codec. Use
+<code class="xref c macro docutils literal">CP_ACP</code> code page to get the MBCS encoder.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<a id="unicodemethodsandslots"></a>
+<h2 id="methods-and-slot-functions">Methods and Slot Functions</h2>
+<p>The following APIs are capable of handling Unicode objects and strings on input
+(we refer to them as strings in the descriptions) and return Unicode objects or
+integers as appropriate.</p>
+<p>They all return <code>NULL</code> or <code>-1</code> if an exception occurs.</p>
+<dl class="c function">
+  <dt id="c:function:pyunicode_concat"><code class="sig-name">PyObject* PyUnicode_Concat(PyObject *left, PyObject *right)</code></dt>
+  <dd><p>Concat two strings giving a new Unicode string.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_split"><code class="sig-name">PyObject* PyUnicode_Split(PyObject *unicode, PyObject *sep, Py_ssize_t maxsplit)</code></dt>
+  <dd><p>Split a string giving a list of Unicode strings.  If <em>sep</em> is <code>NULL</code>, splitting
+will be done at all whitespace substrings.  Otherwise, splits occur at the given
+separator.  At most <em>maxsplit</em> splits will be done.  If negative, no limit is
+set.  Separators are not included in the resulting list.</p>
+<p>On error, return <code>NULL</code> with an exception set.</p>
+<p>Equivalent to <a class="reference internal" href="../library/stdtypes.html#py:method:str.split"><code class="xref py method docutils literal">str.split</code></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_rsplit"><code class="sig-name">PyObject* PyUnicode_RSplit(PyObject *unicode, PyObject *sep, Py_ssize_t maxsplit)</code></dt>
+  <dd><p>Similar to <a class="reference internal" href="unicode.html#c:function:pyunicode_split"><code class="xref c function docutils literal">PyUnicode_Split</code></a>, but splitting will be done beginning
+at the end of the string.</p>
+<p>On error, return <code>NULL</code> with an exception set.</p>
+<p>Equivalent to <a class="reference internal" href="../library/stdtypes.html#py:method:str.rsplit"><code class="xref py method docutils literal">str.rsplit</code></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_splitlines"><code class="sig-name">PyObject* PyUnicode_Splitlines(PyObject *unicode, int keepends)</code></dt>
+  <dd><p>Split a Unicode string at line breaks, returning a list of Unicode strings.
+CRLF is considered to be one line break.  If <em>keepends</em> is <code>0</code>, the Line break
+characters are not included in the resulting strings.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_partition"><code class="sig-name">PyObject* PyUnicode_Partition(PyObject *unicode, PyObject *sep)</code></dt>
+  <dd><p>Split a Unicode string at the first occurrence of <em>sep</em>, and return
+a 3-tuple containing the part before the separator, the separator itself,
+and the part after the separator. If the separator is not found,
+return a 3-tuple containing the string itself, followed by two empty strings.</p>
+<p><em>sep</em> must not be empty.</p>
+<p>On error, return <code>NULL</code> with an exception set.</p>
+<p>Equivalent to <a class="reference internal" href="../library/stdtypes.html#py:method:str.partition"><code class="xref py method docutils literal">str.partition</code></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_rpartition"><code class="sig-name">PyObject* PyUnicode_RPartition(PyObject *unicode, PyObject *sep)</code></dt>
+  <dd><p>Similar to <a class="reference internal" href="unicode.html#c:function:pyunicode_partition"><code class="xref c function docutils literal">PyUnicode_Partition</code></a>, but split a Unicode string at the
+last occurrence of <em>sep</em>. If the separator is not found, return a 3-tuple
+containing two empty strings, followed by the string itself.</p>
+<p><em>sep</em> must not be empty.</p>
+<p>On error, return <code>NULL</code> with an exception set.</p>
+<p>Equivalent to <a class="reference internal" href="../library/stdtypes.html#py:method:str.rpartition"><code class="xref py method docutils literal">str.rpartition</code></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_join"><code class="sig-name">PyObject* PyUnicode_Join(PyObject *separator, PyObject *seq)</code></dt>
+  <dd><p>Join a sequence of strings using the given <em>separator</em> and return the resulting
+Unicode string.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_tailmatch"><code class="sig-name">Py_ssize_t PyUnicode_Tailmatch(PyObject *unicode, PyObject *substr, Py_ssize_t start, Py_ssize_t end, int direction)</code></dt>
+  <dd><p>Return <code>1</code> if <em>substr</em> matches <code>unicode[start:end]</code> at the given tail end
+(<em>direction</em> == <code>-1</code> means to do a prefix match, <em>direction</em> == <code>1</code> a suffix match),
+<code>0</code> otherwise. Return <code>-1</code> if an error occurred.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_find"><code class="sig-name">Py_ssize_t PyUnicode_Find(PyObject *unicode, PyObject *substr, Py_ssize_t start, Py_ssize_t end, int direction)</code></dt>
+  <dd><p>Return the first position of <em>substr</em> in <code>unicode[start:end]</code> using the given
+<em>direction</em> (<em>direction</em> == <code>1</code> means to do a forward search, <em>direction</em> == <code>-1</code> a
+backward search).  The return value is the index of the first match; a value of
+<code>-1</code> indicates that no match was found, and <code>-2</code> indicates that an error
+occurred and an exception has been set.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_findchar"><code class="sig-name">Py_ssize_t PyUnicode_FindChar(PyObject *unicode, Py_UCS4 ch, Py_ssize_t start, Py_ssize_t end, int direction)</code></dt>
+  <dd><p>Return the first position of the character <em>ch</em> in <code>unicode[start:end]</code> using
+the given <em>direction</em> (<em>direction</em> == <code>1</code> means to do a forward search,
+<em>direction</em> == <code>-1</code> a backward search).  The return value is the index of the
+first match; a value of <code>-1</code> indicates that no match was found, and <code>-2</code>
+indicates that an error occurred and an exception has been set.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p><em>start</em> and <em>end</em> are now adjusted to behave like <code>unicode[start:end]</code>.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_count"><code class="sig-name">Py_ssize_t PyUnicode_Count(PyObject *unicode, PyObject *substr, Py_ssize_t start, Py_ssize_t end)</code></dt>
+  <dd><p>Return the number of non-overlapping occurrences of <em>substr</em> in
+<code>unicode[start:end]</code>.  Return <code>-1</code> if an error occurred.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_replace"><code class="sig-name">PyObject* PyUnicode_Replace(PyObject *unicode, PyObject *substr, PyObject *replstr, Py_ssize_t maxcount)</code></dt>
+  <dd><p>Replace at most <em>maxcount</em> occurrences of <em>substr</em> in <em>unicode</em> with <em>replstr</em> and
+return the resulting Unicode object. <em>maxcount</em> == <code>-1</code> means replace all
+occurrences.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_compare"><code class="sig-name">int PyUnicode_Compare(PyObject *left, PyObject *right)</code></dt>
+  <dd><p>Compare two strings and return <code>-1</code>, <code>0</code>, <code>1</code> for less than, equal, and greater than,
+respectively.</p>
+<p>This function returns <code>-1</code> upon failure, so one should call
+<a class="reference internal" href="exceptions.html#c:function:pyerr_occurred"><code class="xref c function docutils literal">PyErr_Occurred</code></a> to check for errors.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p>The <a class="reference internal" href="unicode.html#c:function:pyunicode_equal"><code class="xref c function docutils literal">PyUnicode_Equal</code></a> function.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_equal"><code class="sig-name">int PyUnicode_Equal(PyObject *a, PyObject *b)</code></dt>
+  <dd><p>Test if two strings are equal:</p>
+<ul>
+<li><p>Return <code>1</code> if <em>a</em> is equal to <em>b</em>.</p>
+</li>
+<li><p>Return <code>0</code> if <em>a</em> is not equal to <em>b</em>.</p>
+</li>
+<li><p>Set a <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> exception and return <code>-1</code> if <em>a</em> or <em>b</em> is not a
+<a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> object.</p>
+</li>
+</ul>
+<p>The function always succeeds if <em>a</em> and <em>b</em> are <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> objects.</p>
+<p>The function works for <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> subclasses, but does not honor custom
+<code>__eq__()</code> method.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p>The <a class="reference internal" href="unicode.html#c:function:pyunicode_compare"><code class="xref c function docutils literal">PyUnicode_Compare</code></a> function.</p>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_equaltoutf8andsize"><code class="sig-name">int PyUnicode_EqualToUTF8AndSize(PyObject *unicode, const char *string, Py_ssize_t size)</code></dt>
+  <dd><p>Compare a Unicode object with a char buffer which is interpreted as
+being UTF-8 or ASCII encoded and return true (<code>1</code>) if they are equal,
+or false (<code>0</code>) otherwise.
+If the Unicode object contains surrogate code points
+(<code>U+D800</code> - <code>U+DFFF</code>) or the C string is not valid UTF-8,
+false (<code>0</code>) is returned.</p>
+<p>This function does not raise exceptions.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_equaltoutf8"><code class="sig-name">int PyUnicode_EqualToUTF8(PyObject *unicode, const char *string)</code></dt>
+  <dd><p>Similar to <a class="reference internal" href="unicode.html#c:function:pyunicode_equaltoutf8andsize"><code class="xref c function docutils literal">PyUnicode_EqualToUTF8AndSize</code></a>, but compute <em>string</em>
+length using <code class="xref c function docutils literal">strlen</code>.
+If the Unicode object contains null characters, false (<code>0</code>) is returned.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_comparewithasciistring"><code class="sig-name">int PyUnicode_CompareWithASCIIString(PyObject *unicode, const char *string)</code></dt>
+  <dd><p>Compare a Unicode object, <em>unicode</em>, with <em>string</em> and return <code>-1</code>, <code>0</code>, <code>1</code> for less
+than, equal, and greater than, respectively. It is best to pass only
+ASCII-encoded strings, but the function interprets the input string as
+ISO-8859-1 if it contains non-ASCII characters.</p>
+<p>This function does not raise exceptions.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_richcompare"><code class="sig-name">PyObject* PyUnicode_RichCompare(PyObject *left,  PyObject *right, int op)</code></dt>
+  <dd><p>Rich compare two Unicode strings and return one of the following:</p>
+<ul>
+<li><p><code>NULL</code> in case an exception was raised</p>
+</li>
+<li><p><a class="reference internal" href="bool.html#c:member:py_true"><code class="xref c member docutils literal">Py_True</code></a> or <a class="reference internal" href="bool.html#c:member:py_false"><code class="xref c member docutils literal">Py_False</code></a> for successful comparisons</p>
+</li>
+<li><p><a class="reference internal" href="object.html#c:member:py_notimplemented"><code class="xref c member docutils literal">Py_NotImplemented</code></a> in case the type combination is unknown</p>
+</li>
+</ul>
+<p>Possible values for <em>op</em> are <a class="reference internal" href="typeobj.html#c:macro:py_gt"><code class="xref c macro docutils literal">Py_GT</code></a>, <a class="reference internal" href="typeobj.html#c:macro:py_ge"><code class="xref c macro docutils literal">Py_GE</code></a>, <a class="reference internal" href="typeobj.html#c:macro:py_eq"><code class="xref c macro docutils literal">Py_EQ</code></a>,
+<a class="reference internal" href="typeobj.html#c:macro:py_ne"><code class="xref c macro docutils literal">Py_NE</code></a>, <a class="reference internal" href="typeobj.html#c:macro:py_lt"><code class="xref c macro docutils literal">Py_LT</code></a>, and <a class="reference internal" href="typeobj.html#c:macro:py_le"><code class="xref c macro docutils literal">Py_LE</code></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_format"><code class="sig-name">PyObject* PyUnicode_Format(PyObject *format, PyObject *args)</code></dt>
+  <dd><p>Return a new string object from <em>format</em> and <em>args</em>; this is analogous to
+<code>format % args</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_contains"><code class="sig-name">int PyUnicode_Contains(PyObject *unicode, PyObject *substr)</code></dt>
+  <dd><p>Check whether <em>substr</em> is contained in <em>unicode</em> and return true or false
+accordingly.</p>
+<p><em>substr</em> has to coerce to a one element Unicode string. <code>-1</code> is returned
+if there was an error.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_interninplace"><code class="sig-name">void PyUnicode_InternInPlace(PyObject **p_unicode)</code></dt>
+  <dd><p>Intern the argument :c:expr:`*p_unicode` in place.  The argument must be the address of a
+pointer variable pointing to a Python Unicode string object.  If there is an
+existing interned string that is the same as :c:expr:`*p_unicode`, it sets :c:expr:`*p_unicode` to
+it (releasing the reference to the old string object and creating a new
+<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to the interned string object), otherwise it leaves
+:c:expr:`*p_unicode` alone and interns it.</p>
+<p>(Clarification: even though there is a lot of talk about references, think
+of this function as reference-neutral. You must own the object you pass in;
+after the call you no longer own the passed-in reference, but you newly own
+the result.)</p>
+<p>This function never raises an exception.
+On error, it leaves its argument unchanged without interning it.</p>
+<p>Instances of subclasses of <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> may not be interned, that is,
+:c:expr:`PyUnicode_CheckExact(*p_unicode)` must be true. If it is not,
+then – as with any other error – the argument is left unchanged.</p>
+<p>Note that interned strings are not “immortal”.
+You must keep a reference to the result to benefit from interning.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_internfromstring"><code class="sig-name">PyObject* PyUnicode_InternFromString(const char *str)</code></dt>
+  <dd><p>A combination of <a class="reference internal" href="unicode.html#c:function:pyunicode_fromstring"><code class="xref c function docutils literal">PyUnicode_FromString</code></a> and
+<a class="reference internal" href="unicode.html#c:function:pyunicode_interninplace"><code class="xref c function docutils literal">PyUnicode_InternInPlace</code></a>, meant for statically allocated strings.</p>
+<p>Return a new ("owned") reference to either a new Unicode string object
+that has been interned, or an earlier interned string object with the
+same value.</p>
+<p>Python may keep a reference to the result, or make it <a class="reference internal" href="../glossary.html#term-immortal"><span class="xref std std-term">immortal</span></a>,
+preventing it from being garbage-collected promptly.
+For interning an unbounded number of different strings, such as ones coming
+from user input, prefer calling <a class="reference internal" href="unicode.html#c:function:pyunicode_fromstring"><code class="xref c function docutils literal">PyUnicode_FromString</code></a> and
+<a class="reference internal" href="unicode.html#c:function:pyunicode_interninplace"><code class="xref c function docutils literal">PyUnicode_InternInPlace</code></a> directly.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_check_interned"><code class="sig-name">unsigned int PyUnicode_CHECK_INTERNED(PyObject *str)</code></dt>
+  <dd><p>Return a non-zero value if <em>str</em> is interned, zero if not.
+The <em>str</em> argument must be a string; this is not checked.
+This function always succeeds.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+
+   A non-zero return value may carry additional information
+   about *how* the string is interned.
+   The meaning of such non-zero values, as well as each specific string's
+   intern-related details, may change between CPython versions.</pre>
+</div>
+</dd>
+</dl>
+<h2 id="pyunicodewriter">PyUnicodeWriter</h2>
+<p>The <a class="reference internal" href="unicode.html#c:type:pyunicodewriter"><code class="xref c type docutils literal">PyUnicodeWriter</code></a> API can be used to create a Python <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a>
+object.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+<dl class="c type">
+  <dt id="c:type:pyunicodewriter"><code class="sig-name">PyUnicodeWriter</code></dt>
+  <dd><p>A Unicode writer instance.</p>
+<p>The instance must be destroyed by <a class="reference internal" href="unicode.html#c:function:pyunicodewriter_finish"><code class="xref c function docutils literal">PyUnicodeWriter_Finish</code></a> on
+success, or <a class="reference internal" href="unicode.html#c:function:pyunicodewriter_discard"><code class="xref c function docutils literal">PyUnicodeWriter_Discard</code></a> on error.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicodewriter_create"><code class="sig-name">PyUnicodeWriter* PyUnicodeWriter_Create(Py_ssize_t length)</code></dt>
+  <dd><p>Create a Unicode writer instance.</p>
+<p><em>length</em> must be greater than or equal to <code>0</code>.</p>
+<p>If <em>length</em> is greater than <code>0</code>, preallocate an internal buffer of
+<em>length</em> characters.</p>
+<p>Set an exception and return <code>NULL</code> on error.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicodewriter_finish"><code class="sig-name">PyObject* PyUnicodeWriter_Finish(PyUnicodeWriter *writer)</code></dt>
+  <dd><p>Return the final Python <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> object and destroy the writer instance.</p>
+<p>Set an exception and return <code>NULL</code> on error.</p>
+<p>The writer instance is invalid after this call.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicodewriter_discard"><code class="sig-name">void PyUnicodeWriter_Discard(PyUnicodeWriter *writer)</code></dt>
+  <dd><p>Discard the internal Unicode buffer and destroy the writer instance.</p>
+<p>If <em>writer</em> is <code>NULL</code>, no operation is performed.</p>
+<p>The writer instance is invalid after this call.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicodewriter_writechar"><code class="sig-name">int PyUnicodeWriter_WriteChar(PyUnicodeWriter *writer, Py_UCS4 ch)</code></dt>
+  <dd><p>Write the single Unicode character <em>ch</em> into <em>writer</em>.</p>
+<p>On success, return <code>0</code>.
+On error, set an exception, leave the writer unchanged, and return <code>-1</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicodewriter_writeutf8"><code class="sig-name">int PyUnicodeWriter_WriteUTF8(PyUnicodeWriter *writer, const char *str, Py_ssize_t size)</code></dt>
+  <dd><p>Decode the string <em>str</em> from UTF-8 in strict mode and write the output into <em>writer</em>.</p>
+<p><em>size</em> is the string length in bytes. If <em>size</em> is equal to <code>-1</code>, call
+<code>strlen(str)</code> to get the string length.</p>
+<p>On success, return <code>0</code>.
+On error, set an exception, leave the writer unchanged, and return <code>-1</code>.</p>
+<p>See also <a class="reference internal" href="unicode.html#c:function:pyunicodewriter_decodeutf8stateful"><code class="xref c function docutils literal">PyUnicodeWriter_DecodeUTF8Stateful</code></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicodewriter_writeascii"><code class="sig-name">int PyUnicodeWriter_WriteASCII(PyUnicodeWriter *writer, const char *str, Py_ssize_t size)</code></dt>
+  <dd><p>Write the ASCII string <em>str</em> into <em>writer</em>.</p>
+<p><em>size</em> is the string length in bytes. If <em>size</em> is equal to <code>-1</code>, call
+<code>strlen(str)</code> to get the string length.</p>
+<p><em>str</em> must only contain ASCII characters. The behavior is undefined if
+<em>str</em> contains non-ASCII characters.</p>
+<p>On success, return <code>0</code>.
+On error, set an exception, leave the writer unchanged, and return <code>-1</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicodewriter_writewidechar"><code class="sig-name">int PyUnicodeWriter_WriteWideChar(PyUnicodeWriter *writer, const wchar_t *str, Py_ssize_t size)</code></dt>
+  <dd><p>Write the wide string <em>str</em> into <em>writer</em>.</p>
+<p><em>size</em> is a number of wide characters. If <em>size</em> is equal to <code>-1</code>, call
+<code>wcslen(str)</code> to get the string length.</p>
+<p>On success, return <code>0</code>.
+On error, set an exception, leave the writer unchanged, and return <code>-1</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicodewriter_writeucs4"><code class="sig-name">int PyUnicodeWriter_WriteUCS4(PyUnicodeWriter *writer, Py_UCS4 *str, Py_ssize_t size)</code></dt>
+  <dd><p>Writer the UCS4 string <em>str</em> into <em>writer</em>.</p>
+<p><em>size</em> is a number of UCS4 characters.</p>
+<p>On success, return <code>0</code>.
+On error, set an exception, leave the writer unchanged, and return <code>-1</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicodewriter_writestr"><code class="sig-name">int PyUnicodeWriter_WriteStr(PyUnicodeWriter *writer, PyObject *obj)</code></dt>
+  <dd><p>Call <a class="reference internal" href="object.html#c:function:pyobject_str"><code class="xref c function docutils literal">PyObject_Str</code></a> on <em>obj</em> and write the output into <em>writer</em>.</p>
+<p>On success, return <code>0</code>.
+On error, set an exception, leave the writer unchanged, and return <code>-1</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicodewriter_writerepr"><code class="sig-name">int PyUnicodeWriter_WriteRepr(PyUnicodeWriter *writer, PyObject *obj)</code></dt>
+  <dd><p>Call <a class="reference internal" href="object.html#c:function:pyobject_repr"><code class="xref c function docutils literal">PyObject_Repr</code></a> on <em>obj</em> and write the output into <em>writer</em>.</p>
+<p>On success, return <code>0</code>.
+On error, set an exception, leave the writer unchanged, and return <code>-1</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicodewriter_writesubstring"><code class="sig-name">int PyUnicodeWriter_WriteSubstring(PyUnicodeWriter *writer, PyObject *str, Py_ssize_t start, Py_ssize_t end)</code></dt>
+  <dd><p>Write the substring <code>str[start:end]</code> into <em>writer</em>.</p>
+<p><em>str</em> must be Python <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> object. <em>start</em> must be greater than or
+equal to 0, and less than or equal to <em>end</em>. <em>end</em> must be less than or
+equal to <em>str</em> length.</p>
+<p>On success, return <code>0</code>.
+On error, set an exception, leave the writer unchanged, and return <code>-1</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicodewriter_format"><code class="sig-name">int PyUnicodeWriter_Format(PyUnicodeWriter *writer, const char *format, ...)</code></dt>
+  <dd><p>Similar to <a class="reference internal" href="unicode.html#c:function:pyunicode_fromformat"><code class="xref c function docutils literal">PyUnicode_FromFormat</code></a>, but write the output directly into <em>writer</em>.</p>
+<p>On success, return <code>0</code>.
+On error, set an exception, leave the writer unchanged, and return <code>-1</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicodewriter_decodeutf8stateful"><code class="sig-name">int PyUnicodeWriter_DecodeUTF8Stateful(PyUnicodeWriter *writer, const char *string, Py_ssize_t length, const char *errors, Py_ssize_t *consumed)</code></dt>
+  <dd><p>Decode the string <em>str</em> from UTF-8 with <em>errors</em> error handler and write the
+output into <em>writer</em>.</p>
+<p><em>size</em> is the string length in bytes. If <em>size</em> is equal to <code>-1</code>, call
+<code>strlen(str)</code> to get the string length.</p>
+<p><em>errors</em> is an <a href="../library/codecs.html#error-handlers">error handler</a> name, such as
+<code>"replace"</code>. If <em>errors</em> is <code>NULL</code>, use the strict error handler.</p>
+<p>If <em>consumed</em> is not <code>NULL</code>, set <em>*consumed</em> to the number of decoded
+bytes on success.
+If <em>consumed</em> is <code>NULL</code>, treat trailing incomplete UTF-8 byte sequences
+as an error.</p>
+<p>On success, return <code>0</code>.
+On error, set an exception, leave the writer unchanged, and return <code>-1</code>.</p>
+<p>See also <a class="reference internal" href="unicode.html#c:function:pyunicodewriter_writeutf8"><code class="xref c function docutils literal">PyUnicodeWriter_WriteUTF8</code></a>.</p>
+</dd>
+</dl>
+<h2 id="deprecated-api">Deprecated API</h2>
+<p>The following API is deprecated.</p>
+<dl class="c type">
+  <dt id="c:type:py_unicode"><code class="sig-name">Py_UNICODE</code></dt>
+  <dd><p>This is a typedef of <a href="#" class="broken-link"><code class="xref c type docutils literal">wchar_t</code></a>, which is a 16-bit type or 32-bit type
+depending on the platform.
+Please use <a href="#" class="broken-link"><code class="xref c type docutils literal">wchar_t</code></a> directly instead.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>In previous versions, this was a 16-bit type or a 32-bit type depending on
+whether you selected a "narrow" or "wide" Unicode version of Python at
+build time.</p>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'deprecated-removed'</p>
+<pre class="directive-error-source">.. deprecated-removed:: 3.13 3.15</pre>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_ready"><code class="sig-name">int PyUnicode_READY(PyObject *unicode)</code></dt>
+  <dd><p>Do nothing and return <code>0</code>.
+This API is kept only for backward compatibility, but there are no plans
+to remove it.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.10:</span></p>
+<p>This API does nothing since Python 3.12.
+Previously, this needed to be called for each string created using
+the old API (<code class="xref c function docutils literal">PyUnicode_FromUnicode</code> or similar).</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunicode_is_ready"><code class="sig-name">unsigned int PyUnicode_IS_READY(PyObject *unicode)</code></dt>
+  <dd><p>Do nothing and return <code>1</code>.
+This API is kept only for backward compatibility, but there are no plans
+to remove it.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.14:</span></p>
+<p>This API does nothing since Python 3.12.
+Previously, this could be called to check if
+<a class="reference internal" href="unicode.html#c:function:pyunicode_ready"><code class="xref c function docutils literal">PyUnicode_READY</code></a> is necessary.</p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="bytearray.html">&larr; Byte Array Objects</a>
+        <a class="next" href="tuple.html">Tuple Objects &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
