@@ -32,7 +32,7 @@ finished one 🔶. A heading with no marker means the step has not started.
   (PRs #238–#248, listed at the end of M0), #2 (PR #253), #3 (PR #255),
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
-  #11 (PR #286), and #12 (most of it early, in PR #248).
+  #11 (PR #286), and #12 (PR #292, most of it early in PR #248).
 - **Next: #13, intersphinx.**
 
 The pull request that finishes a step also updates this section and the
@@ -333,7 +333,7 @@ Measured on CPython's 524 documents, `--check` takes 9 s. It shows 2564
 warnings (1857 of them unknown directives), 2882 hints and 33 include
 summaries.
 
-### 12. Local packaging ✅ (#248)
+### 12. Local packaging ✅ (#292, most of it early in #248)
 
 **You experience:** `npm run package` produces a VSIX that installs into a
 normal VS Code and works. Nothing is published.
