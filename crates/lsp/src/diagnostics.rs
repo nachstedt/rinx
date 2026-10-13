@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 
 use lsp_types::{CodeDescription, NumberOrString, Range, Uri};
 use rinx_ast::{Diagnostic, DiagnosticCode, Document, Span, retain_reportable, section_slug};
-use rinx_parser::{ParseCtx, RejectParseFiles};
+use rinx_parser::{ParseCtx, RejectParseFiles, SplicedText};
 
 use crate::documents::DocumentStore;
 use crate::files::{FileReads, WorkspaceFiles};
@@ -67,9 +67,9 @@ pub struct ParsedSource {
 /// The text is parsed with its line endings as the protocol counts them (see
 /// [`protocol_line_endings`]), so every reported line is one the editor shows.
 ///
-/// The parse uses `settings`, the document's project's — its default domain
-/// and default role — and no entity schema and no Jinja, which nothing tells
-/// the server about yet (roadmap #15, #18, #20).
+/// The parse uses `settings`, the document's project's — its default domain,
+/// default role, `rst_prolog` and `rst_epilog` — and no entity schema and no
+/// Jinja, which nothing tells the server about yet (roadmap #15, #18, #20).
 #[must_use]
 pub fn parse_source(
     uri: &Uri,
@@ -82,13 +82,12 @@ pub fn parse_source(
     let (document, reads) = if let Some(path) = file_path(uri) {
         let files = WorkspaceFiles::for_document(&path, open);
         let name = doc_path.map_or_else(|| path.to_string_lossy(), Cow::Borrowed);
-        let ctx = ParseCtx::new(settings.domain, &files).with_default_role(&settings.default_role);
+        let ctx = configured(ParseCtx::new(settings.domain, &files), settings);
         let document = rinx_parser::parse_with_ctx(&name, &text, &ctx);
         (document, files.into_reads())
     } else {
         // An unsaved buffer has no directory to resolve a file against.
-        let ctx = ParseCtx::new(settings.domain, &RejectParseFiles)
-            .with_default_role(&settings.default_role);
+        let ctx = configured(ParseCtx::new(settings.domain, &RejectParseFiles), settings);
         (
             rinx_parser::parse_with_ctx(uri.as_str(), &text, &ctx),
             FileReads::default(),
@@ -98,6 +97,34 @@ pub fn parse_source(
         document,
         reads,
         text,
+    }
+}
+
+/// What a span in a project's `rst_prolog` names as its file: Sphinx's own
+/// name for it, which is no path, so the editor places such a diagnostic at
+/// the start of the document it was parsed with.
+pub const RST_PROLOG: &str = "<rst_prolog>";
+
+/// [`RST_PROLOG`]'s counterpart for `rst_epilog`.
+pub const RST_EPILOG: &str = "<rst_epilog>";
+
+/// `ctx` configured with a project's parse settings: its default role, and
+/// its `rst_prolog` and `rst_epilog`.
+fn configured<'a>(ctx: ParseCtx<'a>, settings: &'a ParseSettings) -> ParseCtx<'a> {
+    let ctx = ctx.with_default_role(&settings.default_role);
+    let ctx = match &settings.prolog {
+        Some(text) => ctx.with_prolog(SplicedText {
+            name: RST_PROLOG,
+            text,
+        }),
+        None => ctx,
+    };
+    match &settings.epilog {
+        Some(text) => ctx.with_epilog(SplicedText {
+            name: RST_EPILOG,
+            text,
+        }),
+        None => ctx,
     }
 }
 
@@ -464,6 +491,84 @@ mod tests {
         // Then
         assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
         assert_eq!(diagnostics[0].range.start, lsp_types::Position::new(2, 0));
+    }
+
+    /// What parsing `text` at `uri` under `settings` reports, by URI.
+    fn diagnostics_under(
+        uri: &Uri,
+        text: &str,
+        settings: &ParseSettings,
+    ) -> BTreeMap<Uri, Vec<lsp_types::Diagnostic>> {
+        let open = DocumentStore::default();
+        diagnose_source(
+            uri,
+            &parse_source(uri, None, text, settings, &open),
+            &[],
+            &Strictness::default(),
+            &open,
+            PositionEncoding::Utf16,
+        )
+        .by_uri
+        .into_iter()
+        .collect()
+    }
+
+    fn with_splices(prolog: &str, epilog: &str) -> ParseSettings {
+        ParseSettings {
+            prolog: Some(prolog.to_string()),
+            epilog: Some(epilog.to_string()),
+            ..ParseSettings::default()
+        }
+    }
+
+    #[test]
+    fn test_parse_source_parses_the_projects_prolog_and_epilog() {
+        // Given
+        let settings = with_splices(".. |a| replace:: A\n", ".. |b| replace:: B\n");
+        let dir = temp_directory("splices", &[]);
+
+        // When — a document on disk, and an unsaved buffer
+        let on_disk = diagnostics_under(&file(&dir.join("index.rst")), "|a| and |b|.\n", &settings);
+        let unsaved = diagnostics_under(&uri("untitled:Untitled-1"), "|a| and |b|.\n", &settings);
+
+        // Then
+        assert!(on_disk.values().all(Vec::is_empty), "{on_disk:?}");
+        assert!(unsaved.values().all(Vec::is_empty), "{unsaved:?}");
+    }
+
+    #[test]
+    fn test_parse_source_names_the_prolog_as_sphinx_does() {
+        // When
+        let parsed = parse_source(
+            &uri("untitled:Untitled-1"),
+            None,
+            "Text.\n",
+            &with_splices("Prolog.\n", "Epilog.\n"),
+            &DocumentStore::default(),
+        );
+
+        // Then
+        assert_eq!(parsed.document.source_files, [RST_PROLOG, RST_EPILOG]);
+    }
+
+    #[test]
+    fn test_a_mistake_in_the_prolog_is_placed_at_the_documents_start() {
+        // Given — `<rst_prolog>` is no file the editor could open
+        let document = uri("file:///docs/index.rst");
+
+        // When
+        let by_uri = diagnostics_under(
+            &document,
+            "Title\n=====\n\nText.\n",
+            &with_splices("\n.. nonsense::\n", ""),
+        );
+
+        // Then
+        assert_eq!(by_uri.keys().collect::<Vec<_>>(), [&document]);
+        assert_eq!(
+            lines_and_codes(&by_uri[&document]),
+            [(0, "directive.unknown".to_string())]
+        );
     }
 
     #[test]

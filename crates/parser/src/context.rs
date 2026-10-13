@@ -130,6 +130,21 @@ impl SourcePoint {
     }
 }
 
+/// Text added to every document of a project, and the name its positions are
+/// reported under: Sphinx's `rst_prolog` and `rst_epilog`.
+///
+/// The name becomes the [`FileId`] of everything parsed from the text, so a
+/// diagnostic in it names the text rather than a line of the document it was
+/// added to — the build passes the file the text was read from, the language
+/// server Sphinx's own `<rst_prolog>`. See `crate::blocks::splice`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SplicedText<'a> {
+    /// What a span inside the text names as its file.
+    pub name: &'a str,
+    /// The reStructuredText itself.
+    pub text: &'a str,
+}
+
 /// Whether a section title may stand in the lines being parsed.
 ///
 /// docutils' `match_titles`: a document's own lines may hold titles, and
@@ -218,6 +233,14 @@ pub struct ParseCtx<'a> {
     /// [`crate::parse_with_ctx`], which owns one table per document; a context
     /// built without it defines no roles and keeps the configured default.
     document_roles: Option<&'a DocumentRoles>,
+    /// The text parsed ahead of the document's own, after its leading
+    /// metadata: Sphinx's `rst_prolog`.
+    ///
+    /// Read once, by [`crate::parse_with_ctx`]; an included fragment's context
+    /// has none, as Sphinx adds it to documents only.
+    prolog: Option<SplicedText<'a>>,
+    /// The text parsed after the document's own: Sphinx's `rst_epilog`.
+    epilog: Option<SplicedText<'a>>,
     /// Where the current line slice came from, or `None` when it came from
     /// nowhere in the source — see [`Self::synthetic`].
     origin: Option<Origin>,
@@ -288,6 +311,8 @@ impl<'a> ParseCtx<'a> {
             import_keys: empty_import_keys(),
             configured_default_role: &DefaultRole::TITLE_REFERENCE,
             document_roles: None,
+            prolog: None,
+            epilog: None,
             origin: Some(Origin::START),
             file: None,
             current_file: None,
@@ -341,6 +366,36 @@ impl<'a> ParseCtx<'a> {
         self.document_roles
             .and_then(DocumentRoles::default_role)
             .unwrap_or_else(|| self.configured_default_role.clone())
+    }
+
+    /// The same context, parsing `prolog` ahead of each document's own text.
+    #[must_use]
+    pub fn with_prolog(self, prolog: SplicedText<'a>) -> Self {
+        Self {
+            prolog: Some(prolog),
+            ..self
+        }
+    }
+
+    /// The same context, parsing `epilog` after each document's own text.
+    #[must_use]
+    pub fn with_epilog(self, epilog: SplicedText<'a>) -> Self {
+        Self {
+            epilog: Some(epilog),
+            ..self
+        }
+    }
+
+    /// The text parsed ahead of the document's own, if any.
+    #[must_use]
+    pub(crate) const fn prolog(&self) -> Option<SplicedText<'a>> {
+        self.prolog
+    }
+
+    /// The text parsed after the document's own, if any.
+    #[must_use]
+    pub(crate) const fn epilog(&self) -> Option<SplicedText<'a>> {
+        self.epilog
     }
 
     /// The same context, parsing against `schema`.
@@ -549,6 +604,23 @@ impl<'a> ParseCtx<'a> {
         }
     }
 
+    /// The context for parsing a prolog or epilog whose spans name `file`:
+    /// positions start again at line 1 column 1 of that text.
+    ///
+    /// Unlike [`Self::included`], a file named inside it still resolves
+    /// against the document — the text is the document's, as it is when
+    /// Sphinx pastes it in — and the Jinja map is dropped, since Sphinx's
+    /// `source-read` rendered the document before the prolog joined it.
+    #[must_use]
+    pub(crate) fn spliced(&self, file: FileId) -> Self {
+        Self {
+            origin: Some(Origin::START),
+            file: Some(file),
+            template_map: None,
+            ..*self
+        }
+    }
+
     /// The context for parsing the text of an included file: positions start
     /// again at line 1 column 1, and every span built under it is attributed
     /// to `file`.
@@ -575,6 +647,10 @@ impl<'a> ParseCtx<'a> {
             import_keys: self.import_keys,
             configured_default_role: self.configured_default_role,
             document_roles: self.document_roles,
+            // A fragment is text of the document that includes it, which was
+            // decorated once already.
+            prolog: None,
+            epilog: None,
             origin: Some(Origin::START),
             file: Some(file),
             current_file: Some(id),
@@ -845,5 +921,98 @@ mod tests {
 
         // Then
         assert_eq!(included.section_titles(), SectionTitles::Forbidden);
+    }
+
+    #[test]
+    fn test_a_new_context_has_no_prolog_or_epilog() {
+        // Given / When
+        let ctx = ParseCtx::with_domain(Domain::Py);
+
+        // Then
+        assert_eq!(ctx.prolog(), None);
+        assert_eq!(ctx.epilog(), None);
+    }
+
+    #[test]
+    fn test_with_prolog_and_with_epilog_record_their_texts() {
+        // Given
+        let prolog = SplicedText {
+            name: "prolog.rst",
+            text: ".. |a| replace:: A\n",
+        };
+        let epilog = SplicedText {
+            name: "epilog.rst",
+            text: ".. _b: https://b.example\n",
+        };
+
+        // When
+        let ctx = ParseCtx::with_domain(Domain::Py)
+            .with_prolog(prolog)
+            .with_epilog(epilog);
+
+        // Then
+        assert_eq!(ctx.prolog(), Some(prolog));
+        assert_eq!(ctx.epilog(), Some(epilog));
+    }
+
+    #[test]
+    fn test_an_included_context_is_not_decorated() {
+        // Given — Sphinx adds `rst_prolog` to documents, never to the text an
+        // `.. include::` splices in
+        let prolog = SplicedText {
+            name: "prolog.rst",
+            text: "Prolog.\n",
+        };
+        let ctx = ParseCtx::with_domain(Domain::Py)
+            .with_prolog(prolog)
+            .with_epilog(prolog);
+        let stack = vec!["part.rst".to_string()];
+
+        // When
+        let included = ctx.included(FileId::new(0), "part.rst", &stack);
+
+        // Then
+        assert_eq!(included.prolog(), None);
+        assert_eq!(included.epilog(), None);
+    }
+
+    #[test]
+    fn test_spliced_positions_restart_at_line_one_of_the_spliced_file() {
+        // Given a context deep inside a document
+        let ctx = ParseCtx::with_domain(Domain::Py).nested(7, 3);
+
+        // When
+        let spliced = ctx.spliced(FileId::new(2));
+
+        // Then
+        let point = spliced.position(1, 4).expect("positioned");
+        assert_eq!(point.position, Position::new(2, 5));
+        assert_eq!(point.file, Some(FileId::new(2)));
+    }
+
+    #[test]
+    fn test_spliced_text_resolves_files_against_the_document() {
+        // Given — a prolog is text of the document, so an `.. include::` in it
+        // resolves where one written in the document would
+        let ctx = ParseCtx::with_domain(Domain::Py);
+
+        // When
+        let spliced = ctx.spliced(FileId::new(0));
+
+        // Then
+        assert_eq!(spliced.current_file(), None);
+        assert!(spliced.include_stack().is_empty());
+    }
+
+    #[test]
+    fn test_spliced_keeps_the_section_title_permission() {
+        // Given
+        let ctx = ParseCtx::with_domain(Domain::Py);
+
+        // When / Then
+        assert_eq!(
+            ctx.spliced(FileId::new(0)).section_titles(),
+            SectionTitles::Allowed
+        );
     }
 }

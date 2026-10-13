@@ -25,7 +25,9 @@ Supported:
 - Grid and simple tables, ``.. table::``, ``.. list-table::`` and
   ``.. csv-table::`` (the last including ``:file:``).
 - Substitutions, ``.. include::``, ``.. image::``, ``.. figure::``,
-  ``.. contents::`` and ``.. sectnum::``.
+  ``.. contents::`` and ``.. sectnum::``. Substitutions and roles every page
+  shares can live in a library's ``rst_prolog`` or ``rst_epilog`` file, which
+  is parsed with each document (see :ref:`rules`).
 - The ``:code:`` role, and roles derived from it with ``.. role::``, which
   give inline code a language to be highlighted as:
 

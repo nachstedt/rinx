@@ -341,10 +341,12 @@ itself would not give.
 
 ## Open questions
 
-- **`rst_prolog`/`rst_epilog`.** Common in legacy projects, mostly for
+- ~~**`rst_prolog`/`rst_epilog`.** Common in legacy projects, mostly for
   substitutions, and not supported by the build either. Implementing them, as
   a parse-time prepend and append, may be cheaper than downgrading every
-  "undefined substitution" they cause.
+  "undefined substitution" they cause.~~ Implemented in both (roadmap #14,
+  ADR-040): the server reads them from `conf.py`, the build from a library's
+  files.
 - **A file under two `conf.py`s or two libraries.** The nearest model wins.
   Whether the second should be reported is undecided.
 - ~~**Severity names.** Should the legacy downgrades be configurable per

@@ -44,6 +44,10 @@ pub struct ParseSettings {
     pub domain: Domain,
     /// The role a bare `` `text` `` is read as — `default_role`.
     pub default_role: DefaultRole,
+    /// The text parsed at the start of every document — `rst_prolog`.
+    pub prolog: Option<String>,
+    /// The text parsed at the end of every document — `rst_epilog`.
+    pub epilog: Option<String>,
 }
 
 impl Default for ParseSettings {
@@ -52,6 +56,8 @@ impl Default for ParseSettings {
         Self {
             domain: Domain::Py,
             default_role: DefaultRole::TITLE_REFERENCE,
+            prolog: None,
+            epilog: None,
         }
     }
 }
@@ -368,5 +374,7 @@ mod tests {
         // Then
         assert_eq!(settings.domain, Domain::Py);
         assert_eq!(settings.default_role, DefaultRole::TITLE_REFERENCE);
+        assert_eq!(settings.prolog, None);
+        assert_eq!(settings.epilog, None);
     }
 }

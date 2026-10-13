@@ -84,8 +84,9 @@ These are the settings read:
 - ``numfig``, ``numfig_secnum_depth`` and ``highlight_language``: how pages are rendered.
 - ``extensions``: how strictly the project's findings are reported (see below).
 - ``intersphinx_mapping`` and ``intersphinx_cache_limit``: the other sites the project links into, when ``extensions`` declares ``sphinx.ext.intersphinx`` (see :ref:`vscode-intersphinx`).
+- ``rst_prolog`` and ``rst_epilog``: text parsed at the start and the end of every document, typically substitutions. Only a literal string is read: an f-string such as CPython's ``rst_epilog`` is reported, and its substitutions stay undefined. A mistake in the text itself is shown at the start of each document it is parsed with.
 
-Every other setting is ignored, and not reported. ``rst_prolog`` and the sphinx-needs settings are read by later steps. Saving ``conf.py``, or creating or deleting one, reads the folder's projects again.
+Every other setting is ignored, and not reported. The sphinx-needs settings are read by a later step. Saving ``conf.py``, or creating or deleting one, reads the folder's projects again.
 
 A Sphinx project leans on extensions rinx does not run, such as autodoc. Reported as warnings, everything they explain would drown the findings you can fix, so the server lowers what a declared extension accounts for:
 

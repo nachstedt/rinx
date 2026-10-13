@@ -40,6 +40,19 @@ def _rinx_library_impl(ctx):
     # Sphinx's `default_role`: the role bare `text` in backquotes is read as.
     # Left off, the worker keeps docutils' own default, `title-reference`.
     default_role_args = ["--default-role", ctx.attr.default_role] if ctx.attr.default_role else []
+
+    # Sphinx's `rst_prolog` and `rst_epilog`: text parsed with every document,
+    # so each is an input of every parse action and editing one re-parses the
+    # whole library. Taken as files rather than strings, so a diagnostic in
+    # one names a file an author can open.
+    splice_args = []
+    splice_inputs = []
+    if ctx.file.rst_prolog:
+        splice_args.extend(["--rst-prolog", ctx.file.rst_prolog.path])
+        splice_inputs.append(ctx.file.rst_prolog)
+    if ctx.file.rst_epilog:
+        splice_args.extend(["--rst-epilog", ctx.file.rst_epilog.path])
+        splice_inputs.append(ctx.file.rst_epilog)
     ast_files = []
     doctest_plans = []
     embed_sidecars = []
@@ -63,7 +76,7 @@ def _rinx_library_impl(ctx):
                 "--input", src.path,
                 "--output", ast_raw.path,
                 "--default-domain", ctx.attr.default_domain,
-            ] + schema_args + diagram_args + jinja_args + default_role_args,
+            ] + schema_args + diagram_args + jinja_args + default_role_args + splice_args,
             # `parse_data` files join the parse action's inputs because the
             # parser genuinely reads them: `.. csv-table::`'s `:file:`, and the
             # sources `.. include::`/`.. literalinclude::` splice into the
@@ -77,7 +90,7 @@ def _rinx_library_impl(ctx):
             # included file's text becomes part of the .ast, so editing it
             # re-parses and re-renders every document that includes it. That is
             # correct — the page really did change.
-            inputs = [src] + ctx.files.parse_data + schema_inputs,
+            inputs = [src] + ctx.files.parse_data + schema_inputs + splice_inputs,
             outputs = [ast_raw],
             mnemonic = "RinxParse",
             progress_message = "Parsing %s" % src.short_path,
@@ -237,6 +250,14 @@ rinx_library = rule(
         "default_role": attr.string(
             default = "",
             doc = "The role interpreted text written without one — `text` in single backquotes — is read as in this library's docs, the way a Sphinx project's `default_role` sets it: any role the build knows, e.g. \"any\", \"py:func\" or an entity role the schema declares. Empty keeps docutils' default, `title-reference`, which renders a title as `<cite>`. A `.. default-role::` overrides it for the rest of its document. A name no role answers to fails the parse.",
+        ),
+        "rst_prolog": attr.label(
+            allow_single_file = True,
+            doc = "reStructuredText parsed at the start of every document of this library, after its leading field list — Sphinx's `rst_prolog`, kept in a file rather than a string. Typically substitutions, `.. role::` definitions and link targets shared by every page. A diagnostic in it names this file. Unlike an `.. include::`, it is parsed with each document rather than spliced into one, so it must not also appear in `srcs`, and editing it re-parses the whole library. An `.. include::` written in it resolves against the document, as in Sphinx.",
+        ),
+        "rst_epilog": attr.label(
+            allow_single_file = True,
+            doc = "reStructuredText parsed at the end of every document of this library — Sphinx's `rst_epilog`, kept in a file rather than a string. Everything `rst_prolog` says applies.",
         ),
         "_worker": attr.label(
             default = Label("//:rinx"),

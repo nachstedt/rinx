@@ -1,0 +1,16 @@
+"""A library whose every document starts with `prolog.rst` and ends with
+`epilog.rst` — Sphinx's `rst_prolog` and `rst_epilog`, kept in files.
+
+Neither file is in `srcs`: each is parsed with every document rather than
+published as a page of its own.
+"""
+
+load("@rinx//:defs.bzl", "rinx_library")
+
+rinx_library(
+    name = "docs",
+    srcs = ["index.rst"],
+    rst_epilog = "epilog.rst",
+    rst_prolog = "prolog.rst",
+    visibility = ["//visibility:public"],
+)

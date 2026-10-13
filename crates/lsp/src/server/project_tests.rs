@@ -72,6 +72,38 @@ fn test_the_default_role_is_the_one_conf_py_names() {
 }
 
 #[test]
+fn test_the_epilog_conf_py_sets_is_parsed_with_every_document() {
+    // Given — a substitution only the epilog defines
+    let text = "Home\n====\n\nVersion |version|.\n";
+    let (workspace, mut state) = scanned(
+        "project_rst_epilog",
+        &[
+            ("conf.py", "rst_epilog = '.. |version| replace:: 1.0\\n'\n"),
+            ("index.rst", text),
+        ],
+    );
+
+    // When
+    let opened = handle_notification(&mut state, workspace.open("index.rst", text));
+
+    // Then
+    assert_eq!(workspace.codes_for(&opened, "index.rst"), Some(Vec::new()));
+
+    // When — the epilog is removed from `conf.py`
+    workspace.write("conf.py", "project = 'P'\n");
+    let replies = handle_notification(
+        &mut state,
+        workspace.watched(&[("conf.py", FileChangeType::CHANGED)]),
+    );
+
+    // Then
+    assert_eq!(
+        workspace.codes_for(&replies, "index.rst"),
+        Some(vec!["substitution.undefined".to_string()])
+    );
+}
+
+#[test]
 fn test_the_primary_domain_is_the_one_conf_py_names() {
     // Given
     let (_, mut state) = scanned(
