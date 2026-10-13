@@ -1176,6 +1176,10 @@ other is ignored.</p>
 <h3 id="conf-syntax-error">conf.syntax-error</h3>
 <p>Where the editor stopped reading <code>conf.py</code>, which Python could not run
 either: the settings after it keep their defaults.</p>
+<h3 id="conf-inventory-unreadable">conf.inventory-unreadable</h3>
+<p>An <code>intersphinx_mapping</code> entry none of whose inventories could be read: a
+file that is missing or is no <code>objects.inv</code>, or a download that is none.
+References into it stay unresolved in the editor.</p>
 <h2 id="noqa">noqa</h2>
 <h3 id="noqa-unknown-code">noqa.unknown-code</h3>
 <p>A <code>.. noqa:</code> comment naming an id that is not a diagnostic code. Never
