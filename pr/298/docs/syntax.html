@@ -128,7 +128,9 @@ literal blocks and doctest blocks.</p>
 <code>.. csv-table::</code> (the last including <code>:file:</code>).</p>
 </li>
 <li><p>Substitutions, <code>.. include::</code>, <code>.. image::</code>, <code>.. figure::</code>,
-<code>.. contents::</code> and <code>.. sectnum::</code>.</p>
+<code>.. contents::</code> and <code>.. sectnum::</code>. Substitutions and roles every page
+shares can live in a library's <code>rst_prolog</code> or <code>rst_epilog</code> file, which
+is parsed with each document (see <a href="rules.html#rules">Bazel rules</a>).</p>
 </li>
 <li><p>The <code>:code:</code> role, and roles derived from it with <code>.. role::</code>, which
 give inline code a language to be highlighted as:</p>

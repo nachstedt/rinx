@@ -195,8 +195,10 @@
 </li>
 <li><p><code>intersphinx_mapping</code> and <code>intersphinx_cache_limit</code>: the other sites the project links into, when <code>extensions</code> declares <code>sphinx.ext.intersphinx</code> (see <a href="vscode.html#vscode-intersphinx">Inventories</a>).</p>
 </li>
+<li><p><code>rst_prolog</code> and <code>rst_epilog</code>: text parsed at the start and the end of every document, typically substitutions. Only a literal string is read: an f-string such as CPython's <code>rst_epilog</code> is reported, and its substitutions stay undefined. A mistake in the text itself is shown at the start of each document it is parsed with.</p>
+</li>
 </ul>
-<p>Every other setting is ignored, and not reported. <code>rst_prolog</code> and the sphinx-needs settings are read by later steps. Saving <code>conf.py</code>, or creating or deleting one, reads the folder's projects again.</p>
+<p>Every other setting is ignored, and not reported. The sphinx-needs settings are read by a later step. Saving <code>conf.py</code>, or creating or deleting one, reads the folder's projects again.</p>
 <p>A Sphinx project leans on extensions rinx does not run, such as autodoc. Reported as warnings, everything they explain would drown the findings you can fix, so the server lowers what a declared extension accounts for:</p>
 <ul>
 <li><p>An unknown directive that a declared extension provides, such as <code>.. automodule::</code> under <code>sphinx.ext.autodoc</code>, is <em>Information</em>: its contents are not checked. Any other unknown directive stays a warning, since it may be a typo.</p>

@@ -228,6 +228,25 @@ overrides it for the rest of its document; an unknown name fails the
 build.</p>
 </td>
 </tr>
+<tr>
+<td><p><code>rst_prolog</code></p>
+</td>
+<td><p>A reStructuredText file parsed at the start of every document, after
+its leading field list, like Sphinx's <code>rst_prolog</code> (which is a string
+in <code>conf.py</code>). Typically substitutions, <code>.. role::</code> definitions and
+link targets every page shares. A mistake in it is reported at its own
+line in this file. It must not also be in <code>srcs</code>, and editing it
+re-parses every document of the library. An <code>.. include::</code> in it
+resolves against the document, as in Sphinx.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>rst_epilog</code></p>
+</td>
+<td><p>The same, parsed at the end of every document, like Sphinx's
+<code>rst_epilog</code>.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h2 id="rinx-site">rinx_site</h2>

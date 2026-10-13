@@ -2136,6 +2136,23 @@ are refused.</p>
 </td>
 </tr>
 <tr>
+<td><p><code>rst_prolog</code> and <code>rst_epilog</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Files set per library (<code>rst_prolog</code>/<code>rst_epilog</code> attributes),
+not strings in <code>conf.py</code>.</p>
+</li>
+<li><p>A mistake in one is reported at its line in that file.</p>
+</li>
+<li><p>The language server reads them from <code>conf.py</code> when they are
+literal strings.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
 <td><p>Site-wide general index (<code>genindex.html</code>)</p>
 </td>
 <td><p>✅ ℹ️</p>

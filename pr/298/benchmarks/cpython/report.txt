@@ -79,6 +79,7 @@ code-block.unknown-language: 7
 list.enumerated-start-not-one: 4
 block-quote.unindent-no-blank-line: 4
 conf.modified-setting: 2
+conf.unread-setting: 1
 table.grid.inconsistent-column-boundary: 1
 default-role.unknown-role: 1
 
