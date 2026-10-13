@@ -9,7 +9,9 @@ use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{WarningOrigin, format_error_diagnostic, report_diagnostic};
 use super::entity_schema::{import_keys_from_args, load_entity_schema};
 use super::parse_files::DocumentRelativeFiles;
-use super::parse_inputs::{ParseInputs, default_role_from_args, jinja_from_args};
+use super::parse_inputs::{
+    ParseInputs, default_role_from_args, jinja_from_args, splices_from_args,
+};
 
 /// Whether the library a document belongs to opted in to diagrams.
 ///
@@ -186,6 +188,7 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
     let import_keys = import_keys_from_args(args, &schema);
     let jinja = jinja_from_args(args)?;
     let default_role = default_role_from_args(args, &schema)?;
+    let splices = splices_from_args(args)?;
     let inputs = ParseInputs {
         default_domain,
         default_role: &default_role,
@@ -193,6 +196,7 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
         schema: &schema,
         jinja: jinja.as_deref(),
         import_keys: &import_keys,
+        splices: &splices,
     };
     dump_rendered_source(args, &rst, &inputs)?;
     let json = process_parse(&input, &rst, &inputs, DiagramSupport::from_args(args))?;
@@ -220,6 +224,7 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::commands::parse_inputs::DocumentSplices;
     use std::collections::BTreeMap;
 
     /// A loader rooted at a directory holding no CSV files, for the tests
@@ -244,6 +249,7 @@ mod tests {
                 schema: &rinx_entity::EntitySchema::empty(),
                 jinja: None,
                 import_keys: &BTreeMap::new(),
+                splices: &DocumentSplices::default(),
             },
             DiagramSupport::Enabled,
         )
@@ -266,6 +272,7 @@ mod tests {
                 schema: &rinx_entity::EntitySchema::empty(),
                 jinja: None,
                 import_keys: &BTreeMap::new(),
+                splices: &DocumentSplices::default(),
             },
             diagrams,
         )
@@ -423,6 +430,7 @@ mod tests {
                 schema: &rinx_entity::EntitySchema::empty(),
                 jinja: None,
                 import_keys: &BTreeMap::new(),
+                splices: &DocumentSplices::default(),
             },
             DiagramSupport::Enabled,
         )
@@ -485,6 +493,81 @@ mod tests {
         assert!(result.is_ok(), "{result:?}");
         let ast = std::fs::read_to_string(&args[3]).expect("read ast");
         assert!(ast.contains(r#""Reference""#), "{ast}");
+    }
+
+    #[test]
+    fn test_cmd_parse_parses_the_librarys_prolog_with_the_document() {
+        // Given
+        let args = parse_args_for("rinx_cmd_parse_rst_prolog", "About |project|.\n");
+        let prolog = std::path::Path::new(&args[1]).with_file_name("prolog.rst");
+        std::fs::write(&prolog, ".. |project| replace:: Rinx Project\n").expect("write prolog");
+        let prolog = prolog.to_str().expect("utf-8 temp path").to_string();
+        let args = [args, vec!["--rst-prolog".to_string(), prolog.clone()]].concat();
+
+        // When
+        let result = cmd_parse(&args);
+
+        // Then
+        assert!(result.is_ok(), "{result:?}");
+        let ast = std::fs::read_to_string(&args[3]).expect("read ast");
+        assert!(ast.contains("Rinx Project"), "{ast}");
+        assert!(!ast.contains("substitution.undefined"), "{ast}");
+    }
+
+    #[test]
+    fn test_cmd_parse_fails_when_the_prolog_is_missing() {
+        // Given
+        let args = parse_args_for("rinx_cmd_parse_rst_prolog_missing", "Text.\n");
+        let args = [
+            args,
+            vec![
+                "--rst-prolog".to_string(),
+                "/nonexistent/prolog.rst".to_string(),
+            ],
+        ]
+        .concat();
+
+        // When
+        let result = cmd_parse(&args);
+
+        // Then
+        let error = result.expect_err("a missing prolog must fail the parse");
+        assert!(error.to_string().contains("rst_prolog"), "{error}");
+    }
+
+    #[test]
+    fn test_a_warning_in_the_prolog_names_the_prolog_file_and_its_line() {
+        // Given
+        let splices = DocumentSplices {
+            prolog: Some(crate::commands::parse_inputs::SplicedFile {
+                path: "docs/prolog.rst".to_string(),
+                text: "\n.. nonsense::\n".to_string(),
+            }),
+            epilog: None,
+        };
+        let files = no_parse_files();
+        let inputs = ParseInputs {
+            default_domain: ast::Domain::Py,
+            default_role: &rinx_parser::DefaultRole::TITLE_REFERENCE,
+            files: &files,
+            schema: &rinx_entity::EntitySchema::empty(),
+            jinja: None,
+            import_keys: &BTreeMap::new(),
+            splices: &splices,
+        };
+        let doc = parser::parse_with_ctx("docs/doc.rst", "Text.\n", &inputs.ctx());
+
+        // When
+        let warning = crate::commands::diagnostics::format_diagnostic(
+            &WarningOrigin::new(&doc.path, &doc.source_files),
+            &doc.diagnostics[0],
+        );
+
+        // Then
+        assert!(
+            warning.starts_with("warning: docs/prolog.rst:2:1 (included from docs/doc.rst):"),
+            "{warning}"
+        );
     }
 
     #[test]

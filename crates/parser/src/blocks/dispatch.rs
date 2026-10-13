@@ -22,6 +22,7 @@ use super::line_block::try_parse_line_block;
 use super::literal_block::collect_literal_block_body;
 use super::option_list::try_parse_option_list;
 use super::simple_table::try_parse_simple_table;
+use super::splice::parse_spliced;
 use super::table::try_parse_grid_table;
 use super::target::try_parse_target;
 use super::transition::try_parse_transition;
@@ -95,7 +96,22 @@ pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
 
     let mut adornment_order: Vec<Adornment> = Vec::new();
 
-    let mut nodes = parse_blocks(lines, &mut adornment_order, &mut diagnostics, ctx);
+    // `rst_prolog` and `rst_epilog`, each a segment of its own around the
+    // document's lines, sharing its adornment order and role table — see
+    // `splice`.
+    let mut nodes = parse_spliced(ctx.prolog(), &mut adornment_order, &mut diagnostics, ctx);
+    nodes.extend(parse_blocks(
+        lines,
+        &mut adornment_order,
+        &mut diagnostics,
+        ctx,
+    ));
+    nodes.extend(parse_spliced(
+        ctx.epilog(),
+        &mut adornment_order,
+        &mut diagnostics,
+        ctx,
+    ));
 
     let mut index_id_counter = 0;
     super::index_ids::assign_index_ids(&mut nodes, &mut index_id_counter);

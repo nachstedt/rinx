@@ -91,6 +91,8 @@ impl<'a> Reader<'a> {
             parse: ParseSettings {
                 domain,
                 default_role,
+                prolog: self.text("rst_prolog"),
+                epilog: self.text("rst_epilog"),
             },
             numfig: self.boolean("numfig").unwrap_or(defaults.numfig),
             numfig_secnum_depth: self
@@ -148,6 +150,12 @@ impl<'a> Reader<'a> {
         }
         self.invalid(value, format!("`{name}` must be a string"));
         None
+    }
+
+    /// A string setting whose empty value means none, as Sphinx's
+    /// `if prolog:` reads `rst_prolog`.
+    fn text(&mut self, name: &str) -> Option<String> {
+        self.string(name).filter(|text| !text.is_empty())
     }
 
     fn boolean(&mut self, name: &str) -> Option<bool> {
@@ -734,6 +742,51 @@ mod tests {
     }
 
     #[test]
+    fn test_read_sphinx_conf_reads_the_prolog_and_the_epilog() {
+        // When
+        let parse = settings(
+            "rst_prolog = '.. |a| replace:: A'\nrst_epilog = '''\n.. _b: https://b\n'''\n",
+        )
+        .parse;
+
+        // Then
+        assert_eq!(parse.prolog.as_deref(), Some(".. |a| replace:: A"));
+        assert_eq!(parse.epilog.as_deref(), Some("\n.. _b: https://b\n"));
+    }
+
+    #[test]
+    fn test_read_sphinx_conf_reads_an_empty_prolog_as_none() {
+        // When / Then
+        assert_eq!(settings("rst_prolog = ''\n").parse.prolog, None);
+    }
+
+    #[test]
+    fn test_read_sphinx_conf_reports_a_computed_epilog_and_reads_none() {
+        // Given
+        let text = "version = '1'\nrst_epilog = f'.. |v| replace:: {version}'\n";
+
+        // When / Then
+        assert_eq!(settings(text).parse.epilog, None);
+        assert_eq!(findings(text), [("conf.unread-setting", 2)]);
+    }
+
+    #[test]
+    fn test_read_sphinx_conf_reports_a_change_to_the_prolog() {
+        // Given
+        let text = "rst_prolog = 'A'\nif x:\n    rst_prolog += 'B'\n";
+
+        // When / Then
+        assert_eq!(settings(text).parse.prolog.as_deref(), Some("A"));
+        assert_eq!(findings(text), [("conf.modified-setting", 3)]);
+    }
+
+    #[test]
+    fn test_read_sphinx_conf_reports_a_prolog_of_the_wrong_kind() {
+        // When / Then
+        assert_eq!(findings("rst_prolog = 3\n"), [("conf.invalid-value", 1)]);
+    }
+
+    #[test]
     fn test_read_sphinx_conf_reads_cpythons_conf_py() {
         // Given
         let text = include_str!("../../../pyconf/testdata/cpython-3.14.2-conf.py");
@@ -756,11 +809,13 @@ mod tests {
         );
         assert!(considers(&reading.settings, "library/os.rst"));
         // The optional extensions appended on line 51; `nitpick_ignore`
-        // changes too, but is not read.
+        // changes too, but is not read. `rst_epilog` is an f-string over an
+        // imported `version`.
         assert_eq!(
             findings(text),
             [
                 ("conf.modified-setting", 51),
+                ("conf.unread-setting", 79),
                 ("conf.modified-setting", 119)
             ]
         );

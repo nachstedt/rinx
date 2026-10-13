@@ -32,8 +32,9 @@ finished one 🔶. A heading with no marker means the step has not started.
   (PRs #238–#248, listed at the end of M0), #2 (PR #253), #3 (PR #255),
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
-  #11 (PR #286), #12 (PR #292, most of it early in PR #248), and #13 (PR #297).
-- **Next: #14, `rst_prolog` / `rst_epilog`.**
+  #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
+  and #14.
+- **Next: #15, sphinx-needs schema in Rust.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -391,7 +392,7 @@ on the next start or `conf.py` change, `:ref:` and `:doc:` into an inventory
 not loaded stay warnings (ADR-038 §5), and an inventory's targets do not
 complete.
 
-### 14. `rst_prolog` / `rst_epilog`
+### 14. `rst_prolog` / `rst_epilog` ✅
 
 **You experience:** substitutions from `conf.py` no longer show as undefined.
 
@@ -399,6 +400,21 @@ complete.
 - Build-side support too (library attribute), plus `compatibility.rst` and an example
 - Server reads them from `conf.py`
 - Tests
+
+The parser reads the prolog and the epilog as segments of their own around the
+document's lines, sharing its adornment order, diagnostics and role table, so
+the document's positions never move (ADR-040). A segment's spans carry a
+`FileId` under its name, as an included fragment's do, so a mistake in it is
+reported at its own line. The build takes them as files,
+`rinx_library(rst_prolog = …, rst_epilog = …)`, so that name is a real
+path. The server reads `conf.py`'s literal strings and names them
+`<rst_prolog>`/`<rst_epilog>` as Sphinx does, placing a mistake in them at the
+start of the document.
+
+Not done here: CPython's `rst_epilog` is an f-string over an imported
+`version`, extended by `+=` inside an `if`, so it stays `conf.unread-setting`.
+23 `substitution.undefined` remain in `--check`, which now shows 2565 warnings
+(issue #299).
 
 ### 15. sphinx-needs schema in Rust
 

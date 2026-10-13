@@ -17,7 +17,9 @@ use rinx_ast::retain_reportable;
 use super::entity_schema::{import_keys_from_args, load_entity_schema, load_entity_templates};
 use super::parse::parse_default_domain_flag;
 use super::parse_files::DocumentRelativeFiles;
-use super::parse_inputs::{ParseInputs, default_role_from_args, jinja_from_args};
+use super::parse_inputs::{
+    ParseInputs, default_role_from_args, jinja_from_args, splices_from_args,
+};
 
 /// One previewed page, plus every warning it produced.
 ///
@@ -227,6 +229,7 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
             schema: &schema,
             jinja: jinja.as_deref(),
             import_keys: &import_keys,
+            splices: &splices_from_args(args)?,
         },
         &load_entity_templates(args)?,
     )?;
@@ -263,6 +266,7 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::commands::parse_inputs::DocumentSplices;
     use rinx_entity::EntitySchema;
     use std::collections::BTreeMap;
 
@@ -295,6 +299,7 @@ mod tests {
                 schema: &EntitySchema::empty(),
                 jinja: None,
                 import_keys: &BTreeMap::new(),
+                splices: &DocumentSplices::default(),
             },
             &renderer::EntityTemplates::new(),
         )
@@ -328,6 +333,7 @@ mod tests {
                 schema: &EntitySchema::empty(),
                 jinja: None,
                 import_keys: &BTreeMap::new(),
+                splices: &DocumentSplices::default(),
             },
             &renderer::EntityTemplates::new(),
         )
@@ -359,6 +365,7 @@ mod tests {
                 schema: &EntitySchema::empty(),
                 jinja: None,
                 import_keys: &BTreeMap::new(),
+                splices: &DocumentSplices::default(),
             },
             &renderer::EntityTemplates::new(),
         )
@@ -384,6 +391,7 @@ mod tests {
                 schema: &EntitySchema::empty(),
                 jinja: None,
                 import_keys: &BTreeMap::new(),
+                splices: &DocumentSplices::default(),
             },
             &renderer::EntityTemplates::new(),
         )

@@ -861,6 +861,13 @@ Document structure
        - Whitespace control, computed template names and undefined values
          are refused.
        - Template names resolve from the source root.
+   * - ``rst_prolog`` and ``rst_epilog``
+     - ✅ ℹ️
+     - - Files set per library (``rst_prolog``/``rst_epilog`` attributes),
+         not strings in ``conf.py``.
+       - A mistake in one is reported at its line in that file.
+       - The language server reads them from ``conf.py`` when they are
+         literal strings.
    * - Site-wide general index (``genindex.html``)
      - ✅ ℹ️
      - - Own markup, not Sphinx's.

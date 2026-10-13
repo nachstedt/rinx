@@ -81,6 +81,17 @@ document that a ``rinx_site`` renders, not HTML.
        ``title-reference``, shown as a citation. A ``.. default-role::``
        overrides it for the rest of its document; an unknown name fails the
        build.
+   * - ``rst_prolog``
+     - A reStructuredText file parsed at the start of every document, after
+       its leading field list, like Sphinx's ``rst_prolog`` (which is a string
+       in ``conf.py``). Typically substitutions, ``.. role::`` definitions and
+       link targets every page shares. A mistake in it is reported at its own
+       line in this file. It must not also be in ``srcs``, and editing it
+       re-parses every document of the library. An ``.. include::`` in it
+       resolves against the document, as in Sphinx.
+   * - ``rst_epilog``
+     - The same, parsed at the end of every document, like Sphinx's
+       ``rst_epilog``.
 
 rinx_site
 ---------

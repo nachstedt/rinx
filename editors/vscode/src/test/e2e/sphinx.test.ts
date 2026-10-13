@@ -59,6 +59,16 @@ suite('Sphinx project (e2e)', () => {
         );
     });
 
+    test('a substitution the prolog in conf.py defines is not undefined', async () => {
+        // When
+        await vscode.window.showTextDocument(project('index.rst'));
+
+        // Then — once the document is rendered, nothing but the broken
+        // reference is shown
+        await waitFor('the document to render', () => codesFor(project('index.rst')).includes('link.broken-ref'));
+        assert.deepStrictEqual(codesFor(project('index.rst')), ['link.broken-ref']);
+    });
+
     test('a directive of a declared extension is information, not a warning', async () => {
         // When
         await vscode.window.showTextDocument(project('api.rst'));

@@ -18,6 +18,7 @@ mod literal_block;
 mod option_list;
 mod refused_roles;
 mod simple_table;
+mod splice;
 mod substitutions;
 mod table;
 mod target;

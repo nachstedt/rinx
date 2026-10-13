@@ -1,18 +1,19 @@
 //! Everything a subcommand needs in order to *parse*, bundled.
 //!
-//! Six settings travel together wherever RST is turned into an AST — the
+//! Seven settings travel together wherever RST is turned into an AST — the
 //! default domain, the default role, the loader a file-reading directive goes
 //! through, the entity schema that supplies the project's own directive
-//! vocabulary, the import keys it declares, and whether the source is
-//! rendered as a Jinja template first. Both `parse` and `preview` take all
-//! six, so they are one parameter rather than six, for
+//! vocabulary, the import keys it declares, whether the source is rendered as
+//! a Jinja template first, and the prolog and epilog added to every document.
+//! Both `parse` and `preview` take all seven, so they are one parameter rather
+//! than seven, for
 //! the same reason `ParseCtx` exists in the parser: the next parse-time
 //! setting should not have to touch every signature again.
 
 use anyhow::{Result, anyhow};
 use rinx_ast as ast;
 use rinx_entity::EntitySchema;
-use rinx_parser::{DefaultRole, ParseCtx};
+use rinx_parser::{DefaultRole, ParseCtx, SplicedText};
 use std::collections::BTreeMap;
 
 use super::cli_args::{flag_value_opt, flag_values_opt};
@@ -39,6 +40,35 @@ pub(super) struct ParseInputs<'a> {
     /// needs the schema *file's* location, which only the caller that read it
     /// knows; see `entity_schema::resolve_import_keys`.
     pub import_keys: &'a BTreeMap<String, String>,
+    /// The text added to the start and the end of every document.
+    pub splices: &'a DocumentSplices,
+}
+
+/// A file read to be parsed as part of every document, and the path its
+/// diagnostics name.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct SplicedFile {
+    /// The path the file was read from, as `rinx_library` passed it.
+    pub path: String,
+    /// Its contents.
+    pub text: String,
+}
+
+impl SplicedFile {
+    fn as_spliced_text(&self) -> SplicedText<'_> {
+        SplicedText {
+            name: &self.path,
+            text: &self.text,
+        }
+    }
+}
+
+/// Sphinx's `rst_prolog` and `rst_epilog`, which `rinx_library` takes as the
+/// files of the same names.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub(super) struct DocumentSplices {
+    pub prolog: Option<SplicedFile>,
+    pub epilog: Option<SplicedFile>,
 }
 
 impl<'a> ParseInputs<'a> {
@@ -48,6 +78,14 @@ impl<'a> ParseInputs<'a> {
             .with_schema(self.schema)
             .with_import_keys(self.import_keys)
             .with_default_role(self.default_role);
+        let ctx = match &self.splices.prolog {
+            Some(prolog) => ctx.with_prolog(prolog.as_spliced_text()),
+            None => ctx,
+        };
+        let ctx = match &self.splices.epilog {
+            Some(epilog) => ctx.with_epilog(epilog.as_spliced_text()),
+            None => ctx,
+        };
         match self.jinja {
             Some(context) => ctx.with_jinja(context),
             None => ctx,
@@ -90,6 +128,36 @@ pub(super) fn default_role_from_args(
     })
 }
 
+/// Reads the files the `--rst-prolog` and `--rst-epilog` flags name, which
+/// `rinx_library`'s `rst_prolog` and `rst_epilog` attributes pass.
+///
+/// # Errors
+///
+/// Fails when a named file cannot be read: every document of the library is
+/// parsed with it, so a build without it would be wrong everywhere at once.
+pub(super) fn splices_from_args(args: &[String]) -> Result<DocumentSplices> {
+    let read = |flag: &str, attribute: &str| {
+        flag_value_opt(args, flag)
+            .map(|path| {
+                std::fs::read_to_string(&path)
+                    .map(|text| SplicedFile {
+                        path: path.clone(),
+                        text,
+                    })
+                    .map_err(|error| {
+                        anyhow!(
+                            "Cannot read {flag} '{path}': {error}; check the rinx_library's `{attribute}`"
+                        )
+                    })
+            })
+            .transpose()
+    };
+    Ok(DocumentSplices {
+        prolog: read("--rst-prolog", "rst_prolog")?,
+        epilog: read("--rst-epilog", "rst_epilog")?,
+    })
+}
+
 /// Reads the `--jinja` opt-in and the `--jinja-context k=v ...` bindings that
 /// `rinx_library`'s `jinja` and `jinja_context` attributes pass.
 ///
@@ -124,6 +192,89 @@ mod tests {
 
     fn args(values: &[&str]) -> Vec<String> {
         values.iter().map(ToString::to_string).collect()
+    }
+
+    #[test]
+    fn test_splices_from_args_reads_neither_without_the_flags() {
+        // When
+        let splices = splices_from_args(&[]).unwrap();
+
+        // Then
+        assert_eq!(splices, DocumentSplices::default());
+    }
+
+    #[test]
+    fn test_splices_from_args_reads_the_named_files() {
+        // Given
+        let dir = std::env::temp_dir().join("rinx_splices_from_args");
+        std::fs::create_dir_all(&dir).unwrap();
+        let prolog = dir.join("prolog.rst");
+        let epilog = dir.join("epilog.rst");
+        std::fs::write(&prolog, ".. |a| replace:: A\n").unwrap();
+        std::fs::write(&epilog, ".. _b: https://b.example\n").unwrap();
+        let prolog = prolog.to_str().unwrap();
+        let epilog = epilog.to_str().unwrap();
+
+        // When
+        let splices =
+            splices_from_args(&args(&["--rst-prolog", prolog, "--rst-epilog", epilog])).unwrap();
+
+        // Then
+        assert_eq!(
+            splices,
+            DocumentSplices {
+                prolog: Some(SplicedFile {
+                    path: prolog.to_string(),
+                    text: ".. |a| replace:: A\n".to_string(),
+                }),
+                epilog: Some(SplicedFile {
+                    path: epilog.to_string(),
+                    text: ".. _b: https://b.example\n".to_string(),
+                }),
+            }
+        );
+    }
+
+    #[test]
+    fn test_splices_from_args_fails_naming_the_attribute_of_a_missing_file() {
+        // When
+        let error = splices_from_args(&args(&["--rst-epilog", "/nonexistent/epilog.rst"]))
+            .expect_err("a missing epilog must fail");
+
+        // Then
+        assert!(error.to_string().contains("`rst_epilog`"), "{error}");
+    }
+
+    #[test]
+    fn test_ctx_parses_the_prolog_and_epilog_with_every_document() {
+        // Given
+        let splices = DocumentSplices {
+            prolog: Some(SplicedFile {
+                path: "prolog.rst".to_string(),
+                text: ".. |a| replace:: A\n".to_string(),
+            }),
+            epilog: Some(SplicedFile {
+                path: "epilog.rst".to_string(),
+                text: ".. |b| replace:: B\n".to_string(),
+            }),
+        };
+        let files = super::super::parse_files::DocumentRelativeFiles::for_document("doc.rst");
+        let inputs = ParseInputs {
+            default_domain: ast::Domain::Py,
+            default_role: &rinx_parser::DefaultRole::TITLE_REFERENCE,
+            files: &files,
+            schema: &EntitySchema::empty(),
+            jinja: None,
+            import_keys: &BTreeMap::new(),
+            splices: &splices,
+        };
+
+        // When
+        let doc = rinx_parser::parse_with_ctx("doc.rst", "|a| and |b|.\n", &inputs.ctx());
+
+        // Then
+        assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
+        assert_eq!(doc.source_files, ["prolog.rst", "epilog.rst"]);
     }
 
     #[test]
@@ -194,6 +345,7 @@ mod tests {
             schema: &schema,
             jinja: None,
             import_keys: &BTreeMap::new(),
+            splices: &DocumentSplices::default(),
         };
 
         // When
@@ -216,6 +368,7 @@ mod tests {
             schema: &schema,
             jinja: None,
             import_keys: &BTreeMap::new(),
+            splices: &DocumentSplices::default(),
         };
 
         // When
@@ -241,6 +394,7 @@ mod tests {
             schema: &schema,
             jinja: None,
             import_keys: &BTreeMap::new(),
+            splices: &DocumentSplices::default(),
         };
 
         // When
@@ -326,6 +480,7 @@ mod tests {
             schema: &schema,
             jinja: Some(&context),
             import_keys: &BTreeMap::new(),
+            splices: &DocumentSplices::default(),
         };
 
         // When
