@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>xml.sax.handler — Base classes for SAX handlers — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Structured Markup Processing Tools"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="html.html">html — HyperText Markup Language support</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="html.parser.html">html.parser — Simple HTML and XHTML parser</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="html.entities.html">html.entities — Definitions of HTML general entities</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.html">XML Processing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.etree.elementtree.html">xml.etree.ElementTree — The ElementTree XML API</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.dom.html">xml.dom — The Document Object Model API</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.dom.minidom.html">xml.dom.minidom — Minimal DOM implementation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.dom.pulldom.html">xml.dom.pulldom — Support for building partial DOM trees</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.sax.html">xml.sax — Support for SAX2 parsers</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="xml.sax.handler.html">xml.sax.handler — Base classes for SAX handlers</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle xml.sax.handler — Base classes for SAX handlers"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="xml.sax.handler.html#contenthandler-objects">ContentHandler Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="xml.sax.handler.html#dtdhandler-objects">DTDHandler Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="xml.sax.handler.html#entityresolver-objects">EntityResolver Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="xml.sax.handler.html#errorhandler-objects">ErrorHandler Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="xml.sax.handler.html#lexicalhandler-objects">LexicalHandler Objects</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.sax.utils.html">xml.sax.saxutils — SAX Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.sax.reader.html">xml.sax.xmlreader — Interface for XML parsers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pyexpat.html">xml.parsers.expat — Fast XML parsing using Expat</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="xml.sax.html">&larr; xml.sax — Support for SAX2 parsers</a>
+        <a class="next" href="xml.sax.utils.html">xml.sax.saxutils — SAX Utilities &rarr;</a>
+      </nav>
+      
+      <h1 id="xml-sax-handler-base-classes-for-sax-handlers"><code class="xref py module docutils literal">xml.sax.handler</code> — Base classes for SAX handlers</h1>
+<dl class="py module">
+  <dt id="py:module:xml.sax.handler"><code class="sig-name">xml.sax.handler</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'moduleauthor'</p>
+<pre class="directive-error-source">.. moduleauthor:: Lars Marius Garshol &lt;larsga@garshol.priv.no&gt;</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Martin v. Löwis &lt;martin@v.loewis.de&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/xml/sax/handler.py`</p>
+<hr />
+<p>The SAX API defines five kinds of handlers: content handlers, DTD handlers,
+error handlers, entity resolvers and lexical handlers. Applications normally
+only need to implement those interfaces whose events they are interested in;
+they can implement the interfaces in a single object or in multiple objects.
+Handler implementations should inherit from the base classes provided in the
+module <a class="reference internal" href="xml.sax.handler.html#py:module:xml.sax.handler" title="xml.sax.handler: Base classes for SAX event handlers."><code class="xref py module docutils literal">xml.sax.handler</code></a>, so that all methods get default implementations.</p>
+<dl class="py class">
+  <dt id="py:class:xml.sax.handler.contenthandler"><em class="property">class</em> <code class="sig-name">ContentHandler</code></dt>
+  <dd><p>This is the main callback interface in SAX, and the one most important to
+applications. The order of events in this interface mirrors the order of the
+information in the document.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:xml.sax.handler.dtdhandler"><em class="property">class</em> <code class="sig-name">DTDHandler</code></dt>
+  <dd><p>Handle DTD events.</p>
+<p>This interface specifies only those DTD events required for basic parsing
+(unparsed entities and attributes).</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:xml.sax.handler.entityresolver"><em class="property">class</em> <code class="sig-name">EntityResolver</code></dt>
+  <dd><p>Basic interface for resolving entities. If you create an object implementing
+this interface, then register the object with your Parser, the parser will call
+the method in your object to resolve all external entities.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:xml.sax.handler.errorhandler"><em class="property">class</em> <code class="sig-name">ErrorHandler</code></dt>
+  <dd><p>Interface used by the parser to present error and warning messages to the
+application.  The methods of this object control whether errors are immediately
+converted to exceptions or are handled in some other way.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:xml.sax.handler.lexicalhandler"><em class="property">class</em> <code class="sig-name">LexicalHandler</code></dt>
+  <dd><p>Interface used by the parser to represent low frequency events which may not
+be of interest to many applications.</p>
+</dd>
+</dl>
+<p>In addition to these classes, <a class="reference internal" href="xml.sax.handler.html#py:module:xml.sax.handler" title="xml.sax.handler: Base classes for SAX event handlers."><code class="xref py module docutils literal">xml.sax.handler</code></a> provides symbolic constants
+for the feature and property names.</p>
+<dl class="py data">
+  <dt id="py:data:xml.sax.handler.feature_namespaces"><code class="sig-name">feature_namespaces</code></dt>
+  <dd><div class="line-block">
+<div class="line">value: <code>"http://xml.org/sax/features/namespaces"</code></div>
+<div class="line">true: Perform Namespace processing.</div>
+<div class="line">false: Optionally do not perform Namespace processing (implies
+namespace-prefixes; default).</div>
+<div class="line">access: (parsing) read-only; (not parsing) read/write</div>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:xml.sax.handler.feature_namespace_prefixes"><code class="sig-name">feature_namespace_prefixes</code></dt>
+  <dd><div class="line-block">
+<div class="line">value: <code>"http://xml.org/sax/features/namespace-prefixes"</code></div>
+<div class="line">true: Report the original prefixed names and attributes used for Namespace
+declarations.</div>
+<div class="line">false: Do not report attributes used for Namespace declarations, and
+optionally do not report original prefixed names (default).</div>
+<div class="line">access: (parsing) read-only; (not parsing) read/write</div>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:xml.sax.handler.feature_string_interning"><code class="sig-name">feature_string_interning</code></dt>
+  <dd><div class="line-block">
+<div class="line">value: <code>"http://xml.org/sax/features/string-interning"</code></div>
+<div class="line">true: All element names, prefixes, attribute names, Namespace URIs, and
+local names are interned using the built-in intern function.</div>
+<div class="line">false: Names are not necessarily interned, although they may be (default).</div>
+<div class="line">access: (parsing) read-only; (not parsing) read/write</div>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:xml.sax.handler.feature_validation"><code class="sig-name">feature_validation</code></dt>
+  <dd><div class="line-block">
+<div class="line">value: <code>"http://xml.org/sax/features/validation"</code></div>
+<div class="line">true: Report all validation errors (implies external-general-entities and
+external-parameter-entities).</div>
+<div class="line">false: Do not report validation errors.</div>
+<div class="line">access: (parsing) read-only; (not parsing) read/write</div>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:xml.sax.handler.feature_external_ges"><code class="sig-name">feature_external_ges</code></dt>
+  <dd><div class="admonition warning">
+  <p class="admonition-title">Warning</p>
+<p>Enabling opens a vulnerability to
+<a href="https://en.wikipedia.org/wiki/XML_external_entity_attack">external entity attacks</a>
+if the parser is used with user-provided XML content.
+Please reflect on your <a href="https://en.wikipedia.org/wiki/Threat_model">threat model</a>
+before enabling this feature.</p>
+</div>
+<div class="line-block">
+<div class="line">value: <code>"http://xml.org/sax/features/external-general-entities"</code></div>
+<div class="line">true: Include all external general (text) entities.</div>
+<div class="line">false: Do not include external general entities.</div>
+<div class="line">access: (parsing) read-only; (not parsing) read/write</div>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:xml.sax.handler.feature_external_pes"><code class="sig-name">feature_external_pes</code></dt>
+  <dd><div class="line-block">
+<div class="line">value: <code>"http://xml.org/sax/features/external-parameter-entities"</code></div>
+<div class="line">true: Include all external parameter entities, including the external DTD
+subset.</div>
+<div class="line">false: Do not include any external parameter entities, even the external
+DTD subset.</div>
+<div class="line">access: (parsing) read-only; (not parsing) read/write</div>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:xml.sax.handler.all_features"><code class="sig-name">all_features</code></dt>
+  <dd><p>List of all features.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:xml.sax.handler.property_lexical_handler"><code class="sig-name">property_lexical_handler</code></dt>
+  <dd><div class="line-block">
+<div class="line">value: <code>"http://xml.org/sax/properties/lexical-handler"</code></div>
+<div class="line">data type: xml.sax.handler.LexicalHandler (not supported in Python 2)</div>
+<div class="line">description: An optional extension handler for lexical events like
+comments.</div>
+<div class="line">access: read/write</div>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:xml.sax.handler.property_declaration_handler"><code class="sig-name">property_declaration_handler</code></dt>
+  <dd><div class="line-block">
+<div class="line">value: <code>"http://xml.org/sax/properties/declaration-handler"</code></div>
+<div class="line">data type: xml.sax.sax2lib.DeclHandler (not supported in Python 2)</div>
+<div class="line">description: An optional extension handler for DTD-related events other
+than notations and unparsed entities.</div>
+<div class="line">access: read/write</div>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:xml.sax.handler.property_dom_node"><code class="sig-name">property_dom_node</code></dt>
+  <dd><div class="line-block">
+<div class="line">value: <code>"http://xml.org/sax/properties/dom-node"</code></div>
+<div class="line">data type: org.w3c.dom.Node (not supported in Python 2)</div>
+<div class="line">description: When parsing, the current DOM node being visited if this is
+a DOM iterator; when not parsing, the root DOM node for iteration.</div>
+<div class="line">access: (parsing) read-only; (not parsing) read/write</div>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:xml.sax.handler.property_xml_string"><code class="sig-name">property_xml_string</code></dt>
+  <dd><div class="line-block">
+<div class="line">value: <code>"http://xml.org/sax/properties/xml-string"</code></div>
+<div class="line">data type: Bytes</div>
+<div class="line">description: The literal string of characters that was the source for the
+current event.</div>
+<div class="line">access: read-only</div>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:xml.sax.handler.all_properties"><code class="sig-name">all_properties</code></dt>
+  <dd><p>List of all known property names.</p>
+</dd>
+</dl>
+<a id="content-handler-objects"></a>
+<h2 id="contenthandler-objects">ContentHandler Objects</h2>
+<p>Users are expected to subclass <a class="reference internal" href="xml.sax.handler.html#py:class:xml.sax.handler.contenthandler"><code class="xref py class docutils literal">ContentHandler</code></a> to support their
+application.  The following methods are called by the parser on the appropriate
+events in the input document:</p>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.contenthandler.setdocumentlocator"><code class="sig-name">ContentHandler.setDocumentLocator(locator)</code></dt>
+  <dd><p>Called by the parser to give the application a locator for locating the origin
+of document events.</p>
+<p>SAX parsers are strongly encouraged (though not absolutely required) to supply a
+locator: if it does so, it must supply the locator to the application by
+invoking this method before invoking any of the other methods in the
+DocumentHandler interface.</p>
+<p>The locator allows the application to determine the end position of any
+document-related event, even if the parser is not reporting an error. Typically,
+the application will use this information for reporting its own errors (such as
+character content that does not match an application's business rules). The
+information returned by the locator is probably not sufficient for use with a
+search engine.</p>
+<p>Note that the locator will return correct information only during the invocation
+of the events in this interface. The application should not attempt to use it at
+any other time.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.contenthandler.startdocument"><code class="sig-name">ContentHandler.startDocument()</code></dt>
+  <dd><p>Receive notification of the beginning of a document.</p>
+<p>The SAX parser will invoke this method only once, before any other methods in
+this interface or in DTDHandler (except for <a class="reference internal" href="xml.sax.handler.html#py:method:xml.sax.handler.contenthandler.setdocumentlocator"><code class="xref py method docutils literal">setDocumentLocator</code></a>).</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.contenthandler.enddocument"><code class="sig-name">ContentHandler.endDocument()</code></dt>
+  <dd><p>Receive notification of the end of a document.</p>
+<p>The SAX parser will invoke this method only once, and it will be the last method
+invoked during the parse. The parser shall not invoke this method until it has
+either abandoned parsing (because of an unrecoverable error) or reached the end
+of input.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.contenthandler.startprefixmapping"><code class="sig-name">ContentHandler.startPrefixMapping(prefix, uri)</code></dt>
+  <dd><p>Begin the scope of a prefix-URI Namespace mapping.</p>
+<p>The information from this event is not necessary for normal Namespace
+processing: the SAX XML reader will automatically replace prefixes for element
+and attribute names when the <code>feature_namespaces</code> feature is enabled (the
+default).</p>
+<p>There are cases, however, when applications need to use prefixes in character
+data or in attribute values, where they cannot safely be expanded automatically;
+the <a class="reference internal" href="xml.sax.handler.html#py:method:xml.sax.handler.contenthandler.startprefixmapping"><code class="xref py method docutils literal">startPrefixMapping</code></a> and <a class="reference internal" href="xml.sax.handler.html#py:method:xml.sax.handler.contenthandler.endprefixmapping"><code class="xref py method docutils literal">endPrefixMapping</code></a> events supply the
+information to the application to expand prefixes in those contexts itself, if
+necessary.</p>
+<p>Note that <a class="reference internal" href="xml.sax.handler.html#py:method:xml.sax.handler.contenthandler.startprefixmapping"><code class="xref py method docutils literal">startPrefixMapping</code></a> and <a class="reference internal" href="xml.sax.handler.html#py:method:xml.sax.handler.contenthandler.endprefixmapping"><code class="xref py method docutils literal">endPrefixMapping</code></a> events are not
+guaranteed to be properly nested relative to each-other: all
+<a class="reference internal" href="xml.sax.handler.html#py:method:xml.sax.handler.contenthandler.startprefixmapping"><code class="xref py method docutils literal">startPrefixMapping</code></a> events will occur before the corresponding
+<a class="reference internal" href="xml.sax.handler.html#py:method:xml.sax.handler.contenthandler.startelement"><code class="xref py method docutils literal">startElement</code></a> event, and all <a class="reference internal" href="xml.sax.handler.html#py:method:xml.sax.handler.contenthandler.endprefixmapping"><code class="xref py method docutils literal">endPrefixMapping</code></a> events will occur
+after the corresponding <a class="reference internal" href="xml.sax.handler.html#py:method:xml.sax.handler.contenthandler.endelement"><code class="xref py method docutils literal">endElement</code></a> event, but their order is not
+guaranteed.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.contenthandler.endprefixmapping"><code class="sig-name">ContentHandler.endPrefixMapping(prefix)</code></dt>
+  <dd><p>End the scope of a prefix-URI mapping.</p>
+<p>See <a class="reference internal" href="xml.sax.handler.html#py:method:xml.sax.handler.contenthandler.startprefixmapping"><code class="xref py method docutils literal">startPrefixMapping</code></a> for details. This event will always occur after
+the corresponding <a class="reference internal" href="xml.sax.handler.html#py:method:xml.sax.handler.contenthandler.endelement"><code class="xref py method docutils literal">endElement</code></a> event, but the order of
+<a class="reference internal" href="xml.sax.handler.html#py:method:xml.sax.handler.contenthandler.endprefixmapping"><code class="xref py method docutils literal">endPrefixMapping</code></a> events is not otherwise guaranteed.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.contenthandler.startelement"><code class="sig-name">ContentHandler.startElement(name, attrs)</code></dt>
+  <dd><p>Signals the start of an element in non-namespace mode.</p>
+<p>The <em>name</em> parameter contains the raw XML 1.0 name of the element type as a
+string and the <em>attrs</em> parameter holds an object of the
+<a href="xml.sax.reader.html#attributes-objects">Attributes</a> interface containing the attributes of
+the element.  The object passed as <em>attrs</em> may be re-used by the parser; holding
+on to a reference to it is not a reliable way to keep a copy of the attributes.
+To keep a copy of the attributes, use the <a href="#" class="broken-link"><code class="xref py method docutils literal">copy</code></a> method of the <em>attrs</em>
+object.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.contenthandler.endelement"><code class="sig-name">ContentHandler.endElement(name)</code></dt>
+  <dd><p>Signals the end of an element in non-namespace mode.</p>
+<p>The <em>name</em> parameter contains the name of the element type, just as with the
+<a class="reference internal" href="xml.sax.handler.html#py:method:xml.sax.handler.contenthandler.startelement"><code class="xref py method docutils literal">startElement</code></a> event.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.contenthandler.startelementns"><code class="sig-name">ContentHandler.startElementNS(name, qname, attrs)</code></dt>
+  <dd><p>Signals the start of an element in namespace mode.</p>
+<p>The <em>name</em> parameter contains the name of the element type as a <code>(uri,
+localname)</code> tuple, the <em>qname</em> parameter contains the raw XML 1.0 name used in
+the source document, and the <em>attrs</em> parameter holds an instance of the
+<a href="xml.sax.reader.html#attributes-ns-objects">AttributesNS</a> interface
+containing the attributes of the element.  If no namespace is associated with
+the element, the <em>uri</em> component of <em>name</em> will be <code>None</code>.  The object passed
+as <em>attrs</em> may be re-used by the parser; holding on to a reference to it is not
+a reliable way to keep a copy of the attributes.  To keep a copy of the
+attributes, use the <a href="#" class="broken-link"><code class="xref py method docutils literal">copy</code></a> method of the <em>attrs</em> object.</p>
+<p>Parsers may set the <em>qname</em> parameter to <code>None</code>, unless the
+<code>feature_namespace_prefixes</code> feature is activated.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.contenthandler.endelementns"><code class="sig-name">ContentHandler.endElementNS(name, qname)</code></dt>
+  <dd><p>Signals the end of an element in namespace mode.</p>
+<p>The <em>name</em> parameter contains the name of the element type, just as with the
+<a class="reference internal" href="xml.sax.handler.html#py:method:xml.sax.handler.contenthandler.startelementns"><code class="xref py method docutils literal">startElementNS</code></a> method, likewise the <em>qname</em> parameter.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.contenthandler.characters"><code class="sig-name">ContentHandler.characters(content)</code></dt>
+  <dd><p>Receive notification of character data.</p>
+<p>The Parser will call this method to report each chunk of character data. SAX
+parsers may return all contiguous character data in a single chunk, or they may
+split it into several chunks; however, all of the characters in any single event
+must come from the same external entity so that the Locator provides useful
+information.</p>
+<p><em>content</em> may be a string or bytes instance; the <code>expat</code> reader module
+always produces strings.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>The earlier SAX 1 interface provided by the Python XML Special Interest Group
+used a more Java-like interface for this method.  Since most parsers used from
+Python did not take advantage of the older interface, the simpler signature was
+chosen to replace it.  To convert old code to the new interface, use <em>content</em>
+instead of slicing content with the old <em>offset</em> and <em>length</em> parameters.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.contenthandler.ignorablewhitespace"><code class="sig-name">ContentHandler.ignorableWhitespace(whitespace)</code></dt>
+  <dd><p>Receive notification of ignorable whitespace in element content.</p>
+<p>Validating Parsers must use this method to report each chunk of ignorable
+whitespace (see the W3C XML 1.0 recommendation, section 2.10): non-validating
+parsers may also use this method if they are capable of parsing and using
+content models.</p>
+<p>SAX parsers may return all contiguous whitespace in a single chunk, or they may
+split it into several chunks; however, all of the characters in any single event
+must come from the same external entity, so that the Locator provides useful
+information.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.contenthandler.processinginstruction"><code class="sig-name">ContentHandler.processingInstruction(target, data)</code></dt>
+  <dd><p>Receive notification of a processing instruction.</p>
+<p>The Parser will invoke this method once for each processing instruction found:
+note that processing instructions may occur before or after the main document
+element.</p>
+<p>A SAX parser should never report an XML declaration (XML 1.0, section 2.8) or a
+text declaration (XML 1.0, section 4.3.1) using this method.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.contenthandler.skippedentity"><code class="sig-name">ContentHandler.skippedEntity(name)</code></dt>
+  <dd><p>Receive notification of a skipped entity.</p>
+<p>The Parser will invoke this method once for each entity skipped. Non-validating
+processors may skip entities if they have not seen the declarations (because,
+for example, the entity was declared in an external DTD subset). All processors
+may skip external entities, depending on the values of the
+<code>feature_external_ges</code> and the <code>feature_external_pes</code> properties.</p>
+</dd>
+</dl>
+<a id="dtd-handler-objects"></a>
+<h2 id="dtdhandler-objects">DTDHandler Objects</h2>
+<p><a class="reference internal" href="xml.sax.handler.html#py:class:xml.sax.handler.dtdhandler"><code class="xref py class docutils literal">DTDHandler</code></a> instances provide the following methods:</p>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.dtdhandler.notationdecl"><code class="sig-name">DTDHandler.notationDecl(name, publicId, systemId)</code></dt>
+  <dd><p>Handle a notation declaration event.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.dtdhandler.unparsedentitydecl"><code class="sig-name">DTDHandler.unparsedEntityDecl(name, publicId, systemId, ndata)</code></dt>
+  <dd><p>Handle an unparsed entity declaration event.</p>
+</dd>
+</dl>
+<a id="entity-resolver-objects"></a>
+<h2 id="entityresolver-objects">EntityResolver Objects</h2>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.entityresolver.resolveentity"><code class="sig-name">EntityResolver.resolveEntity(publicId, systemId)</code></dt>
+  <dd><p>Resolve the system identifier of an entity and return either the system
+identifier to read from as a string, or an InputSource to read from. The default
+implementation returns <em>systemId</em>.</p>
+</dd>
+</dl>
+<a id="sax-error-handler"></a>
+<h2 id="errorhandler-objects">ErrorHandler Objects</h2>
+<p>Objects with this interface are used to receive error and warning information
+from the <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.xmlreader"><code class="xref py class docutils literal">XMLReader</code></a>.  If you create an object that
+implements this interface, then register the object with your
+<a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.xmlreader"><code class="xref py class docutils literal">XMLReader</code></a>, the parser
+will call the methods in your object to report all warnings and errors. There
+are three levels of errors available: warnings, (possibly) recoverable errors,
+and unrecoverable errors.  All methods take a <a class="reference internal" href="xml.sax.html#py:exception:xml.sax.saxparseexception"><code class="xref py exception docutils literal">SAXParseException</code></a> as the
+only parameter.  Errors and warnings may be converted to an exception by raising
+the passed-in exception object.</p>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.errorhandler.error"><code class="sig-name">ErrorHandler.error(exception)</code></dt>
+  <dd><p>Called when the parser encounters a recoverable error.  If this method does not
+raise an exception, parsing may continue, but further document information
+should not be expected by the application.  Allowing the parser to continue may
+allow additional errors to be discovered in the input document.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.errorhandler.fatalerror"><code class="sig-name">ErrorHandler.fatalError(exception)</code></dt>
+  <dd><p>Called when the parser encounters an error it cannot recover from; parsing is
+expected to terminate when this method returns.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.errorhandler.warning"><code class="sig-name">ErrorHandler.warning(exception)</code></dt>
+  <dd><p>Called when the parser presents minor warning information to the application.
+Parsing is expected to continue when this method returns, and document
+information will continue to be passed to the application. Raising an exception
+in this method will cause parsing to end.</p>
+</dd>
+</dl>
+<a id="lexical-handler-objects"></a>
+<h2 id="lexicalhandler-objects">LexicalHandler Objects</h2>
+<p>Optional SAX2 handler for lexical events.</p>
+<p>This handler is used to obtain lexical information about an XML
+document. Lexical information includes information describing the
+document encoding used and XML comments embedded in the document, as
+well as section boundaries for the DTD and for any CDATA sections.
+The lexical handlers are used in the same manner as content handlers.</p>
+<p>Set the LexicalHandler of an XMLReader by using the setProperty method
+with the property identifier
+<code>'http://xml.org/sax/properties/lexical-handler'</code>.</p>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.lexicalhandler.comment"><code class="sig-name">LexicalHandler.comment(content)</code></dt>
+  <dd><p>Reports a comment anywhere in the document (including the DTD and
+outside the document element).</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.lexicalhandler.startdtd"><code class="sig-name">LexicalHandler.startDTD(name, public_id, system_id)</code></dt>
+  <dd><p>Reports the start of the DTD declarations if the document has an
+associated DTD.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.lexicalhandler.enddtd"><code class="sig-name">LexicalHandler.endDTD()</code></dt>
+  <dd><p>Reports the end of DTD declaration.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.lexicalhandler.startcdata"><code class="sig-name">LexicalHandler.startCDATA()</code></dt>
+  <dd><p>Reports the start of a CDATA marked section.</p>
+<p>The contents of the CDATA marked section will be reported through
+the characters handler.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.handler.lexicalhandler.endcdata"><code class="sig-name">LexicalHandler.endCDATA()</code></dt>
+  <dd><p>Reports the end of a CDATA marked section.</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="xml.sax.html">&larr; xml.sax — Support for SAX2 parsers</a>
+        <a class="next" href="xml.sax.utils.html">xml.sax.saxutils — SAX Utilities &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

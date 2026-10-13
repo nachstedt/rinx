@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grid Directives — Megacorp Documentation</title>
+  <link rel="stylesheet" href="../../default.css">
+  <script defer src="../../version_switcher.js"></script>
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">Megacorp Documentation</h2>
+        <p class="project-version">v2.0-beta</p>
+        <div class="version-switcher" data-json-url="https:&#x2f;&#x2f;nachstedt.github.io&#x2f;rinx&#x2f;versions.json" hidden></div>
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../headings.html">Section headings</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../hyperlinks.html">Hyperlinks and Targets</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../admonitions.html">Admonitions Showcase</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../inline_roles.html">Inline Roles</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../any_role.html">The :any: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../doc_role.html">The :doc: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../numref.html">The :numref: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../downloads.html">The :download: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../version_changes.html">Version Change Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../seealso.html">See Also Directive</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../literal_blocks.html">Literal Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../code_blocks.html">Code Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../definition_lists.html">Definition Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../enumerated_lists.html">Enumerated Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../option_lists.html">Option Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../block_quotes.html">Block Quotes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../line_blocks.html">Line Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../comments.html">Comments</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../domains.html">Domains</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../current_module.html">Current Module</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../transitions.html">Transitions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../typography.html">Smart Typography</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../escapes.html">Backslash Escapes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tables.html">Grid Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../simple_tables.html">Simple Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../list_table.html">List Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../csv_table.html">CSV Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../table_directive.html">The table Directive</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../math.html">Math</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../code_role.html">The :code: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../registry_roles.html">Registry Roles: :pep:, :rfc:, :cve: and :cwe:</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../images.html">Images</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../figures.html">Figures</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../substitutions.html">Substitutions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../includes.html">Includes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../index_entries.html">Index Entries</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../noqa.html">Suppressing diagnostics</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../unknown_directives.html">Unrecognized and malformed directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../if_builder.html">Conditional content by builder</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../doctests.html">Doctest Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../entities/index.html">Entities</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../toctree/index.html">Toctree Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../contents/index.html">Contents Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../default_role/index.html">Interpreted Text</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../sectnum/index.html">Sectnum Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../dropdown/index.html">Dropdown Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="index.html">Grid Directives</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Grid Directives"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="index.html#columns">Columns</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#spacing">Spacing</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#alignment">Alignment</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#nesting">Nesting</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="columns.html">Columns</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="spacing.html">Spacing</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="alignment.html">Alignment</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="nesting.html">Nesting</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../button_link/index.html">Button Link Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../jinja/index.html">🧩 Templated Sources</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../intersphinx/index.html">Linking into other sites</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../team_a/index.html">Team A: Getting Started</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../team_b/index.html">Team B: Infrastructure Guide</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="../dropdown/reference.html">&larr; Referring to a Dropdown</a>
+        <a class="next" href="columns.html">Columns &rarr;</a>
+      </nav>
+      
+      <a id="grid-index"></a>
+<h1 id="grid-directives">Grid Directives</h1>
+<p><code>.. grid::</code> is sphinx-design's responsive row and <code>.. grid-item::</code> is one
+cell of it. Like <code>.. dropdown::</code> neither is part of docutils or Sphinx, and
+like it they earn their place by <em>containing</em> things: an unknown directive
+never parses its body, so before these existed everything written inside a grid
+— prose, targets, entities, diagrams — was invisible to every later phase.</p>
+<p>A grid's argument says how many of twelve columns the row splits into. One
+value applies at every breakpoint; four are read as <em>xs sm md lg</em>:</p>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-1 sd-row-cols-md-2 sd-row-cols-lg-2 sd-g-3 sd-g-xs-3 sd-g-sm-3 sd-g-md-3 sd-g-lg-3 docutils">
+<div class="sd-col sd-d-flex-column sd-p-3 sd-border-1 docutils">
+<p>One column on a narrow screen, two once there is room. Resize the window
+and the two cells stack.</p>
+</div>
+<div class="sd-col sd-d-flex-column sd-p-3 sd-border-1 docutils">
+<p>Each cell's body is ordinary block content, so it can hold anything a
+document can — including the directives on the pages below.</p>
+</div>
+</div>
+</div>
+<ul>
+  <li><a href="columns.html">Columns</a>
+<ul>
+  <li><a href="columns.html#the-argument">The argument</a></li>
+  <li><a href="columns.html#the-columns-option">The :columns: option</a></li>
+</ul>
+  </li>
+  <li><a href="spacing.html">Spacing</a>
+<ul>
+  <li><a href="spacing.html#gutter">:gutter:</a></li>
+  <li><a href="spacing.html#margin-and-padding">:margin: and :padding:</a></li>
+</ul>
+  </li>
+  <li><a href="alignment.html">Alignment</a>
+<ul>
+  <li><a href="alignment.html#child-direction">:child-direction:</a></li>
+  <li><a href="alignment.html#child-align">:child-align:</a></li>
+  <li><a href="alignment.html#reverse">:reverse:</a></li>
+  <li><a href="alignment.html#class-container-class-row-and-class">:class-container:, :class-row: and :class:</a></li>
+</ul>
+  </li>
+  <li><a href="nesting.html">Nesting</a>
+<ul>
+  <li><a href="nesting.html#a-diagram-in-a-cell">A diagram in a cell</a></li>
+  <li><a href="nesting.html#other-constructs-in-a-cell">Other constructs in a cell</a></li>
+  <li><a href="nesting.html#a-grid-inside-a-grid">A grid inside a grid</a></li>
+</ul>
+  </li>
+</ul>
+<h2 id="columns">Columns</h2>
+<p>"Columns" shows the row's own count and a cell's <code>:columns:</code> override. A
+twelve-column row with one cell spanning four of them:</p>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-12 sd-row-cols-xs-12 sd-row-cols-sm-12 sd-row-cols-md-12 sd-row-cols-lg-12 sd-g-2 sd-g-xs-2 sd-g-sm-2 sd-g-md-2 sd-g-lg-2 docutils">
+<div class="sd-col sd-d-flex-column sd-col-4 sd-col-xs-4 sd-col-sm-4 sd-col-md-4 sd-col-lg-4 sd-border-1 docutils">
+<p><code>:columns: 4</code></p>
+</div>
+<div class="sd-col sd-d-flex-column sd-col-8 sd-col-xs-8 sd-col-sm-8 sd-col-md-8 sd-col-lg-8 sd-border-1 docutils">
+<p><code>:columns: 8</code> — the two together fill the row.</p>
+</div>
+</div>
+</div>
+<h2 id="spacing">Spacing</h2>
+<p>"Spacing" shows <code>:gutter:</code>, <code>:margin:</code> and <code>:padding:</code>. The gutter is the
+space <em>between</em> cells and takes the same one-or-four breakpoint values the
+column counts do:</p>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 sd-p-2 sd-border-1 docutils">
+<div class="sd-row sd-row-cols-3 sd-row-cols-xs-3 sd-row-cols-sm-3 sd-row-cols-md-3 sd-row-cols-lg-3 sd-g-5 sd-g-xs-5 sd-g-sm-5 sd-g-md-5 sd-g-lg-5 docutils">
+<div class="sd-col sd-d-flex-column sd-border-1 docutils">
+<p><code>:gutter: 5</code></p>
+</div>
+<div class="sd-col sd-d-flex-column sd-border-1 docutils">
+<p>is the widest</p>
+</div>
+<div class="sd-col sd-d-flex-column sd-border-1 docutils">
+<p>step there is.</p>
+</div>
+</div>
+</div>
+<h2 id="alignment">Alignment</h2>
+<p>"Alignment" shows <code>:child-direction:</code> and <code>:child-align:</code>, which govern how
+a cell lays <em>its own</em> content out, and <code>:reverse:</code>, which lays the row out
+right to left:</p>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 sd-g-3 sd-g-xs-3 sd-g-sm-3 sd-g-md-3 sd-g-lg-3 sd-flex-row-reverse docutils">
+<div class="sd-col sd-d-flex-column sd-align-major-center sd-border-1 docutils">
+<p>Written first, drawn second.</p>
+</div>
+<div class="sd-col sd-d-flex-column sd-align-major-center sd-border-1 docutils">
+<p>Written second, drawn first.</p>
+</div>
+</div>
+</div>
+<h2 id="nesting">Nesting</h2>
+<p>"Nesting" is the page this family was added for: it draws a PlantUML diagram
+from inside a <code>.. grid-item::</code>.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="../dropdown/reference.html">&larr; Referring to a Dropdown</a>
+        <a class="next" href="columns.html">Columns &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
