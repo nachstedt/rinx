@@ -972,6 +972,29 @@ mod tests {
     }
 
     #[test]
+    fn test_an_unknown_domain_qualified_directive_names_itself_as_written() {
+        // Given — a domain this build does not have
+        let source = ".. cpp:class:: Widget\n";
+
+        // When
+        let document = crate::parse("index.rst", source);
+
+        // Then — the prefix is part of the subject, since the name it qualifies
+        // is meaningless without it
+        let subjects: Vec<_> = document
+            .diagnostics
+            .iter()
+            .map(|diagnostic| diagnostic.subject.clone())
+            .collect();
+        assert_eq!(
+            subjects,
+            [Some(rinx_ast::DiagnosticSubject::Directive(
+                "cpp:class".to_string()
+            ))]
+        );
+    }
+
+    #[test]
     fn test_parse_body_directive_routes_needsequence_to_the_sequence_parser() {
         // Given — no schema is in hand here, so the relation is unknown and the
         // diagram degrades; what matters is which parser said so

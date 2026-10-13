@@ -46,6 +46,7 @@ mod definition_list_item;
 mod description_flags;
 mod diagnostic;
 mod diagnostic_code;
+mod diagnostic_subject;
 mod directive;
 mod doctest;
 mod document;
@@ -114,6 +115,7 @@ pub use definition_list_item::DefinitionListItem;
 pub use description_flags::{DescriptionFlag, DescriptionFlags};
 pub use diagnostic::Diagnostic;
 pub use diagnostic_code::{DiagnosticCode, UnknownDiagnosticCode};
+pub use diagnostic_subject::DiagnosticSubject;
 pub use directive::Directive;
 pub use doctest::{
     DocTestBlock, DocTestFlag, DocTestFlagName, DocTestGroup, DocTestGroupSelector, DocTestTrim,

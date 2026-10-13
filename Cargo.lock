@@ -1158,6 +1158,7 @@ dependencies = [
  "rinx_toctree",
  "serde",
  "serde_json",
+ "toml",
 ]
 
 [[package]]

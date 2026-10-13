@@ -1,7 +1,7 @@
 //! The server's projects: which one a file belongs to, how a folder's
 //! projects are replaced when the scan — or a changed `conf.py` — finds them
-//! again, and what they show the client: their `conf.py`'s findings, and the
-//! status bar's list.
+//! again, and what they show the client: their `conf.py`'s findings, the
+//! status bar's list, and — once — the extensions the server cannot model.
 //!
 //! A file belongs to the project whose source root is the nearest above it,
 //! and only that project is asked whether the file is a document — an
@@ -20,6 +20,7 @@ use std::time::Duration;
 use lsp_server::Message;
 use lsp_types::{FileChangeType, FileEvent, Uri};
 
+use super::handlers::show_information;
 use super::state::ServerState;
 use crate::diagnostics::conf_diagnostics;
 use crate::progress::{IndexState, IndexStatus, ProjectStatus};
@@ -182,11 +183,16 @@ impl ServerState {
         !elsewhere.is_empty()
     }
 
-    /// The messages replacing a folder's projects brings about: every
-    /// document diagnosed under the folder read again, if a project changed,
-    /// and every `conf.py` published.
+    /// The messages replacing a folder's projects brings about: the notice
+    /// of each new project's unmodelled extensions, every document diagnosed
+    /// under the folder read again, if a project changed, and every `conf.py`
+    /// published.
     fn after_replacing(&mut self, folder: usize, replaced: &Replaced) -> Vec<Message> {
-        let mut messages = Vec::new();
+        let mut messages: Vec<Message> = replaced
+            .added
+            .iter()
+            .filter_map(|(id, _)| self.announce_unmodelled_extensions(*id))
+            .collect();
         if replaced.changed
             && let Some(root) = self.folders.get(folder).cloned()
         {
@@ -202,6 +208,33 @@ impl ServerState {
             messages.extend(self.publish(conf.clone(), false));
         }
         messages
+    }
+
+    /// The notice naming the extensions project `id` declares that the
+    /// server cannot model, unless there are none or the user was told about
+    /// exactly these for its `conf.py` already (ADR-038 §5).
+    fn announce_unmodelled_extensions(&mut self, id: ProjectId) -> Option<Message> {
+        let project = self.projects.get(&id)?;
+        let conf = project.conf_path()?.to_path_buf();
+        let unmodelled = project.model().settings.strictness.unmodelled_extensions();
+        if unmodelled.is_empty() {
+            return None;
+        }
+        let names: Vec<String> = unmodelled.iter().map(|name| format!("`{name}`")).collect();
+        let message = format!(
+            "rinx does not know the extensions {} that {} declares. Their directives are \
+             reported as unknown, and a reference into any domain that does not resolve as a hint, \
+             since one of them may define it.",
+            names.join(", "),
+            self.folders.get(project.folder()).map_or_else(
+                || conf.to_string_lossy().into_owned(),
+                |root| { relative_name(root, &conf) }
+            ),
+        );
+        let unmodelled = unmodelled.to_vec();
+        self.announced
+            .insert((conf, unmodelled))
+            .then(|| show_information(message))
     }
 
     /// The URI of every `conf.py` of folder `folder`'s projects.

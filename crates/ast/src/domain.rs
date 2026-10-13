@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// Domains namespace directives and cross-reference roles so the same
 /// object-type name (e.g. `function`) can mean different things in
 /// different languages.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Domain {
     Py,

@@ -10,7 +10,9 @@
 //! one warning (`part.rst:3:1 (included from index.rst)`), so it has no code
 //! and no `.. noqa:` of its own — silencing the problems in the fragment is
 //! what removes it. It is *Information* rather than a warning, so a problem is
-//! not counted twice in the editor's totals.
+//! not counted twice in the editor's totals. Only warnings are summarized:
+//! a problem the project's strictness lowered — a directive of an extension
+//! rinx does not analyse — is no reason to flag the include.
 //!
 //! A fragment included twice shows its problems on both `.. include::` lines,
 //! since a diagnostic records the file it is in rather than the inclusion that
@@ -83,6 +85,9 @@ fn related_problems(
     let reached = site.reached_files(&document.include_sites);
     let mut related: Vec<DiagnosticRelatedInformation> = Vec::new();
     for found in placed {
+        if found.judgement.severity != DiagnosticSeverity::WARNING {
+            continue;
+        }
         let file = found.diagnostic.span.and_then(|span| span.file);
         if !file.is_some_and(|file| reached.contains(&file)) {
             continue;
@@ -133,7 +138,8 @@ mod tests {
     use super::*;
     use crate::documents::DocumentStore;
     use crate::files::FileReads;
-    use rinx_ast::{Diagnostic, DiagnosticCode, FileId, Position, Span};
+    use crate::project::Strictness;
+    use rinx_ast::{Diagnostic, DiagnosticCode, DiagnosticSubject, FileId, Position, Span};
 
     fn uri(text: &str) -> Uri {
         text.parse().expect("valid uri")
@@ -175,6 +181,14 @@ mod tests {
 
     /// The summaries for `document`, whose fragments all read as `text`.
     fn summaries(document: &Document) -> Vec<(Uri, lsp_types::Diagnostic)> {
+        summaries_under(document, &Strictness::default())
+    }
+
+    /// [`summaries`], for a document of a project with `strictness`.
+    fn summaries_under(
+        document: &Document,
+        strictness: &Strictness,
+    ) -> Vec<(Uri, lsp_types::Diagnostic)> {
         let mut reads = FileReads::default();
         for file in &document.source_files {
             reads
@@ -197,6 +211,7 @@ mod tests {
                     placement.place(document, diagnostic.span, PositionEncoding::Utf16);
                 Placed {
                     diagnostic,
+                    judgement: strictness.judge(diagnostic),
                     uri,
                     range,
                 }
@@ -266,6 +281,22 @@ mod tests {
 
         // When / Then
         assert_eq!(summaries(&document), Vec::new());
+    }
+
+    #[test]
+    fn test_an_include_bringing_in_only_lowered_problems_has_no_summary() {
+        // Given an autodoc project whose fragment holds an autodoc directive
+        let automodule = Diagnostic::new(
+            DiagnosticCode::DirectiveUnknown,
+            "unknown directive type 'automodule'",
+            span(3, Some(0)),
+        )
+        .about(DiagnosticSubject::Directive("automodule".to_string()));
+        let document = document(&["/docs/part.rst"], &[(1, None, 0)], vec![automodule]);
+        let strictness = Strictness::legacy(&["sphinx.ext.autodoc".to_string()]);
+
+        // When / Then — the fragment shows it as Information; the include is clean
+        assert_eq!(summaries_under(&document, &strictness), Vec::new());
     }
 
     #[test]

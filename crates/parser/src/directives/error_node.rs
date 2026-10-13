@@ -16,12 +16,14 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::indent::strip_common_indent;
-use rinx_ast::{Diagnostic, DiagnosticCode, Directive, Span};
+use rinx_ast::{Diagnostic, DiagnosticCode, DiagnosticSubject, Directive, Span};
 
 /// Degrades a directive whose name this build does not recognize.
 ///
 /// The wording follows docutils' own (`unknown directive type "foo"`), since a
-/// reader who knows Sphinx will recognize it.
+/// reader who knows Sphinx will recognize it. The diagnostic names the
+/// directive as its subject too, so a front end can tell which extension it
+/// belongs to without reading the message.
 pub(in crate::directives) fn unknown_directive(
     name: String,
     argument: String,
@@ -29,11 +31,14 @@ pub(in crate::directives) fn unknown_directive(
     span: Option<Span>,
     diagnostics: &mut Diagnostics,
 ) -> Directive {
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::DirectiveUnknown,
-        format!("unknown directive type '{name}'"),
-        span,
-    ));
+    diagnostics.push(
+        Diagnostic::at(
+            DiagnosticCode::DirectiveUnknown,
+            format!("unknown directive type '{name}'"),
+            span,
+        )
+        .about(DiagnosticSubject::Directive(name.clone())),
+    );
     Directive::Unknown {
         name,
         argument,
@@ -107,6 +112,10 @@ mod tests {
         assert_eq!(found.len(), 1);
         assert_eq!(found[0].code, DiagnosticCode::DirectiveUnknown);
         assert_eq!(found[0].message, "unknown directive type 'mermaid'");
+        assert_eq!(
+            found[0].subject,
+            Some(DiagnosticSubject::Directive("mermaid".to_string()))
+        );
         assert_eq!(
             directive,
             Directive::Unknown {
