@@ -49,7 +49,11 @@ async function discardActiveEditor(): Promise<void> {
 
 suite('Language server diagnostics (e2e)', () => {
     suiteSetup(() => {
-        const binary = vscode.workspace.getConfiguration('rinx').get<string>('binaryPath') ?? '';
+        // A bundled VSIX under test sets no binary: it brings its own.
+        const binary = vscode.workspace.getConfiguration('rinx').inspect<string>('binaryPath')?.workspaceValue;
+        if (binary === undefined) {
+            return;
+        }
         assert.ok(
             fs.existsSync(binary),
             `no rinx binary at '${binary}': run \`cargo build\` at the repository root, or set RINX_BINARY`,

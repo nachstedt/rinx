@@ -1,7 +1,10 @@
 # Everything is left out of the VSIX but what is listed below: the bundle
 # carries vscode-languageclient, so no node_modules ship. vsix-files.txt is
-# the resulting list, which CI compares against.
+# the resulting list, which CI compares against. bin/ exists only while
+# `npm run package:bundled` packages a binary.
 **
 !dist/extension.js
 !README.md
 !LICENSE
+!bin/rinx
+!bin/rinx.exe

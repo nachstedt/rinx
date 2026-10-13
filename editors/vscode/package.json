@@ -40,7 +40,7 @@
         "rinx.binaryPath": {
           "type": "string",
           "default": "rinx",
-          "description": "Path to the rinx binary, used by the preview and the language server. Can be a bare command (if in PATH) or an absolute path (e.g., /usr/local/bin/rinx). When unset, the binary is discovered through Bazel, falling back to `rinx` on the PATH."
+          "description": "Path to the rinx binary, used by the preview and the language server. Can be a bare command (if in PATH) or an absolute path (e.g., /usr/local/bin/rinx). When unset, the binary is discovered through Bazel, then the one bundled into the extension (if any), falling back to `rinx` on the PATH."
         },
         "rinx.trace.server": {
           "type": "string",
@@ -97,8 +97,9 @@
     "test": "vscode-test",
     "prepackage": "node scripts/write-license.mjs",
     "package": "vsce package --no-dependencies --out rinx.vsix",
+    "package:bundled": "node scripts/package-bundled.mjs",
     "package:files": "node scripts/write-license.mjs && vsce ls --no-dependencies",
-    "package:check": "npm run -s package:files | sort | diff vsix-files.txt -"
+    "package:check": "npm run -s package:files | LC_ALL=C sort | diff vsix-files.txt -"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.1",

@@ -10,6 +10,8 @@
 // - `e2e-no-server` points the extension at a binary that does not exist.
 // - `e2e-vsix`, only when RINX_VSIX names a packaged extension, runs the e2e
 //   tests against that VSIX installed, rather than against this checkout.
+//   With RINX_VSIX_BUNDLED=1 the VSIX is one `npm run package:bundled` made,
+//   and no rinx.binaryPath is set, so the server is the binary inside it.
 //
 // Each e2e label gets its own copy of test-fixtures/workspace in the temp
 // directory, with the settings it needs written into the copy: test-cli shares
@@ -59,10 +61,12 @@ function packagedExtensionTests(vsix) {
         files: ['out/test/e2e/**/*.test.js', 'out/test/e2e-vsix/**/*.test.js'],
         extensionDevelopmentPath: fileURLToPath(new URL('./test-fixtures/vsix-host', import.meta.url)),
         installExtensions: [resolve(vsix)],
-        workspaceFolder: fixtureWorkspace('e2e-vsix', {
-            ...workspaceSettings,
-            'rinx.binaryPath': rinxBinary,
-        }),
+        workspaceFolder: fixtureWorkspace(
+            'e2e-vsix',
+            process.env.RINX_VSIX_BUNDLED === '1'
+                ? workspaceSettings
+                : { ...workspaceSettings, 'rinx.binaryPath': rinxBinary },
+        ),
     };
 }
 

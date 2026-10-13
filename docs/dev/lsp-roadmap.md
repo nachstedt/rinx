@@ -32,9 +32,7 @@ finished one 🔶. A heading with no marker means the step has not started.
   (PRs #238–#248, listed at the end of M0), #2 (PR #253), #3 (PR #255),
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
-  and #11 (PR #286).
-- **Done early:** most of #12, which is the packaging, the CI artifact and the
-  installed-VSIX test.
+  #11 (PR #286), and #12 (most of it early, in PR #248).
 - **Next: #13, intersphinx.**
 
 The pull request that finishes a step also updates this section and the
@@ -49,7 +47,9 @@ is used in one of three ways, none of which uploads anything:
    `rinx.binaryPath` at `target/debug/rinx` (or `target/release/rinx` for a
    large corpus). The loop is `cargo build`, then reload the window.
 2. **Local VSIX.** Run `npm run package` in `editors/vscode`, then
-   `code --install-extension rinx.vsix`.
+   `code --install-extension rinx.vsix`. `npm run package:bundled` packages
+   a release build of `rinx` into it as well, as `rinx-<platform>.vsix`,
+   which then needs no binary of its own.
 3. **Sharing with a few people.** Give them the VSIX as a CI artifact (every
    CI run uploads one, as `rinx-vsix`) or
    GitHub release asset, installed via "Install from VSIX…", together with a
@@ -333,16 +333,25 @@ Measured on CPython's 524 documents, `--check` takes 9 s. It shows 2564
 warnings (1857 of them unknown directives), 2882 hints and 33 include
 summaries.
 
-### 12. Local packaging 🔶 partly done (#248)
+### 12. Local packaging ✅ (#248)
 
 **You experience:** `npm run package` produces a VSIX that installs into a
 normal VS Code and works. Nothing is published.
 
-- ~~`package` script running `vsce package`, plus a `.vscodeignore`~~ (done early, with an esbuild bundle, in the CI testing work)
+- `package` script running `vsce package`, plus a `.vscodeignore` (done early, with an esbuild bundle, in the CI testing work)
 - Optionally bundle the binary for the packaging machine's platform
-- Binary lookup order: setting → bundled → Bazel
-- ~~CI job uploading the VSIX as a workflow artifact~~ (done: `VS Code / package`, artifact `rinx-vsix`)
-- ~~CI smoke test installing the VSIX~~ (done: `VS Code / packaged`, which runs the e2e suite against the installed VSIX on Linux and macOS; Windows joins with #39)
+- Binary lookup order: setting → Bazel → bundled → PATH
+- CI job uploading the VSIX as a workflow artifact (done early: `VS Code / package`, artifact `rinx-vsix`)
+- CI smoke test installing the VSIX (done early: `VS Code / packaged`, which runs the e2e suite against the installed VSIX on Linux and macOS; Windows joins with #39)
+
+The bundled package is `npm run package:bundled`, a platform-specific
+`rinx-<platform>.vsix` (`vsce --target`) carrying `bin/rinx`; `npm run
+package` stays the platform-neutral package without one. The lookup puts
+Bazel ahead of the bundled binary, against this step's first plan: a Bazel
+workspace's `@rinx//:rinx` is the version its build runs, which M3's parity
+needs. `VS Code / packaged` now also runs the e2e suite against a bundled
+VSIX with no `rinx.binaryPath` set, on Linux and macOS. It bundles CI's debug
+binary and uploads nothing, since release binaries are #39's.
 
 ### 13. Intersphinx
 

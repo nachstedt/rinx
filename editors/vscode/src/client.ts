@@ -9,8 +9,15 @@ import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-lan
 import { BazelScanner } from './bazel';
 import { chooseBinaryPath, explicitValue } from './binary';
 
-/** Finds the binary for the language server, the way the preview finds it. */
-export async function resolveServerBinary(scanner: BazelScanner, log: (msg: string) => void): Promise<string> {
+/**
+ * Finds the binary for the language server, the way the preview finds it;
+ * `bundled` is the one the VSIX carries, if any.
+ */
+export async function resolveServerBinary(
+    scanner: BazelScanner,
+    bundled: string | undefined,
+    log: (msg: string) => void,
+): Promise<string> {
     const settings = vscode.workspace.getConfiguration('rinx');
     const configured = explicitValue(settings.inspect<string>('binaryPath'));
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
@@ -18,7 +25,7 @@ export async function resolveServerBinary(scanner: BazelScanner, log: (msg: stri
     if (!configured && workspaceRoot && (settings.get<boolean>('autoDiscover') ?? true)) {
         discovered = await scanner.deriveBinaryPath(workspaceRoot);
     }
-    const binary = chooseBinaryPath(configured, discovered);
+    const binary = chooseBinaryPath(configured, discovered, bundled);
     log(`Language server binary: ${binary}`);
     return binary;
 }
