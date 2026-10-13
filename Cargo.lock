@@ -1152,6 +1152,7 @@ dependencies = [
  "rinx_ast",
  "rinx_entity",
  "rinx_index",
+ "rinx_inventory",
  "rinx_parser",
  "rinx_pyconf",
  "rinx_renderer",

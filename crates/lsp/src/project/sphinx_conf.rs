@@ -22,6 +22,7 @@ use rinx_parser::{DefaultRole, ParseCtx, RejectParseFiles};
 use rinx_pyconf::{BoundValue, ModuleReading, Value, ValueKind, read_module};
 
 use super::exclusion::{Exclusion, INCLUDE_EVERYTHING};
+use super::intersphinx::{DEFAULT_CACHE_LIMIT_DAYS, IntersphinxSettings, read_mapping};
 use super::model::{ParseSettings, ProjectSettings};
 use super::strictness::Strictness;
 
@@ -65,6 +66,9 @@ pub fn read_sphinx_conf(text: &str) -> ConfReading {
     ConfReading { settings, findings }
 }
 
+/// The extension whose settings say which other sites a project links into.
+const INTERSPHINX: &str = "sphinx.ext.intersphinx";
+
 struct Reader<'a> {
     module: &'a ModuleReading,
     findings: Vec<Diagnostic>,
@@ -79,6 +83,7 @@ impl<'a> Reader<'a> {
             .unwrap_or(defaults.root_doc);
         let domain = self.primary_domain();
         let default_role = self.default_role(domain);
+        let extensions = self.strings("extensions").unwrap_or_default();
         ProjectSettings {
             root_doc,
             source_suffixes: self.source_suffixes(),
@@ -94,7 +99,8 @@ impl<'a> Reader<'a> {
             highlight_language: self
                 .highlight_language()
                 .unwrap_or(defaults.highlight_language),
-            strictness: self.strictness(),
+            intersphinx: self.intersphinx(&extensions),
+            strictness: Strictness::legacy(&extensions),
         }
     }
 
@@ -164,10 +170,44 @@ impl<'a> Reader<'a> {
         None
     }
 
-    /// The strictness the declared `extensions` imply, against the table
-    /// this server was built with.
-    fn strictness(&mut self) -> Strictness {
-        Strictness::legacy(&self.strings("extensions").unwrap_or_default())
+    /// `intersphinx_mapping` and `intersphinx_cache_limit` — read only when
+    /// `extensions` declares intersphinx, as Sphinx ignores them otherwise.
+    fn intersphinx(&mut self, extensions: &[String]) -> IntersphinxSettings {
+        if !extensions.iter().any(|name| name == INTERSPHINX) {
+            return IntersphinxSettings::default();
+        }
+        let entries = match self.literal("intersphinx_mapping") {
+            Some(mapping) => {
+                let findings = &mut self.findings;
+                read_mapping(
+                    mapping,
+                    |value| to_span(value.span),
+                    |value, message| {
+                        findings.push(Diagnostic::new(
+                            DiagnosticCode::ConfInvalidValue,
+                            message,
+                            to_span(value.span),
+                        ));
+                    },
+                )
+            }
+            None => Vec::new(),
+        };
+        IntersphinxSettings {
+            entries,
+            cache_limit_days: self
+                .whole_number("intersphinx_cache_limit")
+                .unwrap_or(DEFAULT_CACHE_LIMIT_DAYS),
+        }
+    }
+
+    fn whole_number(&mut self, name: &str) -> Option<i64> {
+        let value = self.literal(name)?;
+        if let ValueKind::Int(number) = value.kind {
+            return Some(number);
+        }
+        self.invalid(value, format!("`{name}` must be a whole number"));
+        None
     }
 
     /// The strings of the list or tuple `name` is bound to, each other
@@ -526,6 +566,49 @@ mod tests {
         assert_eq!(
             reading.settings.strictness.unmodelled_extensions(),
             ["my_ext"]
+        );
+    }
+
+    #[test]
+    fn test_read_sphinx_conf_reads_the_intersphinx_settings_of_a_project_declaring_it() {
+        // Given
+        let text = "extensions = ['sphinx.ext.intersphinx']\nintersphinx_mapping = {'python': ('https://docs.python.org/3', None)}\nintersphinx_cache_limit = -1\n";
+
+        // When
+        let settings = settings(text);
+
+        // Then
+        assert_eq!(settings.intersphinx.entries.len(), 1);
+        assert_eq!(settings.intersphinx.entries[0].name.as_str(), "python");
+        assert_eq!(settings.intersphinx.cache_limit_days, -1);
+        assert!(findings(text).is_empty());
+    }
+
+    #[test]
+    fn test_read_sphinx_conf_ignores_intersphinx_settings_without_the_extension() {
+        // Given — Sphinx ignores the mapping when the extension is not loaded
+        let text = "intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}\nintersphinx_cache_limit = 'x'\n";
+
+        // When / Then
+        assert!(settings(text).intersphinx.entries.is_empty());
+        assert!(findings(text).is_empty());
+    }
+
+    #[test]
+    fn test_read_sphinx_conf_reports_a_malformed_intersphinx_entry_where_it_is_written() {
+        // Given
+        let text = "extensions = ['sphinx.ext.intersphinx']\nintersphinx_mapping = {\n    'ok': ('https://ok.org', None),\n    'https://old.org': None,\n}\nintersphinx_cache_limit = 1.5\n";
+
+        // When
+        let reading = read_sphinx_conf(text);
+
+        // Then
+        assert_eq!(reading.settings.intersphinx.entries.len(), 1);
+        assert_eq!(reading.settings.intersphinx.entries[0].span.start.line, 3);
+        assert_eq!(reading.settings.intersphinx.cache_limit_days, 5);
+        assert_eq!(
+            findings(text),
+            [("conf.invalid-value", 4), ("conf.invalid-value", 6)]
         );
     }
 

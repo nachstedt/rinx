@@ -12,6 +12,8 @@ mod discover;
 mod exclusion;
 mod extension_profile;
 mod index;
+mod intersphinx;
+mod inventories;
 mod model;
 mod scan;
 mod sphinx_conf;
@@ -21,6 +23,7 @@ pub use discover::{
     DiscoveredProject, contains_conf, discover_projects, is_conf, is_visible_under, sources_under,
 };
 pub use index::{IndexedDocument, Project};
+pub use inventories::Fetched;
 pub use model::{ParseSettings, ProjectSource};
 pub use scan::{ScannedProject, scan_projects};
 #[cfg(test)]

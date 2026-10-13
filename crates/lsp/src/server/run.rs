@@ -46,7 +46,8 @@ pub fn run(connection: &Connection) -> Result<()> {
             supports_progress(&params.capabilities),
         )
         .with_definition_links(supports_definition_links(&params.capabilities))
-        .with_watched_files(supports_watched_files(&params.capabilities));
+        .with_watched_files(supports_watched_files(&params.capabilities))
+        .with_inventory_fetching(fetches_inventories(&params));
     let mut scan_events: Receiver<ScanEvent> = never();
     let roots = state.folder_roots();
     if !roots.is_empty() {
@@ -118,6 +119,17 @@ fn workspace_roots(params: &InitializeParams) -> Vec<PathBuf> {
         .flatten()
         .filter_map(|folder| file_path(&folder.uri))
         .collect()
+}
+
+/// Whether the client downloads inventories for the server, as the VS Code
+/// extension says with its `fetchInventories` initialization option.
+fn fetches_inventories(params: &InitializeParams) -> bool {
+    params
+        .initialization_options
+        .as_ref()
+        .and_then(|options| options.get("fetchInventories"))
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false)
 }
 
 /// Whether the client takes `$/progress` reports for work the server starts.

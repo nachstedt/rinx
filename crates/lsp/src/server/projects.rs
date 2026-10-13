@@ -193,6 +193,8 @@ impl ServerState {
             .iter()
             .filter_map(|(id, _)| self.announce_unmodelled_extensions(*id))
             .collect();
+        let added: Vec<ProjectId> = replaced.added.iter().map(|(id, _)| *id).collect();
+        messages.extend(self.load_inventories(&added));
         if replaced.changed
             && let Some(root) = self.folders.get(folder).cloned()
         {
@@ -257,7 +259,7 @@ impl ServerState {
             .filter(|project| project.conf_path() == Some(path.as_path()))
             .flat_map(|project| {
                 let (findings, text) = project.conf_findings();
-                conf_diagnostics(findings, text, self.encoding)
+                conf_diagnostics(&findings, text, self.encoding)
             })
             .collect()
     }

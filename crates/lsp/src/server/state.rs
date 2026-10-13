@@ -56,6 +56,7 @@ use std::time::Duration;
 use rayon::prelude::*;
 
 use super::handlers::publish_diagnostics;
+use super::inventories::InventoryFetches;
 use super::projects::ProjectId;
 use super::scan::ScanEvent;
 use crate::completion::{completion_items, role_at};
@@ -117,6 +118,8 @@ pub struct ServerState {
     pub(super) scan: Option<RunningScan>,
     /// The id the next request the server sends will carry.
     next_request_id: i32,
+    /// The inventory downloads asked of the client.
+    pub(super) fetches: InventoryFetches,
 }
 
 /// A document the graph diagnoses: its latest parse, and what rendering it
@@ -194,6 +197,7 @@ impl ServerState {
             watched_files: false,
             scan: None,
             next_request_id: 1,
+            fetches: InventoryFetches::default(),
         }
     }
 
@@ -226,6 +230,15 @@ impl ServerState {
     #[must_use]
     pub fn with_watched_files(mut self, watched_files: bool) -> Self {
         self.watched_files = watched_files;
+        self
+    }
+
+    /// This server, asking the client to download the inventories its
+    /// projects declare when `fetch_inventories`, as a client passing the
+    /// `fetchInventories` initialization option does on request.
+    #[must_use]
+    pub fn with_inventory_fetching(mut self, fetch_inventories: bool) -> Self {
+        self.fetches = InventoryFetches::new(fetch_inventories);
         self
     }
 
@@ -284,7 +297,7 @@ impl ServerState {
     }
 
     /// The id for the next request the server sends.
-    fn next_request_id(&mut self) -> RequestId {
+    pub(super) fn next_request_id(&mut self) -> RequestId {
         let id = RequestId::from(self.next_request_id);
         self.next_request_id += 1;
         id
@@ -292,6 +305,9 @@ impl ServerState {
 
     /// The messages a reply from the client brings about.
     pub(super) fn on_response(&mut self, response: &Response) -> Vec<Message> {
+        if let Some(messages) = self.on_inventory_response(response) {
+            return messages;
+        }
         self.scan
             .as_mut()
             .map(|scan| scan.progress.on_response(response))
@@ -503,6 +519,11 @@ impl ServerState {
             .into_iter()
             .flat_map(|folder| self.reload_folder(folder))
             .collect();
+        let paths: Vec<PathBuf> = changes
+            .iter()
+            .filter_map(|event| file_path(&event.uri))
+            .collect();
+        messages.extend(self.reload_inventory_files(&paths));
         let touched: BTreeSet<Uri> = changes
             .iter()
             .flat_map(|event| self.touched_by(event))
@@ -792,9 +813,7 @@ impl ServerState {
         let strictness = tracked
             .project
             .and_then(|project| self.projects.get(&project))
-            .map_or(&default_strictness, |project| {
-                &project.model().settings.strictness
-            });
+            .map_or(&default_strictness, Project::strictness);
         let mut diagnosis = diagnose_source(
             uri,
             &tracked.parsed,

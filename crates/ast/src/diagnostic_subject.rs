@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::InventoryName;
 use crate::domain::Domain;
 
 /// What a [`Diagnostic`](crate::Diagnostic) is about, for a front end that
@@ -23,6 +24,9 @@ pub enum DiagnosticSubject {
     /// An `:any:` reference that resolved to nothing, which could have named
     /// a target of any domain.
     AnyReference,
+    /// An `:external+name:` reference naming an inventory this site does not
+    /// hold — which the language server may simply not have loaded yet.
+    Inventory(InventoryName),
 }
 
 #[cfg(test)]
@@ -36,6 +40,7 @@ mod tests {
             DiagnosticSubject::Directive("cpp:class".to_string()),
             DiagnosticSubject::DomainReference(Domain::C),
             DiagnosticSubject::AnyReference,
+            DiagnosticSubject::Inventory(InventoryName::new("python").unwrap()),
         ];
 
         for subject in subjects {

@@ -8,7 +8,8 @@
 //!
 //! [`state`] holds what the server remembers and turns a change into the
 //! diagnostics to publish, with [`projects`] keeping the workspace's projects
-//! and routing each file to one; [`handlers`] are the pure functions from one
+//! and routing each file to one and [`inventories`] getting their
+//! intersphinx inventories in; [`handlers`] are the pure functions from one
 //! message to the replies, and [`run`] is the loop around them. [`scan`] is
 //! the thread scanning the workspace beside the loop; the file-system
 //! events the client reports reach [`state`] like any other notification.
@@ -17,6 +18,7 @@
 
 mod check;
 mod handlers;
+mod inventories;
 mod projects;
 mod run;
 mod scan;
@@ -28,6 +30,8 @@ mod completion_tests;
 mod definition_tests;
 #[cfg(test)]
 mod hover_tests;
+#[cfg(test)]
+mod inventory_tests;
 #[cfg(test)]
 mod notification_tests;
 #[cfg(test)]
