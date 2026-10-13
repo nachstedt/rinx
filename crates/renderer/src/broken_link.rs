@@ -124,7 +124,8 @@ impl BrokenLinkKind {
 
     /// What a reference of this kind was about, for the language server's
     /// strictness filter: the domain a missed object would have been defined
-    /// in. Only a plain miss has one — an ambiguous reference found several
+    /// in, or the inventory a reference named that the site does not hold.
+    /// Only a plain miss has one — an ambiguous reference found several
     /// definitions, which no unanalysed extension explains away.
     #[must_use]
     pub fn subject(&self) -> Option<DiagnosticSubject> {
@@ -134,6 +135,7 @@ impl BrokenLinkKind {
             }
             Self::OptionReference => Some(DiagnosticSubject::DomainReference(Domain::Std)),
             Self::AnyReference => Some(DiagnosticSubject::AnyReference),
+            Self::UnknownInventory(name) => Some(DiagnosticSubject::Inventory(name.clone())),
             _ => None,
         }
     }
@@ -321,6 +323,18 @@ mod tests {
         assert_eq!(
             BrokenLinkKind::AnyReference.subject(),
             Some(DiagnosticSubject::AnyReference)
+        );
+    }
+
+    #[test]
+    fn test_subject_of_an_unknown_inventory_names_it() {
+        // Given
+        let name = InventoryName::new("python").unwrap();
+
+        // When / Then
+        assert_eq!(
+            BrokenLinkKind::UnknownInventory(name.clone()).subject(),
+            Some(DiagnosticSubject::Inventory(name))
         );
     }
 

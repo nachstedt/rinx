@@ -43,9 +43,13 @@ function fixtureWorkspace(name, settings) {
 
 const rinxBinary = process.env.RINX_BINARY ?? repository('target/debug/rinx');
 
-/** The settings every e2e workspace shares: no Bazel, the repository's theme. */
+/**
+ * The settings every e2e workspace shares: no Bazel, the repository's theme,
+ * and inventories downloaded without a prompt no test could answer.
+ */
 const workspaceSettings = {
     'rinx.autoDiscover': false,
+    'rinx.inventories.download': 'always',
     'rinx.trace.server': 'verbose',
     'rinx.configPath': repository('templates/default_config.toml'),
     'rinx.templatePath': repository('templates/default.html'),

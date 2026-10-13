@@ -15,6 +15,7 @@ rinx_analyzer.workspace = true
 rinx_ast.workspace = true
 rinx_entity.workspace = true
 rinx_index.workspace = true
+rinx_inventory.workspace = true
 rinx_parser.workspace = true
 rinx_pyconf.workspace = true
 rinx_renderer.workspace = true

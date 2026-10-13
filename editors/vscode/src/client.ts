@@ -30,13 +30,17 @@ export async function resolveServerBinary(
     return binary;
 }
 
-/** The options connecting the client to every reStructuredText document. */
+/**
+ * The options connecting the client to every reStructuredText document, and
+ * telling the server this client downloads inventories (see inventories.ts).
+ */
 export function clientOptions(outputChannel: vscode.LogOutputChannel): LanguageClientOptions {
     return {
         documentSelector: [
             { scheme: 'file', language: 'restructuredtext' },
             { scheme: 'untitled', language: 'restructuredtext' },
         ],
+        initializationOptions: { fetchInventories: true },
         outputChannel,
     };
 }

@@ -222,12 +222,27 @@ editor and CI would disagree about what is suppressed.
 ### 6. The editor may fetch inventories; the build still may not
 
 ADR-023's rule that nothing is fetched exists because a build must be
-hermetic, and an editor need not be. In legacy mode the server fetches each
-`intersphinx_mapping` inventory **once, with the user's consent**, and caches
-it in the extension's `globalStorageUri` with a time-to-live.
-`rinx_inventory::read_inventory` reads it unchanged. Without an inventory,
-an unresolved external reference is a Hint. In rinx mode, inventories come
-from the manifest, as the build declared them, and nothing is fetched.
+hermetic, and an editor need not be. In legacy mode each `intersphinx_mapping`
+inventory is fetched **once, with the user's consent**, and cached in the
+extension's `globalStorageUri` for the project's `intersphinx_cache_limit`
+days; an expired copy is still used when fetching it again fails.
+
+The **extension** fetches, not the server, which stays off the network. For
+each address a mapping names, the server sends a `rinx/fetchInventory`
+request (`{ url, cacheLimitDays }`) and reads the file the answer names
+(`{ path }`, or `{ unavailable }` with why) through
+`rinx_inventory::read_inventory`, unchanged. Consent, the cache and the HTTP
+client are then the editor's, where Workspace Trust, proxies and the user's
+choices already live, and the server has nothing to sandbox. Only a client
+passing the `fetchInventories` initialization option is asked, so another
+editor never receives a request it does not know. A file the mapping names
+is read by the server itself, being on the disk it already reads.
+
+Without an inventory — not fetched yet, declined, or unreadable — a domain
+reference resolving nowhere, and an `:external+name:` reference naming it,
+is a Hint naming the inventory and why it is missing. In rinx mode,
+inventories come from the manifest, as the build declared them, and nothing
+is fetched.
 
 ### 7. Legacy mode is a way in, not a destination
 

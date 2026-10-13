@@ -7,6 +7,15 @@ import { BazelScanner, DiscoveredConfig } from './bazel';
 import { bundledBinaryPath, chooseBinaryPath, explicitValue } from './binary';
 import { resolveServerBinary, startLanguageClient } from './client';
 import { errorMessage } from './errors';
+import {
+    CONSENT_KEY,
+    DownloadSetting,
+    downloadWithFetch,
+    FETCH_INVENTORY_METHOD,
+    FetchInventoryParams,
+    InventoryFetcher,
+    RememberedConsent,
+} from './inventories';
 import { IndexStatus, IndexStatusItem, STATUS_METHOD } from './status';
 
 // A log channel rather than a plain one: the language client writes its own
@@ -44,7 +53,7 @@ export function activate(context: vscode.ExtensionContext): RinxApi {
     );
     // Not awaited: finding the binary may build it with Bazel, and the
     // preview command must not wait for that.
-    void startServer(statusItem, bundled);
+    void startServer(statusItem, bundled, inventoryFetcher(context));
     return { indexStatus: () => statusItem.last, serverBinary: () => serverBinary };
 }
 
@@ -53,14 +62,33 @@ export async function deactivate(): Promise<void> {
     client = undefined;
 }
 
+/** The fetcher answering the server's inventory requests, caching in `context`'s global storage. */
+function inventoryFetcher(context: vscode.ExtensionContext): InventoryFetcher {
+    return new InventoryFetcher({
+        storageDir: context.globalStorageUri.fsPath,
+        setting: () => vscode.workspace.getConfiguration('rinx').get<DownloadSetting>('inventories.download') ?? 'ask',
+        remembered: () => context.workspaceState.get<RememberedConsent>(CONSENT_KEY),
+        remember: (consent) => context.workspaceState.update(CONSENT_KEY, consent),
+        prompt: (message, ...choices) => vscode.window.showInformationMessage(message, ...choices),
+        download: downloadWithFetch,
+        now: () => Date.now(),
+        log,
+    });
+}
+
 /** Starts the language server, reporting a failure rather than throwing. */
-async function startServer(statusItem: IndexStatusItem, bundled: string | undefined): Promise<void> {
+async function startServer(
+    statusItem: IndexStatusItem,
+    bundled: string | undefined,
+    fetcher: InventoryFetcher,
+): Promise<void> {
     let binary = 'rinx';
     try {
         binary = await resolveServerBinary(new BazelScanner(log), bundled, log);
         client = await startLanguageClient(binary, outputChannel);
         serverBinary = binary;
         client.onNotification(STATUS_METHOD, (status: IndexStatus) => statusItem.update(status));
+        client.onRequest(FETCH_INVENTORY_METHOD, (params: FetchInventoryParams) => fetcher.fetchInventory(params));
     } catch (error: unknown) {
         log(`Language server failed to start: ${errorMessage(error)}`);
         const action = await vscode.window.showWarningMessage(

@@ -12,6 +12,11 @@
 //! before that, so the project remembers what it forgot until the scan's
 //! result is recorded, and does not let the scan bring it back.
 //!
+//! The project also holds its `intersphinx_mapping` inventories as far as
+//! they are loaded ([`ProjectInventories`]): the loaded ones join its index,
+//! and the others lower what its [`Strictness`] reports. A change to either
+//! counts as a change of the index, so every open document renders again.
+//!
 //! Which files are documents, what they are named and how the index is built
 //! is the project's [`ProjectModel`]'s to say; no entity schema applies until
 //! a Bazel manifest (roadmap #18) or the sphinx-needs settings (#15) name one.
@@ -22,11 +27,13 @@ use std::path::{Path, PathBuf};
 use rinx_analyzer::{DocumentAnalysis, build_project_index_from_analyses};
 use rinx_ast::{Diagnostic, Document};
 use rinx_entity::EntitySchema;
-use rinx_index::ProjectIndex;
+use rinx_index::{ExternalInventory, ProjectIndex};
 use rinx_renderer::config::SiteConfig;
 
 use super::discover::DiscoveredProject;
+use super::inventories::{Fetched, ProjectInventories};
 use super::model::{DEFAULT_ROOT_DOC, ProjectModel, ProjectSource, RST_SUFFIX};
+use super::strictness::Strictness;
 use crate::files::reads_at_or_under;
 
 /// The root document Sphinx falls back to when `index` is missing
@@ -78,6 +85,13 @@ pub struct Project {
     /// Whether the scan's result is recorded, after which nothing need be
     /// remembered as forgotten.
     scanned: bool,
+    inventories: ProjectInventories,
+    /// The loaded inventories while no fold holds them: moved into each fold
+    /// and back out when it is dropped, since copying Python's alone would
+    /// cost every fold ~4 ms.
+    external: Vec<ExternalInventory>,
+    /// The model's strictness, knowing which inventories are not loaded.
+    strictness: Strictness,
 }
 
 impl Project {
@@ -91,7 +105,16 @@ impl Project {
             conf_text,
             sources: _,
         } = discovered;
+        let inventories = ProjectInventories::new(&model.settings.intersphinx);
+        let strictness = model
+            .settings
+            .strictness
+            .clone()
+            .with_unloaded_inventories(inventories.unloaded());
         Self {
+            inventories,
+            external: Vec::new(),
+            strictness,
             model,
             findings,
             conf_text,
@@ -129,10 +152,70 @@ impl Project {
         }
     }
 
-    /// What reading `conf.py` found, and the text its positions count in.
+    /// What reading `conf.py` found, and loading the inventories it
+    /// declares, in source order — and the text their positions count in.
     #[must_use]
-    pub fn conf_findings(&self) -> (&[Diagnostic], &str) {
-        (&self.findings, &self.conf_text)
+    pub fn conf_findings(&self) -> (Vec<Diagnostic>, &str) {
+        let mut findings = self.findings.clone();
+        findings.extend(self.inventories.findings());
+        findings.sort_by_key(|finding| finding.span.map(|span| span.start));
+        (findings, &self.conf_text)
+    }
+
+    /// How the project's findings are reported, knowing which of its
+    /// inventories are not loaded.
+    #[must_use]
+    pub fn strictness(&self) -> &Strictness {
+        &self.strictness
+    }
+
+    /// Loads what of the project's inventories can be loaded now — files
+    /// from the disk, downloads as `fetched` says (see
+    /// [`ProjectInventories::advance`]) — returning whether any changed,
+    /// which changes the index.
+    pub fn advance_inventories(&mut self, fetched: &impl Fn(&str) -> Option<Fetched>) -> bool {
+        let read = |path: &Path| std::fs::read(path);
+        let changed = self
+            .inventories
+            .advance(&self.model.source_root, &read, fetched);
+        if changed {
+            self.inventories_changed();
+        }
+        changed
+    }
+
+    /// The addresses whose download the project's inventories wait for.
+    #[must_use]
+    pub fn awaited_inventories(&self) -> Vec<String> {
+        self.inventories
+            .awaited()
+            .into_iter()
+            .map(str::to_string)
+            .collect()
+    }
+
+    /// How many days a downloaded inventory stays fresh for this project.
+    #[must_use]
+    pub fn inventory_cache_limit_days(&self) -> i64 {
+        self.model.settings.intersphinx.cache_limit_days
+    }
+
+    /// Reads every inventory read from the file at `path` again, as it
+    /// changed on the disk — returning whether one is.
+    pub fn reload_inventory_file(&mut self, path: &Path) -> bool {
+        self.inventories
+            .reset_reading(&self.model.source_root, path)
+    }
+
+    fn inventories_changed(&mut self) {
+        self.strictness = self
+            .model
+            .settings
+            .strictness
+            .clone()
+            .with_unloaded_inventories(self.inventories.unloaded());
+        self.invalidate();
+        self.external = self.inventories.loaded().cloned().collect();
     }
 
     /// Takes `findings`, and the `conf.py` text they are positioned in, as
@@ -231,7 +314,9 @@ impl Project {
 
     /// Drops the cached fold, a document having changed.
     fn invalidate(&mut self) {
-        self.index = None;
+        if let Some(index) = self.index.take() {
+            self.external = index.external_inventories;
+        }
         self.generation += 1;
     }
 
@@ -279,18 +364,22 @@ impl Project {
     /// The project index the project's documents fold into.
     pub fn project_index(&mut self) -> &ProjectIndex {
         let root_doc = self.root_doc().to_string();
-        let (documents, model) = (&self.documents, &self.model);
+        let (documents, model, external) = (&self.documents, &self.model, &mut self.external);
         self.index.get_or_insert_with(|| {
             let analyses: BTreeMap<String, DocumentAnalysis> = documents
                 .iter()
                 .map(|(doc_path, indexed)| (doc_path.clone(), indexed.analysis.clone()))
                 .collect();
-            build_project_index_from_analyses(
+            let mut index = build_project_index_from_analyses(
                 &analyses,
                 &model.index_settings(&root_doc),
                 &EntitySchema::empty(),
             )
-            .index
+            .index;
+            // Whole rather than pruned to what the documents name, as the
+            // build's index is: the next edit may name anything.
+            index.external_inventories = std::mem::take(external);
+            index
         })
     }
 }
@@ -613,5 +702,91 @@ mod tests {
         assert!(text.starts_with("root_doc"));
         assert_eq!(folder().conf_path(), None);
         assert_eq!(project.model().settings.root_doc, "index");
+    }
+
+    /// A temporary file holding an inventory that lists the Python class
+    /// `dict`.
+    fn inventory_file(name: &str) -> PathBuf {
+        let path = std::env::temp_dir().join(format!("rinx_lsp_project_{name}.inv"));
+        let inventory = rinx_inventory::Inventory {
+            project: "Python".to_string(),
+            version: "3".to_string(),
+            entries: vec![rinx_inventory::InventoryEntry {
+                name: "dict".to_string(),
+                entry_type: rinx_inventory::EntryType::new("py:class").unwrap(),
+                priority: 1,
+                uri: "library/stdtypes.html#$".to_string(),
+                display_name: None,
+            }],
+        };
+        std::fs::write(&path, rinx_inventory::write_inventory(&inventory)).unwrap();
+        path
+    }
+
+    const PYTHON_CONF: &str = "extensions = ['sphinx.ext.intersphinx']\nintersphinx_mapping = {'python': ('https://docs.python.org/3/', None)}\n";
+
+    #[test]
+    fn test_a_downloaded_inventory_joins_the_index_and_leaves_the_strictness() {
+        // Given
+        let mut project = sphinx(PYTHON_CONF);
+        project.advance_inventories(&|_: &str| None);
+        assert_eq!(
+            project.awaited_inventories(),
+            ["https://docs.python.org/3/objects.inv"]
+        );
+        assert!(project.project_index().external_inventories.is_empty());
+        let generation = project.generation();
+        let path = inventory_file("downloaded");
+
+        // When
+        let changed = project.advance_inventories(&|_: &str| Some(Ok(path.clone())));
+
+        // Then — and still after a document changes the fold
+        assert!(changed);
+        assert!(project.generation() > generation);
+        let inventories = &project.project_index().external_inventories;
+        assert_eq!(inventories.len(), 1);
+        assert!(inventories[0].lookup("py:class", "dict").is_some());
+        project.record("a.rst".to_string(), labelled("a.rst", "a"));
+        assert_eq!(project.project_index().external_inventories.len(), 1);
+        assert_eq!(
+            project.strictness(),
+            &project.model().settings.strictness.clone()
+        );
+        assert_eq!(project.inventory_cache_limit_days(), 5);
+    }
+
+    #[test]
+    fn test_an_unreadable_inventory_is_one_of_the_conf_findings() {
+        // Given
+        let mut project = sphinx(
+            "extensions = ['sphinx.ext.intersphinx']\nintersphinx_mapping = {'a': ('https://a.org', 'missing.inv')}\n",
+        );
+
+        // When
+        let changed = project.advance_inventories(&|_: &str| None);
+
+        // Then
+        assert!(changed);
+        let (findings, _) = project.conf_findings();
+        let codes: Vec<&str> = findings.iter().map(|f| f.code.as_str()).collect();
+        assert_eq!(codes, ["conf.inventory-unreadable"]);
+        assert_ne!(
+            project.strictness(),
+            &project.model().settings.strictness.clone()
+        );
+    }
+
+    #[test]
+    fn test_reload_inventory_file_reads_a_project_file_again() {
+        // Given
+        let mut project = sphinx(
+            "extensions = ['sphinx.ext.intersphinx']\nintersphinx_mapping = {'a': ('https://a.org', 'a.inv')}\n",
+        );
+        project.advance_inventories(&|_: &str| None);
+
+        // When / Then
+        assert!(project.reload_inventory_file(Path::new("/work/docs/a.inv")));
+        assert!(!project.reload_inventory_file(Path::new("/work/docs/b.inv")));
     }
 }

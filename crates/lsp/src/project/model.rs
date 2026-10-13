@@ -14,6 +14,7 @@ use rinx_parser::DefaultRole;
 use rinx_renderer::config::SiteConfig;
 
 use super::exclusion::Exclusion;
+use super::intersphinx::IntersphinxSettings;
 use super::strictness::Strictness;
 
 /// Where a project's configuration comes from.
@@ -74,6 +75,8 @@ pub struct ProjectSettings {
     pub highlight_language: ResolvedLanguage,
     /// How findings are reported, by what the declared `extensions` explain.
     pub strictness: Strictness,
+    /// The other sites the project links into — `intersphinx_mapping`.
+    pub intersphinx: IntersphinxSettings,
 }
 
 /// Sphinx's default root document.
@@ -96,6 +99,7 @@ impl Default for ProjectSettings {
             numfig_secnum_depth: rinx_index::DEFAULT_NUMFIG_SECNUM_DEPTH,
             highlight_language: ResolvedLanguage::default(),
             strictness: Strictness::default(),
+            intersphinx: IntersphinxSettings::default(),
         }
     }
 }

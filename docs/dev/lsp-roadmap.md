@@ -32,8 +32,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   (PRs #238–#248, listed at the end of M0), #2 (PR #253), #3 (PR #255),
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
-  #11 (PR #286), and #12 (PR #292, most of it early in PR #248).
-- **Next: #13, intersphinx.**
+  #11 (PR #286), #12 (PR #292, most of it early in PR #248), and #13.
+- **Next: #14, `rst_prolog` / `rst_epilog`.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -353,7 +353,7 @@ needs. `VS Code / packaged` now also runs the e2e suite against a bundled
 VSIX with no `rinx.binaryPath` set, on Linux and macOS. It bundles CI's debug
 binary and uploads nothing, since release binaries are #39's.
 
-### 13. Intersphinx
+### 13. Intersphinx ✅
 
 **You experience:** `` :py:class:`dict` `` resolves, and hover shows the
 external URL.
@@ -363,6 +363,33 @@ external URL.
 - Cache in `globalStorageUri` with a time-to-live
 - Feed into `ExternalInventory`
 - Tests
+
+The mapping is read only when `extensions` declares `sphinx.ext.intersphinx`,
+as Sphinx reads it; the address-keyed form Sphinx 8 removed is refused by
+name. Each entry's sources are tried in order: a file is read by the server,
+relative to `conf.py`, and read again when it changes; an address is asked of
+the extension with a `rinx/fetchInventory` request, once per address and
+session, and only of a client passing the `fetchInventories` initialization
+option. The extension asks once per workspace, naming the hosts
+(`rinx.inventories.download` decides without asking), and caches each
+download for the project's `intersphinx_cache_limit` days, falling back to an
+expired copy when the network fails. ADR-038 §6 said the server fetches; it
+now says the extension does.
+
+While an entry is not loaded, a broken domain reference and an
+`:external+name:` naming it are Hints saying why (`DiagnosticSubject::Inventory`
+is new for the latter). An entry none of whose sources could be read is
+`conf.inventory-unreadable` on its line in `conf.py`; a declined download is
+not. Loaded inventories join the fold whole, not pruned as the build's index
+is, since the next edit may name anything. They are moved into each fold and
+back out rather than copied: Python's 20 176 entries cost ~4 ms a copy against
+a ~27 ms fold. Reading that inventory takes ~40 ms, once, when the download
+arrives.
+
+Not done here: a cache that expires during a long session is refreshed only
+on the next start or `conf.py` change, `:ref:` and `:doc:` into an inventory
+not loaded stay warnings (ADR-038 §5), and an inventory's targets do not
+complete.
 
 ### 14. `rst_prolog` / `rst_epilog`
 

@@ -52,6 +52,21 @@
           "default": "off",
           "description": "Traces the communication between VS Code and the rinx language server in the Rinx output channel."
         },
+        "rinx.inventories.download": {
+          "type": "string",
+          "enum": [
+            "ask",
+            "always",
+            "never"
+          ],
+          "enumDescriptions": [
+            "Ask once per workspace, naming the sites, before downloading.",
+            "Download without asking.",
+            "Never download; references into another site stay hints."
+          ],
+          "default": "ask",
+          "description": "Whether the language server may download the `objects.inv` of the sites a Sphinx project's `intersphinx_mapping` links into, so references into them resolve. Downloads are cached for the project's `intersphinx_cache_limit` days."
+        },
         "rinx.autoDiscover": {
           "type": "boolean",
           "default": true,

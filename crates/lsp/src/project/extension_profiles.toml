@@ -71,8 +71,9 @@ name = "sphinx.ext.imgmath"
 [[extension]]
 name = "sphinx.ext.extlinks"
 
-# Inventories are roadmap step #13; until then its references are reported as
-# a site with none would report them.
+# Its references resolve through the inventories its `intersphinx_mapping`
+# names, which the server loads itself (`project/inventories.rs`); while one is
+# not loaded, a reference that may be in it is a hint there, not here.
 [[extension]]
 name = "sphinx.ext.intersphinx"
 

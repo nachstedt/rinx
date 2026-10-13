@@ -13,6 +13,9 @@
 //! - an unknown directive a declared extension provides is *Information*;
 //! - a reference resolving to nothing, into a domain a declared extension
 //!   fills, is a *Hint* — an extension the table does not model may fill any;
+//! - while an `intersphinx_mapping` inventory is not loaded — the editor has
+//!   not downloaded it, or could not — a reference that may be in it is a
+//!   *Hint* too: a domain reference, or one naming that inventory;
 //! - everything else stays a *Warning*, as the build reports it. That
 //!   includes an unknown directive nothing known provides, even when the
 //!   project declares extensions the table does not model: it is as likely a
@@ -20,6 +23,7 @@
 
 use lsp_types::DiagnosticSeverity;
 use rinx_ast::{Diagnostic, DiagnosticCode, DiagnosticSubject};
+use rinx_inventory::InventoryName;
 
 use super::extension_profile::{ExtensionProfile, ExtensionProfiles, TargetScope};
 
@@ -61,6 +65,18 @@ impl Strictness {
         }
     }
 
+    /// This strictness, for a project whose inventories `unloaded` — each
+    /// with why — are not loaded.
+    #[must_use]
+    pub fn with_unloaded_inventories(self, unloaded: Vec<(InventoryName, String)>) -> Self {
+        match self {
+            Self::Legacy(policy) => Self::Legacy(ExtensionPolicy {
+                unloaded_inventories: unloaded,
+                ..policy
+            }),
+        }
+    }
+
     /// The declared extensions the table does not describe, in declaration
     /// order — what the server names once, so an author knows why references
     /// are lowered.
@@ -99,6 +115,9 @@ pub struct ExtensionPolicy {
     /// The declared extensions it does not — each assumed to define targets
     /// in every domain.
     unmodelled: Vec<String>,
+    /// The `intersphinx_mapping` inventories not loaded, with why, in
+    /// declaration order — any of which may hold what a reference missed.
+    unloaded_inventories: Vec<(InventoryName, String)>,
 }
 
 impl ExtensionPolicy {
@@ -137,19 +156,47 @@ impl ExtensionPolicy {
             }
             DiagnosticSubject::DomainReference(_) | DiagnosticSubject::AnyReference => {
                 let definers = self.definers_of(subject);
-                if definers.is_empty() {
+                let mut explanations = Vec::new();
+                if !definers.is_empty() {
+                    explanations.push(format!(
+                        "it may be defined by {}, which rinx does not analyse",
+                        quoted_list(&definers)
+                    ));
+                }
+                if !self.unloaded_inventories.is_empty() {
+                    let inventories: Vec<String> = self
+                        .unloaded_inventories
+                        .iter()
+                        .map(|(name, why)| format!("`{}` ({why})", name.as_str()))
+                        .collect();
+                    explanations.push(format!(
+                        "it may be in an inventory rinx has not loaded: {}",
+                        inventories.join(", ")
+                    ));
+                }
+                if explanations.is_empty() {
                     return warning();
                 }
                 Judgement {
                     severity: DiagnosticSeverity::HINT,
-                    message: format!(
-                        "{}; it may be defined by {}, which rinx does not analyse",
-                        diagnostic.message,
-                        quoted_list(&definers)
-                    ),
+                    message: format!("{}; {}", diagnostic.message, explanations.join("; ")),
                 }
             }
-            DiagnosticSubject::Directive(_) => warning(),
+            DiagnosticSubject::Inventory(name)
+                if diagnostic.code == DiagnosticCode::LinkUnknownInventory =>
+            {
+                self.unloaded_inventories
+                    .iter()
+                    .find(|(unloaded, _)| unloaded == name)
+                    .map_or_else(warning, |(_, why)| Judgement {
+                        severity: DiagnosticSeverity::HINT,
+                        message: format!(
+                            "the inventory `{}` is not loaded ({why}), so this reference is not checked",
+                            name.as_str()
+                        ),
+                    })
+            }
+            DiagnosticSubject::Directive(_) | DiagnosticSubject::Inventory(_) => warning(),
         }
     }
 
@@ -337,6 +384,78 @@ mod tests {
             ),
             "{}",
             judgement.message
+        );
+    }
+
+    fn python_unloaded(strictness: Strictness) -> Strictness {
+        strictness.with_unloaded_inventories(vec![(
+            InventoryName::new("python").unwrap(),
+            "not downloaded yet".to_string(),
+        )])
+    }
+
+    #[test]
+    fn test_a_domain_reference_is_a_hint_while_an_inventory_is_not_loaded() {
+        // Given / When
+        let judgement = python_unloaded(policy(&[])).judge(&py_reference());
+
+        // Then
+        assert_eq!(judgement.severity, DiagnosticSeverity::HINT);
+        assert_eq!(
+            judgement.message,
+            "broken domain object 'spam.eggs'; it may be in an inventory rinx has not loaded: `python` (not downloaded yet)"
+        );
+    }
+
+    #[test]
+    fn test_an_unloaded_inventory_and_an_extension_are_both_named() {
+        // Given / When
+        let judgement = python_unloaded(policy(&["sphinx.ext.autodoc"])).judge(&py_reference());
+
+        // Then
+        assert_eq!(
+            judgement.message,
+            "broken domain object 'spam.eggs'; it may be defined by `sphinx.ext.autodoc`, which rinx does not analyse; it may be in an inventory rinx has not loaded: `python` (not downloaded yet)"
+        );
+    }
+
+    #[test]
+    fn test_a_reference_naming_an_unloaded_inventory_is_a_hint_and_a_typo_a_warning() {
+        // Given
+        let naming = |name: &str| {
+            Diagnostic::new(
+                DiagnosticCode::LinkUnknownInventory,
+                "unknown inventory",
+                SPAN,
+            )
+            .about(DiagnosticSubject::Inventory(
+                InventoryName::new(name).unwrap(),
+            ))
+        };
+        let strictness = python_unloaded(policy(&[]));
+
+        // When
+        let unloaded = strictness.judge(&naming("python"));
+        let typo = strictness.judge(&naming("pyhton"));
+
+        // Then
+        assert_eq!(unloaded.severity, DiagnosticSeverity::HINT);
+        assert_eq!(
+            unloaded.message,
+            "the inventory `python` is not loaded (not downloaded yet), so this reference is not checked"
+        );
+        assert_eq!(typo.severity, DiagnosticSeverity::WARNING);
+    }
+
+    #[test]
+    fn test_a_label_reference_stays_a_warning_while_an_inventory_is_not_loaded() {
+        // Given — ADR-038 §5: `:ref:` and `:doc:` stay warnings
+        let diagnostic = Diagnostic::new(DiagnosticCode::LinkBrokenRef, "broken ref", SPAN);
+
+        // When / Then
+        assert_eq!(
+            python_unloaded(policy(&[])).judge(&diagnostic).severity,
+            DiagnosticSeverity::WARNING
         );
     }
 

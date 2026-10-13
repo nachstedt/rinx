@@ -15,6 +15,7 @@ rust_library(
         "//crates/ast:rinx_ast",
         "//crates/entity:rinx_entity",
         "//crates/index:rinx_index",
+        "//crates/inventory:rinx_inventory",
         "//crates/parser:rinx_parser",
         "//crates/pyconf:rinx_pyconf",
         "//crates/renderer:rinx_renderer",

@@ -571,6 +571,88 @@ fn test_lsp_watches_the_workspace_and_breaks_a_reference_to_a_deleted_file() {
 }
 
 #[test]
+fn test_lsp_asks_its_client_for_an_inventory_and_resolves_into_it() {
+    // Given — a Sphinx project linking into Python's documentation, and a
+    // client that downloads inventories
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_inventory");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    std::fs::write(
+        root.join("conf.py"),
+        "extensions = ['sphinx.ext.intersphinx']\nintersphinx_mapping = {'python': ('https://docs.python.org/3/', None)}\n",
+    )
+    .expect("write");
+    let text = "Home\n====\n\nSee :py:class:`dict`.\n";
+    std::fs::write(root.join("index.rst"), text).expect("write");
+    let saved = root.join(".cache").join("python.inv");
+    std::fs::create_dir_all(saved.parent().expect("a parent")).expect("mkdir");
+    let inventory = rinx_inventory::Inventory {
+        project: "Python".to_string(),
+        version: "3.14".to_string(),
+        entries: vec![rinx_inventory::InventoryEntry {
+            name: "dict".to_string(),
+            entry_type: rinx_inventory::EntryType::new("py:class").expect("a type"),
+            priority: 1,
+            uri: "library/stdtypes.html#$".to_string(),
+            display_name: None,
+        }],
+    };
+    std::fs::write(&saved, rinx_inventory::write_inventory(&inventory)).expect("write");
+    let index = format!("file://{}", root.join("index.rst").display());
+    let mut server = Server::spawn();
+    server.initialize_with(json!({
+        "capabilities": {},
+        "initializationOptions": { "fetchInventories": true },
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+
+    // When — the server asks, and the client answers with the file it saved
+    let asked = std::iter::from_fn(|| Some(server.receive()))
+        .find_map(|message| match message {
+            Message::Request(request) if request.method == "rinx/fetchInventory" => Some(request),
+            _ => None,
+        })
+        .expect("the inventory's request");
+    server.send(lsp_server::Response::new_ok(
+        asked.id.clone(),
+        json!({ "path": saved }),
+    ));
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": index, "languageId": "restructuredtext", "version": 1, "text": text,
+        }}),
+    );
+    server.published_until(&index);
+    server.request(
+        2,
+        "textDocument/hover",
+        json!({
+            "textDocument": { "uri": index },
+            "position": { "line": 3, "character": 16 },
+        }),
+    );
+    let hovered = std::iter::from_fn(|| Some(server.receive()))
+        .find_map(|message| match message {
+            Message::Response(response) => Some(response),
+            _ => None,
+        })
+        .expect("the hover");
+
+    // Then
+    assert_eq!(
+        asked.params,
+        json!({ "url": "https://docs.python.org/3/objects.inv", "cacheLimitDays": 5 })
+    );
+    let hover = hovered.response_result.expect("a hover");
+    let markdown = hover["contents"]["value"].as_str().expect("markdown");
+    assert!(
+        markdown.contains("<https://docs.python.org/3/library/stdtypes.html#dict>"),
+        "{markdown}"
+    );
+}
+
+#[test]
 fn test_lsp_exits_with_success_after_shutdown_and_exit() {
     // Given
     let mut server = Server::spawn();

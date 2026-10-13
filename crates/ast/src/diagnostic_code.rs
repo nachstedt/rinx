@@ -1298,6 +1298,10 @@ diagnostic_codes! {
     /// Where the editor stopped reading `conf.py`, which Python could not
     /// run either: the settings after it keep their defaults.
     ConfSyntaxError => "conf.syntax-error",
+    /// An `intersphinx_mapping` entry none of whose inventories could be
+    /// read: a file that is missing or is no `objects.inv`, or a download
+    /// that is none. References into it stay unresolved in the editor.
+    ConfInventoryUnreadable => "conf.inventory-unreadable",
 
     // --- The suppression mechanism itself ----------------------------------
     /// A `.. noqa:` comment naming an id that is not a diagnostic code. Never

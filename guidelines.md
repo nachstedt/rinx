@@ -162,6 +162,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Check whether a rule about configuration is about *paths* or about *phases* before invoking it: a config file the parser reads is fine, and a workspace-relative path survives relocation — what a config file cannot do is declare a build input.
 - Relative file paths work correctly for offline viewing; do not use inlining as a workaround for path computation.
 - Decide which files a tool reads from explicit configuration, never from a convention meant for another tool such as `.gitignore`, since generated sources are often exactly what such a file ignores.
+- When a Sphinx project already configures a behaviour (such as `intersphinx_cache_limit`), the editor follows that value rather than adding an editor setting for it.
 
 ## Build, examples and documentation
 
