@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Updating entities after the fact — Megacorp Documentation</title>
+  <link rel="stylesheet" href="../../default.css">
+  <script defer src="../../version_switcher.js"></script>
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">Megacorp Documentation</h2>
+        <p class="project-version">v2.0-beta</p>
+        <div class="version-switcher" data-json-url="https:&#x2f;&#x2f;nachstedt.github.io&#x2f;rinx&#x2f;versions.json" hidden></div>
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../headings.html">Section headings</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../hyperlinks.html">Hyperlinks and Targets</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../admonitions.html">Admonitions Showcase</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../inline_roles.html">Inline Roles</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../any_role.html">The :any: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../doc_role.html">The :doc: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../numref.html">The :numref: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../downloads.html">The :download: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../version_changes.html">Version Change Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../seealso.html">See Also Directive</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../literal_blocks.html">Literal Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../code_blocks.html">Code Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../definition_lists.html">Definition Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../enumerated_lists.html">Enumerated Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../option_lists.html">Option Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../block_quotes.html">Block Quotes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../line_blocks.html">Line Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../comments.html">Comments</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../domains.html">Domains</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../current_module.html">Current Module</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../transitions.html">Transitions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../typography.html">Smart Typography</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../escapes.html">Backslash Escapes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tables.html">Grid Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../simple_tables.html">Simple Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../list_table.html">List Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../csv_table.html">CSV Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../table_directive.html">The table Directive</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../math.html">Math</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../code_role.html">The :code: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../registry_roles.html">Registry Roles: :pep:, :rfc:, :cve: and :cwe:</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../images.html">Images</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../figures.html">Figures</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../substitutions.html">Substitutions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../includes.html">Includes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../index_entries.html">Index Entries</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../noqa.html">Suppressing diagnostics</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../unknown_directives.html">Unrecognized and malformed directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../if_builder.html">Conditional content by builder</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../doctests.html">Doctest Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Entities</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Entities"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="requirements.html">Requirements</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="audit_events.html">Audit events</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tables.html">Listing entities</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="charts.html">Charting the graph</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="imported.html">Importing from sphinx-needs</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="entity_update.html">Updating entities after the fact</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Updating entities after the fact"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="entity_update.html#targeting-a-single-id-appending-and-removing-a-tag">Targeting a single id, appending and removing a tag</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="entity_update.html#targeting-a-filter-setting-a-field-on-every-match-at-once">Targeting a filter, setting a field on every match at once</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="entity_update.html#appending-and-removing-a-relation-target">Appending and removing a relation target</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="entity_update.html#a-target-matching-nothing">A target matching nothing</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="entity_update.html#rejected-mutations">Rejected mutations</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="entity_update.html#a-conflicting-pair">A conflicting pair</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="diagrams.html">Diagrams over the entity graph</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../toctree/index.html">Toctree Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../contents/index.html">Contents Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../default_role/index.html">Interpreted Text</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../sectnum/index.html">Sectnum Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../dropdown/index.html">Dropdown Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../grid/index.html">Grid Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../button_link/index.html">Button Link Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../jinja/index.html">🧩 Templated Sources</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../intersphinx/index.html">Linking into other sites</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../team_a/index.html">Team A: Getting Started</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../team_b/index.html">Team B: Infrastructure Guide</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="imported.html">&larr; Importing from sphinx-needs</a>
+        <a class="next" href="diagrams.html">Diagrams over the entity graph &rarr;</a>
+      </nav>
+      
+      <h1 id="updating-entities-after-the-fact">Updating entities after the fact</h1>
+<p><code>.. entity-update::</code>, and its sphinx-needs spelling <code>.. needextend::</code>,
+mutate the fields of one or many already-declared entities — from any
+document, once the whole project is merged. Applying one is never
+destructive: it never overwrites what was written in <code>requirements.rst</code>,
+below — it builds a separate, traceable history beside it, which the
+entity's own rendered box (and a custom template's <code>history</code> variable)
+reads through. See <code>docs/decisions/019-entity-update.md</code>.</p>
+<h2 id="targeting-a-single-id-appending-and-removing-a-tag">Targeting a single id, appending and removing a tag</h2>
+<div class="entity-update"><p class="entity-update-target"><code>entity-update</code> &rarr; <code>REQ_001</code></p><ul class="entity-update-fields"><li><code>+tags</code>: safety-critical</li></ul><div class="entity-update-justification"><p>Flagged during the safety review of the boot sequence.</p>
+</div></div><div class="entity-update"><p class="entity-update-target"><code>entity-update</code> &rarr; <code>REQ_001</code></p><ul class="entity-update-fields"><li><code>-tags</code>: kernel</li></ul><div class="entity-update-justification"><p>The kernel team no longer owns this requirement's timing budget.</p>
+</div></div><p><code>REQ_001</code> (declared in <code>requirements.rst</code>, with <code>:tags: boot, kernel</code>)
+now shows <code>boot</code>, <code>safety-critical</code> wherever its tags are read — its own
+page there, this page's two directives above, and any <code>.. entity-table::</code>
+or <code>.. entity-pie::</code> that lists it.</p>
+<h2 id="targeting-a-filter-setting-a-field-on-every-match-at-once">Targeting a filter, setting a field on every match at once</h2>
+<div class="entity entity-spec" id="entity-SPEC_002"><p class="entity-header"><span class="entity-type">Specification</span><span class="entity-title">Structured logging format</span><span class="entity-id">SPEC_002</span></p><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>approved</td></tr></tbody></table><div class="entity-section entity-section-rationale"><p class="entity-section-label">Rationale</p><p>Drafted alongside the boot sequence, but not reviewed yet.</p>
+</div></details></div><div class="entity-update"><p class="entity-update-target"><code>entity-update</code> &rarr; <code>type == "spec" and status == "draft"</code></p><ul class="entity-update-fields"><li><code>status</code>: approved</li></ul><div class="entity-update-justification"><p>Batch-approving every draft specification ahead of the release review —
+<code>SPEC_001</code> (already approved in <code>requirements.rst</code>) is unaffected;
+only <code>SPEC_002</code> above matches.</p>
+</div></div><h2 id="appending-and-removing-a-relation-target">Appending and removing a relation target</h2>
+<div class="entity entity-impl" id="entity-IMPL_002"><p class="entity-header"><span class="entity-type">Implementation</span><span class="entity-title">Boot-timing self-check</span><span class="entity-id">IMPL_002</span></p><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Module</th><td>boot.selfcheck</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">Implements</p><ul class="entity-link-list"><li><a class="reference internal" href="requirements.html#entity-SPEC_001">SPEC_001</a></li></ul></div></details></div><div class="entity-update"><p class="entity-update-target"><code>entity-update</code> &rarr; <code>SPEC_001</code></p><ul class="entity-update-fields"><li><code>+implemented_by</code>: IMPL_002</li></ul><div class="entity-update-justification"><p>Recording that the boot-timing self-check module also implements this
+specification, alongside <code>IMPL_001</code> already declared in
+<code>requirements.rst</code>.</p>
+</div></div><h2 id="a-target-matching-nothing">A target matching nothing</h2>
+<div class="entity-update"><p class="entity-update-target"><code>entity-update</code> &rarr; <code>type == "req" and status == "archived"</code></p><div class="entity-update-justification"><p>No requirement is archived yet, so this quietly does nothing rather than
+warning about it.</p>
+</div></div><div class="entity-update"><p class="entity-update-target"><code>entity-update</code> &rarr; <code>type == "test" and automated == False</code></p><div class="entity-update-justification"><p>Every test in this project is automated, so this one <em>does</em> warn
+(<code>entity-update.empty-result</code>) — <code>:strict:</code> defaults to <code>true</code>,
+catching a filter that no longer matches anything it once did.</p>
+</div></div><h2 id="rejected-mutations">Rejected mutations</h2>
+<p>Identity fields, and a declared section, cannot be changed this way:</p>
+<div class="entity-update"><p class="entity-update-target"><code>entity-update</code> &rarr; <code>REQ_001</code></p><div class="entity-update-justification"><p>Reported as <code>entity-update.protected-field</code> and ignored.</p>
+</div></div><div class="entity-update"><p class="entity-update-target"><code>entity-update</code> &rarr; <code>REQ_001</code></p><div class="entity-update-justification"><p>Reported as <code>entity-update.section-not-supported</code>: a section is a
+document, deliberately kept out of the project index this directive's
+effects live in.</p>
+</div></div><div class="entity-update"><p class="entity-update-target"><code>entity-update</code> &rarr; <code>REQ_001</code></p><div class="entity-update-justification"><p><code>req</code> declares no such field at all, so this is
+<code>entity-update.unknown-field</code>.</p>
+</div></div><h2 id="a-conflicting-pair">A conflicting pair</h2>
+<div class="entity-update"><p class="entity-update-target"><code>entity-update</code> &rarr; <code>REQ_001</code></p><ul class="entity-update-fields"><li><code>status</code>: closed</li></ul><div class="entity-update-justification"><p>Closed after the boot-timing regression passed.</p>
+</div></div><div class="entity-update"><p class="entity-update-target"><code>entity-update</code> &rarr; <code>REQ_001</code></p><ul class="entity-update-fields"><li><code>status</code>: in_progress</li></ul><div class="entity-update-justification"><p>Reopened pending the safety review above — which disagrees with the
+directive immediately before it about <code>REQ_001</code>'s status. Both are
+reported under <code>entity-update.conflicting-update</code>, each against its own
+directive, and the conflicting value is marked wherever it renders.</p>
+</div></div>
+      
+      <nav class="page-relations">
+        <a class="prev" href="imported.html">&larr; Importing from sphinx-needs</a>
+        <a class="next" href="diagrams.html">Diagrams over the entity graph &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
