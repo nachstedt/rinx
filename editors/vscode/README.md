@@ -15,8 +15,10 @@ re-implementation of Sphinx.
 A `rinx` binary. The extension finds one in this order:
 
 1. the `rinx.binaryPath` setting;
-2. a Bazel workspace's `@rinx//:rinx`;
-3. `rinx` on the `PATH`.
+2. a Bazel workspace's `@rinx//:rinx`, the version its build runs;
+3. the binary inside the extension, if it was packaged with
+   `npm run package:bundled`;
+4. `rinx` on the `PATH`.
 
 `cargo install rinx` provides one.
 

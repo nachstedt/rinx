@@ -20,7 +20,7 @@ The extension acts as an orchestrator between the VS Code editor, the ``rinx`` C
 
 The extension provides the following settings:
 
-- ``rinx.binaryPath``: Path to the ``rinx`` binary, for the preview and the language server. When unset, the binary is discovered through Bazel, falling back to ``rinx`` on the ``PATH``.
+- ``rinx.binaryPath``: Path to the ``rinx`` binary, for the preview and the language server. When unset, the binary is discovered through Bazel, then taken from the extension itself if it was packaged with one (``npm run package:bundled``), falling back to ``rinx`` on the ``PATH``.
 - ``rinx.configPath``: Path to the ``rinx.toml`` config file (auto-detected from workspace).
 - ``rinx.templatePath``: Path to the HTML template used for rendering.
 - ``rinx.indexPath``: Path to the project index (default: auto-detected from ``bazel-bin``).
@@ -213,14 +213,15 @@ CI runs all of these on every pull request, from ``editors/vscode``:
 
 - ``npm run typecheck``, ``npm run lint`` and ``npm run format:check``. The linter is oxlint, with type-aware rules: the extension is on TypeScript 7, which ESLint's TypeScript support cannot load.
 - ``npm test`` runs the tests inside a real VS Code through ``@vscode/test-cli``, configured in ``.vscode-test.mjs``. ``VSCODE_VERSION=min`` picks the oldest VS Code that ``engines.vscode`` allows, and ``VSCODE_VERSION=insiders`` picks the next one. ``npm test -- --coverage`` also measures coverage, which ``node scripts/check-coverage.mjs <floor>`` checks.
-- The tests come in four labels, and ``npm test -- --label <name>`` runs one. ``unit`` needs nothing else. ``e2e`` opens a copy of ``test-fixtures/workspace`` and talks to the real ``rinx lsp``: the binary named by ``RINX_BINARY``, or else ``target/debug/rinx``, so run ``cargo build`` first. ``e2e-no-server`` checks that the extension survives a binary that does not exist. ``e2e-vsix`` exists only when ``RINX_VSIX`` names a packaged extension: it runs the ``e2e`` tests against that VSIX installed into VS Code, rather than against the checkout.
+- The tests come in four labels, and ``npm test -- --label <name>`` runs one. ``unit`` needs nothing else. ``e2e`` opens a copy of ``test-fixtures/workspace`` and talks to the real ``rinx lsp``: the binary named by ``RINX_BINARY``, or else ``target/debug/rinx``, so run ``cargo build`` first. ``e2e-no-server`` checks that the extension survives a binary that does not exist. ``e2e-vsix`` exists only when ``RINX_VSIX`` names a packaged extension: it runs the ``e2e`` tests against that VSIX installed into VS Code, rather than against the checkout. With ``RINX_VSIX_BUNDLED=1`` the VSIX is one with a binary inside, and no ``rinx.binaryPath`` is set, so the tests run against the binary it carries.
 
 5. Packaging and Local Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 To test the extension as a "production" build:
 1.  **Package the extension**: Run ``npm run package`` inside ``editors/vscode``. This bundles the extension with esbuild into ``dist/`` and writes ``rinx.vsix``. ``npm run package:check`` compares the packaged files against ``vsix-files.txt``. Every CI run also uploads the VSIX as the ``rinx-vsix`` artifact.
-2.  **Install locally**: Run ``code --install-extension rinx.vsix``.
-3.  **Configure**: Set ``rinx.binaryPath`` in your global VS Code settings to point to your locally built binary, such as ``target/debug/rinx`` after ``cargo build``. Reload the window after rebuilding it, so the language server restarts.
+2.  **Or package it with a binary**: Run ``npm run package:bundled``. It builds ``rinx`` in release mode (or takes ``-- --binary <path>``), packages it into the VSIX under ``bin/`` and writes ``rinx-<platform>.vsix``, which works on the packaging machine's platform only. Such a VSIX needs no further setup: the extension uses its own binary unless ``rinx.binaryPath`` is set or a Bazel workspace provides one.
+3.  **Install locally**: Run ``code --install-extension rinx.vsix`` (or the ``rinx-<platform>.vsix``).
+4.  **Configure**: For a VSIX without a binary, set ``rinx.binaryPath`` in your global VS Code settings to point to your locally built binary, such as ``target/debug/rinx`` after ``cargo build``. Reload the window after rebuilding it, so the language server restarts.
 
 6. Bazel Integration (Optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

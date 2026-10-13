@@ -573,9 +573,11 @@ jobs:
         retention-days: 14
 
   # The end-to-end tests against that VSIX installed into a clean VS Code,
-  # rather than against the checkout, on Linux and macOS.
+  # rather than against the checkout, on Linux and macOS. The `bundled`
+  # variant packages the rinx binary into the VSIX (`npm run package:bundled`)
+  # and sets no rinx.binaryPath, so the server is the one the VSIX carries.
   vscode-vsix:
-    name: VS Code / packaged (${{ matrix.os }})
+    name: VS Code / packaged (${{ matrix.os }}, ${{ matrix.variant }})
     needs: [rinx-binary, vscode-package]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
@@ -583,12 +585,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
+        variant: [plain, bundled]
     defaults:
       run:
         working-directory: editors/vscode
     env:
       RINX_BINARY: ${{ github.workspace }}/rinx-bin/rinx
       RINX_VSIX: ${{ github.workspace }}/rinx-vsix/rinx.vsix
+      RINX_VSIX_BUNDLED: ${{ matrix.variant == 'bundled' && '1' || '' }}
     steps:
     - uses: actions/checkout@v7
 
@@ -612,10 +616,20 @@ jobs:
       run: chmod +x "$RINX_BINARY"
 
     - name: Download the VSIX
+      if: matrix.variant == 'plain'
       uses: actions/download-artifact@v8
       with:
         name: rinx-vsix
         path: ${{ github.workspace }}/rinx-vsix
+
+    # A debug binary, and not uploaded: release binaries are the
+    # Marketplace step's (#39 of docs/dev/lsp-roadmap.md).
+    - name: Package the VSIX with the rinx binary
+      if: matrix.variant == 'bundled'
+      run: |
+        npm run package:bundled -- --binary "$RINX_BINARY"
+        mkdir -p "$(dirname "$RINX_VSIX")"
+        mv rinx-*.vsix "$RINX_VSIX"
 
     # Linux runners have no display; macOS runners do.
     - name: Run the end-to-end tests against the VSIX
@@ -625,7 +639,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v7
       with:
-        name: vscode-vsix-logs-${{ matrix.os }}
+        name: vscode-vsix-logs-${{ matrix.os }}-${{ matrix.variant }}
         path: editors/vscode/.vscode-test/user-data/logs
         retention-days: 7
 

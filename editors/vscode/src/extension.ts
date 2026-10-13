@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { LanguageClient } from 'vscode-languageclient/node';
 import { BazelScanner, DiscoveredConfig } from './bazel';
-import { chooseBinaryPath, explicitValue } from './binary';
+import { bundledBinaryPath, chooseBinaryPath, explicitValue } from './binary';
 import { resolveServerBinary, startLanguageClient } from './client';
 import { errorMessage } from './errors';
 import { IndexStatus, IndexStatusItem, STATUS_METHOD } from './status';
@@ -18,20 +18,25 @@ function log(msg: string) {
 }
 
 let client: LanguageClient | undefined;
+// The binary the language server was started from, once it has been.
+let serverBinary: string | undefined;
 
 /** What the extension offers other extensions — and its own end-to-end tests. */
 export interface RinxApi {
     /** The last status the language server reported for its workspace index. */
     indexStatus(): IndexStatus | undefined;
+    /** The binary the language server was started from, once it has been. */
+    serverBinary(): string | undefined;
 }
 
 export function activate(context: vscode.ExtensionContext): RinxApi {
     const statusItem = new IndexStatusItem();
+    const bundled = bundledBinaryPath(context.extensionPath, process.platform, fs.existsSync);
     context.subscriptions.push(
         outputChannel,
         statusItem,
         vscode.commands.registerCommand('rinx.showPreview', () => {
-            PreviewPanel.createOrShow(context.extensionUri);
+            PreviewPanel.createOrShow(context.extensionUri, bundled);
         }),
         vscode.commands.registerCommand('rinx.showLogs', () => {
             outputChannel.show();
@@ -39,8 +44,8 @@ export function activate(context: vscode.ExtensionContext): RinxApi {
     );
     // Not awaited: finding the binary may build it with Bazel, and the
     // preview command must not wait for that.
-    void startServer(statusItem);
-    return { indexStatus: () => statusItem.last };
+    void startServer(statusItem, bundled);
+    return { indexStatus: () => statusItem.last, serverBinary: () => serverBinary };
 }
 
 export async function deactivate(): Promise<void> {
@@ -49,11 +54,12 @@ export async function deactivate(): Promise<void> {
 }
 
 /** Starts the language server, reporting a failure rather than throwing. */
-async function startServer(statusItem: IndexStatusItem): Promise<void> {
+async function startServer(statusItem: IndexStatusItem, bundled: string | undefined): Promise<void> {
     let binary = 'rinx';
     try {
-        binary = await resolveServerBinary(new BazelScanner(log), log);
+        binary = await resolveServerBinary(new BazelScanner(log), bundled, log);
         client = await startLanguageClient(binary, outputChannel);
+        serverBinary = binary;
         client.onNotification(STATUS_METHOD, (status: IndexStatus) => statusItem.update(status));
     } catch (error: unknown) {
         log(`Language server failed to start: ${errorMessage(error)}`);
@@ -110,6 +116,8 @@ class PreviewPanel {
     public static currentPanel: PreviewPanel | undefined;
     private readonly _panel: vscode.WebviewPanel;
     private readonly _extensionUri: vscode.Uri;
+    // The binary the VSIX carries, if any: see binary.ts.
+    private readonly _bundledBinary: string | undefined;
     private _disposables: vscode.Disposable[] = [];
     private static _configCache = new BazelConfigCache();
     private _scanner = new BazelScanner(log);
@@ -118,7 +126,7 @@ class PreviewPanel {
     // closes it finishes later, and must not write into the disposed webview.
     private _disposed = false;
 
-    public static createOrShow(extensionUri: vscode.Uri) {
+    public static createOrShow(extensionUri: vscode.Uri, bundledBinary: string | undefined) {
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
         if (PreviewPanel.currentPanel) {
@@ -130,12 +138,13 @@ class PreviewPanel {
             enableScripts: true,
         });
 
-        PreviewPanel.currentPanel = new PreviewPanel(panel, extensionUri);
+        PreviewPanel.currentPanel = new PreviewPanel(panel, extensionUri, bundledBinary);
     }
 
-    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, bundledBinary: string | undefined) {
         this._panel = panel;
         this._extensionUri = extensionUri;
+        this._bundledBinary = bundledBinary;
 
         this._update();
 
@@ -297,7 +306,11 @@ class PreviewPanel {
         }
 
         return {
-            binaryPath: chooseBinaryPath(explicitValue(settings.inspect<string>('binaryPath')), discovered?.binaryPath),
+            binaryPath: chooseBinaryPath(
+                explicitValue(settings.inspect<string>('binaryPath')),
+                discovered?.binaryPath,
+                this._bundledBinary,
+            ),
             configPath:
                 discovered?.configPath ||
                 this._getAbsolutePath(settings.get<string>('configPath') || 'rinx.toml', workspaceRoot),
