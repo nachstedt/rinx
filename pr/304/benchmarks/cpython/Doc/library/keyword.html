@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>keyword — Testing for Python keywords — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="language.html">Python Language Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python Language Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="ast.html">ast — Abstract syntax trees</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="symtable.html">symtable — Access to the compiler&#x27;s symbol tables</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="token.html">token — Constants used with Python parse trees</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current">
+            <a href="keyword.html">keyword — Testing for Python keywords</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tokenize.html">tokenize — Tokenizer for Python source</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tabnanny.html">tabnanny — Detection of ambiguous indentation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pyclbr.html">pyclbr — Python module browser support</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="py_compile.html">py_compile — Compile Python source files</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="compileall.html">compileall — Byte-compile Python libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="dis.html">dis — Disassembler for Python bytecode</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pickletools.html">pickletools — Tools for pickle developers</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="token.html">&larr; token — Constants used with Python parse trees</a>
+        <a class="next" href="tokenize.html">tokenize — Tokenizer for Python source &rarr;</a>
+      </nav>
+      
+      <h1 id="keyword-testing-for-python-keywords"><code class="xref py module docutils literal">keyword</code> — Testing for Python keywords</h1>
+<dl class="py module">
+  <dt id="py:module:keyword"><code class="sig-name">keyword</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/keyword.py`</p>
+<hr />
+<p>This module allows a Python program to determine if a string is a
+<a href="../reference/lexical_analysis.html#keywords">keyword</a> or <a href="../reference/lexical_analysis.html#soft-keywords">soft keyword</a>.</p>
+<dl class="py function">
+  <dt id="py:function:keyword.iskeyword"><code class="sig-name">iskeyword(s)</code></dt>
+  <dd><p>Return <code>True</code> if <em>s</em> is a Python <a href="../reference/lexical_analysis.html#keywords">keyword</a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:keyword.kwlist"><code class="sig-name">kwlist</code></dt>
+  <dd><p>Sequence containing all the <a href="../reference/lexical_analysis.html#keywords">keywords</a> defined for the
+interpreter.  If any keywords are defined to only be active when particular
+<a class="reference internal" href="__future__.html#py:module:__future__" title="__future__: Future statement definitions"><code class="xref py module docutils literal">__future__</code></a> statements are in effect, these will be included as well.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:keyword.issoftkeyword"><code class="sig-name">issoftkeyword(s)</code></dt>
+  <dd><p>Return <code>True</code> if <em>s</em> is a Python <a href="../reference/lexical_analysis.html#soft-keywords">soft keyword</a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:keyword.softkwlist"><code class="sig-name">softkwlist</code></dt>
+  <dd><p>Sequence containing all the <a href="../reference/lexical_analysis.html#soft-keywords">soft keywords</a> defined for the
+interpreter.  If any soft keywords are defined to only be active when particular
+<a class="reference internal" href="__future__.html#py:module:__future__" title="__future__: Future statement definitions"><code class="xref py module docutils literal">__future__</code></a> statements are in effect, these will be included as well.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="token.html">&larr; token — Constants used with Python parse trees</a>
+        <a class="next" href="tokenize.html">tokenize — Tokenizer for Python source &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
