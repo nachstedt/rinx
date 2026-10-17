@@ -19,8 +19,8 @@ rinx_toctree.workspace = true
 rinx_scope.workspace = true
 rinx_uml.workspace = true
 anyhow = "1.0.102"
-html-escape = "0.2.13"
-math-core = "0.8"
+html-escape = "0.3.0"
+math-core = "0.9"
 minijinja = "2"
 octicons-pack = { version = "19.33", default-features = false }
 pathdiff = "0.2.3"
