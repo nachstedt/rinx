@@ -7,6 +7,7 @@
     "entity_type": {
       "description": "The entity types this project declares, one `[[entity_type]]` each.",
       "type": "array",
+      "default": [],
       "items": {
         "$ref": "#/$defs/RawEntityType"
       }
@@ -22,6 +23,7 @@
     "role": {
       "description": "Inline roles that reference an entity from prose. Optional: every entity\nis reachable by `:ref:` and by the built-in `:entity:` role regardless.",
       "type": "array",
+      "default": [],
       "items": {
         "$ref": "#/$defs/RawRole"
       }
@@ -43,7 +45,8 @@
         },
         "split": {
           "description": "How the argument text is divided before being mapped.",
-          "$ref": "#/$defs/RawSplit"
+          "$ref": "#/$defs/RawSplit",
+          "default": "whole"
         }
       },
       "additionalProperties": false
@@ -132,6 +135,7 @@
         "attribute": {
           "description": "Typed values, never parsed as RST.",
           "type": "array",
+          "default": [],
           "items": {
             "$ref": "#/$defs/RawAttribute"
           }
@@ -161,6 +165,7 @@
         "relation": {
           "description": "Typed edges to other entities, declared on the type that carries them.",
           "type": "array",
+          "default": [],
           "items": {
             "$ref": "#/$defs/RawRelation"
           }
@@ -168,6 +173,7 @@
         "section": {
           "description": "Named prose sections, whose content *is* fully-parsed RST.",
           "type": "array",
+          "default": [],
           "items": {
             "$ref": "#/$defs/RawSection"
           }

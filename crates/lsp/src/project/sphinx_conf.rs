@@ -24,6 +24,7 @@ use rinx_pyconf::{BoundValue, ModuleReading, Value, ValueKind, read_module};
 use super::exclusion::{Exclusion, INCLUDE_EVERYTHING};
 use super::intersphinx::{DEFAULT_CACHE_LIMIT_DAYS, IntersphinxSettings, read_mapping};
 use super::model::{ParseSettings, ProjectSettings};
+use super::needs::{NEEDS_EXTENSIONS, NeedsDeclaration, conf_setting_names, read_declaration};
 use super::strictness::Strictness;
 
 /// What reading one `conf.py` found: the settings, and every way the reading
@@ -31,6 +32,9 @@ use super::strictness::Strictness;
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConfReading {
     pub settings: ProjectSettings,
+    /// The project's sphinx-needs configuration, when `extensions` declares
+    /// sphinx-needs — to be resolved against the files it names.
+    pub needs: Option<NeedsDeclaration>,
     /// In source order, each positioned in `conf.py`.
     pub findings: Vec<Diagnostic>,
 }
@@ -43,7 +47,7 @@ pub fn read_sphinx_conf(text: &str) -> ConfReading {
         module: &module,
         findings: Vec::new(),
     };
-    let settings = reader.settings();
+    let (settings, needs) = reader.settings();
     let mut findings = reader.findings;
     findings.extend(module.wildcard_imports.iter().map(|span| {
         Diagnostic::new(
@@ -63,7 +67,11 @@ pub fn read_sphinx_conf(text: &str) -> ConfReading {
         ));
     }
     findings.sort_by_key(|finding| finding.span.map(|span| span.start));
-    ConfReading { settings, findings }
+    ConfReading {
+        settings,
+        needs,
+        findings,
+    }
 }
 
 /// The extension whose settings say which other sites a project links into.
@@ -75,7 +83,7 @@ struct Reader<'a> {
 }
 
 impl<'a> Reader<'a> {
-    fn settings(&mut self) -> ProjectSettings {
+    fn settings(&mut self) -> (ProjectSettings, Option<NeedsDeclaration>) {
         let defaults = ProjectSettings::default();
         let root_doc = self
             .string("root_doc")
@@ -84,7 +92,8 @@ impl<'a> Reader<'a> {
         let domain = self.primary_domain();
         let default_role = self.default_role(domain);
         let extensions = self.strings("extensions").unwrap_or_default();
-        ProjectSettings {
+        let needs = self.needs(&extensions);
+        let settings = ProjectSettings {
             root_doc,
             source_suffixes: self.source_suffixes(),
             exclusion: self.exclusion(),
@@ -93,6 +102,7 @@ impl<'a> Reader<'a> {
                 default_role,
                 prolog: self.text("rst_prolog"),
                 epilog: self.text("rst_epilog"),
+                ..ParseSettings::default()
             },
             numfig: self.boolean("numfig").unwrap_or(defaults.numfig),
             numfig_secnum_depth: self
@@ -103,7 +113,44 @@ impl<'a> Reader<'a> {
                 .unwrap_or(defaults.highlight_language),
             intersphinx: self.intersphinx(&extensions),
             strictness: Strictness::legacy(&extensions),
+            ..defaults
+        };
+        (settings, needs)
+    }
+
+    /// The literal `needs_*` settings — read only when `extensions` declares
+    /// sphinx-needs, as Sphinx ignores them otherwise.
+    fn needs(&mut self, extensions: &[String]) -> Option<NeedsDeclaration> {
+        if !extensions
+            .iter()
+            .any(|name| NEEDS_EXTENSIONS.contains(&name.as_str()))
+        {
+            return None;
         }
+        let literals: Vec<(&str, &Value)> = conf_setting_names()
+            .filter_map(|(setting, name)| Some((setting, self.literal(&name)?)))
+            .collect();
+        let from_toml = self.string("needs_from_toml");
+        let toml_root = self.strings("needs_from_toml_table").unwrap_or_default();
+        let anchor = self
+            .module
+            .binding("needs_from_toml")
+            .or_else(|| self.module.binding("extensions"))
+            .map(|binding| to_span(binding.target));
+        let findings = &mut self.findings;
+        Some(read_declaration(
+            &literals,
+            from_toml,
+            toml_root,
+            anchor,
+            |value, message| {
+                findings.push(Diagnostic::new(
+                    DiagnosticCode::ConfInvalidValue,
+                    message,
+                    to_span(value.span),
+                ));
+            },
+        ))
     }
 
     /// The literal `name` is bound to, reporting each change made to it

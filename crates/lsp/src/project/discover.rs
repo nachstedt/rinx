@@ -25,10 +25,12 @@
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use rinx_ast::{Diagnostic, DiagnosticCode};
 
 use super::model::{ProjectModel, ProjectSource};
+use super::needs::resolve_needs;
 use super::sphinx_conf::read_sphinx_conf;
 
 /// The file that makes a directory a Sphinx project's source root.
@@ -138,7 +140,16 @@ fn sphinx_project_at(directory: &Path) -> Option<DiscoveredProject> {
         return None;
     }
     let text = fs::read_to_string(&conf).unwrap_or_default();
-    let reading = read_sphinx_conf(&text);
+    let mut reading = read_sphinx_conf(&text);
+    if let Some(declaration) = &reading.needs {
+        let needs = resolve_needs(directory, declaration, &mut reading.findings);
+        reading
+            .findings
+            .sort_by_key(|finding| finding.span.map(|span| span.start));
+        reading.settings.parse.schema = Arc::new(needs.schema);
+        reading.settings.parse.import_keys = needs.import_keys;
+        reading.settings.config_files = needs.files;
+    }
     Some(DiscoveredProject {
         model: ProjectModel {
             source_root: directory.to_path_buf(),

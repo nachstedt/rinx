@@ -18,7 +18,6 @@ from typing import Any, TextIO
 
 import benchmark_common
 from benchmark_common import (
-    BUILD_CONFIG_FLAGS,
     WARMUP_PACKAGE,
     BuildResult,
     ReportLayout,
@@ -457,45 +456,13 @@ def lsp_failures(counts: LspCounts | None, limit: int = MAX_LSP_WARNINGS) -> lis
     ]
 
 
-def find_server_binary() -> Path | None:
-    """The `rinx` binary the corpus build ran, or None when it cannot be found.
-
-    The build runs it in Bazel's exec configuration, so the binary is asked
-    for among the warmup site's dependencies: `bazel build @rinx//:rinx`
-    would compile a second one in another configuration.
-    """
-    result = subprocess.run(
-        [
-            "bazel",
-            "cquery",
-            *BUILD_CONFIG_FLAGS,
-            "--output=files",
-            f'filter("crates/worker:rinx$", deps(//{WARMUP_PACKAGE}:site))',
-        ],
-        cwd=str(TARGET_DIR),
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    return first_executable(result.stdout.splitlines(), TARGET_DIR)
-
-
-def first_executable(paths: list[str], root: Path) -> Path | None:
-    """The first of `paths`, relative to `root`, that is an executable file."""
-    for path in paths:
-        candidate = root / path.strip()
-        if path.strip() and candidate.is_file() and os.access(candidate, os.X_OK):
-            return candidate
-    return None
-
-
 def run_lsp_check() -> LspCounts | None:
     """What the language server shows for CPython's documents, all open.
 
     Runs `rinx lsp --check` over `Doc/`, the folder an editor would open:
     `conf.py` decides what is a document, as it does for an author.
     """
-    binary = find_server_binary()
+    binary = benchmark_common.find_rinx_binary(TARGET_DIR)
     if binary is None:
         print("Could not find the rinx binary the build ran; skipping the language server.")
         return None

@@ -26,7 +26,6 @@ use std::path::{Path, PathBuf};
 
 use rinx_analyzer::{DocumentAnalysis, build_project_index_from_analyses};
 use rinx_ast::{Diagnostic, Document};
-use rinx_entity::EntitySchema;
 use rinx_index::{ExternalInventory, ProjectIndex};
 use rinx_renderer::config::SiteConfig;
 
@@ -373,7 +372,7 @@ impl Project {
             let mut index = build_project_index_from_analyses(
                 &analyses,
                 &model.index_settings(&root_doc),
-                &EntitySchema::empty(),
+                &model.settings.parse.schema,
             )
             .index;
             // Whole rather than pruned to what the documents name, as the

@@ -724,3 +724,35 @@ def exit_status(*, build_succeeded: bool, failures: Sequence[str] = ()) -> int:
     `MAX_LSP_WARNINGS`).
     """
     return 0 if build_succeeded and not failures else 1
+
+
+def find_rinx_binary(workspace: Path) -> Path | None:
+    """The `rinx` binary a benchmark workspace's build runs, or None when it cannot be found.
+
+    The build runs it in Bazel's exec configuration, so the binary is asked
+    for among the warm-up site's dependencies: `bazel build @rinx//:rinx`
+    would compile a second one in another configuration.
+    """
+    result = subprocess.run(
+        [
+            "bazel",
+            "cquery",
+            *BUILD_CONFIG_FLAGS,
+            "--output=files",
+            f'filter("crates/worker:rinx$", deps(//{WARMUP_PACKAGE}:site))',
+        ],
+        cwd=str(workspace),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return first_executable(result.stdout.splitlines(), workspace)
+
+
+def first_executable(paths: list[str], root: Path) -> Path | None:
+    """The first of `paths`, relative to `root`, that is an executable file."""
+    for path in paths:
+        candidate = root / path.strip()
+        if path.strip() and candidate.is_file() and os.access(candidate, os.X_OK):
+            return candidate
+    return None

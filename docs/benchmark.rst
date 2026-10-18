@@ -214,10 +214,10 @@ Three public corpora were considered:
 
 The Eclipse S-CORE pair is the larger and more demanding target — Apache-2.0, tagged, already Bazel-native, with real ``:derived_from:``/``:satisfied_by:``/``:safety: ASIL_B`` traceability — and is the obvious scale-up once the demo builds clean. It is not the starting point because its vocabulary lives in a third repository in a YAML dialect of its own, whereas the demo's is a declarative TOML written by the people who define sphinx-needs' semantics, which converts mechanically.
 
-The schema conversion (``scripts/needs_schema.py``)
----------------------------------------------------
+The schema conversion (``rinx needs_schema``)
+---------------------------------------------
 
-A sphinx-needs project using ubCode keeps its configuration in ``ubproject.toml`` (announced to Sphinx by ``needs_from_toml``). That file is data, so the vocabulary it declares converts into an ``entities.toml``:
+A sphinx-needs project using ubCode keeps its configuration in ``ubproject.toml`` (announced to Sphinx by ``needs_from_toml``). That file is data, so the vocabulary it declares converts into an ``entities.toml``. The conversion is ``rinx_entity``'s, and the benchmark runs it through the binary its warm-up build compiled, between the warm-up and the timed build: ``rinx needs_schema --ubproject docs/ubproject.toml --output docs/entities.toml``, which prints its report as JSON. The language server runs the same conversion over a project's ``conf.py`` (see :ref:`vscode-sphinx-projects`):
 
 .. list-table::
    :header-rows: 1
@@ -237,7 +237,7 @@ A sphinx-needs project using ubCode keeps its configuration in ``ubproject.toml`
 
 The generated file lands in the clone (``<workspace>/entities.toml``), never in this repository — it is derived data, rewritten on every run.
 
-``schemas.json`` is read for one thing only: an option that a rule makes *unconditionally* required on one need type is narrowed onto that type. Everything else — id patterns, ``allOf`` conditional selects, ``network`` constraints across linked entities — is reported instead. Honouring the ``required`` half of a conditional rule would be worse than not honouring it at all.
+``schemas.json`` — the file ``schema_definitions_from_json`` names — is read for the rules that select exactly one need type: an option they make required, an id ``pattern``, and a ``pattern`` or ``enum`` on a text field are narrowed onto that type (``docs/decisions/022-value-patterns.md``). Everything else — ``allOf`` conditional selects, ``network`` constraints across linked entities, a keyword with no equivalent — is reported instead. Honouring the ``required`` half of a conditional rule would be worse than not honouring it at all.
 
 Everything the conversion cannot carry over is collected into a report rather than dropped, and printed under **"Sphinx-Needs Constructs Without An Entity-Model Equivalent"**. That section is as much the point of the benchmark as the diagnostics are: each entry is a question about the entity meta-model.
 

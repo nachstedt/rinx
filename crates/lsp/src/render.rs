@@ -13,14 +13,17 @@
 //!
 //! The site's configuration is the project's, as far as the server reads it:
 //! a Sphinx project's `root_doc`, `numfig` and `highlight_language` from its
-//! `conf.py`. Inventories come with roadmap #13 and #18, so until then an
-//! intersphinx reference is reported as a site with none would.
+//! `conf.py`, its entity schema the one its sphinx-needs configuration
+//! converts into.
 
 use rinx_ast::{Diagnostic, Document};
+use rinx_entity::EntitySchema;
 use rinx_index::ProjectIndex;
 use rinx_renderer::config::SiteConfig;
+use rinx_renderer::{EmbeddedAssets, EntityTemplates};
 
-/// What rendering `document` against `index` finds, in source order and
+/// What rendering `document` against `index`, under `schema`, finds, in
+/// source order and
 /// before any `.. noqa:` is applied — the conversion to the protocol filters
 /// these together with the parse's own.
 #[must_use]
@@ -28,8 +31,20 @@ pub fn render_diagnostics(
     document: &Document,
     index: &ProjectIndex,
     config: &SiteConfig,
+    schema: &EntitySchema,
 ) -> Vec<Diagnostic> {
-    rinx_renderer::render_with_config(document, index, &document.path, config).diagnostics()
+    // No embedded image changes what is reported, and no project template
+    // either: an entity is checked against its schema, not its presentation.
+    rinx_renderer::render_with_assets(
+        document,
+        index,
+        &document.path,
+        config,
+        &EmbeddedAssets::new(),
+        schema,
+        &EntityTemplates::new(),
+    )
+    .diagnostics()
 }
 
 #[cfg(test)]
@@ -37,7 +52,6 @@ mod tests {
     use super::*;
     use rinx_analyzer::{DocumentAnalysis, IndexSettings, build_project_index_from_analyses};
     use rinx_ast::DiagnosticCode;
-    use rinx_entity::EntitySchema;
     use std::collections::BTreeMap;
 
     /// The index the documents `(path, text)` fold into.
@@ -66,7 +80,12 @@ mod tests {
         let index = index_of(&[("index.rst", REFERENCING)]);
 
         // When
-        let found = render_diagnostics(&document, &index, &SiteConfig::default());
+        let found = render_diagnostics(
+            &document,
+            &index,
+            &SiteConfig::default(),
+            &EntitySchema::empty(),
+        );
 
         // Then
         let codes: Vec<DiagnosticCode> = found.iter().map(|diagnostic| diagnostic.code).collect();
@@ -85,7 +104,12 @@ mod tests {
 
         // When / Then
         assert_eq!(
-            render_diagnostics(&document, &index, &SiteConfig::default()),
+            render_diagnostics(
+                &document,
+                &index,
+                &SiteConfig::default(),
+                &EntitySchema::empty()
+            ),
             Vec::new()
         );
     }
@@ -98,7 +122,12 @@ mod tests {
         let index = index_of(&[("guide/intro.rst", text), ("setup.rst", "Setup\n=====\n")]);
 
         // When
-        let found = render_diagnostics(&document, &index, &SiteConfig::default());
+        let found = render_diagnostics(
+            &document,
+            &index,
+            &SiteConfig::default(),
+            &EntitySchema::empty(),
+        );
 
         // Then
         let messages: Vec<&str> = found

@@ -33,6 +33,8 @@ mod hover_tests;
 #[cfg(test)]
 mod inventory_tests;
 #[cfg(test)]
+mod needs_tests;
+#[cfg(test)]
 mod notification_tests;
 #[cfg(test)]
 mod project_tests;

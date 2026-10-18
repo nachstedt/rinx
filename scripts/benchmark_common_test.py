@@ -664,3 +664,49 @@ class TestExportedNames:
         # Given / When / Then — two scripts, one contract
         assert publish_pages.BENCHMARK_REPORT == benchmark_common.REPORT_NAME
         assert publish_pages.BENCHMARK_ENTRY == benchmark_common.ENTRY_NAME
+
+
+class TestFirstExecutable:
+    def test_finds_the_first_executable_file_among_the_paths(self, tmp_path: Path) -> None:
+        # Given
+        (tmp_path / "data").write_text("")
+        binary = tmp_path / "bin" / "rinx"
+        binary.parent.mkdir()
+        binary.write_text("")
+        binary.chmod(0o755)
+
+        # When
+        found = benchmark_common.first_executable(["", "missing", "data", "bin/rinx\n"], tmp_path)
+
+        # Then
+        assert found == binary
+
+    def test_finds_nothing_when_nothing_is_executable(self, tmp_path: Path) -> None:
+        # Given / When / Then
+        assert benchmark_common.first_executable(["missing"], tmp_path) is None
+
+
+class TestFindRinxBinary:
+    def test_asks_cquery_for_the_exec_built_binary_and_finds_its_file(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Given a workspace holding the file cquery names
+        binary = tmp_path / "bazel-out" / "exec" / "rinx"
+        binary.parent.mkdir(parents=True)
+        binary.write_text("")
+        binary.chmod(0o755)
+        queries: list[list[str]] = []
+
+        def run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+            queries.append(command)
+            return subprocess.CompletedProcess(command, 0, "bazel-out/exec/rinx\n", "")
+
+        monkeypatch.setattr(benchmark_common.subprocess, "run", run)
+
+        # When
+        found = benchmark_common.find_rinx_binary(tmp_path)
+
+        # Then
+        assert found == binary
+        assert queries[0][:2] == ["bazel", "cquery"]
+        assert any("deps(//bench_warmup:site)" in part for part in queries[0])

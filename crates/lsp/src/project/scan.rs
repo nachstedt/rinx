@@ -16,7 +16,7 @@ use super::discover::DiscoveredProject;
 #[cfg(test)]
 use super::discover::discover_projects;
 use super::index::IndexedDocument;
-use super::model::ParseSettings;
+use super::model::ProjectModel;
 use crate::diagnostics::{ParsedSource, parse_source};
 use crate::documents::DocumentStore;
 use crate::uri::file_uri;
@@ -64,21 +64,25 @@ pub fn scan_projects(
     // The scan sees the disk only: what the editor holds is recorded on the
     // server's thread, where the buffers are.
     let disk_only = DocumentStore::default();
-    let parsed: Vec<(usize, String, IndexedDocument)> = jobs
-        .par_iter()
-        .filter_map(|&(project, doc_path, path)| {
-            let settings = &projects[project].model.settings.parse;
-            let scanned = parse_document(doc_path, path, settings, &disk_only).map(|parsed| {
-                (
-                    project,
-                    doc_path.to_string(),
-                    IndexedDocument::of(path.to_path_buf(), &parsed.document, parsed.reads.paths),
-                )
-            });
-            on_progress(done.fetch_add(1, Ordering::Relaxed) + 1, total);
-            scanned
-        })
-        .collect();
+    let parsed: Vec<(usize, String, IndexedDocument)> =
+        jobs.par_iter()
+            .filter_map(|&(project, doc_path, path)| {
+                let scanned = parse_document(doc_path, path, &projects[project].model, &disk_only)
+                    .map(|parsed| {
+                        (
+                            project,
+                            doc_path.to_string(),
+                            IndexedDocument::of(
+                                path.to_path_buf(),
+                                &parsed.document,
+                                parsed.reads.paths,
+                            ),
+                        )
+                    });
+                on_progress(done.fetch_add(1, Ordering::Relaxed) + 1, total);
+                scanned
+            })
+            .collect();
     let mut scanned: Vec<ScannedProject> = projects
         .into_iter()
         .map(|discovered| ScannedProject {
@@ -100,19 +104,17 @@ pub fn parse_project_documents(project: &DiscoveredProject) -> Vec<rinx_ast::Doc
     project
         .sources
         .iter()
-        .filter_map(|(doc_path, path)| {
-            parse_document(doc_path, path, &project.model.settings.parse, &disk_only)
-        })
+        .filter_map(|(doc_path, path)| parse_document(doc_path, path, &project.model, &disk_only))
         .map(|parsed| parsed.document)
         .collect()
 }
 
-/// The parse of the document `doc_path`, the file at `path`, read from the
-/// disk — or `None` when it cannot be read.
+/// The parse of the document `doc_path` of the project `model`, the file at
+/// `path`, read from the disk — or `None` when it cannot be read.
 fn parse_document(
     doc_path: &str,
     path: &Path,
-    settings: &ParseSettings,
+    model: &ProjectModel,
     disk_only: &DocumentStore,
 ) -> Option<ParsedSource> {
     let text = std::fs::read_to_string(path).ok()?;
@@ -120,8 +122,9 @@ fn parse_document(
     Some(parse_source(
         &uri,
         Some(doc_path),
+        Some(&model.source_root),
         &text,
-        settings,
+        &model.settings.parse,
         disk_only,
     ))
 }

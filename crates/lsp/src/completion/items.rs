@@ -4,6 +4,7 @@ use lsp_types::{
     CompletionItem, CompletionItemKind, CompletionItemLabelDetails, CompletionTextEdit, Range,
     TextEdit,
 };
+use rinx_entity::EntitySchema;
 use rinx_index::ProjectIndex;
 
 use super::context::{CompletedRole, RoleContext};
@@ -16,19 +17,48 @@ const NO_TITLE: &str = "<no title>";
 /// replacing `range` — the protocol's spelling of `context.replace`.
 ///
 /// A label offers the title a bare `:ref:` to it would show, and the
-/// document defining it; a document offers its title. Document names are
-/// relative to `doc_path` unless the author began the name with `/`.
+/// document defining it; a document offers its title; an entity its title,
+/// type and document. Document names are relative to `doc_path` unless the
+/// author began the name with `/`.
 #[must_use]
 pub fn completion_items(
     index: &ProjectIndex,
+    schema: &EntitySchema,
     doc_path: &str,
     context: &RoleContext,
     range: Range,
 ) -> Vec<CompletionItem> {
-    match context.role {
+    match &context.role {
         CompletedRole::Ref => ref_items(index, range),
         CompletedRole::Doc => doc_items(index, doc_path, context.typed.starts_with('/'), range),
+        CompletedRole::Entity(role) => entity_items(index, schema, role, range),
     }
+}
+
+/// One item per entity of a type the role named `role` accepts.
+fn entity_items(
+    index: &ProjectIndex,
+    schema: &EntitySchema,
+    role: &str,
+    range: Range,
+) -> Vec<CompletionItem> {
+    let Some(spec) = schema.role(role) else {
+        return Vec::new();
+    };
+    index
+        .entities
+        .iter()
+        .filter(|(_, record)| spec.accepts(&record.type_name))
+        .map(|(id, record)| CompletionItem {
+            detail: Some(record.display_text(id).to_string()),
+            label_details: Some(CompletionItemLabelDetails {
+                detail: Some(format!(" {}", record.type_name)),
+                description: Some(record.doc_path.clone()),
+            }),
+            kind: Some(CompletionItemKind::REFERENCE),
+            ..replacing(id.as_str().to_string(), range)
+        })
+        .collect()
 }
 
 /// One item per label the index resolves.
@@ -140,6 +170,7 @@ mod tests {
         // When
         let items = completion_items(
             &index(),
+            &EntitySchema::empty(),
             "index.rst",
             &context(CompletedRole::Ref, ""),
             range(),
@@ -165,6 +196,7 @@ mod tests {
         // When
         let items = completion_items(
             &index(),
+            &EntitySchema::empty(),
             "guide/notes.rst",
             &context(CompletedRole::Doc, "se"),
             range(),
@@ -187,6 +219,7 @@ mod tests {
         // When
         let items = completion_items(
             &index(),
+            &EntitySchema::empty(),
             "guide/notes.rst",
             &context(CompletedRole::Doc, "/"),
             range(),
@@ -232,5 +265,93 @@ mod tests {
                 new_text: "install".to_string(),
             }))
         );
+    }
+
+    /// A schema of two types, `req` and `spec`, with a role for each and
+    /// sphinx-needs' `:need:` over both.
+    fn needs_schema() -> EntitySchema {
+        rinx_entity::load_schema(
+            "[[entity_type]]\nname = \"req\"\n[[entity_type]]\nname = \"spec\"\n\
+             [[role]]\nname = \"req\"\ntypes = [\"req\"]\n\
+             [[role]]\nname = \"need\"\n",
+            &rinx_entity::NoReservedNames,
+        )
+        .expect("a valid schema")
+    }
+
+    fn entity_index() -> ProjectIndex {
+        let record = |type_name: &str, title: Option<&str>| rinx_index::EntityRecord {
+            type_name: type_name.to_string(),
+            doc_path: "reqs.rst".to_string(),
+            title: title.map(ToString::to_string),
+            attributes: std::collections::BTreeMap::new(),
+            outgoing: std::collections::BTreeMap::new(),
+            uml: std::collections::BTreeMap::new(),
+        };
+        let mut index = ProjectIndex::default();
+        index.entities.insert(
+            rinx_ast::EntityId::new("R_1").expect("an id"),
+            record("req", Some("Brakes")),
+        );
+        index.entities.insert(
+            rinx_ast::EntityId::new("S_1").expect("an id"),
+            record("spec", None),
+        );
+        index
+    }
+
+    #[test]
+    fn test_completion_items_offers_every_entity_the_role_accepts() {
+        // When
+        let items = completion_items(
+            &entity_index(),
+            &needs_schema(),
+            "index.rst",
+            &context(CompletedRole::Entity("need".into()), ""),
+            range(),
+        );
+
+        // Then each id is offered with its title, or the id without one
+        assert_eq!(
+            shown(&items),
+            [("R_1", Some("Brakes")), ("S_1", Some("S_1"))]
+        );
+        assert_eq!(
+            items[0]
+                .label_details
+                .as_ref()
+                .and_then(|d| d.description.as_deref()),
+            Some("reqs.rst")
+        );
+    }
+
+    #[test]
+    fn test_completion_items_offers_only_the_types_a_role_names() {
+        // When
+        let items = completion_items(
+            &entity_index(),
+            &needs_schema(),
+            "index.rst",
+            &context(CompletedRole::Entity("req".into()), ""),
+            range(),
+        );
+
+        // Then
+        assert_eq!(shown(&items), [("R_1", Some("Brakes"))]);
+    }
+
+    #[test]
+    fn test_completion_items_offers_nothing_for_a_role_the_schema_lacks() {
+        // When
+        let items = completion_items(
+            &entity_index(),
+            &needs_schema(),
+            "index.rst",
+            &context(CompletedRole::Entity("spec".into()), ""),
+            range(),
+        );
+
+        // Then
+        assert!(items.is_empty());
     }
 }

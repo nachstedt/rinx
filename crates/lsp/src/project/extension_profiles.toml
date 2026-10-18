@@ -109,6 +109,25 @@ directives = [
 ]
 roles = ["octicon", "fab", "fas", "far", "bdg", "bdg-primary", "bdg-secondary", "bdg-link-primary", "bdg-ref-primary"]
 
+# Its need types become entity directives through the schema the server
+# converts from `needs_*` and `ubproject.toml` (`project/needs.rs`), and
+# `needtable`, `needflow`, `needpie`, `needbar`, `needsequence`, `needuml`,
+# `needarch`, `needimport`, `needextend` and `needservice` are rinx's own;
+# these are the rest. A need is
+# no domain object, so it produces no targets here.
+[[extension]]
+name = "sphinx_needs"
+directives = [
+    "need",
+    "needlist",
+    "needfilter",
+    "needgantt",
+    "needreport",
+    "needextract",
+    "list2need",
+]
+roles = ["need", "need_count", "need_func", "need_part", "np", "need_incoming", "need_outgoing"]
+
 [[extension]]
 name = "sphinx_tabs.tabs"
 directives = ["tabs", "tab", "group-tab", "code-tab"]

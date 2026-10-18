@@ -74,6 +74,34 @@ impl EntitySchema {
         &self.import_keys
     }
 
+    /// The `[import_keys]` table resolved into the paths the parser's file
+    /// loader takes, for a schema whose table was written in the file at
+    /// `written_in` — a source-root-relative path.
+    ///
+    /// Two transformations, both of which must happen exactly once, in a
+    /// phase that knows where that file sits:
+    ///
+    /// 1. **Anchored at the file**, by the rule every other written path in
+    ///    this build follows (`rinx_ast::resolve_from_document`): a leading
+    ///    `/` means the source root, anything else is relative to the file
+    ///    that wrote it. That keeps a schema relocatable together with the
+    ///    data files beside it, and takes sphinx-needs' own
+    ///    `/needs_import.json` spelling verbatim.
+    /// 2. **Prefixed with `/`** afterwards, so the parser can hand it to its
+    ///    file loader with no anchor of its own and get source-root
+    ///    resolution: a project-level setting names a file from the
+    ///    project's root, not from whichever document happens to mention it.
+    #[must_use]
+    pub fn resolved_import_keys(&self, written_in: &str) -> BTreeMap<String, String> {
+        self.import_keys
+            .iter()
+            .map(|(alias, written)| {
+                let resolved = rinx_ast::resolve_from_document(written, written_in);
+                (alias.clone(), format!("/{}", resolved.to_string_lossy()))
+            })
+            .collect()
+    }
+
     /// A borrowable empty schema with the process's lifetime.
     ///
     /// Exists because [`crate::EntitySchema`] is threaded through the parser
@@ -456,5 +484,79 @@ mod tests {
         // Then the hash moves — the pin above narrows what the fingerprint
         // ignores, it does not disable it
         assert_ne!(with_type.hash(), empty.hash());
+    }
+
+    /// A schema declaring `import_keys`, for the resolution tests below.
+    fn keyed_schema(pairs: &[(&str, &str)]) -> EntitySchema {
+        let table = pairs
+            .iter()
+            .map(|(alias, path)| format!("{alias} = \"{path}\""))
+            .collect::<Vec<_>>()
+            .join("\n");
+        crate::load_schema(
+            &format!("[import_keys]\n{table}\n[[entity_type]]\nname = \"req\"\n"),
+            &crate::NoReservedNames,
+        )
+        .expect("the fixture schema is valid")
+    }
+
+    #[test]
+    fn test_a_bare_import_key_resolves_beside_the_schema_file() {
+        // Given a schema nested in the tree, naming a file with no leading `/`
+        let schema = keyed_schema(&[("upstream", "needs.json")]);
+
+        // When its keys are resolved
+        let resolved = schema.resolved_import_keys("examples/entities/entities.toml");
+
+        // Then the file is found beside the schema, which is what lets a
+        // schema and its data files move through the tree together
+        assert_eq!(
+            resolved.get("upstream").map(String::as_str),
+            Some("/examples/entities/needs.json")
+        );
+    }
+
+    #[test]
+    fn test_a_slash_prefixed_import_key_resolves_at_the_source_root() {
+        // Given sphinx-needs' own spelling, which is source-root-relative
+        let schema = keyed_schema(&[("imported_project", "/needs_import.json")]);
+
+        // When its keys are resolved
+        let resolved = schema.resolved_import_keys("deep/nested/entities.toml");
+
+        // Then the leading `/` wins over the schema's location, so a converted
+        // `ubproject.toml` value carries across verbatim
+        assert_eq!(
+            resolved.get("imported_project").map(String::as_str),
+            Some("/needs_import.json")
+        );
+    }
+
+    #[test]
+    fn test_every_resolved_import_key_is_prefixed_for_the_loader() {
+        // Given keys written both ways
+        let schema = keyed_schema(&[("a", "beside.json"), ("b", "/root.json")]);
+
+        // When they are resolved
+        let resolved = schema.resolved_import_keys("docs/entities.toml");
+
+        // Then both come out `/`-prefixed, so the parser can hand them to the
+        // file loader with no anchor of its own and get source-root resolution
+        assert!(
+            resolved.values().all(|path| path.starts_with('/')),
+            "{resolved:?}"
+        );
+    }
+
+    #[test]
+    fn test_a_schema_without_import_keys_resolves_to_an_empty_map() {
+        // Given a schema declaring none
+        let schema =
+            crate::load_schema("[[entity_type]]\nname = \"req\"\n", &crate::NoReservedNames)
+                .expect("valid");
+
+        // When its keys are resolved
+        // Then there are none, and every lookup simply misses
+        assert!(schema.resolved_import_keys("entities.toml").is_empty());
     }
 }
