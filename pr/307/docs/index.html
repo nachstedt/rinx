@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>rinx — rinx</title>
+  <link rel="stylesheet" href="../default.css">
+  <script defer src="../version_switcher.js"></script>
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">rinx</h2>
+        
+        <div class="version-switcher" data-json-url="https:&#x2f;&#x2f;nachstedt.github.io&#x2f;rinx&#x2f;versions.json" hidden></div>
+        
+        
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="getting_started.html">Getting started</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="rules.html">Bazel rules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="syntax.html">Supported syntax</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="compatibility.html">Compatibility status</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="entities.html">Entities</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="intersphinx.html">Linking between documentation sites</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="vscode.html">VS Code Extension Architecture for Rinx</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="benchmark.html">Benchmarking Rinx</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="diagnostics.html">Diagnostic codes</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        
+        <a class="next" href="getting_started.html">Getting started &rarr;</a>
+      </nav>
+      
+      <a id="home"></a>
+<h1 id="rinx">rinx</h1>
+<p><strong>rinx</strong> is a Rust re-implementation of (a subset of) the <a href="https://www.sphinx-doc.org/">Sphinx</a> documentation generator, built to be a
+first-class <a href="https://bazel.build/">Bazel</a> build step rather than an external
+tool wrapped by one. It turns reStructuredText into an HTML site with
+cross-references, toctree navigation, syntax highlighting, math and diagrams,
+and it models requirements and other project-specific constructs the way
+<a href="https://sphinx-needs.com/">sphinx-needs</a> does.</p>
+<p>This site is itself built by rinx, from the <code>docs/</code> directory of its
+repository.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>rinx is early and pre-1.0. The rule and CLI interfaces may still change
+between minor versions. <a href="syntax.html#syntax">Supported syntax</a> lists what is supported today, and
+<a href="compatibility.html#compatibility">Compatibility status</a> has the details.</p>
+</div>
+<h2 id="why">Why</h2>
+<p>A Sphinx build is a single process: it re-reads the whole project and decides
+for itself what is out of date. rinx splits the work into small, deterministic
+steps (parse, index, render), each of them a separate Bazel action. So:</p>
+<ul>
+<li><p><strong>Only what changed is rebuilt.</strong> Editing one page re-parses that page only.
+Results are cached like any other Bazel output, including remote caches.</p>
+</li>
+<li><p><strong>Documentation composes like code.</strong> A <code>rinx_library</code> per team or
+component, a <code>rinx_site</code> that assembles them, and dependency checking that
+fails the build when a toctree points at a library that isn't declared.</p>
+</li>
+<li><p><strong>Fast.</strong> CPython's documentation (about 500 documents) builds as a Bazel
+target; see <a href="benchmark.html#benchmark">Benchmarking Rinx</a>.</p>
+</li>
+<li><p><strong>Resilient parsing.</strong> A half-written document still produces a page, which
+is what makes the <a href="vscode.html#vscode">VS Code live preview</a> possible.</p>
+</li>
+</ul>
+<h2 id="contents">Contents</h2>
+<ul>
+  <li><a href="getting_started.html">Getting started</a>
+<ul>
+  <li><a href="getting_started.html#adding-rinx-to-a-project">Adding rinx to a project</a></li>
+  <li><a href="getting_started.html#a-first-site">A first site</a></li>
+  <li><a href="getting_started.html#building-and-viewing-it">Building and viewing it</a></li>
+  <li><a href="getting_started.html#where-to-go-next">Where to go next</a></li>
+</ul>
+  </li>
+  <li><a href="rules.html">Bazel rules</a>
+<ul>
+  <li><a href="rules.html#rinx-library">rinx_library</a></li>
+  <li><a href="rules.html#rinx-site">rinx_site</a></li>
+  <li><a href="rules.html#rinx-inventory">rinx_inventory</a></li>
+  <li><a href="rules.html#rinx-doctest-tests">rinx_doctest_tests</a></li>
+</ul>
+  </li>
+  <li><a href="syntax.html">Supported syntax</a>
+<ul>
+  <li><a href="syntax.html#restructuredtext">reStructuredText</a></li>
+  <li><a href="syntax.html#sphinx">Sphinx</a></li>
+  <li><a href="syntax.html#extensions">Extensions</a></li>
+  <li><a href="syntax.html#diagnostics">Diagnostics</a></li>
+</ul>
+  </li>
+  <li><a href="compatibility.html">Compatibility status</a>
+<ul>
+  <li><a href="compatibility.html#heading-adornments">Heading adornments</a></li>
+  <li><a href="compatibility.html#inline-markup">Inline markup</a></li>
+  <li><a href="compatibility.html#block-level-elements">Block-level elements</a></li>
+  <li><a href="compatibility.html#tables">Tables</a></li>
+  <li><a href="compatibility.html#directives">Directives</a></li>
+  <li><a href="compatibility.html#extension-directives">Extension directives</a></li>
+  <li><a href="compatibility.html#domains">Domains</a></li>
+  <li><a href="compatibility.html#linking-between-sites-intersphinx">Linking between sites (intersphinx)</a></li>
+  <li><a href="compatibility.html#document-structure">Document structure</a></li>
+  <li><a href="compatibility.html#diagnostics">Diagnostics</a></li>
+  <li><a href="compatibility.html#entities-rinx-extension">Entities (rinx extension)</a></li>
+</ul>
+  </li>
+  <li><a href="entities.html">Entities</a>
+<ul>
+  <li><a href="entities.html#the-four-kinds-of-declaration">The four kinds of declaration</a></li>
+  <li><a href="entities.html#declaring-a-type">Declaring a type</a></li>
+  <li><a href="entities.html#identity">Identity</a></li>
+  <li><a href="entities.html#cardinality">Cardinality</a></li>
+  <li><a href="entities.html#sections">Sections</a></li>
+  <li><a href="entities.html#relations-and-back-links">Relations and back-links</a></li>
+  <li><a href="entities.html#roles">Roles</a></li>
+  <li><a href="entities.html#presentation">Presentation</a></li>
+  <li><a href="entities.html#build-wiring">Build wiring</a></li>
+  <li><a href="entities.html#editor-support-for-the-schema-file">Editor support for the schema file</a></li>
+  <li><a href="entities.html#listing-entities">Listing entities</a></li>
+  <li><a href="entities.html#flowcharts-of-the-graph">Flowcharts of the graph</a></li>
+  <li><a href="entities.html#sequence-diagrams-of-the-graph">Sequence diagrams of the graph</a></li>
+  <li><a href="entities.html#charting-the-graph">Charting the graph</a></li>
+  <li><a href="entities.html#diagramming-entities">Diagramming entities</a></li>
+  <li><a href="entities.html#migrating-from-sphinx-needs">Migrating from sphinx-needs</a></li>
+  <li><a href="entities.html#importing-from-sphinx-needs">Importing from sphinx-needs</a></li>
+  <li><a href="entities.html#diagnostics">Diagnostics</a></li>
+</ul>
+  </li>
+  <li><a href="intersphinx.html">Linking between documentation sites</a>
+<ul>
+  <li><a href="intersphinx.html#linking-into-another-site">Linking into another site</a></li>
+  <li><a href="intersphinx.html#writing-references">Writing references</a></li>
+  <li><a href="intersphinx.html#letting-other-sites-link-into-yours">Letting other sites link into yours</a></li>
+  <li><a href="intersphinx.html#what-the-inventory-lists">What the inventory lists</a></li>
+  <li><a href="intersphinx.html#live-preview">Live preview</a></li>
+</ul>
+  </li>
+  <li><a href="vscode.html">VS Code Extension Architecture for Rinx</a>
+<ul>
+  <li><a href="vscode.html#core-philosophy">Core Philosophy</a></li>
+  <li><a href="vscode.html#architecture-overview">Architecture Overview</a></li>
+  <li><a href="vscode.html#caveats-required-changes">Caveats &amp; Required Changes</a></li>
+  <li><a href="vscode.html#benefits">Benefits</a></li>
+  <li><a href="vscode.html#future-enhancements">Future Enhancements</a></li>
+  <li><a href="vscode.html#development-and-local-testing">Development and Local Testing</a></li>
+</ul>
+  </li>
+  <li><a href="benchmark.html">Benchmarking Rinx</a>
+<ul>
+  <li><a href="benchmark.html#benchmarking-rinx">Benchmarking Rinx</a></li>
+  <li><a href="benchmark.html#in-ci">In CI</a></li>
+  <li><a href="benchmark.html#the-cpython-benchmark">The CPython benchmark</a></li>
+  <li><a href="benchmark.html#benchmarking-the-entity-model">Benchmarking the entity model</a></li>
+</ul>
+  </li>
+</ul>
+<h2 id="reference">Reference</h2>
+<ul>
+  <li><a href="diagnostics.html">Diagnostic codes</a></li>
+</ul>
+<h2 id="more">More</h2>
+<ul>
+<li><p>The <a href="../example-site/examples/index.html">example site</a> is a multi-team project using
+every feature rinx supports, built from <code>examples/</code> in the repository.</p>
+</li>
+<li><p>The <a href="https://github.com/nachstedt/rinx/tree/main/docs/decisions">architecture decision records</a> explain why
+rinx is built the way it is.</p>
+</li>
+<li><p>The source, issues and discussions are on <a href="https://github.com/nachstedt/rinx">GitHub</a>.</p>
+</li>
+</ul>
+
+      
+      <nav class="page-relations">
+        
+        <a class="next" href="getting_started.html">Getting started &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

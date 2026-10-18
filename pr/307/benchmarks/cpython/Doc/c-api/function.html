@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Function Objects — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python&#x2f;C API Reference Manual</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python&#x2f;C API Reference Manual"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stable.html">C API Stability</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="veryhigh.html">The Very High Level Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="refcounting.html">Reference Counting</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Exception Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="extension-modules.html">Defining extension modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="utilities.html">Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="abstract.html">Abstract Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="concrete.html">Concrete Objects Layer</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Concrete Objects Layer"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="concrete.html#fundamental-objects">Fundamental Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#numeric-objects">Numeric Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#sequence-objects">Sequence Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#container-objects">Container Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3 ancestor has-children">
+            <a href="concrete.html#function-objects">Function Objects</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Function Objects"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4 current">
+            <a href="function.html">Function Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="method.html">Instance Method Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="cell.html">Cell Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="code.html">Code Objects</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#other-objects">Other Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#c-api-for-extension-modules">C API for extension modules</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init.html">Initialization, Finalization, and Threads</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init_config.html">Python Initialization Configuration</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="memory.html">Memory Management</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="objimpl.html">Object Implementation Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="apiabiversion.html">API and ABI Versioning</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="monitoring.html">Monitoring C API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="set.html">&larr; Set Objects</a>
+        <a class="next" href="method.html">Instance Method Objects &rarr;</a>
+      </nav>
+      
+      <a id="function-objects"></a>
+<h1 id="function-objects">Function Objects</h1>
+<span id="index-0"></span>
+<p>There are a few functions specific to Python functions.</p>
+<dl class="c type">
+  <dt id="c:type:pyfunctionobject"><code class="sig-name">PyFunctionObject</code></dt>
+  <dd><p>The C structure used for functions.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pyfunction_type"><code class="sig-name">PyTypeObject PyFunction_Type</code></dt>
+  <dd><span id="index-1"></span>
+<p>This is an instance of <a class="reference internal" href="type.html#c:type:pytypeobject"><code class="xref c type docutils literal">PyTypeObject</code></a> and represents the Python function
+type.  It is exposed to Python programmers as <code>types.FunctionType</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_check"><code class="sig-name">int PyFunction_Check(PyObject *o)</code></dt>
+  <dd><p>Return true if <em>o</em> is a function object (has type <a class="reference internal" href="function.html#c:member:pyfunction_type"><code class="xref c member docutils literal">PyFunction_Type</code></a>).
+The parameter must not be <code>NULL</code>.  This function always succeeds.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_new"><code class="sig-name">PyObject* PyFunction_New(PyObject *code, PyObject *globals)</code></dt>
+  <dd><p>Return a new function object associated with the code object <em>code</em>. <em>globals</em>
+must be a dictionary with the global variables accessible to the function.</p>
+<p>The function's docstring and name are retrieved from the code object.
+<a class="reference internal" href="../reference/datamodel.html#py:attribute:function.__module__"><code class="xref py attribute docutils literal">__module__</code></a>
+is retrieved from <em>globals</em>. The argument defaults, annotations and closure are
+set to <code>NULL</code>. <a class="reference internal" href="../reference/datamodel.html#py:attribute:function.__qualname__"><code class="xref py attribute docutils literal">__qualname__</code></a> is set to the same value as
+the code object's <a class="reference internal" href="../reference/datamodel.html#py:attribute:codeobject.co_qualname"><code class="xref py attribute docutils literal">co_qualname</code></a> field.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_newwithqualname"><code class="sig-name">PyObject* PyFunction_NewWithQualName(PyObject *code, PyObject *globals, PyObject *qualname)</code></dt>
+  <dd><p>As <a class="reference internal" href="function.html#c:function:pyfunction_new"><code class="xref c function docutils literal">PyFunction_New</code></a>, but also allows setting the function object's
+<a class="reference internal" href="../reference/datamodel.html#py:attribute:function.__qualname__"><code class="xref py attribute docutils literal">__qualname__</code></a> attribute.
+<em>qualname</em> should be a unicode object or <code>NULL</code>;
+if <code>NULL</code>, the <code class="xref py attribute docutils literal">__qualname__</code> attribute is set to the same value as
+the code object's <a class="reference internal" href="../reference/datamodel.html#py:attribute:codeobject.co_qualname"><code class="xref py attribute docutils literal">co_qualname</code></a> field.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_getcode"><code class="sig-name">PyObject* PyFunction_GetCode(PyObject *op)</code></dt>
+  <dd><p>Return the code object associated with the function object <em>op</em>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_getglobals"><code class="sig-name">PyObject* PyFunction_GetGlobals(PyObject *op)</code></dt>
+  <dd><p>Return the globals dictionary associated with the function object <em>op</em>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_getmodule"><code class="sig-name">PyObject* PyFunction_GetModule(PyObject *op)</code></dt>
+  <dd><p>Return a <a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">borrowed reference</span></a> to the <a class="reference internal" href="../reference/datamodel.html#py:attribute:function.__module__"><code class="xref py attribute docutils literal">__module__</code></a>
+attribute of the <a href="../reference/datamodel.html#user-defined-funcs">function object</a> <em>op</em>.
+It can be <em>NULL</em>.</p>
+<p>This is normally a <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">string</code></a> containing the module name,
+but can be set to any other object by Python code.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_getdefaults"><code class="sig-name">PyObject* PyFunction_GetDefaults(PyObject *op)</code></dt>
+  <dd><p>Return the argument default values of the function object <em>op</em>. This can be a
+tuple of arguments or <code>NULL</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_setdefaults"><code class="sig-name">int PyFunction_SetDefaults(PyObject *op, PyObject *defaults)</code></dt>
+  <dd><p>Set the argument default values for the function object <em>op</em>. <em>defaults</em> must be
+<code>Py_None</code> or a tuple.</p>
+<p>Raises <a class="reference internal" href="../library/exceptions.html#py:exception:systemerror"><code class="xref py exception docutils literal">SystemError</code></a> and returns <code>-1</code> on failure.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_setvectorcall"><code class="sig-name">void PyFunction_SetVectorcall(PyFunctionObject *func, vectorcallfunc vectorcall)</code></dt>
+  <dd><p>Set the vectorcall field of a given function object <em>func</em>.</p>
+<p>Warning: extensions using this API must preserve the behavior
+of the unaltered (default) vectorcall function!</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_getkwdefaults"><code class="sig-name">PyObject* PyFunction_GetKwDefaults(PyObject *op)</code></dt>
+  <dd><p>Return the keyword-only argument default values of the function object <em>op</em>. This can be a
+dictionary of arguments or <code>NULL</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_setkwdefaults"><code class="sig-name">int PyFunction_SetKwDefaults(PyObject *op, PyObject *defaults)</code></dt>
+  <dd><p>Set the keyword-only argument default values of the function object <em>op</em>.
+<em>defaults</em> must be a dictionary of keyword-only arguments or <code>Py_None</code>.</p>
+<p>This function returns <code>0</code> on success, and returns <code>-1</code> with an exception
+set on failure.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_getclosure"><code class="sig-name">PyObject* PyFunction_GetClosure(PyObject *op)</code></dt>
+  <dd><p>Return the closure associated with the function object <em>op</em>. This can be <code>NULL</code>
+or a tuple of cell objects.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_setclosure"><code class="sig-name">int PyFunction_SetClosure(PyObject *op, PyObject *closure)</code></dt>
+  <dd><p>Set the closure associated with the function object <em>op</em>. <em>closure</em> must be
+<code>Py_None</code> or a tuple of cell objects.</p>
+<p>Raises <a class="reference internal" href="../library/exceptions.html#py:exception:systemerror"><code class="xref py exception docutils literal">SystemError</code></a> and returns <code>-1</code> on failure.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_getannotations"><code class="sig-name">PyObject *PyFunction_GetAnnotations(PyObject *op)</code></dt>
+  <dd><p>Return the annotations of the function object <em>op</em>. This can be a
+mutable dictionary or <code>NULL</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_setannotations"><code class="sig-name">int PyFunction_SetAnnotations(PyObject *op, PyObject *annotations)</code></dt>
+  <dd><p>Set the annotations for the function object <em>op</em>. <em>annotations</em>
+must be a dictionary or <code>Py_None</code>.</p>
+<p>Raises <a class="reference internal" href="../library/exceptions.html#py:exception:systemerror"><code class="xref py exception docutils literal">SystemError</code></a> and returns <code>-1</code> on failure.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_get_code"><code class="sig-name">PyObject *PyFunction_GET_CODE(PyObject *op)</code></dt>
+  <dt id="c:function:pyfunction_get_globals"><code class="sig-name">PyObject *PyFunction_GET_GLOBALS(PyObject *op)</code></dt>
+  <dt id="c:function:pyfunction_get_module"><code class="sig-name">PyObject *PyFunction_GET_MODULE(PyObject *op)</code></dt>
+  <dt id="c:function:pyfunction_get_defaults"><code class="sig-name">PyObject *PyFunction_GET_DEFAULTS(PyObject *op)</code></dt>
+  <dt id="c:function:pyfunction_get_kw_defaults"><code class="sig-name">PyObject *PyFunction_GET_KW_DEFAULTS(PyObject *op)</code></dt>
+  <dt id="c:function:pyfunction_get_closure"><code class="sig-name">PyObject *PyFunction_GET_CLOSURE(PyObject *op)</code></dt>
+  <dt id="c:function:pyfunction_get_annotations"><code class="sig-name">PyObject *PyFunction_GET_ANNOTATIONS(PyObject *op)</code></dt>
+  <dd><p>These functions are similar to their <code>PyFunction_Get*</code> counterparts, but
+do not do type checking. Passing anything other than an instance of
+<a class="reference internal" href="function.html#c:member:pyfunction_type"><code class="xref c member docutils literal">PyFunction_Type</code></a> is undefined behavior.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_addwatcher"><code class="sig-name">int PyFunction_AddWatcher(PyFunction_WatchCallback callback)</code></dt>
+  <dd><p>Register <em>callback</em> as a function watcher for the current interpreter.
+Return an ID which may be passed to <a class="reference internal" href="function.html#c:function:pyfunction_clearwatcher"><code class="xref c function docutils literal">PyFunction_ClearWatcher</code></a>.
+In case of error (e.g. no more watcher IDs available),
+return <code>-1</code> and set an exception.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyfunction_clearwatcher"><code class="sig-name">int PyFunction_ClearWatcher(int watcher_id)</code></dt>
+  <dd><p>Clear watcher identified by <em>watcher_id</em> previously returned from
+<a class="reference internal" href="function.html#c:function:pyfunction_addwatcher"><code class="xref c function docutils literal">PyFunction_AddWatcher</code></a> for the current interpreter.
+Return <code>0</code> on success, or <code>-1</code> and set an exception on error
+(e.g.  if the given <em>watcher_id</em> was never registered.)</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c type">
+  <dt id="c:type:pyfunction_watchevent"><code class="sig-name">PyFunction_WatchEvent</code></dt>
+  <dd><p>Enumeration of possible function watcher events:</p>
+<ul>
+<li><p><code>PyFunction_EVENT_CREATE</code></p>
+</li>
+<li><p><code>PyFunction_EVENT_DESTROY</code></p>
+</li>
+<li><p><code>PyFunction_EVENT_MODIFY_CODE</code></p>
+</li>
+<li><p><code>PyFunction_EVENT_MODIFY_DEFAULTS</code></p>
+</li>
+<li><p><code>PyFunction_EVENT_MODIFY_KWDEFAULTS</code></p>
+</li>
+</ul>
+<p>. versionadded:: 3.12</p>
+</dd>
+</dl>
+<dl class="c type">
+  <dt id="c:type:pyfunction_watchcallback"><code class="sig-name">int (*PyFunction_WatchCallback)(PyFunction_WatchEvent event, PyFunctionObject *func, PyObject *new_value)</code></dt>
+  <dd><p>Type of a function watcher callback function.</p>
+<p>If <em>event</em> is <code>PyFunction_EVENT_CREATE</code> or <code>PyFunction_EVENT_DESTROY</code>
+then <em>new_value</em> will be <code>NULL</code>. Otherwise, <em>new_value</em> will hold a
+<a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">borrowed reference</span></a> to the new value that is about to be stored in
+<em>func</em> for the attribute that is being modified.</p>
+<p>The callback may inspect but must not modify <em>func</em>; doing so could have
+unpredictable effects, including infinite recursion.</p>
+<p>If <em>event</em> is <code>PyFunction_EVENT_CREATE</code>, then the callback is invoked
+after <em>func</em> has been fully initialized. Otherwise, the callback is invoked
+before the modification to <em>func</em> takes place, so the prior state of <em>func</em>
+can be inspected. The runtime is permitted to optimize away the creation of
+function objects when possible. In such cases no event will be emitted.
+Although this creates the possibility of an observable difference of
+runtime behavior depending on optimization decisions, it does not change
+the semantics of the Python code being executed.</p>
+<p>If <em>event</em> is <code>PyFunction_EVENT_DESTROY</code>,  Taking a reference in the
+callback to the about-to-be-destroyed function will resurrect it, preventing
+it from being freed at this time. When the resurrected object is destroyed
+later, any watcher callbacks active at that time will be called again.</p>
+<p>If the callback sets an exception, it must return <code>-1</code>; this exception will
+be printed as an unraisable exception using <a class="reference internal" href="exceptions.html#c:function:pyerr_writeunraisable"><code class="xref c function docutils literal">PyErr_WriteUnraisable</code></a>.
+Otherwise it should return <code>0</code>.</p>
+<p>There may already be a pending exception set on entry to the callback. In
+this case, the callback should return <code>0</code> with the same exception still
+set. This means the callback may not call any other API that can set an
+exception unless it saves and clears the exception state first, and restores
+it before returning.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="set.html">&larr; Set Objects</a>
+        <a class="next" href="method.html">Instance Method Objects &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
