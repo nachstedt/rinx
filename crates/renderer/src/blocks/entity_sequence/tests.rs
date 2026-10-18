@@ -14,6 +14,7 @@ use super::*;
 
 fn record(title: &str, sends: &[&str]) -> EntityRecord {
     EntityRecord {
+        relation_spans: BTreeMap::new(),
         type_name: "component".to_string(),
         doc_path: "arch".to_string(),
         title: Some(title.to_string()),

@@ -41,6 +41,12 @@ pub struct EntityRecord {
     /// inside an entity lands here.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub uml: BTreeMap<String, String>,
+    /// The line each outgoing relation was written on, by its option
+    /// spelling — the parse's `EntityBody::relation_spans`, carried into the
+    /// index so a target found missing only project-wide is reported on the
+    /// line that names it. A toctree entry's span is kept for the same reason.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub relation_spans: BTreeMap<String, rinx_ast::Span>,
 }
 
 impl EntityRecord {
@@ -69,6 +75,7 @@ mod tests {
 
     fn record(title: Option<&str>) -> EntityRecord {
         EntityRecord {
+            relation_spans: BTreeMap::new(),
             type_name: "req".to_string(),
             doc_path: "specs/boot".to_string(),
             title: title.map(ToString::to_string),

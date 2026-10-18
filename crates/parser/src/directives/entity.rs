@@ -80,7 +80,7 @@ pub(in crate::directives) fn parse_entity(
         &mut attributes,
         diagnostics,
     );
-    let relations = collect_options(
+    let (relations, relation_spans) = collect_options(
         entity_type,
         &option_lines,
         &mut attributes,
@@ -130,6 +130,7 @@ pub(in crate::directives) fn parse_entity(
         relations,
         sections,
         span: directive_span,
+        relation_spans,
     }))
 }
 
@@ -159,15 +160,17 @@ fn collect_argument_attributes(
     }
 }
 
-/// Reads every `:option:` line, returning the relations among them.
+/// Reads every `:option:` line, returning the relations among them and the
+/// line each was written on.
 fn collect_options(
     entity_type: &EntityType,
     option_lines: &[OptionLine],
     attributes: &mut BTreeMap<String, AttributeValue>,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> BTreeMap<String, Vec<EntityId>> {
+) -> (BTreeMap<String, Vec<EntityId>>, BTreeMap<String, Span>) {
     let mut relations: BTreeMap<String, Vec<EntityId>> = BTreeMap::new();
+    let mut relation_spans: BTreeMap<String, Span> = BTreeMap::new();
 
     for line in option_lines {
         let span = ctx.line_span(line.line_index, &line.raw);
@@ -190,6 +193,9 @@ fn collect_options(
                 line.name.clone(),
                 collect_relation_targets(&line.value, span, diagnostics),
             );
+            if let Some(span) = span {
+                relation_spans.insert(line.name.clone(), span);
+            }
         } else {
             diagnostics.push(Diagnostic::at(
                 DiagnosticCode::EntityUnknownAttribute,
@@ -204,7 +210,7 @@ fn collect_options(
         }
     }
 
-    relations
+    (relations, relation_spans)
 }
 
 /// Determines the entity's id, degrading to a generated one on failure.
@@ -366,5 +372,7 @@ fn report_section_cardinality(
     }
 }
 
+#[cfg(test)]
+mod relation_span_tests;
 #[cfg(test)]
 mod tests;

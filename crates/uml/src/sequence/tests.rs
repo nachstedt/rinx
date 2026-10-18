@@ -39,6 +39,7 @@ fn schema() -> EntitySchema {
 
 fn entity(type_name: &str, title: &str, outgoing: &[(&str, &[&str])]) -> EntityRecord {
     EntityRecord {
+        relation_spans: BTreeMap::new(),
         type_name: type_name.to_string(),
         doc_path: "arch".to_string(),
         title: Some(title.to_string()),

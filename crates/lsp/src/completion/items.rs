@@ -281,6 +281,7 @@ mod tests {
 
     fn entity_index() -> ProjectIndex {
         let record = |type_name: &str, title: Option<&str>| rinx_index::EntityRecord {
+            relation_spans: std::collections::BTreeMap::new(),
             type_name: type_name.to_string(),
             doc_path: "reqs.rst".to_string(),
             title: title.map(ToString::to_string),

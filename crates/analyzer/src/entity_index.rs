@@ -9,7 +9,9 @@
 
 use std::collections::BTreeMap;
 
-use rinx_ast::{Diagnostic, DiagnosticCode, Directive, EntityBody, EntityId, Node, walk_nodes};
+use rinx_ast::{
+    Diagnostic, DiagnosticCode, Directive, EntityBody, EntityId, Node, Span, walk_nodes,
+};
 
 use super::DocumentDiagnostics;
 use rinx_entity::EntitySchema;
@@ -24,6 +26,7 @@ pub(crate) fn index_entity(entity: &EntityBody, doc_path: &str, index: &mut Proj
         attributes: entity.attributes.clone(),
         outgoing: entity.relations.clone(),
         uml: collect_entity_umls(entity),
+        relation_spans: entity.relation_spans.clone(),
     };
     index.entities.insert(entity.id.clone(), record);
 }
@@ -130,6 +133,7 @@ pub(crate) fn collect_entity_diagnostics(
             let targets = index.effective_relation_targets(source_id, relation_name);
             for target in targets {
                 let found = index.entities.get(target);
+                let at = written_at(record, relation_name, target);
                 let diagnostic = match found {
                     // Declared twice rather than not at all: already reported
                     // on both declarations as `entity.duplicate-id`.
@@ -139,6 +143,7 @@ pub(crate) fn collect_entity_diagnostics(
                         format!(
                             "entity '{source_id}' links to '{target}' via ':{relation_name}:', which no document declares"
                         ),
+                        at,
                     )),
                     Some(found) if !relation.accepts_target(&found.type_name) => {
                         Some(entity_diagnostic(
@@ -147,6 +152,7 @@ pub(crate) fn collect_entity_diagnostics(
                                 "entity '{source_id}' links to '{target}' via ':{relation_name}:', but that relation does not accept an entity of type '{}'",
                                 found.type_name
                             ),
+                            at,
                         ))
                     }
                     Some(_) => None,
@@ -214,20 +220,37 @@ pub(crate) fn collect_schema_mismatches(
                 format!(
                     "document '{path}' was parsed against a different entity schema than this build is using; check that every rinx_library and the site name the same entity_schema"
                 ),
+                // About the whole document, so no line of it.
+                None,
             )],
         })
         .collect()
 }
 
-/// Builds a positionless entity diagnostic.
+/// The line `target` was written on as a target of `relation` of the entity
+/// `record` describes, or `None` when the author did not write it there.
 ///
-/// These are found by walking the merged index, which holds no source
-/// positions: an entity's record says which document it came from but not
-/// which line. Reporting no position is the honest answer — the guideline is
-/// to report none rather than a wrong one — and the message names the entity,
-/// which is what an author searches for.
-fn entity_diagnostic(code: DiagnosticCode, message: String) -> Diagnostic {
-    Diagnostic::without_span(code, message)
+/// A target only an `.. entity-update::` appended has no line in the
+/// entity's document — the update may sit in another one — so it is
+/// reported without a position rather than at a wrong one, the guideline
+/// for a finding with no line of its own. So is an entity no author wrote,
+/// such as an imported need.
+fn written_at(record: &EntityRecord, relation: &str, target: &EntityId) -> Option<Span> {
+    if !record.targets(relation).contains(target) {
+        return None;
+    }
+    record.relation_spans.get(relation).copied()
+}
+
+/// Builds an entity diagnostic, at `span` when the finding has a line.
+///
+/// These are found by walking the merged index. An entity's record names its
+/// document, and the line each relation was written on — kept for this, as a
+/// toctree entry's span is — so a relation's finding lands on the option
+/// line; a finding about something no line wrote is reported without one,
+/// and its message names the entity, which is what an author searches for.
+fn entity_diagnostic(code: DiagnosticCode, message: String, span: Option<Span>) -> Diagnostic {
+    Diagnostic::at(code, message, span)
 }
 
 #[cfg(test)]

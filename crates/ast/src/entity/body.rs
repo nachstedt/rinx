@@ -38,6 +38,13 @@ pub struct EntityBody {
     /// Where the directive was written.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub span: Option<Span>,
+    /// The option line each relation in [`Self::relations`] was written on,
+    /// by the same key — absent for an entity no author wrote, such as an
+    /// imported need. Kept because a relation's targets are checked only
+    /// once the whole project is indexed, and this is the only way that
+    /// finding can still name the line, as a toctree entry's span does.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub relation_spans: BTreeMap<String, Span>,
 }
 
 impl EntityBody {
@@ -94,6 +101,7 @@ mod tests {
 
     fn requirement() -> EntityBody {
         EntityBody {
+            relation_spans: BTreeMap::new(),
             type_name: "req".to_string(),
             id: EntityId::new("REQ_001").unwrap(),
             attributes: BTreeMap::from([(

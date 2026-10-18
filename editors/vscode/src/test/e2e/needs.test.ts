@@ -55,10 +55,12 @@ suite('sphinx-needs project (e2e)', () => {
         // Then the directives are known — what is left is the spec's link to
         // a requirement no document declares, which only the whole project
         // reveals — and `:need:` completes the ids
-        await waitFor('the needs to be known', () => {
-            const codes = codesFor(project('index.rst'));
-            return codes.length === 1 && codes[0] === 'entity.unknown-target';
+        const unknown = await waitFor('the needs to be known', () => {
+            const shown = vscode.languages.getDiagnostics(project('index.rst'));
+            return shown.length === 1 && codeOf(shown[0]) === 'entity.unknown-target' && shown[0];
         });
+        // On the `:implements:` line, the one to change.
+        assert.strictEqual(unknown.range.start.line, 10);
         const list = await vscode.commands.executeCommand<vscode.CompletionList>(
             'vscode.executeCompletionItemProvider',
             project('index.rst'),

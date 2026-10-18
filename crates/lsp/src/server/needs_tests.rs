@@ -219,13 +219,31 @@ fn test_a_relation_to_a_need_no_document_declares_is_reported() {
     // When
     let rendered = render_all(&mut state);
 
-    // Then — the parse cannot know; the fold of the project can
+    // Then — the parse cannot know; the fold of the project can, and names
+    // the `:implements:` line, the one to change
     assert_eq!(
         codes(&workspace, &opened, "index.rst"),
         Vec::<String>::new()
     );
-    assert_eq!(
-        codes(&workspace, &rendered, "index.rst"),
-        ["entity.unknown-target"]
-    );
+    let uri = workspace.uri("index.rst");
+    let published = rendered
+        .iter()
+        .filter(|reply| {
+            matches!(reply, Message::Notification(n) if n.method == PublishDiagnostics::METHOD)
+        })
+        .map(published)
+        .filter(|params| params.uri == uri)
+        .last()
+        .expect("the render publishes index.rst");
+    let found: Vec<(String, u32)> = published
+        .diagnostics
+        .iter()
+        .map(|diagnostic| {
+            let Some(NumberOrString::String(code)) = &diagnostic.code else {
+                panic!("a code");
+            };
+            (code.clone(), diagnostic.range.start.line)
+        })
+        .collect();
+    assert_eq!(found, [("entity.unknown-target".to_string(), 5)]);
 }

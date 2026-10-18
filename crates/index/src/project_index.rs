@@ -1160,6 +1160,7 @@ mod tests {
 
     fn requirement_record() -> EntityRecord {
         EntityRecord {
+            relation_spans: BTreeMap::new(),
             type_name: "req".to_string(),
             doc_path: "specs/boot.rst".to_string(),
             title: None,

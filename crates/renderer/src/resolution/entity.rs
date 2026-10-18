@@ -101,6 +101,7 @@ mod tests {
             index.entities.insert(
                 EntityId::new(id).unwrap(),
                 EntityRecord {
+                    relation_spans: BTreeMap::new(),
                     type_name: type_name.to_string(),
                     doc_path: "specs".to_string(),
                     title: None,

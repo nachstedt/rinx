@@ -513,6 +513,7 @@ mod tests {
         index.entities.insert(
             EntityId::new("REQ_001").unwrap(),
             EntityRecord {
+                relation_spans: BTreeMap::new(),
                 type_name: "req".to_string(),
                 doc_path: "reqs.rst".to_string(),
                 title: Some("Fast builds".to_string()),

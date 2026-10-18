@@ -194,7 +194,7 @@ the pause (`library/os.rst`, `library/stdtypes.rst`), fold included.
 Later (issue #265): the render tier also carries what the fold found about
 the document — the toctree, duplicate-definition and entity-graph findings
 the build's `index` action prints — so `:implements: REQ_GHOST` is
-underlined as the build reports it. A second parity test compares both over
+underlined on its own line, as the build now reports it: an entity keeps the line each relation was written on, as a toctree entry does. A second parity test compares both over
 a small sphinx-needs project (`crates/worker/tests/parity_project/`).
 
 ### 7. Hover on references ✅ (#273)

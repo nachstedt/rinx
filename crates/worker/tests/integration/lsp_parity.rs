@@ -396,5 +396,11 @@ fn test_the_editor_reports_what_the_index_reports() {
             "toctree.missing-document"
         ])
     );
+    // — each finding on the line to change, which a positionless one is not:
+    // `:implements:` is `needs.rst`'s eleventh line
+    assert!(
+        build[&project.join("needs.rst")].contains(&(10, 3, "entity.unknown-target".to_string())),
+        "{build:?}"
+    );
     assert_eq!(editor, build);
 }

@@ -19,6 +19,7 @@ pub(crate) fn index_with(records: Vec<(&str, EntityRecord)>) -> ProjectIndex {
 /// A requirement on `doc_path` with `title`.
 pub(crate) fn requirement(doc_path: &str, title: Option<&str>) -> EntityRecord {
     EntityRecord {
+        relation_spans: BTreeMap::new(),
         type_name: "req".to_string(),
         doc_path: doc_path.to_string(),
         title: title.map(str::to_string),
