@@ -6,6 +6,15 @@ import { LanguageClient } from 'vscode-languageclient/node';
 import { BazelScanner, DiscoveredConfig } from './bazel';
 import { bundledBinaryPath, chooseBinaryPath, explicitValue } from './binary';
 import { resolveServerBinary, startLanguageClient } from './client';
+import {
+    chooseInterpreter,
+    CONF_INTERPRETER_CHANGED_METHOD,
+    CONF_INTERPRETER_METHOD,
+    ConfInterpreterParams,
+    InterpreterDependencies,
+    PythonExtensionApi,
+    selectedByPythonExtension,
+} from './conf';
 import { errorMessage } from './errors';
 import {
     CONSENT_KEY,
@@ -53,7 +62,7 @@ export function activate(context: vscode.ExtensionContext): RinxApi {
     );
     // Not awaited: finding the binary may build it with Bazel, and the
     // preview command must not wait for that.
-    void startServer(statusItem, bundled, inventoryFetcher(context));
+    void startServer(statusItem, bundled, inventoryFetcher(context), context.subscriptions);
     return { indexStatus: () => statusItem.last, serverBinary: () => serverBinary };
 }
 
@@ -76,11 +85,69 @@ function inventoryFetcher(context: vscode.ExtensionContext): InventoryFetcher {
     });
 }
 
+/** The `rinx` settings that apply to the file at `uri`. */
+function settingsFor(uri: string): vscode.WorkspaceConfiguration {
+    return vscode.workspace.getConfiguration('rinx', vscode.Uri.parse(uri));
+}
+
+/**
+ * Chooses the interpreter of each `conf.py` the server asks about (see
+ * conf.ts), and tells the server through `notify` whenever the choice may have
+ * changed: trust granted, a `rinx.conf.*` setting changed, or another Python
+ * environment selected.
+ */
+class ConfInterpreters implements vscode.Disposable {
+    private readonly listeners: vscode.Disposable[] = [];
+    private python: Promise<PythonExtensionApi | undefined> | undefined;
+
+    constructor(private readonly notify: () => void) {
+        this.listeners.push(
+            vscode.workspace.onDidGrantWorkspaceTrust(notify),
+            vscode.workspace.onDidChangeConfiguration((event) => {
+                if (event.affectsConfiguration('rinx.conf')) notify();
+            }),
+        );
+    }
+
+    readonly dependencies: InterpreterDependencies = {
+        isTrusted: () => vscode.workspace.isTrusted,
+        execute: (conf) => settingsFor(conf).get<boolean>('conf.execute') ?? false,
+        pythonPath: (conf) => settingsFor(conf).get<string>('conf.pythonPath') || undefined,
+        folder: (conf) => vscode.workspace.getWorkspaceFolder(vscode.Uri.parse(conf))?.uri.fsPath,
+        selectedInterpreter: async (conf) => {
+            const api = await this.pythonExtension();
+            return api ? selectedByPythonExtension(api, vscode.Uri.parse(conf)) : undefined;
+        },
+    };
+
+    /** The Python extension's API, activated and watched, if it is installed. */
+    private pythonExtension(): Promise<PythonExtensionApi | undefined> {
+        this.python ??= (async () => {
+            const extension = vscode.extensions.getExtension<PythonExtensionApi>('ms-python.python');
+            if (!extension) return undefined;
+            try {
+                const api = extension.isActive ? extension.exports : await extension.activate();
+                this.listeners.push(api.environments.onDidChangeActiveEnvironmentPath(this.notify));
+                return api;
+            } catch (error: unknown) {
+                log(`The Python extension could not be asked for an interpreter: ${errorMessage(error)}`);
+                return undefined;
+            }
+        })();
+        return this.python;
+    }
+
+    dispose(): void {
+        for (const listener of this.listeners) listener.dispose();
+    }
+}
+
 /** Starts the language server, reporting a failure rather than throwing. */
 async function startServer(
     statusItem: IndexStatusItem,
     bundled: string | undefined,
     fetcher: InventoryFetcher,
+    subscriptions: vscode.Disposable[],
 ): Promise<void> {
     let binary = 'rinx';
     try {
@@ -89,6 +156,14 @@ async function startServer(
         serverBinary = binary;
         client.onNotification(STATUS_METHOD, (status: IndexStatus) => statusItem.update(status));
         client.onRequest(FETCH_INVENTORY_METHOD, (params: FetchInventoryParams) => fetcher.fetchInventory(params));
+        const running = client;
+        const interpreters = new ConfInterpreters(() => {
+            void running.sendNotification(CONF_INTERPRETER_CHANGED_METHOD);
+        });
+        subscriptions.push(interpreters);
+        client.onRequest(CONF_INTERPRETER_METHOD, (params: ConfInterpreterParams) =>
+            chooseInterpreter(params, interpreters.dependencies),
+        );
     } catch (error: unknown) {
         log(`Language server failed to start: ${errorMessage(error)}`);
         const action = await vscode.window.showWarningMessage(

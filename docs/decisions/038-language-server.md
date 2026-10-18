@@ -139,6 +139,25 @@ As an opt-in, available only in a VS Code trusted workspace, the server runs
 `conf.py` in the project's interpreter and dumps a whitelist of names as
 JSON. This gives exact values to projects that compute them.
 
+The work is split between the editor and the server. The **editor grants**
+the run: it knows whether the workspace is trusted, what the user's
+`rinx.conf.execute` says, and which interpreter the Python extension has
+selected. For each `conf.py` whose reading fell short, the server sends a
+`rinx/confInterpreter` request (`{ conf }`, answered `{ path }` or
+`{ unavailable }`) to a client passing the `evaluateConf` initialization
+option, and it never runs anything otherwise. When the answer may have
+changed, the client sends `rinx/confInterpreterChanged`. The **server runs**
+the file: the dump script (`conf_dump.py`) is embedded in the binary and
+started as `python -c`, with a timeout, so `rinx lsp --check --python` runs
+the same code with no editor. Each value comes back as its `repr` and goes
+through the same literal reader and the same per-setting checks a written
+value does, so a run is authoritative only as far as those checks accept it.
+A `conf.py` edited since its run, or a project module it imported, is run
+again. This is unlike the inventories of §6, which the editor downloads:
+there, the server would need an HTTP client and a cache of its own, while
+here the server already reads the project's files, and only the permission
+belongs to the editor.
+
 On top of either, a `[tool.rinx]` table (in `rinx.toml` or `pyproject.toml`)
 overrides any value. It is the escape hatch for what the static reader cannot
 see, and the first file a migration (§7) writes.

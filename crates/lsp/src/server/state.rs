@@ -55,6 +55,7 @@ use std::time::Duration;
 
 use rayon::prelude::*;
 
+use super::conf_runs::{ConfExecution, ConfRunEvent, ConfRuns};
 use super::handlers::publish_diagnostics;
 use super::inventories::InventoryFetches;
 use super::projects::ProjectId;
@@ -120,6 +121,8 @@ pub struct ServerState {
     next_request_id: i32,
     /// The inventory downloads asked of the client.
     pub(super) fetches: InventoryFetches,
+    /// The `conf.py` runs asked for, under way and finished.
+    pub(super) conf_runs: ConfRuns,
 }
 
 /// A document the graph diagnoses: its latest parse, and what rendering it
@@ -199,6 +202,7 @@ impl ServerState {
             scan: None,
             next_request_id: 1,
             fetches: InventoryFetches::default(),
+            conf_runs: ConfRuns::default(),
         }
     }
 
@@ -241,6 +245,29 @@ impl ServerState {
     pub fn with_inventory_fetching(mut self, fetch_inventories: bool) -> Self {
         self.fetches = InventoryFetches::new(fetch_inventories);
         self
+    }
+
+    /// This server, running each `conf.py` that reading falls short for in
+    /// the interpreter `execution` comes by (see [`super::conf_runs`]).
+    #[must_use]
+    pub fn with_conf_execution(mut self, execution: ConfExecution) -> Self {
+        self.conf_runs = ConfRuns::new(execution);
+        self
+    }
+
+    /// This server, running `conf.py` through `runs` — for tests needing a
+    /// timeout of their own.
+    #[cfg(test)]
+    pub(super) fn with_conf_runs(mut self, runs: ConfRuns) -> Self {
+        self.conf_runs = runs;
+        self
+    }
+
+    /// Where the results of the `conf.py` runs arrive, for the loop to pass
+    /// each to [`Self::on_conf_run`].
+    #[must_use]
+    pub fn conf_run_events(&self) -> crossbeam_channel::Receiver<ConfRunEvent> {
+        self.conf_runs.events()
     }
 
     /// The root of every workspace folder, in the order scan events name
@@ -307,6 +334,9 @@ impl ServerState {
     /// The messages a reply from the client brings about.
     pub(super) fn on_response(&mut self, response: &Response) -> Vec<Message> {
         if let Some(messages) = self.on_inventory_response(response) {
+            return messages;
+        }
+        if let Some(messages) = self.on_conf_interpreter_response(response) {
             return messages;
         }
         self.scan
@@ -518,6 +548,11 @@ impl ServerState {
     /// created or deleted with one inside — finds its folder's projects
     /// again first, since which files are documents may have changed.
     pub(super) fn on_watched_files(&mut self, changes: &[FileEvent]) -> Vec<Message> {
+        let paths: Vec<PathBuf> = changes
+            .iter()
+            .filter_map(|event| file_path(&event.uri))
+            .collect();
+        self.forget_conf_runs_importing(&paths);
         let reconfigured: BTreeSet<usize> = changes
             .iter()
             .filter_map(|event| self.folder_reconfigured_by(event))
@@ -525,10 +560,6 @@ impl ServerState {
         let mut messages: Vec<Message> = reconfigured
             .into_iter()
             .flat_map(|folder| self.reload_folder(folder))
-            .collect();
-        let paths: Vec<PathBuf> = changes
-            .iter()
-            .filter_map(|event| file_path(&event.uri))
             .collect();
         messages.extend(self.reload_inventory_files(&paths));
         let touched: BTreeSet<Uri> = changes

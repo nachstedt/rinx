@@ -652,6 +652,80 @@ fn test_lsp_asks_its_client_for_an_inventory_and_resolves_into_it() {
     );
 }
 
+#[cfg(unix)]
+#[test]
+fn test_lsp_runs_conf_py_in_the_interpreter_its_client_names() {
+    use std::os::unix::fs::PermissionsExt;
+    // Given — a project computing its root document, and an interpreter
+    // standing in for Python, printing what running `conf.py` would
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_conf_run");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    std::fs::write(
+        root.join("conf.py"),
+        "import os\nroot_doc = os.getenv('ROOT', 'contents')\n",
+    )
+    .expect("write");
+    std::fs::write(root.join("contents.rst"), "Home\n====\n").expect("write");
+    let python = root.join(".bin").join("python");
+    std::fs::create_dir_all(python.parent().expect("a parent")).expect("mkdir");
+    std::fs::write(
+        &python,
+        "#!/bin/sh\ncat <<'EOF'\n{\"values\": {\"root_doc\": \"'contents'\"}}\nEOF\n",
+    )
+    .expect("write");
+    std::fs::set_permissions(&python, std::fs::Permissions::from_mode(0o755)).expect("chmod");
+    let conf = format!("file://{}", root.join("conf.py").display());
+    let mut server = Server::spawn();
+    server.initialize_with(json!({
+        "capabilities": {},
+        "initializationOptions": { "evaluateConf": true },
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+
+    // When — the server asks, and the client names the interpreter
+    let asked = std::iter::from_fn(|| Some(server.receive()))
+        .find_map(|message| match message {
+            Message::Request(request) if request.method == "rinx/confInterpreter" => Some(request),
+            _ => None,
+        })
+        .expect("the interpreter's request");
+    server.send(lsp_server::Response::new_ok(
+        asked.id.clone(),
+        json!({ "path": python }),
+    ));
+    let mut conf_published = None;
+    let ran = std::iter::from_fn(|| Some(server.receive()))
+        .find_map(|message| match message {
+            Message::Notification(notification)
+                if notification.method == "textDocument/publishDiagnostics"
+                    && notification.params["uri"] == conf.as_str() =>
+            {
+                conf_published = Some(notification.params);
+                None
+            }
+            Message::Notification(notification)
+                if notification.method == "rinx/status"
+                    && notification.params["projects"][0]["executedWith"].is_string() =>
+            {
+                Some(notification.params)
+            }
+            _ => None,
+        })
+        .expect("the status after the run");
+
+    // Then — the run's value replaced the reading's warning
+    assert_eq!(asked.params, json!({ "conf": conf }));
+    assert_eq!(
+        ran["projects"][0]["executedWith"],
+        python.display().to_string()
+    );
+    assert_eq!(
+        conf_published.expect("conf.py is published again")["diagnostics"],
+        json!([])
+    );
+}
+
 #[test]
 fn test_lsp_exits_with_success_after_shutdown_and_exit() {
     // Given

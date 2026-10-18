@@ -16,10 +16,19 @@
 //!
 //! Only the settings the server uses are read, so only they are reported: a
 //! computed `html_theme` changes nothing the editor shows.
+//!
+//! Where the workspace allows running `conf.py` (see [`super::conf_eval`]),
+//! what running it found is authoritative instead: every setting is the value
+//! it computed, read through the same checks, and positioned on the line that
+//! assigns it — so none of the three findings above is made, while a value of
+//! the wrong kind still is.
 
 use rinx_ast::{Diagnostic, DiagnosticCode, Domain, Position, ResolvedLanguage, Span};
 use rinx_parser::{DefaultRole, ParseCtx, RejectParseFiles};
 use rinx_pyconf::{BoundValue, ModuleReading, Value, ValueKind, read_module};
+use std::collections::BTreeMap;
+
+use super::conf_eval::{ConfValues, ExecutedValue, conf_settings};
 
 use super::exclusion::{Exclusion, INCLUDE_EVERYTHING};
 use super::intersphinx::{DEFAULT_CACHE_LIMIT_DAYS, IntersphinxSettings, read_mapping};
@@ -37,25 +46,62 @@ pub struct ConfReading {
     pub needs: Option<NeedsDeclaration>,
     /// In source order, each positioned in `conf.py`.
     pub findings: Vec<Diagnostic>,
+    /// Whether reading `conf.py` without running it fell short for a setting
+    /// the server reads — which running it would make exact.
+    pub falls_short: bool,
 }
 
-/// The settings `text`, a `conf.py`, configures.
+/// The settings `text`, a `conf.py`, configures, read without running it.
 #[must_use]
 pub fn read_sphinx_conf(text: &str) -> ConfReading {
+    read_conf(text, None)
+}
+
+/// The settings `text`, a `conf.py`, configures, as running it found them
+/// to be: `values`.
+#[must_use]
+pub fn read_executed_sphinx_conf(text: &str, values: &ConfValues) -> ConfReading {
+    read_conf(text, Some(values))
+}
+
+fn read_conf(text: &str, executed: Option<&ConfValues>) -> ConfReading {
     let module = read_module(text);
+    let executed = executed.map(|values| anchored_values(&module, values));
     let mut reader = Reader {
         module: &module,
+        executed: executed.as_ref(),
         findings: Vec::new(),
+        asked: Vec::new(),
     };
     let (settings, needs) = reader.settings();
     let mut findings = reader.findings;
-    findings.extend(module.wildcard_imports.iter().map(|span| {
-        Diagnostic::new(
-            DiagnosticCode::ConfWildcardImport,
-            "`from … import *` may set settings rinx cannot see",
-            to_span(*span),
-        )
-    }));
+    // What a run found does not depend on what reading the text could see.
+    if executed.is_none() {
+        findings.extend(static_reading_limits(&module));
+    }
+    findings.sort_by_key(|finding| finding.span.map(|span| span.start));
+    ConfReading {
+        settings,
+        needs,
+        findings,
+        falls_short: falls_short(&module),
+    }
+}
+
+/// Where reading `module` without running it had to stop or guess: each
+/// wildcard import, and the syntax error it stopped at.
+fn static_reading_limits(module: &ModuleReading) -> Vec<Diagnostic> {
+    let mut findings: Vec<Diagnostic> = module
+        .wildcard_imports
+        .iter()
+        .map(|span| {
+            Diagnostic::new(
+                DiagnosticCode::ConfWildcardImport,
+                "`from … import *` may set settings rinx cannot see",
+                to_span(*span),
+            )
+        })
+        .collect();
     if let Some(error) = &module.error {
         findings.push(Diagnostic::new(
             DiagnosticCode::ConfSyntaxError,
@@ -66,12 +112,69 @@ pub fn read_sphinx_conf(text: &str) -> ConfReading {
             to_span(error.span),
         ));
     }
-    findings.sort_by_key(|finding| finding.span.map(|span| span.start));
-    ConfReading {
-        settings,
-        needs,
-        findings,
-    }
+    findings
+}
+
+/// Whether reading `module` without running it falls short for a setting
+/// the server reads: one computed or changed afterwards, or a wildcard
+/// import or syntax error that may hide any.
+fn falls_short(module: &ModuleReading) -> bool {
+    !module.wildcard_imports.is_empty()
+        || module.error.is_some()
+        || conf_settings().iter().any(|name| {
+            module.binding(name).is_some_and(|binding| {
+                matches!(binding.value, BoundValue::Unread(_)) || !binding.modifications.is_empty()
+            })
+        })
+}
+
+/// `values`, each positioned where `module` assigns it — or at the start of
+/// `conf.py` when the assignment is not one the reader sees.
+fn anchored_values(module: &ModuleReading, values: &ConfValues) -> BTreeMap<String, ExecutedValue> {
+    values
+        .values
+        .iter()
+        .map(|(name, value)| {
+            let value = match value {
+                ExecutedValue::Literal(value) => {
+                    ExecutedValue::Literal(anchored(value, anchor(module, name)))
+                }
+                ExecutedValue::Unrepresentable(spelling) => {
+                    ExecutedValue::Unrepresentable(spelling.clone())
+                }
+            };
+            (name.clone(), value)
+        })
+        .collect()
+}
+
+/// Where `module` assigns `name`, or the start of `conf.py`.
+fn anchor(module: &ModuleReading, name: &str) -> rinx_pyconf::Span {
+    module.binding(name).map_or(
+        rinx_pyconf::Span {
+            start: rinx_pyconf::Position::START,
+            end: rinx_pyconf::Position::START,
+        },
+        |binding| binding.target,
+    )
+}
+
+/// `value`, and everything in it, positioned at `span`.
+fn anchored(value: &Value, span: rinx_pyconf::Span) -> Value {
+    let all = |items: &[Value]| items.iter().map(|item| anchored(item, span)).collect();
+    let kind = match &value.kind {
+        ValueKind::List(items) => ValueKind::List(all(items)),
+        ValueKind::Tuple(items) => ValueKind::Tuple(all(items)),
+        ValueKind::Set(items) => ValueKind::Set(all(items)),
+        ValueKind::Dict(entries) => ValueKind::Dict(
+            entries
+                .iter()
+                .map(|(key, item)| (anchored(key, span), anchored(item, span)))
+                .collect(),
+        ),
+        other => other.clone(),
+    };
+    Value { kind, span }
 }
 
 /// The extension whose settings say which other sites a project links into.
@@ -79,7 +182,12 @@ const INTERSPHINX: &str = "sphinx.ext.intersphinx";
 
 struct Reader<'a> {
     module: &'a ModuleReading,
+    /// What running `conf.py` found, when it ran: then the only source of
+    /// values.
+    executed: Option<&'a BTreeMap<String, ExecutedValue>>,
     findings: Vec<Diagnostic>,
+    /// Every setting asked for, in order.
+    asked: Vec<String>,
 }
 
 impl<'a> Reader<'a> {
@@ -157,6 +265,23 @@ impl<'a> Reader<'a> {
     /// afterwards — or `None`, reported, when it is bound to something else,
     /// and `None` silently when it is not bound at all.
     fn literal(&mut self, name: &str) -> Option<&'a Value> {
+        self.asked.push(name.to_string());
+        if let Some(executed) = self.executed {
+            return match executed.get(name)? {
+                ExecutedValue::Literal(value) => Some(value),
+                ExecutedValue::Unrepresentable(spelling) => {
+                    self.findings.push(Diagnostic::new(
+                        DiagnosticCode::ConfUnrepresentableValue,
+                        format!(
+                            "running `conf.py` makes `{name}` {}, which no literal spells, so rinx uses its default",
+                            abbreviated(spelling)
+                        ),
+                        to_span(anchor(self.module, name)),
+                    ));
+                    None
+                }
+            };
+        }
         let binding = self.module.binding(name)?;
         match &binding.value {
             BoundValue::Literal(value) => {
@@ -435,8 +560,20 @@ impl<'a> Reader<'a> {
     }
 }
 
+/// The longest `repr` a finding quotes whole.
+const QUOTED_SPELLING: usize = 60;
+
+/// `spelling`, quoted, cut short when long.
+fn abbreviated(spelling: &str) -> String {
+    if spelling.chars().count() <= QUOTED_SPELLING {
+        return format!("`{spelling}`");
+    }
+    let start: String = spelling.chars().take(QUOTED_SPELLING).collect();
+    format!("`{start}…`")
+}
+
 /// `span` as a diagnostic's span: the same lines and character columns.
-fn to_span(span: rinx_pyconf::Span) -> Span {
+pub(super) fn to_span(span: rinx_pyconf::Span) -> Span {
     let point = |position: rinx_pyconf::Position| {
         Position::new(
             u32::try_from(position.line).unwrap_or(u32::MAX),
@@ -882,6 +1019,181 @@ mod tests {
                 "pydoc_topics",
                 "pyspecific",
             ]
+        );
+    }
+
+    /// What running a `conf.py` found: each of `values`, a name and the
+    /// `repr` it printed.
+    fn executed(values: &[(&str, &str)]) -> ConfValues {
+        let output = serde_json::json!({
+            "values": values.iter().copied().collect::<BTreeMap<&str, &str>>(),
+        });
+        super::super::conf_eval::read_output_for_tests(&output.to_string())
+    }
+
+    #[test]
+    fn test_read_executed_sphinx_conf_takes_the_computed_values() {
+        // Given
+        let text = "version = '3.14'\nrst_epilog = f'|v| {version}'\nextensions = []\nextensions += ['x']\n";
+        let values = executed(&[("rst_epilog", "'|v| 3.14'"), ("extensions", "['x']")]);
+
+        // When
+        let reading = read_executed_sphinx_conf(text, &values);
+
+        // Then nothing is reported unread or unapplied
+        assert_eq!(reading.settings.parse.epilog.as_deref(), Some("|v| 3.14"));
+        assert_eq!(reading.settings.strictness.unmodelled_extensions(), ["x"]);
+        assert_eq!(reading.findings, []);
+        assert!(reading.falls_short);
+    }
+
+    #[test]
+    fn test_read_executed_sphinx_conf_keeps_the_default_of_a_setting_conf_py_did_not_bind() {
+        // Given a setting bound only on a path the run did not take
+        let text = "import os\nif os.environ.get('NUMFIG'):\n    numfig = True\n";
+
+        // When
+        let reading = read_executed_sphinx_conf(text, &executed(&[]));
+
+        // Then
+        assert!(!reading.settings.numfig);
+        assert_eq!(reading.findings, []);
+    }
+
+    #[test]
+    fn test_read_executed_sphinx_conf_does_not_report_what_reading_could_not_see() {
+        // Given a wildcard import and a line the reader stops at
+        let text = "from settings import *\nproject = (\n";
+
+        // When
+        let reading = read_executed_sphinx_conf(text, &executed(&[]));
+
+        // Then
+        assert_eq!(reading.findings, []);
+        assert_eq!(
+            findings(text),
+            [("conf.wildcard-import", 1), ("conf.syntax-error", 2)]
+        );
+    }
+
+    #[test]
+    fn test_read_executed_sphinx_conf_reports_a_wrong_value_where_it_is_assigned() {
+        // Given
+        let text = "\nnumfig = compute()\n";
+
+        // When
+        let reading = read_executed_sphinx_conf(text, &executed(&[("numfig", "'yes'")]));
+
+        // Then
+        let codes: Vec<(&str, u32)> = reading
+            .findings
+            .iter()
+            .map(|finding| {
+                (
+                    finding.code.as_str(),
+                    finding.span.map_or(0, |span| span.start.line),
+                )
+            })
+            .collect();
+        assert_eq!(codes, [("conf.invalid-value", 2)]);
+    }
+
+    #[test]
+    fn test_read_executed_sphinx_conf_reports_a_value_no_literal_spells() {
+        // Given
+        let text = "rst_epilog = make()\n";
+
+        // When
+        let reading =
+            read_executed_sphinx_conf(text, &executed(&[("rst_epilog", "<Epilog at 0x1>")]));
+
+        // Then
+        assert_eq!(reading.settings.parse.epilog, None);
+        assert_eq!(reading.findings.len(), 1);
+        assert_eq!(
+            reading.findings[0].code,
+            DiagnosticCode::ConfUnrepresentableValue
+        );
+        assert!(
+            reading.findings[0].message.contains("`<Epilog at 0x1>`"),
+            "{}",
+            reading.findings[0].message
+        );
+    }
+
+    #[test]
+    fn test_read_sphinx_conf_says_whether_reading_fell_short() {
+        // When / Then
+        assert!(!read_sphinx_conf("project = 'P'\nnumfig = True\n").falls_short);
+        assert!(!read_sphinx_conf("html_theme = pick()\n").falls_short);
+        assert!(read_sphinx_conf("numfig = pick()\n").falls_short);
+        assert!(read_sphinx_conf("extensions = []\nextensions.append('x')\n").falls_short);
+        assert!(read_sphinx_conf("from x import *\n").falls_short);
+        assert!(read_sphinx_conf("numfig = (\n").falls_short);
+    }
+
+    #[test]
+    fn test_a_run_is_asked_for_every_setting_the_reader_reads() {
+        // Given a `conf.py` declaring every extension whose settings are read
+        let module = read_module(
+            "extensions = ['sphinx.ext.intersphinx', 'sphinx_needs']\nneeds_from_toml = 'u.toml'\n",
+        );
+        let mut reader = Reader {
+            module: &module,
+            executed: None,
+            findings: Vec::new(),
+            asked: Vec::new(),
+        };
+
+        // When
+        reader.settings();
+
+        // Then
+        let asked_for = conf_settings();
+        let missing: Vec<&String> = reader
+            .asked
+            .iter()
+            .filter(|name| !asked_for.contains(name))
+            .collect();
+        assert_eq!(missing, Vec::<&String>::new());
+    }
+
+    #[test]
+    fn test_anchored_positions_a_value_and_everything_in_it() {
+        // Given
+        let module = read_module("\n\nexclude_patterns = compute()\n");
+        let ExecutedValue::Literal(value) =
+            super::super::conf_eval::executed_value_for_tests("{'a': ['b']}")
+        else {
+            panic!("a literal");
+        };
+
+        // When
+        let span = anchor(&module, "exclude_patterns");
+        let value = anchored(&value, span);
+
+        // Then
+        assert_eq!(span.start.line, 3);
+        let ValueKind::Dict(entries) = &value.kind else {
+            panic!("a dict");
+        };
+        let (key, item) = &entries[0];
+        assert_eq!([value.span, key.span, item.span], [span; 3]);
+        assert_eq!(item.as_sequence().map(|items| items[0].span), Some(span));
+        assert_eq!(
+            anchor(&module, "numfig").start,
+            rinx_pyconf::Position::START
+        );
+    }
+
+    #[test]
+    fn test_abbreviated_cuts_a_long_spelling_short() {
+        // When / Then
+        assert_eq!(abbreviated("<x>"), "`<x>`");
+        let long = "x".repeat(QUOTED_SPELLING + 5);
+        assert_eq!(
+            abbreviated(&long),
+            format!("`{}…`", "x".repeat(QUOTED_SPELLING))
         );
     }
 }

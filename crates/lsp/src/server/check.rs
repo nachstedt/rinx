@@ -16,6 +16,7 @@ use lsp_types::notification::{DidOpenTextDocument, Notification as _, PublishDia
 use lsp_types::{DidOpenTextDocumentParams, PublishDiagnosticsParams, TextDocumentItem, Uri};
 use serde::Serialize;
 
+use super::conf_runs::ConfExecution;
 use super::handlers::handle_notification;
 use super::scan::ScanEvent;
 use super::state::ServerState;
@@ -34,12 +35,18 @@ pub struct FolderCheck {
 }
 
 /// Scans `root`, a workspace folder, opens every document its projects
-/// index, renders them all, and returns what the server shows.
+/// index, renders them all, and returns what the server shows — running each
+/// `conf.py` that reading falls short for in `python`, when given, as an
+/// editor allowed to would.
 #[must_use]
-pub fn check_folder(root: &Path) -> FolderCheck {
+pub fn check_folder(root: &Path, python: Option<&Path>) -> FolderCheck {
     let started = Instant::now();
-    let mut state =
-        ServerState::new(PositionEncoding::Utf16).with_workspace(vec![root.to_path_buf()], false);
+    let execution = python.map_or(ConfExecution::Off, |python| {
+        ConfExecution::Granted(python.to_path_buf())
+    });
+    let mut state = ServerState::new(PositionEncoding::Utf16)
+        .with_workspace(vec![root.to_path_buf()], false)
+        .with_conf_execution(execution);
     let mut messages = state.start_scan();
     let projects = scan_projects(discover_projects(root), &|_, _| {});
     messages.extend(state.on_scan_event(ScanEvent::Finished {
@@ -47,6 +54,7 @@ pub fn check_folder(root: &Path) -> FolderCheck {
         projects,
         elapsed: started.elapsed(),
     }));
+    messages.extend(state.finish_conf_runs());
     let documents: Vec<PathBuf> = state
         .projects
         .values()
@@ -119,7 +127,7 @@ mod tests {
         );
 
         // When
-        let check = check_folder(&workspace.root);
+        let check = check_folder(&workspace.root, None);
 
         // Then
         let severities = |file: &str| -> Vec<Option<DiagnosticSeverity>> {

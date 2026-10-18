@@ -3,13 +3,15 @@
 //!
 //! [`discover`] finds a workspace folder's projects — one per `conf.py`, and
 //! the folder itself for what lies under none — with each one's
-//! [`model`], read for a Sphinx project by [`sphinx_conf`] and matched
+//! [`model`], read for a Sphinx project by [`sphinx_conf`] — or, where the
+//! workspace allows it, run by [`conf_eval`] — and matched
 //! against its files by [`exclusion`], its entity schema converted from its
 //! sphinx-needs configuration by [`needs`] (reading `conf.py`'s literals
 //! through [`python_value`]). [`scan`] parses and analyses their
 //! documents in parallel when the server starts, and [`index`] keeps one
 //! analysis per document and folds them into the project's index.
 
+mod conf_eval;
 mod discover;
 mod exclusion;
 mod extension_profile;
@@ -23,8 +25,12 @@ mod scan;
 mod sphinx_conf;
 mod strictness;
 
+#[cfg(test)]
+pub use conf_eval::ConfValues;
+pub use conf_eval::{CONF_RUN_TIMEOUT, ConfEvaluation, ConfEvaluations, run_conf};
 pub use discover::{
-    DiscoveredProject, contains_conf, discover_projects, is_conf, is_visible_under, sources_under,
+    DiscoveredProject, contains_conf, discover_projects, discover_projects_with, is_conf,
+    is_visible_under, sources_under,
 };
 pub use index::{IndexedDocument, Project};
 pub use inventories::Fetched;

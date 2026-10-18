@@ -36,6 +36,34 @@ suite('Index status Test Suite', () => {
         );
     });
 
+    test('statusText: a Sphinx project whose conf.py was run says so', () => {
+        assert.strictEqual(
+            statusText({
+                state: 'ready',
+                documents: 2,
+                elapsedMs: 0,
+                projects: [{ kind: 'sphinx', conf: 'docs/conf.py', executedWith: '/venv/bin/python' }],
+            }),
+            'rinx: Sphinx project (docs/conf.py, run) · 2 docs (0.0 s)',
+        );
+    });
+
+    test('statusTooltip: names the interpreter a conf.py was run in', () => {
+        assert.strictEqual(
+            statusTooltip({
+                state: 'ready',
+                documents: 2,
+                projects: [
+                    { kind: 'sphinx', conf: 'a/conf.py', executedWith: '/venv/bin/python' },
+                    { kind: 'sphinx', conf: 'b/conf.py' },
+                ],
+            }),
+            'The rinx language server’s index of this workspace\n' +
+                'Sphinx project: a/conf.py, run with /venv/bin/python\n' +
+                'Sphinx project: b/conf.py',
+        );
+    });
+
     test('statusText: several Sphinx projects are counted', () => {
         assert.strictEqual(
             statusText({

@@ -27,11 +27,12 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use rinx_ast::{Diagnostic, DiagnosticCode};
+use rinx_ast::{Diagnostic, DiagnosticCode, Position, Span};
 
+use super::conf_eval::{ConfEvaluation, ConfEvaluations};
 use super::model::{ProjectModel, ProjectSource};
 use super::needs::resolve_needs;
-use super::sphinx_conf::read_sphinx_conf;
+use super::sphinx_conf::{read_executed_sphinx_conf, read_sphinx_conf};
 
 /// The file that makes a directory a Sphinx project's source root.
 pub(crate) const CONF_FILE: &str = "conf.py";
@@ -48,6 +49,9 @@ pub struct DiscoveredProject {
     /// Every document, by its name, with its file — in the order Sphinx
     /// finds them.
     pub sources: Vec<(String, PathBuf)>,
+    /// Whether reading `conf.py` without running it fell short, so running
+    /// it — where that is allowed — would make the project's settings exact.
+    pub wants_conf_run: bool,
 }
 
 impl DiscoveredProject {
@@ -60,20 +64,32 @@ impl DiscoveredProject {
             findings: Vec::new(),
             conf_text: String::new(),
             sources: Vec::new(),
+            wants_conf_run: false,
         }
     }
 }
 
 /// Every project under the workspace folder at `folder`, the folder's own
 /// first — a Sphinx project when `conf.py` is at its root, else one with no
-/// configuration — and nested ones in the order the walk meets them.
+/// configuration — and nested ones in the order the walk meets them; each
+/// `conf.py` read without running it.
 #[must_use]
 pub fn discover_projects(folder: &Path) -> Vec<DiscoveredProject> {
+    discover_projects_with(folder, &ConfEvaluations::new())
+}
+
+/// [`discover_projects`], taking what `evaluations` found running a
+/// `conf.py` over reading it, for each whose text is still the text it ran.
+#[must_use]
+pub fn discover_projects_with(
+    folder: &Path,
+    evaluations: &ConfEvaluations,
+) -> Vec<DiscoveredProject> {
     let mut projects = vec![
-        sphinx_project_at(folder)
+        sphinx_project_at(folder, evaluations)
             .unwrap_or_else(|| DiscoveredProject::folder(folder.to_path_buf())),
     ];
-    walk(folder, 0, &mut projects);
+    walk(folder, 0, &mut projects, evaluations);
     projects
 }
 
@@ -86,8 +102,9 @@ pub fn sources_under(model: &ProjectModel, directory: &Path) -> Vec<(String, Pat
         findings: Vec::new(),
         conf_text: String::new(),
         sources: Vec::new(),
+        wants_conf_run: false,
     }];
-    walk(directory, 0, &mut projects);
+    walk(directory, 0, &mut projects, &ConfEvaluations::new());
     projects.swap_remove(0).sources
 }
 
@@ -134,13 +151,25 @@ pub fn is_visible_under(root: &Path, path: &Path) -> bool {
 
 /// The Sphinx project whose `conf.py` is in `directory`, if there is one. A
 /// `conf.py` that cannot be read configures nothing, as an empty one would.
-fn sphinx_project_at(directory: &Path) -> Option<DiscoveredProject> {
+/// What running it found, in `evaluations`, is taken over reading it as long
+/// as the file is unchanged since; a run that failed is reported, and the
+/// file read.
+fn sphinx_project_at(directory: &Path, evaluations: &ConfEvaluations) -> Option<DiscoveredProject> {
     let conf = directory.join(CONF_FILE);
     if !conf.is_file() {
         return None;
     }
     let text = fs::read_to_string(&conf).unwrap_or_default();
-    let mut reading = read_sphinx_conf(&text);
+    let evaluation = evaluations
+        .get(&conf)
+        .filter(|evaluation| evaluation.conf_text == text);
+    let mut reading = match evaluation.map(|evaluation| &evaluation.outcome) {
+        Some(Ok(values)) => read_executed_sphinx_conf(&text, values),
+        _ => read_sphinx_conf(&text),
+    };
+    if let Some(evaluation) = evaluation {
+        reading.findings.extend(run_failure(evaluation));
+    }
     if let Some(declaration) = &reading.needs {
         let needs = resolve_needs(directory, declaration, &mut reading.findings);
         reading
@@ -149,6 +178,14 @@ fn sphinx_project_at(directory: &Path) -> Option<DiscoveredProject> {
         reading.settings.parse.schema = Arc::new(needs.schema);
         reading.settings.parse.import_keys = needs.import_keys;
         reading.settings.config_files = needs.files;
+    }
+    if let Some(Ok(values)) = evaluation.map(|evaluation| &evaluation.outcome) {
+        // A module `conf.py` imports changes what it computes, so editing
+        // one finds the project again, as editing `conf.py` does.
+        reading
+            .settings
+            .config_files
+            .extend(values.imported.iter().cloned());
     }
     Some(DiscoveredProject {
         model: ProjectModel {
@@ -159,12 +196,37 @@ fn sphinx_project_at(directory: &Path) -> Option<DiscoveredProject> {
         findings: reading.findings,
         conf_text: text,
         sources: Vec::new(),
+        wants_conf_run: reading.falls_short,
     })
+}
+
+/// The finding that `evaluation`, a run of `conf.py`, failed — on the line
+/// it failed at, or the first — if it did.
+fn run_failure(evaluation: &ConfEvaluation) -> Option<Diagnostic> {
+    let failure = evaluation.outcome.as_ref().err()?;
+    let line = failure
+        .line
+        .and_then(|line| u32::try_from(line).ok())
+        .unwrap_or(1);
+    Some(Diagnostic::new(
+        DiagnosticCode::ConfExecutionFailed,
+        format!(
+            "running `conf.py` with `{}` failed, so rinx reads it without running it: {}",
+            evaluation.interpreter.display(),
+            failure.message
+        ),
+        Span::new(Position::new(line, 1), Position::new(line, 1)),
+    ))
 }
 
 /// Adds the documents in `directory`, and under it, to `projects[current]`
 /// — or to the project a deeper `conf.py` starts, added to `projects`.
-fn walk(directory: &Path, current: usize, projects: &mut Vec<DiscoveredProject>) {
+fn walk(
+    directory: &Path,
+    current: usize,
+    projects: &mut Vec<DiscoveredProject>,
+    evaluations: &ConfEvaluations,
+) {
     let Ok(entries) = fs::read_dir(directory) else {
         // An unreadable corner of a workspace costs its own documents, not
         // everyone else's.
@@ -208,13 +270,13 @@ fn walk(directory: &Path, current: usize, projects: &mut Vec<DiscoveredProject>)
         if is_excluded(&projects[current].model, &subdirectory) {
             continue;
         }
-        match sphinx_project_at(&subdirectory) {
+        match sphinx_project_at(&subdirectory, evaluations) {
             Some(nested) => {
                 projects.push(nested);
                 let index = projects.len() - 1;
-                walk(&subdirectory, index, projects);
+                walk(&subdirectory, index, projects, evaluations);
             }
-            None => walk(&subdirectory, current, projects),
+            None => walk(&subdirectory, current, projects, evaluations),
         }
     }
 }
@@ -259,6 +321,7 @@ fn is_hidden(path: &Path) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use super::super::conf_eval::{ConfFailure, ConfValues};
     use super::*;
 
     /// A fresh directory under the system's temporary one, holding `files`
@@ -543,5 +606,130 @@ mod tests {
             Path::new("/work/.config/docs/.git")
         ));
         assert!(!is_visible_under(root, Path::new("/work/other")));
+    }
+
+    /// A run of `conf.py` holding `text`, coming to `outcome`.
+    fn evaluation(text: &str, outcome: super::super::conf_eval::ConfOutcome) -> ConfEvaluation {
+        ConfEvaluation {
+            conf_text: text.to_string(),
+            interpreter: PathBuf::from("/venv/bin/python"),
+            outcome,
+        }
+    }
+
+    const COMPUTED: &str = "exclude_patterns = [name for name in ['drafts']]\n";
+
+    #[test]
+    fn test_discover_projects_with_takes_a_run_of_conf_py_as_it_is() {
+        // Given a run excluding `drafts`, which imported `paths.py`
+        let root = temp_tree(
+            "conf_ran",
+            &[
+                ("conf.py", COMPUTED),
+                ("index.rst", "x"),
+                ("drafts/wip.rst", "x"),
+            ],
+        );
+        let output = serde_json::json!({
+            "values": {"exclude_patterns": "['drafts']"},
+            "imported": [root.join("paths.py")],
+        });
+        let values = super::super::conf_eval::read_output_for_tests(&output.to_string());
+        let evaluations =
+            ConfEvaluations::from([(root.join("conf.py"), evaluation(COMPUTED, Ok(values)))]);
+
+        // When
+        let projects = discover_projects_with(&root, &evaluations);
+
+        // Then
+        assert_eq!(names(&projects[0]), ["index.rst"]);
+        assert_eq!(projects[0].findings, []);
+        assert!(projects[0].wants_conf_run);
+        assert!(
+            projects[0]
+                .model
+                .settings
+                .config_files
+                .contains(&root.join("paths.py"))
+        );
+    }
+
+    #[test]
+    fn test_discover_projects_with_reads_a_conf_py_edited_since_its_run() {
+        // Given a run of an earlier text
+        let root = temp_tree(
+            "conf_edited",
+            &[("conf.py", COMPUTED), ("drafts/wip.rst", "x")],
+        );
+        let evaluations = ConfEvaluations::from([(
+            root.join("conf.py"),
+            evaluation("exclude_patterns = []\n", Ok(ConfValues::default())),
+        )]);
+
+        // When
+        let projects = discover_projects_with(&root, &evaluations);
+
+        // Then it is read, as if it had never run
+        assert_eq!(names(&projects[0]), ["drafts/wip.rst"]);
+        assert_eq!(projects[0].findings.len(), 1);
+        assert_eq!(
+            projects[0].findings[0].code,
+            DiagnosticCode::ConfUnreadSetting
+        );
+    }
+
+    #[test]
+    fn test_discover_projects_with_reports_a_failed_run_on_its_line() {
+        // Given
+        let root = temp_tree("conf_failed", &[("conf.py", COMPUTED)]);
+        let failure = ConfFailure {
+            message: "ImportError: no".to_string(),
+            line: Some(1),
+        };
+        let evaluations =
+            ConfEvaluations::from([(root.join("conf.py"), evaluation(COMPUTED, Err(failure)))]);
+
+        // When
+        let projects = discover_projects_with(&root, &evaluations);
+
+        // Then the reading stands beside the failure
+        let codes: Vec<(DiagnosticCode, Option<u32>)> = projects[0]
+            .findings
+            .iter()
+            .map(|finding| (finding.code, finding.span.map(|span| span.start.line)))
+            .collect();
+        assert_eq!(
+            codes,
+            [
+                (DiagnosticCode::ConfUnreadSetting, Some(1)),
+                (DiagnosticCode::ConfExecutionFailed, Some(1)),
+            ]
+        );
+        assert!(
+            projects[0].findings[1].message.contains("/venv/bin/python")
+                && projects[0].findings[1].message.contains("ImportError: no")
+        );
+    }
+
+    #[test]
+    fn test_run_failure_lands_on_the_first_line_without_one() {
+        // Given
+        let failed = evaluation(
+            "",
+            Err(ConfFailure {
+                message: "timed out".to_string(),
+                line: None,
+            }),
+        );
+
+        // When
+        let finding = run_failure(&failed).expect("a finding");
+
+        // Then
+        assert_eq!(finding.span.map(|span| span.start.line), Some(1));
+        assert_eq!(
+            run_failure(&evaluation("", Ok(ConfValues::default()))),
+            None
+        );
     }
 }

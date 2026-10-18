@@ -66,6 +66,18 @@
           "default": "ask",
           "description": "Whether the language server may download the `objects.inv` of the sites a Sphinx project's `intersphinx_mapping` links into, so references into them resolve. Downloads are cached for the project's `intersphinx_cache_limit` days."
         },
+        "rinx.conf.execute": {
+          "type": "boolean",
+          "default": false,
+          "scope": "resource",
+          "description": "Whether the language server may run a Sphinx project's `conf.py` in a trusted workspace, for the exact values of the settings it computes rather than spells as literals. Off, `conf.py` is read without running it, and what cannot be read is underlined there."
+        },
+        "rinx.conf.pythonPath": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "The Python interpreter `conf.py` runs in when `rinx.conf.execute` is on: a command on the PATH, or a path, relative to the workspace folder. When empty, the interpreter selected with the Python extension is used, if it is installed."
+        },
         "rinx.autoDiscover": {
           "type": "boolean",
           "default": true,

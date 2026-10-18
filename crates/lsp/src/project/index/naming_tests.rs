@@ -109,3 +109,20 @@ fn test_a_projects_conf_and_folder_are_its_own() {
     assert_eq!(folder().conf_path(), None);
     assert_eq!(project.model().settings.root_doc, "index");
 }
+
+#[test]
+fn test_a_project_found_again_takes_its_conf_py_reading() {
+    // Given a project whose `conf.py` reading fell short
+    let mut project = sphinx("root_doc = os.getenv('X')\n");
+    assert!(project.wants_conf_run());
+
+    // When it is found again with every setting a literal
+    let mut found = DiscoveredProject::folder(PathBuf::from("/work/docs"));
+    found.conf_text = "root_doc = 'index'\n".to_string();
+    project.set_conf_reading(&found);
+
+    // Then
+    assert!(!project.wants_conf_run());
+    assert_eq!(project.conf_text(), "root_doc = 'index'\n");
+    assert_eq!(project.conf_findings().0, []);
+}

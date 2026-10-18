@@ -33,6 +33,7 @@ pub(super) fn sphinx(conf: &str) -> Project {
             findings: reading.findings,
             conf_text: conf.to_string(),
             sources: Vec::new(),
+            wants_conf_run: reading.falls_short,
         },
     )
 }

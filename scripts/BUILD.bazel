@@ -112,6 +112,7 @@ py_library(
             ":doctest_runner_lib",
             ":publish_crates_lib",
             ":publish_pages_lib",
+            "//crates/lsp:conf_dump_lib",
             "@pypi//pytest",
         ],
     )

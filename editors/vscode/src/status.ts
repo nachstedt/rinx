@@ -8,8 +8,11 @@ export const STATUS_METHOD = 'rinx/status';
 
 /** One project, as `rinx/status` names it. */
 export type ProjectStatus =
-    /** A Sphinx project, by its `conf.py`'s path within its workspace folder. */
-    | { kind: 'sphinx'; conf: string }
+    /**
+     * A Sphinx project, by its `conf.py`'s path within its workspace folder,
+     * with the interpreter `conf.py` was run in when it was run rather than read.
+     */
+    | { kind: 'sphinx'; conf: string; executedWith?: string }
     /** A workspace folder's documents under no `conf.py`, by the folder's name. */
     | { kind: 'folder'; root: string };
 
@@ -26,7 +29,8 @@ export interface IndexStatus {
 
 /**
  * What the status bar shows for `status`: `rinx: 512 docs indexed (0.8 s)`,
- * or with Sphinx projects `rinx: Sphinx project (docs/conf.py) · 512 docs (0.8 s)`.
+ * or with Sphinx projects `rinx: Sphinx project (docs/conf.py) · 512 docs (0.8 s)`
+ * — `(docs/conf.py, run)` when its `conf.py` was run.
  */
 export function statusText(status: IndexStatus): string {
     if (status.state === 'indexing') {
@@ -38,7 +42,10 @@ export function statusText(status: IndexStatus): string {
     if (sphinx.length === 0) {
         return `rinx: ${status.documents} ${docs} indexed (${seconds} s)`;
     }
-    const projects = sphinx.length === 1 ? `Sphinx project (${sphinx[0]})` : `${sphinx.length} Sphinx projects`;
+    const projects =
+        sphinx.length === 1
+            ? `Sphinx project (${sphinx[0].conf}${sphinx[0].executedWith ? ', run' : ''})`
+            : `${sphinx.length} Sphinx projects`;
     return `rinx: ${projects} · ${status.documents} ${docs} (${seconds} s)`;
 }
 
@@ -46,14 +53,20 @@ export function statusText(status: IndexStatus): string {
 export function statusTooltip(status: IndexStatus): string {
     const lines = ['The rinx language server’s index of this workspace'];
     for (const project of status.projects ?? []) {
-        lines.push(project.kind === 'sphinx' ? `Sphinx project: ${project.conf}` : `Folder: ${project.root}`);
+        if (project.kind === 'folder') {
+            lines.push(`Folder: ${project.root}`);
+        } else if (project.executedWith) {
+            lines.push(`Sphinx project: ${project.conf}, run with ${project.executedWith}`);
+        } else {
+            lines.push(`Sphinx project: ${project.conf}`);
+        }
     }
     return lines.join('\n');
 }
 
-/** The `conf.py` of every Sphinx project `status` names. */
-function sphinxConfs(status: IndexStatus): string[] {
-    return (status.projects ?? []).flatMap((project) => (project.kind === 'sphinx' ? [project.conf] : []));
+/** Every Sphinx project `status` names. */
+function sphinxConfs(status: IndexStatus): { conf: string; executedWith?: string }[] {
+    return (status.projects ?? []).flatMap((project) => (project.kind === 'sphinx' ? [project] : []));
 }
 
 /** The status bar item, hidden until the server first reports. */

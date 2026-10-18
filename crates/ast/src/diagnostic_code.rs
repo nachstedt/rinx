@@ -1311,6 +1311,15 @@ diagnostic_codes! {
     /// a link computed by a function, a conditional `schemas.json` rule,
     /// variants, … — which the editor reads the project without.
     ConfNeedsUnconverted => "conf.needs-unconverted",
+    /// `conf.py` could not be run, in a trusted workspace that allows
+    /// running it: it raised an exception, did not finish in time, or did
+    /// not print its settings. The editor reads it without running it, as
+    /// it does when running is not allowed.
+    ConfExecutionFailed => "conf.execution-failed",
+    /// A setting `conf.py` computed, when run, to a value with no literal
+    /// spelling — an object, a function — which the editor cannot take: the
+    /// setting keeps its default.
+    ConfUnrepresentableValue => "conf.unrepresentable-value",
 
     // --- The suppression mechanism itself ----------------------------------
     /// A `.. noqa:` comment naming an id that is not a diagnostic code. Never
