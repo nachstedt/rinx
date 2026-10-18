@@ -26,10 +26,12 @@ line-length = 100
 src = ["scripts"]
 # Fixtures, not code of ours: a real `sphinx-build` project kept byte-for-byte
 # as the inventory fixture, real `conf.py` files the `conf.py` reader is
-# checked against, and the editor tests' Sphinx project.
+# checked against, and the Sphinx projects of the editor tests and of the
+# language server's parity test.
 extend-exclude = [
     "crates/inventory/testdata",
     "crates/pyconf/testdata",
+    "crates/worker/tests/parity_project",
     "editors/vscode/test-fixtures",
 ]
 # Python only: ruff would otherwise also reformat the ```python blocks in the
@@ -127,5 +129,6 @@ fail_under = 80
 exclude = [
     "crates/inventory/testdata",
     "crates/pyconf/testdata",
+    "crates/worker/tests/parity_project",
     "editors/vscode/test-fixtures",
 ]
