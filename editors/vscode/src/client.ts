@@ -32,7 +32,8 @@ export async function resolveServerBinary(
 
 /**
  * The options connecting the client to every reStructuredText document, and
- * telling the server this client downloads inventories (see inventories.ts).
+ * telling the server this client downloads inventories (see inventories.ts)
+ * and chooses the interpreter `conf.py` runs in (see conf.ts).
  */
 export function clientOptions(outputChannel: vscode.LogOutputChannel): LanguageClientOptions {
     return {
@@ -40,7 +41,7 @@ export function clientOptions(outputChannel: vscode.LogOutputChannel): LanguageC
             { scheme: 'file', language: 'restructuredtext' },
             { scheme: 'untitled', language: 'restructuredtext' },
         ],
-        initializationOptions: { fetchInventories: true },
+        initializationOptions: { fetchInventories: true, evaluateConf: true },
         outputChannel,
     };
 }

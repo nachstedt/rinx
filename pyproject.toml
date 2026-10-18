@@ -23,7 +23,7 @@ default-groups = ["dev"]
 target-version = "py311"
 line-length = 100
 # So the scripts' flat imports sort as first-party.
-src = ["scripts"]
+src = ["scripts", "crates/lsp/src/project"]
 # Fixtures, not code of ours: a real `sphinx-build` project kept byte-for-byte
 # as the inventory fixture, real `conf.py` files the `conf.py` reader is
 # checked against, and the Sphinx projects of the editor tests and of the
@@ -40,7 +40,8 @@ include = ["*.py", "*.pyi"]
 # The doctest runner is shipped: it runs inside users' `py_test`s, on whichever
 # interpreter their toolchain provides.
 # Its test holds to the same floor, so CI can run it on that interpreter.
-per-file-target-version = { "scripts/doctest_runner*.py" = "py39" }
+# So does the `conf.py` runner the language server embeds, on a project's own.
+per-file-target-version = { "scripts/doctest_runner*.py" = "py39", "crates/lsp/src/project/conf_dump.py" = "py39", "scripts/conf_dump_test.py" = "py39" }
 
 [tool.ruff.format]
 # `examples/includes.rst` quotes these by line number (`:lines: 7-11`) and by
@@ -77,6 +78,10 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
+# The language server's `conf.py` runner: running a project's `conf.py` is
+# what it is for (`exec`), and whatever that raises is reported rather than
+# crashing it.
+"crates/lsp/src/project/conf_dump.py" = ["S102", "BLE001"]
 "scripts/*_test.py" = [
     # pytest's own assertion style.
     "S101",
@@ -105,14 +110,14 @@ convention = "pep257"
 # `scripts/` on the path mirrors those targets' `imports = ["."]`.
 testpaths = ["scripts"]
 python_files = ["*_test.py"]
-pythonpath = ["scripts"]
+pythonpath = ["scripts", "crates/lsp/src/project"]
 addopts = ["--strict-markers", "--strict-config", "-ra"]
 filterwarnings = ["error"]
 xfail_strict = true
 
 [tool.coverage.run]
 branch = true
-source = ["scripts"]
+source = ["scripts", "crates/lsp/src/project"]
 omit = ["scripts/*_test.py"]
 
 [tool.coverage.report]
@@ -122,6 +127,11 @@ skip_covered = true
 # (cloning, `bazel build`) are exercised by running them, not by unit tests,
 # which is most of what is missing.
 fail_under = 80
+
+[tool.ty.environment]
+# The language server's `conf.py` runner, which `scripts/conf_dump_test.py`
+# imports as pytest's `pythonpath` puts it on the path.
+extra-paths = ["crates/lsp/src/project"]
 
 [tool.ty.src]
 # The same fixtures as ruff's `extend-exclude`: CPython's `conf.py` imports

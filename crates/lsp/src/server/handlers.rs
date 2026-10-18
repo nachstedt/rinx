@@ -14,6 +14,7 @@ use lsp_types::{
     TextDocumentSyncKind, Uri,
 };
 
+use super::conf_runs::CONF_INTERPRETER_CHANGED_METHOD;
 use super::state::ServerState;
 use crate::position::PositionEncoding;
 
@@ -103,6 +104,7 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
             };
             state.on_watched_files(&params.changes)
         }
+        CONF_INTERPRETER_CHANGED_METHOD => state.on_conf_interpreter_changed(),
         _ => Vec::new(),
     }
 }

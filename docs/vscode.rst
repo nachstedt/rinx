@@ -26,6 +26,9 @@ The extension provides the following settings:
 - ``rinx.indexPath``: Path to the project index (default: auto-detected from ``bazel-bin``).
 - ``rinx.previewMode``: ``onSave`` or ``onType`` (default: ``onType``).
 - ``rinx.trace.server``: ``off``, ``messages`` or ``verbose``; traces the language server's protocol traffic into the *Rinx* output channel.
+- ``rinx.inventories.download``: ``ask``, ``always`` or ``never``; whether the language server may download the inventories a Sphinx project links into (see :ref:`vscode-intersphinx`).
+- ``rinx.conf.execute``: whether the language server may run a Sphinx project's ``conf.py`` (default: off; see :ref:`vscode-running-conf`).
+- ``rinx.conf.pythonPath``: the Python interpreter ``conf.py`` runs in; when empty, the one selected with the Python extension.
 
 2. The Preview Pipeline (As-You-Type)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,7 +69,7 @@ Sphinx projects
 
 A directory holding a ``conf.py`` is a Sphinx project, and every file belongs to the nearest project above it. What lies under no ``conf.py`` stays the workspace folder's own project. The status bar then names the project, for example ``rinx: Sphinx project (docs/conf.py) · 512 docs (0.8 s)``, and its tooltip lists every project.
 
-The server reads ``conf.py`` without running it, since running it would need the project's Python and its extensions, and would run code you have not chosen to trust. It takes each setting below where it is written as a literal: a string, a number, ``True``, ``False``, ``None``, or a list, tuple or dict of those. Every setting it cannot take as written is reported in ``conf.py`` itself:
+By default the server reads ``conf.py`` without running it, since running it needs the project's Python and its extensions, and runs code you have not chosen to trust (see :ref:`vscode-running-conf` to let it). It takes each setting below where it is written as a literal: a string, a number, ``True``, ``False``, ``None``, or a list, tuple or dict of those. Every setting it cannot take as written is reported in ``conf.py`` itself:
 
 - ``conf.unread-setting``: the value is computed or imported, so the setting keeps its default.
 - ``conf.modified-setting``: the literal is changed afterwards, as by ``exclude_patterns.append(…)`` inside an ``if``. The literal applies; the change does not.
@@ -84,7 +87,7 @@ These are the settings read:
 - ``numfig``, ``numfig_secnum_depth`` and ``highlight_language``: how pages are rendered.
 - ``extensions``: how strictly the project's findings are reported (see below).
 - ``intersphinx_mapping`` and ``intersphinx_cache_limit``: the other sites the project links into, when ``extensions`` declares ``sphinx.ext.intersphinx`` (see :ref:`vscode-intersphinx`).
-- ``rst_prolog`` and ``rst_epilog``: text parsed at the start and the end of every document, typically substitutions. Only a literal string is read: an f-string such as CPython's ``rst_epilog`` is reported, and its substitutions stay undefined. A mistake in the text itself is shown at the start of each document it is parsed with.
+- ``rst_prolog`` and ``rst_epilog``: text parsed at the start and the end of every document, typically substitutions. Read without running ``conf.py``, only a literal string is taken: an f-string such as CPython's ``rst_epilog`` is reported, and its substitutions stay undefined. A mistake in the text itself is shown at the start of each document it is parsed with.
 
 - The sphinx-needs settings, when ``extensions`` declares ``sphinx_needs`` (see below).
 
@@ -104,6 +107,17 @@ A Sphinx project leans on extensions rinx does not run, such as autodoc. Reporte
 - A domain reference that resolves to nothing, such as ``:py:func:`spam.eggs```, is a *Hint* when a declared extension may define it: autodoc defines ``py`` objects. ``:ref:``, ``:doc:`` and every other reference stay warnings.
 
 Which extensions rinx knows, and what each one adds, is a table in the repository, ``crates/lsp/src/project/extension_profiles.toml``; teaching it another extension needs no Rust. An extension missing from the table is assumed to define objects of every domain, so it lowers every broken domain reference to a hint, but it explains no directive: nothing says which are its. The server names those extensions once, in a notification, when it first finds the project. The code of a lowered diagnostic is unchanged, so a ``.. noqa:`` still names it, and the build still reports it as a warning.
+
+.. _vscode-running-conf:
+
+Running ``conf.py``
+^^^^^^^^^^^^^^^^^^^
+
+A project that computes its settings — a version imported from the package it documents, an epilog built with an f-string, exclusions added inside an ``if`` — gets their exact values once the server may run its ``conf.py``. Turn on ``rinx.conf.execute``: the server then runs each ``conf.py`` whose reading fell short, and only those, and only in a workspace you trust: in an untrusted one the extension names no interpreter, whatever the settings say. It runs in ``rinx.conf.pythonPath`` when set — a command on the ``PATH``, or a path relative to the workspace folder — or else in the interpreter the Python extension has selected for the file.
+
+``conf.py`` runs as Sphinx runs it, in its own directory with ``__file__`` and an empty ``tags`` bound, and the server then takes every setting above from what it computed instead of from its text, checked as a literal would be. So none of the findings above is made, while a value of the wrong kind still is, on the line that assigns it. A value with no literal spelling, such as an object, is ``conf.unrepresentable-value``, and the setting keeps its default. If running fails — an exception, an import the interpreter cannot satisfy, more than 20 seconds — that is ``conf.execution-failed``, on the line it failed at, and ``conf.py`` is read as before. What ``conf.py`` prints is ignored.
+
+The status bar then says ``Sphinx project (docs/conf.py, run)``, and its tooltip names the interpreter. Saving ``conf.py``, or a module of the project it imported, runs it again, and so does granting trust, changing either setting, or selecting another interpreter. ``rinx lsp --check <folder> --python <interpreter>`` does the same from the command line.
 
 .. _vscode-intersphinx:
 

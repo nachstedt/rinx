@@ -9,6 +9,7 @@ use lsp_server::{Connection, Message};
 use lsp_types::notification::{Exit, Notification as _};
 use lsp_types::{ClientCapabilities, InitializeParams};
 
+use super::conf_runs::ConfExecution;
 use super::handlers::{handle_notification, handle_request, initialize_result};
 use super::scan::{ScanEvent, spawn_scan};
 use super::state::ServerState;
@@ -47,7 +48,9 @@ pub fn run(connection: &Connection) -> Result<()> {
         )
         .with_definition_links(supports_definition_links(&params.capabilities))
         .with_watched_files(supports_watched_files(&params.capabilities))
-        .with_inventory_fetching(fetches_inventories(&params));
+        .with_inventory_fetching(fetches_inventories(&params))
+        .with_conf_execution(conf_execution(&params));
+    let conf_runs = state.conf_run_events();
     let mut scan_events: Receiver<ScanEvent> = never();
     let roots = state.folder_roots();
     if !roots.is_empty() {
@@ -102,6 +105,7 @@ pub fn run(connection: &Connection) -> Result<()> {
                 scan_events = never();
                 Vec::new()
             },
+            recv(conf_runs) -> event => event.map(|event| state.on_conf_run(event)).unwrap_or_default(),
             recv(render_due) -> _ => state.render_next(),
         };
         for reply in replies {
@@ -130,6 +134,23 @@ fn fetches_inventories(params: &InitializeParams) -> bool {
         .and_then(|options| options.get("fetchInventories"))
         .and_then(serde_json::Value::as_bool)
         .unwrap_or(false)
+}
+
+/// Where `conf.py`'s interpreter comes from: the client, when it passes the
+/// `evaluateConf` initialization option, which the VS Code extension does —
+/// answering only in a trusted workspace that allows running `conf.py`.
+fn conf_execution(params: &InitializeParams) -> ConfExecution {
+    let asks = params
+        .initialization_options
+        .as_ref()
+        .and_then(|options| options.get("evaluateConf"))
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false);
+    if asks {
+        ConfExecution::AskClient
+    } else {
+        ConfExecution::Off
+    }
 }
 
 /// Whether the client takes `$/progress` reports for work the server starts.
@@ -197,6 +218,27 @@ mod tests {
     fn test_workspace_roots_is_empty_without_folders() {
         // When / Then
         assert!(workspace_roots(&InitializeParams::default()).is_empty());
+    }
+
+    #[test]
+    fn test_conf_execution_asks_only_a_client_passing_the_option() {
+        // Given
+        let asking = InitializeParams {
+            initialization_options: Some(serde_json::json!({"evaluateConf": true})),
+            ..InitializeParams::default()
+        };
+        let declining = InitializeParams {
+            initialization_options: Some(serde_json::json!({"evaluateConf": false})),
+            ..InitializeParams::default()
+        };
+
+        // When / Then
+        assert_eq!(conf_execution(&asking), ConfExecution::AskClient);
+        assert_eq!(conf_execution(&declining), ConfExecution::Off);
+        assert_eq!(
+            conf_execution(&InitializeParams::default()),
+            ConfExecution::Off
+        );
     }
 
     #[test]

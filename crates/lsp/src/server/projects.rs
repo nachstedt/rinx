@@ -25,7 +25,7 @@ use super::state::ServerState;
 use crate::diagnostics::conf_diagnostics;
 use crate::progress::{IndexState, IndexStatus, ProjectStatus};
 use crate::project::{
-    DiscoveredProject, Project, ProjectSource, contains_conf, discover_projects, is_conf,
+    DiscoveredProject, Project, ProjectSource, contains_conf, discover_projects_with, is_conf,
     is_visible_under, scan_projects,
 };
 use crate::uri::{file_path, file_uri};
@@ -81,7 +81,8 @@ impl ServerState {
         let Some(root) = self.folders.get(folder).cloned() else {
             return Vec::new();
         };
-        let replaced = self.replace_projects(folder, discover_projects(&root));
+        let discovered = discover_projects_with(&root, self.conf_runs.evaluations());
+        let replaced = self.replace_projects(folder, discovered);
         // A new project's documents, and those a kept one gained, are read
         // now; nothing else will.
         let mut ids = Vec::new();
@@ -133,7 +134,7 @@ impl ServerState {
                 .map(|(id, _)| *id);
             let id = if let Some(id) = same {
                 if let Some(known) = self.projects.get_mut(&id) {
-                    known.set_conf_findings(project.findings.clone(), project.conf_text.clone());
+                    known.set_conf_reading(&project);
                 }
                 unchanged.push((id, project));
                 id
@@ -195,6 +196,7 @@ impl ServerState {
             .collect();
         let added: Vec<ProjectId> = replaced.added.iter().map(|(id, _)| *id).collect();
         messages.extend(self.load_inventories(&added));
+        messages.extend(self.run_confs());
         if replaced.changed
             && let Some(root) = self.folders.get(folder).cloned()
         {
@@ -359,6 +361,10 @@ impl ServerState {
                 match &project.model().source {
                     ProjectSource::SphinxConf { conf } => Some(ProjectStatus::Sphinx {
                         conf: relative_name(root, conf),
+                        executed_with: self
+                            .conf_runs
+                            .executed_with(conf, project.conf_text())
+                            .map(|interpreter| interpreter.display().to_string()),
                     }),
                     ProjectSource::Folder if project.document_count() > 0 => {
                         Some(ProjectStatus::Folder {

@@ -57,8 +57,14 @@ pub struct IndexStatus {
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ProjectStatus {
     /// A Sphinx project, named by its `conf.py`'s path within its workspace
-    /// folder (`docs/conf.py`).
-    Sphinx { conf: String },
+    /// folder (`docs/conf.py`) — with the interpreter its settings come from
+    /// when it was run rather than read.
+    #[serde(rename_all = "camelCase")]
+    Sphinx {
+        conf: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        executed_with: Option<String>,
+    },
     /// The documents of a workspace folder under no `conf.py`, the folder
     /// named by its path's last component.
     Folder { root: String },
@@ -359,6 +365,11 @@ mod tests {
             projects: vec![
                 ProjectStatus::Sphinx {
                     conf: "docs/conf.py".to_string(),
+                    executed_with: None,
+                },
+                ProjectStatus::Sphinx {
+                    conf: "api/conf.py".to_string(),
+                    executed_with: Some("/venv/bin/python".to_string()),
                 },
                 ProjectStatus::Folder {
                     root: "rinx".to_string(),
@@ -378,6 +389,7 @@ mod tests {
                 "elapsedMs": 800,
                 "projects": [
                     {"kind": "sphinx", "conf": "docs/conf.py"},
+                    {"kind": "sphinx", "conf": "api/conf.py", "executedWith": "/venv/bin/python"},
                     {"kind": "folder", "root": "rinx"},
                 ],
             })

@@ -8,8 +8,9 @@
 //!
 //! [`state`] holds what the server remembers and turns a change into the
 //! diagnostics to publish, with [`projects`] keeping the workspace's projects
-//! and routing each file to one and [`inventories`] getting their
-//! intersphinx inventories in; [`handlers`] are the pure functions from one
+//! and routing each file to one, [`inventories`] getting their
+//! intersphinx inventories in and [`conf_runs`] running their `conf.py` where
+//! that is allowed; [`handlers`] are the pure functions from one
 //! message to the replies, and [`run`] is the loop around them. [`scan`] is
 //! the thread scanning the workspace beside the loop; the file-system
 //! events the client reports reach [`state`] like any other notification.
@@ -17,6 +18,7 @@
 //! measuring a corpus rather than serving an editor.
 
 mod check;
+mod conf_runs;
 mod handlers;
 mod inventories;
 mod projects;
@@ -26,6 +28,9 @@ mod state;
 
 #[cfg(test)]
 mod completion_tests;
+// The interpreter the tests run is a shell script.
+#[cfg(all(test, unix))]
+mod conf_run_tests;
 #[cfg(test)]
 mod definition_tests;
 #[cfg(test)]

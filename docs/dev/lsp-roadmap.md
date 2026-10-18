@@ -33,8 +33,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
   #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
-  #14 (PR #300) and #15 (PR #305).
-- **Next: #16, executing `conf.py` in a trusted workspace.**
+  #14 (PR #300), #15 (PR #305) and #16.
+- **Next: #17, other editors.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -463,7 +463,7 @@ directives, and `conf.py` shows the twelve constructs the benchmark's report
 lists. Not done here: the demo's documents are Jinja templates, which the
 server reads only with #20, and completion inside a relation option is #27's.
 
-### 16. Executing `conf.py` in a trusted workspace (opt-in)
+### 16. Executing `conf.py` in a trusted workspace (opt-in) ✅
 
 **You experience:** projects with computed settings get exact values.
 
@@ -472,6 +472,33 @@ server reads only with #20, and completion inside a relation option is #27's.
 - Dump script: run `conf.py` with Sphinx-like globals (`tags`), print whitelisted names as JSON
 - Merge over the static values; report errors
 - Tests
+
+The editor grants a run and the server runs it (ADR-038 §4). For each
+`conf.py` whose reading fell short — a computed or modified setting, a
+wildcard import, a syntax error — the server asks a client passing the
+`evaluateConf` initialization option with a `rinx/confInterpreter` request.
+The extension answers only in a trusted workspace with `rinx.conf.execute` on,
+naming `rinx.conf.pythonPath` or else the Python extension's interpreter, and
+sends `rinx/confInterpreterChanged` when trust, a setting or the interpreter
+changes. The script, `conf_dump.py`, is embedded in the binary and started as
+`python -c` on a thread, with a 20 s timeout, so `rinx lsp --check <folder>
+--python <exe>` runs it too. It runs `conf.py` as Sphinx's `eval_config_file`
+does and prints each setting as its `repr`, which the server reads back with
+`rinx_pyconf`'s literal reader. The reader's per-setting checks therefore
+apply unchanged, and a value no literal spells is `conf.unrepresentable-value`.
+A successful run is authoritative for every setting, so none of the reading's
+`conf.*` findings is made; a failed one is `conf.execution-failed` on its line,
+beside them. A `conf.py` saved since, or a project module it imported, runs
+again. The status bar says `Sphinx project (docs/conf.py, run)`.
+
+Measured on CPython's 524 documents with Sphinx 9.0.4 installed: `--check`
+still takes 10 s, `conf.py` shows nothing, and the warnings fall from 2566 to
+2548, `substitution.undefined` from 23 to 8. Without Sphinx and docutils the
+run fails at `from pyspecific import …` on line 19 and the reading stands.
+
+Not done here: the benchmark still checks without running `conf.py`, since its
+interpreter has no Sphinx. Saving `conf.py` shows the reading's findings until
+the new run arrives.
 
 ### 17. Other editors
 

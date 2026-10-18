@@ -83,6 +83,8 @@ pub struct Project {
     /// What reading `conf.py` found, positioned in [`Self::conf_text`].
     findings: Vec<Diagnostic>,
     conf_text: String,
+    /// Whether reading `conf.py` without running it fell short.
+    wants_conf_run: bool,
     /// The workspace folder the project was found in, by index.
     folder: usize,
     documents: BTreeMap<String, IndexedDocument>,
@@ -116,6 +118,7 @@ impl Project {
             findings,
             conf_text,
             sources: _,
+            wants_conf_run,
         } = discovered;
         let inventories = ProjectInventories::new(&model.settings.intersphinx);
         let strictness = model
@@ -130,6 +133,7 @@ impl Project {
             model,
             findings,
             conf_text,
+            wants_conf_run,
             folder,
             documents: BTreeMap::new(),
             fold: None,
@@ -230,11 +234,26 @@ impl Project {
         self.external = self.inventories.loaded().cloned().collect();
     }
 
-    /// Takes `findings`, and the `conf.py` text they are positioned in, as
-    /// what reading the project's `conf.py` now finds.
-    pub fn set_conf_findings(&mut self, findings: Vec<Diagnostic>, conf_text: String) {
-        self.findings = findings;
-        self.conf_text = conf_text;
+    /// Takes what `discovered`, the project found again with the same
+    /// model, found reading its `conf.py`: the findings, the text they are
+    /// positioned in, and whether running it would make it exact.
+    pub fn set_conf_reading(&mut self, discovered: &DiscoveredProject) {
+        self.findings.clone_from(&discovered.findings);
+        self.conf_text.clone_from(&discovered.conf_text);
+        self.wants_conf_run = discovered.wants_conf_run;
+    }
+
+    /// The text of `conf.py` as last read, empty for a folder.
+    #[must_use]
+    pub fn conf_text(&self) -> &str {
+        &self.conf_text
+    }
+
+    /// Whether reading the project's `conf.py` without running it fell short
+    /// for a setting the server reads.
+    #[must_use]
+    pub fn wants_conf_run(&self) -> bool {
+        self.wants_conf_run
     }
 
     /// The name of the document at `path` in this project, or `None` when
