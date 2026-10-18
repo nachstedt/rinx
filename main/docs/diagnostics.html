@@ -1189,6 +1189,14 @@ Its need directives stay unknown.</p>
 <p>A sphinx-needs construct the entity model has no equivalent for — a link
 computed by a function, a conditional <code>schemas.json</code> rule, variants, … —
 which the editor reads the project without.</p>
+<h3 id="conf-execution-failed">conf.execution-failed</h3>
+<p><code>conf.py</code> could not be run, in a trusted workspace that allows running it: it
+raised an exception, did not finish in time, or did not print its settings. The
+editor reads it without running it, as it does when running is not allowed.</p>
+<h3 id="conf-unrepresentable-value">conf.unrepresentable-value</h3>
+<p>A setting <code>conf.py</code> computed, when run, to a value with no literal spelling —
+an object, a function — which the editor cannot take: the setting keeps its
+default.</p>
 <h2 id="noqa">noqa</h2>
 <h3 id="noqa-unknown-code">noqa.unknown-code</h3>
 <p>A <code>.. noqa:</code> comment naming an id that is not a diagnostic code. Never

@@ -136,6 +136,12 @@
 </li>
 <li><p><code>rinx.trace.server</code>: <code>off</code>, <code>messages</code> or <code>verbose</code>; traces the language server's protocol traffic into the <em>Rinx</em> output channel.</p>
 </li>
+<li><p><code>rinx.inventories.download</code>: <code>ask</code>, <code>always</code> or <code>never</code>; whether the language server may download the inventories a Sphinx project links into (see <a href="vscode.html#vscode-intersphinx">Inventories</a>).</p>
+</li>
+<li><p><code>rinx.conf.execute</code>: whether the language server may run a Sphinx project's <code>conf.py</code> (default: off; see <a href="vscode.html#vscode-running-conf">Running conf.py</a>).</p>
+</li>
+<li><p><code>rinx.conf.pythonPath</code>: the Python interpreter <code>conf.py</code> runs in; when empty, the one selected with the Python extension.</p>
+</li>
 </ul>
 <h3 id="the-preview-pipeline-as-you-type">2. The Preview Pipeline (As-You-Type)</h3>
 <p>When the user edits a <code>.rst</code> file, the extension executes the following pipeline:</p>
@@ -164,7 +170,7 @@
 <a id="vscode-sphinx-projects"></a>
 <h4 id="sphinx-projects">Sphinx projects</h4>
 <p>A directory holding a <code>conf.py</code> is a Sphinx project, and every file belongs to the nearest project above it. What lies under no <code>conf.py</code> stays the workspace folder's own project. The status bar then names the project, for example <code>rinx: Sphinx project (docs/conf.py) · 512 docs (0.8 s)</code>, and its tooltip lists every project.</p>
-<p>The server reads <code>conf.py</code> without running it, since running it would need the project's Python and its extensions, and would run code you have not chosen to trust. It takes each setting below where it is written as a literal: a string, a number, <code>True</code>, <code>False</code>, <code>None</code>, or a list, tuple or dict of those. Every setting it cannot take as written is reported in <code>conf.py</code> itself:</p>
+<p>By default the server reads <code>conf.py</code> without running it, since running it needs the project's Python and its extensions, and runs code you have not chosen to trust (see <a href="vscode.html#vscode-running-conf">Running conf.py</a> to let it). It takes each setting below where it is written as a literal: a string, a number, <code>True</code>, <code>False</code>, <code>None</code>, or a list, tuple or dict of those. Every setting it cannot take as written is reported in <code>conf.py</code> itself:</p>
 <ul>
 <li><p><code>conf.unread-setting</code>: the value is computed or imported, so the setting keeps its default.</p>
 </li>
@@ -195,7 +201,7 @@
 </li>
 <li><p><code>intersphinx_mapping</code> and <code>intersphinx_cache_limit</code>: the other sites the project links into, when <code>extensions</code> declares <code>sphinx.ext.intersphinx</code> (see <a href="vscode.html#vscode-intersphinx">Inventories</a>).</p>
 </li>
-<li><p><code>rst_prolog</code> and <code>rst_epilog</code>: text parsed at the start and the end of every document, typically substitutions. Only a literal string is read: an f-string such as CPython's <code>rst_epilog</code> is reported, and its substitutions stay undefined. A mistake in the text itself is shown at the start of each document it is parsed with.</p>
+<li><p><code>rst_prolog</code> and <code>rst_epilog</code>: text parsed at the start and the end of every document, typically substitutions. Read without running <code>conf.py</code>, only a literal string is taken: an f-string such as CPython's <code>rst_epilog</code> is reported, and its substitutions stay undefined. A mistake in the text itself is shown at the start of each document it is parsed with.</p>
 </li>
 <li><p>The sphinx-needs settings, when <code>extensions</code> declares <code>sphinx_needs</code> (see below).</p>
 </li>
@@ -219,6 +225,11 @@
 </li>
 </ul>
 <p>Which extensions rinx knows, and what each one adds, is a table in the repository, <code>crates/lsp/src/project/extension_profiles.toml</code>; teaching it another extension needs no Rust. An extension missing from the table is assumed to define objects of every domain, so it lowers every broken domain reference to a hint, but it explains no directive: nothing says which are its. The server names those extensions once, in a notification, when it first finds the project. The code of a lowered diagnostic is unchanged, so a <code>.. noqa:</code> still names it, and the build still reports it as a warning.</p>
+<a id="vscode-running-conf"></a>
+<h4 id="running-conf-py">Running <code>conf.py</code></h4>
+<p>A project that computes its settings — a version imported from the package it documents, an epilog built with an f-string, exclusions added inside an <code>if</code> — gets their exact values once the server may run its <code>conf.py</code>. Turn on <code>rinx.conf.execute</code>: the server then runs each <code>conf.py</code> whose reading fell short, and only those, and only in a workspace you trust: in an untrusted one the extension names no interpreter, whatever the settings say. It runs in <code>rinx.conf.pythonPath</code> when set — a command on the <code>PATH</code>, or a path relative to the workspace folder — or else in the interpreter the Python extension has selected for the file.</p>
+<p><code>conf.py</code> runs as Sphinx runs it, in its own directory with <code>__file__</code> and an empty <code>tags</code> bound, and the server then takes every setting above from what it computed instead of from its text, checked as a literal would be. So none of the findings above is made, while a value of the wrong kind still is, on the line that assigns it. A value with no literal spelling, such as an object, is <code>conf.unrepresentable-value</code>, and the setting keeps its default. If running fails — an exception, an import the interpreter cannot satisfy, more than 20 seconds — that is <code>conf.execution-failed</code>, on the line it failed at, and <code>conf.py</code> is read as before. What <code>conf.py</code> prints is ignored.</p>
+<p>The status bar then says <code>Sphinx project (docs/conf.py, run)</code>, and its tooltip names the interpreter. Saving <code>conf.py</code>, or a module of the project it imported, runs it again, and so does granting trust, changing either setting, or selecting another interpreter. <code>rinx lsp --check &lt;folder&gt; --python &lt;interpreter&gt;</code> does the same from the command line.</p>
 <a id="vscode-intersphinx"></a>
 <h4 id="inventories">Inventories</h4>
 <p>A Sphinx project declaring <code>sphinx.ext.intersphinx</code> links into the sites its <code>intersphinx_mapping</code> names, so <code>:py:class:`dict`</code> leads to Python's documentation. The editor resolves those references too: hovering one shows the address it leads to. It needs each site's <code>objects.inv</code>, read from where the mapping says, as Sphinx reads it:</p>
