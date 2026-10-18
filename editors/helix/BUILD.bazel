@@ -1,0 +1,3 @@
+# The configuration docs/editors.rst shows with `.. literalinclude::`, and
+# editors/run-tests.sh runs in the editor.
+exports_files(["languages.toml"])

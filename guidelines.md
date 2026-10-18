@@ -174,6 +174,8 @@ entry under the heading it belongs to, as a single short sentence.
 - Before 1.0, rename an attribute outright rather than keeping the old spelling as an alias: one honest name is worth more than the churn of updating every call site.
 - A test that proves a build declaration is load-bearing must also force the affected action to re-run, since Bazel does not invalidate an action when an input is merely removed.
 - Resolve a tool from `PATH` in a test script rather than hardcoding its install location.
+- Test every integration the documentation promises in CI rather than leaving it to a check by hand, including the editors other than the one we ship for.
+- Keep a configuration snippet the documentation shows in a file that a test runs and the page includes, so the two cannot drift.
 - In docs/compatibility.rst, mark a row 🔶 partial only while something we still intend to implement is missing; a feature whose remaining differences are all deliberate is ✅ ℹ️.
 - A difference left out only to keep a change small is a gap, not a deliberate deviation, however easy it would be to add.
 - Keep compatibility notes to brief bullets naming only what is missing or deviates, never explaining how something works.

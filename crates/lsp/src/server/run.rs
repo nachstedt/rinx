@@ -7,7 +7,8 @@ use anyhow::{Context, Result, bail};
 use crossbeam_channel::{Receiver, after, never, select, unbounded};
 use lsp_server::{Connection, Message};
 use lsp_types::notification::{Exit, Notification as _};
-use lsp_types::{ClientCapabilities, InitializeParams};
+use lsp_types::{ClientCapabilities, InitializeParams, Uri, WorkspaceFolder};
+use serde::Deserialize;
 
 use super::conf_runs::ConfExecution;
 use super::handlers::{handle_notification, handle_request, initialize_result};
@@ -36,6 +37,8 @@ const RENDER_DELAY: Duration = Duration::from_millis(300);
 /// the client disconnects while a message is being sent.
 pub fn run(connection: &Connection) -> Result<()> {
     let (initialize_id, params) = connection.initialize_start()?;
+    let roots: InitializeRoots =
+        serde_json::from_value(params.clone()).context("invalid initialize parameters")?;
     let params: InitializeParams =
         serde_json::from_value(params).context("invalid initialize parameters")?;
     let (result, encoding) = initialize_result(&params.capabilities);
@@ -43,7 +46,7 @@ pub fn run(connection: &Connection) -> Result<()> {
 
     let mut state = ServerState::new(encoding)
         .with_workspace(
-            workspace_roots(&params),
+            workspace_roots(&roots),
             supports_progress(&params.capabilities),
         )
         .with_definition_links(supports_definition_links(&params.capabilities))
@@ -114,15 +117,31 @@ pub fn run(connection: &Connection) -> Result<()> {
     }
 }
 
+/// Where the client says its workspace is: its folders, or the single root
+/// of a client predating them.
+///
+/// Read apart from [`InitializeParams`], which marks `rootUri` deprecated —
+/// yet clients still send it alone, and the protocol has a server fall back
+/// to it when `workspaceFolders` is absent.
+#[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct InitializeRoots {
+    workspace_folders: Option<Vec<WorkspaceFolder>>,
+    root_uri: Option<Uri>,
+}
+
 /// The root of every workspace folder the client opened, as an absolute
-/// path. A folder that is not on this machine is left out.
-fn workspace_roots(params: &InitializeParams) -> Vec<PathBuf> {
-    params
-        .workspace_folders
-        .iter()
-        .flatten()
-        .filter_map(|folder| file_path(&folder.uri))
-        .collect()
+/// path, or of its `rootUri` when it sent no folder list at all — an empty
+/// list means no folder is open. A folder that is not on this machine is
+/// left out.
+fn workspace_roots(roots: &InitializeRoots) -> Vec<PathBuf> {
+    match &roots.workspace_folders {
+        Some(folders) => folders
+            .iter()
+            .filter_map(|folder| file_path(&folder.uri))
+            .collect(),
+        None => roots.root_uri.iter().filter_map(file_path).collect(),
+    }
 }
 
 /// Whether the client downloads inventories for the server, as the VS Code
@@ -186,7 +205,7 @@ fn supports_watched_files(capabilities: &ClientCapabilities) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lsp_types::{Uri, WindowClientCapabilities, WorkspaceFolder};
+    use lsp_types::WindowClientCapabilities;
 
     fn folder(uri: &str) -> WorkspaceFolder {
         WorkspaceFolder {
@@ -195,21 +214,26 @@ mod tests {
         }
     }
 
+    /// The roots read from an `initialize` request's `params`.
+    fn roots_of(params: serde_json::Value) -> Vec<PathBuf> {
+        let roots: InitializeRoots = serde_json::from_value(params).expect("valid roots");
+        workspace_roots(&roots)
+    }
+
     #[test]
     fn test_workspace_roots_reads_every_local_folder() {
         // Given
-        let params = InitializeParams {
-            workspace_folders: Some(vec![
+        let params = serde_json::json!({
+            "workspaceFolders": [
                 folder("file:///work/docs"),
                 folder("vscode-vfs://github/remote"),
                 folder("file:///work/other"),
-            ]),
-            ..InitializeParams::default()
-        };
+            ],
+        });
 
         // When / Then
         assert_eq!(
-            workspace_roots(&params),
+            roots_of(params),
             [PathBuf::from("/work/docs"), PathBuf::from("/work/other")]
         );
     }
@@ -217,7 +241,49 @@ mod tests {
     #[test]
     fn test_workspace_roots_is_empty_without_folders() {
         // When / Then
-        assert!(workspace_roots(&InitializeParams::default()).is_empty());
+        assert!(roots_of(serde_json::json!({})).is_empty());
+    }
+
+    #[test]
+    fn test_workspace_roots_falls_back_to_the_root_uri_without_folders() {
+        // Given
+        let params = serde_json::json!({ "rootUri": "file:///work/docs" });
+
+        // When / Then
+        assert_eq!(roots_of(params), [PathBuf::from("/work/docs")]);
+    }
+
+    #[test]
+    fn test_workspace_roots_prefers_the_folders_over_the_root_uri() {
+        // Given
+        let params = serde_json::json!({
+            "workspaceFolders": [folder("file:///work/other")],
+            "rootUri": "file:///work/docs",
+        });
+
+        // When / Then
+        assert_eq!(roots_of(params), [PathBuf::from("/work/other")]);
+    }
+
+    #[test]
+    fn test_workspace_roots_takes_an_empty_folder_list_as_no_folder() {
+        // Given
+        let params = serde_json::json!({
+            "workspaceFolders": [],
+            "rootUri": "file:///work/docs",
+        });
+
+        // When / Then
+        assert!(roots_of(params).is_empty());
+    }
+
+    #[test]
+    fn test_workspace_roots_reads_a_null_root_uri_as_none() {
+        // Given
+        let params = serde_json::json!({ "workspaceFolders": null, "rootUri": null });
+
+        // When / Then
+        assert!(roots_of(params).is_empty());
     }
 
     #[test]

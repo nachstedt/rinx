@@ -727,6 +727,89 @@ fn test_lsp_runs_conf_py_in_the_interpreter_its_client_names() {
 }
 
 #[test]
+fn test_lsp_serves_a_client_announcing_only_what_the_protocol_requires() {
+    // Given — what an editor other than VS Code may send: a `rootUri` and no
+    // folders, no progress, no watcher registration, no initialization
+    // options, and a list of encodings led by one the server does not speak
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_minimal_client");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    std::fs::write(
+        root.join("setup.rst"),
+        ".. _install:\n\nInstalling\n==========\n",
+    )
+    .expect("write");
+    let notes = format!("file://{}", root.join("notes.rst").display());
+    let mut server = Server::spawn();
+    let initialized = server.initialize_with(json!({
+        "capabilities": { "general": { "positionEncodings": ["utf-8", "utf-32"] } },
+        "rootUri": format!("file://{}", root.display()),
+    }));
+    let mut before_ready = Vec::new();
+    loop {
+        let message = server.receive();
+        let ready = matches!(
+            &message,
+            Message::Notification(notification)
+                if notification.method == "rinx/status" && notification.params["state"] == "ready"
+        );
+        before_ready.push(message);
+        if ready {
+            break;
+        }
+    }
+
+    // When — a document referencing a label of the scanned folder after a
+    // character outside the Basic Multilingual Plane, then a hover on it
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": notes, "languageId": "rst", "version": 1,
+            "text": "\u{1F600} See :ref:`install`.\n\n.. foo::\n",
+        }}),
+    );
+    let published = server.published_until(&notes);
+    server.request(
+        2,
+        "textDocument/hover",
+        json!({
+            "textDocument": { "uri": notes },
+            "position": { "line": 0, "character": 9 },
+        }),
+    );
+    let mut after_open = Vec::new();
+    let hovered = loop {
+        match server.receive() {
+            Message::Response(response) => break response,
+            other => after_open.push(other),
+        }
+    };
+
+    // Then — UTF-32 is agreed, the root is scanned, and the server asks the
+    // client for nothing it did not announce
+    let result = initialized.response_result.expect("initialized");
+    assert_eq!(result["capabilities"]["positionEncoding"], "utf-32");
+    let opened = published.last().expect("the document's diagnostics");
+    assert_eq!(codes(opened), vec!["directive.unknown"]);
+    let hover = hovered.response_result.expect("a hover");
+    let markdown = hover["contents"]["value"].as_str().expect("markdown");
+    assert!(markdown.starts_with("**Installing**"), "{markdown}");
+    assert_eq!(
+        hover["range"]["start"],
+        json!({ "line": 0, "character": 6 })
+    );
+    let requests: Vec<_> = before_ready
+        .iter()
+        .chain(&after_open)
+        .filter_map(|message| match message {
+            Message::Request(request) => Some(request.method.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert!(requests.is_empty(), "{requests:?}");
+}
+
+#[test]
 fn test_lsp_exits_with_success_after_shutdown_and_exit() {
     // Given
     let mut server = Server::spawn();

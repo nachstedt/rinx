@@ -33,8 +33,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
   #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
-  #14 (PR #300), #15 (PR #305) and #16 (PR #311).
-- **Next: #17, other editors.**
+  #14 (PR #300), #15 (PR #305), #16 (PR #311) and #17.
+- **Next: #18, the `lsp_manifest` output group and the Bazel source.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -63,6 +63,7 @@ Every step's "Tests" item includes the following:
 - **Handler tests** in `rinx_lsp`.
 - **A stdio test** (`crates/worker/tests/integration/lsp.rs`) when the step changes the protocol surface.
 - **An end-to-end test** through real VS Code (`editors/vscode/src/test/e2e/`) when the step is something an author can see.
+- **An editor test** in Neovim, Emacs and Helix (`editors/run-tests.sh`) when the step changes what every client sees, rather than the VS Code extension alone.
 - **Parity work**: narrowing the parity test's relaxations (`lsp_parity.rs`) when the step closes a gap it names.
 
 CI runs all of these on every pull request.
@@ -500,13 +501,35 @@ Not done here: the benchmark still checks without running `conf.py`, since its
 interpreter has no Sphinx. Saving `conf.py` shows the reading's findings until
 the new run arrives.
 
-### 17. Other editors
+### 17. Other editors ✅
 
 **You experience:** `rinx lsp` works in Neovim, Helix and Emacs.
 
 - `docs/editors.rst` with configuration snippets
 - Toctree entry
 - Check by hand in Neovim
+
+Each snippet is a file under `editors/` (`neovim/rinx.lua`,
+`helix/languages.toml`, `emacs/rinx-eglot.el`): the page shows it with
+`.. literalinclude::`, and CI runs that same file in its editor, so the two
+cannot drift. `editors/run-tests.sh <editor>` copies
+`editors/test-fixtures/workspace` out of the repository and drives the editor
+against a `rinx` put first on the `PATH`. The `Editors` jobs run it against
+CI's binary on Neovim 0.11 and 0.12 and on Emacs 29 and 31. These check
+diagnostics, hover, definition and completion through each editor's own
+client. Helix has no scripting interface, so its job runs `hx --health rst`
+and then a real session in a detached tmux, reading the diagnostics from
+Helix's log; its hover, definition and completion stay checks by hand.
+
+The server needed one change: a client sending only `rootUri`, with no
+`workspaceFolders`, now gets its folder scanned rather than no workspace at
+all. A stdio test speaks as such a minimal client: no progress, no watcher
+registration, no initialization options, and `utf-8` offered first. It checks
+that the server agrees on `utf-32` and asks the client for nothing it did not
+announce. On Linux, Neovim announces no file watching, so the page says how to
+turn it on. Downloading inventories, running `conf.py`, the preview and the
+status bar remain VS Code's. The page lists the opt-in protocol extensions
+another client would implement for the first two.
 
 ---
 
