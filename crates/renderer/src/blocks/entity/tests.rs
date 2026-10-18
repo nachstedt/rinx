@@ -70,6 +70,7 @@ fn paragraph(text: &str) -> Node {
 
 fn requirement() -> EntityBody {
     EntityBody {
+        relation_spans: BTreeMap::new(),
         type_name: "req".to_string(),
         id: EntityId::new("REQ_001").unwrap(),
         attributes: BTreeMap::from([
@@ -103,6 +104,7 @@ fn requirement() -> EntityBody {
 /// that gives the record a *different* value to prove the index wins.
 fn requirement_record() -> EntityRecord {
     EntityRecord {
+        relation_spans: BTreeMap::new(),
         type_name: "req".to_string(),
         doc_path: "specs/boot".to_string(),
         title: Some("Boot quickly".to_string()),
@@ -124,6 +126,7 @@ fn index() -> ProjectIndex {
     index.entities.insert(
         EntityId::new("SPEC_003").unwrap(),
         EntityRecord {
+            relation_spans: BTreeMap::new(),
             type_name: "spec".to_string(),
             doc_path: "specs/detail".to_string(),
             title: None,
@@ -135,6 +138,7 @@ fn index() -> ProjectIndex {
     index.entities.insert(
         EntityId::new("REQ_002").unwrap(),
         EntityRecord {
+            relation_spans: BTreeMap::new(),
             type_name: "req".to_string(),
             doc_path: "specs/other".to_string(),
             title: None,
@@ -264,6 +268,7 @@ fn test_render_attributes_prefers_the_index_record_over_the_ast() {
     index.entities.insert(
         EntityId::new("REQ_001").unwrap(),
         EntityRecord {
+            relation_spans: BTreeMap::new(),
             type_name: "req".to_string(),
             doc_path: "specs/boot".to_string(),
             title: Some("Boot quickly".to_string()),
@@ -429,6 +434,7 @@ fn test_render_links_prefers_the_update_history_current_targets() {
     index.entities.insert(
         EntityId::new("SPEC_004").unwrap(),
         EntityRecord {
+            relation_spans: BTreeMap::new(),
             type_name: "spec".to_string(),
             doc_path: "specs/other-detail".to_string(),
             title: None,
@@ -715,6 +721,7 @@ fn test_a_template_reads_the_effective_attribute_value_not_the_ast() {
     index.entities.insert(
         EntityId::new("REQ_001").unwrap(),
         EntityRecord {
+            relation_spans: BTreeMap::new(),
             type_name: "req".to_string(),
             doc_path: "specs/boot".to_string(),
             title: Some("Boot quickly".to_string()),
@@ -743,6 +750,7 @@ fn test_a_template_reads_the_effective_outgoing_targets() {
     index.entities.insert(
         EntityId::new("SPEC_004").unwrap(),
         EntityRecord {
+            relation_spans: BTreeMap::new(),
             type_name: "spec".to_string(),
             doc_path: "specs/other-detail".to_string(),
             title: None,

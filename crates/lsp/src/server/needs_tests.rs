@@ -199,3 +199,51 @@ fn test_a_need_role_completes_the_projects_need_ids() {
         .collect();
     assert_eq!(shown, [("R_1", Some("Brakes"))]);
 }
+
+#[test]
+fn test_a_relation_to_a_need_no_document_declares_is_reported() {
+    // Given a link option, and a spec linking to a requirement nobody wrote
+    let ubproject =
+        format!("{UBPROJECT}[[needs.types]]\ndirective = \"spec\"\n\n[needs.links.implements]\n");
+    let specs = "Specs\n=====\n\n.. spec:: Pads\n   :id: S_1\n   :implements: R_GHOST\n";
+    let (workspace, mut state) = scanned(
+        "needs_unknown_target",
+        &[
+            ("conf.py", CONF),
+            ("ubproject.toml", ubproject.as_str()),
+            ("index.rst", specs),
+        ],
+    );
+    let opened = handle_notification(&mut state, workspace.open("index.rst", specs));
+
+    // When
+    let rendered = render_all(&mut state);
+
+    // Then — the parse cannot know; the fold of the project can, and names
+    // the `:implements:` line, the one to change
+    assert_eq!(
+        codes(&workspace, &opened, "index.rst"),
+        Vec::<String>::new()
+    );
+    let uri = workspace.uri("index.rst");
+    let published = rendered
+        .iter()
+        .filter(|reply| {
+            matches!(reply, Message::Notification(n) if n.method == PublishDiagnostics::METHOD)
+        })
+        .map(published)
+        .filter(|params| params.uri == uri)
+        .last()
+        .expect("the render publishes index.rst");
+    let found: Vec<(String, u32)> = published
+        .diagnostics
+        .iter()
+        .map(|diagnostic| {
+            let Some(NumberOrString::String(code)) = &diagnostic.code else {
+                panic!("a code");
+            };
+            (code.clone(), diagnostic.range.start.line)
+        })
+        .collect();
+    assert_eq!(found, [("entity.unknown-target".to_string(), 5)]);
+}

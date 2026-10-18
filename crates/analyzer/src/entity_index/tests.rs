@@ -48,6 +48,7 @@ fn entity(id: &str, type_name: &str, outgoing: &[(&str, &[&str])]) -> (EntityId,
             })
             .collect(),
         uml: BTreeMap::new(),
+        relation_spans: BTreeMap::new(),
     };
     (EntityId::new(id).unwrap(), record)
 }
@@ -69,6 +70,7 @@ fn id(raw: &str) -> EntityId {
 fn test_index_entity_records_what_a_reader_of_the_index_needs() {
     // Given
     let body = EntityBody {
+        relation_spans: BTreeMap::new(),
         type_name: "req".to_string(),
         id: id("REQ_001"),
         attributes: BTreeMap::from([(
@@ -96,6 +98,7 @@ fn test_index_entity_records_what_a_reader_of_the_index_needs() {
 fn test_index_entity_keeps_no_section_prose() {
     // Given — a listing needs fields, not paragraphs, and the index is bounded
     let body = EntityBody {
+        relation_spans: BTreeMap::new(),
         type_name: "req".to_string(),
         id: id("REQ_001"),
         attributes: BTreeMap::new(),
@@ -246,6 +249,58 @@ fn test_collect_diagnostics_reports_a_target_no_document_declares() {
         DiagnosticCode::EntityUnknownTarget
     );
     assert!(reported[0].diagnostics[0].message.contains("NOWHERE"));
+}
+
+/// The span of line `line` of the document, from its fourth column.
+fn line_span(line: u32) -> rinx_ast::Span {
+    rinx_ast::Span::new(
+        rinx_ast::Position::new(line, 4),
+        rinx_ast::Position::new(line, 30),
+    )
+}
+
+#[test]
+fn test_collect_diagnostics_reports_a_written_target_on_its_option_line() {
+    // Given — `:links: NOWHERE` written on line 4
+    let (id, mut record) = entity("REQ_001", "req", &[("links", &["NOWHERE"])]);
+    record
+        .relation_spans
+        .insert("links".to_string(), line_span(4));
+    let index = index_of(vec![(id, record)]);
+
+    // When
+    let reported = collect_entity_diagnostics(&index, &schema());
+
+    // Then — the line an author has to change, not the document's start
+    assert_eq!(reported[0].diagnostics[0].span, Some(line_span(4)));
+}
+
+#[test]
+fn test_collect_diagnostics_reports_an_appended_target_without_a_line() {
+    // Given — an `.. entity-update::` elsewhere appended `NOWHERE` to the
+    // `:links:` written on line 4
+    let (id, mut record) = entity("REQ_001", "req", &[("links", &["SPEC_1"])]);
+    record
+        .relation_spans
+        .insert("links".to_string(), line_span(4));
+    let mut index = index_of(vec![(id.clone(), record), entity("SPEC_1", "spec", &[])]);
+    let mut history = rinx_index::EntityFieldHistory::default();
+    history.relations.insert(
+        "links".to_string(),
+        rinx_index::RelationFieldHistory {
+            original: vec![self::id("SPEC_1")],
+            applied: Vec::new(),
+            current: vec![self::id("SPEC_1"), self::id("NOWHERE")],
+        },
+    );
+    index.entity_update_history.insert(id, history);
+
+    // When
+    let reported = collect_entity_diagnostics(&index, &schema());
+
+    // Then — the update may sit in another document, so no line of this one
+    assert_eq!(reported[0].diagnostics.len(), 1);
+    assert_eq!(reported[0].diagnostics[0].span, None);
 }
 
 #[test]
@@ -403,13 +458,25 @@ fn test_collect_schema_mismatches_reports_a_schema_the_build_does_not_have() {
 // ── entity_diagnostic ───────────────────────────────────────────────
 
 #[test]
-fn test_entity_diagnostic_reports_no_position() {
-    // Given — the merged index holds no source lines, so none is honest
-    let diagnostic = entity_diagnostic(DiagnosticCode::EntityUnknownTarget, "why".to_string());
+fn test_entity_diagnostic_is_at_the_span_it_is_given_or_none() {
+    // Given
+    let span = rinx_ast::Span::new(
+        rinx_ast::Position::new(4, 4),
+        rinx_ast::Position::new(4, 30),
+    );
 
-    // When / Then
-    assert_eq!(diagnostic.span, None);
-    assert_eq!(diagnostic.message, "why");
+    // When
+    let placed = entity_diagnostic(
+        DiagnosticCode::EntityUnknownTarget,
+        "why".to_string(),
+        Some(span),
+    );
+    let unplaced = entity_diagnostic(DiagnosticCode::EntityUnknownTarget, "why".to_string(), None);
+
+    // Then
+    assert_eq!(placed.span, Some(span));
+    assert_eq!(unplaced.span, None);
+    assert_eq!(placed.message, "why");
 }
 
 #[test]
@@ -421,6 +488,7 @@ fn test_group_produces_one_entry_per_document() {
             vec![entity_diagnostic(
                 DiagnosticCode::EntityUnknownTarget,
                 "one".to_string(),
+                None,
             )],
         ),
         (
@@ -428,6 +496,7 @@ fn test_group_produces_one_entry_per_document() {
             vec![entity_diagnostic(
                 DiagnosticCode::EntityUnknownTarget,
                 "two".to_string(),
+                None,
             )],
         ),
     ]);

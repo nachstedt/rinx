@@ -108,7 +108,12 @@ mod tests {
                     "conf.py",
                     "import os\nextensions = ['sphinx.ext.autodoc']\nroot_doc = os.getenv('R')\n",
                 ),
-                ("index.rst", "Home\n====\n\n.. automodule:: spam\n"),
+                // Listing `api` keeps it from being an orphan, a third tier's
+                // finding this test is not about.
+                (
+                    "index.rst",
+                    "Home\n====\n\n.. toctree::\n\n   api\n\n.. automodule:: spam\n",
+                ),
                 ("api.rst", "API\n===\n\nSee :py:func:`spam.eggs`.\n"),
             ],
         );

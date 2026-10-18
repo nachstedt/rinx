@@ -18,6 +18,7 @@ fn project() -> ProjectIndex {
         index.entities.insert(
             EntityId::new(id).expect("a valid id"),
             EntityRecord {
+                relation_spans: BTreeMap::new(),
                 type_name: "req".to_string(),
                 doc_path: "specs".to_string(),
                 title: Some(id.to_string()),

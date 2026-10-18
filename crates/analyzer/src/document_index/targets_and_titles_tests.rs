@@ -1111,6 +1111,7 @@ fn test_analyze_records_a_code_block_caption_for_its_name() {
 fn test_analyze_records_an_entity_anchor_for_its_target() {
     // Given — an entity renders at `entity-<id>`, not at its lowercased name
     let body = rinx_ast::EntityBody {
+        relation_spans: std::collections::BTreeMap::new(),
         type_name: "req".to_string(),
         id: rinx_ast::EntityId::new("REQ_001").unwrap(),
         attributes: std::collections::BTreeMap::new(),

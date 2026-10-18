@@ -1,0 +1,11 @@
+[[needs.types]]
+directive = "req"
+title = "Requirement"
+
+[[needs.types]]
+directive = "spec"
+title = "Specification"
+
+[needs.links.implements]
+outgoing = "implements"
+incoming = "is implemented by"

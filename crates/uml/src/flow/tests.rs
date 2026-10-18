@@ -36,6 +36,7 @@ fn schema() -> EntitySchema {
 /// One entity of `type_name` on `doc_path`, with the outgoing edges given.
 fn entity(type_name: &str, title: &str, outgoing: &[(&str, &[&str])]) -> EntityRecord {
     EntityRecord {
+        relation_spans: BTreeMap::new(),
         type_name: type_name.to_string(),
         doc_path: "specs".to_string(),
         title: Some(title.to_string()),

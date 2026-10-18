@@ -238,6 +238,9 @@ fn an_imported_entity_carries_the_same_body_a_written_one_does() {
         .map(rinx_ast::EntityId::as_str)
         .collect();
     assert_eq!(links, ["REQ_2"]);
+    // — save the line each relation was written on: JSON has none, so a
+    // missing target is reported without one rather than at a wrong one
+    assert!(entity.relation_spans.is_empty());
     assert_eq!(entity.content().len(), 1);
 }
 

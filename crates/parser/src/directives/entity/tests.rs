@@ -97,7 +97,7 @@ fn parse(rst: &str) -> rinx_ast::Document {
 }
 
 /// The first entity in `rst`.
-fn parse_entity_of(rst: &str) -> EntityBody {
+pub(super) fn parse_entity_of(rst: &str) -> EntityBody {
     let doc = parse(rst);
     first_entity(&doc.nodes).unwrap_or_else(|| panic!("no entity parsed from:\n{rst}"))
 }

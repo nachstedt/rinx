@@ -547,6 +547,7 @@ fn build_entity(
     let sections = import_sections(need, entity_type, &id, adornment_order, diagnostics, ctx);
 
     Some(EntityBody {
+        relation_spans: BTreeMap::new(),
         type_name: entity_type.name.clone(),
         id,
         attributes,

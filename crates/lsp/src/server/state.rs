@@ -135,7 +135,8 @@ struct TrackedDocument {
     rendered: Option<Rendered>,
 }
 
-/// What rendering a document found, and what it rendered.
+/// What rendering a document found — with what folding its project found
+/// about it, which the render read — and what it rendered.
 #[derive(Debug)]
 struct Rendered {
     key: RenderKey,
@@ -858,11 +859,17 @@ impl ServerState {
         };
         let config = project.site_config();
         let schema = Arc::clone(&project.model().settings.parse.schema);
-        let index = project.project_index();
         let Some(tracked) = self.tracked.get_mut(&uri) else {
             return Vec::new();
         };
-        let diagnostics = render_diagnostics(&tracked.parsed.document, index, &config, &schema);
+        let document = &tracked.parsed.document;
+        let mut diagnostics =
+            render_diagnostics(document, project.project_index(), &config, &schema);
+        // What only the whole project reveals about the document is found by
+        // the same fold the render read, so it is as current as the render:
+        // the parse names a document by its name in the project, which is
+        // what the fold keys it by.
+        diagnostics.extend_from_slice(project.index_diagnostics(&document.path));
         tracked.rendered = Some(Rendered { key, diagnostics });
         self.record_diagnosis(&uri)
             .into_iter()

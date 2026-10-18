@@ -46,6 +46,7 @@ fn id(raw: &str) -> EntityId {
 
 fn requirement(status: &str, tags: &[&str], links: &[&str]) -> EntityRecord {
     EntityRecord {
+        relation_spans: BTreeMap::new(),
         type_name: "req".to_string(),
         doc_path: "specs/boot.rst".to_string(),
         title: None,

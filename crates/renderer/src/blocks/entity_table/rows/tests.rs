@@ -37,6 +37,7 @@ fn id(raw: &str) -> EntityId {
 
 fn requirement(status: &str, title: &str, doc: &str) -> EntityRecord {
     EntityRecord {
+        relation_spans: BTreeMap::new(),
         type_name: "req".to_string(),
         doc_path: doc.to_string(),
         title: Some(title.to_string()),
@@ -67,6 +68,7 @@ fn index() -> ProjectIndex {
     index.entities.insert(
         id("TEST_1"),
         EntityRecord {
+            relation_spans: BTreeMap::new(),
             type_name: "test".to_string(),
             doc_path: "tests/boot".to_string(),
             title: None,

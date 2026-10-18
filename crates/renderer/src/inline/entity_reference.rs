@@ -157,6 +157,7 @@ mod tests {
         index.entities.insert(
             EntityId::new("REQ_001").unwrap(),
             EntityRecord {
+                relation_spans: BTreeMap::new(),
                 type_name: "req".to_string(),
                 doc_path: "specs/boot".to_string(),
                 title: title.map(ToString::to_string),
@@ -168,6 +169,7 @@ mod tests {
         index.entities.insert(
             EntityId::new("SPEC_003").unwrap(),
             EntityRecord {
+                relation_spans: BTreeMap::new(),
                 type_name: "spec".to_string(),
                 doc_path: "specs/boot".to_string(),
                 title: None,
