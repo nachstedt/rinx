@@ -68,8 +68,8 @@ impl MathRenderer {
         };
         Self {
             // The only fallible part of building a converter is parsing custom
-            // macros, and the config declares none.
-            converter: LatexToMathML::new(config)
+            // macros, and none are passed.
+            converter: LatexToMathML::new(config, Vec::new())
                 .expect("a converter with no custom macros cannot fail to build"),
         }
     }
