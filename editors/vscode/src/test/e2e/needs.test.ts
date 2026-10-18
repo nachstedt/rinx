@@ -41,7 +41,7 @@ suite('sphinx-needs project (e2e)', () => {
         );
     });
 
-    test('a need type is a directive once conf.py declares sphinx-needs, and its ids complete', async () => {
+    test('a need type is a directive once conf.py declares sphinx-needs, its links are checked, and its ids complete', async () => {
         // Given — with no `conf.py`, `.. req::` is an unknown directive
         await vscode.window.showTextDocument(project('index.rst'));
         await waitFor('the need to be unknown', () => codesFor(project('index.rst')).includes('directive.unknown'));
@@ -52,8 +52,13 @@ suite('sphinx-needs project (e2e)', () => {
             "extensions = ['sphinx_needs']\nneeds_from_toml = 'ubproject.toml'\n",
         );
 
-        // Then the directive is known, and `:need:` completes its id
-        await waitFor('the need to be known', () => codesFor(project('index.rst')).length === 0);
+        // Then the directives are known — what is left is the spec's link to
+        // a requirement no document declares, which only the whole project
+        // reveals — and `:need:` completes the ids
+        await waitFor('the needs to be known', () => {
+            const codes = codesFor(project('index.rst'));
+            return codes.length === 1 && codes[0] === 'entity.unknown-target';
+        });
         const list = await vscode.commands.executeCommand<vscode.CompletionList>(
             'vscode.executeCompletionItemProvider',
             project('index.rst'),

@@ -191,6 +191,12 @@ references and `numfig` projects report what a bare site would.
 Measured on CPython's 528 documents: the render tier arrives 140–230 ms after
 the pause (`library/os.rst`, `library/stdtypes.rst`), fold included.
 
+Later (issue #265): the render tier also carries what the fold found about
+the document — the toctree, duplicate-definition and entity-graph findings
+the build's `index` action prints — so `:implements: REQ_GHOST` is
+underlined as the build reports it. A second parity test compares both over
+a small sphinx-needs project (`crates/worker/tests/parity_project/`).
+
 ### 7. Hover on references ✅ (#273)
 
 **You experience:** hovering a reference shows the resolved title and file.

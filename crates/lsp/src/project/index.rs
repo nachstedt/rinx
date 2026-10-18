@@ -17,9 +17,13 @@
 //! and the others lower what its [`Strictness`] reports. A change to either
 //! counts as a change of the index, so every open document renders again.
 //!
+//! The fold also yields what only the whole project reveals — a toctree
+//! naming a missing document, a label two documents define, a relation to an
+//! entity no document declares — kept with the index it was found in, by
+//! document, for the render tier to publish (issue #265).
+//!
 //! Which files are documents, what they are named and how the index is built
-//! is the project's [`ProjectModel`]'s to say; no entity schema applies until
-//! a Bazel manifest (roadmap #18) or the sphinx-needs settings (#15) name one.
+//! is the project's [`ProjectModel`]'s to say, the entity schema included.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -63,6 +67,15 @@ impl IndexedDocument {
     }
 }
 
+/// One fold of a project's documents: the index, and what building it found
+/// about each document, by its name — kept together so the two cannot be of
+/// different folds.
+#[derive(Debug)]
+struct Fold {
+    index: ProjectIndex,
+    diagnostics: BTreeMap<String, Vec<Diagnostic>>,
+}
+
 /// A project the server indexes.
 #[derive(Debug)]
 pub struct Project {
@@ -74,7 +87,7 @@ pub struct Project {
     folder: usize,
     documents: BTreeMap<String, IndexedDocument>,
     /// The fold of `documents`, until one of them changes.
-    index: Option<ProjectIndex>,
+    fold: Option<Fold>,
     /// Counts the changes to `documents`, so a render can tell whether the
     /// index it read is still the index.
     generation: u64,
@@ -119,7 +132,7 @@ impl Project {
             conf_text,
             folder,
             documents: BTreeMap::new(),
-            index: None,
+            fold: None,
             generation: 0,
             forgotten: BTreeSet::new(),
             scanned: false,
@@ -313,8 +326,8 @@ impl Project {
 
     /// Drops the cached fold, a document having changed.
     fn invalidate(&mut self) {
-        if let Some(index) = self.index.take() {
-            self.external = index.external_inventories;
+        if let Some(fold) = self.fold.take() {
+            self.external = fold.index.external_inventories;
         }
         self.generation += 1;
     }
@@ -362,430 +375,55 @@ impl Project {
 
     /// The project index the project's documents fold into.
     pub fn project_index(&mut self) -> &ProjectIndex {
+        &self.fold().index
+    }
+
+    /// What folding the project's documents found about the document
+    /// `doc_path` — the build's `index` warnings about it, before any
+    /// `.. noqa:` is applied.
+    pub fn index_diagnostics(&mut self, doc_path: &str) -> &[Diagnostic] {
+        self.fold()
+            .diagnostics
+            .get(doc_path)
+            .map_or(&[], Vec::as_slice)
+    }
+
+    /// The fold of the project's documents, folding them first if a document
+    /// changed since the last.
+    fn fold(&mut self) -> &Fold {
         let root_doc = self.root_doc().to_string();
         let (documents, model, external) = (&self.documents, &self.model, &mut self.external);
-        self.index.get_or_insert_with(|| {
+        self.fold.get_or_insert_with(|| {
             let analyses: BTreeMap<String, DocumentAnalysis> = documents
                 .iter()
                 .map(|(doc_path, indexed)| (doc_path.clone(), indexed.analysis.clone()))
                 .collect();
-            let mut index = build_project_index_from_analyses(
+            let build = build_project_index_from_analyses(
                 &analyses,
                 &model.index_settings(&root_doc),
                 &model.settings.parse.schema,
-            )
-            .index;
+            );
+            let mut index = build.index;
             // Whole rather than pruned to what the documents name, as the
             // build's index is: the next edit may name anything.
             index.external_inventories = std::mem::take(external);
-            index
+            let mut diagnostics: BTreeMap<String, Vec<Diagnostic>> = BTreeMap::new();
+            for reported in build.diagnostics {
+                diagnostics
+                    .entry(reported.source_path)
+                    .or_default()
+                    .extend(reported.diagnostics);
+            }
+            Fold { index, diagnostics }
         })
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use rinx_ast::TargetName;
-
-    fn folder() -> Project {
-        Project::new(0, DiscoveredProject::folder(PathBuf::from("/work/docs")))
-    }
-
-    /// The analysis of a document named `doc_path` defining the label `label`.
-    fn labelled(doc_path: &str, label: &str) -> IndexedDocument {
-        let document = rinx_parser::parse(doc_path, &format!(".. _{label}:\n\nText.\n"));
-        IndexedDocument::of(
-            Path::new("/work/docs").join(doc_path),
-            &document,
-            BTreeSet::new(),
-        )
-    }
-
-    #[test]
-    fn test_doc_path_of_names_a_document_by_its_path_in_the_folder() {
-        // When / Then
-        assert_eq!(
-            folder().doc_path_of(Path::new("/work/docs/guide/setup.rst")),
-            Some("guide/setup.rst".to_string())
-        );
-        assert_eq!(
-            folder().doc_path_of(Path::new("/elsewhere/setup.rst")),
-            None
-        );
-        assert_eq!(folder().doc_path_of(Path::new("/work/docs/data.csv")), None);
-    }
-
-    #[test]
-    fn test_path_of_inverts_doc_path_of() {
-        // When / Then
-        assert_eq!(
-            folder().path_of("guide/setup.rst"),
-            PathBuf::from("/work/docs/guide/setup.rst")
-        );
-    }
-
-    #[test]
-    fn test_project_index_forgets_a_label_its_document_no_longer_defines() {
-        // Given
-        let mut folder = folder();
-        folder.record("a.rst".to_string(), labelled("a.rst", "setup"));
-        assert!(
-            folder
-                .project_index()
-                .targets
-                .contains_key(&TargetName::new("setup"))
-        );
-
-        // When — the label is renamed in the editor.
-        folder.record("a.rst".to_string(), labelled("a.rst", "install"));
-
-        // Then
-        let index = folder.project_index();
-        assert!(!index.targets.contains_key(&TargetName::new("setup")));
-        assert!(index.targets.contains_key(&TargetName::new("install")));
-    }
-
-    #[test]
-    fn test_record_scanned_keeps_a_more_recent_analysis() {
-        // Given — `a.rst` analysed from its open buffer during the scan.
-        let mut folder = folder();
-        folder.record("a.rst".to_string(), labelled("a.rst", "edited"));
-
-        // When
-        folder.record_scanned([
-            ("a.rst".to_string(), labelled("a.rst", "saved")),
-            ("b.rst".to_string(), labelled("b.rst", "other")),
-        ]);
-
-        // Then
-        let index = folder.project_index();
-        assert!(index.targets.contains_key(&TargetName::new("edited")));
-        assert!(!index.targets.contains_key(&TargetName::new("saved")));
-        assert!(index.targets.contains_key(&TargetName::new("other")));
-        assert_eq!(folder.document_count(), 2);
-    }
-
-    #[test]
-    fn test_generation_changes_only_when_a_document_changes() {
-        // Given
-        let mut folder = folder();
-        let start = folder.generation();
-
-        // When — a document is recorded, then recorded again unchanged
-        folder.record("a.rst".to_string(), labelled("a.rst", "setup"));
-        let after_change = folder.generation();
-        folder.record("a.rst".to_string(), labelled("a.rst", "setup"));
-
-        // Then
-        assert_ne!(after_change, start);
-        assert_eq!(folder.generation(), after_change);
-    }
-
-    #[test]
-    fn test_generation_changes_when_a_scan_brings_a_new_document() {
-        // Given — `a.rst` already recorded from its open buffer
-        let mut folder = folder();
-        folder.record("a.rst".to_string(), labelled("a.rst", "edited"));
-        let before = folder.generation();
-
-        // When — the scan brings only `a.rst`, which is kept, then `b.rst`
-        folder.record_scanned([("a.rst".to_string(), labelled("a.rst", "saved"))]);
-        let after_known = folder.generation();
-        folder.record_scanned([("b.rst".to_string(), labelled("b.rst", "other"))]);
-
-        // Then
-        assert_eq!(after_known, before);
-        assert_ne!(folder.generation(), before);
-    }
-
-    #[test]
-    fn test_forget_drops_a_document_from_the_index() {
-        // Given
-        let mut folder = folder();
-        folder.record("a.rst".to_string(), labelled("a.rst", "setup"));
-        let before = folder.generation();
-
-        // When
-        folder.forget("a.rst");
-
-        // Then
-        assert!(folder.project_index().targets.is_empty());
-        assert_eq!(folder.document_count(), 0);
-        assert_ne!(folder.generation(), before);
-    }
-
-    #[test]
-    fn test_forget_of_an_unknown_document_changes_nothing() {
-        // Given
-        let mut folder = folder();
-        let before = folder.generation();
-
-        // When
-        folder.forget("a.rst");
-
-        // Then
-        assert_eq!(folder.generation(), before);
-    }
-
-    #[test]
-    fn test_record_scanned_does_not_bring_back_a_forgotten_document() {
-        // Given — `a.rst` deleted while the scan, which had read it, ran
-        let mut folder = folder();
-        folder.forget("a.rst");
-
-        // When
-        folder.record_scanned([
-            ("a.rst".to_string(), labelled("a.rst", "stale")),
-            ("b.rst".to_string(), labelled("b.rst", "other")),
-        ]);
-
-        // Then
-        let index = folder.project_index();
-        assert!(!index.targets.contains_key(&TargetName::new("stale")));
-        assert!(index.targets.contains_key(&TargetName::new("other")));
-    }
-
-    #[test]
-    fn test_record_after_forget_lets_the_scan_keep_its_rule() {
-        // Given — `a.rst` deleted, then created again, during the scan
-        let mut folder = folder();
-        folder.forget("a.rst");
-        folder.record("a.rst".to_string(), labelled("a.rst", "recreated"));
-
-        // When
-        folder.record_scanned([("a.rst".to_string(), labelled("a.rst", "stale"))]);
-
-        // Then — the newer analysis stays
-        let index = folder.project_index();
-        assert!(index.targets.contains_key(&TargetName::new("recreated")));
-        assert!(!index.targets.contains_key(&TargetName::new("stale")));
-    }
-
-    #[test]
-    fn test_documents_under_lists_a_directory_and_a_document() {
-        // Given
-        let mut folder = folder();
-        folder.record("guide/a.rst".to_string(), labelled("guide/a.rst", "a"));
-        folder.record("guide/b.rst".to_string(), labelled("guide/b.rst", "b"));
-        folder.record("guides.rst".to_string(), labelled("guides.rst", "c"));
-
-        // When / Then — `guides.rst` is not under `guide`
-        assert_eq!(
-            folder.documents_under(Path::new("/work/docs/guide")),
-            ["guide/a.rst", "guide/b.rst"]
-        );
-        assert_eq!(
-            folder.documents_under(Path::new("/work/docs/guides.rst")),
-            ["guides.rst"]
-        );
-    }
-
-    #[test]
-    fn test_includers_of_lists_the_documents_that_read_a_file() {
-        // Given
-        let mut folder = folder();
-        let fragment = PathBuf::from("/work/docs/_shared/note.rst");
-        let mut includer = labelled("a.rst", "a");
-        includer.reads.insert(fragment.clone());
-        folder.record("a.rst".to_string(), includer);
-        folder.record("b.rst".to_string(), labelled("b.rst", "b"));
-
-        // When / Then — by the file, and by the directory holding it
-        assert_eq!(folder.includers_of(&fragment), ["a.rst"]);
-        assert_eq!(
-            folder.includers_of(Path::new("/work/docs/_shared")),
-            ["a.rst"]
-        );
-    }
-
-    /// A Sphinx project at `/work/docs` whose `conf.py` says `conf`.
-    fn sphinx(conf: &str) -> Project {
-        let reading = crate::project::sphinx_conf::read_sphinx_conf(conf);
-        Project::new(
-            1,
-            DiscoveredProject {
-                model: ProjectModel {
-                    source_root: PathBuf::from("/work/docs"),
-                    source: ProjectSource::SphinxConf {
-                        conf: PathBuf::from("/work/docs/conf.py"),
-                    },
-                    settings: reading.settings,
-                },
-                findings: reading.findings,
-                conf_text: conf.to_string(),
-                sources: Vec::new(),
-            },
-        )
-    }
-
-    #[test]
-    fn test_doc_path_of_keeps_the_first_file_of_a_document() {
-        // Given — `intro` recorded from `intro.rst`
-        let mut project = sphinx("source_suffix = ['.rst', '.txt']\n");
-        project.record("intro.rst".to_string(), labelled("intro.rst", "a"));
-
-        // When / Then — `intro.txt` comes after it by name
-        assert_eq!(project.doc_path_of(Path::new("/work/docs/intro.txt")), None);
-        assert_eq!(
-            project.doc_path_of(Path::new("/work/docs/intro.rst")),
-            Some("intro.rst".to_string())
-        );
-    }
-
-    #[test]
-    fn test_path_of_finds_a_recorded_documents_own_file() {
-        // Given
-        let mut project = sphinx("source_suffix = '.txt'\n");
-        let document = rinx_parser::parse("intro.rst", "Text.\n");
-        project.record(
-            "intro.rst".to_string(),
-            IndexedDocument::of(
-                PathBuf::from("/work/docs/intro.txt"),
-                &document,
-                BTreeSet::new(),
-            ),
-        );
-
-        // When / Then
-        assert_eq!(
-            project.path_of("intro.rst"),
-            PathBuf::from("/work/docs/intro.txt")
-        );
-        assert_eq!(
-            project.path_of("other.rst"),
-            PathBuf::from("/work/docs/other.txt")
-        );
-    }
-
-    #[test]
-    fn test_root_doc_falls_back_to_contents_as_sphinx_does() {
-        // Given — no `index`, but a `contents`
-        let mut project = sphinx("project = 'P'\n");
-        project.record("contents.rst".to_string(), labelled("contents.rst", "a"));
-
-        // When / Then
-        assert_eq!(project.root_doc(), "contents");
-        assert_eq!(project.site_config().root_doc, "contents");
-        assert_eq!(project.project_index().root_documents, ["contents.rst"]);
-    }
-
-    #[test]
-    fn test_root_doc_keeps_index_when_it_exists_or_is_not_sphinxs() {
-        // Given
-        let mut project = sphinx("project = 'P'\n");
-        project.record("contents.rst".to_string(), labelled("contents.rst", "a"));
-        project.record("index.rst".to_string(), labelled("index.rst", "b"));
-        let mut plain = folder();
-        plain.record("contents.rst".to_string(), labelled("contents.rst", "a"));
-
-        // When / Then
-        assert_eq!(project.root_doc(), "index");
-        assert_eq!(plain.root_doc(), "index");
-        assert_eq!(sphinx("root_doc = 'start'\n").root_doc(), "start");
-    }
-
-    #[test]
-    fn test_a_projects_conf_and_folder_are_its_own() {
-        // Given
-        let project = sphinx("root_doc = os.getenv('X')\n");
-
-        // When
-        let (findings, text) = project.conf_findings();
-
-        // Then
-        assert_eq!(project.folder(), 1);
-        assert_eq!(project.root(), Path::new("/work/docs"));
-        assert_eq!(project.conf_path(), Some(Path::new("/work/docs/conf.py")));
-        assert_eq!(findings.len(), 1);
-        assert!(text.starts_with("root_doc"));
-        assert_eq!(folder().conf_path(), None);
-        assert_eq!(project.model().settings.root_doc, "index");
-    }
-
-    /// A temporary file holding an inventory that lists the Python class
-    /// `dict`.
-    fn inventory_file(name: &str) -> PathBuf {
-        let path = std::env::temp_dir().join(format!("rinx_lsp_project_{name}.inv"));
-        let inventory = rinx_inventory::Inventory {
-            project: "Python".to_string(),
-            version: "3".to_string(),
-            entries: vec![rinx_inventory::InventoryEntry {
-                name: "dict".to_string(),
-                entry_type: rinx_inventory::EntryType::new("py:class").unwrap(),
-                priority: 1,
-                uri: "library/stdtypes.html#$".to_string(),
-                display_name: None,
-            }],
-        };
-        std::fs::write(&path, rinx_inventory::write_inventory(&inventory)).unwrap();
-        path
-    }
-
-    const PYTHON_CONF: &str = "extensions = ['sphinx.ext.intersphinx']\nintersphinx_mapping = {'python': ('https://docs.python.org/3/', None)}\n";
-
-    #[test]
-    fn test_a_downloaded_inventory_joins_the_index_and_leaves_the_strictness() {
-        // Given
-        let mut project = sphinx(PYTHON_CONF);
-        project.advance_inventories(&|_: &str| None);
-        assert_eq!(
-            project.awaited_inventories(),
-            ["https://docs.python.org/3/objects.inv"]
-        );
-        assert!(project.project_index().external_inventories.is_empty());
-        let generation = project.generation();
-        let path = inventory_file("downloaded");
-
-        // When
-        let changed = project.advance_inventories(&|_: &str| Some(Ok(path.clone())));
-
-        // Then — and still after a document changes the fold
-        assert!(changed);
-        assert!(project.generation() > generation);
-        let inventories = &project.project_index().external_inventories;
-        assert_eq!(inventories.len(), 1);
-        assert!(inventories[0].lookup("py:class", "dict").is_some());
-        project.record("a.rst".to_string(), labelled("a.rst", "a"));
-        assert_eq!(project.project_index().external_inventories.len(), 1);
-        assert_eq!(
-            project.strictness(),
-            &project.model().settings.strictness.clone()
-        );
-        assert_eq!(project.inventory_cache_limit_days(), 5);
-    }
-
-    #[test]
-    fn test_an_unreadable_inventory_is_one_of_the_conf_findings() {
-        // Given
-        let mut project = sphinx(
-            "extensions = ['sphinx.ext.intersphinx']\nintersphinx_mapping = {'a': ('https://a.org', 'missing.inv')}\n",
-        );
-
-        // When
-        let changed = project.advance_inventories(&|_: &str| None);
-
-        // Then
-        assert!(changed);
-        let (findings, _) = project.conf_findings();
-        let codes: Vec<&str> = findings.iter().map(|f| f.code.as_str()).collect();
-        assert_eq!(codes, ["conf.inventory-unreadable"]);
-        assert_ne!(
-            project.strictness(),
-            &project.model().settings.strictness.clone()
-        );
-    }
-
-    #[test]
-    fn test_reload_inventory_file_reads_a_project_file_again() {
-        // Given
-        let mut project = sphinx(
-            "extensions = ['sphinx.ext.intersphinx']\nintersphinx_mapping = {'a': ('https://a.org', 'a.inv')}\n",
-        );
-        project.advance_inventories(&|_: &str| None);
-
-        // When / Then
-        assert!(project.reload_inventory_file(Path::new("/work/docs/a.inv")));
-        assert!(!project.reload_inventory_file(Path::new("/work/docs/b.inv")));
-    }
-}
+mod fold_tests;
+#[cfg(test)]
+mod inventory_tests;
+#[cfg(test)]
+mod naming_tests;
+#[cfg(test)]
+mod test_support;

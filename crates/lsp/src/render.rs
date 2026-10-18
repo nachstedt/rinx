@@ -6,6 +6,11 @@
 //! (`rinx_renderer`), so the codes and the messages are the build's too; only
 //! the page around the body is skipped, since nothing reads its HTML.
 //!
+//! The tier also carries what folding the project found about the document —
+//! a toctree entry naming no document, a label two documents define, a
+//! relation to an unknown entity — since the render reads that same fold;
+//! the server adds those from `Project::index_diagnostics`.
+//!
 //! It is far more expensive than a parse, syntax highlighting included, so
 //! the server runs it only for the documents it shows and only once edits
 //! pause (ADR-038 §9). No `PlantUML` is ever compiled: a diagram's template is

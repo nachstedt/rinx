@@ -266,3 +266,135 @@ fn test_the_editor_reports_what_the_build_reports() {
         "the editor and the build disagree:\n{mismatches}"
     );
 }
+
+/// Runs `rinx` with `args` in `directory`, returning what it printed to
+/// stdout and stderr, and failing the test when it fails.
+fn rinx(directory: &Path, args: &[&str]) -> (String, String) {
+    let output = Command::new(env!("CARGO_BIN_EXE_rinx"))
+        .args(args)
+        .current_dir(directory)
+        .output()
+        .expect("rinx runs");
+    let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+    assert!(output.status.success(), "rinx {args:?} failed:\n{stderr}");
+    (String::from_utf8_lossy(&output.stdout).into_owned(), stderr)
+}
+
+/// What the build warns about in `project`'s documents, parsing each and
+/// indexing them all as a site does — run in `project`, so a document is
+/// named as the server names it, against the entity schema `rinx needs_schema`
+/// writes from its `ubproject.toml`.
+fn project_build_findings(project: &Path, documents: &[&str], scratch: &Path) -> Findings {
+    let schema = scratch.join("entities.toml");
+    let schema = schema.to_str().expect("a UTF-8 path");
+    rinx(
+        project,
+        &[
+            "needs_schema",
+            "--ubproject",
+            "ubproject.toml",
+            "--output",
+            schema,
+        ],
+    );
+    let mut warnings = String::new();
+    let mut asts = Vec::new();
+    for document in documents {
+        let ast = scratch.join(format!("{document}.ast"));
+        let ast = ast.to_str().expect("a UTF-8 path").to_string();
+        let (_, stderr) = rinx(
+            project,
+            &[
+                "parse",
+                "--input",
+                document,
+                "--output",
+                &ast,
+                "--entity-schema",
+                schema,
+            ],
+        );
+        warnings.push_str(&stderr);
+        asts.push(ast);
+    }
+    let index = scratch.join("project.index");
+    let mut args = vec![
+        "index",
+        "--output",
+        index.to_str().expect("a UTF-8 path"),
+        "--entity-schema",
+        schema,
+        "--inputs",
+    ];
+    args.extend(asts.iter().map(String::as_str));
+    let (_, stderr) = rinx(project, &args);
+    warnings.push_str(&stderr);
+
+    let mut findings = Findings::new();
+    for line in warnings.lines() {
+        let Some(rest) = line.strip_prefix("warning: ") else {
+            continue;
+        };
+        let (document, after) = rest.split_once(':').expect("a path");
+        findings
+            .entry(project.join(document))
+            .or_default()
+            .insert(parse_warning_location(after));
+    }
+    findings
+}
+
+#[test]
+fn test_the_editor_reports_what_the_index_reports() {
+    // Given a project whose mistakes only the whole of it reveals: a toctree
+    // entry naming no document, a label two documents define, and a need
+    // linking to one no document declares
+    let project = repository_root().join("crates/worker/tests/parity_project");
+    let scratch =
+        std::env::temp_dir().join(format!("rinx_lsp_parity_project_{}", std::process::id()));
+    std::fs::create_dir_all(&scratch).expect("a scratch directory");
+
+    // When — the build parses and indexes it; the server checks the folder
+    let build = project_build_findings(
+        &project,
+        &["index.rst", "labels.rst", "needs.rst"],
+        &scratch,
+    );
+    let (stdout, _) = rinx(
+        &project,
+        &["lsp", "--check", project.to_str().expect("a UTF-8 path")],
+    );
+    let check: Value = serde_json::from_str(&stdout).expect("--check prints JSON");
+    let publishes: Vec<Value> = check["published"]
+        .as_object()
+        .expect("a map of publishes")
+        .iter()
+        // `conf.py` shows what the editor reads of the configuration, which
+        // has no counterpart in the build.
+        .filter(|(uri, _)| {
+            Path::new(uri.as_str())
+                .extension()
+                .is_some_and(|ext| ext == "rst")
+        })
+        .map(|(uri, diagnostics)| json!({ "uri": uri, "diagnostics": diagnostics }))
+        .collect();
+    let editor = editor_findings(&publishes);
+    let _ = std::fs::remove_dir_all(&scratch);
+
+    // Then — the same, and something: a fixture that reported nothing would
+    // pass for want of anything to compare
+    let codes: BTreeSet<&str> = build
+        .values()
+        .flatten()
+        .map(|(_, _, code)| code.as_str())
+        .collect();
+    assert_eq!(
+        codes,
+        BTreeSet::from([
+            "entity.unknown-target",
+            "target.duplicate-name",
+            "toctree.missing-document"
+        ])
+    );
+    assert_eq!(editor, build);
+}
