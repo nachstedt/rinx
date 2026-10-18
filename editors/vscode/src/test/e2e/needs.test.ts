@@ -35,7 +35,9 @@ suite('sphinx-needs project (e2e)', () => {
         fs.rmSync(project('conf.py').fsPath, { force: true });
         const api = vscode.extensions.getExtension<RinxApi>('nachstedt.rinx')?.exports;
         await waitFor('the needs project to be gone', () =>
-            api?.indexStatus()?.projects?.every((status) => status.kind !== 'sphinx' || !status.conf.startsWith('needs')),
+            api
+                ?.indexStatus()
+                ?.projects?.every((status) => status.kind !== 'sphinx' || !status.conf.startsWith('needs')),
         );
     });
 
