@@ -218,7 +218,8 @@ and the same reasoning applies with more force to project-defined policy. The
 - The benchmark's "Sphinx-Needs Constructs Without An Entity-Model Equivalent"
   section changes meaning: it stops being a list of gaps to close in the schema
   language and becomes a specification for what an external validator must
-  cover. `scripts/needs_schema.py`'s categories should be re-grouped
+  cover. The converter's categories (`rinx_entity::needs_conf::ReportCategory`,
+  once `scripts/needs_schema.py`'s) should be re-grouped
   accordingly — they currently conflate "cannot be expressed", "could be
   expressed and is not yet" (`minItems: 1` is our `required`; a `network` items
   rule is our `to = [...]`), and "already converted, with a redundant half

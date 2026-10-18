@@ -2,7 +2,7 @@
 
 rinx is Rust, but a handful of Python scripts live in `scripts/`: the two
 benchmarks (`benchmark.py`, `benchmark_entities.py`, sharing
-`benchmark_common.py` and `needs_schema.py`), the crates.io publisher
+`benchmark_common.py`), the crates.io publisher
 (`publish_crates.py`), the GitHub Pages publisher (`publish_pages.py`) and
 the doctest runner (`doctest_runner.py`). The examples in `examples/shared/`
 are Python too.

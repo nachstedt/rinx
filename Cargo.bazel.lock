@@ -1,5 +1,5 @@
 {
-  "checksum": "58803b5ee25fa7c16833edd522efd9e9ac029a16bc1eefd6464ba0280e48c307",
+  "checksum": "ebca681b0cf63ab00c26a0ff2981fe7610c78eaa201b75e27f281f9c50a24c29",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -2144,6 +2144,9 @@
     },
     "indexmap 2.14.0": {
       "common_attrs": {
+        "crate_features": [
+          "std"
+        ],
         "deps": [
           {
             "id": "equivalent 1.0.2",
@@ -6897,10 +6900,15 @@
           "default",
           "display",
           "parse",
+          "preserve_order",
           "serde",
           "std"
         ],
         "deps": [
+          {
+            "id": "indexmap 2.14.0",
+            "target": "indexmap"
+          },
           {
             "id": "serde_core 1.0.229",
             "target": "serde_core"

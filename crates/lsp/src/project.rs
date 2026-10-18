@@ -4,7 +4,9 @@
 //! [`discover`] finds a workspace folder's projects — one per `conf.py`, and
 //! the folder itself for what lies under none — with each one's
 //! [`model`], read for a Sphinx project by [`sphinx_conf`] and matched
-//! against its files by [`exclusion`]. [`scan`] parses and analyses their
+//! against its files by [`exclusion`], its entity schema converted from its
+//! sphinx-needs configuration by [`needs`] (reading `conf.py`'s literals
+//! through [`python_value`]). [`scan`] parses and analyses their
 //! documents in parallel when the server starts, and [`index`] keeps one
 //! analysis per document and folds them into the project's index.
 
@@ -15,6 +17,8 @@ mod index;
 mod intersphinx;
 mod inventories;
 mod model;
+mod needs;
+mod python_value;
 mod scan;
 mod sphinx_conf;
 mod strictness;

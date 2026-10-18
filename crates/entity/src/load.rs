@@ -1,5 +1,5 @@
 use schemars::JsonSchema;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::argument::{ArgumentSpec, ArgumentSplit};
 use crate::attribute::{AttributeSchema, AttributeType};
@@ -60,7 +60,24 @@ pub fn load_schema(
             message: error.to_string(),
         }])
     })?;
+    load_raw_schema(raw, reserved)
+}
 
+/// Loads a schema from its declarations as the file spells them.
+///
+/// The half of [`load_schema`] after the TOML is read, for a caller that
+/// built the declarations itself — the sphinx-needs conversion does — so the
+/// declarations it produces are checked by exactly the rules a written
+/// `entities.toml` is.
+///
+/// # Errors
+///
+/// Returns [`SchemaErrors`] if the declarations violate any declaration or
+/// back-link rule.
+pub fn load_raw_schema(
+    raw: RawSchema,
+    reserved: &dyn ReservedDirectiveNames,
+) -> Result<EntitySchema, SchemaErrors> {
     let mut errors = Vec::new();
     let import_keys = raw.import_keys;
     let declared_types: Vec<String> = raw.entity_type.iter().map(|t| t.name.clone()).collect();
@@ -397,10 +414,10 @@ fn check_declared_types(
 // every entity, so it is refused at the source.
 
 /// A project's entity meta-model, as the schema file spells it.
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 #[schemars(title = "rinx entity schema")]
-pub(crate) struct RawSchema {
+pub struct RawSchema {
     /// Names a `.. needimport::` may write instead of a path, each mapped to
     /// the file it stands for — sphinx-needs' `needs_import_keys`.
     ///
@@ -409,55 +426,74 @@ pub(crate) struct RawSchema {
     /// vocabulary rather than in the build file. The file it names must still
     /// be declared in the library's `parse_data`, since only the build system
     /// can put it in the parse action's sandbox.
-    #[serde(default)]
-    import_keys: std::collections::BTreeMap<String, String>,
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    #[schemars(extend("default" = {}))]
+    pub(crate) import_keys: std::collections::BTreeMap<String, String>,
     /// The entity types this project declares, one `[[entity_type]]` each.
-    #[serde(default)]
-    entity_type: Vec<RawEntityType>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(extend("default" = []))]
+    pub(crate) entity_type: Vec<RawEntityType>,
     /// Inline roles that reference an entity from prose. Optional: every entity
     /// is reachable by `:ref:` and by the built-in `:entity:` role regardless.
-    #[serde(default)]
-    role: Vec<RawRole>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(extend("default" = []))]
+    pub(crate) role: Vec<RawRole>,
 }
 
 /// One entity type: a directive name plus everything an instance may carry.
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
-struct RawEntityType {
+pub(crate) struct RawEntityType {
     /// The directive name, e.g. `req` for `.. req::`.
-    name: String,
+    pub(crate) name: String,
     /// Human-readable label for the built-in rendering; defaults to `name`.
-    label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) label: Option<String>,
     /// A `MiniJinja` template's file name, supplied by the site's
     /// `entity_templates` attribute. Omit for the built-in rendering.
-    template: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) template: Option<String>,
     /// How the text after `::` maps onto attributes. Omit for a type that
     /// takes no argument.
-    argument: Option<RawArgument>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) argument: Option<RawArgument>,
     /// How instances of this type are identified.
-    id: Option<RawId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) id: Option<RawId>,
     /// Typed values, never parsed as RST.
-    #[serde(default)]
-    attribute: Vec<RawAttribute>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(extend("default" = []))]
+    pub(crate) attribute: Vec<RawAttribute>,
     /// Named prose sections, whose content *is* fully-parsed RST.
-    #[serde(default)]
-    section: Vec<RawSection>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(extend("default" = []))]
+    pub(crate) section: Vec<RawSection>,
     /// Typed edges to other entities, declared on the type that carries them.
-    #[serde(default)]
-    relation: Vec<RawRelation>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(extend("default" = []))]
+    pub(crate) relation: Vec<RawRelation>,
 }
 
 /// How `.. <type>:: <argument>` maps onto the type's attributes.
-#[derive(Deserialize, JsonSchema, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, JsonSchema, Default)]
 #[serde(deny_unknown_fields)]
-struct RawArgument {
+pub(crate) struct RawArgument {
     /// Attribute names, in the order the argument's parts fill them. Each must
     /// be an attribute the type declares.
-    #[serde(default)]
-    fields: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(extend("default" = []))]
+    pub(crate) fields: Vec<String>,
     /// How the argument text is divided before being mapped.
-    #[serde(default)]
-    split: RawSplit,
+    #[serde(default, skip_serializing_if = "RawSplit::is_whole")]
+    #[schemars(extend("default" = "whole"))]
+    pub(crate) split: RawSplit,
+}
+
+impl RawSplit {
+    /// Whether this is the default split, which a written schema leaves out.
+    fn is_whole(&self) -> bool {
+        matches!(self, Self::Whole)
+    }
 }
 
 impl RawArgument {
@@ -473,9 +509,9 @@ impl RawArgument {
 }
 
 /// How a directive's argument text is divided.
-#[derive(Deserialize, JsonSchema, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, JsonSchema, Default)]
 #[serde(rename_all = "lowercase")]
-enum RawSplit {
+pub(crate) enum RawSplit {
     /// The whole argument is one value — the sphinx-needs shape.
     #[default]
     Whole,
@@ -484,22 +520,26 @@ enum RawSplit {
 }
 
 /// How an entity type's ids are determined.
-#[derive(Deserialize, JsonSchema, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, JsonSchema, Default)]
 #[serde(deny_unknown_fields)]
-struct RawId {
+pub(crate) struct RawId {
     /// Prepended to derived and generated ids, never to an explicit `:id:`.
-    prefix: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) prefix: Option<String>,
     /// Whether the author must write an explicit `:id:`.
-    #[serde(default)]
-    required: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[schemars(extend("default" = false))]
+    pub(crate) required: bool,
     /// Attributes whose values compose the id, joined with `_`. Each must be an
     /// attribute the type declares.
-    from: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) from: Option<Vec<String>>,
     /// A regular expression every id of this type should match — explicit,
     /// composed or generated, prefix included. Searched for, as JSON Schema's
     /// `pattern` is: write `^…$` to match the whole id. A mismatch is reported
     /// as `entity.id-pattern-mismatch`, and the entity keeps its id.
-    pattern: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) pattern: Option<String>,
 }
 
 impl RawId {
@@ -516,28 +556,33 @@ impl RawId {
     }
 }
 
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
-struct RawAttribute {
+pub(crate) struct RawAttribute {
     /// The option spelling, e.g. `status` for `:status:`.
-    name: String,
+    pub(crate) name: String,
     /// Human-readable label for the rendered field table.
-    label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) label: Option<String>,
     #[serde(rename = "type")]
-    value_type: RawAttributeType,
+    pub(crate) value_type: RawAttributeType,
     /// The permitted values. Required for the two enum types, and refused for
     /// every other — both spellings look like they constrain the value, and
     /// only one does.
-    values: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) values: Option<Vec<String>>,
     /// A regular expression the value must match; for `list<string>`, each
     /// item must. Searched for, as JSON Schema's `pattern` is: write `^…$` to
     /// match the whole value. Only the three text types take one.
-    pattern: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) pattern: Option<String>,
     /// Whether the option must be given.
-    #[serde(default)]
-    required: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[schemars(extend("default" = false))]
+    pub(crate) required: bool,
     /// The value used when the option is absent.
-    default: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) default: Option<String>,
 }
 
 /// The `type = "..."` spellings an attribute may declare.
@@ -545,8 +590,8 @@ struct RawAttribute {
 /// A typed enum rather than a free string, so an unknown spelling is refused
 /// by deserialization — which both shortens the loader and lets the generated
 /// JSON Schema offer the seven valid values as completions.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, JsonSchema)]
-enum RawAttributeType {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
+pub(crate) enum RawAttributeType {
     #[serde(rename = "string")]
     String,
     #[serde(rename = "text")]
@@ -565,7 +610,7 @@ enum RawAttributeType {
 
 impl RawAttributeType {
     /// The spelling as written in a schema file, for a diagnostic that quotes it.
-    const fn as_str(self) -> &'static str {
+    pub(crate) const fn as_str(self) -> &'static str {
         match self {
             Self::String => "string",
             Self::Text => "text",
@@ -579,19 +624,22 @@ impl RawAttributeType {
 }
 
 /// A named prose section, written as a sub-directive inside an entity's body.
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
-struct RawSection {
+pub(crate) struct RawSection {
     /// The sub-directive name. May not shadow a directive the build already has.
-    name: String,
+    pub(crate) name: String,
     /// Heading shown by the built-in rendering; defaults to `name`.
-    label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) label: Option<String>,
     /// Whether the sub-directive must appear at least once.
-    #[serde(default)]
-    required: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[schemars(extend("default" = false))]
+    pub(crate) required: bool,
     /// Whether it may appear more than once, kept in document order.
-    #[serde(default)]
-    multiple: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[schemars(extend("default" = false))]
+    pub(crate) multiple: bool,
 }
 
 impl RawSection {
@@ -606,26 +654,32 @@ impl RawSection {
 }
 
 /// A typed edge to other entities, declared on the type that carries it.
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
-struct RawRelation {
+pub(crate) struct RawRelation {
     /// The option spelling on the source entity, e.g. `links` for `:links:`.
-    name: String,
+    pub(crate) name: String,
     /// Label shown by the built-in rendering; defaults to `name`.
-    label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) label: Option<String>,
     /// Entity types a target may have. Omit to accept any type.
-    to: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) to: Option<Vec<String>>,
     /// Whether at least one target id must be named.
-    #[serde(default)]
-    required: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[schemars(extend("default" = false))]
+    pub(crate) required: bool,
     /// Whether more than one target id may be named.
-    #[serde(default)]
-    multiple: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[schemars(extend("default" = false))]
+    pub(crate) multiple: bool,
     /// The back-link name derived on each target. Omit for a one-directional
     /// relation.
-    incoming: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) incoming: Option<String>,
     /// Heading for that back-link; defaults to `incoming`.
-    incoming_label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) incoming_label: Option<String>,
 }
 
 impl RawRelation {
@@ -643,13 +697,14 @@ impl RawRelation {
 }
 
 /// An inline role that references an entity from prose.
-#[derive(Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
-struct RawRole {
+pub(crate) struct RawRole {
     /// The role spelling, e.g. `req` for ``:req:`REQ_001` ``.
-    name: String,
+    pub(crate) name: String,
     /// Entity types the role may resolve to. Omit to accept any type.
-    types: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) types: Option<Vec<String>>,
 }
 
 #[cfg(test)]

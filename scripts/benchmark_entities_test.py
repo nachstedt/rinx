@@ -471,3 +471,109 @@ class TestSummaryRows:
             "Suppressed by whitelist:",
         ]
         assert rows[0].value == "2 distinct (6 occurrences)"
+
+
+class TestConvertSchema:
+    def test_runs_rinx_needs_schema_and_reads_its_report(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Given a binary that prints one unconvertible construct
+        calls: list[list[str]] = []
+
+        def run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+            calls.append(command)
+            report = [{"category": "variants", "detail": "field a"}]
+            return subprocess.CompletedProcess(command, 0, json.dumps(report), "")
+
+        monkeypatch.setattr(benchmark_entities.subprocess, "run", run)
+
+        # When
+        report = benchmark_entities.convert_schema(tmp_path, tmp_path / "rinx")
+
+        # Then
+        assert report == [("variants", "field a")]
+        assert calls[0][:2] == [str(tmp_path / "rinx"), "needs_schema"]
+        assert calls[0][calls[0].index("--ubproject") + 1] == str(tmp_path / "ubproject.toml")
+        assert calls[0][calls[0].index("--output") + 1] == str(tmp_path / "entities.toml")
+
+    def test_is_none_when_the_conversion_fails(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Given
+        monkeypatch.setattr(
+            benchmark_entities.subprocess,
+            "run",
+            lambda command, **_: subprocess.CompletedProcess(command, 1, "", "boom"),
+        )
+
+        # When / Then
+        assert benchmark_entities.convert_schema(tmp_path, tmp_path / "rinx") is None
+
+
+class TestRunBenchmark:
+    def test_converts_the_schema_between_the_warm_up_and_the_corpus_build(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Given every step recording that it ran
+        steps: list[str] = []
+        monkeypatch.setattr(
+            benchmark_entities, "warm_up", lambda **_: steps.append("warm") or (True, 1.0)
+        )
+        monkeypatch.setattr(
+            benchmark_common, "find_rinx_binary", lambda _: steps.append("find") or tmp_path
+        )
+        monkeypatch.setattr(
+            benchmark_entities,
+            "convert_schema",
+            lambda *_: steps.append("convert") or [("variants", "x")],
+        )
+        built = benchmark_common.BuildResult(succeeded=True, warmup_seconds=1.0, corpus_seconds=2.0)
+        monkeypatch.setattr(
+            benchmark_entities, "build_corpus", lambda _: steps.append("build") or built
+        )
+
+        # When
+        result, report = benchmark_entities.run_benchmark()
+
+        # Then
+        assert steps == ["warm", "find", "convert", "build"]
+        assert result == built
+        assert report == [("variants", "x")]
+
+    def test_a_failed_conversion_fails_without_building_the_corpus(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Given
+        monkeypatch.setattr(benchmark_entities, "warm_up", lambda **_: (True, 1.0))
+        monkeypatch.setattr(benchmark_common, "find_rinx_binary", lambda _: tmp_path)
+        monkeypatch.setattr(benchmark_entities, "convert_schema", lambda *_: None)
+
+        def build(_: float) -> benchmark_common.BuildResult:
+            message = "the corpus must not be built"
+            raise AssertionError(message)
+
+        monkeypatch.setattr(benchmark_entities, "build_corpus", build)
+
+        # When
+        result, report = benchmark_entities.run_benchmark()
+
+        # Then
+        assert not result.succeeded
+        assert report == []
+
+    def test_a_failed_warm_up_skips_the_rest(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        # Given
+        monkeypatch.setattr(benchmark_entities, "warm_up", lambda **_: (False, 1.0))
+
+        def find(_: Path) -> Path:
+            message = "no binary is looked for"
+            raise AssertionError(message)
+
+        monkeypatch.setattr(benchmark_common, "find_rinx_binary", find)
+
+        # When
+        result, _ = benchmark_entities.run_benchmark()
+
+        # Then
+        assert not result.succeeded
+        assert result.warmup_seconds == 1.0

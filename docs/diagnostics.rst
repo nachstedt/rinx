@@ -2248,6 +2248,21 @@ An ``intersphinx_mapping`` entry none of whose inventories could be read: a
 file that is missing or is no ``objects.inv``, or a download that is none.
 References into it stay unresolved in the editor.
 
+conf.needs-invalid
+~~~~~~~~~~~~~~~~~~
+
+A sphinx-needs configuration the editor could not turn into an entity schema:
+the ``ubproject.toml`` or ``schemas.json`` it names is missing or malformed, a
+setting has the wrong shape, or the types it declares contradict each other.
+Its need directives stay unknown.
+
+conf.needs-unconverted
+~~~~~~~~~~~~~~~~~~~~~~
+
+A sphinx-needs construct the entity model has no equivalent for — a link
+computed by a function, a conditional ``schemas.json`` rule, variants, … —
+which the editor reads the project without.
+
 noqa
 ----
 

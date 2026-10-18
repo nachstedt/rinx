@@ -265,8 +265,10 @@ impl ServerState {
     }
 
     /// The folder whose projects `event` may change: one naming a `conf.py`
-    /// a project has or the walk would find, a directory created with one
-    /// inside, or a directory deleted holding a project.
+    /// a project has or the walk would find, or another file a project's
+    /// configuration was read from — its `ubproject.toml` — a directory
+    /// created with a `conf.py` inside, or a directory deleted holding a
+    /// project.
     pub(super) fn folder_reconfigured_by(&self, event: &FileEvent) -> Option<usize> {
         let path = file_path(&event.uri)?;
         let folder = self
@@ -276,10 +278,10 @@ impl ServerState {
             .filter(|(_, root)| is_visible_under(root, &path))
             .max_by_key(|(_, root)| root.components().count())
             .map(|(folder, _)| folder)?;
-        let configures = self
-            .projects
-            .values()
-            .any(|project| project.conf_path() == Some(path.as_path()));
+        let configures = self.projects.values().any(|project| {
+            project.conf_path() == Some(path.as_path())
+                || project.model().settings.config_files.contains(&path)
+        });
         let entered = |directory: &Path| {
             self.project_holding(directory)
                 .is_none_or(|project| project.model().enters(directory))

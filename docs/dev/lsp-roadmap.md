@@ -33,8 +33,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
   #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
-  and #14 (PR #300).
-- **Next: #15, sphinx-needs schema in Rust.**
+  #14 (PR #300) and #15 (PR #305).
+- **Next: #16, executing `conf.py` in a trusted workspace.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -416,7 +416,7 @@ Not done here: CPython's `rst_epilog` is an f-string over an imported
 23 `substitution.undefined` remain in `--check`, which now shows 2565 warnings
 (issue #299).
 
-### 15. sphinx-needs schema in Rust
+### 15. sphinx-needs schema in Rust ✅ (#305)
 
 **You experience:** `.. req::` is recognised, and need ids complete and
 resolve.
@@ -426,6 +426,36 @@ resolve.
 - CLI subcommand; the script calls it
 - Port its Python tests
 - Entity-id completion source
+
+The conversion is `rinx_entity::needs_conf`, and it yields the loader's own
+`RawSchema`, so `load_raw_schema` checks a converted schema exactly as it
+checks a written one; `needs_schema.py` and its tests are gone, ported. Its
+input is one `NeedsConfig`, which a `ubproject.toml`'s `[needs]` table and a
+`conf.py`'s literal `needs_*` settings both deserialize into (the latter
+through a serde deserializer over `rinx_pyconf`'s values), with sphinx-needs
+6's `fields`/`links` tables and the older `extra_options`/`extra_links` lists
+both read. `rinx needs_schema --ubproject … --output …` writes the
+`entities.toml` and prints the report as JSON; the entity benchmark runs it
+with the binary its warm-up compiled, so it converts between the warm-up and
+the timed build. On the demo corpus the Rust conversion matches the Python
+one entry for entry.
+
+The server converts only when `extensions` declares `sphinx_needs`, as
+Sphinx reads the settings. The TOML overrides `conf.py` a setting at a time,
+and a path in it is relative to it, both as sphinx-needs documents;
+`needs_from_toml_table` names the table above `needs`. What could not be read
+is `conf.needs-invalid` and each construct with no equivalent
+`conf.needs-unconverted`, on the `needs_from_toml` line. Editing the TOML or
+the `schemas.json` reloads the project. The schema reaches every parse, the
+fold, the render tier, hover and definition, and a role the schema declares
+(`:need:`, a type's own, `:entity:`) completes the ids it accepts. A
+`/`-rooted path now resolves against the project's source root, as in the
+build, which resolved import keys need.
+
+Measured on the sphinx-needs demo: `--check` shows its need types as
+directives, and `conf.py` shows the twelve constructs the benchmark's report
+lists. Not done here: the demo's documents are Jinja templates, which the
+server reads only with #20, and completion inside a relation option is #27's.
 
 ### 16. Executing `conf.py` in a trusted workspace (opt-in)
 

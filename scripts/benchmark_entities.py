@@ -3,8 +3,9 @@
 `benchmark.py` measures general RST coverage against CPython. This one measures
 *entity* coverage against the useblocks sphinx-needs demo: it converts that
 project's own sphinx-needs configuration into a rinx entity schema
-(`needs_schema.py`), builds its documents against that schema, and reports
-everything the pipeline did not understand.
+(`rinx needs_schema`, the conversion the language server runs too), builds its
+documents against that schema, and reports everything the pipeline did not
+understand.
 
 Unlike the CPython benchmark this is not a throughput measurement — 39
 documents will not stress the pipeline. What it produces is a triage list: each
@@ -27,14 +28,12 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import tomllib
 from collections import Counter
 from collections.abc import Iterable, Sequence
 from pathlib import Path, PurePosixPath
-from typing import TextIO
+from typing import TextIO, TypeAlias
 
 import benchmark_common
-import needs_schema
 from benchmark_common import (
     WARMUP_PACKAGE,
     BuildResult,
@@ -49,7 +48,10 @@ from benchmark_common import (
     whitelist_rows,
     write_frequency_summary,
 )
-from needs_schema import Report
+
+# One `(category, detail)` entry per construct the converter could not carry
+# over, as `rinx needs_schema` prints them.
+Report: TypeAlias = list[tuple[str, str]]
 
 TARGET_DIR = Path(tempfile.gettempdir()) / "rinx_benchmark_needs"
 REPO_URL = "https://github.com/useblocks/sphinx-needs-demo.git"
@@ -129,22 +131,33 @@ def clone_repo(version: str) -> None:
 # ── Schema conversion ─────────────────────────────────────────────────────────
 
 
-def convert_schema(docs_dir: Path) -> Report:
+def convert_schema(docs_dir: Path, binary: Path) -> Report | None:
     """Convert the corpus' own sphinx-needs configuration into an entity schema.
 
-    Returns the converter's report of constructs with no equivalent in our
-    meta-model — half the point of the whole benchmark.
+    Runs `rinx needs_schema` over `ubproject.toml`, which names its
+    `schemas.json` itself. Returns the converter's report of constructs with no
+    equivalent in our meta-model — half the point of the whole benchmark — or
+    None when the conversion failed.
     """
     print("Converting the project's sphinx-needs configuration into an entity schema...")
-    ubproject = tomllib.loads((docs_dir / "ubproject.toml").read_text())
-
-    schemas_path = docs_dir / "schemas.json"
-    schemas = json.loads(schemas_path.read_text()) if schemas_path.exists() else {}
-
-    text, report = needs_schema.convert(ubproject, schemas)
-    (docs_dir / SCHEMA_NAME).write_text(text)
+    result = subprocess.run(
+        [
+            str(binary),
+            "needs_schema",
+            "--ubproject",
+            str(docs_dir / "ubproject.toml"),
+            "--output",
+            str(docs_dir / SCHEMA_NAME),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        print(f"rinx needs_schema failed:\n{result.stderr}")
+        return None
     print(f"Wrote {docs_dir / SCHEMA_NAME}.")
-    return report
+    return [(entry["category"], entry["detail"]) for entry in json.loads(result.stdout)]
 
 
 # ── Bazel project generation ──────────────────────────────────────────────────
@@ -426,8 +439,8 @@ def discard_stale_corpus_outputs(workspace: Path) -> None:
             entry.unlink(missing_ok=True)
 
 
-def run_benchmark(*, clean: bool = False) -> BuildResult:
-    """Build the warm-up site, then the corpus, returning how both went."""
+def warm_up(*, clean: bool = False) -> tuple[bool, float]:
+    """Build the warm-up site, compiling rinx; whether it built, and how long it took."""
     workspace = corpus_workspace()
     if clean:
         print("Cleaning Bazel cache...")
@@ -440,9 +453,12 @@ def run_benchmark(*, clean: bool = False) -> BuildResult:
         workspace, f"//{WARMUP_PACKAGE}:site", "bazel_deps_build.log"
     )
     print(f"Dependency build finished in {deps_duration:.2f} seconds.")
-    if not deps_built:
-        return BuildResult(succeeded=False, warmup_seconds=deps_duration, corpus_seconds=None)
+    return deps_built, deps_duration
 
+
+def build_corpus(warmup_seconds: float) -> BuildResult:
+    """Build the corpus, after a warm-up that took `warmup_seconds`."""
+    workspace = corpus_workspace()
     print("\nRunning Bazel build of the sphinx-needs demo documentation...")
     build_succeeded, duration = benchmark_common.timed_bazel_build(
         workspace, "//:site", "bazel_build.log"
@@ -453,8 +469,28 @@ def run_benchmark(*, clean: bool = False) -> BuildResult:
     print(f"\nBazel build output was captured to: {workspace / 'bazel_build.log'}")
     print(f"HTML output is located at: {site_dir()}/")
     return BuildResult(
-        succeeded=build_succeeded, warmup_seconds=deps_duration, corpus_seconds=duration
+        succeeded=build_succeeded, warmup_seconds=warmup_seconds, corpus_seconds=duration
     )
+
+
+def run_benchmark(*, clean: bool = False) -> tuple[BuildResult, Report]:
+    """Warm up, convert the schema with the binary that built, then build the corpus.
+
+    The conversion needs the `rinx` binary, and the warm-up is what compiles it,
+    so it runs between the two builds and is not timed with either.
+    """
+    deps_built, deps_duration = warm_up(clean=clean)
+    failed = BuildResult(succeeded=False, warmup_seconds=deps_duration, corpus_seconds=None)
+    if not deps_built:
+        return failed, []
+    binary = benchmark_common.find_rinx_binary(corpus_workspace())
+    if binary is None:
+        print("Could not find the rinx binary the warm-up built.")
+        return failed, []
+    schema_report = convert_schema(corpus_workspace(), binary)
+    if schema_report is None:
+        return failed, []
+    return build_corpus(deps_duration), schema_report
 
 
 # ── Analysis ──────────────────────────────────────────────────────────────────
@@ -655,9 +691,8 @@ def main() -> int:
 
     print(f"Benchmarking the entity model against sphinx-needs-demo {args.demo_version}.")
     clone_repo(args.demo_version)
-    schema_report = convert_schema(corpus_workspace())
     generate_bazel_project(rinx_root)
-    result = run_benchmark(clean=args.clean)
+    result, schema_report = run_benchmark(clean=args.clean)
     rows = analyze_results(build_succeeded=result.succeeded, schema_report=schema_report)
     outcome = benchmark_common.RunOutcome(
         title=f"sphinx-needs demo {args.demo_version}",

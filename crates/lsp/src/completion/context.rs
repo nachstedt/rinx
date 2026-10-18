@@ -11,12 +11,15 @@
 use std::ops::Range;
 
 /// A reference role completion answers for.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CompletedRole {
     /// `:ref:`, completed with labels.
     Ref,
     /// `:doc:` or `:std:doc:`, completed with document names.
     Doc,
+    /// A role of the project's entity schema — `:need:`, a type's own,
+    /// the built-in `:entity:` — completed with entity ids.
+    Entity(String),
 }
 
 /// The role the cursor is inside, and what completing it replaces.
@@ -32,17 +35,23 @@ pub struct RoleContext {
 }
 
 /// The reference role whose target the cursor at character index `cursor` on
-/// `line` is in, or `None` when it is in no role completion answers for.
+/// `line` is in, or `None` when it is in no role completion answers for —
+/// `is_entity_role` saying which role names the project's entity schema
+/// declares.
 ///
 /// In the `Title <target>` form only the target completes, once its `<` is
 /// written. Nothing completes inside a `!`-prefixed target, which is never
 /// looked up, nor under an `:external:` prefix, since the server reads no
 /// inventory.
 #[must_use]
-pub fn role_at(line: &str, cursor: usize) -> Option<RoleContext> {
+pub fn role_at(
+    line: &str,
+    cursor: usize,
+    is_entity_role: &dyn Fn(&str) -> bool,
+) -> Option<RoleContext> {
     let chars: Vec<char> = line.chars().collect();
     let cursor = cursor.min(chars.len());
-    let (role, content_start) = open_role_before(&chars[..cursor])?;
+    let (role, content_start) = open_role_before(&chars[..cursor], is_entity_role)?;
     let content = &chars[content_start..cursor];
     let (target_start, angled) = match content.iter().rposition(|&c| c == '<') {
         Some(at) if content[at..].contains(&'>') => return None,
@@ -70,7 +79,10 @@ pub fn role_at(line: &str, cursor: usize) -> Option<RoleContext> {
 /// The role whose interpreted text is still open at the end of `before`, and
 /// the index its content starts at; `None` when the text is closed, inside
 /// an inline literal, or of a role completion does not answer for.
-fn open_role_before(before: &[char]) -> Option<(CompletedRole, usize)> {
+fn open_role_before(
+    before: &[char],
+    is_entity_role: &dyn Fn(&str) -> bool,
+) -> Option<(CompletedRole, usize)> {
     let mut open: Option<(Option<CompletedRole>, usize)> = None;
     let mut i = 0;
     while i < before.len() {
@@ -82,7 +94,10 @@ fn open_role_before(before: &[char]) -> Option<(CompletedRole, usize)> {
                     .find(|&at| before[at] == '`' && before[at + 1] == '`')?;
                 i = closing + 1;
             }
-            '`' => open = Some((completed_role(&role_name_before(&before[..i])), i + 1)),
+            '`' => {
+                let name = role_name_before(&before[..i]);
+                open = Some((completed_role(&name, is_entity_role), i + 1));
+            }
             _ => {}
         }
         i += 1;
@@ -108,10 +123,11 @@ fn role_name_before(before: &[char]) -> String {
 }
 
 /// The completed role a role named `name` is, as the parser spells them.
-fn completed_role(name: &str) -> Option<CompletedRole> {
+fn completed_role(name: &str, is_entity_role: &dyn Fn(&str) -> bool) -> Option<CompletedRole> {
     match name {
         "ref" => Some(CompletedRole::Ref),
         "doc" | "std:doc" => Some(CompletedRole::Doc),
+        _ if is_entity_role(name) => Some(CompletedRole::Entity(name.to_string())),
         _ => None,
     }
 }
@@ -123,7 +139,7 @@ mod tests {
     /// The context at the `|` in `marked`, which is removed first.
     fn at_marker(marked: &str) -> Option<RoleContext> {
         let cursor = marked.chars().position(|c| c == '|').expect("a marker");
-        role_at(&marked.replacen('|', "", 1), cursor)
+        role_at(&marked.replacen('|', "", 1), cursor, &|name| name == "need")
     }
 
     fn context(role: CompletedRole, typed: &str, replace: Range<usize>) -> RoleContext {
@@ -247,7 +263,7 @@ mod tests {
     fn test_role_at_clamps_a_cursor_past_the_line_end() {
         // When / Then
         assert_eq!(
-            role_at(":ref:`a", 40),
+            role_at(":ref:`a", 40, &|_| false),
             Some(context(CompletedRole::Ref, "a", 6..7))
         );
     }
@@ -258,7 +274,10 @@ mod tests {
         let before: Vec<char> = ":doc:`x".chars().collect();
 
         // When / Then
-        assert_eq!(open_role_before(&before), Some((CompletedRole::Doc, 6)));
+        assert_eq!(
+            open_role_before(&before, &|_| false),
+            Some((CompletedRole::Doc, 6))
+        );
     }
 
     #[test]
@@ -274,10 +293,28 @@ mod tests {
     #[test]
     fn test_completed_role_names_the_roles_the_parser_reads() {
         // When / Then
-        assert_eq!(completed_role("ref"), Some(CompletedRole::Ref));
-        assert_eq!(completed_role("doc"), Some(CompletedRole::Doc));
-        assert_eq!(completed_role("std:doc"), Some(CompletedRole::Doc));
+        assert_eq!(completed_role("ref", &|_| false), Some(CompletedRole::Ref));
+        assert_eq!(completed_role("doc", &|_| false), Some(CompletedRole::Doc));
+        assert_eq!(
+            completed_role("std:doc", &|_| false),
+            Some(CompletedRole::Doc)
+        );
         // The parser reads no `:std:ref:` yet (#268).
-        assert_eq!(completed_role("std:ref"), None);
+        assert_eq!(completed_role("std:ref", &|_| false), None);
+    }
+
+    #[test]
+    fn test_role_at_opens_an_entity_role_the_schema_declares() {
+        // When / Then
+        assert_eq!(
+            at_marker("Implements :need:`R_|`."),
+            Some(context(CompletedRole::Entity("need".into()), "R_", 18..20))
+        );
+    }
+
+    #[test]
+    fn test_role_at_ignores_a_role_the_schema_does_not_declare() {
+        // When / Then
+        assert_eq!(at_marker("See :req:`R_|`."), None);
     }
 }

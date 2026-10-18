@@ -12,9 +12,10 @@
 //! includer when a fragment changes — and it keeps each file's text, against
 //! which a diagnostic found inside it is placed.
 //!
-//! The server knows no source root yet, so a `/`-rooted path is refused rather
-//! than resolved against something it is not; workspace awareness brings the
-//! root.
+//! A `/`-rooted path resolves against the source root of the document's
+//! project, as the build resolves it; a document belonging to no project has
+//! none, and such a path is refused rather than resolved against something it
+//! is not.
 
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
@@ -53,17 +54,24 @@ pub fn reads_at_or_under(reads: &BTreeSet<PathBuf>, path: &Path) -> bool {
 /// open buffers first and the disk second.
 pub struct WorkspaceFiles<'a> {
     document: PathBuf,
+    source_root: Option<PathBuf>,
     open: &'a DocumentStore,
     reads: RefCell<FileReads>,
 }
 
 impl<'a> WorkspaceFiles<'a> {
-    /// A loader for the document at `document`, an absolute path, that sees
-    /// the buffers in `open`.
+    /// A loader for the document at `document`, an absolute path, of the
+    /// project at `source_root` if it belongs to one, that sees the buffers
+    /// in `open`.
     #[must_use]
-    pub fn for_document(document: &Path, open: &'a DocumentStore) -> Self {
+    pub fn for_document(
+        document: &Path,
+        source_root: Option<&Path>,
+        open: &'a DocumentStore,
+    ) -> Self {
         Self {
             document: document.to_path_buf(),
+            source_root: source_root.map(Path::to_path_buf),
             open,
             reads: RefCell::default(),
         }
@@ -87,15 +95,20 @@ impl<'a> WorkspaceFiles<'a> {
 
 impl ParseFileLoader for WorkspaceFiles<'_> {
     fn load(&self, path: &str, relative_to: Option<&str>) -> Result<LoadedFile, String> {
-        if path.starts_with('/') {
-            return Err(format!(
-                "cannot read '{path}': the editor does not know this project's source root yet"
-            ));
-        }
-        // A directive inside an included fragment resolves against that
-        // fragment, whose id is the absolute path this loader returned for it.
-        let anchor = relative_to.map_or_else(|| self.document.to_string_lossy(), Into::into);
-        let resolved = rinx_ast::resolve_from_document(path, &anchor);
+        let resolved = if let Some(rooted) = path.strip_prefix('/') {
+            let Some(root) = &self.source_root else {
+                return Err(format!(
+                    "cannot read '{path}': the document belongs to no project, so it has no source root"
+                ));
+            };
+            root.join(rooted)
+        } else {
+            // A directive inside an included fragment resolves against that
+            // fragment, whose id is the absolute path this loader returned
+            // for it.
+            let anchor = relative_to.map_or_else(|| self.document.to_string_lossy(), Into::into);
+            rinx_ast::resolve_from_document(path, &anchor)
+        };
         let id = resolved.to_string_lossy().into_owned();
         let read = self.read(&resolved);
         let mut reads = self.reads.borrow_mut();
@@ -152,7 +165,7 @@ mod tests {
         // Given
         let dir = temp_directory("beside", &[("data.csv", "a, b\n")]);
         let open = DocumentStore::default();
-        let loader = WorkspaceFiles::for_document(&dir.join("index.rst"), &open);
+        let loader = WorkspaceFiles::for_document(&dir.join("index.rst"), None, &open);
 
         // When
         let file = loader.load("data.csv", None).expect("read the file");
@@ -167,7 +180,7 @@ mod tests {
         // Given
         let dir = temp_directory("fragment", &[("shared/rows.csv", "x\n")]);
         let open = DocumentStore::default();
-        let loader = WorkspaceFiles::for_document(&dir.join("index.rst"), &open);
+        let loader = WorkspaceFiles::for_document(&dir.join("index.rst"), None, &open);
         let fragment = dir.join("shared/part.rst");
 
         // When
@@ -184,7 +197,7 @@ mod tests {
         // Given
         let dir = temp_directory("missing", &[]);
         let open = DocumentStore::default();
-        let loader = WorkspaceFiles::for_document(&dir.join("index.rst"), &open);
+        let loader = WorkspaceFiles::for_document(&dir.join("index.rst"), None, &open);
 
         // When
         let Err(error) = loader.load("absent.csv", None) else {
@@ -203,7 +216,7 @@ mod tests {
         let part = dir.join("part.rst");
         let uri = crate::uri::file_uri(&part).expect("an absolute path");
         open.open(uri, 2, "unsaved\r\n".to_string());
-        let loader = WorkspaceFiles::for_document(&dir.join("index.rst"), &open);
+        let loader = WorkspaceFiles::for_document(&dir.join("index.rst"), None, &open);
 
         // When
         let file = loader.load("part.rst", None).expect("read the buffer");
@@ -217,7 +230,7 @@ mod tests {
         // Given
         let dir = temp_directory("reads", &[("data.csv", "a\n")]);
         let open = DocumentStore::default();
-        let loader = WorkspaceFiles::for_document(&dir.join("index.rst"), &open);
+        let loader = WorkspaceFiles::for_document(&dir.join("index.rst"), None, &open);
 
         // When
         let _ = loader.load("data.csv", None);
@@ -236,11 +249,11 @@ mod tests {
     }
 
     #[test]
-    fn test_load_refuses_a_source_root_path() {
+    fn test_load_refuses_a_source_root_path_outside_every_project() {
         // Given
         let dir = temp_directory("rooted", &[]);
         let open = DocumentStore::default();
-        let loader = WorkspaceFiles::for_document(&dir.join("index.rst"), &open);
+        let loader = WorkspaceFiles::for_document(&dir.join("index.rst"), None, &open);
 
         // When
         let Err(error) = loader.load("/shared/data.csv", None) else {
@@ -249,5 +262,20 @@ mod tests {
 
         // Then
         assert!(error.contains("source root"), "{error}");
+    }
+
+    #[test]
+    fn test_load_reads_a_source_root_path_from_the_projects_root() {
+        // Given a document in a subdirectory of its project
+        let dir = temp_directory("rooted_project", &[("shared/data.csv", "a\n")]);
+        let open = DocumentStore::default();
+        let loader = WorkspaceFiles::for_document(&dir.join("guide/index.rst"), Some(&dir), &open);
+
+        // When
+        let file = loader.load("/shared/data.csv", None).expect("loads");
+
+        // Then
+        assert_eq!(file.text, "a\n");
+        assert_eq!(file.id, dir.join("shared/data.csv").to_string_lossy());
     }
 }

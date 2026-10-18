@@ -339,33 +339,13 @@ class TestLspFailures:
         assert benchmark.lsp_failures(None, limit=0) == []
 
 
-class TestFirstExecutable:
-    def test_finds_the_first_executable_file_among_the_paths(self, tmp_path: Path) -> None:
-        # Given
-        (tmp_path / "data").write_text("")
-        binary = tmp_path / "bin" / "rinx"
-        binary.parent.mkdir()
-        binary.write_text("")
-        binary.chmod(0o755)
-
-        # When
-        found = benchmark.first_executable(["", "missing", "data", "bin/rinx\n"], tmp_path)
-
-        # Then
-        assert found == binary
-
-    def test_finds_nothing_when_nothing_is_executable(self, tmp_path: Path) -> None:
-        # Given / When / Then
-        assert benchmark.first_executable(["missing"], tmp_path) is None
-
-
 class TestRunLspCheck:
     def test_counts_what_the_binary_printed(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # Given a binary that prints one warning
         binary = tmp_path / "rinx"
-        monkeypatch.setattr(benchmark, "find_server_binary", lambda: binary)
+        monkeypatch.setattr(benchmark_common, "find_rinx_binary", lambda _: binary)
         calls: list[list[str]] = []
 
         def run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
@@ -385,7 +365,7 @@ class TestRunLspCheck:
 
     def test_is_skipped_without_a_binary(self, monkeypatch: pytest.MonkeyPatch) -> None:
         # Given
-        monkeypatch.setattr(benchmark, "find_server_binary", lambda: None)
+        monkeypatch.setattr(benchmark_common, "find_rinx_binary", lambda _: None)
 
         # When / Then
         assert benchmark.run_lsp_check() is None
@@ -394,7 +374,7 @@ class TestRunLspCheck:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # Given
-        monkeypatch.setattr(benchmark, "find_server_binary", lambda: tmp_path / "rinx")
+        monkeypatch.setattr(benchmark_common, "find_rinx_binary", lambda _: tmp_path / "rinx")
         monkeypatch.setattr(
             benchmark.subprocess,
             "run",
@@ -403,30 +383,3 @@ class TestRunLspCheck:
 
         # When / Then
         assert benchmark.run_lsp_check() is None
-
-
-class TestFindServerBinary:
-    def test_asks_cquery_for_the_exec_built_binary_and_finds_its_file(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        # Given a target directory holding the file cquery names
-        monkeypatch.setattr(benchmark, "TARGET_DIR", tmp_path)
-        binary = tmp_path / "bazel-out" / "exec" / "rinx"
-        binary.parent.mkdir(parents=True)
-        binary.write_text("")
-        binary.chmod(0o755)
-        queries: list[list[str]] = []
-
-        def run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
-            queries.append(command)
-            return subprocess.CompletedProcess(command, 0, "bazel-out/exec/rinx\n", "")
-
-        monkeypatch.setattr(benchmark.subprocess, "run", run)
-
-        # When
-        found = benchmark.find_server_binary()
-
-        # Then
-        assert found == binary
-        assert queries[0][:2] == ["bazel", "cquery"]
-        assert any("deps(//bench_warmup:site)" in part for part in queries[0])

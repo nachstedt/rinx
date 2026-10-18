@@ -156,10 +156,10 @@ The settings read, and what each maps to:
 | `intersphinx_mapping` | inventories (§6) |
 | `needs_*` / `needs_from_toml` | the entity schema |
 
-The sphinx-needs conversion exists today as `scripts/needs_schema.py`. It
-moves into Rust (`rinx_entity`), so the server can call it. The script then
-calls the same code through the CLI, and the conversion is not kept in two
-languages.
+The sphinx-needs conversion, once `scripts/needs_schema.py`, is
+`rinx_entity::needs_conf`, so the server calls it over a project's `conf.py`
+and `ubproject.toml`. The entity benchmark calls the same code through
+`rinx needs_schema`, and the conversion is not kept in two languages.
 
 ### 5. Strictness is a diagnostic post-filter
 
@@ -293,7 +293,7 @@ PlantUML is never compiled in the editor.
 - `ProjectIndex` grows a per-document form in the server. The two shapes must
   produce the same answers, which the server's tests check by building both
   from one corpus.
-- `scripts/needs_schema.py` and `render_corpus_build_file` become callers of
+- The sphinx-needs conversion (done, roadmap #15) and `render_corpus_build_file` become callers of
   Rust code instead of implementations.
 
 ## Rollout

@@ -12,7 +12,6 @@ py_library(
         "benchmark_common.py",
         "benchmark_entities.py",
         "benchmark_warmup.py",
-        "needs_schema.py",
     ],
     # Add this package dir to sys.path so `import benchmark` resolves as a
     # top-level module (both for the binaries and the tests).
@@ -33,13 +32,12 @@ py_binary(
 
 # The sphinx-needs benchmark: entity-model coverage. Shares the plumbing in
 # benchmark_common.py, and converts the corpus' own configuration through
-# needs_schema.py.
+# `rinx needs_schema`, run by the binary its warm-up build compiled.
 py_binary(
     name = "benchmark_entities",
     srcs = [
         "benchmark_common.py",
         "benchmark_entities.py",
-        "needs_schema.py",
     ],
     imports = ["."],
     main = "benchmark_entities.py",

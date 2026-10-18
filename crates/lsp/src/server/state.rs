@@ -47,10 +47,10 @@ use lsp_types::{
     RegistrationParams, Uri,
 };
 use rinx_ast::Diagnostic;
-use rinx_entity::EntitySchema;
 use rinx_renderer::{ReferenceResolver, ReferenceTarget};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::Duration;
 
 use rayon::prelude::*;
@@ -403,8 +403,13 @@ impl ServerState {
     ) -> Option<CompletionResponse> {
         let text = &self.documents.get(uri)?.text;
         let line = text.lines().nth(position.line as usize).unwrap_or_default();
-        let context = role_at(line, char_index_of(line, position.character, self.encoding))?;
         let (project, doc_path) = self.locate(&file_path(uri)?)?;
+        let schema = Arc::clone(&self.projects.get(&project)?.model().settings.parse.schema);
+        let context = role_at(
+            line,
+            char_index_of(line, position.character, self.encoding),
+            &|name| schema.role(name).is_some(),
+        )?;
         let at = |index: usize| {
             let column = u32::try_from(index + 1).unwrap_or(u32::MAX);
             to_lsp_position(
@@ -418,7 +423,7 @@ impl ServerState {
         let index = self.projects.get_mut(&project)?.project_index();
         Some(CompletionResponse::List(CompletionList {
             is_incomplete,
-            items: completion_items(index, &doc_path, &context, range),
+            items: completion_items(index, &schema, &doc_path, &context, range),
         }))
     }
 
@@ -475,13 +480,14 @@ impl ServerState {
         let document = &tracked.parsed.document;
         let reference = reference_at(document, at)?;
         let range = to_lsp_range(reference.span()?, text, self.encoding);
-        // With the project's configuration, as the render tier resolves; no
-        // entity schema applies until roadmap #15 and #18.
+        // With the project's configuration and schema, as the render tier
+        // resolves.
         let project = self.projects.get_mut(&id)?;
         let config = project.site_config();
+        let schema = Arc::clone(&project.model().settings.parse.schema);
         let index = project.project_index();
-        let target = ReferenceResolver::new(document, index, &config, EntitySchema::empty_ref())
-            .resolve(reference)?;
+        let target =
+            ReferenceResolver::new(document, index, &config, &schema).resolve(reference)?;
         Some((range, target, id))
     }
 
@@ -700,11 +706,14 @@ impl ServerState {
         };
         let doc_path = located.as_ref().map(|(_, doc_path)| doc_path.as_str());
         let default_settings = ParseSettings::default();
-        let settings = located
+        let model = located
             .as_ref()
             .and_then(|(project, _)| self.projects.get(project))
-            .map_or(&default_settings, |project| &project.model().settings.parse);
-        let parsed = text.map(|text| parse_source(uri, doc_path, &text, settings, &self.documents));
+            .map(Project::model);
+        let settings = model.map_or(&default_settings, |model| &model.settings.parse);
+        let source_root = model.map(|model| model.source_root.as_path());
+        let parsed = text
+            .map(|text| parse_source(uri, doc_path, source_root, &text, settings, &self.documents));
         Reading {
             path,
             located,
@@ -848,11 +857,12 @@ impl ServerState {
             return Vec::new();
         };
         let config = project.site_config();
+        let schema = Arc::clone(&project.model().settings.parse.schema);
         let index = project.project_index();
         let Some(tracked) = self.tracked.get_mut(&uri) else {
             return Vec::new();
         };
-        let diagnostics = render_diagnostics(&tracked.parsed.document, index, &config);
+        let diagnostics = render_diagnostics(&tracked.parsed.document, index, &config, &schema);
         tracked.rendered = Some(Rendered { key, diagnostics });
         self.record_diagnosis(&uri)
             .into_iter()

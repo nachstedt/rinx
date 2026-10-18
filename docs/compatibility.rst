@@ -940,6 +940,17 @@ A project-declared construct vocabulary covering the ground of `sphinx-needs
      - ✅ ℹ️
      - - Rust ``regex`` dialect: no lookaround or backreferences.
        - Conditional and network rules are not converted.
+   * - sphinx-needs configuration (``needs_*``, ``ubproject.toml``,
+       ``schemas.json``) as an entity schema
+     - ✅ ℹ️
+     - - Converted by ``rinx needs_schema`` for the build, and read by the
+         language server from ``conf.py`` and its ``needs_from_toml``.
+       - Need types, fields, links, statuses, ``needs_id_required``,
+         ``needs_import_keys`` and type-scoped ``schemas.json`` rules carry
+         over; constraints, variants, global options, computed links and
+         conditional or network rules are reported, not converted.
+       - Every field and link is declared on every type, as sphinx-needs
+         scopes none.
    * - Filter strings
      - ✅ ℹ️
      - - Arithmetic, ordering comparisons, attribute access, calls other

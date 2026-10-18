@@ -6,10 +6,13 @@
 //! `conf.py` differ only in their settings. The Bazel manifest (roadmap #18)
 //! will be a third [`ProjectSource`].
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use rinx_analyzer::IndexSettings;
 use rinx_ast::{Domain, ResolvedLanguage};
+use rinx_entity::EntitySchema;
 use rinx_parser::DefaultRole;
 use rinx_renderer::config::SiteConfig;
 
@@ -48,6 +51,13 @@ pub struct ParseSettings {
     pub prolog: Option<String>,
     /// The text parsed at the end of every document — `rst_epilog`.
     pub epilog: Option<String>,
+    /// The entity vocabulary documents are parsed against — converted from
+    /// the project's sphinx-needs configuration. Shared, since every parse
+    /// and the project's index read the one schema.
+    pub schema: Arc<EntitySchema>,
+    /// The names a `.. needimport::` may write for a file, each resolved to
+    /// a `/`-rooted path the source root resolves — `needs_import_keys`.
+    pub import_keys: BTreeMap<String, String>,
 }
 
 impl Default for ParseSettings {
@@ -58,6 +68,8 @@ impl Default for ParseSettings {
             default_role: DefaultRole::TITLE_REFERENCE,
             prolog: None,
             epilog: None,
+            schema: Arc::new(EntitySchema::empty()),
+            import_keys: BTreeMap::new(),
         }
     }
 }
@@ -83,6 +95,10 @@ pub struct ProjectSettings {
     pub strictness: Strictness,
     /// The other sites the project links into — `intersphinx_mapping`.
     pub intersphinx: IntersphinxSettings,
+    /// The files besides `conf.py` the project's configuration was read
+    /// from — the `ubproject.toml` and `schemas.json` of sphinx-needs — so
+    /// a change to one is a change of configuration.
+    pub config_files: Vec<PathBuf>,
 }
 
 /// Sphinx's default root document.
@@ -106,6 +122,7 @@ impl Default for ProjectSettings {
             highlight_language: ResolvedLanguage::default(),
             strictness: Strictness::default(),
             intersphinx: IntersphinxSettings::default(),
+            config_files: Vec::new(),
         }
     }
 }

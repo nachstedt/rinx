@@ -74,13 +74,14 @@ pub struct ParsedSource {
 pub fn parse_source(
     uri: &Uri,
     doc_path: Option<&str>,
+    source_root: Option<&Path>,
     text: &str,
     settings: &ParseSettings,
     open: &DocumentStore,
 ) -> ParsedSource {
     let text = protocol_line_endings(text).into_owned();
     let (document, reads) = if let Some(path) = file_path(uri) {
-        let files = WorkspaceFiles::for_document(&path, open);
+        let files = WorkspaceFiles::for_document(&path, source_root, open);
         let name = doc_path.map_or_else(|| path.to_string_lossy(), Cow::Borrowed);
         let ctx = configured(ParseCtx::new(settings.domain, &files), settings);
         let document = rinx_parser::parse_with_ctx(&name, &text, &ctx);
@@ -111,7 +112,10 @@ pub const RST_EPILOG: &str = "<rst_epilog>";
 /// `ctx` configured with a project's parse settings: its default role, and
 /// its `rst_prolog` and `rst_epilog`.
 fn configured<'a>(ctx: ParseCtx<'a>, settings: &'a ParseSettings) -> ParseCtx<'a> {
-    let ctx = ctx.with_default_role(&settings.default_role);
+    let ctx = ctx
+        .with_default_role(&settings.default_role)
+        .with_schema(&settings.schema)
+        .with_import_keys(&settings.import_keys);
     let ctx = match &settings.prolog {
         Some(text) => ctx.with_prolog(SplicedText {
             name: RST_PROLOG,
@@ -351,7 +355,7 @@ mod tests {
     ) -> DocumentDiagnosis {
         diagnose_source(
             uri,
-            &parse_source(uri, None, text, &ParseSettings::default(), open),
+            &parse_source(uri, None, None, text, &ParseSettings::default(), open),
             &[],
             &Strictness::default(),
             open,
@@ -502,7 +506,7 @@ mod tests {
         let open = DocumentStore::default();
         diagnose_source(
             uri,
-            &parse_source(uri, None, text, settings, &open),
+            &parse_source(uri, None, None, text, settings, &open),
             &[],
             &Strictness::default(),
             &open,
@@ -541,6 +545,7 @@ mod tests {
         // When
         let parsed = parse_source(
             &uri("untitled:Untitled-1"),
+            None,
             None,
             "Text.\n",
             &with_splices("Prolog.\n", "Epilog.\n"),
