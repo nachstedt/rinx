@@ -197,8 +197,20 @@
 </li>
 <li><p><code>rst_prolog</code> and <code>rst_epilog</code>: text parsed at the start and the end of every document, typically substitutions. Only a literal string is read: an f-string such as CPython's <code>rst_epilog</code> is reported, and its substitutions stay undefined. A mistake in the text itself is shown at the start of each document it is parsed with.</p>
 </li>
+<li><p>The sphinx-needs settings, when <code>extensions</code> declares <code>sphinx_needs</code> (see below).</p>
+</li>
 </ul>
-<p>Every other setting is ignored, and not reported. The sphinx-needs settings are read by a later step. Saving <code>conf.py</code>, or creating or deleting one, reads the folder's projects again.</p>
+<p>Every other setting is ignored, and not reported. Saving <code>conf.py</code>, or creating or deleting one, reads the folder's projects again.</p>
+<p>A project declaring <code>sphinx_needs</code> gets its need types as directives: <code>.. req::</code> is recognised and checked, its id is a target, and <code>:need:</code> and each type's own role resolve, hover and go to the need, and complete the ids of the needs the project defines. The server converts the project's sphinx-needs configuration into an entity schema (see <a href="entities.html#entities">Entities</a>), the conversion <code>rinx needs_schema</code> writes an <code>entities.toml</code> with:</p>
+<ul>
+<li><p>The literal <code>needs_*</code> settings of <code>conf.py</code>: <code>needs_types</code>, <code>needs_fields</code> or <code>needs_extra_options</code>, <code>needs_links</code> or <code>needs_extra_links</code>, <code>needs_statuses</code>, <code>needs_id_required</code>, <code>needs_import_keys</code>, and those sphinx-needs offers that the entity model cannot express, so they can be reported.</p>
+</li>
+<li><p>The <code>[needs]</code> table of the <code>ubproject.toml</code> that <code>needs_from_toml</code> names, relative to <code>conf.py</code>, under the table <code>needs_from_toml_table</code> names, if any. As in sphinx-needs, a setting written there overrides the same setting in <code>conf.py</code>, and a path written there is relative to the TOML file.</p>
+</li>
+<li><p>The <code>schemas.json</code> that <code>needs_schema_definitions_from_json</code> names: the rules selecting one need type, which make an option required or constrain a value.</p>
+</li>
+</ul>
+<p>What could not be read is <code>conf.needs-invalid</code>, and each construct the entity model cannot express, such as a link whose targets a function computes or a conditional <code>schemas.json</code> rule, is <code>conf.needs-unconverted</code>. Both are reported on the <code>needs_from_toml</code> line, or on <code>extensions</code> when there is none. Saving the <code>ubproject.toml</code> or the <code>schemas.json</code> reads the project again, as saving <code>conf.py</code> does.</p>
 <p>A Sphinx project leans on extensions rinx does not run, such as autodoc. Reported as warnings, everything they explain would drown the findings you can fix, so the server lowers what a declared extension accounts for:</p>
 <ul>
 <li><p>An unknown directive that a declared extension provides, such as <code>.. automodule::</code> under <code>sphinx.ext.autodoc</code>, is <em>Information</em>: its contents are not checked. Any other unknown directive stays a warning, since it may be a typo.</p>

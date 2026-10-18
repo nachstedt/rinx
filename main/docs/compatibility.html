@@ -2330,6 +2330,27 @@ errors.</p>
 </td>
 </tr>
 <tr>
+<td><p>sphinx-needs configuration (<code>needs_*</code>, <code>ubproject.toml</code>,
+<code>schemas.json</code>) as an entity schema</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Converted by <code>rinx needs_schema</code> for the build, and read by the
+language server from <code>conf.py</code> and its <code>needs_from_toml</code>.</p>
+</li>
+<li><p>Need types, fields, links, statuses, <code>needs_id_required</code>,
+<code>needs_import_keys</code> and type-scoped <code>schemas.json</code> rules carry
+over; constraints, variants, global options, computed links and
+conditional or network rules are reported, not converted.</p>
+</li>
+<li><p>Every field and link is declared on every type, as sphinx-needs
+scopes none.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
 <td><p>Filter strings</p>
 </td>
 <td><p>✅ ℹ️</p>

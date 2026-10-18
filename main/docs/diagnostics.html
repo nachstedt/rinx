@@ -1180,6 +1180,15 @@ either: the settings after it keep their defaults.</p>
 <p>An <code>intersphinx_mapping</code> entry none of whose inventories could be read: a
 file that is missing or is no <code>objects.inv</code>, or a download that is none.
 References into it stay unresolved in the editor.</p>
+<h3 id="conf-needs-invalid">conf.needs-invalid</h3>
+<p>A sphinx-needs configuration the editor could not turn into an entity schema:
+the <code>ubproject.toml</code> or <code>schemas.json</code> it names is missing or malformed, a
+setting has the wrong shape, or the types it declares contradict each other.
+Its need directives stay unknown.</p>
+<h3 id="conf-needs-unconverted">conf.needs-unconverted</h3>
+<p>A sphinx-needs construct the entity model has no equivalent for — a link
+computed by a function, a conditional <code>schemas.json</code> rule, variants, … —
+which the editor reads the project without.</p>
 <h2 id="noqa">noqa</h2>
 <h3 id="noqa-unknown-code">noqa.unknown-code</h3>
 <p>A <code>.. noqa:</code> comment naming an id that is not a diagnostic code. Never
