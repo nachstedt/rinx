@@ -16,7 +16,6 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:rinx.showPreview",
     "onLanguage:restructuredtext"
   ],
   "main": "./dist/extension.js",
