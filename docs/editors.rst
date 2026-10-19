@@ -49,6 +49,8 @@ Emacs 29 or later, through Eglot, which is built in. Put this in ``init.el``:
    :language: lisp
    :start-at: ;; Eglot
 
+The last line matters only on Emacs 31.1. That release shows Flymake's diagnostics only in files listed in ``trusted-content``, Eglot's among them, so without it a file shows hover and completion but no diagnostics. Later releases exempt Eglot themselves.
+
 The server's root is the project Emacs finds for the file, usually its version-control repository. Within it, each document still belongs to the nearest ``conf.py`` (see :ref:`vscode-sphinx-projects`). lsp-mode works as well, as a client registered for ``rst-mode`` running ``rinx lsp``, but this configuration is not tested.
 
 What every editor gets
