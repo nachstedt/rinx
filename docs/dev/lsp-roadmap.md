@@ -33,7 +33,7 @@ finished one 🔶. A heading with no marker means the step has not started.
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
   #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
-  #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315) and #18.
+  #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315) and #18 (PR #317).
 - **Next: #19, strict mode.**
 
 The pull request that finishes a step also updates this section and the
@@ -535,7 +535,7 @@ another client would implement for the first two.
 
 ## M3: rinx projects (Bazel)
 
-### 18. `lsp_manifest` output group + Bazel source ✅
+### 18. `lsp_manifest` output group + Bazel source ✅ (#317)
 
 **You experience:** in this repository, entity directives and each library's
 settings work, and the status bar shows `rinx project //docs:site`.
