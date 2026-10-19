@@ -66,7 +66,13 @@ suite('Running conf.py (e2e)', () => {
         const ran = await waitFor('the status to name the interpreter', () =>
             api
                 ?.indexStatus()
-                ?.projects?.find((status) => status.kind === 'sphinx' && status.conf === 'conf_run/conf.py'),
+                // The status naming the project may arrive before the one naming the run.
+                ?.projects?.find(
+                    (status) =>
+                        status.kind === 'sphinx' &&
+                        status.conf === 'conf_run/conf.py' &&
+                        status.executedWith !== undefined,
+                ),
         );
         assert.deepStrictEqual(ran, { kind: 'sphinx', conf: 'conf_run/conf.py', executedWith: PYTHON });
         assert.deepStrictEqual(codesFor(project('conf.py')), []);
