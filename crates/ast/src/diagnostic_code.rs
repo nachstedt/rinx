@@ -524,6 +524,12 @@ diagnostic_codes! {
     /// nothing. Reported by the site's asset validation, the one step that
     /// sees both the documents and the bundle.
     DownloadUndeclared => "download.undeclared",
+    /// A `.. image::`, `.. figure::` or `.. |name| image::` naming a project
+    /// file that never reached the site's `_images/` directory — in a Bazel
+    /// build, a file missing from the `images` attribute of every library of
+    /// the site. Fails the build: the page would otherwise show a broken
+    /// picture.
+    ImageUndeclared => "image.undeclared",
 
     // --- `.. include::` ----------------------------------------------------
     /// The directive has no argument, so it names no file to splice in.
@@ -588,6 +594,15 @@ diagnostic_codes! {
     /// A document no toctree reaches, so a reader can only arrive at it by
     /// following a cross-reference. Suppress with a leading `:orphan:` field.
     ToctreeOrphanDocument => "toctree.orphan-document",
+    /// An entry naming a document of no library in its own library's `deps`.
+    /// In a Bazel build a toctree is a dependency, so this fails the build
+    /// even when another library of the site holds the document; `.. noqa:`
+    /// cannot silence it, being a fault of the build file, not the document.
+    ToctreeUndeclaredDependency => "toctree.undeclared-dependency",
+    /// A `:glob:` pattern matching no document of its library or the
+    /// libraries in its `deps`. Fails a Bazel build as an undeclared entry
+    /// does, since the pattern is expanded against the declared documents.
+    ToctreeGlobMatchesNoDependency => "toctree.glob-matches-no-dependency",
 
     // --- Definitions several documents claim --------------------------------
     /// A label, `:name:` or other `:ref:` target another document defines too.

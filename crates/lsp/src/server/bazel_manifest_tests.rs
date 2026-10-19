@@ -474,3 +474,319 @@ fn test_an_unreadable_manifest_is_shown_once_and_the_folder_stays_a_folder() {
     assert!(self::shown(&again).is_empty());
     assert!(state.locate(&workspace.root.join("index.rst")).is_some());
 }
+
+/// What `file` shows in `messages`: each diagnostic's code and severity.
+fn shown_for(
+    workspace: &Workspace,
+    messages: &[Message],
+    file: &str,
+) -> Vec<(String, lsp_types::DiagnosticSeverity)> {
+    let uri = workspace.uri(file);
+    messages
+        .iter()
+        .filter(|message| {
+            matches!(message, Message::Notification(notification)
+                if notification.method == "textDocument/publishDiagnostics")
+        })
+        .map(published)
+        .filter(|params| params.uri == uri)
+        .last()
+        .map(|params| {
+            params
+                .diagnostics
+                .iter()
+                .filter_map(|diagnostic| match (&diagnostic.code, diagnostic.severity) {
+                    (Some(NumberOrString::String(code)), Some(severity)) => {
+                        Some((code.clone(), severity))
+                    }
+                    _ => None,
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// A server over `workspace`, granted its `site.lsp_manifest.json`, with the
+/// scan's result taken.
+fn granted(workspace: &Workspace) -> ServerState {
+    scanned_with(
+        workspace,
+        ManifestSource::Granted(vec![workspace.root.join("site.lsp_manifest.json")]),
+    )
+    .0
+}
+
+/// An index whose toctree names `guide`, under a `.. noqa:` silencing
+/// everything.
+const INDEX_LISTING_GUIDE: &str = ".. noqa\n\n.. toctree::\n\n   guide\n";
+
+#[test]
+fn test_a_toctree_entry_outside_the_librarys_deps_is_an_error_no_noqa_silences() {
+    // Given — `guide.rst` is the site's, but of a library `//:index` does not
+    // depend on
+    let workspace = bazel_workspace(
+        "bazel_undeclared_toctree",
+        &[
+            ("index.rst", INDEX_LISTING_GUIDE),
+            ("guide.rst", "Guide\n=====\n"),
+            (
+                "site.lsp_manifest.json",
+                &manifest(
+                    "//:site",
+                    vec![
+                        library(
+                            "//:index",
+                            &["index.rst"],
+                            &serde_json::json!({"allowed_docs": ["index"]}),
+                        ),
+                        library("//:guide", &["guide.rst"], &serde_json::json!({})),
+                    ],
+                ),
+            ),
+        ],
+    );
+    let mut state = granted(&workspace);
+
+    // When
+    let opened = handle_notification(&mut state, workspace.open("index.rst", INDEX_LISTING_GUIDE));
+
+    // Then
+    assert_eq!(
+        shown_for(&workspace, &opened, "index.rst"),
+        [(
+            "toctree.undeclared-dependency".to_string(),
+            lsp_types::DiagnosticSeverity::ERROR
+        )]
+    );
+}
+
+#[test]
+fn test_a_toctree_entry_the_deps_declare_shows_nothing() {
+    // Given
+    let workspace = bazel_workspace(
+        "bazel_declared_toctree",
+        &[
+            ("index.rst", INDEX_LISTING_GUIDE),
+            ("guide.rst", "Guide\n=====\n"),
+            (
+                "site.lsp_manifest.json",
+                &manifest(
+                    "//:site",
+                    vec![
+                        library(
+                            "//:index",
+                            &["index.rst"],
+                            &serde_json::json!({"allowed_docs": ["index", "guide"]}),
+                        ),
+                        library("//:guide", &["guide.rst"], &serde_json::json!({})),
+                    ],
+                ),
+            ),
+        ],
+    );
+    let mut state = granted(&workspace);
+
+    // When
+    let opened = handle_notification(&mut state, workspace.open("index.rst", INDEX_LISTING_GUIDE));
+
+    // Then
+    assert_eq!(shown_for(&workspace, &opened, "index.rst"), []);
+}
+
+#[test]
+fn test_a_folder_without_its_manifest_checks_no_declaration() {
+    // Given — the same undeclared entry, but no manifest granted
+    let workspace = bazel_workspace(
+        "bazel_no_declarations",
+        &[
+            ("index.rst", INDEX_LISTING_GUIDE),
+            ("guide.rst", "Guide\n=====\n"),
+        ],
+    );
+    let (mut state, _) = scanned_with(&workspace, ManifestSource::Off);
+
+    // When
+    let opened = handle_notification(&mut state, workspace.open("index.rst", INDEX_LISTING_GUIDE));
+
+    // Then
+    assert_eq!(shown_for(&workspace, &opened, "index.rst"), []);
+}
+
+#[test]
+fn test_a_document_no_library_lists_shows_both_the_build_failure_and_the_missing_document() {
+    // Given
+    let text = ".. toctree::\n\n   gone\n";
+    let workspace = bazel_workspace(
+        "bazel_toctree_gone",
+        &[
+            ("index.rst", text),
+            (
+                "site.lsp_manifest.json",
+                &manifest(
+                    "//:site",
+                    vec![library(
+                        "//:index",
+                        &["index.rst"],
+                        &serde_json::json!({"allowed_docs": ["index"]}),
+                    )],
+                ),
+            ),
+        ],
+    );
+    let mut state = granted(&workspace);
+    handle_notification(&mut state, workspace.open("index.rst", text));
+
+    // When
+    let rendered = render_all(&mut state);
+
+    // Then
+    assert_eq!(
+        shown_for(&workspace, &rendered, "index.rst"),
+        [
+            (
+                "toctree.missing-document".to_string(),
+                lsp_types::DiagnosticSeverity::WARNING
+            ),
+            (
+                "toctree.undeclared-dependency".to_string(),
+                lsp_types::DiagnosticSeverity::ERROR
+            ),
+        ]
+    );
+}
+
+#[test]
+fn test_assets_count_as_declared_by_any_library_of_the_site() {
+    // Given — the image is the other library's, the download nobody's
+    let text = ".. image:: logo.png\n\nGet :download:`data.csv`.\n";
+    let workspace = bazel_workspace(
+        "bazel_assets",
+        &[
+            ("index.rst", text),
+            (
+                "site.lsp_manifest.json",
+                &manifest(
+                    "//:site",
+                    vec![
+                        library(
+                            "//:index",
+                            &["index.rst"],
+                            &serde_json::json!({"allowed_docs": ["index"]}),
+                        ),
+                        library(
+                            "//:pictures",
+                            &[],
+                            &serde_json::json!({"images": ["logo.png"]}),
+                        ),
+                    ],
+                ),
+            ),
+        ],
+    );
+    let mut state = granted(&workspace);
+
+    // When
+    let opened = handle_notification(&mut state, workspace.open("index.rst", text));
+
+    // Then
+    assert_eq!(
+        shown_for(&workspace, &opened, "index.rst"),
+        [(
+            "download.undeclared".to_string(),
+            lsp_types::DiagnosticSeverity::ERROR
+        )]
+    );
+}
+
+#[test]
+fn test_a_diagram_needs_its_librarys_opt_in() {
+    // Given
+    let text = ".. plantuml::\n\n   A -> B\n";
+    let workspace = bazel_workspace(
+        "bazel_diagrams",
+        &[
+            ("plain.rst", text),
+            ("drawn.rst", text),
+            (
+                "site.lsp_manifest.json",
+                &manifest(
+                    "//:site",
+                    vec![
+                        library("//:plain", &["plain.rst"], &serde_json::json!({})),
+                        library(
+                            "//:drawn",
+                            &["drawn.rst"],
+                            &serde_json::json!({"diagrams": true}),
+                        ),
+                    ],
+                ),
+            ),
+        ],
+    );
+    let mut state = granted(&workspace);
+
+    // When
+    let plain = handle_notification(&mut state, workspace.open("plain.rst", text));
+    let drawn = handle_notification(&mut state, workspace.open("drawn.rst", text));
+
+    // Then
+    assert_eq!(
+        shown_for(&workspace, &plain, "plain.rst"),
+        [(
+            "uml.diagrams-disabled".to_string(),
+            lsp_types::DiagnosticSeverity::ERROR
+        )]
+    );
+    assert_eq!(shown_for(&workspace, &drawn, "drawn.rst"), []);
+}
+
+#[test]
+fn test_a_broken_reference_is_an_error_where_the_site_sets_strict_links() {
+    // Given
+    let text = "See :ref:`nowhere`.\n";
+    let site = |strict: bool| {
+        serde_json::json!({
+            "version": 1,
+            "site": {
+                "label": "//:site",
+                "config": {"source": "rinx.toml"},
+                "entity_schema": null,
+                "strict_links": strict,
+            },
+            "inventories": [],
+            "libraries": [library("//:docs", &["index.rst"], &serde_json::json!({}))],
+        })
+        .to_string()
+    };
+    let mut severities = Vec::new();
+    for (name, strict) in [("bazel_lenient_links", false), ("bazel_strict_links", true)] {
+        let workspace = bazel_workspace(
+            name,
+            &[
+                ("index.rst", text),
+                ("site.lsp_manifest.json", &site(strict)),
+            ],
+        );
+        let mut state = granted(&workspace);
+        handle_notification(&mut state, workspace.open("index.rst", text));
+
+        // When
+        let rendered = render_all(&mut state);
+        severities.push(shown_for(&workspace, &rendered, "index.rst"));
+    }
+
+    // Then
+    assert_eq!(
+        severities,
+        [
+            vec![(
+                "link.broken-ref".to_string(),
+                lsp_types::DiagnosticSeverity::WARNING
+            )],
+            vec![(
+                "link.broken-ref".to_string(),
+                lsp_types::DiagnosticSeverity::ERROR
+            )],
+        ]
+    );
+}

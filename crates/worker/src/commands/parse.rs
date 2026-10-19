@@ -38,51 +38,6 @@ impl DiagramSupport {
     }
 }
 
-/// One diagnostic per diagram directive in `doc`, however deeply nested.
-///
-/// Walks the parsed document rather than asking the parser to refuse the
-/// directive, so the parser stays unaware of build configuration — the live
-/// preview, which has no library at all, parses a diagram like any other
-/// construct. An `.. include::`d fragment is covered too, since by now it is
-/// part of the document's own tree.
-pub(super) fn find_disabled_diagrams(doc: &ast::Document) -> Vec<ast::Diagnostic> {
-    let mut found = Vec::new();
-    ast::walk_nodes(&doc.nodes, &mut |node| {
-        let (directive, code, span) = match node {
-            ast::Node::Directive(ast::Directive::Uml(uml)) => (
-                uml.source.as_str(),
-                ast::DiagnosticCode::UmlDiagramsDisabled,
-                uml.span,
-            ),
-            // A flowchart draws no less of a picture for having generated it,
-            // so it needs the same opt-in — under its own code, because a code
-            // names the construct.
-            ast::Node::Directive(ast::Directive::EntityFlow(flow)) => (
-                flow.source.as_str(),
-                ast::DiagnosticCode::EntityFlowDiagramsDisabled,
-                flow.span,
-            ),
-            // A sequence diagram is generated like a flowchart, and needs the
-            // opt-in for the flowchart's reason.
-            ast::Node::Directive(ast::Directive::EntitySequence(sequence)) => (
-                sequence.source.as_str(),
-                ast::DiagnosticCode::EntitySequenceDiagramsDisabled,
-                sequence.span,
-            ),
-            _ => return,
-        };
-        found.push(ast::Diagnostic::at(
-            code,
-            format!(
-                "{directive}: this library does not compile diagrams; set `diagrams = True` on \
-                 its rinx_library to enable them"
-            ),
-            span,
-        ));
-    });
-    found
-}
-
 /// `parse_files` is injected rather than built here so this stays the pure,
 /// I/O-free half of the subcommand: a test can hand in a loader that reads
 /// nothing, while `cmd_parse` hands in the real filesystem one.
@@ -111,7 +66,7 @@ pub(super) fn process_parse(
     // Not subject to `.. noqa:`: a suppressed opt-in check would still leave
     // the page pointing at an SVG nothing compiled.
     if diagrams == DiagramSupport::Disabled {
-        let disabled = find_disabled_diagrams(&doc);
+        let disabled = rinx_analyzer::disabled_diagrams(&doc);
         if !disabled.is_empty() {
             for diagnostic in &disabled {
                 eprintln!("{}", format_error_diagnostic(&origin, diagnostic));
@@ -325,93 +280,18 @@ mod tests {
     }
 
     #[test]
-    fn test_find_disabled_diagrams_reports_each_diagram_at_its_own_line() {
-        // Given — one at top level and one nested in an admonition
-        let rst = ".. plantuml::\n\n   A -> B\n\n.. note::\n\n   .. uml::\n\n      C -> D\n";
-        let doc = parser::parse("index.rst", rst);
-
-        // When
-        let found = find_disabled_diagrams(&doc);
-
-        // Then
-        let lines: Vec<u32> = found
-            .iter()
-            .map(|diagnostic| {
-                diagnostic
-                    .span
-                    .expect("a diagram has a position")
-                    .start
-                    .line
-            })
-            .collect();
-        assert_eq!(lines, [1, 7]);
-        assert!(
-            found
-                .iter()
-                .all(|d| d.code == ast::DiagnosticCode::UmlDiagramsDisabled)
-        );
-    }
-
-    #[test]
     fn test_a_flowchart_needs_the_same_opt_in_under_its_own_code() {
         // Given — a generated picture is compiled by the same action a written
         // one is, so a library that creates no diagram actions has nowhere to
         // put it either
         let rst = ".. entity-flow::\n";
-        let doc = parser::parse("index.rst", rst);
 
-        // When
-        let found = find_disabled_diagrams(&doc);
-
-        // Then
-        assert_eq!(found.len(), 1);
-        assert_eq!(
-            found[0].code,
-            ast::DiagnosticCode::EntityFlowDiagramsDisabled
-        );
-        assert!(found[0].message.contains("diagrams = True"), "{found:?}");
+        // When / Then
         assert!(
             parse_with_diagrams(rst, DiagramSupport::Disabled).is_err(),
             "a flowchart in a library without the opt-in must fail the parse"
         );
         assert!(parse_with_diagrams(rst, DiagramSupport::Enabled).is_ok());
-    }
-
-    #[test]
-    fn test_a_sequence_diagram_needs_the_same_opt_in_under_its_own_code() {
-        // Given — built directly: parsing one needs a schema declaring the
-        // relation it walks, which is beside the point here
-        let sequence = ast::EntitySequence::new(
-            ast::EntitySequenceSource::NeedSequence,
-            ast::NonEmptyVector::single(ast::EntityId::new("COMP_UI").unwrap()),
-            ast::NonEmptyVector::single("sends".to_string()),
-        );
-        let doc = ast::Document::new(
-            "index.rst".to_string(),
-            vec![ast::Node::Directive(ast::Directive::EntitySequence(
-                Box::new(sequence),
-            ))],
-        );
-
-        // When
-        let found = find_disabled_diagrams(&doc);
-
-        // Then
-        assert_eq!(found.len(), 1);
-        assert_eq!(
-            found[0].code,
-            ast::DiagnosticCode::EntitySequenceDiagramsDisabled
-        );
-        assert!(found[0].message.starts_with("needsequence:"), "{found:?}");
-    }
-
-    #[test]
-    fn test_find_disabled_diagrams_finds_nothing_in_a_document_without_one() {
-        // Given
-        let doc = parser::parse("index.rst", "Just prose.\n");
-
-        // When / Then
-        assert!(find_disabled_diagrams(&doc).is_empty());
     }
 
     #[test]

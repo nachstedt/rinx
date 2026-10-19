@@ -33,8 +33,9 @@ finished one 🔶. A heading with no marker means the step has not started.
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
   #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
-  #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315) and #18 (PR #317).
-- **Next: #19, strict mode.**
+  #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315), #18 (PR #317)
+  and #19.
+- **Next: #20, Jinja-templated documents.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -581,7 +582,7 @@ Not done here: the manifest records each library's `jinja` and
 `jinja_context`, but the server applies them only with #20; `deps`, `images`
 and `downloads` are recorded for #19.
 
-### 19. Strict mode
+### 19. Strict mode ✅
 
 **You experience:** a toctree entry missing from `deps`, or an undeclared
 image or download, is underlined exactly as the build fails.
@@ -590,6 +591,40 @@ image or download, is underlined exactly as the build fails.
 - `validator.rs`'s allowed-documents check per library
 - Refactor the `validate_assets` checks into a pure function, then reuse it
 - Tests
+
+The build's checks became typed diagnostics with positions and codes, and
+the server calls the same functions. `rinx_toctree::undeclared_toctree_entries`
+replaced `validator.rs` and reports `toctree.undeclared-dependency` or
+`toctree.glob-matches-no-dependency` at the entry. `rinx_analyzer::undeclared_assets`
+reports `image.undeclared` (new) and `download.undeclared` at the construct,
+finding the roles with the typed inline walk rather than the AST's JSON. The
+diagram opt-in, `disabled_diagrams`, moved there from the worker too, since
+the server parsed every diagram as if `diagrams = True` was set. The build
+now prints each failure as an `error: path:line:column: code: message` line.
+
+Each library's `ParseSettings` carries its `BuildDeclarations` from the
+manifest: the documents its toctrees may name, its `diagrams` flag, and the
+site's bundled images and downloads, the union over every library as the
+build's bundle directories are. A parse checks them and shows what fails as an
+*Error* that no `.. noqa:` silences, as the build does not. A site setting
+`strict_links` makes its broken references *Errors* too, which `.. noqa:`
+does silence. Which findings fail the build is known by where they come from,
+never by their code. `Strictness::Rinx` lowers nothing. A `:loading: embed`
+image the site bundles is embeddable, which removes #18's two
+`image.embed-unavailable` findings. A toctree entry naming a document no
+library lists shows both the build's `toctree.undeclared-dependency` and the
+fold's `toctree.missing-document`. A third parity test runs the build's
+failing actions over a small Bazel fixture (`crates/worker/tests/parity_bazel/`)
+and compares their errors with the editor's.
+
+Measured on this repository with the manifests of `//docs:site`,
+`//examples:site` and `//examples/intersphinx:sibling_site`: `--check` shows 18
+diagnostics under `examples/` and `docs/`, all the warnings the examples show
+on purpose, and no error.
+
+Not done here (issue #318): an undeclared image with `:loading: embed` still fails the
+build first in `embed_assets`, with that action's untyped message, where the
+editor shows `image.undeclared`.
 
 ### 20. Jinja-templated documents
 

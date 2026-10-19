@@ -46,7 +46,6 @@ use lsp_types::{
     FileEvent, FileSystemWatcher, GlobPattern, GotoDefinitionResponse, Hover, Range, Registration,
     RegistrationParams, Uri,
 };
-use rinx_ast::Diagnostic;
 use rinx_renderer::{ReferenceResolver, ReferenceTarget};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -74,7 +73,7 @@ use crate::project::{
     is_visible_under, sources_under,
 };
 use crate::reference_at::reference_at;
-use crate::render::render_diagnostics;
+use crate::render::{RenderFindings, RenderSettings, render_diagnostics};
 use crate::uri::{file_path, file_uri};
 
 /// The id the file watcher is registered under.
@@ -146,7 +145,7 @@ struct TrackedDocument {
 #[derive(Debug)]
 struct Rendered {
     key: RenderKey,
-    diagnostics: Vec<Diagnostic>,
+    findings: RenderFindings,
 }
 
 /// The inputs of a render: one parse of the document, and one version of its
@@ -874,10 +873,11 @@ impl ServerState {
         let Some(tracked) = self.tracked.get(uri) else {
             return self.graph.forget(uri);
         };
+        let unrendered = RenderFindings::default();
         let rendered = tracked
             .rendered
             .as_ref()
-            .map_or(&[][..], |rendered| rendered.diagnostics.as_slice());
+            .map_or(&unrendered, |rendered| &rendered.findings);
         // A document in no project declares no extensions, so nothing about
         // it is lowered.
         let default_strictness = Strictness::default();
@@ -919,19 +919,35 @@ impl ServerState {
             return Vec::new();
         };
         let config = project.site_config();
-        let schema = Arc::clone(&project.model().settings.parse.schema);
+        let model = project.model();
+        let schema = Arc::clone(&model.settings.parse.schema);
+        let strict_links = model.settings.strict_links;
         let Some(tracked) = self.tracked.get_mut(&uri) else {
             return Vec::new();
         };
         let document = &tracked.parsed.document;
-        let mut diagnostics =
-            render_diagnostics(document, project.project_index(), &config, &schema);
+        // The site's bundle is shared by its libraries, so any document's
+        // library names it.
+        let bundled = model
+            .parse_settings(Some(&document.path))
+            .declarations
+            .as_ref()
+            .map(|declared| Arc::clone(&declared.bundled));
+        let settings = RenderSettings {
+            config: &config,
+            schema: &schema,
+            strict_links,
+            bundled: bundled.as_deref(),
+        };
+        let mut findings = render_diagnostics(document, project.project_index(), &settings);
         // What only the whole project reveals about the document is found by
         // the same fold the render read, so it is as current as the render:
         // the parse names a document by its name in the project, which is
-        // what the fold keys it by.
-        diagnostics.extend_from_slice(project.index_diagnostics(&document.path));
-        tracked.rendered = Some(Rendered { key, diagnostics });
+        // what the fold keys it by. None of it fails the build.
+        findings
+            .reported
+            .extend_from_slice(project.index_diagnostics(&document.path));
+        tracked.rendered = Some(Rendered { key, findings });
         self.record_diagnosis(&uri)
             .into_iter()
             .filter_map(|uri| self.publish(uri, false))

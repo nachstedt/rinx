@@ -10,6 +10,7 @@
 //! `rinx_ast`'s `normalize_path`, re-exported below, resolves the
 //! `.`/`..` components in the document paths a toctree may name.
 
+mod declarations;
 mod document_analysis;
 mod document_index;
 mod domain_object_index;
@@ -25,6 +26,7 @@ mod page_order;
 mod project_index;
 mod section_numbering;
 
+pub use declarations::{DeclaredFiles, disabled_diagrams, undeclared_assets};
 pub use document_analysis::DocumentAnalysis;
 pub use document_index::analyze;
 // `normalize_path` lives in `rinx_ast`, which is the only crate both

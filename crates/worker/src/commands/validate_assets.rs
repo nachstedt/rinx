@@ -12,53 +12,28 @@
 //!   error pictures `PlantUML` draws while exiting 0. Nothing here re-expands a
 //!   template: the render already did, and the files are the record of it.
 //! - **Authored images** — what a `.. image::` or `.. figure::` names, which
-//!   must have been declared in its library's `images` attribute.
+//!   must have been declared in its library's `images` attribute. Reported
+//!   as an `image.undeclared` error at the directive.
 //! - **Downloads** — what a `:download:` names, which must have been declared
 //!   in its library's `downloads` attribute and so reached `_downloads/`.
 //!   Reported as a `download.undeclared` error at the role's position.
+//!
+//! The last two are [`rinx_analyzer::undeclared_assets`], which the language
+//! server asks against the manifest's declarations, so the editor underlines
+//! exactly what fails here.
 //!
 //! Either bundle directory may be absent — a site declaring no images, or no
 //! downloads — and is then treated as empty, so a document naming a file the
 //! site never bundled still fails rather than skipping the check.
 
 use anyhow::{Context, Result, anyhow};
+use rinx_analyzer::{DeclaredFiles, undeclared_assets};
 use rinx_ast as ast;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::cli_args::{flag_value_opt, flag_values, flag_values_opt};
 use super::diagnostics::{WarningOrigin, format_error_diagnostic};
-
-/// Collects the project files every `.. image::`/`.. figure::` in `doc`
-/// refers to, as paths under the site's `_images/` directory.
-///
-/// External URLs are skipped: nothing bundles them, so their absence from the
-/// site is not a build failure. Resolution goes through
-/// [`ast::AssetUri::resolve`], the same function the bundler and the renderer
-/// use, so a `..` in a path cannot make the three disagree.
-pub(super) fn collect_image_paths(doc: &ast::Document) -> Vec<std::path::PathBuf> {
-    let mut paths = Vec::new();
-    let mut record = |options: &ast::ImageOptions| {
-        if let Some(resolved) = options.uri.resolve(&doc.path)
-            && !paths.contains(&resolved)
-        {
-            paths.push(resolved);
-        }
-    };
-    ast::walk_nodes(&doc.nodes, &mut |node| match node {
-        ast::Node::Directive(ast::Directive::Image(options)) => record(options),
-        ast::Node::Directive(ast::Directive::Figure(figure)) => record(&figure.image),
-        // A `.. |name| image::` substitution definition names a real image
-        // too, subject to the same `images` attribute requirement.
-        ast::Node::Directive(ast::Directive::SubstitutionDefinition(definition)) => {
-            if let ast::SubstitutionKind::Image(options) = &definition.kind {
-                record(options);
-            }
-        }
-        _ => {}
-    });
-    paths
-}
 
 /// Text found only in the pictures `PlantUML` draws *instead of* a diagram while
 /// still exiting 0 — so the compile action succeeds and only the file tells.
@@ -127,61 +102,6 @@ fn is_bundled(dir: Option<&Path>, path: &Path) -> bool {
     dir.is_some_and(|dir| dir.join(path).exists())
 }
 
-/// Collects the project files every linked `:download:` in the document
-/// serialized as `ast_json` refers to, each with where the role was written.
-///
-/// The roles are found in the AST's JSON rather than by walking the typed
-/// tree: inline content sits in paragraphs, titles, table cells, entity
-/// sections and more, and [`ast::walk_nodes`] deliberately does not descend
-/// into it — the same reason `index.rs`'s `written_reference_targets` reads
-/// the JSON. Each hit is still read back as an [`ast::InlineNode`], so its
-/// shape is checked rather than assumed. Resolution goes through
-/// [`ast::AssetUri::resolve`], the function the renderer builds the `href`
-/// with. External URLs and the `!` form name nothing to bundle and are
-/// skipped.
-fn collect_download_paths(
-    ast_json: &serde_json::Value,
-    doc_path: &str,
-) -> Result<Vec<(PathBuf, Option<ast::Span>)>> {
-    fn collect(value: &serde_json::Value, found: &mut Vec<serde_json::Value>) {
-        match value {
-            serde_json::Value::Object(fields) => {
-                for (key, inner) in fields {
-                    if key == "DownloadReference" {
-                        found.push(serde_json::json!({ "DownloadReference": inner }));
-                    } else {
-                        collect(inner, found);
-                    }
-                }
-            }
-            serde_json::Value::Array(items) => {
-                for item in items {
-                    collect(item, found);
-                }
-            }
-            _ => {}
-        }
-    }
-    let mut found = Vec::new();
-    collect(ast_json, &mut found);
-    let mut paths = Vec::new();
-    for value in found {
-        let node: ast::InlineNode =
-            serde_json::from_value(value).context("Malformed :download: role in AST")?;
-        if let ast::InlineNode::DownloadReference {
-            target,
-            link: true,
-            span,
-            ..
-        } = node
-            && let Some(resolved) = target.resolve(doc_path)
-        {
-            paths.push((resolved, span));
-        }
-    }
-    Ok(paths)
-}
-
 /// The directories a site bundled, each `None` when it bundled none.
 #[derive(Debug, Clone, Copy, Default)]
 pub(super) struct Bundles<'a> {
@@ -189,6 +109,16 @@ pub(super) struct Bundles<'a> {
     pub(super) images: Option<&'a Path>,
     /// `_downloads/`: the files `:download:` links.
     pub(super) downloads: Option<&'a Path>,
+}
+
+impl DeclaredFiles for Bundles<'_> {
+    fn has_image(&self, path: &Path) -> bool {
+        is_bundled(self.images, path)
+    }
+
+    fn has_download(&self, path: &Path) -> bool {
+        is_bundled(self.downloads, path)
+    }
 }
 
 pub(super) fn process_validate_assets(
@@ -206,35 +136,13 @@ pub(super) fn process_validate_assets(
     }
 
     for json in ast_jsons {
-        let value: serde_json::Value =
-            serde_json::from_str(json).context("Failed to deserialize AST")?;
-        let doc: ast::Document =
-            serde_json::from_value(value.clone()).context("Failed to deserialize AST")?;
-        for path in collect_image_paths(&doc) {
-            if !is_bundled(bundles.images, &path) {
-                missing.push(format!(
-                    "Image {} missing for document {} — if this is a Bazel build, add the file \
-                     to the library's images attribute",
-                    path.display(),
-                    doc.path
-                ));
-            }
-        }
+        let doc: ast::Document = serde_json::from_str(json).context("Failed to deserialize AST")?;
         let origin = WarningOrigin::new(&doc.path, &doc.source_files);
-        for (path, span) in collect_download_paths(&value, &doc.path)? {
-            if !is_bundled(bundles.downloads, &path) {
-                let diagnostic = ast::Diagnostic::at(
-                    ast::DiagnosticCode::DownloadUndeclared,
-                    format!(
-                        "download file {} was not bundled — if this is a Bazel build, add it \
-                         to the library's downloads attribute",
-                        path.display()
-                    ),
-                    span,
-                );
-                missing.push(format_error_diagnostic(&origin, &diagnostic));
-            }
-        }
+        missing.extend(
+            undeclared_assets(&doc, &bundles)
+                .iter()
+                .map(|diagnostic| format_error_diagnostic(&origin, diagnostic)),
+        );
     }
 
     if missing.is_empty() {
@@ -342,75 +250,6 @@ mod tests {
                 ast::ImageOptions::new(ast::AssetUri::new(uri)),
             )))],
         )
-    }
-
-    #[test]
-    fn test_collect_image_paths_resolves_against_the_document() {
-        // Given
-        let doc = document_with_image("guide/intro.rst", "images/logo.png");
-
-        // When
-        let paths = collect_image_paths(&doc);
-
-        // Then
-        assert_eq!(
-            paths,
-            vec![std::path::PathBuf::from("guide/images/logo.png")]
-        );
-    }
-
-    #[test]
-    fn test_collect_image_paths_skips_an_external_url() {
-        // Given — nothing bundles it, so its absence is not a build failure
-        let doc = document_with_image("index.rst", "https://example.com/logo.png");
-
-        // When
-        let paths = collect_image_paths(&doc);
-
-        // Then
-        assert!(paths.is_empty());
-    }
-
-    #[test]
-    fn test_collect_image_paths_finds_a_substitution_image() {
-        // Given — a `.. |name| image::` definition names a real image too,
-        // subject to the same `images` attribute requirement.
-        let doc = ast::Document::new(
-            "index.rst".to_string(),
-            vec![ast::Node::Directive(
-                ast::Directive::SubstitutionDefinition(ast::SubstitutionDefinition {
-                    name: "biohazard".to_string(),
-                    kind: ast::SubstitutionKind::Image(Box::new(ast::ImageOptions::new(
-                        ast::AssetUri::new("biohazard.png"),
-                    ))),
-                    span: None,
-                }),
-            )],
-        );
-
-        // When
-        let paths = collect_image_paths(&doc);
-
-        // Then
-        assert_eq!(paths, vec![std::path::PathBuf::from("biohazard.png")]);
-    }
-
-    #[test]
-    fn test_collect_image_paths_finds_a_figures_image() {
-        // Given
-        let figure = ast::Figure::new(ast::ImageOptions::new(ast::AssetUri::new("logo.png")));
-        let doc = ast::Document::new(
-            "index.rst".to_string(),
-            vec![ast::Node::Directive(ast::Directive::Figure(Box::new(
-                figure,
-            )))],
-        );
-
-        // When
-        let paths = collect_image_paths(&doc);
-
-        // Then
-        assert_eq!(paths, vec![std::path::PathBuf::from("logo.png")]);
     }
 
     #[test]
@@ -614,65 +453,6 @@ mod tests {
 
         // Then
         assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_collect_download_paths_resolves_against_the_document() {
-        // Given
-        let doc = document_with_inlines("guide/intro.rst", vec![download("../data/a.csv")]);
-        let value = serde_json::to_value(&doc).unwrap();
-
-        // When
-        let paths = collect_download_paths(&value, &doc.path).unwrap();
-
-        // Then
-        assert_eq!(paths.len(), 1);
-        assert_eq!(paths[0].0, PathBuf::from("data/a.csv"));
-        assert_eq!(paths[0].1.map(|span| span.start.line), Some(3));
-    }
-
-    #[test]
-    fn test_collect_download_paths_finds_a_role_nested_in_a_container() {
-        // Given — a role inside a list item, which no block walk reaches
-        let doc = ast::Document::new(
-            "index.rst".to_string(),
-            vec![ast::Node::BulletList {
-                bullet: '-',
-                items: vec![ast::ListItem {
-                    nodes: vec![ast::Node::Paragraph(vec![download("tool.py")])],
-                }],
-            }],
-        );
-        let value = serde_json::to_value(&doc).unwrap();
-
-        // When
-        let paths = collect_download_paths(&value, &doc.path).unwrap();
-
-        // Then
-        assert_eq!(paths.len(), 1);
-        assert_eq!(paths[0].0, PathBuf::from("tool.py"));
-    }
-
-    #[test]
-    fn test_collect_download_paths_skips_external_urls_and_the_bang_form() {
-        // Given — neither names a file the site bundles
-        let unlinked = ast::InlineNode::DownloadReference {
-            display: None,
-            target: ast::AssetUri::new("tool.py"),
-            link: false,
-            span: None,
-        };
-        let doc = document_with_inlines(
-            "index.rst",
-            vec![download("https://example.com/tool.zip"), unlinked],
-        );
-        let value = serde_json::to_value(&doc).unwrap();
-
-        // When
-        let paths = collect_download_paths(&value, &doc.path).unwrap();
-
-        // Then
-        assert!(paths.is_empty(), "{paths:?}");
     }
 
     #[test]

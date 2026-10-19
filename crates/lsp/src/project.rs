@@ -13,6 +13,7 @@
 
 mod bazel_manifest;
 mod conf_eval;
+mod declarations;
 mod discover;
 mod exclusion;
 mod extension_profile;
@@ -30,6 +31,7 @@ pub use bazel_manifest::{BazelGrant, BazelRoots, read_bazel_projects};
 #[cfg(test)]
 pub use conf_eval::ConfValues;
 pub use conf_eval::{CONF_RUN_TIMEOUT, ConfEvaluation, ConfEvaluations, run_conf};
+pub use declarations::{BundledFiles, undeclared_uses};
 pub use discover::{
     DiscoveredProject, contains_conf, discover_projects, discover_projects_with, is_conf,
     is_visible_under, sources_under,
