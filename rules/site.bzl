@@ -6,6 +6,7 @@ one to HTML (Phase 3: render) using the rinx worker binary.
 """
 
 load("//:providers.bzl", "RinxInfo", "RinxInventoryInfo")
+load("//rules:lsp_manifest.bzl", "lsp_file", "lsp_label")
 
 def _compile_diagrams(ctx, plantuml, puml_dir, doc_path):
     """Compiles one document's diagram sources to SVG, returning the SVG dir.
@@ -464,6 +465,51 @@ mkdir -p "$OUT"
     )
     final_outputs.append(switcher_out)
 
+    # ── The language server's manifest ───────────────────────────────────────
+    # Everything the server needs to read this site's documents as the build
+    # does: each library's sources and parse settings, the site's config,
+    # schema and inventories (ADR-038 §2). Pure Starlark, written while
+    # analyzing, and in a non-default group, so building the site never
+    # writes it; the editor asks with `--output_groups=lsp_manifest`.
+    # Libraries are sorted by label so the bytes do not depend on `deps`'
+    # order.
+    lsp_libraries = sorted(
+        [
+            json.decode(library)
+            for library in depset(
+                transitive = [dep[RinxInfo].lsp_libraries for dep in ctx.attr.deps],
+            ).to_list()
+        ],
+        key = lambda library: library["label"],
+    )
+    lsp_manifest = ctx.actions.declare_file(ctx.label.name + ".lsp_manifest.json")
+    ctx.actions.write(lsp_manifest, json.encode_indent(struct(
+        version = 1,
+        site = struct(
+            label = lsp_label(ctx.label),
+            config = lsp_file(config_file),
+            template = lsp_file(template_file),
+            css = lsp_file(css_file),
+            entity_schema = lsp_file(entity_schema) if entity_schema else None,
+            entity_templates = [lsp_file(t) for t in entity_templates],
+            strict_links = ctx.attr.strict_links,
+            domain_indices = ctx.attr.domain_indices,
+        ),
+        inventories = [
+            struct(name = inventory.name, base_url = inventory.base_url, file = lsp_file(inventory.file))
+            for inventory in inventories
+        ],
+        libraries = lsp_libraries,
+    )) + "\n")
+
+    # The manifest, and every file it names, so one build materializes all
+    # the server reads — an inventory another site writes, above all.
+    lsp_manifest_files = depset(
+        [lsp_manifest, config_file, template_file, css_file] + schema_inputs + entity_templates +
+        [inventory.file for inventory in inventories],
+        transitive = [dep[RinxInfo].lsp_inputs for dep in ctx.attr.deps],
+    )
+
     return [
         DefaultInfo(files = depset(final_outputs)),
         OutputGroupInfo(
@@ -482,6 +528,9 @@ mkdir -p "$OUT"
             # it as a `rinx_inventory` source without depending on
             # every page: a filegroup with `output_group = "inventory"`.
             inventory = depset([inventory_out]),
+            # The language server's description of this site, with the
+            # files it names: `--output_groups=lsp_manifest`.
+            lsp_manifest = lsp_manifest_files,
         ),
     ]
 
@@ -556,5 +605,10 @@ Assembles a complete documentation site from rinx_library deps.
 Performs Phase 2 (global index, one action) and Phase 3 (per-file HTML
 render, one action per .ast file).  All actions are individually cacheable
 by Bazel.
+
+The non-default `lsp_manifest` output group writes `<name>.lsp_manifest.json`,
+which tells the language server every library's sources and parse settings,
+and the site's config, schema and inventories, so the editor reads each
+document as the build does. Building the site never writes it.
 """,
 )

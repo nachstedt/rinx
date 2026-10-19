@@ -83,6 +83,11 @@
           "default": true,
           "description": "Automatically discover configuration from Bazel. Requires `bazel` to be on the PATH."
         },
+        "rinx.site": {
+          "type": "string",
+          "default": "",
+          "description": "The `rinx_site` this workspace is about, such as `//docs:site`: the preview uses it without asking, and a document several sites list belongs to it in the language server. When empty, the site the preview was pointed at decides, and otherwise the first by label."
+        },
         "rinx.configPath": {
           "type": "string",
           "default": "rinx.toml",

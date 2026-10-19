@@ -29,6 +29,8 @@ The extension provides the following settings:
 - ``rinx.inventories.download``: ``ask``, ``always`` or ``never``; whether the language server may download the inventories a Sphinx project links into (see :ref:`vscode-intersphinx`).
 - ``rinx.conf.execute``: whether the language server may run a Sphinx project's ``conf.py`` (default: off; see :ref:`vscode-running-conf`).
 - ``rinx.conf.pythonPath``: the Python interpreter ``conf.py`` runs in; when empty, the one selected with the Python extension.
+- ``rinx.site``: the ``rinx_site`` the workspace is about, such as ``//docs:site``. The preview uses it without asking, and a document several sites list belongs to it in the language server (see :ref:`vscode-bazel-projects`).
+- ``rinx.autoDiscover``: whether the extension runs Bazel at all, for the preview's configuration and the language server's manifests (default: on).
 
 2. The Preview Pipeline (As-You-Type)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -61,6 +63,17 @@ Hovering a reference shows where it leads: the title of what it names — a sect
 Go to Definition (F12, or Ctrl+click) on the same references opens the file of the document they lead to: the document a ``:doc:`` names, or the one holding a label, term, object or entity. It covers the same roles and resolves them the same way, so a reference the page would draw broken leads nowhere. For now it opens the document at its first line, not at the label or object itself. A reference into another site's inventory has no definition, since there is no source to open; its hover shows the address.
 
 The index also decides which references are broken. What the parser finds is reported as you type; what only rendering the page finds comes a moment later, once you pause for 300 ms: a ``:ref:``, ``:doc:`` or domain reference that resolves nowhere (``link.broken-ref``, ``link.broken-doc``, …), a label two documents define, an equation that does not convert, a listing whose filter matches nothing. So do the problems only the whole project reveals, which the build reports while indexing: a toctree entry naming no document, or a document in no toctree; a label, term, object or entity id two documents define; an entity relation naming an id no document declares. A toctree entry and an entity relation are shown on the line that writes them. The others are about the project rather than a line, so they are shown on the document's first line, and a ``.. noqa:`` cannot silence one without a line, as in the build. These are the build's own warnings, with the same codes and messages, and a ``.. noqa:`` silences them as it does in the build. Only the documents you have open are rendered, along with any closed document that includes an open file. Defining a missing label in another document, even in an unsaved buffer, clears the warning without your touching the reference. The page is rendered with what the server reads of the project's configuration, and with the inventories it has loaded, so a reference the build resolves through intersphinx resolves here too (see :ref:`vscode-intersphinx`). Diagrams are not compiled.
+
+.. _vscode-bazel-projects:
+
+Bazel projects
+^^^^^^^^^^^^^^
+
+In a workspace folder holding ``MODULE.bazel`` or a ``WORKSPACE`` file, the extension finds every ``rinx_site``, builds each one's ``lsp_manifest`` output group (see :ref:`rules`) and hands the manifests to the language server. Each site is a project, and its documents are exactly the ``srcs`` of its libraries, each parsed with its own library's settings: its ``default_domain``, ``default_role``, ``entity_schema``, ``rst_prolog`` and ``rst_epilog``. A document's ``.. include::``, ``.. literalinclude::`` and ``.. csv-table:: :file:`` may read only the files its library declares in ``parse_data``, so an undeclared one is ``include.file-unreadable`` in the editor as it is in the build, even while the file is open. The site's ``rinx.toml``, ``domain_indices`` and ``inventories`` decide how its pages render; an inventory is read from the file the build reads, and nothing is downloaded. A mistake in a library's ``rst_prolog`` is shown in that file.
+
+The status bar then names the site, for example ``rinx: rinx project //docs:site · 105 docs (0.3 s)``, or counts them when there are several. A document two sites list belongs to the one ``rinx.site`` names, else to the one the preview was pointed at, else to the first by label; the other sites are read without it. What the manifests do not list — a ``README.rst``, a test fixture — stays the folder's, or a ``conf.py``'s. Editing a ``BUILD`` file, a ``.bzl`` file or ``MODULE.bazel`` builds the manifests again a moment later; until they arrive, the folder is read as it would be without Bazel. A manifest that cannot be read, and a setting in it the build would refuse — an invalid schema or ``rinx.toml``, a ``default_role`` no role answers to — is shown once in a notification, and the setting keeps its default. ``rinx lsp --check <folder> --manifest <manifest>`` (once per site) does the same from the command line.
+
+Jinja-templated libraries (``jinja = True``) are read without the Jinja pass for now, and a toctree entry missing from ``deps`` or an undeclared image is not reported yet.
 
 .. _vscode-sphinx-projects:
 

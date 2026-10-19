@@ -6,6 +6,7 @@ rinx worker binary and propagates them via RinxInfo.
 """
 
 load("//:providers.bzl", "RinxInfo")
+load("//rules:lsp_manifest.bzl", "lsp_file", "lsp_label")
 
 def _rinx_library_impl(ctx):
     worker = ctx.executable._worker
@@ -175,6 +176,28 @@ def _rinx_library_impl(ctx):
         )
         embed_sidecars.append(embeds_out)
 
+    # What the language server needs to parse this library's documents as
+    # these actions do (ADR-038 §2): the same settings, as data. Encoded here
+    # rather than in the site, because only the library sees its attributes;
+    # a string, because a depset's elements must be hashable.
+    lsp_library = json.encode(struct(
+        label = lsp_label(ctx.label),
+        srcs = [lsp_file(src) for src in ctx.files.srcs],
+        parse_data = [f.short_path for f in ctx.files.parse_data],
+        images = [f.short_path for f in ctx.files.images],
+        downloads = [f.short_path for f in ctx.files.downloads],
+        deps = [lsp_label(dep.label) for dep in ctx.attr.deps],
+        allowed_docs = sorted({name: True for name in allowed_doc_names_list}.keys()),
+        default_domain = ctx.attr.default_domain,
+        default_role = ctx.attr.default_role or None,
+        diagrams = ctx.attr.diagrams,
+        jinja = ctx.attr.jinja,
+        jinja_context = ctx.attr.jinja_context,
+        rst_prolog = lsp_file(ctx.file.rst_prolog) if ctx.file.rst_prolog else None,
+        rst_epilog = lsp_file(ctx.file.rst_epilog) if ctx.file.rst_epilog else None,
+        entity_schema = lsp_file(entity_schema) if entity_schema else None,
+    ))
+
     # Collect .ast files from deps (other rinx_library targets).
     transitive_asts = [dep[RinxInfo].ast_files for dep in ctx.attr.deps]
     transitive_diagram_asts = [dep[RinxInfo].diagram_ast_files for dep in ctx.attr.deps]
@@ -201,6 +224,14 @@ def _rinx_library_impl(ctx):
             # parsed, rendered or embedded, so it only rides to the site.
             download_files = depset(ctx.files.downloads, transitive = transitive_downloads),
             embed_sidecars = depset(embed_sidecars, transitive = transitive_embeds),
+            lsp_libraries = depset(
+                [lsp_library],
+                transitive = [dep[RinxInfo].lsp_libraries for dep in ctx.attr.deps],
+            ),
+            lsp_inputs = depset(
+                ctx.files.srcs + schema_inputs + splice_inputs,
+                transitive = [dep[RinxInfo].lsp_inputs for dep in ctx.attr.deps],
+            ),
         ),
     ]
 

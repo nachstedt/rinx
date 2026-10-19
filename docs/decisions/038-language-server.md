@@ -89,14 +89,20 @@ It is produced by one of two `ProjectSource`s:
   writing an `lsp_manifest.json`. It lists every library's sources and parse
   attributes, the schema, config and inventories. This is the same shape as
   `doctest_plans`: Bazel writes what a tool needs, and the tool never queries
-  Bazel's graph itself.
+  Bazel's graph itself. Building the group is the editor's, which already
+  runs Bazel for the preview: the server asks a client passing the
+  `bazelManifests` initialization option with a `rinx/bazelManifests` request
+  per Bazel workspace folder, and the client answers with the manifests' paths
+  and the roots their files are under, as for `rinx/confInterpreter` (§4).
 - **Sphinx** (*legacy mode*): the nearest `conf.py` above a file (§4), plus an
   optional override (§4).
 
 Nothing downstream of `ProjectModel` knows which source built it, except
-through `strictness`. In a monorepo, each `conf.py` or manifest is one model,
-and a file belongs to the nearest one above it. The extension already picks a
-site the same way.
+through `strictness`. In a monorepo, each `conf.py` or manifest is one model.
+A file a manifest lists belongs to that site, wherever it lies; any other file
+belongs to the nearest `conf.py` or folder above it. A document two sites list
+belongs to the one the user prefers — `rinx.site`, or the site the preview
+was pointed at — and otherwise to the first by label.
 
 ### 3. The server indexes the workspace itself
 

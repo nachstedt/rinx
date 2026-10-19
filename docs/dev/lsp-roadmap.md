@@ -33,8 +33,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
   #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
-  #14 (PR #300), #15 (PR #305), #16 (PR #311) and #17 (PR #315).
-- **Next: #18, the `lsp_manifest` output group and the Bazel source.**
+  #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315) and #18.
+- **Next: #19, strict mode.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -535,7 +535,7 @@ another client would implement for the first two.
 
 ## M3: rinx projects (Bazel)
 
-### 18. `lsp_manifest` output group + Bazel source
+### 18. `lsp_manifest` output group + Bazel source ✅
 
 **You experience:** in this repository, entity directives and each library's
 settings work, and the status bar shows `rinx project //docs:site`.
@@ -545,6 +545,41 @@ settings work, and the status bar shows `rinx project //docs:site`.
 - Extension builds or locates the manifest and watches `BUILD` files
 - `ProjectSource::Bazel` with `ParseInputs` per library (schema, default role, domain, Jinja, `parse_data`)
 - Shell test for the rule; loader unit tests
+
+Each `rinx_library` encodes its attributes as JSON into `RinxInfo`, and the
+site writes them, sorted by label, as `<site>.lsp_manifest.json` in Starlark
+alone, with no action; the `lsp_manifest` group also holds every generated file
+the manifest names, such as another site's `objects.inv`. A file is named by
+its workspace path when it is a source and by its execution-root path when it
+is generated. The server never runs Bazel: for a folder holding `MODULE.bazel`
+or a `WORKSPACE`, it asks a client passing the `bazelManifests` initialization
+option with a `rinx/bazelManifests` request, and the extension finds every
+`rinx_site`, builds the group and answers; editing a `BUILD`, `.bzl` or
+`MODULE.bazel` file, `rinx.site`, or the preview's choice of site sends
+`rinx/bazelManifestsChanged`. `rinx lsp --check <folder> --manifest <file>`
+grants manifests with no client. Each site is a project whose documents are
+exactly its libraries' `srcs`, each parsed with its library's
+`ParseSettings`: domain, default role, schema and import keys, prolog and
+epilog read from their files (and named by them, so a mistake shows in the
+prolog), and `parse_data`, outside which the loader refuses to read, open
+buffers included. The site's `rinx.toml`, `domain_indices` and inventories
+render its pages. A listed file belongs to its site wherever it lies; a
+document two sites list, to `rinx.site`'s, else the preview's, else the first
+by label. What reading a manifest finds is a `bazel.*` finding shown once in a
+notification, since the manifest is no file anyone opens. The schema loader
+the build and the server share moved into `rinx_parser` as
+`load_entity_schema`; the worker's `ParseInputs` itself stays where it is,
+since `ParseSettings` is the server's counterpart.
+
+Measured on this repository, granting the manifests of `//docs:site`,
+`//examples:site` and `//examples/intersphinx:sibling_site`: `--check` shows
+200 diagnostics under `examples/` and `docs/` without them and 20 with them —
+the warnings the examples show on purpose, plus two `image.embed-unavailable`
+the build does not report, since the server embeds no images yet.
+
+Not done here: the manifest records each library's `jinja` and
+`jinja_context`, but the server applies them only with #20; `deps`, `images`
+and `downloads` are recorded for #19.
 
 ### 19. Strict mode
 

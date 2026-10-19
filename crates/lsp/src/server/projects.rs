@@ -81,7 +81,8 @@ impl ServerState {
         let Some(root) = self.folders.get(folder).cloned() else {
             return Vec::new();
         };
-        let discovered = discover_projects_with(&root, self.conf_runs.evaluations());
+        let (bazel, announced) = self.bazel_projects_of(folder);
+        let discovered = discover_projects_with(&root, self.conf_runs.evaluations(), bazel);
         let replaced = self.replace_projects(folder, discovered);
         // A new project's documents, and those a kept one gained, are read
         // now; nothing else will.
@@ -105,7 +106,8 @@ impl ServerState {
                 project.record_scanned(scanned.documents);
             }
         }
-        let mut messages = self.after_replacing(folder, &replaced);
+        let mut messages = announced;
+        messages.extend(self.after_replacing(folder, &replaced));
         if self.scan.is_none() {
             messages.extend(self.diagnose_includers_of_open_documents());
             let status = self.status(IndexState::Ready, self.scan_elapsed);
@@ -197,6 +199,7 @@ impl ServerState {
         let added: Vec<ProjectId> = replaced.added.iter().map(|(id, _)| *id).collect();
         messages.extend(self.load_inventories(&added));
         messages.extend(self.run_confs());
+        messages.extend(self.ask_bazel_manifests());
         if replaced.changed
             && let Some(root) = self.folders.get(folder).cloned()
         {
@@ -306,10 +309,24 @@ impl ServerState {
         self.holding(path).map(|(_, project)| project)
     }
 
+    /// The Bazel project listing `path` as a document — a listed file is its
+    /// project's, wherever it lies — or else the project whose source root
+    /// is the nearest at or above it, among those that are not Bazel
+    /// projects: one of those holds only what it lists.
     fn holding(&self, path: &Path) -> Option<(ProjectId, &Project)> {
+        if let Some((id, project)) = self
+            .projects
+            .iter()
+            .find(|(_, project)| project.model().lists(path))
+        {
+            return Some((*id, project));
+        }
         self.projects
             .iter()
-            .filter(|(_, project)| path.starts_with(project.root()))
+            .filter(|(_, project)| {
+                !matches!(project.model().source, ProjectSource::Bazel { .. })
+                    && path.starts_with(project.root())
+            })
             .max_by_key(|(_, project)| project.root().components().count())
             .map(|(id, project)| (*id, project))
     }
@@ -349,8 +366,8 @@ impl ServerState {
         }
     }
 
-    /// Every Sphinx project, and each folder with documents of its own, in
-    /// the order of their roots.
+    /// Every Sphinx and Bazel project, and each folder with documents of its
+    /// own, in the order of their roots.
     fn project_statuses(&self) -> Vec<ProjectStatus> {
         let mut projects: Vec<&Project> = self.projects.values().collect();
         projects.sort_by(|a, b| a.root().cmp(b.root()));
@@ -372,6 +389,9 @@ impl ServerState {
                                 name.to_string_lossy().into_owned()
                             }),
                         })
+                    }
+                    ProjectSource::Bazel { site, .. } => {
+                        Some(ProjectStatus::Bazel { site: site.clone() })
                     }
                     ProjectSource::Folder => None,
                 }

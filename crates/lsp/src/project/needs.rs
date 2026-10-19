@@ -182,15 +182,13 @@ pub(crate) fn resolve_needs(
     for entry in unconverted {
         report.unconverted(&entry);
     }
-    let schema = load_raw_schema(declarations, &|name: &str| {
-        rinx_parser::is_builtin_directive_name(name)
-    })
-    .unwrap_or_else(|errors| {
-        report.invalid(format!(
-            "the need types it declares are no valid entity schema:\n{errors}"
-        ));
-        EntitySchema::empty()
-    });
+    let schema = load_raw_schema(declarations, &rinx_parser::is_builtin_directive_name)
+        .unwrap_or_else(|errors| {
+            report.invalid(format!(
+                "the need types it declares are no valid entity schema:\n{errors}"
+            ));
+            EntitySchema::empty()
+        });
     let import_keys = schema.resolved_import_keys(&anchor_of("import_keys"));
     ResolvedNeeds {
         schema,

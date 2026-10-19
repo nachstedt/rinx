@@ -16,6 +16,7 @@ use lsp_types::notification::{DidOpenTextDocument, Notification as _, PublishDia
 use lsp_types::{DidOpenTextDocumentParams, PublishDiagnosticsParams, TextDocumentItem, Uri};
 use serde::Serialize;
 
+use super::bazel_manifests::ManifestSource;
 use super::conf_runs::ConfExecution;
 use super::handlers::handle_notification;
 use super::scan::ScanEvent;
@@ -34,19 +35,36 @@ pub struct FolderCheck {
     pub published: BTreeMap<Uri, Vec<lsp_types::Diagnostic>>,
 }
 
+/// What a check grants that an editor would: an interpreter for `conf.py`,
+/// and the manifests of the folder's Bazel sites.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct CheckOptions {
+    /// The interpreter each `conf.py` that reading falls short for runs in.
+    pub python: Option<PathBuf>,
+    /// The `lsp_manifest` files of the folder's sites, their files found
+    /// under the folder.
+    pub manifests: Vec<PathBuf>,
+}
+
 /// Scans `root`, a workspace folder, opens every document its projects
-/// index, renders them all, and returns what the server shows — running each
-/// `conf.py` that reading falls short for in `python`, when given, as an
-/// editor allowed to would.
+/// index, renders them all, and returns what the server shows — with what
+/// `options` grants, as an editor allowed to would.
 #[must_use]
-pub fn check_folder(root: &Path, python: Option<&Path>) -> FolderCheck {
+pub fn check_folder(root: &Path, options: &CheckOptions) -> FolderCheck {
     let started = Instant::now();
-    let execution = python.map_or(ConfExecution::Off, |python| {
-        ConfExecution::Granted(python.to_path_buf())
-    });
+    let execution = options
+        .python
+        .clone()
+        .map_or(ConfExecution::Off, ConfExecution::Granted);
+    let manifests = if options.manifests.is_empty() {
+        ManifestSource::Off
+    } else {
+        ManifestSource::Granted(options.manifests.clone())
+    };
     let mut state = ServerState::new(PositionEncoding::Utf16)
         .with_workspace(vec![root.to_path_buf()], false)
-        .with_conf_execution(execution);
+        .with_conf_execution(execution)
+        .with_bazel_manifests(manifests);
     let mut messages = state.start_scan();
     let projects = scan_projects(discover_projects(root), &|_, _| {});
     messages.extend(state.on_scan_event(ScanEvent::Finished {
@@ -127,7 +145,7 @@ mod tests {
         );
 
         // When
-        let check = check_folder(&workspace.root, None);
+        let check = check_folder(&workspace.root, &CheckOptions::default());
 
         // Then
         let severities = |file: &str| -> Vec<Option<DiagnosticSeverity>> {

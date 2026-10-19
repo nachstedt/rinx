@@ -103,6 +103,13 @@ diagrams, and copies the images, the downloads and the stylesheet. The output is
 other Sphinx or rinx sites link into it through, available as the target's
 ``inventory`` output group.
 
+The ``lsp_manifest`` output group writes ``<name>.lsp_manifest.json``, which
+tells the language server every library's sources and parse settings, and the
+site's configuration, schema and inventories, so the editor reads each
+document as the build does (see :ref:`vscode-bazel-projects`). Building the site
+does not write it; the VS Code extension asks for it with
+``bazel build --output_groups=lsp_manifest``.
+
 .. list-table::
    :header-rows: 1
 

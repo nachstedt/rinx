@@ -730,10 +730,13 @@ fn test_lsp_runs_conf_py_in_the_interpreter_its_client_names() {
 fn test_lsp_serves_a_client_announcing_only_what_the_protocol_requires() {
     // Given — what an editor other than VS Code may send: a `rootUri` and no
     // folders, no progress, no watcher registration, no initialization
-    // options, and a list of encodings led by one the server does not speak
+    // options, and a list of encodings led by one the server does not speak;
+    // the folder is a Bazel workspace, whose manifests such a client is never
+    // asked for
     let root = std::env::temp_dir().join("rinx_lsp_stdio_minimal_client");
     let _ = std::fs::remove_dir_all(&root);
     std::fs::create_dir_all(&root).expect("mkdir");
+    std::fs::write(root.join("MODULE.bazel"), "").expect("write");
     std::fs::write(
         root.join("setup.rst"),
         ".. _install:\n\nInstalling\n==========\n",
@@ -875,6 +878,75 @@ fn test_lsp_refuses_a_request_before_initialize() {
         Some(ErrorCode::ServerNotInitialized as i32)
     );
     assert!(initialized.response_result.is_ok(), "{initialized:?}");
+}
+
+/// The codes `rinx lsp --check` shows for `file` of the fixture
+/// `crates/worker/tests/bazel_project/`, checked with `args` after it.
+fn bazel_project_codes(args: &[&str], file: &str) -> Vec<String> {
+    let project = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/bazel_project");
+    let output = Command::new(env!("CARGO_BIN_EXE_rinx"))
+        .args(["lsp", "--check", project.to_str().expect("a UTF-8 path")])
+        .args(args)
+        .current_dir(&project)
+        .output()
+        .expect("rinx runs");
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let check: Value = serde_json::from_slice(&output.stdout).expect("JSON");
+    let uri = format!(
+        "file://{}",
+        std::fs::canonicalize(project.join(file))
+            .expect("the file")
+            .display()
+    );
+    check["published"][uri.as_str()]
+        .as_array()
+        .map(|diagnostics| {
+            diagnostics
+                .iter()
+                .filter_map(|diagnostic| diagnostic["code"].as_str().map(str::to_string))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+#[test]
+fn test_lsp_check_reads_each_library_of_a_bazel_manifest_as_the_build_does() {
+    // Given — the fixture's manifest, as `rinx_site`'s `lsp_manifest` output
+    // group would write it: an entity library, and a `c`-domain library whose
+    // `default_role` is `any`, with an include it does not declare
+    let manifest = ["--manifest", "site.lsp_manifest.json"];
+
+    // When / Then — without the manifest the folder knows none of it
+    assert_eq!(
+        bazel_project_codes(&[], "reqs/index.rst"),
+        ["directive.unknown"]
+    );
+    assert_eq!(
+        bazel_project_codes(&manifest, "reqs/index.rst"),
+        Vec::<String>::new()
+    );
+    // `.. macro::` is the `c` domain's, and a bare `nowhere` a `:any:`
+    // reference that resolves nowhere, only under the library's settings
+    assert_eq!(
+        bazel_project_codes(&[], "api/index.rst"),
+        ["directive.unknown"]
+    );
+    assert_eq!(
+        bazel_project_codes(&manifest, "api/index.rst"),
+        ["link.broken-any"]
+    );
+    assert_eq!(
+        bazel_project_codes(&[], "api/undeclared.rst"),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        bazel_project_codes(&manifest, "api/undeclared.rst"),
+        ["include.file-unreadable"]
+    );
 }
 
 #[test]

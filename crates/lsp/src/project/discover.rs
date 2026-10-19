@@ -22,7 +22,7 @@
 //! and generated sources, exactly what an ignore file lists, are often part
 //! of it.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -75,21 +75,36 @@ impl DiscoveredProject {
 /// `conf.py` read without running it.
 #[must_use]
 pub fn discover_projects(folder: &Path) -> Vec<DiscoveredProject> {
-    discover_projects_with(folder, &ConfEvaluations::new())
+    discover_projects_with(folder, &ConfEvaluations::new(), Vec::new())
 }
 
 /// [`discover_projects`], taking what `evaluations` found running a
-/// `conf.py` over reading it, for each whose text is still the text it ran.
+/// `conf.py` over reading it, for each whose text is still the text it ran,
+/// and with the Bazel projects `bazel` — read from their manifests by
+/// [`super::read_bazel_projects`] — after the others.
+///
+/// A file a Bazel project lists is its own, so the walk leaves it to that
+/// project rather than to the folder or a `conf.py` above it.
 #[must_use]
 pub fn discover_projects_with(
     folder: &Path,
     evaluations: &ConfEvaluations,
+    bazel: Vec<DiscoveredProject>,
 ) -> Vec<DiscoveredProject> {
+    let claimed: BTreeSet<PathBuf> = bazel
+        .iter()
+        .flat_map(|project| project.sources.iter().map(|(_, path)| path.clone()))
+        .collect();
     let mut projects = vec![
         sphinx_project_at(folder, evaluations)
             .unwrap_or_else(|| DiscoveredProject::folder(folder.to_path_buf())),
     ];
-    walk(folder, 0, &mut projects, evaluations);
+    let mut walk = Walk {
+        evaluations,
+        claimed: &claimed,
+    };
+    walk.directory(folder, 0, &mut projects);
+    projects.extend(bazel);
     projects
 }
 
@@ -104,7 +119,11 @@ pub fn sources_under(model: &ProjectModel, directory: &Path) -> Vec<(String, Pat
         sources: Vec::new(),
         wants_conf_run: false,
     }];
-    walk(directory, 0, &mut projects, &ConfEvaluations::new());
+    let mut walk = Walk {
+        evaluations: &ConfEvaluations::new(),
+        claimed: &BTreeSet::new(),
+    };
+    walk.directory(directory, 0, &mut projects);
     projects.swap_remove(0).sources
 }
 
@@ -219,64 +238,74 @@ fn run_failure(evaluation: &ConfEvaluation) -> Option<Diagnostic> {
     ))
 }
 
-/// Adds the documents in `directory`, and under it, to `projects[current]`
-/// — or to the project a deeper `conf.py` starts, added to `projects`.
-fn walk(
-    directory: &Path,
-    current: usize,
-    projects: &mut Vec<DiscoveredProject>,
-    evaluations: &ConfEvaluations,
-) {
-    let Ok(entries) = fs::read_dir(directory) else {
-        // An unreadable corner of a workspace costs its own documents, not
-        // everyone else's.
-        return;
-    };
-    let mut files = Vec::new();
-    let mut directories = Vec::new();
-    for entry in entries.flatten() {
-        let path = entry.path();
-        // `DirEntry::file_type` does not follow symlinks, which is the whole
-        // point: a symlinked directory reports as a symlink.
-        let Ok(kind) = entry.file_type() else {
-            continue;
+/// What the walk is given: the runs of `conf.py` to take over reading them,
+/// and the files a Bazel project lists, which no walked project takes.
+struct Walk<'a> {
+    evaluations: &'a ConfEvaluations,
+    claimed: &'a BTreeSet<PathBuf>,
+}
+
+impl Walk<'_> {
+    /// Adds the documents in `directory`, and under it, to
+    /// `projects[current]` — or to the project a deeper `conf.py` starts,
+    /// added to `projects`.
+    fn directory(
+        &mut self,
+        directory: &Path,
+        current: usize,
+        projects: &mut Vec<DiscoveredProject>,
+    ) {
+        let Ok(entries) = fs::read_dir(directory) else {
+            // An unreadable corner of a workspace costs its own documents,
+            // not everyone else's.
+            return;
         };
-        if kind.is_dir() {
-            if !is_hidden(&path) {
-                directories.push(path);
+        let mut files = Vec::new();
+        let mut directories = Vec::new();
+        for entry in entries.flatten() {
+            let path = entry.path();
+            // `DirEntry::file_type` does not follow symlinks, which is the
+            // whole point: a symlinked directory reports as a symlink.
+            let Ok(kind) = entry.file_type() else {
+                continue;
+            };
+            if kind.is_dir() {
+                if !is_hidden(&path) {
+                    directories.push(path);
+                }
+            } else if (kind.is_file() || path.is_file()) && !self.claimed.contains(&path) {
+                files.push(path);
             }
-        } else if kind.is_file() || path.is_file() {
-            files.push(path);
         }
-    }
-    // Sphinx walks each directory's files in name order, and the first file
-    // of a document is the one it reads.
-    files.sort();
-    directories.sort();
-    let mut seen: BTreeMap<String, PathBuf> = BTreeMap::new();
-    for file in files {
-        let project = &mut projects[current];
-        let Some(doc_path) = project.model.doc_path_of(&file) else {
-            continue;
-        };
-        if let Some(first) = seen.get(&doc_path) {
-            project.findings.push(duplicate_source(first, &file));
-            continue;
-        }
-        seen.insert(doc_path.clone(), file.clone());
-        project.sources.push((doc_path, file));
-    }
-    for subdirectory in directories {
-        if is_excluded(&projects[current].model, &subdirectory) {
-            continue;
-        }
-        match sphinx_project_at(&subdirectory, evaluations) {
-            Some(nested) => {
-                projects.push(nested);
-                let index = projects.len() - 1;
-                walk(&subdirectory, index, projects, evaluations);
+        // Sphinx walks each directory's files in name order, and the first
+        // file of a document is the one it reads.
+        files.sort();
+        directories.sort();
+        let mut seen: BTreeMap<String, PathBuf> = BTreeMap::new();
+        for file in files {
+            let project = &mut projects[current];
+            let Some(doc_path) = project.model.doc_path_of(&file) else {
+                continue;
+            };
+            if let Some(first) = seen.get(&doc_path) {
+                project.findings.push(duplicate_source(first, &file));
+                continue;
             }
-            None => walk(&subdirectory, current, projects, evaluations),
+            seen.insert(doc_path.clone(), file.clone());
+            project.sources.push((doc_path, file));
+        }
+        for subdirectory in directories {
+            if is_excluded(&projects[current].model, &subdirectory) {
+                continue;
+            }
+            match sphinx_project_at(&subdirectory, self.evaluations) {
+                Some(nested) => {
+                    projects.push(nested);
+                    let index = projects.len() - 1;
+                    self.directory(&subdirectory, index, projects);
+                }
+                None => self.directory(&subdirectory, current, projects),
+            }
         }
     }
 }
@@ -620,6 +649,28 @@ mod tests {
     const COMPUTED: &str = "exclude_patterns = [name for name in ['drafts']]\n";
 
     #[test]
+    fn test_discover_projects_with_leaves_a_bazel_projects_files_to_it() {
+        // Given a Bazel project listing `listed.rst` of the folder
+        let root = temp_tree(
+            "bazel_claimed",
+            &[("listed.rst", "Listed\n"), ("other.rst", "Other\n")],
+        );
+        let bazel = DiscoveredProject {
+            sources: vec![("listed.rst".to_string(), root.join("listed.rst"))],
+            ..DiscoveredProject::folder(root.clone())
+        };
+
+        // When
+        let projects = discover_projects_with(&root, &ConfEvaluations::new(), vec![bazel]);
+
+        // Then the folder takes only the other file, and the Bazel project
+        // comes after it
+        assert_eq!(projects.len(), 2);
+        assert_eq!(names(&projects[0]), ["other.rst"]);
+        assert_eq!(names(&projects[1]), ["listed.rst"]);
+    }
+
+    #[test]
     fn test_discover_projects_with_takes_a_run_of_conf_py_as_it_is() {
         // Given a run excluding `drafts`, which imported `paths.py`
         let root = temp_tree(
@@ -639,7 +690,7 @@ mod tests {
             ConfEvaluations::from([(root.join("conf.py"), evaluation(COMPUTED, Ok(values)))]);
 
         // When
-        let projects = discover_projects_with(&root, &evaluations);
+        let projects = discover_projects_with(&root, &evaluations, Vec::new());
 
         // Then
         assert_eq!(names(&projects[0]), ["index.rst"]);
@@ -667,7 +718,7 @@ mod tests {
         )]);
 
         // When
-        let projects = discover_projects_with(&root, &evaluations);
+        let projects = discover_projects_with(&root, &evaluations, Vec::new());
 
         // Then it is read, as if it had never run
         assert_eq!(names(&projects[0]), ["drafts/wip.rst"]);
@@ -690,7 +741,7 @@ mod tests {
             ConfEvaluations::from([(root.join("conf.py"), evaluation(COMPUTED, Err(failure)))]);
 
         // When
-        let projects = discover_projects_with(&root, &evaluations);
+        let projects = discover_projects_with(&root, &evaluations, Vec::new());
 
         // Then the reading stands beside the failure
         let codes: Vec<(DiagnosticCode, Option<u32>)> = projects[0]

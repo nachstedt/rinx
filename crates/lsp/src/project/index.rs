@@ -164,7 +164,7 @@ impl Project {
     pub fn conf_path(&self) -> Option<&Path> {
         match &self.model.source {
             ProjectSource::SphinxConf { conf } => Some(conf),
-            ProjectSource::Folder => None,
+            ProjectSource::Folder | ProjectSource::Bazel { .. } => None,
         }
     }
 
@@ -423,6 +423,9 @@ impl Project {
                 &model.settings.parse.schema,
             );
             let mut index = build.index;
+            index
+                .domain_indices
+                .clone_from(&model.settings.domain_indices);
             // Whole rather than pruned to what the documents name, as the
             // build's index is: the next edit may name anything.
             index.external_inventories = std::mem::take(external);

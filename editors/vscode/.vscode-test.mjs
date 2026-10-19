@@ -8,6 +8,8 @@
 // - `e2e` opens a fixture workspace and talks to the real `rinx lsp`: the
 //   binary at RINX_BINARY, or else the repository's `cargo build` output.
 // - `e2e-no-server` points the extension at a binary that does not exist.
+// - `e2e-bazel` opens test-fixtures/bazel/workspace, a Bazel workspace, with
+//   test-fixtures/bazel/fake-bazel/bazel standing in for Bazel on the PATH.
 // - `e2e-vsix`, only when RINX_VSIX names a packaged extension, runs the e2e
 //   tests against that VSIX installed, rather than against this checkout.
 //   With RINX_VSIX_BUNDLED=1 the VSIX is one `npm run package:bundled` made,
@@ -32,10 +34,10 @@ function vscodeVersion() {
     return requested === 'min' ? manifest.engines.vscode.replace(/^\^/, '') : requested;
 }
 
-/** A fresh copy of the fixture workspace whose settings are `settings`. */
-function fixtureWorkspace(name, settings) {
+/** A fresh copy of the fixture workspace `fixture` whose settings are `settings`. */
+function fixtureWorkspace(name, settings, fixture = 'workspace') {
     const workspace = mkdtempSync(join(tmpdir(), `rinx-${name}-`));
-    cpSync(fileURLToPath(new URL('./test-fixtures/workspace', import.meta.url)), workspace, { recursive: true });
+    cpSync(fileURLToPath(new URL(`./test-fixtures/${fixture}`, import.meta.url)), workspace, { recursive: true });
     mkdirSync(join(workspace, '.vscode'));
     writeFileSync(join(workspace, '.vscode', 'settings.json'), JSON.stringify(settings, null, 2));
     return workspace;
@@ -87,6 +89,19 @@ export default defineConfig({
             }),
         },
         ...(process.env.RINX_VSIX ? [packagedExtensionTests(process.env.RINX_VSIX)] : []),
+        {
+            ...common,
+            label: 'e2e-bazel',
+            files: 'out/test/e2e-bazel/**/*.test.js',
+            workspaceFolder: fixtureWorkspace(
+                'e2e-bazel',
+                { ...workspaceSettings, 'rinx.autoDiscover': true, 'rinx.binaryPath': rinxBinary },
+                'bazel/workspace',
+            ),
+            env: {
+                PATH: `${fileURLToPath(new URL('./test-fixtures/bazel/fake-bazel', import.meta.url))}:${process.env.PATH}`,
+            },
+        },
         {
             ...common,
             label: 'e2e-no-server',

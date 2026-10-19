@@ -55,6 +55,7 @@ use std::time::Duration;
 
 use rayon::prelude::*;
 
+use super::bazel_manifests::{BazelManifests, ManifestSource};
 use super::conf_runs::{ConfExecution, ConfRunEvent, ConfRuns};
 use super::handlers::publish_diagnostics;
 use super::inventories::InventoryFetches;
@@ -123,6 +124,8 @@ pub struct ServerState {
     pub(super) fetches: InventoryFetches,
     /// The `conf.py` runs asked for, under way and finished.
     pub(super) conf_runs: ConfRuns,
+    /// The Bazel manifests asked for and granted.
+    pub(super) bazel: BazelManifests,
 }
 
 /// A document the graph diagnoses: its latest parse, and what rendering it
@@ -203,6 +206,7 @@ impl ServerState {
             next_request_id: 1,
             fetches: InventoryFetches::default(),
             conf_runs: ConfRuns::default(),
+            bazel: BazelManifests::default(),
         }
     }
 
@@ -252,6 +256,14 @@ impl ServerState {
     #[must_use]
     pub fn with_conf_execution(mut self, execution: ConfExecution) -> Self {
         self.conf_runs = ConfRuns::new(execution);
+        self
+    }
+
+    /// This server, reading the Bazel sites of its folders from the
+    /// manifests `source` comes by (see [`super::bazel_manifests`]).
+    #[must_use]
+    pub fn with_bazel_manifests(mut self, source: ManifestSource) -> Self {
+        self.bazel = BazelManifests::new(source);
         self
     }
 
@@ -339,6 +351,9 @@ impl ServerState {
         if let Some(messages) = self.on_conf_interpreter_response(response) {
             return messages;
         }
+        if let Some(messages) = self.on_bazel_manifests_response(response) {
+            return messages;
+        }
         self.scan
             .as_mut()
             .map(|scan| scan.progress.on_response(response))
@@ -392,8 +407,23 @@ impl ServerState {
             messages.extend(self.install_projects(folder, found));
         }
         for project in scanned {
+            // A document a Bazel project now lists is that project's, though
+            // the scan found it before the manifests arrived.
+            let documents: Vec<_> = project
+                .documents
+                .into_iter()
+                .filter(|(doc_path, indexed)| {
+                    self.locate(&indexed.path).is_some_and(|(owner, name)| {
+                        name == *doc_path
+                            && self.projects.get(&owner).is_some_and(|owner| {
+                                owner.folder() == folder
+                                    && owner.model() == &project.discovered.model
+                            })
+                    })
+                })
+                .collect();
             if let Some(recorded) = self.project_with_model(folder, &project.discovered) {
-                recorded.record_scanned(project.documents);
+                recorded.record_scanned(documents);
             }
         }
         let Some(scan) = self.scan.as_mut() else {
@@ -742,7 +772,7 @@ impl ServerState {
             .as_ref()
             .and_then(|(project, _)| self.projects.get(project))
             .map(Project::model);
-        let settings = model.map_or(&default_settings, |model| &model.settings.parse);
+        let settings = model.map_or(&default_settings, |model| model.parse_settings(doc_path));
         let source_root = model.map(|model| model.source_root.as_path());
         let parsed = text
             .map(|text| parse_source(uri, doc_path, source_root, &text, settings, &self.documents));

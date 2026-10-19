@@ -1,0 +1,4 @@
+Undeclared
+==========
+
+.. include:: part.rst

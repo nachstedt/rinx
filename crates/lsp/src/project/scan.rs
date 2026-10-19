@@ -124,7 +124,7 @@ fn parse_document(
         Some(doc_path),
         Some(&model.source_root),
         &text,
-        &model.settings.parse,
+        model.parse_settings(Some(doc_path)),
         disk_only,
     ))
 }

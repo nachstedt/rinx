@@ -1,0 +1,11 @@
+#!/bin/sh
+# Stands in for Bazel in the e2e-bazel tests, answering the commands the
+# extension runs to build the language server's manifests (src/bazel.ts):
+# the workspace has one site, whose manifest is checked in beside it.
+case "$1" in
+query) echo '//:site' ;;
+build) ;;
+cquery) echo 'site.lsp_manifest.json' ;;
+info) if [ "$2" = execution_root ]; then pwd; fi ;;
+*) echo "fake bazel: unexpected command: $*" >&2; exit 2 ;;
+esac

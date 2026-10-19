@@ -73,6 +73,7 @@ Some features need the editor to do something for the server, and only the VS Co
 - The live preview.
 - Downloading inventories. The server never touches the network, so in other editors an inventory named by an address is not loaded, and references into it are hints rather than warnings.
 - Running ``conf.py``. The server needs to be told which interpreter to run it in, and only in a trusted workspace (see :ref:`vscode-running-conf`). Elsewhere, ``conf.py`` is only read.
+- Reading a Bazel workspace's sites as the build does. The server never runs Bazel, so it needs to be handed each site's manifest (see :ref:`vscode-bazel-projects`). Elsewhere, a Bazel workspace is read as a folder.
 - The status bar, which shows the scan's progress and the project. Other editors show the protocol's own progress reports, where they support them.
 
 Protocol extensions
@@ -83,5 +84,6 @@ A client can offer what VS Code offers through these messages. Each one is opt-i
 - ``rinx/status``, a notification from the server, with the index's state (``indexing`` or ``ready``), the number of documents indexed, and the projects found. A client may ignore it.
 - The ``fetchInventories`` initialization option. With it, the server sends ``rinx/fetchInventory`` requests naming an address, and the client answers with the downloaded inventory.
 - The ``evaluateConf`` initialization option. With it, the server sends a ``rinx/confInterpreter`` request for each ``conf.py`` it could not read, and the client answers with an interpreter or none. The client sends a ``rinx/confInterpreterChanged`` notification when its answer would change.
+- The ``bazelManifests`` initialization option. With it, the server sends a ``rinx/bazelManifests`` request for each workspace folder holding ``MODULE.bazel`` or a ``WORKSPACE`` file, and the client answers with the paths of the ``<site>.lsp_manifest.json`` files that ``bazel build --output_groups=lsp_manifest`` wrote, the workspace and execution roots, and optionally the preferred site — or none. The client sends a ``rinx/bazelManifestsChanged`` notification when its answer would change.
 
 The exact shapes are in ``crates/lsp/src/server/`` in the repository.

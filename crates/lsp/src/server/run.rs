@@ -10,6 +10,7 @@ use lsp_types::notification::{Exit, Notification as _};
 use lsp_types::{ClientCapabilities, InitializeParams, Uri, WorkspaceFolder};
 use serde::Deserialize;
 
+use super::bazel_manifests::ManifestSource;
 use super::conf_runs::ConfExecution;
 use super::handlers::{handle_notification, handle_request, initialize_result};
 use super::scan::{ScanEvent, spawn_scan};
@@ -52,7 +53,8 @@ pub fn run(connection: &Connection) -> Result<()> {
         .with_definition_links(supports_definition_links(&params.capabilities))
         .with_watched_files(supports_watched_files(&params.capabilities))
         .with_inventory_fetching(fetches_inventories(&params))
-        .with_conf_execution(conf_execution(&params));
+        .with_conf_execution(conf_execution(&params))
+        .with_bazel_manifests(manifest_source(&params));
     let conf_runs = state.conf_run_events();
     let mut scan_events: Receiver<ScanEvent> = never();
     let roots = state.folder_roots();
@@ -169,6 +171,23 @@ fn conf_execution(params: &InitializeParams) -> ConfExecution {
         ConfExecution::AskClient
     } else {
         ConfExecution::Off
+    }
+}
+
+/// Where a Bazel folder's manifests come from: the client, when it passes
+/// the `bazelManifests` initialization option, which the VS Code extension
+/// does — building them with Bazel as it already does for the preview.
+fn manifest_source(params: &InitializeParams) -> ManifestSource {
+    let asks = params
+        .initialization_options
+        .as_ref()
+        .and_then(|options| options.get("bazelManifests"))
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false);
+    if asks {
+        ManifestSource::AskClient
+    } else {
+        ManifestSource::Off
     }
 }
 
@@ -304,6 +323,22 @@ mod tests {
         assert_eq!(
             conf_execution(&InitializeParams::default()),
             ConfExecution::Off
+        );
+    }
+
+    #[test]
+    fn test_manifest_source_asks_only_a_client_passing_the_option() {
+        // Given
+        let asking = InitializeParams {
+            initialization_options: Some(serde_json::json!({"bazelManifests": true})),
+            ..InitializeParams::default()
+        };
+
+        // When / Then
+        assert_eq!(manifest_source(&asking), ManifestSource::AskClient);
+        assert_eq!(
+            manifest_source(&InitializeParams::default()),
+            ManifestSource::Off
         );
     }
 

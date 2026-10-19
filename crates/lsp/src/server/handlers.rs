@@ -14,6 +14,7 @@ use lsp_types::{
     TextDocumentSyncKind, Uri,
 };
 
+use super::bazel_manifests::BAZEL_MANIFESTS_CHANGED_METHOD;
 use super::conf_runs::CONF_INTERPRETER_CHANGED_METHOD;
 use super::state::ServerState;
 use crate::position::PositionEncoding;
@@ -105,6 +106,7 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
             state.on_watched_files(&params.changes)
         }
         CONF_INTERPRETER_CHANGED_METHOD => state.on_conf_interpreter_changed(),
+        BAZEL_MANIFESTS_CHANGED_METHOD => state.on_bazel_manifests_changed(),
         _ => Vec::new(),
     }
 }
@@ -165,12 +167,18 @@ fn invalid_params(id: RequestId, method: &str, error: &serde_json::Error) -> Res
 /// A `window/showMessage` notification telling the user `message`, as
 /// information rather than a warning or an error.
 pub(super) fn show_information(message: String) -> Message {
+    show_message(MessageType::INFO, message)
+}
+
+/// A `window/showMessage` notification warning the user of `message`.
+pub(super) fn show_warning(message: String) -> Message {
+    show_message(MessageType::WARNING, message)
+}
+
+fn show_message(typ: MessageType, message: String) -> Message {
     Notification::new(
         ShowMessage::METHOD.to_string(),
-        ShowMessageParams {
-            typ: MessageType::INFO,
-            message,
-        },
+        ShowMessageParams { typ, message },
     )
     .into()
 }
