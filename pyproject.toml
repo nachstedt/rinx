@@ -32,6 +32,7 @@ extend-exclude = [
     "crates/inventory/testdata",
     "crates/pyconf/testdata",
     "crates/worker/tests/parity_project",
+    "editors/test-fixtures",
     "editors/vscode/test-fixtures",
 ]
 # Python only: ruff would otherwise also reformat the ```python blocks in the
@@ -140,5 +141,6 @@ exclude = [
     "crates/inventory/testdata",
     "crates/pyconf/testdata",
     "crates/worker/tests/parity_project",
+    "editors/test-fixtures",
     "editors/vscode/test-fixtures",
 ]

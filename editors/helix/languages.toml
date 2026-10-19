@@ -1,0 +1,9 @@
+# rinx's language server for reStructuredText, in Helix.
+[language-server.rinx]
+command = "rinx"
+args = ["lsp"]
+
+[[language]]
+name = "rst"
+language-servers = ["rinx"]
+roots = ["conf.py", "MODULE.bazel"]

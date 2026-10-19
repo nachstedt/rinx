@@ -133,7 +133,7 @@ A Sphinx project declaring ``sphinx.ext.intersphinx`` links into the sites its `
 
 The address-keyed form older Sphinx versions took, ``{'https://docs.python.org/3': None}``, is reported as ``conf.invalid-value``: Sphinx 8 removed it. An entry none of whose inventories could be read — a missing file, or one that is no inventory — is reported on its line in ``conf.py`` as ``conf.inventory-unreadable``.
 
-Until an entry's inventory is loaded — not downloaded yet, declined, or unreadable — a domain reference that resolves nowhere may well be in it, so it is a *Hint* naming the inventory and why it is missing, as is an ``:external+python:`` reference to that inventory. Once every inventory is loaded, a reference still resolving nowhere is the warning the build reports. ``:ref:``, ``:doc:`` and ``:term:`` stay warnings either way. Editors other than VS Code download nothing, so there only file inventories load.
+Until an entry's inventory is loaded — not downloaded yet, declined, or unreadable — a domain reference that resolves nowhere may well be in it, so it is a *Hint* naming the inventory and why it is missing, as is an ``:external+python:`` reference to that inventory. Once every inventory is loaded, a reference still resolving nowhere is the warning the build reports. ``:ref:``, ``:doc:`` and ``:term:`` stay warnings either way. Editors other than VS Code download nothing, so there only file inventories load (see :ref:`editors`).
 
 4. Change Detection & Background Reconcile
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

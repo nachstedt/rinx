@@ -51,6 +51,7 @@ Contents
    entities
    intersphinx
    vscode
+   editors
    benchmark
 
 Reference

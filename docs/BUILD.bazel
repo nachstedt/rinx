@@ -14,6 +14,7 @@ rinx_library(
         "benchmark.rst",
         "compatibility.rst",
         "diagnostics.rst",
+        "editors.rst",
         "entities.rst",
         "getting_started.rst",
         "index.rst",
@@ -21,6 +22,12 @@ rinx_library(
         "rules.rst",
         "syntax.rst",
         "vscode.rst",
+    ],
+    # The editor configurations `editors.rst` shows, which CI runs as written.
+    parse_data = [
+        "//editors/emacs:rinx-eglot.el",
+        "//editors/helix:languages.toml",
+        "//editors/neovim:rinx.lua",
     ],
 )
 
