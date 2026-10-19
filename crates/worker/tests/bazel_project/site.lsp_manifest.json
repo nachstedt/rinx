@@ -1,0 +1,55 @@
+{
+	"inventories": [],
+	"libraries": [
+		{
+			"allowed_docs": ["api/index", "api/undeclared"],
+			"default_domain": "c",
+			"default_role": "any",
+			"deps": [],
+			"diagrams": false,
+			"downloads": [],
+			"entity_schema": null,
+			"images": [],
+			"jinja": false,
+			"jinja_context": {},
+			"label": "//api:docs",
+			"parse_data": [],
+			"rst_epilog": null,
+			"rst_prolog": null,
+			"srcs": [
+				{"source": "api/index.rst"},
+				{"source": "api/undeclared.rst"}
+			]
+		},
+		{
+			"allowed_docs": ["reqs/index"],
+			"default_domain": "py",
+			"default_role": null,
+			"deps": [],
+			"diagrams": false,
+			"downloads": [],
+			"entity_schema": {"source": "reqs/entities.toml"},
+			"images": [],
+			"jinja": false,
+			"jinja_context": {},
+			"label": "//reqs:docs",
+			"parse_data": [],
+			"rst_epilog": null,
+			"rst_prolog": null,
+			"srcs": [
+				{"source": "reqs/index.rst"}
+			]
+		}
+	],
+	"site": {
+		"config": {"source": "rinx.toml"},
+		"css": {"source": "assets/default.css"},
+		"domain_indices": [],
+		"entity_schema": {"source": "reqs/entities.toml"},
+		"entity_templates": [],
+		"label": "//:site",
+		"strict_links": false,
+		"template": {"source": "templates/default.html"}
+	},
+	"version": 1
+}

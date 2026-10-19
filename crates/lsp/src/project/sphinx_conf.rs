@@ -32,7 +32,7 @@ use super::conf_eval::{ConfValues, ExecutedValue, conf_settings};
 
 use super::exclusion::{Exclusion, INCLUDE_EVERYTHING};
 use super::intersphinx::{DEFAULT_CACHE_LIMIT_DAYS, IntersphinxSettings, read_mapping};
-use super::model::{ParseSettings, ProjectSettings};
+use super::model::{ParseSettings, ProjectSettings, Splice};
 use super::needs::{NEEDS_EXTENSIONS, NeedsDeclaration, conf_setting_names, read_declaration};
 use super::strictness::Strictness;
 
@@ -208,8 +208,8 @@ impl<'a> Reader<'a> {
             parse: ParseSettings {
                 domain,
                 default_role,
-                prolog: self.text("rst_prolog"),
-                epilog: self.text("rst_epilog"),
+                prolog: self.text("rst_prolog").map(Splice::unnamed),
+                epilog: self.text("rst_epilog").map(Splice::unnamed),
                 ..ParseSettings::default()
             },
             numfig: self.boolean("numfig").unwrap_or(defaults.numfig),
@@ -934,8 +934,14 @@ mod tests {
         .parse;
 
         // Then
-        assert_eq!(parse.prolog.as_deref(), Some(".. |a| replace:: A"));
-        assert_eq!(parse.epilog.as_deref(), Some("\n.. _b: https://b\n"));
+        assert_eq!(
+            parse.prolog.as_ref().map(|splice| splice.text.as_str()),
+            Some(".. |a| replace:: A")
+        );
+        assert_eq!(
+            parse.epilog.as_ref().map(|splice| splice.text.as_str()),
+            Some("\n.. _b: https://b\n")
+        );
     }
 
     #[test]
@@ -960,7 +966,14 @@ mod tests {
         let text = "rst_prolog = 'A'\nif x:\n    rst_prolog += 'B'\n";
 
         // When / Then
-        assert_eq!(settings(text).parse.prolog.as_deref(), Some("A"));
+        assert_eq!(
+            settings(text)
+                .parse
+                .prolog
+                .as_ref()
+                .map(|splice| splice.text.as_str()),
+            Some("A")
+        );
         assert_eq!(findings(text), [("conf.modified-setting", 3)]);
     }
 
@@ -1041,7 +1054,15 @@ mod tests {
         let reading = read_executed_sphinx_conf(text, &values);
 
         // Then nothing is reported unread or unapplied
-        assert_eq!(reading.settings.parse.epilog.as_deref(), Some("|v| 3.14"));
+        assert_eq!(
+            reading
+                .settings
+                .parse
+                .epilog
+                .as_ref()
+                .map(|splice| splice.text.as_str()),
+            Some("|v| 3.14")
+        );
         assert_eq!(reading.settings.strictness.unmodelled_extensions(), ["x"]);
         assert_eq!(reading.findings, []);
         assert!(reading.falls_short);

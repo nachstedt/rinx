@@ -11,6 +11,7 @@
 //! documents in parallel when the server starts, and [`index`] keeps one
 //! analysis per document and folds them into the project's index.
 
+mod bazel_manifest;
 mod conf_eval;
 mod discover;
 mod exclusion;
@@ -25,6 +26,7 @@ mod scan;
 mod sphinx_conf;
 mod strictness;
 
+pub use bazel_manifest::{BazelGrant, BazelRoots, read_bazel_projects};
 #[cfg(test)]
 pub use conf_eval::ConfValues;
 pub use conf_eval::{CONF_RUN_TIMEOUT, ConfEvaluation, ConfEvaluations, run_conf};
@@ -34,7 +36,7 @@ pub use discover::{
 };
 pub use index::{IndexedDocument, Project};
 pub use inventories::Fetched;
-pub use model::{ParseSettings, ProjectSource};
+pub use model::{ParseSettings, ProjectSource, Splice};
 pub use scan::{ScannedProject, scan_projects};
 #[cfg(test)]
 pub use scan::{parse_project_documents, scan_folder};

@@ -16,6 +16,11 @@
 //! project, as the build resolves it; a document belonging to no project has
 //! none, and such a path is refused rather than resolved against something it
 //! is not.
+//!
+//! A Bazel library's documents may read only the files its `parse_data`
+//! declares, since nothing else reaches the build's parse action. Such a
+//! loader refuses any other file — even one open in the editor — so an
+//! undeclared `.. include::` fails here as it fails there.
 
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
@@ -56,6 +61,7 @@ pub struct WorkspaceFiles<'a> {
     document: PathBuf,
     source_root: Option<PathBuf>,
     open: &'a DocumentStore,
+    declared: Option<&'a BTreeSet<PathBuf>>,
     reads: RefCell<FileReads>,
 }
 
@@ -73,8 +79,16 @@ impl<'a> WorkspaceFiles<'a> {
             document: document.to_path_buf(),
             source_root: source_root.map(Path::to_path_buf),
             open,
+            declared: None,
             reads: RefCell::default(),
         }
+    }
+
+    /// This loader, reading only the files in `declared` when it is given —
+    /// a Bazel library's `parse_data`.
+    #[must_use]
+    pub fn restricted_to(self, declared: Option<&'a BTreeSet<PathBuf>>) -> Self {
+        Self { declared, ..self }
     }
 
     /// Everything this loader was asked for.
@@ -110,6 +124,16 @@ impl ParseFileLoader for WorkspaceFiles<'_> {
             rinx_ast::resolve_from_document(path, &anchor)
         };
         let id = resolved.to_string_lossy().into_owned();
+        if self
+            .declared
+            .is_some_and(|declared| !declared.contains(&resolved))
+        {
+            self.reads.borrow_mut().paths.insert(resolved);
+            return Err(format!(
+                "cannot read '{id}': it is not in the library's parse_data attribute, so it \
+                 does not reach the build's parse action"
+            ));
+        }
         let read = self.read(&resolved);
         let mut reads = self.reads.borrow_mut();
         reads.paths.insert(resolved.clone());
@@ -190,6 +214,62 @@ mod tests {
 
         // Then
         assert_eq!(file.text, "x\n");
+    }
+
+    #[test]
+    fn test_load_reads_a_declared_file() {
+        // Given
+        let dir = temp_directory("declared", &[("data.csv", "a\n")]);
+        let open = DocumentStore::default();
+        let declared: BTreeSet<PathBuf> = [dir.join("data.csv")].into_iter().collect();
+        let loader = WorkspaceFiles::for_document(&dir.join("index.rst"), None, &open)
+            .restricted_to(Some(&declared));
+
+        // When
+        let file = loader.load("data.csv", None).expect("read the file");
+
+        // Then
+        assert_eq!(file.text, "a\n");
+    }
+
+    #[test]
+    fn test_load_refuses_an_undeclared_file_and_records_it() {
+        // Given — the file exists, but the library does not declare it
+        let dir = temp_directory("undeclared", &[("data.csv", "a\n")]);
+        let open = DocumentStore::default();
+        let declared = BTreeSet::new();
+        let loader = WorkspaceFiles::for_document(&dir.join("index.rst"), None, &open)
+            .restricted_to(Some(&declared));
+
+        // When
+        let Err(error) = loader.load("data.csv", None) else {
+            panic!("an undeclared file was read");
+        };
+
+        // Then — refused by name, and still recorded, since declaring it
+        // changes the parse
+        assert!(error.contains("parse_data"), "{error}");
+        let reads = loader.into_reads();
+        assert!(reads.paths.contains(&dir.join("data.csv")));
+        assert!(reads.texts.is_empty());
+    }
+
+    #[test]
+    fn test_load_refuses_an_undeclared_file_even_when_it_is_open() {
+        // Given — the editor holds the file, which the build still would not see
+        let dir = temp_directory("undeclared_open", &[]);
+        let mut open = DocumentStore::default();
+        open.open(
+            crate::uri::file_uri(&dir.join("part.rst")).expect("a file URI"),
+            1,
+            "Part.\n".to_string(),
+        );
+        let declared = BTreeSet::new();
+        let loader = WorkspaceFiles::for_document(&dir.join("index.rst"), None, &open)
+            .restricted_to(Some(&declared));
+
+        // When / Then
+        assert!(loader.load("part.rst", None).is_err());
     }
 
     #[test]

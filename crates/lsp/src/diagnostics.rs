@@ -21,7 +21,7 @@ use crate::documents::DocumentStore;
 use crate::files::{FileReads, WorkspaceFiles};
 use crate::include_summary::summarize_includes;
 use crate::position::{PositionEncoding, to_lsp_range};
-use crate::project::{Judgement, ParseSettings, Strictness};
+use crate::project::{Judgement, ParseSettings, Splice, Strictness};
 use crate::uri::{file_path, file_uri};
 
 /// What every published diagnostic names as its producer.
@@ -67,9 +67,12 @@ pub struct ParsedSource {
 /// The text is parsed with its line endings as the protocol counts them (see
 /// [`protocol_line_endings`]), so every reported line is one the editor shows.
 ///
-/// The parse uses `settings`, the document's project's — its default domain,
-/// default role, `rst_prolog` and `rst_epilog` — and no entity schema and no
-/// Jinja, which nothing tells the server about yet (roadmap #15, #18, #20).
+/// The parse uses `settings`, the document's library's or project's — its
+/// default domain, default role, `rst_prolog` and `rst_epilog`, schema and
+/// declared `parse_data` — and no Jinja, which nothing tells the server
+/// about yet (roadmap #20). A prolog or epilog read from a file is taken from
+/// the editor's buffer while that file is open, and recorded as read, as an
+/// included fragment is.
 #[must_use]
 pub fn parse_source(
     uri: &Uri,
@@ -80,20 +83,37 @@ pub fn parse_source(
     open: &DocumentStore,
 ) -> ParsedSource {
     let text = protocol_line_endings(text).into_owned();
-    let (document, reads) = if let Some(path) = file_path(uri) {
-        let files = WorkspaceFiles::for_document(&path, source_root, open);
+    let prolog = splice_text(settings.prolog.as_ref(), RST_PROLOG, open);
+    let epilog = splice_text(settings.epilog.as_ref(), RST_EPILOG, open);
+    let (document, mut reads) = if let Some(path) = file_path(uri) {
+        let files = WorkspaceFiles::for_document(&path, source_root, open)
+            .restricted_to(settings.parse_data.as_ref());
         let name = doc_path.map_or_else(|| path.to_string_lossy(), Cow::Borrowed);
-        let ctx = configured(ParseCtx::new(settings.domain, &files), settings);
+        let ctx = configured(
+            ParseCtx::new(settings.domain, &files),
+            settings,
+            [&prolog, &epilog],
+        );
         let document = rinx_parser::parse_with_ctx(&name, &text, &ctx);
         (document, files.into_reads())
     } else {
         // An unsaved buffer has no directory to resolve a file against.
-        let ctx = configured(ParseCtx::new(settings.domain, &RejectParseFiles), settings);
+        let ctx = configured(
+            ParseCtx::new(settings.domain, &RejectParseFiles),
+            settings,
+            [&prolog, &epilog],
+        );
         (
             rinx_parser::parse_with_ctx(uri.as_str(), &text, &ctx),
             FileReads::default(),
         )
     };
+    for splice in [&prolog, &epilog].into_iter().flatten() {
+        if let Some(file) = &splice.file {
+            reads.paths.insert(file.clone());
+            reads.texts.insert(file.clone(), splice.text.clone());
+        }
+    }
     ParsedSource {
         document,
         reads,
@@ -109,24 +129,60 @@ pub const RST_PROLOG: &str = "<rst_prolog>";
 /// [`RST_PROLOG`]'s counterpart for `rst_epilog`.
 pub const RST_EPILOG: &str = "<rst_epilog>";
 
-/// `ctx` configured with a project's parse settings: its default role, and
-/// its `rst_prolog` and `rst_epilog`.
-fn configured<'a>(ctx: ParseCtx<'a>, settings: &'a ParseSettings) -> ParseCtx<'a> {
+/// A prolog or epilog as one parse reads it.
+struct SpliceText {
+    /// What its spans name: its file's path, or `unnamed`.
+    name: String,
+    /// Its file, if it has one.
+    file: Option<PathBuf>,
+    text: String,
+}
+
+/// `splice` as a parse reads it: named after its file, or `unnamed` without
+/// one, and with an open buffer's text rather than what was read with the
+/// project — the buffer being the truth, as for an included fragment.
+fn splice_text(splice: Option<&Splice>, unnamed: &str, open: &DocumentStore) -> Option<SpliceText> {
+    let splice = splice?;
+    let Some(file) = &splice.file else {
+        return Some(SpliceText {
+            name: unnamed.to_string(),
+            file: None,
+            text: splice.text.clone(),
+        });
+    };
+    let text = open
+        .get_by_path(file)
+        .map_or_else(|| splice.text.clone(), |buffer| buffer.text.clone());
+    Some(SpliceText {
+        name: file.to_string_lossy().into_owned(),
+        file: Some(file.clone()),
+        text: protocol_line_endings(&text).into_owned(),
+    })
+}
+
+/// `ctx` configured with a project's parse settings: its default role, its
+/// schema and import keys, and the prolog and epilog in `splices`.
+fn configured<'a>(
+    ctx: ParseCtx<'a>,
+    settings: &'a ParseSettings,
+    splices: [&'a Option<SpliceText>; 2],
+) -> ParseCtx<'a> {
+    let [prolog, epilog] = splices;
     let ctx = ctx
         .with_default_role(&settings.default_role)
         .with_schema(&settings.schema)
         .with_import_keys(&settings.import_keys);
-    let ctx = match &settings.prolog {
-        Some(text) => ctx.with_prolog(SplicedText {
-            name: RST_PROLOG,
-            text,
+    let ctx = match prolog {
+        Some(splice) => ctx.with_prolog(SplicedText {
+            name: &splice.name,
+            text: &splice.text,
         }),
         None => ctx,
     };
-    match &settings.epilog {
-        Some(text) => ctx.with_epilog(SplicedText {
-            name: RST_EPILOG,
-            text,
+    match epilog {
+        Some(splice) => ctx.with_epilog(SplicedText {
+            name: &splice.name,
+            text: &splice.text,
         }),
         None => ctx,
     }
@@ -519,8 +575,8 @@ mod tests {
 
     fn with_splices(prolog: &str, epilog: &str) -> ParseSettings {
         ParseSettings {
-            prolog: Some(prolog.to_string()),
-            epilog: Some(epilog.to_string()),
+            prolog: Some(Splice::unnamed(prolog.to_string())),
+            epilog: Some(Splice::unnamed(epilog.to_string())),
             ..ParseSettings::default()
         }
     }

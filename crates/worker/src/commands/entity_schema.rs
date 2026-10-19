@@ -7,25 +7,12 @@
 //! what a missing `--entity-schema` means.
 
 use anyhow::{Context, Result, anyhow};
-use rinx_entity::{EntitySchema, ReservedDirectiveNames, load_schema};
+use rinx_entity::EntitySchema;
 use rinx_renderer::EntityTemplates;
 use std::collections::BTreeMap;
 use std::fs;
 
 use super::cli_args::{flag_value_opt, flag_values_opt};
-
-/// Answers the schema loader's shadowing question by asking the parser.
-///
-/// The parser owns the directive vocabulary, so this is the one place the two
-/// crates are joined: `rinx_entity` deliberately holds no list of
-/// built-in directive names, which would drift the moment a new one is added.
-struct ParserDirectiveNames;
-
-impl ReservedDirectiveNames for ParserDirectiveNames {
-    fn is_reserved(&self, name: &str) -> bool {
-        rinx_parser::is_builtin_directive_name(name)
-    }
-}
 
 /// Reads the schema named by an optional `--entity-schema` flag.
 ///
@@ -53,7 +40,7 @@ pub(super) fn load_entity_schema(args: &[String]) -> Result<EntitySchema> {
 /// Split from the file read so it is testable without the filesystem, the same
 /// `process_*`/`cmd_*` division every subcommand here follows.
 pub(super) fn parse_entity_schema(text: &str, path: &str) -> Result<EntitySchema> {
-    load_schema(text, &ParserDirectiveNames)
+    rinx_parser::load_entity_schema(text)
         .map_err(|errors| anyhow!("Invalid entity schema '{path}':\n{errors}"))
 }
 
@@ -179,17 +166,6 @@ mod tests {
 
         // Then
         assert!(templates.is_empty());
-    }
-
-    #[test]
-    fn test_the_parser_bridge_reports_a_real_directive_name() {
-        // Given
-        let reserved = ParserDirectiveNames;
-
-        // When / Then
-        assert!(reserved.is_reserved("note"));
-        assert!(reserved.is_reserved("toctree"));
-        assert!(!reserved.is_reserved("verification-criteria"));
     }
 
     #[test]

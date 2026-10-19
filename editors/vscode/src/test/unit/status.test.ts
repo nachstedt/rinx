@@ -100,6 +100,44 @@ suite('Index status Test Suite', () => {
         );
     });
 
+    test('statusText: one Bazel site is named by its label, ahead of Sphinx projects', () => {
+        assert.strictEqual(
+            statusText({
+                state: 'ready',
+                documents: 105,
+                elapsedMs: 300,
+                projects: [
+                    { kind: 'folder', root: 'rinx' },
+                    { kind: 'sphinx', conf: 'testdata/conf.py' },
+                    { kind: 'bazel', site: '//docs:site' },
+                ],
+            }),
+            'rinx: rinx project //docs:site · 105 docs (0.3 s)',
+        );
+    });
+
+    test('statusText: several Bazel sites are counted', () => {
+        assert.strictEqual(
+            statusText({
+                state: 'ready',
+                documents: 2,
+                elapsedMs: 0,
+                projects: [
+                    { kind: 'bazel', site: '//docs:site' },
+                    { kind: 'bazel', site: '//examples:site' },
+                ],
+            }),
+            'rinx: 2 rinx projects · 2 docs (0.0 s)',
+        );
+    });
+
+    test('statusTooltip: names each Bazel site', () => {
+        assert.strictEqual(
+            statusTooltip({ state: 'ready', documents: 1, projects: [{ kind: 'bazel', site: '//docs:site' }] }),
+            'The rinx language server’s index of this workspace\nrinx project: //docs:site',
+        );
+    });
+
     test('statusTooltip: without projects says what the item is', () => {
         assert.strictEqual(
             statusTooltip({ state: 'indexing', documents: 0 }),

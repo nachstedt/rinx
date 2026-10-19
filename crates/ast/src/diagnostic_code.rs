@@ -1321,6 +1321,22 @@ diagnostic_codes! {
     /// setting keeps its default.
     ConfUnrepresentableValue => "conf.unrepresentable-value",
 
+    // --- Reading a Bazel project's manifest (the editor only) --------------
+    /// The language server's manifest of a `rinx_site` — what its
+    /// `lsp_manifest` output group writes — could not be read: it is
+    /// missing, is no JSON of the manifest's shape, or was written by a
+    /// version of the rules this editor does not know. The site's documents
+    /// are read as the folder's instead.
+    BazelManifestUnreadable => "bazel.manifest-unreadable",
+    /// A file the manifest names — the site's `rinx.toml`, an entity schema,
+    /// a library's `rst_prolog` or `rst_epilog` — could not be read; the
+    /// setting it holds keeps its default.
+    BazelFileUnreadable => "bazel.file-unreadable",
+    /// A setting the manifest records that the build itself would refuse —
+    /// an invalid entity schema or `rinx.toml`, a `default_role` no role
+    /// answers to; the setting keeps its default.
+    BazelInvalidSetting => "bazel.invalid-setting",
+
     // --- The suppression mechanism itself ----------------------------------
     /// A `.. noqa:` comment naming an id that is not a diagnostic code. Never
     /// suppressible: a suppression that silences the report of its own typo

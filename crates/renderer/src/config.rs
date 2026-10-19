@@ -17,7 +17,7 @@ use serde::Deserialize;
 ///
 /// Contains only site metadata — no file paths. File paths are resolved
 /// by the build system and passed as separate CLI arguments.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct SiteConfig {
     /// The project name displayed in the sidebar header and page title.
     #[serde(default = "default_project")]
@@ -181,7 +181,7 @@ pub struct SiteConfig {
 }
 
 /// The `[version_switcher]` table of a site config.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct VersionSwitcher {
     /// Where the browser fetches the list of published versions from.

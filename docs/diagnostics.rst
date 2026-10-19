@@ -2277,6 +2277,31 @@ A setting ``conf.py`` computed, when run, to a value with no literal spelling �
 an object, a function — which the editor cannot take: the setting keeps its
 default.
 
+bazel
+-----
+
+bazel.manifest-unreadable
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The language server's manifest of a ``rinx_site`` — what its ``lsp_manifest``
+output group writes — could not be read: it is missing, is no JSON of the
+manifest's shape, or was written by a version of the rules this editor does not
+know. The site's documents are read as the folder's instead.
+
+bazel.file-unreadable
+~~~~~~~~~~~~~~~~~~~~~
+
+A file the manifest names — the site's ``rinx.toml``, an entity schema, a
+library's ``rst_prolog`` or ``rst_epilog`` — could not be read; the setting it
+holds keeps its default.
+
+bazel.invalid-setting
+~~~~~~~~~~~~~~~~~~~~~
+
+A setting the manifest records that the build itself would refuse — an invalid
+entity schema or ``rinx.toml``, a ``default_role`` no role answers to; the
+setting keeps its default.
+
 noqa
 ----
 

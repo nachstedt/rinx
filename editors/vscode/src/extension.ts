@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import { LanguageClient } from 'vscode-languageclient/node';
 import { BazelScanner, DiscoveredConfig } from './bazel';
 import { bundledBinaryPath, chooseBinaryPath, explicitValue } from './binary';
-import { resolveServerBinary, startLanguageClient } from './client';
+import { createLanguageClient, resolveServerBinary } from './client';
 import {
     chooseInterpreter,
     CONF_INTERPRETER_CHANGED_METHOD,
@@ -25,6 +25,14 @@ import {
     InventoryFetcher,
     RememberedConsent,
 } from './inventories';
+import {
+    answerManifests,
+    BAZEL_MANIFESTS_CHANGED_METHOD,
+    BAZEL_MANIFESTS_METHOD,
+    BazelManifestsParams,
+    debounced,
+    ManifestDependencies,
+} from './manifests';
 import { IndexStatus, IndexStatusItem, STATUS_METHOD } from './status';
 
 // A log channel rather than a plain one: the language client writes its own
@@ -38,6 +46,16 @@ function log(msg: string) {
 let client: LanguageClient | undefined;
 // The binary the language server was started from, once it has been.
 let serverBinary: string | undefined;
+// The site the preview was last pointed at, and whom to tell when it
+// changes: a document several sites list belongs to it, unless `rinx.site`
+// names another.
+let previewSite: string | undefined;
+let onPreviewSiteChanged: (() => void) | undefined;
+
+/** `rinx.site`, the site the user chose for this workspace, if set. */
+function configuredSite(): string | undefined {
+    return vscode.workspace.getConfiguration('rinx').get<string>('site') || undefined;
+}
 
 /** What the extension offers other extensions — and its own end-to-end tests. */
 export interface RinxApi {
@@ -152,18 +170,27 @@ async function startServer(
     let binary = 'rinx';
     try {
         binary = await resolveServerBinary(new BazelScanner(log), bundled, log);
-        client = await startLanguageClient(binary, outputChannel);
-        serverBinary = binary;
+        // Every handler is registered before the client starts: the server
+        // asks for the Bazel manifests as soon as it has found the projects.
+        client = createLanguageClient(binary, outputChannel);
         client.onNotification(STATUS_METHOD, (status: IndexStatus) => statusItem.update(status));
         client.onRequest(FETCH_INVENTORY_METHOD, (params: FetchInventoryParams) => fetcher.fetchInventory(params));
         const running = client;
-        const interpreters = new ConfInterpreters(() => {
-            void running.sendNotification(CONF_INTERPRETER_CHANGED_METHOD);
-        });
+        const notify = (method: string) => {
+            if (running.isRunning()) void running.sendNotification(method);
+        };
+        const interpreters = new ConfInterpreters(() => notify(CONF_INTERPRETER_CHANGED_METHOD));
         subscriptions.push(interpreters);
         client.onRequest(CONF_INTERPRETER_METHOD, (params: ConfInterpreterParams) =>
             chooseInterpreter(params, interpreters.dependencies),
         );
+        const manifests = new BazelManifests(() => notify(BAZEL_MANIFESTS_CHANGED_METHOD));
+        subscriptions.push(manifests);
+        client.onRequest(BAZEL_MANIFESTS_METHOD, (params: BazelManifestsParams) =>
+            answerManifests(params, manifests.dependencies),
+        );
+        await client.start();
+        serverBinary = binary;
     } catch (error: unknown) {
         log(`Language server failed to start: ${errorMessage(error)}`);
         const action = await vscode.window.showWarningMessage(
@@ -173,6 +200,56 @@ async function startServer(
         if (action === 'Show Logs') {
             outputChannel.show();
         }
+    }
+}
+
+/** How long after the last edit of a Bazel file the manifests are rebuilt. */
+const MANIFEST_REBUILD_DELAY_MS = 2000;
+
+/**
+ * Builds the manifests the server asks for (see manifests.ts), and tells the
+ * server through `notify` whenever they may have changed: a `BUILD`, `.bzl`,
+ * `MODULE.bazel` or `WORKSPACE` file edited, `rinx.site` or
+ * `rinx.autoDiscover` changed, or the preview pointed at another site.
+ */
+class BazelManifests implements vscode.Disposable {
+    private readonly listeners: vscode.Disposable[] = [];
+    private readonly scanner = new BazelScanner(log);
+    private readonly rebuild: ReturnType<typeof debounced>;
+
+    constructor(notify: () => void) {
+        this.rebuild = debounced(notify, MANIFEST_REBUILD_DELAY_MS);
+        const watcher = vscode.workspace.createFileSystemWatcher(
+            '**/{BUILD,BUILD.bazel,*.bzl,MODULE.bazel,WORKSPACE,WORKSPACE.bazel}',
+        );
+        watcher.onDidChange(this.rebuild);
+        watcher.onDidCreate(this.rebuild);
+        watcher.onDidDelete(this.rebuild);
+        this.listeners.push(
+            watcher,
+            vscode.workspace.onDidChangeConfiguration((event) => {
+                if (event.affectsConfiguration('rinx.site') || event.affectsConfiguration('rinx.autoDiscover')) {
+                    notify();
+                }
+            }),
+        );
+        onPreviewSiteChanged = () => {
+            if (!configuredSite()) notify();
+        };
+    }
+
+    readonly dependencies: ManifestDependencies = {
+        autoDiscover: () => vscode.workspace.getConfiguration('rinx').get<boolean>('autoDiscover') ?? true,
+        preferredSite: () => configuredSite() ?? previewSite,
+        findSiteTargets: (root) => this.scanner.findSiteTargets(root),
+        buildManifests: (root, sites) => this.scanner.buildManifests(root, sites),
+        executionRoot: (root) => this.scanner.getExecutionRoot(root),
+    };
+
+    dispose(): void {
+        this.rebuild.cancel();
+        onPreviewSiteChanged = undefined;
+        for (const listener of this.listeners) listener.dispose();
     }
 }
 
@@ -346,7 +423,10 @@ class PreviewPanel {
             log(`Found ${targets.length} site target(s): ${targets.join(', ') || '(none)'}`);
             let selectedTarget: string | undefined;
 
-            if (targets.length === 1) {
+            const configured = configuredSite();
+            if (configured && targets.includes(configured)) {
+                selectedTarget = configured;
+            } else if (targets.length === 1) {
                 selectedTarget = targets[0];
             } else if (targets.length > 1) {
                 selectedTarget = await vscode.window.showQuickPick(targets, {
@@ -356,6 +436,10 @@ class PreviewPanel {
 
             if (selectedTarget) {
                 log(`Using site target: ${selectedTarget}`);
+                if (selectedTarget !== previewSite) {
+                    previewSite = selectedTarget;
+                    onPreviewSiteChanged?.();
+                }
                 const configLabel = await this._scanner.queryAttribute(selectedTarget, 'config', workspaceRoot);
                 const templateLabel = await this._scanner.queryAttribute(selectedTarget, 'template', workspaceRoot);
                 log(`Config label: ${configLabel || '(not found)'}`);

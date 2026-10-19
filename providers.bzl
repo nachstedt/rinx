@@ -14,6 +14,8 @@ RinxInfo = provider(
         "image_files": "A depset of authored image File objects, declared via rinx_library's `images` attribute. These are files the author wrote and referenced with `.. image::`/`.. figure::`, as opposed to the diagrams the site rule compiles, which never pass through a library at all.",
         "download_files": "A depset of the File objects this library's documents link with `:download:`, declared via rinx_library's `downloads` attribute. Copied into the site's `_downloads/` directory at their source-root-relative path and read by no other action, so editing one re-renders no page.",
         "embed_sidecars": "A depset of per-document .embeds.json File objects, mapping each `:loading: embed` image to its data: URI. Consumed by the render action of the document it belongs to.",
+        "lsp_libraries": "A depset of JSON strings, one per rinx_library in the transitive closure, each describing that library's sources and parse settings for the language server. The site writes them into its `lsp_manifest` output group.",
+        "lsp_inputs": "A depset of the File objects the language server reads for these libraries — sources, schema, prolog and epilog — so the site's `lsp_manifest` output group materializes any that are generated.",
     },
 )
 

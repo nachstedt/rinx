@@ -68,6 +68,8 @@ pub enum ProjectStatus {
     /// The documents of a workspace folder under no `conf.py`, the folder
     /// named by its path's last component.
     Folder { root: String },
+    /// A `rinx_site`, named by its label (`//docs:site`).
+    Bazel { site: String },
 }
 
 impl IndexStatus {
@@ -374,6 +376,9 @@ mod tests {
                 ProjectStatus::Folder {
                     root: "rinx".to_string(),
                 },
+                ProjectStatus::Bazel {
+                    site: "//docs:site".to_string(),
+                },
             ],
         };
 
@@ -391,6 +396,7 @@ mod tests {
                     {"kind": "sphinx", "conf": "docs/conf.py"},
                     {"kind": "sphinx", "conf": "api/conf.py", "executedWith": "/venv/bin/python"},
                     {"kind": "folder", "root": "rinx"},
+                    {"kind": "bazel", "site": "//docs:site"},
                 ],
             })
         );

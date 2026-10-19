@@ -9,14 +9,16 @@
 //! [`state`] holds what the server remembers and turns a change into the
 //! diagnostics to publish, with [`projects`] keeping the workspace's projects
 //! and routing each file to one, [`inventories`] getting their
-//! intersphinx inventories in and [`conf_runs`] running their `conf.py` where
-//! that is allowed; [`handlers`] are the pure functions from one
+//! intersphinx inventories in, [`conf_runs`] running their `conf.py` where
+//! that is allowed and [`bazel_manifests`] getting a Bazel workspace's site
+//! manifests from the client; [`handlers`] are the pure functions from one
 //! message to the replies, and [`run`] is the loop around them. [`scan`] is
 //! the thread scanning the workspace beside the loop; the file-system
 //! events the client reports reach [`state`] like any other notification.
 //! [`check`] drives the same state in-process over a whole folder, for
 //! measuring a corpus rather than serving an editor.
 
+mod bazel_manifests;
 mod check;
 mod conf_runs;
 mod handlers;
@@ -26,6 +28,8 @@ mod run;
 mod scan;
 mod state;
 
+#[cfg(test)]
+mod bazel_manifest_tests;
 #[cfg(test)]
 mod completion_tests;
 // The interpreter the tests run is a shell script.
@@ -58,5 +62,5 @@ mod watch_tests;
 #[cfg(test)]
 mod workspace_tests;
 
-pub use check::{FolderCheck, check_folder};
+pub use check::{CheckOptions, FolderCheck, check_folder};
 pub use run::run;

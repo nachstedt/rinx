@@ -32,8 +32,9 @@ export async function resolveServerBinary(
 
 /**
  * The options connecting the client to every reStructuredText document, and
- * telling the server this client downloads inventories (see inventories.ts)
- * and chooses the interpreter `conf.py` runs in (see conf.ts).
+ * telling the server this client downloads inventories (see inventories.ts),
+ * chooses the interpreter `conf.py` runs in (see conf.ts) and builds a Bazel
+ * workspace's site manifests (see manifests.ts).
  */
 export function clientOptions(outputChannel: vscode.LogOutputChannel): LanguageClientOptions {
     return {
@@ -41,18 +42,18 @@ export function clientOptions(outputChannel: vscode.LogOutputChannel): LanguageC
             { scheme: 'file', language: 'restructuredtext' },
             { scheme: 'untitled', language: 'restructuredtext' },
         ],
-        initializationOptions: { fetchInventories: true, evaluateConf: true },
+        initializationOptions: { fetchInventories: true, evaluateConf: true, bazelManifests: true },
         outputChannel,
     };
 }
 
-/** Starts the language server, returning the running client. */
-export async function startLanguageClient(
-    binary: string,
-    outputChannel: vscode.LogOutputChannel,
-): Promise<LanguageClient> {
+/**
+ * The client of the language server at `binary`, not started yet: every
+ * handler must be registered before `start()`, since the server sends its
+ * first requests — `rinx/bazelManifests` among them — as soon as it has found
+ * the workspace's projects, and one arriving before its handler is refused.
+ */
+export function createLanguageClient(binary: string, outputChannel: vscode.LogOutputChannel): LanguageClient {
     const serverOptions: ServerOptions = { command: binary, args: ['lsp'] };
-    const client = new LanguageClient('rinx', 'Rinx', serverOptions, clientOptions(outputChannel));
-    await client.start();
-    return client;
+    return new LanguageClient('rinx', 'Rinx', serverOptions, clientOptions(outputChannel));
 }
