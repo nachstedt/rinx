@@ -106,4 +106,46 @@ suite('Bazel project (e2e)', () => {
             );
         }
     });
+
+    test('the quick fix adds the missing library to deps', async () => {
+        // Given — `//other:docs` lists `reqs/index` in a toctree, but has no deps
+        const document = workspaceFile('other/index.rst');
+        await vscode.window.showTextDocument(document);
+        const undeclared = await waitFor('the undeclared toctree entry to be underlined', () =>
+            vscode.languages.getDiagnostics(document).find((diagnostic) => {
+                const code = diagnostic.code;
+                const value = typeof code === 'object' ? String(code.value) : String(code);
+                return value === 'toctree.undeclared-dependency';
+            }),
+        );
+
+        // When
+        const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+            'vscode.executeCodeActionProvider',
+            document,
+            undeclared.range,
+            vscode.CodeActionKind.QuickFix.value,
+        );
+        const fix = actions.find((action) => action.title === 'Add //reqs:docs to the deps of //other:docs');
+        assert.ok(fix?.edit, JSON.stringify(actions.map((action) => action.title)));
+        assert.ok(await vscode.workspace.applyEdit(fix.edit));
+
+        // Then
+        const build = await vscode.workspace.openTextDocument(workspaceFile('other/BUILD.bazel'));
+        assert.strictEqual(
+            build.getText(),
+            [
+                'load("@rinx//:defs.bzl", "rinx_library")',
+                '',
+                'rinx_library(',
+                '    name = "docs",',
+                '    srcs = ["index.rst"],',
+                '    deps = ["//reqs:docs"],',
+                ')',
+                '',
+            ].join('\n'),
+        );
+        // The workspace is this run's copy, so the edit may be kept.
+        assert.ok(await build.save());
+    });
 });

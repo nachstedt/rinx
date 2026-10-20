@@ -244,7 +244,9 @@ as an *Error*:
   `rinx_analyzer::undeclared_assets` and `disabled_diagrams`), so the two
   cannot disagree. A site's bundle is the union of its libraries', as the
   build's bundle directories are. Like the build, no `.. noqa:` silences
-  these: the fault is the build file's, not the document's.
+  these: the fault is the build file's, not the document's. A toctree entry
+  outside `deps` comes with a quick fix adding the library to them
+  (ADR-041).
 - **A broken reference in a site setting `strict_links`.** A `.. noqa:` does
   silence this one, since the build filters before it fails.
 

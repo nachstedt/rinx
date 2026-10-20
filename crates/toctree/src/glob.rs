@@ -19,7 +19,7 @@ use crate::pattern::SphinxPattern;
 /// arbitrary order documents happened to be indexed in, and that order decides
 /// navigation order, page order and section numbers. Sphinx sorts for the same
 /// reason.
-pub(crate) fn matching_docnames<'a>(
+pub fn matching_docnames<'a>(
     pattern: &str,
     universe: impl IntoIterator<Item = &'a str>,
     owner: &str,

@@ -42,9 +42,9 @@
 use lsp_server::{Message, Request, RequestId, Response};
 use lsp_types::request::{RegisterCapability, Request as _};
 use lsp_types::{
-    CompletionList, CompletionResponse, DidChangeWatchedFilesRegistrationOptions, FileChangeType,
-    FileEvent, FileSystemWatcher, GlobPattern, GotoDefinitionResponse, Hover, Range, Registration,
-    RegistrationParams, Uri,
+    CodeAction, CompletionList, CompletionResponse, DidChangeWatchedFilesRegistrationOptions,
+    FileChangeType, FileEvent, FileSystemWatcher, GlobPattern, GotoDefinitionResponse, Hover,
+    Range, Registration, RegistrationParams, Uri,
 };
 use rinx_renderer::{ReferenceResolver, ReferenceTarget};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
@@ -60,6 +60,7 @@ use super::handlers::publish_diagnostics;
 use super::inventories::InventoryFetches;
 use super::projects::ProjectId;
 use super::scan::ScanEvent;
+use crate::code_action::quick_fixes;
 use crate::completion::{completion_items, role_at};
 use crate::definition::reference_definition;
 use crate::diagnostics::{ParsedSource, diagnose_source, parse_source};
@@ -497,6 +498,28 @@ impl ServerState {
         Some(reference_hover(&target, range, |doc_path| {
             file_uri(&project.path_of(doc_path))
         }))
+    }
+
+    /// The quick fixes for what the document `uri` fails the build on within
+    /// `range`, from its latest parse — none for a document the server does
+    /// not track or that is in no Bazel project.
+    ///
+    /// A build file is read from the disk: the server is never sent one's
+    /// buffer, so an unsaved edit to it is not seen.
+    pub(super) fn code_actions(&self, uri: &Uri, range: Range) -> Vec<CodeAction> {
+        let Some(tracked) = self.tracked.get(uri) else {
+            return Vec::new();
+        };
+        let Some(project) = tracked.project.and_then(|id| self.projects.get(&id)) else {
+            return Vec::new();
+        };
+        quick_fixes(
+            &tracked.parsed,
+            project.model(),
+            range,
+            self.encoding,
+            &|path| std::fs::read_to_string(path).ok(),
+        )
     }
 
     /// The definition of the reference at `position` in the open document

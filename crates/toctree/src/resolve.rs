@@ -45,6 +45,9 @@ pub struct UnmatchedEntry {
     pub kind: UnmatchedKind,
     /// The entry as the author wrote it, for the diagnostic message.
     pub text: String,
+    /// What it was resolved to against the document writing it: a
+    /// document's `.rst` path, or a glob's extension-less docname pattern.
+    pub resolved: String,
     pub span: Option<Span>,
 }
 
@@ -145,6 +148,7 @@ pub fn expand_toctree(
                     unmatched.push(UnmatchedEntry {
                         kind: UnmatchedKind::MissingDocument,
                         text: docname.clone(),
+                        resolved,
                         span: *span,
                     });
                 }
@@ -155,15 +159,14 @@ pub fn expand_toctree(
                 // before matching — then stripped back, since docnames match
                 // without their extension.
                 let resolved_pattern = resolve_docname(owner, pattern);
-                let matched = matching_docnames(
-                    strip_rst(&resolved_pattern),
-                    docnames.iter().copied(),
-                    owner_docname,
-                );
+                let resolved_pattern = strip_rst(&resolved_pattern);
+                let matched =
+                    matching_docnames(resolved_pattern, docnames.iter().copied(), owner_docname);
                 if matched.is_empty() {
                     unmatched.push(UnmatchedEntry {
                         kind: UnmatchedKind::GlobMatchedNothing,
                         text: pattern.clone(),
+                        resolved: resolved_pattern.to_string(),
                         span: *span,
                     });
                 }
@@ -385,6 +388,29 @@ mod tests {
         assert_eq!(unmatched.len(), 1);
         assert_eq!(unmatched[0].kind, UnmatchedKind::GlobMatchedNothing);
         assert_eq!(unmatched[0].text, "nope/*");
+    }
+
+    #[test]
+    fn test_expand_toctree_records_what_an_unmatched_entry_resolved_to() {
+        // Given — both entries written relative to `guide/index.rst`
+        let toctree = toctree(vec![
+            document("../missing"),
+            TocEntry::Glob {
+                pattern: "nope/*".to_string(),
+                span: None,
+            },
+        ]);
+
+        // When
+        let (_, unmatched) = expand_toctree(&toctree, "guide/index.rst", &universe(&[]));
+
+        // Then — a document as its `.rst` path, a pattern as the docname
+        // pattern it was matched as
+        let resolved: Vec<&str> = unmatched
+            .iter()
+            .map(|entry| entry.resolved.as_str())
+            .collect();
+        assert_eq!(resolved, ["missing.rst", "guide/nope/*"]);
     }
 
     #[test]

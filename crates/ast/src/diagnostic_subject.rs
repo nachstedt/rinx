@@ -27,6 +27,21 @@ pub enum DiagnosticSubject {
     /// An `:external+name:` reference naming an inventory this site does not
     /// hold — which the language server may simply not have loaded yet.
     Inventory(InventoryName),
+    /// A toctree entry naming what its library's `deps` do not declare — what
+    /// the language server needs to offer the dependency to add.
+    UndeclaredToctreeEntry(UndeclaredEntry),
+}
+
+/// What an undeclared toctree entry was resolved to, against the document
+/// writing it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum UndeclaredEntry {
+    /// A document, as its `.rst` path from the source root.
+    Document(String),
+    /// A `:glob:` pattern, as the extension-less docname pattern it was
+    /// matched as — the documents it would match are the project's to find.
+    Glob(String),
 }
 
 #[cfg(test)]
@@ -41,6 +56,12 @@ mod tests {
             DiagnosticSubject::DomainReference(Domain::C),
             DiagnosticSubject::AnyReference,
             DiagnosticSubject::Inventory(InventoryName::new("python").unwrap()),
+            DiagnosticSubject::UndeclaredToctreeEntry(UndeclaredEntry::Document(
+                "team_a/index.rst".to_string(),
+            )),
+            DiagnosticSubject::UndeclaredToctreeEntry(UndeclaredEntry::Glob(
+                "team_b/*".to_string(),
+            )),
         ];
 
         for subject in subjects {

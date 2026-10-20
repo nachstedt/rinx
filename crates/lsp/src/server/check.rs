@@ -13,7 +13,9 @@ use std::time::Instant;
 
 use lsp_server::{Message, Notification};
 use lsp_types::notification::{DidOpenTextDocument, Notification as _, PublishDiagnostics};
-use lsp_types::{DidOpenTextDocumentParams, PublishDiagnosticsParams, TextDocumentItem, Uri};
+use lsp_types::{
+    DidOpenTextDocumentParams, Position, PublishDiagnosticsParams, Range, TextDocumentItem, Uri,
+};
 use serde::Serialize;
 
 use super::bazel_manifests::ManifestSource;
@@ -33,6 +35,10 @@ pub struct FolderCheck {
     /// What the server last published for each file it published for: the
     /// documents, the files they include, and each project's `conf.py`.
     pub published: BTreeMap<Uri, Vec<lsp_types::Diagnostic>>,
+    /// The quick fixes the server offers anywhere in each document that has
+    /// any, with their edits — what a script applies to fix a build.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub quick_fixes: BTreeMap<Uri, Vec<lsp_types::CodeAction>>,
 }
 
 /// What a check grants that an editor would: an interpreter for `conf.py`,
@@ -87,9 +93,20 @@ pub fn check_folder(root: &Path, options: &CheckOptions) -> FolderCheck {
     while state.has_pending_renders() {
         messages.extend(state.render_next());
     }
+    let whole = Range::new(Position::new(0, 0), Position::new(u32::MAX, 0));
+    let quick_fixes = documents
+        .iter()
+        .map(PathBuf::as_path)
+        .filter_map(file_uri)
+        .filter_map(|uri| {
+            let fixes = state.code_actions(&uri, whole);
+            (!fixes.is_empty()).then_some((uri, fixes))
+        })
+        .collect();
     FolderCheck {
         documents: documents.len(),
         published: last_published(&messages),
+        quick_fixes,
     }
 }
 
@@ -161,6 +178,73 @@ mod tests {
         );
         assert_eq!(severities("api.rst"), [Some(DiagnosticSeverity::HINT)]);
         assert_eq!(severities("conf.py"), [Some(DiagnosticSeverity::WARNING)]);
+    }
+
+    #[test]
+    fn test_check_folder_lists_each_documents_quick_fixes() {
+        // Given — a toctree entry outside `//:index`'s deps, in a site
+        // granted by its manifest
+        use crate::server::bazel_manifest_tests::{library, manifest};
+        let workspace = Workspace::new(
+            "check_folder_quick_fixes",
+            &[
+                ("MODULE.bazel", "module(name = \"docs\")\n"),
+                ("rinx.toml", ""),
+                ("index.rst", "Home\n====\n\n.. toctree::\n\n   guide\n"),
+                ("guide.rst", "Guide\n=====\n"),
+                (
+                    "BUILD.bazel",
+                    "rinx_library(\n    name = \"index\",\n    srcs = [\"index.rst\"],\n)\n",
+                ),
+                (
+                    "site.lsp_manifest.json",
+                    &manifest(
+                        "//:site",
+                        vec![
+                            library(
+                                "//:index",
+                                &["index.rst"],
+                                &serde_json::json!({"allowed_docs": ["index"]}),
+                            ),
+                            library("//:guide", &["guide.rst"], &serde_json::json!({})),
+                        ],
+                    ),
+                ),
+            ],
+        );
+        let options = CheckOptions {
+            manifests: vec![workspace.root.join("site.lsp_manifest.json")],
+            ..CheckOptions::default()
+        };
+
+        // When
+        let check = check_folder(&workspace.root, &options);
+
+        // Then — only the document with something to fix is listed
+        let titles: Vec<(&Uri, Vec<&str>)> = check
+            .quick_fixes
+            .iter()
+            .map(|(uri, fixes)| (uri, fixes.iter().map(|fix| fix.title.as_str()).collect()))
+            .collect();
+        assert_eq!(
+            titles,
+            [(
+                &workspace.uri("index.rst"),
+                vec!["Add //:guide to the deps of //:index"]
+            )]
+        );
+    }
+
+    #[test]
+    fn test_a_check_with_no_quick_fixes_prints_none() {
+        // Given
+        let check = FolderCheck::default();
+
+        // When
+        let json = serde_json::to_value(&check).expect("serializes");
+
+        // Then
+        assert_eq!(json, serde_json::json!({"documents": 0, "published": {}}));
     }
 
     #[test]

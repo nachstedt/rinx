@@ -18,10 +18,11 @@
 //!
 //! A library's `jinja` and `jinja_context` decide whether its documents are
 //! rendered as Jinja templates before they are parsed, as its parse action
-//! renders them (#20).
+//! renders them (#20). Each library's `deps` labels and the documents it
+//! lists are kept for the quick fix adding a missing dependency (#21).
 //!
-//! The manifest holds more than this module reads — each library's `deps`
-//! labels, the site's template — for the steps that use them (#21, #22);
+//! The manifest holds more than this module reads — the site's template —
+//! for the step that uses it (#22);
 //! unknown fields are therefore ignored, and only the `version` guards the
 //! shape.
 //!
@@ -188,6 +189,9 @@ struct ManifestInventory {
 struct ManifestLibrary {
     label: String,
     srcs: Vec<ManifestFile>,
+    /// The labels of the libraries in its `deps`.
+    #[serde(default)]
+    deps: Vec<String>,
     #[serde(default)]
     parse_data: Vec<String>,
     /// The documents its toctrees may name, without their `.rst`.
@@ -455,6 +459,12 @@ impl Reader<'_> {
                     bundled: Arc::clone(bundled),
                 }),
             },
+            documents: library
+                .srcs
+                .iter()
+                .filter_map(ManifestFile::doc_path)
+                .collect(),
+            deps: library.deps,
             label: library.label,
         }
     }
@@ -1140,6 +1150,55 @@ mod tests {
         let later = &unpreferred[1].model;
         assert_eq!(later.doc_path_of(Path::new("/work/shared.rst")), None);
         assert_eq!(unpreferred[1].sources, []);
+    }
+
+    #[test]
+    fn test_each_library_keeps_its_deps_and_documents() {
+        // Given
+        let text = manifest(
+            vec![
+                library(
+                    "//docs:a",
+                    &["docs/index.rst"],
+                    json!({"deps": ["//docs/api:b"]}),
+                ),
+                library("//docs/api:b", &["docs/api/ref.rst"], json!({})),
+            ],
+            json!({}),
+        );
+
+        // When
+        let reading = read(&text, &[CONFIG]);
+
+        // Then
+        let libraries = &reading.model.settings.libraries;
+        assert_eq!(libraries[0].deps, ["//docs/api:b"]);
+        assert_eq!(libraries[1].deps, Vec::<String>::new());
+        assert_eq!(
+            libraries[1].documents,
+            BTreeSet::from(["docs/api/ref.rst".to_string()])
+        );
+    }
+
+    #[test]
+    fn test_a_library_keeps_the_documents_another_site_claimed() {
+        // Given two sites listing `shared.rst`, the first claiming it
+        let site = |label: &str| {
+            let text = manifest(
+                vec![library("//lib:docs", &["shared.rst"], json!({}))],
+                json!({"label": label}),
+            );
+            read(&text, &[CONFIG])
+        };
+
+        // When
+        let projects = claim_documents(vec![site("//a:site"), site("//b:site")], None);
+
+        // Then — the second site's library still lists it, for the deps a
+        // toctree naming it needs
+        let later = &projects[1].model;
+        assert_eq!(later.doc_path_of(Path::new("/work/shared.rst")), None);
+        assert!(later.settings.libraries[0].documents.contains("shared.rst"));
     }
 
     #[test]

@@ -27,6 +27,7 @@ mod pattern;
 mod resolve;
 
 pub use declared::{DeclaredDocuments, undeclared_toctree_entries};
+pub use glob::matching_docnames;
 pub use pattern::SphinxPattern;
 
 // Re-exported rather than defined here: resolving `.`/`..` is a plain path

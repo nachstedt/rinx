@@ -966,3 +966,107 @@ fn test_lsp_refuses_an_unknown_argument() {
         "{stderr}"
     );
 }
+
+#[test]
+fn test_lsp_offers_the_missing_dependency_of_a_toctree_entry() {
+    // Given — a Bazel workspace whose `//:index` toctree names a document of
+    // `//:guide`, which it does not depend on
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_quick_fix");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    let text = "Home\n====\n\n.. toctree::\n\n   guide\n";
+    let build = "rinx_library(\n    name = \"index\",\n    srcs = [\"index.rst\"],\n)\n";
+    let library = |label: &str, src: &str, allowed: &[&str]| {
+        json!({
+            "label": label, "srcs": [{"source": src}], "allowed_docs": allowed,
+            "default_domain": "py", "default_role": null, "rst_prolog": null,
+            "rst_epilog": null, "entity_schema": null,
+        })
+    };
+    let manifest = json!({
+        "version": 1,
+        "site": {"label": "//:site", "config": {"source": "rinx.toml"}, "entity_schema": null},
+        "inventories": [],
+        "libraries": [
+            library("//:guide", "guide.rst", &["guide"]),
+            library("//:index", "index.rst", &["index"]),
+        ],
+    });
+    for (file, content) in [
+        ("MODULE.bazel", "module(name = \"docs\")\n".to_string()),
+        ("rinx.toml", String::new()),
+        ("BUILD.bazel", build.to_string()),
+        ("index.rst", text.to_string()),
+        ("guide.rst", "Guide\n=====\n".to_string()),
+        ("site.lsp_manifest.json", manifest.to_string()),
+    ] {
+        std::fs::write(root.join(file), content).expect("write");
+    }
+    let index = format!("file://{}", root.join("index.rst").display());
+    let mut server = Server::spawn();
+    let initialized = server.initialize_with(json!({
+        "capabilities": {},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+        "initializationOptions": {"bazelManifests": true},
+    }));
+    let asked = std::iter::from_fn(|| Some(server.receive()))
+        .find_map(|message| match message {
+            Message::Request(request) if request.method == "rinx/bazelManifests" => Some(request),
+            _ => None,
+        })
+        .expect("the manifests asked for");
+    server.send(lsp_server::Response::new_ok(
+        asked.id,
+        json!({"manifests": [root.join("site.lsp_manifest.json")]}),
+    ));
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": index, "languageId": "restructuredtext", "version": 1, "text": text,
+        }}),
+    );
+    std::iter::from_fn(|| match server.receive() {
+        Message::Notification(notification) => Some(notification),
+        _ => None,
+    })
+    .filter(|notification| notification.method == "textDocument/publishDiagnostics")
+    .map(|notification| notification.params)
+    .find(|published| codes(published).contains(&"toctree.undeclared-dependency"))
+    .expect("the entry underlined");
+
+    // When
+    server.request(
+        2,
+        "textDocument/codeAction",
+        json!({
+            "textDocument": { "uri": index },
+            "range": { "start": { "line": 5, "character": 3 }, "end": { "line": 5, "character": 3 } },
+            "context": { "diagnostics": [] },
+        }),
+    );
+    let answered = std::iter::from_fn(|| Some(server.receive()))
+        .find_map(|message| match message {
+            Message::Response(response) => Some(response),
+            _ => None,
+        })
+        .expect("the code actions");
+
+    // Then
+    let capabilities = &initialized.response_result.expect("initialized")["capabilities"];
+    assert_eq!(
+        capabilities["codeActionProvider"],
+        json!({"codeActionKinds": ["quickfix"]})
+    );
+    let actions = answered.response_result.expect("code actions");
+    assert_eq!(actions[0]["title"], "Add //:guide to the deps of //:index");
+    assert_eq!(actions[0]["kind"], "quickfix");
+    let build_uri = format!("file://{}", root.join("BUILD.bazel").display());
+    assert_eq!(
+        actions[0]["edit"]["changes"][&build_uri],
+        // After the comma ending `    srcs = ["index.rst"],`.
+        json!([{
+            "range": { "start": { "line": 2, "character": 25 }, "end": { "line": 2, "character": 25 } },
+            "newText": "\n    deps = [\":guide\"],",
+        }])
+    );
+}

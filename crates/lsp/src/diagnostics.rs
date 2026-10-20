@@ -403,7 +403,7 @@ pub fn conf_diagnostics(
 }
 
 /// Converts one diagnostic, placed at `range`, shown as `judgement` says.
-fn to_lsp_diagnostic(
+pub(crate) fn to_lsp_diagnostic(
     diagnostic: &Diagnostic,
     judgement: &Judgement,
     range: Range,

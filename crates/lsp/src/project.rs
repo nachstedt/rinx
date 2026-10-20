@@ -12,8 +12,10 @@
 //! analysis per document and folds them into the project's index.
 
 mod bazel_manifest;
+mod build_file;
 mod conf_eval;
 mod declarations;
+mod dependency_fix;
 mod discover;
 mod exclusion;
 mod extension_profile;
@@ -28,17 +30,21 @@ mod sphinx_conf;
 mod strictness;
 
 pub use bazel_manifest::{BazelGrant, BazelRoots, read_bazel_projects};
+pub use build_file::{add_deps, build_file_of, library_listing};
 #[cfg(test)]
 pub use conf_eval::ConfValues;
 pub use conf_eval::{CONF_RUN_TIMEOUT, ConfEvaluation, ConfEvaluations, run_conf};
 pub use declarations::{BundledFiles, undeclared_uses};
+pub use dependency_fix::missing_deps;
 pub use discover::{
     DiscoveredProject, contains_conf, discover_projects, discover_projects_with, is_conf,
     is_visible_under, sources_under,
 };
 pub use index::{IndexedDocument, Project};
 pub use inventories::Fetched;
-pub use model::{ParseSettings, ProjectSource, Splice};
+#[cfg(test)]
+pub use model::{LibraryModel, Listing, ProjectSettings};
+pub use model::{Membership, ParseSettings, ProjectModel, ProjectSource, Splice};
 pub use scan::{ScannedProject, scan_projects};
 #[cfg(test)]
 pub use scan::{parse_project_documents, scan_folder};
