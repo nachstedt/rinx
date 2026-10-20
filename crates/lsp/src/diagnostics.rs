@@ -73,11 +73,12 @@ pub struct ParsedSource {
 /// [`protocol_line_endings`]), so every reported line is one the editor shows.
 ///
 /// The parse uses `settings`, the document's library's or project's — its
-/// default domain, default role, `rst_prolog` and `rst_epilog`, schema and
-/// declared `parse_data` — and no Jinja, which nothing tells the server
-/// about yet (roadmap #20). A prolog or epilog read from a file is taken from
-/// the editor's buffer while that file is open, and recorded as read, as an
-/// included fragment is.
+/// default domain, default role, `rst_prolog` and `rst_epilog`, schema,
+/// declared `parse_data`, and the Jinja context its source is rendered with
+/// first, if any. A prolog or epilog read from a file is taken from the
+/// editor's buffer while that file is open, and recorded as read, as an
+/// included fragment is; so is a template an `{% include %}` reads, through
+/// the same loader.
 #[must_use]
 pub fn parse_source(
     uri: &Uri,
@@ -172,7 +173,8 @@ fn splice_text(splice: Option<&Splice>, unnamed: &str, open: &DocumentStore) -> 
 }
 
 /// `ctx` configured with a project's parse settings: its default role, its
-/// schema and import keys, and the prolog and epilog in `splices`.
+/// schema and import keys, its Jinja context, and the prolog and epilog in
+/// `splices`.
 fn configured<'a>(
     ctx: ParseCtx<'a>,
     settings: &'a ParseSettings,
@@ -183,6 +185,10 @@ fn configured<'a>(
         .with_default_role(&settings.default_role)
         .with_schema(&settings.schema)
         .with_import_keys(&settings.import_keys);
+    let ctx = match &settings.jinja {
+        Some(context) => ctx.with_jinja(context),
+        None => ctx,
+    };
     let ctx = match prolog {
         Some(splice) => ctx.with_prolog(SplicedText {
             name: &splice.name,
@@ -1086,6 +1092,199 @@ mod tests {
             vec![(2, "directive.unknown".to_string())]
         );
         assert_eq!(diagnosis.reads, BTreeSet::from([dir.join("part.rst")]));
+    }
+
+    /// Settings rendering a document as a Jinja template with `context`,
+    /// reading only `parse_data` when it is given.
+    fn templated(context: &[(&str, &str)], parse_data: Option<&[PathBuf]>) -> ParseSettings {
+        ParseSettings {
+            jinja: Some(
+                context
+                    .iter()
+                    .map(|(name, value)| ((*name).to_string(), (*value).to_string()))
+                    .collect(),
+            ),
+            parse_data: parse_data.map(|files| files.iter().cloned().collect()),
+            ..ParseSettings::default()
+        }
+    }
+
+    /// What parsing `text` as `dir`'s `index.rst` under `settings` reports,
+    /// with `dir` the source root.
+    fn diagnose_in(
+        dir: &Path,
+        text: &str,
+        settings: &ParseSettings,
+        open: &DocumentStore,
+    ) -> DocumentDiagnosis {
+        let uri = file(&dir.join("index.rst"));
+        diagnose_source(
+            &uri,
+            &parse_source(&uri, Some("index.rst"), Some(dir), text, settings, open),
+            &RenderFindings::default(),
+            &Strictness::default(),
+            open,
+            PositionEncoding::Utf16,
+        )
+    }
+
+    /// A heading whose rendered title fits its underline, and whose written
+    /// one does not.
+    const RELEASE_HEADING: &str = "Release {{ release }}\n===========\n";
+
+    #[test]
+    fn test_parse_source_renders_a_templated_document_with_its_context() {
+        // Given
+        let dir = temp_directory("jinja_context", &[]);
+        let settings = templated(&[("release", "0.1")], None);
+
+        // When
+        let diagnosis = diagnose_in(&dir, RELEASE_HEADING, &settings, &DocumentStore::default());
+
+        // Then the title is `Release 0.1`, which its underline fits
+        assert_eq!(diagnosis.by_uri[&file(&dir.join("index.rst"))], Vec::new());
+    }
+
+    #[test]
+    fn test_parse_source_leaves_a_document_unrendered_without_jinja() {
+        // Given
+        let dir = temp_directory("jinja_off", &[]);
+
+        // When
+        let diagnosis = diagnose_in(
+            &dir,
+            RELEASE_HEADING,
+            &ParseSettings::default(),
+            &DocumentStore::default(),
+        );
+
+        // Then the written title is too long for its underline
+        assert_eq!(
+            lines_and_codes(&diagnosis.by_uri[&file(&dir.join("index.rst"))]),
+            vec![(0, "heading.underline-too-short".to_string())]
+        );
+    }
+
+    #[test]
+    fn test_parse_source_reports_an_undefined_name_on_its_written_line() {
+        // Given
+        let dir = temp_directory("jinja_undefined", &[]);
+        let settings = templated(&[], None);
+
+        // When
+        let diagnosis = diagnose_in(
+            &dir,
+            "Prose.\n\nRelease {{ release }}.\n",
+            &settings,
+            &DocumentStore::default(),
+        );
+
+        // Then
+        assert_eq!(
+            lines_and_codes(&diagnosis.by_uri[&file(&dir.join("index.rst"))]),
+            vec![(2, "jinja.undefined-value".to_string())]
+        );
+    }
+
+    #[test]
+    fn test_parse_source_places_a_mistake_below_an_include_on_its_written_line() {
+        // Given a template of three lines, included above a mistake
+        let dir = temp_directory(
+            "jinja_below",
+            &[("_templates/header.rst", "One.\n\nTwo.\n")],
+        );
+        let settings = templated(&[], None);
+
+        // When
+        let diagnosis = diagnose_in(
+            &dir,
+            "{% include \"_templates/header.rst\" %}\n\n.. foo::\n",
+            &settings,
+            &DocumentStore::default(),
+        );
+
+        // Then the template was rendered in, and the mistake is on the line
+        // it was written on, not the line the rendered text holds it on
+        assert_eq!(
+            diagnosis.reads,
+            BTreeSet::from([dir.join("_templates/header.rst")])
+        );
+        assert_eq!(
+            lines_and_codes(&diagnosis.by_uri[&file(&dir.join("index.rst"))]),
+            vec![(2, "directive.unknown".to_string())]
+        );
+    }
+
+    #[test]
+    fn test_parse_source_places_a_mistake_in_a_template_in_the_template() {
+        // Given
+        let dir = temp_directory(
+            "jinja_inside",
+            &[("_templates/header.rst", "Fine.\n\n.. foo::\n")],
+        );
+        let settings = templated(&[], None);
+
+        // When
+        let diagnosis = diagnose_in(
+            &dir,
+            "Prose.\n\n{% include \"_templates/header.rst\" %}\n",
+            &settings,
+            &DocumentStore::default(),
+        );
+
+        // Then
+        let template = dir.join("_templates/header.rst");
+        assert_eq!(
+            lines_and_codes(&diagnosis.by_uri[&file(&template)]),
+            vec![(2, "directive.unknown".to_string())]
+        );
+        assert_eq!(diagnosis.reads, BTreeSet::from([template]));
+    }
+
+    #[test]
+    fn test_parse_source_reads_an_open_template_from_its_buffer() {
+        // Given a template saved clean but broken in the editor
+        let dir = temp_directory("jinja_buffered", &[("_templates/header.rst", "Fine.\n")]);
+        let template = file(&dir.join("_templates/header.rst"));
+        let mut open = DocumentStore::default();
+        open.open(template.clone(), 3, "Fine.\n\n.. foo::\n".to_string());
+
+        // When
+        let diagnosis = diagnose_in(
+            &dir,
+            "{% include \"_templates/header.rst\" %}\n",
+            &templated(&[], None),
+            &open,
+        );
+
+        // Then
+        assert_eq!(
+            lines_and_codes(&diagnosis.by_uri[&template]),
+            vec![(2, "directive.unknown".to_string())]
+        );
+    }
+
+    #[test]
+    fn test_parse_source_refuses_a_template_outside_parse_data() {
+        // Given a template on the disk that the library did not declare
+        let dir = temp_directory("jinja_undeclared", &[("_templates/header.rst", "Fine.\n")]);
+        let settings = templated(&[], Some(&[]));
+
+        // When
+        let diagnosis = diagnose_in(
+            &dir,
+            "{% include \"_templates/header.rst\" %}\n",
+            &settings,
+            &DocumentStore::default(),
+        );
+
+        // Then it is refused as the build's parse action refuses it
+        let own = &diagnosis.by_uri[&file(&dir.join("index.rst"))];
+        assert_eq!(
+            lines_and_codes(own),
+            vec![(0, "jinja.template-not-found".to_string())]
+        );
+        assert!(own[0].message.contains("parse_data"), "{}", own[0].message);
     }
 
     #[test]

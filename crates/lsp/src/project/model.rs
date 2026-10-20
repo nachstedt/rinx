@@ -89,6 +89,11 @@ pub struct ParseSettings {
     /// The only files a directive may read, when the build declares them —
     /// a library's `parse_data`, absolute — and `None` when any file may be.
     pub parse_data: Option<BTreeSet<PathBuf>>,
+    /// The names a Jinja template may read, when the document is rendered as
+    /// one before it is parsed — a Bazel library's `jinja_context`, given
+    /// `jinja = True` — and `None` when it is not: always outside a Bazel
+    /// project, since a `source-read` hook cannot be seen (ADR-038 §5).
+    pub jinja: Option<Vec<(String, String)>>,
     /// What the document's library declared, whose absence fails the build
     /// — `None` outside a Bazel project, which declares nothing.
     pub declarations: Option<BuildDeclarations>,
@@ -105,6 +110,7 @@ impl Default for ParseSettings {
             schema: Arc::new(EntitySchema::empty()),
             import_keys: BTreeMap::new(),
             parse_data: None,
+            jinja: None,
             declarations: None,
         }
     }

@@ -34,6 +34,23 @@
       "rst_epilog": null,
       "rst_prolog": null,
       "srcs": [{ "source": "reqs/index.rst" }]
+    },
+    {
+      "allowed_docs": ["templated/index"],
+      "default_domain": "py",
+      "default_role": null,
+      "deps": [],
+      "diagrams": false,
+      "downloads": [],
+      "entity_schema": null,
+      "images": [],
+      "jinja": true,
+      "jinja_context": { "release": "0.1" },
+      "label": "//templated:docs",
+      "parse_data": ["templated/_header.rst"],
+      "rst_epilog": null,
+      "rst_prolog": null,
+      "srcs": [{ "source": "templated/index.rst" }]
     }
   ],
   "site": {

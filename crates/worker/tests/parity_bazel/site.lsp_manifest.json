@@ -37,6 +37,19 @@
       "rst_prolog": null,
       "rst_epilog": null,
       "entity_schema": null
+    },
+    {
+      "label": "//:templated",
+      "srcs": [{"source": "templated.rst"}],
+      "parse_data": ["_templates/header.rst"],
+      "allowed_docs": ["templated"],
+      "jinja": true,
+      "jinja_context": {"release": "0.1"},
+      "default_domain": "py",
+      "default_role": null,
+      "rst_prolog": null,
+      "rst_epilog": null,
+      "entity_schema": null
     }
   ]
 }
