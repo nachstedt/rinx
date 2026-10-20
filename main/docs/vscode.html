@@ -94,6 +94,11 @@
           </li>
         
           <li class="toctree-l1">
+            <a href="editors.html">Other editors</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
             <a href="benchmark.html">Benchmarking Rinx</a>
             
           </li>
@@ -111,7 +116,7 @@
       
       <nav class="page-relations">
         <a class="prev" href="intersphinx.html">&larr; Linking between documentation sites</a>
-        <a class="next" href="benchmark.html">Benchmarking Rinx &rarr;</a>
+        <a class="next" href="editors.html">Other editors &rarr;</a>
       </nav>
       
       <a id="vscode"></a>
@@ -142,6 +147,10 @@
 </li>
 <li><p><code>rinx.conf.pythonPath</code>: the Python interpreter <code>conf.py</code> runs in; when empty, the one selected with the Python extension.</p>
 </li>
+<li><p><code>rinx.site</code>: the <code>rinx_site</code> the workspace is about, such as <code>//docs:site</code>. The preview uses it without asking, and a document several sites list belongs to it in the language server (see <a href="vscode.html#vscode-bazel-projects">Bazel projects</a>).</p>
+</li>
+<li><p><code>rinx.autoDiscover</code>: whether the extension runs Bazel at all, for the preview's configuration and the language server's manifests (default: on).</p>
+</li>
 </ul>
 <h3 id="the-preview-pipeline-as-you-type">2. The Preview Pipeline (As-You-Type)</h3>
 <p>When the user edits a <code>.rst</code> file, the extension executes the following pipeline:</p>
@@ -167,6 +176,12 @@
 <p>Hovering a reference shows where it leads: the title of what it names — a section's title, a document's title, an object's qualified name, the number a <code>:numref:</code> or <code>:eq:</code> shows, an entity's title — and the file it is in, as a link that opens it. A reference into another site's inventory shows that page's address instead. This covers <code>:ref:</code>, <code>:doc:</code>, <code>:term:</code>, <code>:numref:</code>, <code>:eq:</code>, <code>:any:</code>, <code>:option:</code>, the domain roles and the entity roles, resolved exactly as the built page links them, in the scope the reference is written in. A reference the page would draw broken shows no hover, since its warning already says why. The hover reads the document as you type it, so it is current without waiting for a pause, and resolves into the inventories the server has loaded (see <a href="vscode.html#vscode-intersphinx">Inventories</a>).</p>
 <p>Go to Definition (F12, or Ctrl+click) on the same references opens the file of the document they lead to: the document a <code>:doc:</code> names, or the one holding a label, term, object or entity. It covers the same roles and resolves them the same way, so a reference the page would draw broken leads nowhere. For now it opens the document at its first line, not at the label or object itself. A reference into another site's inventory has no definition, since there is no source to open; its hover shows the address.</p>
 <p>The index also decides which references are broken. What the parser finds is reported as you type; what only rendering the page finds comes a moment later, once you pause for 300 ms: a <code>:ref:</code>, <code>:doc:</code> or domain reference that resolves nowhere (<code>link.broken-ref</code>, <code>link.broken-doc</code>, …), a label two documents define, an equation that does not convert, a listing whose filter matches nothing. So do the problems only the whole project reveals, which the build reports while indexing: a toctree entry naming no document, or a document in no toctree; a label, term, object or entity id two documents define; an entity relation naming an id no document declares. A toctree entry and an entity relation are shown on the line that writes them. The others are about the project rather than a line, so they are shown on the document's first line, and a <code>.. noqa:</code> cannot silence one without a line, as in the build. These are the build's own warnings, with the same codes and messages, and a <code>.. noqa:</code> silences them as it does in the build. Only the documents you have open are rendered, along with any closed document that includes an open file. Defining a missing label in another document, even in an unsaved buffer, clears the warning without your touching the reference. The page is rendered with what the server reads of the project's configuration, and with the inventories it has loaded, so a reference the build resolves through intersphinx resolves here too (see <a href="vscode.html#vscode-intersphinx">Inventories</a>). Diagrams are not compiled.</p>
+<a id="vscode-bazel-projects"></a>
+<h4 id="bazel-projects">Bazel projects</h4>
+<p>In a workspace folder holding <code>MODULE.bazel</code> or a <code>WORKSPACE</code> file, the extension finds every <code>rinx_site</code>, builds each one's <code>lsp_manifest</code> output group (see <a href="rules.html#rules">Bazel rules</a>) and hands the manifests to the language server. Each site is a project, and its documents are exactly the <code>srcs</code> of its libraries, each parsed with its own library's settings: its <code>default_domain</code>, <code>default_role</code>, <code>entity_schema</code>, <code>rst_prolog</code> and <code>rst_epilog</code>. A document's <code>.. include::</code>, <code>.. literalinclude::</code> and <code>.. csv-table:: :file:</code> may read only the files its library declares in <code>parse_data</code>, so an undeclared one is <code>include.file-unreadable</code> in the editor as it is in the build, even while the file is open. The site's <code>rinx.toml</code>, <code>domain_indices</code> and <code>inventories</code> decide how its pages render; an inventory is read from the file the build reads, and nothing is downloaded. A mistake in a library's <code>rst_prolog</code> is shown in that file.</p>
+<p>What fails the build is an error in the editor, at the line to change: a toctree entry naming a document outside the library's <code>deps</code> (<code>toctree.undeclared-dependency</code>), a diagram in a library without <code>diagrams = True</code>, and an image or a <code>:download:</code> no library of the site declares in <code>images</code> or <code>downloads</code> (<code>image.undeclared</code>, <code>download.undeclared</code>). These are the build's own checks, and like the build no <code>.. noqa:</code> silences them: the fix is in <code>BUILD.bazel</code>. In a site setting <code>strict_links</code>, a broken reference is an error too. Everything else is reported exactly as the build reports it, as a warning.</p>
+<p>The status bar then names the site, for example <code>rinx: rinx project //docs:site · 105 docs (0.3 s)</code>, or counts them when there are several. A document two sites list belongs to the one <code>rinx.site</code> names, else to the one the preview was pointed at, else to the first by label; the other sites are read without it. What the manifests do not list — a <code>README.rst</code>, a test fixture — stays the folder's, or a <code>conf.py</code>'s. Editing a <code>BUILD</code> file, a <code>.bzl</code> file or <code>MODULE.bazel</code> builds the manifests again a moment later; until they arrive, the folder is read as it would be without Bazel. A manifest that cannot be read, and a setting in it the build would refuse — an invalid schema or <code>rinx.toml</code>, a <code>default_role</code> no role answers to — is shown once in a notification, and the setting keeps its default. <code>rinx lsp --check &lt;folder&gt; --manifest &lt;manifest&gt;</code> (once per site) does the same from the command line.</p>
+<p>Jinja-templated libraries (<code>jinja = True</code>) are read without the Jinja pass for now, and a toctree entry missing from <code>deps</code> or an undeclared image is not reported yet.</p>
 <a id="vscode-sphinx-projects"></a>
 <h4 id="sphinx-projects">Sphinx projects</h4>
 <p>A directory holding a <code>conf.py</code> is a Sphinx project, and every file belongs to the nearest project above it. What lies under no <code>conf.py</code> stays the workspace folder's own project. The status bar then names the project, for example <code>rinx: Sphinx project (docs/conf.py) · 512 docs (0.8 s)</code>, and its tooltip lists every project.</p>
@@ -244,7 +259,7 @@
 </li>
 </ul>
 <p>The address-keyed form older Sphinx versions took, <code>{'https://docs.python.org/3': None}</code>, is reported as <code>conf.invalid-value</code>: Sphinx 8 removed it. An entry none of whose inventories could be read — a missing file, or one that is no inventory — is reported on its line in <code>conf.py</code> as <code>conf.inventory-unreadable</code>.</p>
-<p>Until an entry's inventory is loaded — not downloaded yet, declined, or unreadable — a domain reference that resolves nowhere may well be in it, so it is a <em>Hint</em> naming the inventory and why it is missing, as is an <code>:external+python:</code> reference to that inventory. Once every inventory is loaded, a reference still resolving nowhere is the warning the build reports. <code>:ref:</code>, <code>:doc:</code> and <code>:term:</code> stay warnings either way. Editors other than VS Code download nothing, so there only file inventories load.</p>
+<p>Until an entry's inventory is loaded — not downloaded yet, declined, or unreadable — a domain reference that resolves nowhere may well be in it, so it is a <em>Hint</em> naming the inventory and why it is missing, as is an <code>:external+python:</code> reference to that inventory. Once every inventory is loaded, a reference still resolving nowhere is the warning the build reports. <code>:ref:</code>, <code>:doc:</code> and <code>:term:</code> stay warnings either way. Editors other than VS Code download nothing, so there only file inventories load (see <a href="editors.html#editors">Other editors</a>).</p>
 <h3 id="change-detection-background-reconcile">4. Change Detection &amp; Background Reconcile</h3>
 <p>To keep the global state (Sidebar, cross-references to other files) eventually consistent, the extension monitors the local index:</p>
 <ul>
@@ -354,7 +369,7 @@
       
       <nav class="page-relations">
         <a class="prev" href="intersphinx.html">&larr; Linking between documentation sites</a>
-        <a class="next" href="benchmark.html">Benchmarking Rinx &rarr;</a>
+        <a class="next" href="editors.html">Other editors &rarr;</a>
       </nav>
       
     </main>

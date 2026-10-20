@@ -57,6 +57,11 @@
           </li>
         
           <li class="toctree-l1">
+            <a href="editors.html">Other editors</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
             <a href="benchmark.html">Benchmarking Rinx</a>
             
           </li>
@@ -498,6 +503,12 @@ rendering, since only there is the asset sidecar known.</p>
 image does: the page would otherwise ship a link to nothing. Reported by the
 site's asset validation, the one step that sees both the documents and the
 bundle.</p>
+<h2 id="image-1">image</h2>
+<h3 id="image-undeclared">image.undeclared</h3>
+<p>A <code>.. image::</code>, <code>.. figure::</code> or <code>.. |name| image::</code> naming a project
+file that never reached the site's <code>_images/</code> directory — in a Bazel build, a
+file missing from the <code>images</code> attribute of every library of the site. Fails
+the build: the page would otherwise show a broken picture.</p>
 <h2 id="include">include</h2>
 <h3 id="include-missing-path">include.missing-path</h3>
 <p>The directive has no argument, so it names no file to splice in.</p>
@@ -559,6 +570,15 @@ navigation and only the first position orders it.</p>
 <h3 id="toctree-orphan-document">toctree.orphan-document</h3>
 <p>A document no toctree reaches, so a reader can only arrive at it by following a
 cross-reference. Suppress with a leading <code>:orphan:</code> field.</p>
+<h3 id="toctree-undeclared-dependency">toctree.undeclared-dependency</h3>
+<p>An entry naming a document of no library in its own library's <code>deps</code>. In a
+Bazel build a toctree is a dependency, so this fails the build even when
+another library of the site holds the document; <code>.. noqa:</code> cannot silence it,
+being a fault of the build file, not the document.</p>
+<h3 id="toctree-glob-matches-no-dependency">toctree.glob-matches-no-dependency</h3>
+<p>A <code>:glob:</code> pattern matching no document of its library or the libraries in
+its <code>deps</code>. Fails a Bazel build as an undeclared entry does, since the
+pattern is expanded against the declared documents.</p>
 <h2 id="target">target</h2>
 <h3 id="target-duplicate-name">target.duplicate-name</h3>
 <p>A label, <code>:name:</code> or other <code>:ref:</code> target another document defines too.
@@ -1197,6 +1217,20 @@ editor reads it without running it, as it does when running is not allowed.</p>
 <p>A setting <code>conf.py</code> computed, when run, to a value with no literal spelling —
 an object, a function — which the editor cannot take: the setting keeps its
 default.</p>
+<h2 id="bazel">bazel</h2>
+<h3 id="bazel-manifest-unreadable">bazel.manifest-unreadable</h3>
+<p>The language server's manifest of a <code>rinx_site</code> — what its <code>lsp_manifest</code>
+output group writes — could not be read: it is missing, is no JSON of the
+manifest's shape, or was written by a version of the rules this editor does not
+know. The site's documents are read as the folder's instead.</p>
+<h3 id="bazel-file-unreadable">bazel.file-unreadable</h3>
+<p>A file the manifest names — the site's <code>rinx.toml</code>, an entity schema, a
+library's <code>rst_prolog</code> or <code>rst_epilog</code> — could not be read; the setting it
+holds keeps its default.</p>
+<h3 id="bazel-invalid-setting">bazel.invalid-setting</h3>
+<p>A setting the manifest records that the build itself would refuse — an invalid
+entity schema or <code>rinx.toml</code>, a <code>default_role</code> no role answers to; the
+setting keeps its default.</p>
 <h2 id="noqa">noqa</h2>
 <h3 id="noqa-unknown-code">noqa.unknown-code</h3>
 <p>A <code>.. noqa:</code> comment naming an id that is not a diagnostic code. Never

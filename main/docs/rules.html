@@ -84,6 +84,11 @@
           </li>
         
           <li class="toctree-l1">
+            <a href="editors.html">Other editors</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
             <a href="benchmark.html">Benchmarking Rinx</a>
             
           </li>
@@ -256,6 +261,12 @@ diagrams, and copies the images, the downloads and the stylesheet. The output is
 <code>&lt;name&gt;_site_out</code>. The site also writes an <code>objects.inv</code>, the inventory
 other Sphinx or rinx sites link into it through, available as the target's
 <code>inventory</code> output group.</p>
+<p>The <code>lsp_manifest</code> output group writes <code>&lt;name&gt;.lsp_manifest.json</code>, which
+tells the language server every library's sources and parse settings, and the
+site's configuration, schema and inventories, so the editor reads each
+document as the build does (see <a href="vscode.html#vscode-bazel-projects">Bazel projects</a>). Building the site
+does not write it; the VS Code extension asks for it with
+<code>bazel build --output_groups=lsp_manifest</code>.</p>
 <table class="list-table">
 <thead>
 <tr>
