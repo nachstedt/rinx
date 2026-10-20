@@ -13,7 +13,9 @@
 
 use std::collections::BTreeSet;
 
-use rinx_ast::{Diagnostic, DiagnosticCode, Directive, Document, Node};
+use rinx_ast::{
+    Diagnostic, DiagnosticCode, DiagnosticSubject, Directive, Document, Node, UndeclaredEntry,
+};
 
 use crate::resolve::{UnmatchedKind, expand_toctree};
 
@@ -63,7 +65,7 @@ pub fn undeclared_toctree_entries(doc: &Document, declared: &DeclaredDocuments) 
         };
         let (_, unmatched) = expand_toctree(toctree, &doc.path, &declared.0);
         for entry in unmatched {
-            let (code, message) = match entry.kind {
+            let (code, message, needed) = match entry.kind {
                 UnmatchedKind::MissingDocument => (
                     DiagnosticCode::ToctreeUndeclaredDependency,
                     format!(
@@ -71,6 +73,7 @@ pub fn undeclared_toctree_entries(doc: &Document, declared: &DeclaredDocuments) 
                          deps — if this is a Bazel build, add its rinx_library to `deps`",
                         entry.text
                     ),
+                    UndeclaredEntry::Document(entry.resolved),
                 ),
                 UnmatchedKind::GlobMatchedNothing => (
                     DiagnosticCode::ToctreeGlobMatchesNoDependency,
@@ -79,9 +82,13 @@ pub fn undeclared_toctree_entries(doc: &Document, declared: &DeclaredDocuments) 
                          this is a Bazel build, add the rinx_library holding them to `deps`",
                         entry.text
                     ),
+                    UndeclaredEntry::Glob(entry.resolved),
                 ),
             };
-            found.push(Diagnostic::at(code, message, entry.span));
+            found.push(
+                Diagnostic::at(code, message, entry.span)
+                    .about(DiagnosticSubject::UndeclaredToctreeEntry(needed)),
+            );
         }
     }
     found
@@ -90,7 +97,10 @@ pub fn undeclared_toctree_entries(doc: &Document, declared: &DeclaredDocuments) 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rinx_ast::{Position, Span, TocEntry, Toctree, ToctreeFlag, ToctreeOptions};
+    use rinx_ast::{
+        DiagnosticSubject, Position, Span, TocEntry, Toctree, ToctreeFlag, ToctreeOptions,
+        UndeclaredEntry,
+    };
 
     /// Where every entry of these tests is written.
     fn entry_span() -> Span {
@@ -179,6 +189,40 @@ mod tests {
             found[0].message
         );
         assert!(found[0].message.contains("`deps`"), "{}", found[0].message);
+    }
+
+    #[test]
+    fn test_an_undeclared_entry_names_the_document_it_needs() {
+        // Given
+        let doc = index_with(toctree_of(&["team_a/index"]));
+
+        // When
+        let found = undeclared_toctree_entries(&doc, &DeclaredDocuments::default());
+
+        // Then
+        assert_eq!(
+            found[0].subject,
+            Some(DiagnosticSubject::UndeclaredToctreeEntry(
+                UndeclaredEntry::Document("docs/team_a/index.rst".to_string())
+            ))
+        );
+    }
+
+    #[test]
+    fn test_an_undeclared_glob_names_the_pattern_it_was_matched_as() {
+        // Given
+        let doc = index_with(globbing_toctree("team_b/*"));
+
+        // When
+        let found = undeclared_toctree_entries(&doc, &DeclaredDocuments::default());
+
+        // Then
+        assert_eq!(
+            found[0].subject,
+            Some(DiagnosticSubject::UndeclaredToctreeEntry(
+                UndeclaredEntry::Glob("docs/team_b/*".to_string())
+            ))
+        );
     }
 
     #[test]

@@ -31,6 +31,8 @@ mod state;
 #[cfg(test)]
 mod bazel_manifest_tests;
 #[cfg(test)]
+mod code_action_tests;
+#[cfg(test)]
 mod completion_tests;
 // The interpreter the tests run is a shell script.
 #[cfg(all(test, unix))]

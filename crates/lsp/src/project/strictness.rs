@@ -218,7 +218,9 @@ impl ExtensionPolicy {
                         ),
                     })
             }
-            DiagnosticSubject::Directive(_) | DiagnosticSubject::Inventory(_) => warning(),
+            DiagnosticSubject::Directive(_)
+            | DiagnosticSubject::Inventory(_)
+            | DiagnosticSubject::UndeclaredToctreeEntry(_) => warning(),
         }
     }
 

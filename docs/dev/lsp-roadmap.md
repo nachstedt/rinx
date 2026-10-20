@@ -34,8 +34,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
   #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
   #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315), #18 (PR #317),
-  #19 (PR #319) and #20 (PR #324).
-- **Next: #21, Quick fix: add the missing dep.**
+  #19 (PR #319), #20 (PR #324) and #21 (PR #328).
+- **Next: #22, a `rinx/preview` request.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -581,8 +581,8 @@ Measured on this repository, granting the manifests of `//docs:site`,
 the warnings the examples show on purpose, plus two `image.embed-unavailable`
 the build does not report, since the server embeds no images yet.
 
-Not done here: `deps`, `images` and `downloads` are recorded for #19, and
-`jinja` and `jinja_context` for #20.
+Not done here: `deps`, `images` and `downloads` are recorded for #19 and
+#21, and `jinja` and `jinja_context` for #20.
 
 ### 19. Strict mode ✅ (#319)
 
@@ -663,7 +663,7 @@ there can miss (issue #321). An `{% include %}` carries no summary of the
 problems it brought in, as an `.. include::` does (issue #322), and a template
 error underlines nothing but the start of its line (issue #323).
 
-### 21. Quick fix: add the missing dep
+### 21. Quick fix: add the missing dep ✅ (#328)
 
 **You experience:** one click adds the library to `deps` in `BUILD.bazel`.
 
@@ -671,6 +671,43 @@ error underlines nothing but the start of its line (issue #323).
 - Locate the `rinx_library` call and its `deps` (text edit vs. buildozer: decide in the PR)
 - `WorkspaceEdit`
 - Tests
+
+A text edit, decided in ADR-041. The server reads the build file through
+`rinx_pyconf`'s tokenizer and returns the change as an ordinary, undoable
+`WorkspaceEdit`, so no editor needs buildozer. The undeclared toctree finding
+now carries what its entry resolved to (`DiagnosticSubject::UndeclaredToctreeEntry`).
+
+**Which library.** The site's library listing the document, or, for a glob,
+each library listing a match. Since a site collects its libraries through
+`deps`, a library no one depends on yet is in no manifest. That is the usual
+case, so for a document entry the server then reads the build file of the
+document's package and takes the `rinx_library` whose `srcs` holds the file:
+literal lists, `glob(…, exclude = …)` and `+` of those. A library already
+depending on the writer is refused as a cycle.
+
+**The edit.** The writer's `name = "…"` call is found and its `deps` list
+edited, in buildifier's order when the list is sorted and appended
+otherwise, comments kept. A computed `deps`, a `select` or a macro gets no
+fix, and an action is offered only with its edit, computed with it rather
+than on resolve.
+
+`rinx lsp --check` lists each document's fixes (`quick_fixes`), which is how
+`tests/test_dependency_quick_fix.sh` checks the loop against the real build:
+remove `team_b` from `examples/BUILD.bazel`, apply the fix offered, and the
+file is the original and the site builds again.
+
+Not done here:
+- The edit is computed from the disk, so an unsaved buffer of the build file
+  is not seen.
+- The diagnostic clears once the build file is saved and the manifests
+  rebuilt.
+- `visibility` is not checked.
+- Neovim's and Emacs' tests do not grant manifests, so the fix is tested
+  there by no editor test.
+- No fix yet for a toctree inside an `.. include::`d fragment (issue #326),
+  for a glob whose libraries the site does not collect (issue #327), or for
+  the build's other declarations: `images`, `downloads`, `diagrams` (issue
+  #325).
 
 ---
 

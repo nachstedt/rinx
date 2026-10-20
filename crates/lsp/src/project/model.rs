@@ -121,6 +121,13 @@ impl Default for ParseSettings {
 pub struct LibraryModel {
     /// Its label, as the build file names it.
     pub label: String,
+    /// The labels of the libraries in its `deps`, as the build file names
+    /// them.
+    pub deps: Vec<String>,
+    /// Every document it lists, by name — including those another site
+    /// claimed, which the [`Listing`] leaves out, since a toctree naming one
+    /// still needs this library in its `deps`.
+    pub documents: BTreeSet<String>,
     /// How its documents are parsed.
     pub parse: ParseSettings,
 }
@@ -578,6 +585,8 @@ mod tests {
         ));
         let library = |label: &str, domain| LibraryModel {
             label: label.to_string(),
+            deps: Vec::new(),
+            documents: BTreeSet::new(),
             parse: ParseSettings {
                 domain,
                 ..ParseSettings::default()

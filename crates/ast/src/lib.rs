@@ -115,7 +115,7 @@ pub use definition_list_item::DefinitionListItem;
 pub use description_flags::{DescriptionFlag, DescriptionFlags};
 pub use diagnostic::Diagnostic;
 pub use diagnostic_code::{DiagnosticCode, UnknownDiagnosticCode};
-pub use diagnostic_subject::DiagnosticSubject;
+pub use diagnostic_subject::{DiagnosticSubject, UndeclaredEntry};
 pub use directive::Directive;
 pub use doctest::{
     DocTestBlock, DocTestFlag, DocTestFlagName, DocTestGroup, DocTestGroupSelector, DocTestTrim,

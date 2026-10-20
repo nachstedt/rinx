@@ -6,12 +6,15 @@ use lsp_types::notification::{
     DidChangeTextDocument, DidChangeWatchedFiles, DidCloseTextDocument, DidOpenTextDocument,
     Notification as _, PublishDiagnostics, ShowMessage,
 };
-use lsp_types::request::{Completion, GotoDefinition, HoverRequest, Request as _};
+use lsp_types::request::{
+    CodeActionRequest, Completion, GotoDefinition, HoverRequest, Request as _,
+};
 use lsp_types::{
-    ClientCapabilities, CompletionOptions, CompletionParams, GotoDefinitionParams, HoverParams,
-    HoverProviderCapability, InitializeResult, MessageType, OneOf, PublishDiagnosticsParams,
-    ServerCapabilities, ServerInfo, ShowMessageParams, TextDocumentSyncCapability,
-    TextDocumentSyncKind, Uri,
+    ClientCapabilities, CodeActionKind, CodeActionOptions, CodeActionOrCommand, CodeActionParams,
+    CodeActionProviderCapability, CompletionOptions, CompletionParams, GotoDefinitionParams,
+    HoverParams, HoverProviderCapability, InitializeResult, MessageType, OneOf,
+    PublishDiagnosticsParams, ServerCapabilities, ServerInfo, ShowMessageParams,
+    TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
 };
 
 use super::bazel_manifests::BAZEL_MANIFESTS_CHANGED_METHOD;
@@ -38,6 +41,10 @@ pub fn initialize_result(
             }),
             hover_provider: Some(HoverProviderCapability::Simple(true)),
             definition_provider: Some(OneOf::Left(true)),
+            code_action_provider: Some(CodeActionProviderCapability::Options(CodeActionOptions {
+                code_action_kinds: Some(vec![CodeActionKind::QUICKFIX]),
+                ..CodeActionOptions::default()
+            })),
             ..ServerCapabilities::default()
         },
         server_info: Some(ServerInfo {
@@ -112,7 +119,7 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
 }
 
 /// The response to a request other than `shutdown`, which the loop answers
-/// itself: a completion, a hover or a definition, or the refusal of a method
+/// itself: a completion, a hover, a definition or the quick fixes, or the refusal of a method
 /// rinx does not support or of parameters that do not parse.
 pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
     let Request { id, method, params } = request;
@@ -144,6 +151,17 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
                     id,
                     state.complete(&position.text_document.uri, position.position),
                 )
+            }
+            Err(error) => invalid_params(id, &method, &error),
+        },
+        CodeActionRequest::METHOD => match serde_json::from_value::<CodeActionParams>(params) {
+            Ok(params) => {
+                let actions: Vec<CodeActionOrCommand> = state
+                    .code_actions(&params.text_document.uri, params.range)
+                    .into_iter()
+                    .map(CodeActionOrCommand::CodeAction)
+                    .collect();
+                Response::new_ok(id, actions)
             }
             Err(error) => invalid_params(id, &method, &error),
         },

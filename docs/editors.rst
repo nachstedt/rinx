@@ -73,7 +73,7 @@ Some features need the editor to do something for the server, and only the VS Co
 - The live preview.
 - Downloading inventories. The server never touches the network, so in other editors an inventory named by an address is not loaded, and references into it are hints rather than warnings.
 - Running ``conf.py``. The server needs to be told which interpreter to run it in, and only in a trusted workspace (see :ref:`vscode-running-conf`). Elsewhere, ``conf.py`` is only read.
-- Reading a Bazel workspace's sites as the build does. The server never runs Bazel, so it needs to be handed each site's manifest (see :ref:`vscode-bazel-projects`). Elsewhere, a Bazel workspace is read as a folder.
+- Reading a Bazel workspace's sites as the build does. The server never runs Bazel, so it needs to be handed each site's manifest (see :ref:`vscode-bazel-projects`). Elsewhere, a Bazel workspace is read as a folder, so neither what fails the build nor the quick fix adding a missing ``deps`` entry is shown.
 - The status bar, which shows the scan's progress and the project. Other editors show the protocol's own progress reports, where they support them.
 
 Protocol extensions

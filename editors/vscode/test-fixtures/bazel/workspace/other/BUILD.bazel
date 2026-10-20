@@ -1,0 +1,6 @@
+load("@rinx//:defs.bzl", "rinx_library")
+
+rinx_library(
+    name = "docs",
+    srcs = ["index.rst"],
+)

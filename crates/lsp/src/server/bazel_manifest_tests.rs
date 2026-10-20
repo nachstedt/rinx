@@ -14,7 +14,7 @@ const SCHEMA: &str = "[[entity_type]]\nname = \"req\"\n";
 const REQ_DOC: &str = "Requirements\n============\n\n.. req::\n   :id: R_1\n";
 
 /// A library of the label `label` listing `srcs`, with `extra` fields.
-fn library(label: &str, srcs: &[&str], extra: &serde_json::Value) -> serde_json::Value {
+pub(super) fn library(label: &str, srcs: &[&str], extra: &serde_json::Value) -> serde_json::Value {
     let mut library = serde_json::json!({
         "label": label,
         "srcs": srcs.iter().map(|src| serde_json::json!({"source": src})).collect::<Vec<_>>(),
@@ -32,7 +32,7 @@ fn library(label: &str, srcs: &[&str], extra: &serde_json::Value) -> serde_json:
 }
 
 /// The manifest of the site `label`, collecting `libraries`.
-fn manifest(label: &str, libraries: Vec<serde_json::Value>) -> String {
+pub(super) fn manifest(label: &str, libraries: Vec<serde_json::Value>) -> String {
     serde_json::json!({
         "version": 1,
         "site": {"label": label, "config": {"source": "rinx.toml"}, "entity_schema": null},
@@ -44,7 +44,7 @@ fn manifest(label: &str, libraries: Vec<serde_json::Value>) -> String {
 
 /// A Bazel workspace holding `files` besides its `MODULE.bazel` and an
 /// empty `rinx.toml`.
-fn bazel_workspace(name: &str, files: &[(&str, &str)]) -> Workspace {
+pub(super) fn bazel_workspace(name: &str, files: &[(&str, &str)]) -> Workspace {
     let workspace = Workspace::new(name, files);
     workspace.write("MODULE.bazel", "module(name = \"docs\")\n");
     workspace.write("rinx.toml", "");
@@ -53,7 +53,10 @@ fn bazel_workspace(name: &str, files: &[(&str, &str)]) -> Workspace {
 
 /// A server over `workspace` coming by manifests through `source`, with the
 /// scan's result taken — and the messages that brought about.
-fn scanned_with(workspace: &Workspace, source: ManifestSource) -> (ServerState, Vec<Message>) {
+pub(super) fn scanned_with(
+    workspace: &Workspace,
+    source: ManifestSource,
+) -> (ServerState, Vec<Message>) {
     let (state, _) = workspace.server(false);
     let mut state = state.with_bazel_manifests(source);
     let messages = state.on_scan_event(workspace.scanned());
@@ -61,7 +64,7 @@ fn scanned_with(workspace: &Workspace, source: ManifestSource) -> (ServerState, 
 }
 
 /// The `rinx/bazelManifests` requests among `messages`.
-fn manifest_requests(messages: &[Message]) -> Vec<Request> {
+pub(super) fn manifest_requests(messages: &[Message]) -> Vec<Request> {
     messages
         .iter()
         .filter_map(|message| match message {
@@ -74,7 +77,7 @@ fn manifest_requests(messages: &[Message]) -> Vec<Request> {
 }
 
 /// The answer to `request` naming `manifests` in `workspace`.
-fn answer(workspace: &Workspace, request: &Request, manifests: &[&str]) -> Response {
+pub(super) fn answer(workspace: &Workspace, request: &Request, manifests: &[&str]) -> Response {
     let manifests: Vec<String> = manifests
         .iter()
         .map(|manifest| workspace.root.join(manifest).to_string_lossy().into_owned())
@@ -476,7 +479,7 @@ fn test_an_unreadable_manifest_is_shown_once_and_the_folder_stays_a_folder() {
 }
 
 /// What `file` shows in `messages`: each diagnostic's code and severity.
-fn shown_for(
+pub(super) fn shown_for(
     workspace: &Workspace,
     messages: &[Message],
     file: &str,

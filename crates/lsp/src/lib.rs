@@ -22,6 +22,7 @@
 //! - `project` finds the workspace's projects, reads their `conf.py`, and
 //!   scans and keeps each one's project index.
 
+mod code_action;
 mod completion;
 mod definition;
 mod diagnostics;
