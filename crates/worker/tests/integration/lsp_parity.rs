@@ -3,11 +3,13 @@
 //! checked.
 //!
 //! Both sides run as the processes they are — `rinx parse` as a Bazel action
-//! runs it, `rinx lsp` as an editor does — with the defaults both assume
-//! today: the `py` domain, no entity schema, no Jinja. Project configuration
-//! reaches the server only with workspace awareness (roadmap #4, #10, #19),
-//! and from then on this test should parse each document with its library's
-//! flags.
+//! runs it, `rinx lsp` as an editor does. Over the repository's documents
+//! both use the defaults they assume without a project: the `py` domain, no
+//! entity schema, no Jinja. Two small projects of their own check what only
+//! a project reveals: a Sphinx one, whose whole index the build's `index`
+//! action and `rinx lsp --check` both read, and a Bazel site, whose
+//! undeclared toctree entries, diagrams, images and downloads fail the
+//! build's actions and are the editor's errors under its manifest.
 //!
 //! The comparison is file by file: what the build warns about inside an
 //! `.. include::`d fragment, the server must publish on that fragment.
@@ -401,6 +403,171 @@ fn test_the_editor_reports_what_the_index_reports() {
     assert!(
         build[&project.join("needs.rst")].contains(&(10, 3, "entity.unknown-target".to_string())),
         "{build:?}"
+    );
+    assert_eq!(editor, build);
+}
+
+/// Runs `rinx` with `args` in `directory`, expecting it to fail, and
+/// returns what it printed to stderr.
+fn failing_rinx(directory: &Path, args: &[&str]) -> String {
+    let output = Command::new(env!("CARGO_BIN_EXE_rinx"))
+        .args(args)
+        .current_dir(directory)
+        .output()
+        .expect("rinx runs");
+    let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+    assert!(
+        !output.status.success(),
+        "rinx {args:?} succeeded:\n{stderr}"
+    );
+    stderr
+}
+
+/// The `error: path:line:column: code: message` lines among `printed`, by
+/// the file under `project` each names.
+fn error_findings(project: &Path, printed: &str) -> Findings {
+    let mut findings = Findings::new();
+    for line in printed.lines() {
+        let Some(rest) = line.trim_start().strip_prefix("error: ") else {
+            continue;
+        };
+        let (document, after) = rest.split_once(':').expect("a path");
+        findings
+            .entry(project.join(document))
+            .or_default()
+            .insert(parse_warning_location(after));
+    }
+    findings
+}
+
+/// What the build's actions print as errors over the Bazel site in
+/// `project`: parsing `drawn.rst` without `diagrams`, validating
+/// `index.rst`'s toctree against only itself, and validating the assets of
+/// `index.rst` and `guide.rst` against an `_images/` holding `logo.png`.
+fn bazel_build_errors(project: &Path, scratch: &Path) -> (Findings, String) {
+    let images = scratch.join("_images");
+    std::fs::create_dir_all(&images).expect("a scratch directory");
+    std::fs::write(images.join("logo.png"), "").expect("a bundled image");
+    let ast = |name: &str| {
+        scratch
+            .join(name)
+            .to_str()
+            .expect("a UTF-8 path")
+            .to_string()
+    };
+    let mut printed = failing_rinx(
+        project,
+        &[
+            "parse",
+            "--input",
+            "drawn.rst",
+            "--output",
+            &ast("drawn.ast"),
+        ],
+    );
+    for document in ["index", "guide"] {
+        rinx(
+            project,
+            &[
+                "parse",
+                "--input",
+                &format!("{document}.rst"),
+                "--output",
+                &ast(&format!("{document}.ast")),
+            ],
+        );
+    }
+    printed.push_str(&failing_rinx(
+        project,
+        &[
+            "validate_toctree",
+            "--input",
+            &ast("index.ast"),
+            "--output",
+            &ast("index.validated.ast"),
+            "--allowed",
+            "index",
+        ],
+    ));
+    printed.push_str(&failing_rinx(
+        project,
+        &[
+            "validate_assets",
+            "--inputs",
+            &ast("index.ast"),
+            &ast("guide.ast"),
+            "--image-dir",
+            images.to_str().expect("a UTF-8 path"),
+        ],
+    ));
+    (error_findings(project, &printed), printed)
+}
+
+/// The errors `rinx lsp --check` shows over `project`, granted its
+/// `site.lsp_manifest.json`.
+fn editor_errors(project: &Path) -> Findings {
+    let (stdout, _) = rinx(
+        project,
+        &[
+            "lsp",
+            "--check",
+            project.to_str().expect("a UTF-8 path"),
+            "--manifest",
+            project
+                .join("site.lsp_manifest.json")
+                .to_str()
+                .expect("a UTF-8 path"),
+        ],
+    );
+    let check: Value = serde_json::from_str(&stdout).expect("--check prints JSON");
+    let errors: Vec<Value> = check["published"]
+        .as_object()
+        .expect("a map of publishes")
+        .iter()
+        .map(|(uri, diagnostics)| {
+            let errors: Vec<&Value> = diagnostics
+                .as_array()
+                .expect("a diagnostics array")
+                .iter()
+                .filter(|diagnostic| diagnostic["severity"] == 1)
+                .collect();
+            json!({ "uri": uri, "diagnostics": errors })
+        })
+        .collect();
+    editor_findings(&errors)
+}
+
+#[test]
+fn test_the_editor_fails_where_the_build_fails() {
+    // Given a Bazel site whose documents use what their libraries did not
+    // declare: a toctree entry outside `deps`, a diagram without
+    // `diagrams = True`, an image and a download no library bundles — and an
+    // image another library of the site bundles, which is no mistake
+    let project = repository_root().join("crates/worker/tests/parity_bazel");
+    let scratch =
+        std::env::temp_dir().join(format!("rinx_lsp_parity_bazel_{}", std::process::id()));
+
+    // When — the build's own actions fail, each on its own mistake, and the
+    // server checks the folder under the site's manifest
+    let (build, printed) = bazel_build_errors(&project, &scratch);
+    let editor = editor_errors(&project);
+    let _ = std::fs::remove_dir_all(&scratch);
+
+    // Then — every mistake, each once, and nothing else
+    let codes: Vec<&str> = build
+        .values()
+        .flatten()
+        .map(|(_, _, code)| code.as_str())
+        .collect();
+    assert_eq!(
+        codes,
+        [
+            "uml.diagrams-disabled",
+            "toctree.undeclared-dependency",
+            "image.undeclared",
+            "download.undeclared",
+        ],
+        "{printed}"
     );
     assert_eq!(editor, build);
 }

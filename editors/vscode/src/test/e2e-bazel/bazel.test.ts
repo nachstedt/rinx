@@ -64,4 +64,20 @@ suite('Bazel project (e2e)', () => {
             () => codesFor(workspaceFile('reqs/index.rst')).length === 0,
         );
     });
+
+    test("a toctree entry outside the library's deps is underlined as the build fails", async () => {
+        // When — `//other:docs` lists `reqs/index` in a toctree, but has no deps
+        await vscode.window.showTextDocument(workspaceFile('other/index.rst'));
+
+        // Then
+        const undeclared = await waitFor('the undeclared toctree entry to be underlined', () =>
+            vscode.languages.getDiagnostics(workspaceFile('other/index.rst')).find((diagnostic) => {
+                const code = diagnostic.code;
+                const value = typeof code === 'object' ? String(code.value) : String(code);
+                return value === 'toctree.undeclared-dependency';
+            }),
+        );
+        assert.strictEqual(undeclared.severity, vscode.DiagnosticSeverity.Error);
+        assert.strictEqual(undeclared.range.start.line, 8);
+    });
 });

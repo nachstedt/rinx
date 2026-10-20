@@ -5,7 +5,6 @@
 
 pub mod doctest_plan;
 pub mod domain_warnings;
-pub mod validator;
 
 /// Processes an RST text block through the full pipeline (parse, analyze, render)
 /// and outputs an HTML string.

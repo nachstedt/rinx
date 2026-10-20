@@ -12,10 +12,14 @@
 //! render action deserializes it. What the build would refuse is reported
 //! and keeps its default here, so one mistake does not cost the project.
 //!
-//! The manifest holds more than this module reads — each library's `deps`,
-//! images and downloads, its Jinja settings, the site's template — for the
-//! steps that use them (#19, #20, #22); unknown fields are therefore
-//! ignored, and only the `version` guards the shape.
+//! What each library declares — the documents its toctrees may name, whether
+//! it compiles diagrams, and the images and downloads its site bundles — is
+//! read into its [`BuildDeclarations`], whose absence fails the build (#19).
+//!
+//! The manifest holds more than this module reads — each library's `deps`
+//! labels, its Jinja settings, the site's template — for the steps that use
+//! them (#20, #21, #22); unknown fields are therefore ignored, and only the
+//! `version` guards the shape.
 //!
 //! Every file the manifest names is a source file, named by its path in the
 //! workspace, or a generated one, named by its path under the execution root,
@@ -32,14 +36,17 @@ use rinx_index::{DomainIndex, UnknownDomainIndex};
 use rinx_inventory::InventoryName;
 use rinx_parser::{DefaultRole, ParseCtx};
 use rinx_renderer::config::SiteConfig;
+use rinx_toctree::DeclaredDocuments;
 use serde::Deserialize;
 
+use super::declarations::{BuildDeclarations, BundledFiles};
 use super::discover::DiscoveredProject;
 use super::intersphinx::{IntersphinxEntry, IntersphinxSettings, InventorySource};
 use super::model::{
     LibraryModel, Listing, Membership, ParseSettings, ProjectModel, ProjectSettings, ProjectSource,
     Splice,
 };
+use super::strictness::Strictness;
 
 /// The manifest version this server reads; `rules/site.bzl` writes it.
 pub const MANIFEST_VERSION: u64 = 1;
@@ -162,6 +169,8 @@ struct ManifestSite {
     entity_schema: Option<ManifestFile>,
     #[serde(default)]
     domain_indices: Vec<String>,
+    #[serde(default)]
+    strict_links: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -177,6 +186,15 @@ struct ManifestLibrary {
     srcs: Vec<ManifestFile>,
     #[serde(default)]
     parse_data: Vec<String>,
+    /// The documents its toctrees may name, without their `.rst`.
+    #[serde(default)]
+    allowed_docs: Vec<String>,
+    #[serde(default)]
+    images: Vec<String>,
+    #[serde(default)]
+    downloads: Vec<String>,
+    #[serde(default)]
+    diagrams: bool,
     default_domain: String,
     default_role: Option<String>,
     rst_prolog: Option<ManifestFile>,
@@ -232,6 +250,24 @@ impl ManifestFile {
             }
         };
         (!name.starts_with("../")).then(|| name.to_string())
+    }
+}
+
+/// What a site of `libraries` bundles: every library's images and
+/// downloads, by their paths in the workspace — the source root, which a
+/// document's asset resolves against.
+fn bundled_files(libraries: &[ManifestLibrary]) -> BundledFiles {
+    BundledFiles {
+        images: libraries
+            .iter()
+            .flat_map(|library| &library.images)
+            .map(PathBuf::from)
+            .collect(),
+        downloads: libraries
+            .iter()
+            .flat_map(|library| &library.downloads)
+            .map(PathBuf::from)
+            .collect(),
     }
 }
 
@@ -302,6 +338,7 @@ impl Reader<'_> {
     fn project(&mut self, manifest: &Path, parsed: Manifest) -> BazelReading {
         let site = self.site_config(&parsed.site.config);
         let schema = self.schema(parsed.site.entity_schema.as_ref());
+        let bundled = Arc::new(bundled_files(&parsed.libraries));
         let mut listing = Listing::default();
         let mut sources = Vec::new();
         let mut libraries = Vec::new();
@@ -316,7 +353,7 @@ impl Reader<'_> {
                     sources.push((doc_path, path));
                 }
             }
-            libraries.push(self.library(library));
+            libraries.push(self.library(library, &bundled));
         }
         let settings = ProjectSettings {
             root_doc: site.root_doc.clone(),
@@ -329,6 +366,8 @@ impl Reader<'_> {
             numfig: site.numfig,
             numfig_secnum_depth: site.numfig_secnum_depth,
             highlight_language: site.highlight_language.clone(),
+            strictness: Strictness::Rinx,
+            strict_links: parsed.site.strict_links,
             intersphinx: self.intersphinx(parsed.inventories),
             domain_indices: self.domain_indices(&parsed.site.domain_indices),
             site: Some(site),
@@ -349,8 +388,8 @@ impl Reader<'_> {
         }
     }
 
-    /// One library's parse settings.
-    fn library(&mut self, library: ManifestLibrary) -> LibraryModel {
+    /// One library's parse settings, in a site bundling `bundled`.
+    fn library(&mut self, library: ManifestLibrary, bundled: &Arc<BundledFiles>) -> LibraryModel {
         let schema = self.schema(library.entity_schema.as_ref());
         let domain = library.default_domain.parse().unwrap_or_else(|()| {
             self.invalid(format!(
@@ -395,6 +434,13 @@ impl Reader<'_> {
                 schema,
                 import_keys,
                 parse_data: Some(parse_data),
+                declarations: Some(BuildDeclarations {
+                    toctree_documents: DeclaredDocuments::from_names(
+                        library.allowed_docs.iter().map(String::as_str),
+                    ),
+                    diagrams: library.diagrams,
+                    bundled: Arc::clone(bundled),
+                }),
             },
             label: library.label,
         }
@@ -681,6 +727,94 @@ mod tests {
             b.parse_data,
             Some([PathBuf::from("/work/b/data.csv")].into_iter().collect())
         );
+    }
+
+    #[test]
+    fn test_each_library_declares_its_toctree_documents_and_diagrams() {
+        // Given
+        let text = manifest(
+            vec![
+                library(
+                    "//a:docs",
+                    &["a/index.rst"],
+                    json!({"allowed_docs": ["a/index", "b/index"], "diagrams": true}),
+                ),
+                library("//b:docs", &["b/index.rst"], json!({})),
+            ],
+            json!({}),
+        );
+
+        // When
+        let model = read(&text, &[CONFIG]).model;
+
+        // Then
+        let a = model
+            .parse_settings(Some("a/index.rst"))
+            .declarations
+            .as_ref()
+            .expect("a library declares");
+        assert_eq!(
+            a.toctree_documents,
+            DeclaredDocuments::from_names(["a/index.rst", "b/index.rst"])
+        );
+        assert!(a.diagrams);
+        let b = model
+            .parse_settings(Some("b/index.rst"))
+            .declarations
+            .as_ref()
+            .expect("a library declares");
+        assert_eq!(b.toctree_documents, DeclaredDocuments::default());
+        assert!(!b.diagrams);
+    }
+
+    #[test]
+    fn test_the_site_bundles_every_librarys_images_and_downloads() {
+        // Given — as the build's bundle directories, a site-wide union
+        let text = manifest(
+            vec![
+                library(
+                    "//a:docs",
+                    &["a/index.rst"],
+                    json!({"images": ["a/logo.png"]}),
+                ),
+                library(
+                    "//b:docs",
+                    &["b/index.rst"],
+                    json!({"downloads": ["b/data.csv"]}),
+                ),
+            ],
+            json!({}),
+        );
+
+        // When
+        let model = read(&text, &[CONFIG]).model;
+
+        // Then
+        let bundled = BundledFiles {
+            images: [PathBuf::from("a/logo.png")].into_iter().collect(),
+            downloads: [PathBuf::from("b/data.csv")].into_iter().collect(),
+        };
+        for doc_path in ["a/index.rst", "b/index.rst"] {
+            let declared = model.parse_settings(Some(doc_path)).declarations.as_ref();
+            assert_eq!(
+                declared.map(|declared| declared.bundled.as_ref()),
+                Some(&bundled)
+            );
+        }
+    }
+
+    #[test]
+    fn test_a_site_is_strict_as_its_build_is() {
+        // Given
+        let text = manifest(vec![], json!({"strict_links": true}));
+
+        // When
+        let settings = read(&text, &[CONFIG]).model.settings;
+
+        // Then
+        assert_eq!(settings.strictness, Strictness::Rinx);
+        assert!(settings.strict_links);
+        assert_eq!(settings.parse.declarations, None);
     }
 
     #[test]

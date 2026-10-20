@@ -1,0 +1,6 @@
+Drawn
+=====
+
+.. plantuml::
+
+   A -> B

@@ -21,7 +21,8 @@ use crate::documents::DocumentStore;
 use crate::files::{FileReads, WorkspaceFiles};
 use crate::include_summary::summarize_includes;
 use crate::position::{PositionEncoding, to_lsp_range};
-use crate::project::{Judgement, ParseSettings, Splice, Strictness};
+use crate::project::{Judgement, ParseSettings, Splice, Strictness, undeclared_uses};
+use crate::render::RenderFindings;
 use crate::uri::{file_path, file_uri};
 
 /// What every published diagnostic names as its producer.
@@ -50,6 +51,10 @@ pub struct DocumentDiagnosis {
 #[derive(Debug)]
 pub struct ParsedSource {
     pub document: Document,
+    /// What the build fails on in the document because its library did not
+    /// declare it — empty outside a Bazel project. Never subject to
+    /// `.. noqa:`: the fault is the build file's, not the document's.
+    pub undeclared: Vec<Diagnostic>,
     pub reads: FileReads,
     /// The text with the protocol's line endings, which positions count in.
     pub text: String,
@@ -114,8 +119,14 @@ pub fn parse_source(
             reads.texts.insert(file.clone(), splice.text.clone());
         }
     }
+    let undeclared = settings
+        .declarations
+        .as_ref()
+        .map(|declared| undeclared_uses(&document, declared))
+        .unwrap_or_default();
     ParsedSource {
         document,
+        undeclared,
         reads,
         text,
     }
@@ -196,13 +207,14 @@ fn configured<'a>(
 pub fn diagnose_source(
     uri: &Uri,
     parsed: &ParsedSource,
-    rendered: &[Diagnostic],
+    rendered: &RenderFindings,
     strictness: &Strictness,
     open: &DocumentStore,
     encoding: PositionEncoding,
 ) -> DocumentDiagnosis {
     let by_uri = to_lsp_diagnostics(
         &parsed.document,
+        &parsed.undeclared,
         rendered,
         strictness,
         &Placement {
@@ -299,32 +311,47 @@ pub(crate) struct Placed<'a> {
     pub range: Range,
 }
 
-/// Converts the diagnostics found in `document` — those its parse recorded
-/// and `rendered`, those rendering it found — by the URI of the file each one
-/// is in, leaving out what its `.. noqa:` comments silence, and adds, on
-/// each `.. include::` that brought problems in, a summary of them (see
+/// Converts the diagnostics found in `document` — those its parse recorded,
+/// what the build fails on that its library did not declare (`undeclared`),
+/// and those rendering it found — by the URI of the file each one is in,
+/// leaving out what its `.. noqa:` comments silence, and adds, on each
+/// `.. include::` that brought problems in, a summary of them (see
 /// [`crate::include_summary`]).
 ///
 /// The filter is the build's own [`rinx_ast::retain_reportable`], so the
 /// editor and CI cannot disagree about what a comment silences — and since a
-/// suppression records its file, a comment only silences its own file. What
-/// survives it is then judged by `strictness`, the one place a diagnostic's
-/// severity is decided.
+/// suppression records its file, a comment only silences its own file. It
+/// spares `undeclared`, as the build does: no document's comment silences a
+/// fault of its build file. What is shown is then judged by `strictness`,
+/// the one place a diagnostic's severity is decided — or, when it fails the
+/// build, which is known by where it was found, is a
+/// [`Judgement::as_failure`].
 #[must_use]
 pub fn to_lsp_diagnostics(
     document: &Document,
-    rendered: &[Diagnostic],
+    undeclared: &[Diagnostic],
+    rendered: &RenderFindings,
     strictness: &Strictness,
     placement: &Placement<'_>,
     encoding: PositionEncoding,
 ) -> BTreeMap<Uri, Vec<lsp_types::Diagnostic>> {
-    let placed: Vec<Placed<'_>> = retain_reportable(&document.diagnostics, &document.suppressions)
-        .chain(retain_reportable(rendered, &document.suppressions))
-        .map(|diagnostic| {
+    let reported = retain_reportable(&document.diagnostics, &document.suppressions)
+        .chain(retain_reportable(
+            &rendered.reported,
+            &document.suppressions,
+        ))
+        .map(|diagnostic| (diagnostic, strictness.judge(diagnostic)));
+    let failing = undeclared
+        .iter()
+        .chain(retain_reportable(&rendered.failing, &document.suppressions))
+        .map(|diagnostic| (diagnostic, Judgement::as_failure(diagnostic)));
+    let placed: Vec<Placed<'_>> = reported
+        .chain(failing)
+        .map(|(diagnostic, judgement)| {
             let (uri, range) = placement.place(document, diagnostic.span, encoding);
             Placed {
                 diagnostic,
-                judgement: strictness.judge(diagnostic),
+                judgement,
                 uri,
                 range,
             }
@@ -412,7 +439,7 @@ mod tests {
         diagnose_source(
             uri,
             &parse_source(uri, None, None, text, &ParseSettings::default(), open),
-            &[],
+            &RenderFindings::default(),
             &Strictness::default(),
             open,
             encoding,
@@ -563,7 +590,7 @@ mod tests {
         diagnose_source(
             uri,
             &parse_source(uri, None, None, text, settings, &open),
-            &[],
+            &RenderFindings::default(),
             &Strictness::default(),
             &open,
             PositionEncoding::Utf16,
@@ -674,6 +701,7 @@ mod tests {
         let mut converted = to_lsp_diagnostics(
             &document,
             &[],
+            &RenderFindings::default(),
             strictness,
             &Placement {
                 uri: &index,
@@ -708,7 +736,11 @@ mod tests {
         }
         to_lsp_diagnostics(
             &document,
-            rendered,
+            &[],
+            &RenderFindings {
+                reported: rendered.to_vec(),
+                failing: Vec::new(),
+            },
             &Strictness::default(),
             &Placement {
                 uri: &uri("file:///docs/index.rst"),
@@ -1269,5 +1301,98 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics[0].range, Range::default());
+    }
+
+    /// The conversion of a document whose every line `.. noqa:` silences,
+    /// with `undeclared` and `rendered` found about it.
+    fn convert_silenced(
+        undeclared: &[Diagnostic],
+        rendered: &RenderFindings,
+    ) -> Vec<lsp_types::Diagnostic> {
+        let mut document = Document::new("/docs/index.rst".to_string(), Vec::new());
+        document.suppressions = vec![Suppression {
+            start_line: 1,
+            end_line: 3,
+            codes: SuppressionCodes::All,
+            file: None,
+        }];
+        let index = uri("file:///docs/index.rst");
+        to_lsp_diagnostics(
+            &document,
+            undeclared,
+            rendered,
+            &Strictness::Rinx,
+            &Placement {
+                uri: &index,
+                text: "a\nb\nc\n",
+                reads: &FileReads::default(),
+                open: &DocumentStore::default(),
+            },
+            PositionEncoding::Utf16,
+        )
+        .remove(&index)
+        .unwrap_or_default()
+    }
+
+    fn on_line_two(code: DiagnosticCode) -> Diagnostic {
+        Diagnostic::new(
+            code,
+            "found",
+            Span::new(Position::new(2, 1), Position::new(2, 2)),
+        )
+    }
+
+    #[test]
+    fn test_an_undeclared_use_is_an_error_no_noqa_silences() {
+        // Given
+        let undeclared = [on_line_two(DiagnosticCode::ToctreeUndeclaredDependency)];
+
+        // When
+        let converted = convert_silenced(&undeclared, &RenderFindings::default());
+
+        // Then
+        assert_eq!(converted.len(), 1);
+        assert_eq!(converted[0].severity, Some(DiagnosticSeverity::ERROR));
+        assert_eq!(converted[0].range.start.line, 1);
+    }
+
+    #[test]
+    fn test_a_failing_render_finding_is_an_error_a_noqa_silences() {
+        // Given — as the build applies `.. noqa:` before `strict_links` fails
+        let rendered = RenderFindings {
+            reported: Vec::new(),
+            failing: vec![on_line_two(DiagnosticCode::LinkBrokenRef)],
+        };
+
+        // When
+        let silenced = convert_silenced(&[], &rendered);
+        let shown = convert_with_failing(&rendered);
+
+        // Then
+        assert!(silenced.is_empty(), "{silenced:?}");
+        assert_eq!(shown.len(), 1);
+        assert_eq!(shown[0].severity, Some(DiagnosticSeverity::ERROR));
+    }
+
+    /// The conversion of a document with no `.. noqa:`, rendered as
+    /// `rendered`.
+    fn convert_with_failing(rendered: &RenderFindings) -> Vec<lsp_types::Diagnostic> {
+        let document = Document::new("/docs/index.rst".to_string(), Vec::new());
+        let index = uri("file:///docs/index.rst");
+        to_lsp_diagnostics(
+            &document,
+            &[],
+            rendered,
+            &Strictness::Rinx,
+            &Placement {
+                uri: &index,
+                text: "a\nb\nc\n",
+                reads: &FileReads::default(),
+                open: &DocumentStore::default(),
+            },
+            PositionEncoding::Utf16,
+        )
+        .remove(&index)
+        .unwrap_or_default()
     }
 }

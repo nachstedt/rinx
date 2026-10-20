@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "site": {
+    "label": "//:site",
+    "config": {"source": "rinx.toml"},
+    "entity_schema": null
+  },
+  "inventories": [],
+  "libraries": [
+    {
+      "label": "//:drawn",
+      "srcs": [{"source": "drawn.rst"}],
+      "allowed_docs": ["drawn"],
+      "default_domain": "py",
+      "default_role": null,
+      "rst_prolog": null,
+      "rst_epilog": null,
+      "entity_schema": null
+    },
+    {
+      "label": "//:guide",
+      "srcs": [{"source": "guide.rst"}],
+      "allowed_docs": ["guide"],
+      "images": ["logo.png"],
+      "default_domain": "py",
+      "default_role": null,
+      "rst_prolog": null,
+      "rst_epilog": null,
+      "entity_schema": null
+    },
+    {
+      "label": "//:index",
+      "srcs": [{"source": "index.rst"}],
+      "allowed_docs": ["index"],
+      "default_domain": "py",
+      "default_role": null,
+      "rst_prolog": null,
+      "rst_epilog": null,
+      "entity_schema": null
+    }
+  ]
+}

@@ -20,6 +20,13 @@
 //!   includes an unknown directive nothing known provides, even when the
 //!   project declares extensions the table does not model: it is as likely a
 //!   typo as theirs.
+//!
+//! A project rinx builds — a `rinx_site` — is [`Strictness::Rinx`]: nothing
+//! is lowered, since the build runs no extension, and what fails its build is
+//! an *Error*. Which findings fail it is known by where they come from, never
+//! by their code: the checks of what a library declared, and a broken
+//! reference in a site setting `strict_links`. Those are
+//! [`Judgement::as_failure`] whatever the strictness.
 
 use lsp_types::DiagnosticSeverity;
 use rinx_ast::{Diagnostic, DiagnosticCode, DiagnosticSubject};
@@ -28,14 +35,13 @@ use rinx_inventory::InventoryName;
 use super::extension_profile::{ExtensionProfile, ExtensionProfiles, TargetScope};
 
 /// How a project's findings are reported.
-///
-/// Only the legacy mode exists until a project read from its Bazel build
-/// (roadmap #18) gets `Rinx`, under which every diagnostic is exactly what the
-/// build reports.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Strictness {
     /// A project rinx does not build: lowered by what its extensions explain.
     Legacy(ExtensionPolicy),
+    /// A project rinx builds, read from its Bazel manifest: every finding is
+    /// exactly what the build reports.
+    Rinx,
 }
 
 impl Default for Strictness {
@@ -62,6 +68,7 @@ impl Strictness {
     pub fn judge(&self, diagnostic: &Diagnostic) -> Judgement {
         match self {
             Self::Legacy(policy) => policy.judge(diagnostic),
+            Self::Rinx => Judgement::as_reported(diagnostic),
         }
     }
 
@@ -74,6 +81,9 @@ impl Strictness {
                 unloaded_inventories: unloaded,
                 ..policy
             }),
+            // A site's inventory the build cannot read fails its index
+            // action, so nothing that misses it is lowered here.
+            Self::Rinx => Self::Rinx,
         }
     }
 
@@ -84,6 +94,7 @@ impl Strictness {
     pub fn unmodelled_extensions(&self) -> &[String] {
         match self {
             Self::Legacy(policy) => &policy.unmodelled,
+            Self::Rinx => &[],
         }
     }
 }
@@ -101,6 +112,17 @@ impl Judgement {
     pub fn as_reported(diagnostic: &Diagnostic) -> Self {
         Self {
             severity: DiagnosticSeverity::WARNING,
+            message: diagnostic.message.clone(),
+        }
+    }
+
+    /// `diagnostic`, a finding that fails the build, as it is reported: an
+    /// error, worded as found, under every strictness — nothing a project
+    /// declares explains a build failure away.
+    #[must_use]
+    pub fn as_failure(diagnostic: &Diagnostic) -> Self {
+        Self {
+            severity: DiagnosticSeverity::ERROR,
             message: diagnostic.message.clone(),
         }
     }
@@ -491,6 +513,60 @@ mod tests {
             Judgement {
                 severity: DiagnosticSeverity::WARNING,
                 message: "broken domain object 'spam.eggs'".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_rinx_lowers_nothing_an_extension_would_explain() {
+        // Given — what autodoc would explain in a Sphinx project
+        let directive = unknown_directive("automodule");
+
+        // When
+        let judgement = Strictness::Rinx.judge(&directive);
+
+        // Then
+        assert_eq!(judgement, Judgement::as_reported(&directive));
+    }
+
+    #[test]
+    fn test_rinx_keeps_nothing_unloaded_and_no_unmodelled_extension() {
+        // Given
+        let unloaded = vec![(
+            InventoryName::new("python").unwrap(),
+            "not downloaded".to_string(),
+        )];
+
+        // When
+        let strictness = Strictness::Rinx.with_unloaded_inventories(unloaded);
+
+        // Then
+        assert_eq!(strictness, Strictness::Rinx);
+        assert!(strictness.unmodelled_extensions().is_empty());
+        assert_eq!(
+            strictness.judge(&py_reference()).severity,
+            DiagnosticSeverity::WARNING
+        );
+    }
+
+    #[test]
+    fn test_as_failure_is_an_error_worded_as_found() {
+        // Given
+        let failure = Diagnostic::new(
+            DiagnosticCode::ToctreeUndeclaredDependency,
+            "toctree entry 'other' names a document of no library in this library's deps",
+            SPAN,
+        );
+
+        // When
+        let judgement = Judgement::as_failure(&failure);
+
+        // Then
+        assert_eq!(
+            judgement,
+            Judgement {
+                severity: DiagnosticSeverity::ERROR,
+                message: failure.message.clone(),
             }
         );
     }

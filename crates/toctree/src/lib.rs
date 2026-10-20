@@ -3,8 +3,9 @@
 //! Its own crate rather than a module of `rinx_analyzer` because three
 //! phases need this and they are not allowed to depend on each other: the
 //! analyzer builds the project index with it, the renderer walks the toctree
-//! graph with it, and the worker's Bazel strict-deps validator checks
-//! declared dependencies with it. Folding it into the analyzer would put the
+//! graph with it, and the Bazel strict-deps check ([`declared`]) —
+//! which the worker's `validate_toctree` and the language server both call —
+//! checks declared dependencies with it. Folding it into the analyzer would put the
 //! renderer back to depending on the whole analyzer crate — exactly what
 //! splitting `rinx_index` out was meant to stop.
 //!
@@ -20,10 +21,12 @@
 //! from `rinx_ast`, where it moved once image URIs needed the same
 //! `.`/`..` resolution.
 
+mod declared;
 mod glob;
 mod pattern;
 mod resolve;
 
+pub use declared::{DeclaredDocuments, undeclared_toctree_entries};
 pub use pattern::SphinxPattern;
 
 // Re-exported rather than defined here: resolving `.`/`..` is a plain path

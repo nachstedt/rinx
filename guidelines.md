@@ -41,6 +41,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Suspect any file named after a construct that also holds general-purpose helpers, and split the helpers out under a name describing what they do.
 - Keep a helper flat at the crate's `src/` root only when it is genuinely reached from several sibling trees; nesting it under one construct's directory would misstate the dependency.
 - Give shared logic its own crate when the phases needing it are forbidden to depend on each other, rather than reintroducing a dependency an earlier split was made to remove.
+- When the callers sharing some logic already depend on an existing crate it fits, put it there rather than creating a new crate for it.
 - Split a meta-model from the instances it describes along the dependency arrow: what is written in a source file and survives into a build artefact belongs to the artefact's own crate.
 - Ask another crate for a fact it owns through an injected trait rather than keeping a second copy of it, since the copy drifts exactly when the check matters most.
 - Do not separate a type from the only code that constructs and reads it; modules that merely thread a value through their signatures are not users of it.

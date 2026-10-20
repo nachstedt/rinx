@@ -22,6 +22,7 @@ use rinx_index::DomainIndex;
 use rinx_parser::DefaultRole;
 use rinx_renderer::config::SiteConfig;
 
+use super::declarations::BuildDeclarations;
 use super::exclusion::Exclusion;
 use super::intersphinx::IntersphinxSettings;
 use super::strictness::Strictness;
@@ -88,6 +89,9 @@ pub struct ParseSettings {
     /// The only files a directive may read, when the build declares them —
     /// a library's `parse_data`, absolute — and `None` when any file may be.
     pub parse_data: Option<BTreeSet<PathBuf>>,
+    /// What the document's library declared, whose absence fails the build
+    /// — `None` outside a Bazel project, which declares nothing.
+    pub declarations: Option<BuildDeclarations>,
 }
 
 impl Default for ParseSettings {
@@ -101,6 +105,7 @@ impl Default for ParseSettings {
             schema: Arc::new(EntitySchema::empty()),
             import_keys: BTreeMap::new(),
             parse_data: None,
+            declarations: None,
         }
     }
 }
@@ -212,6 +217,9 @@ pub struct ProjectSettings {
     pub highlight_language: ResolvedLanguage,
     /// How findings are reported, by what the declared `extensions` explain.
     pub strictness: Strictness,
+    /// Whether a broken reference fails the build — a `rinx_site`'s
+    /// `strict_links`; never otherwise.
+    pub strict_links: bool,
     /// The other sites the project links into — `intersphinx_mapping`.
     pub intersphinx: IntersphinxSettings,
     /// The domain index pages the site writes, which `:ref:` may name — a
@@ -246,6 +254,7 @@ impl Default for ProjectSettings {
             numfig_secnum_depth: rinx_index::DEFAULT_NUMFIG_SECNUM_DEPTH,
             highlight_language: ResolvedLanguage::default(),
             strictness: Strictness::default(),
+            strict_links: false,
             intersphinx: IntersphinxSettings::default(),
             domain_indices: BTreeSet::new(),
             config_files: Vec::new(),

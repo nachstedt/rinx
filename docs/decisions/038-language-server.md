@@ -233,7 +233,25 @@ Under `Strictness::Legacy`:
   override can switch it on.
 
 `Strictness::Rinx` changes nothing: a rinx-mode diagnostic is exactly what the
-build reports.
+build reports. That includes what *fails* the build, which the editor shows
+as an *Error*:
+
+- **What a library did not declare.** A toctree entry outside its `deps`, a
+  diagram without `diagrams = True`, an image or a download no library of
+  the site bundles. The manifest carries each library's declarations, and
+  the server asks the build's own checks
+  (`rinx_toctree::undeclared_toctree_entries`,
+  `rinx_analyzer::undeclared_assets` and `disabled_diagrams`), so the two
+  cannot disagree. A site's bundle is the union of its libraries', as the
+  build's bundle directories are. Like the build, no `.. noqa:` silences
+  these: the fault is the build file's, not the document's.
+- **A broken reference in a site setting `strict_links`.** A `.. noqa:` does
+  silence this one, since the build filters before it fails.
+
+Which findings fail the build is known by where they come from, never by
+their code: `entity.unknown-target` is a broken reference while rendering
+and a warning of the index fold, and only the first fails a strict site.
+Severity is still decided in `strictness.rs`, through `Judgement::as_failure`.
 
 The filter runs in `rinx_lsp`, in one place, keyed on `DiagnosticCode` plus
 the project model. What a finding is about — the directive's name, the domain
