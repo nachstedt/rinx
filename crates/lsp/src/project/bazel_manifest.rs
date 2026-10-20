@@ -16,10 +16,14 @@
 //! it compiles diagrams, and the images and downloads its site bundles — is
 //! read into its [`BuildDeclarations`], whose absence fails the build (#19).
 //!
+//! A library's `jinja` and `jinja_context` decide whether its documents are
+//! rendered as Jinja templates before they are parsed, as its parse action
+//! renders them (#20).
+//!
 //! The manifest holds more than this module reads — each library's `deps`
-//! labels, its Jinja settings, the site's template — for the steps that use
-//! them (#20, #21, #22); unknown fields are therefore ignored, and only the
-//! `version` guards the shape.
+//! labels, the site's template — for the steps that use them (#21, #22);
+//! unknown fields are therefore ignored, and only the `version` guards the
+//! shape.
 //!
 //! Every file the manifest names is a source file, named by its path in the
 //! workspace, or a generated one, named by its path under the execution root,
@@ -195,6 +199,10 @@ struct ManifestLibrary {
     downloads: Vec<String>,
     #[serde(default)]
     diagrams: bool,
+    #[serde(default)]
+    jinja: bool,
+    #[serde(default)]
+    jinja_context: BTreeMap<String, String>,
     default_domain: String,
     default_role: Option<String>,
     rst_prolog: Option<ManifestFile>,
@@ -434,6 +442,11 @@ impl Reader<'_> {
                 schema,
                 import_keys,
                 parse_data: Some(parse_data),
+                // As `library.bzl` passes it: the context only with `--jinja`,
+                // in the order of its names.
+                jinja: library
+                    .jinja
+                    .then(|| library.jinja_context.into_iter().collect()),
                 declarations: Some(BuildDeclarations {
                     toctree_documents: DeclaredDocuments::from_names(
                         library.allowed_docs.iter().map(String::as_str),
@@ -727,6 +740,60 @@ mod tests {
             b.parse_data,
             Some([PathBuf::from("/work/b/data.csv")].into_iter().collect())
         );
+    }
+
+    #[test]
+    fn test_a_library_asking_for_jinja_parses_with_its_context() {
+        // Given a templated library binding two names, beside a plain one
+        let text = manifest(
+            vec![
+                library(
+                    "//a:docs",
+                    &["a/index.rst"],
+                    json!({"jinja": true, "jinja_context": {"version": "2", "release": "0.1"}}),
+                ),
+                library("//b:docs", &["b/index.rst"], json!({})),
+            ],
+            json!({}),
+        );
+
+        // When
+        let model = read(&text, &[CONFIG]).model;
+
+        // Then the first renders with its context, sorted as the build
+        // passes it, and the second is not rendered at all
+        assert_eq!(
+            model.parse_settings(Some("a/index.rst")).jinja,
+            Some(vec![
+                ("release".to_string(), "0.1".to_string()),
+                ("version".to_string(), "2".to_string()),
+            ])
+        );
+        assert_eq!(model.parse_settings(Some("b/index.rst")).jinja, None);
+    }
+
+    #[test]
+    fn test_a_jinja_context_without_jinja_is_ignored() {
+        // Given a context on a library that did not ask for Jinja
+        let text = manifest(
+            vec![library(
+                "//a:docs",
+                &["a/index.rst"],
+                json!({"jinja": false, "jinja_context": {"release": "0.1"}}),
+            )],
+            json!({}),
+        );
+
+        // When
+        let reading = read(&text, &[CONFIG]);
+
+        // Then nothing is rendered, and nothing is reported: the build
+        // passes no context without `--jinja` either
+        assert_eq!(
+            reading.model.parse_settings(Some("a/index.rst")).jinja,
+            None
+        );
+        assert!(reading.findings.is_empty(), "{:?}", reading.findings);
     }
 
     #[test]

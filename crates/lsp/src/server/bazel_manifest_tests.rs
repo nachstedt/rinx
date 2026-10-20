@@ -790,3 +790,167 @@ fn test_a_broken_reference_is_an_error_where_the_site_sets_strict_links() {
         ]
     );
 }
+
+/// A heading whose rendered title fits its underline, and whose written one
+/// does not.
+const RELEASE_HEADING: &str = "Release {{ release }}\n===========\n";
+/// A document rendering a template in, above a mistake of its own.
+const INCLUDES_HEADER: &str = "{% include \"_templates/header.rst\" %}\n\n.. foo::\n";
+
+/// A section labelled `install` in `setup.rst`.
+const SETUP: &str = ".. _install:\n\nInstalling\n==========\n";
+
+/// A Bazel workspace whose one library, `//:docs`, lists `index.rst` and
+/// `setup.rst` (labelling `install`) and is rendered as a Jinja template
+/// binding `release`, reading the template `_templates/header.rst` — granted
+/// its manifest, with `index.rst` holding `text`.
+fn templated_workspace(name: &str, text: &str) -> (Workspace, ServerState) {
+    templated_workspace_with(name, text, "Fine.\n")
+}
+
+/// [`templated_workspace`], with the template holding `header`.
+fn templated_workspace_with(name: &str, text: &str, header: &str) -> (Workspace, ServerState) {
+    let workspace = bazel_workspace(
+        name,
+        &[
+            ("index.rst", text),
+            ("setup.rst", SETUP),
+            ("_templates/header.rst", header),
+            (
+                "site.lsp_manifest.json",
+                &manifest(
+                    "//:site",
+                    vec![library(
+                        "//:docs",
+                        &["index.rst", "setup.rst"],
+                        &serde_json::json!({
+                            "jinja": true,
+                            "jinja_context": {"release": "0.1"},
+                            "parse_data": ["_templates/header.rst"],
+                        }),
+                    )],
+                ),
+            ),
+        ],
+    );
+    let (mut state, messages) = scanned_with(&workspace, ManifestSource::AskClient);
+    let request = &manifest_requests(&messages)[0];
+    state.on_response(&answer(&workspace, request, &["site.lsp_manifest.json"]));
+    (workspace, state)
+}
+
+/// Whether hovering `file` at `line` and `character` shows anything.
+fn hovers(
+    state: &mut ServerState,
+    workspace: &Workspace,
+    file: &str,
+    line: u32,
+    character: u32,
+) -> bool {
+    let request = Request::new(
+        RequestId::from(8),
+        "textDocument/hover".to_string(),
+        serde_json::json!({
+            "textDocument": {"uri": workspace.uri(file)},
+            "position": {"line": line, "character": character},
+        }),
+    );
+    let response = handle_request(state, request);
+    response.response_result.expect("a result") != serde_json::Value::Null
+}
+
+#[test]
+fn test_a_jinja_library_renders_its_documents_with_its_context() {
+    // Given
+    let (workspace, mut state) = templated_workspace("bazel_jinja", RELEASE_HEADING);
+
+    // When
+    let codes = opened_codes(&mut state, &workspace, "index.rst", RELEASE_HEADING);
+
+    // Then the title is `Release 0.1`, which its underline fits
+    assert_eq!(codes, Vec::<String>::new());
+}
+
+#[test]
+fn test_editing_an_open_template_re_diagnoses_the_document_rendering_it() {
+    // Given the document open, and its template open and clean
+    let (workspace, mut state) = templated_workspace("bazel_jinja_edit", INCLUDES_HEADER);
+    handle_notification(&mut state, workspace.open("index.rst", INCLUDES_HEADER));
+    handle_notification(
+        &mut state,
+        workspace.open("_templates/header.rst", "Fine.\n"),
+    );
+
+    // When the template's buffer breaks, unsaved
+    let replies = handle_notification(
+        &mut state,
+        workspace.change("_templates/header.rst", 2, "Fine.\n\n.. bar::\n"),
+    );
+
+    // Then the template shows what the document found in it, and the
+    // document's own mistake stays on the line it was written on
+    assert_eq!(
+        workspace.codes_for(&replies, "_templates/header.rst"),
+        Some(vec!["directive.unknown".to_string()])
+    );
+    let published = replies
+        .iter()
+        .filter_map(|message| match message {
+            Message::Notification(notification)
+                if notification.method == "textDocument/publishDiagnostics" =>
+            {
+                Some(published(message))
+            }
+            _ => None,
+        })
+        .find(|params| params.uri == workspace.uri("index.rst"))
+        .expect("the document is re-published");
+    assert_eq!(
+        published
+            .diagnostics
+            .iter()
+            .map(|diagnostic| diagnostic.range.start.line)
+            .collect::<Vec<_>>(),
+        [2]
+    );
+}
+
+#[test]
+fn test_a_template_changed_on_disk_re_diagnoses_the_open_document_rendering_it() {
+    // Given
+    let (workspace, mut state) = templated_workspace("bazel_jinja_watch", INCLUDES_HEADER);
+    handle_notification(&mut state, workspace.open("index.rst", INCLUDES_HEADER));
+
+    // When
+    workspace.write("_templates/header.rst", "Fine.\n\n.. bar::\n");
+    let replies = handle_notification(
+        &mut state,
+        workspace.watched(&[("_templates/header.rst", lsp_types::FileChangeType::CHANGED)]),
+    );
+
+    // Then
+    assert_eq!(
+        workspace.codes_for(&replies, "_templates/header.rst"),
+        Some(vec!["directive.unknown".to_string()])
+    );
+}
+
+#[test]
+fn test_a_reference_below_a_template_hovers_on_its_written_line() {
+    // Given a three-line template above a reference whose label only the
+    // rendered text names, and a reference inside the template
+    let text = "{% set target = \"install\" %}{% include \"_templates/header.rst\" %}\n\n\
+                See :ref:`{{ target }}`.\n";
+    let (workspace, mut state) =
+        templated_workspace_with("bazel_jinja_hover", text, "One :ref:`install`.\n\nTwo.\n");
+    handle_notification(&mut state, workspace.open("index.rst", text));
+
+    // When
+    let below = hovers(&mut state, &workspace, "index.rst", 2, 8);
+    let on_include = hovers(&mut state, &workspace, "index.rst", 0, 8);
+
+    // Then the reference written below hovers where it was written, and the
+    // template's own does not hover on the line that renders it in
+    assert!(below);
+    assert!(!on_include);
+}

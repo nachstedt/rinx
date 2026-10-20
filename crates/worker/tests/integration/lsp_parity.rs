@@ -9,7 +9,9 @@
 //! a project reveals: a Sphinx one, whose whole index the build's `index`
 //! action and `rinx lsp --check` both read, and a Bazel site, whose
 //! undeclared toctree entries, diagrams, images and downloads fail the
-//! build's actions and are the editor's errors under its manifest.
+//! build's actions and are the editor's errors under its manifest, and one of
+//! whose libraries renders its document as a Jinja template, whose warnings
+//! both place on the lines they were written on.
 //!
 //! The comparison is file by file: what the build warns about inside an
 //! `.. include::`d fragment, the server must publish on that fragment.
@@ -567,6 +569,92 @@ fn test_the_editor_fails_where_the_build_fails() {
             "image.undeclared",
             "download.undeclared",
         ],
+        "{printed}"
+    );
+    assert_eq!(editor, build);
+}
+
+/// Every finding `rinx lsp --check` shows over `project`, granted its
+/// `site.lsp_manifest.json`, in the files `files` names under it.
+fn editor_findings_in(project: &Path, files: &[&str]) -> Findings {
+    let (stdout, _) = rinx(
+        project,
+        &[
+            "lsp",
+            "--check",
+            project.to_str().expect("a UTF-8 path"),
+            "--manifest",
+            project
+                .join("site.lsp_manifest.json")
+                .to_str()
+                .expect("a UTF-8 path"),
+        ],
+    );
+    let check: Value = serde_json::from_str(&stdout).expect("--check prints JSON");
+    let publishes: Vec<Value> = check["published"]
+        .as_object()
+        .expect("a map of publishes")
+        .iter()
+        .map(|(uri, diagnostics)| json!({ "uri": uri, "diagnostics": diagnostics }))
+        .collect();
+    let wanted: BTreeSet<PathBuf> = files.iter().map(|file| project.join(file)).collect();
+    editor_findings(&publishes)
+        .into_iter()
+        .filter(|(path, _)| wanted.contains(path))
+        .collect()
+}
+
+#[test]
+fn test_the_editor_places_a_templated_documents_warnings_as_the_build_does() {
+    // Given a library rendering its document as a Jinja template, which
+    // renders a three-line template in above a mistake of its own, the
+    // template holding another
+    let project = repository_root().join("crates/worker/tests/parity_bazel");
+    let scratch =
+        std::env::temp_dir().join(format!("rinx_lsp_parity_jinja_{}", std::process::id()));
+    std::fs::create_dir_all(&scratch).expect("a scratch directory");
+
+    // When — the build parses it as `rinx_library(jinja = True, ...)` has
+    // it parsed, and the server checks the folder under the site's manifest
+    let (_, printed) = rinx(
+        &project,
+        &[
+            "parse",
+            "--input",
+            "templated.rst",
+            "--output",
+            scratch
+                .join("templated.ast")
+                .to_str()
+                .expect("a UTF-8 path"),
+            "--jinja",
+            "--jinja-context",
+            "release=0.1",
+        ],
+    );
+    let mut build = Findings::new();
+    for line in printed.lines() {
+        if let Some((path, finding)) = parse_warning(line, Path::new("templated.rst")) {
+            build.entry(project.join(path)).or_default().insert(finding);
+        }
+    }
+    let editor = editor_findings_in(&project, &["templated.rst", "_templates/header.rst"]);
+    let _ = std::fs::remove_dir_all(&scratch);
+
+    // Then — each on the line it was written on, in the file it was
+    // written in
+    assert_eq!(
+        build,
+        Findings::from([
+            (
+                project.join("_templates/header.rst"),
+                BTreeSet::from([(2, 0, "directive.unknown".to_string())])
+            ),
+            (
+                project.join("templated.rst"),
+                BTreeSet::from([(8, 0, "directive.unknown".to_string())])
+            ),
+        ]),
         "{printed}"
     );
     assert_eq!(editor, build);

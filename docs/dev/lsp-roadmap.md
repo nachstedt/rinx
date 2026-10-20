@@ -33,9 +33,9 @@ finished one 🔶. A heading with no marker means the step has not started.
   #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), #6 (PR #270),
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
   #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
-  #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315), #18 (PR #317)
-  and #19 (PR #319).
-- **Next: #20, Jinja-templated documents.**
+  #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315), #18 (PR #317),
+  #19 (PR #319) and #20 (PR #TBD).
+- **Next: #21, Quick fix: add the missing dep.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -462,8 +462,11 @@ build, which resolved import keys need.
 
 Measured on the sphinx-needs demo: `--check` shows its need types as
 directives, and `conf.py` shows the twelve constructs the benchmark's report
-lists. Not done here: the demo's documents are Jinja templates, which the
-server reads only with #20, and completion inside a relation option is #27's.
+lists. Not done here: the demo's documents are Jinja templates, rendered by a
+`source-read` handler in `conf.py`'s `setup()`, which no reading or run of
+`conf.py` sees; #20 renders only a Bazel library's, and a switch for a
+`conf.py` project waits on ADR-038's override (issue #320). Completion inside a
+relation option is #27's.
 
 ### 16. Executing `conf.py` in a trusted workspace (opt-in) ✅ (#311)
 
@@ -578,9 +581,8 @@ Measured on this repository, granting the manifests of `//docs:site`,
 the warnings the examples show on purpose, plus two `image.embed-unavailable`
 the build does not report, since the server embeds no images yet.
 
-Not done here: the manifest records each library's `jinja` and
-`jinja_context`, but the server applies them only with #20; `deps`, `images`
-and `downloads` are recorded for #19.
+Not done here: `deps`, `images` and `downloads` are recorded for #19, and
+`jinja` and `jinja_context` for #20.
 
 ### 19. Strict mode ✅ (#319)
 
@@ -626,7 +628,7 @@ Not done here (issue #318): an undeclared image with `:loading: embed` still fai
 build first in `embed_assets`, with that action's untyped message, where the
 editor shows `image.undeclared`.
 
-### 20. Jinja-templated documents
+### 20. Jinja-templated documents ✅ (#TBD)
 
 **You experience:** `jinja = True` documents get diagnostics at the right
 source positions.
@@ -634,6 +636,32 @@ source positions.
 - Enable Jinja per library from the manifest, with `jinja_context`
 - Templates loaded through the overlay loader
 - Position tests through `TemplateMap`
+
+Each library's `ParseSettings` carries its `jinja_context` when it sets
+`jinja = True`, and `parse_source` renders with it, so the scan, the fold, the
+render tier, hover and definition all read the rendered text. The rest was
+already there. The parser's `TemplateMap` puts each finding on its written
+line. A template is read through the overlay loader under the source root,
+inside `parse_data` and from an open buffer first, as an `.. include::`d
+fragment is, so editing it, open or on disk, re-diagnoses the documents
+rendering it. A mistake inside one is shown in the template. The Bazel parity
+test now also compares a templated library's warnings with `rinx parse
+--jinja`'s.
+
+Measured on this repository with the manifests of `//docs:site`,
+`//examples:site` and `//examples/intersphinx:sibling_site`: `--check` still
+shows the 18 warnings the examples show on purpose, now with
+`examples/jinja/` rendered. Dropping `release` from its `jinja_context`
+shows `jinja.undefined-value` in `_templates/page_header.rst`, where it is
+written.
+
+Not done here: a Sphinx project's Jinja, rendered by a `source-read` handler
+no reading of `conf.py` sees (issue #320). `TemplateMap` maps lines, not
+columns, so a position to the right of a `{{ … }}` on its line is off by the
+substitution's length, in the build as in the editor; hover and definition
+there can miss (issue #321). An `{% include %}` carries no summary of the
+problems it brought in, as an `.. include::` does (issue #322), and a template
+error underlines nothing but the start of its line (issue #323).
 
 ### 21. Quick fix: add the missing dep
 

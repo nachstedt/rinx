@@ -253,6 +253,11 @@ their code: `entity.unknown-target` is a broken reference while rendering
 and a warning of the index fold, and only the first fails a strict site.
 Severity is still decided in `strictness.rs`, through `Judgement::as_failure`.
 
+The same holds for a library setting `jinja = True`: its `jinja_context` comes
+with the manifest, so its documents are rendered before they are parsed, with
+templates read through the same overlay loader as an `.. include::`, and the
+parser's `TemplateMap` puts each finding on the line it was written on.
+
 The filter runs in `rinx_lsp`, in one place, keyed on `DiagnosticCode` plus
 the project model. What a finding is about — the directive's name, the domain
 a reference missed — travels on the diagnostic as a `DiagnosticSubject`, set
