@@ -103,6 +103,19 @@ suite('Language server diagnostics (e2e)', () => {
         await noDiagnosticsOn(document.uri);
     });
 
+    test("a diagram's template error is underlined on the template line it is on", async () => {
+        // Given / When — rendered without a JVM, as every diagram in the editor
+        const uri = workspaceFile('drawn.rst');
+        await vscode.window.showTextDocument(uri);
+
+        // Then — the template's second line, not the directive's
+        const [diagnostic] = await waitFor('the template error', () => {
+            const found = vscode.languages.getDiagnostics(uri).filter((d) => codeOf(d) === 'uml.template-error');
+            return found.length > 0 && found;
+        });
+        assert.strictEqual(diagnostic.range.start.line, 15);
+    });
+
     test('a column after an astral character is counted in UTF-16 units', async () => {
         // Given — a crab is two UTF-16 units, so the reference starts at 3
         const document = await openUntitled('🦀 |nosub|\n');

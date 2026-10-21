@@ -101,6 +101,7 @@ fn with_ctx_over<R>(
         image_errors: &mut Vec::new(),
         embedded_assets,
         image_locator: None,
+        diagram_pictures: crate::DiagramPictures::Compiled,
         highlighter: &highlighter,
         highlight_language: language,
         collapse_entities: true,

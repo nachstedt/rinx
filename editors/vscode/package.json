@@ -103,6 +103,7 @@
   "scripts": {
     "vscode:prepublish": "npm run bundle -- --minify",
     "compile": "tsc -p ./",
+    "prebundle": "node scripts/copy-plantuml.mjs",
     "bundle": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node20 --sourcemap",
     "watch": "tsc -watch -p ./",
     "typecheck": "tsc -p ./ --noEmit",
@@ -118,6 +119,7 @@
     "package:check": "npm run -s package:files | LC_ALL=C sort | diff vsix-files.txt -"
   },
   "devDependencies": {
+    "@plantuml/core": "1.2026.8",
     "@types/mocha": "^10.0.1",
     "@types/node": "^22.20.5",
     "@types/vscode": "^1.140.0",

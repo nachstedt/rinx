@@ -255,4 +255,44 @@ mod tests {
         // Then
         assert_eq!(found, RenderFindings::default());
     }
+
+    const CONFIGURED: &str = ".. plantuml::\n   :config: monochrome\n\n   A -> B\n";
+
+    #[test]
+    fn test_render_diagnostics_reports_a_preamble_the_site_does_not_declare() {
+        // Given
+        let document = rinx_parser::parse("index.rst", CONFIGURED);
+        let index = index_of(&[("index.rst", CONFIGURED)]);
+
+        // When
+        let found = render_diagnostics(&document, &index, &defaults()).reported;
+
+        // Then
+        let codes: Vec<DiagnosticCode> = found.iter().map(|diagnostic| diagnostic.code).collect();
+        assert_eq!(codes, [DiagnosticCode::UmlUnknownConfig]);
+    }
+
+    #[test]
+    fn test_render_diagnostics_finds_nothing_once_the_site_declares_the_preamble() {
+        // Given
+        let document = rinx_parser::parse("index.rst", CONFIGURED);
+        let index = index_of(&[("index.rst", CONFIGURED)]);
+        let config = SiteConfig {
+            uml_configs: std::collections::BTreeMap::from([(
+                "monochrome".to_string(),
+                "skinparam monochrome true".to_string(),
+            )]),
+            ..SiteConfig::default()
+        };
+        let settings = RenderSettings {
+            config: &config,
+            ..defaults()
+        };
+
+        // When / Then
+        assert_eq!(
+            render_diagnostics(&document, &index, &settings),
+            RenderFindings::default()
+        );
+    }
 }

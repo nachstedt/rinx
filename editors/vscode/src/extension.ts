@@ -31,6 +31,7 @@ import {
     debounced,
     ManifestDependencies,
 } from './manifests';
+import type { DiagramsMessage } from './diagrams';
 import { PanelClient, PreviewPanel } from './preview';
 import { IndexStatus, IndexStatusItem, STATUS_METHOD } from './status';
 
@@ -66,6 +67,8 @@ export interface RinxApi {
     previewHtml(): string | undefined;
     /** Follows `href` as a click on it in the preview panel does, if one is open. */
     followPreviewLink(href: string): Promise<void>;
+    /** What the preview panel last reported of the diagrams it drew, if it is open. */
+    previewDiagrams(): DiagramsMessage | undefined;
 }
 
 export function activate(context: vscode.ExtensionContext): RinxApi {
@@ -75,7 +78,7 @@ export function activate(context: vscode.ExtensionContext): RinxApi {
         outputChannel,
         statusItem,
         vscode.commands.registerCommand('rinx.showPreview', () => {
-            PreviewPanel.createOrShow(runningClient);
+            PreviewPanel.createOrShow(runningClient, context.extensionUri);
         }),
         vscode.commands.registerCommand('rinx.showLogs', () => {
             outputChannel.show();
@@ -92,6 +95,7 @@ export function activate(context: vscode.ExtensionContext): RinxApi {
         followPreviewLink: async (href) => {
             await PreviewPanel.currentPanel?.followLink(href);
         },
+        previewDiagrams: () => PreviewPanel.currentPanel?.diagrams,
     };
 }
 

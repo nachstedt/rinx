@@ -1,9 +1,12 @@
 # Everything is left out of the VSIX but what is listed below: the bundle
-# carries vscode-languageclient, so no node_modules ship. vsix-files.txt is
+# carries vscode-languageclient, so no node_modules ship, and the preview's
+# diagram engine is copied into dist/plantuml/ by `npm run bundle`
+# (scripts/copy-plantuml.mjs). vsix-files.txt is
 # the resulting list, which CI compares against. bin/ exists only while
 # `npm run package:bundled` packages a binary.
 **
 !dist/extension.js
+!dist/plantuml/**
 !README.md
 !LICENSE
 !bin/rinx

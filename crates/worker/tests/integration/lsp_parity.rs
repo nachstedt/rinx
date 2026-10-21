@@ -7,7 +7,7 @@
 //! both use the defaults they assume without a project: the `py` domain, no
 //! entity schema, no Jinja. Two small projects of their own check what only
 //! a project reveals: a Sphinx one, whose whole index the build's `index`
-//! action and `rinx lsp --check` both read, and a Bazel site, whose
+//! and `render` actions and `rinx lsp --check` all read, and a Bazel site, whose
 //! undeclared toctree entries, diagrams, images and downloads fail the
 //! build's actions and are the editor's errors under its manifest, and one of
 //! whose libraries renders its document as a Jinja template, whose warnings
@@ -318,6 +318,8 @@ fn project_build_findings(project: &Path, documents: &[&str], scratch: &Path) ->
                 &ast,
                 "--entity-schema",
                 schema,
+                // As the server parses one: no library to ask.
+                "--diagrams",
             ],
         );
         warnings.push_str(&stderr);
@@ -336,6 +338,36 @@ fn project_build_findings(project: &Path, documents: &[&str], scratch: &Path) ->
     let (_, stderr) = rinx(project, &args);
     warnings.push_str(&stderr);
 
+    // What rendering finds — a diagram the project cannot draw among it —
+    // as each page's render action reports it.
+    let root = repository_root();
+    let config = root.join("templates/default_config.toml");
+    let template = root.join("templates/default.html");
+    for (document, ast) in documents.iter().zip(&asts) {
+        let page = scratch.join(format!("{document}.html"));
+        let (_, stderr) = rinx(
+            project,
+            &[
+                "render",
+                "--input",
+                ast,
+                "--index",
+                index.to_str().expect("a UTF-8 path"),
+                "--doc-path",
+                document,
+                "--output",
+                page.to_str().expect("a UTF-8 path"),
+                "--config",
+                config.to_str().expect("a UTF-8 path"),
+                "--template",
+                template.to_str().expect("a UTF-8 path"),
+                "--entity-schema",
+                schema,
+            ],
+        );
+        warnings.push_str(&stderr);
+    }
+
     let mut findings = Findings::new();
     for line in warnings.lines() {
         let Some(rest) = line.strip_prefix("warning: ") else {
@@ -353,17 +385,19 @@ fn project_build_findings(project: &Path, documents: &[&str], scratch: &Path) ->
 #[test]
 fn test_the_editor_reports_what_the_index_reports() {
     // Given a project whose mistakes only the whole of it reveals: a toctree
-    // entry naming no document, a label two documents define, and a need
-    // linking to one no document declares
+    // entry naming no document, a label two documents define, a need
+    // linking to one no document declares, and diagrams the project cannot
+    // draw
     let project = repository_root().join("crates/worker/tests/parity_project");
     let scratch =
         std::env::temp_dir().join(format!("rinx_lsp_parity_project_{}", std::process::id()));
     std::fs::create_dir_all(&scratch).expect("a scratch directory");
 
-    // When — the build parses and indexes it; the server checks the folder
+    // When — the build parses, indexes and renders it; the server checks the
+    // folder
     let build = project_build_findings(
         &project,
-        &["index.rst", "labels.rst", "needs.rst"],
+        &["index.rst", "labels.rst", "needs.rst", "diagrams.rst"],
         &scratch,
     );
     let (stdout, _) = rinx(
@@ -397,15 +431,25 @@ fn test_the_editor_reports_what_the_index_reports() {
     assert_eq!(
         codes,
         BTreeSet::from([
+            "entity-flow.empty-result",
+            "entity-sequence.unknown-start",
             "entity.unknown-target",
             "target.duplicate-name",
-            "toctree.missing-document"
+            "toctree.missing-document",
+            "uml.template-error",
+            "uml.unknown-entity",
         ])
     );
     // — each finding on the line to change, which a positionless one is not:
     // `:implements:` is `needs.rst`'s eleventh line
     assert!(
         build[&project.join("needs.rst")].contains(&(10, 3, "entity.unknown-target".to_string())),
+        "{build:?}"
+    );
+    // — and a template error on its own line of the template, `diagrams.rst`'s
+    // fifteenth, rather than on the directive
+    assert!(
+        build[&project.join("diagrams.rst")].contains(&(14, 3, "uml.template-error".to_string())),
         "{build:?}"
     );
     assert_eq!(editor, build);

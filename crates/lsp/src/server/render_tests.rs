@@ -247,3 +247,114 @@ fn test_writing_the_missing_document_clears_the_toctree_entry() {
         Some(Vec::new())
     );
 }
+
+/// A document drawing one templated diagram whose template's second line,
+/// document line 6 (0-based 5), is no valid Jinja.
+const BROKEN_TEMPLATE: &str = "Home\n====\n\n.. needuml::\n\n   A -> B\n   {{ unterminated\n";
+
+#[test]
+fn test_a_diagram_asking_for_no_entity_is_reported_on_the_directive() {
+    // Given
+    let text = "Home\n====\n\n.. needuml::\n\n   {{ need('REQ_404').title }}\n";
+    let (workspace, mut state) = scanned("render_uml_entity", &[("index.rst", text)]);
+    handle_notification(&mut state, workspace.open("index.rst", text));
+
+    // When
+    let rendered = render_all(&mut state);
+
+    // Then — no JVM: the template was expanded, nothing was compiled
+    assert_eq!(
+        lines_for(&workspace, &rendered, "index.rst"),
+        [("uml.unknown-entity".to_string(), 3)]
+    );
+}
+
+#[test]
+fn test_a_template_error_is_reported_on_the_template_line_it_is_on() {
+    // Given
+    let (workspace, mut state) = scanned("render_uml_template", &[("index.rst", BROKEN_TEMPLATE)]);
+    handle_notification(&mut state, workspace.open("index.rst", BROKEN_TEMPLATE));
+
+    // When
+    let rendered = render_all(&mut state);
+
+    // Then
+    assert_eq!(
+        lines_for(&workspace, &rendered, "index.rst"),
+        [("uml.template-error".to_string(), 6)]
+    );
+}
+
+#[test]
+fn test_a_template_error_in_an_included_diagram_is_shown_in_the_fragment() {
+    // Given — the diagram is written in a fragment, two lines into it
+    let fragment = "Intro.\n\n.. needuml::\n\n   {{ unterminated\n";
+    let (workspace, mut state) = scanned(
+        "render_uml_fragment",
+        &[
+            ("index.rst", "Home\n====\n\n.. include:: part.inc\n"),
+            ("part.inc", fragment),
+        ],
+    );
+
+    // When
+    handle_notification(&mut state, workspace.open("part.inc", fragment));
+    let rendered = render_all(&mut state);
+
+    // Then — on the fragment's line, not the includer's
+    assert_eq!(
+        lines_for(&workspace, &rendered, "part.inc"),
+        [("uml.template-error".to_string(), 4)]
+    );
+}
+
+#[test]
+fn test_a_flowchart_matching_nothing_is_reported() {
+    // Given — a project with no entities at all
+    let text = "Home\n====\n\n.. entity-flow::\n   :caption: Everything\n";
+    let (workspace, mut state) = scanned("render_flow_empty", &[("index.rst", text)]);
+    handle_notification(&mut state, workspace.open("index.rst", text));
+
+    // When
+    let rendered = render_all(&mut state);
+
+    // Then
+    assert_eq!(
+        lines_for(&workspace, &rendered, "index.rst"),
+        [("entity-flow.empty-result".to_string(), 3)]
+    );
+}
+
+#[test]
+fn test_a_noqa_silences_a_diagrams_finding() {
+    // Given — scoped to the directive's block, which holds the template line
+    let text = BROKEN_TEMPLATE.replace(
+        ".. needuml::",
+        ".. noqa: uml.template-error\n\n.. needuml::",
+    );
+    let (workspace, mut state) = scanned("render_uml_noqa", &[("index.rst", &text)]);
+    handle_notification(&mut state, workspace.open("index.rst", &text));
+
+    // When
+    let rendered = render_all(&mut state);
+
+    // Then
+    assert_eq!(lines_for(&workspace, &rendered, "index.rst"), []);
+}
+
+#[test]
+fn test_fixing_the_template_clears_its_error() {
+    // Given — a rendered template error
+    let (workspace, mut state) = scanned("render_uml_fixed", &[("index.rst", BROKEN_TEMPLATE)]);
+    handle_notification(&mut state, workspace.open("index.rst", BROKEN_TEMPLATE));
+    render_all(&mut state);
+
+    // When
+    let fixed = BROKEN_TEMPLATE.replace("{{ unterminated", "B -> C");
+    let mut replies = handle_notification(&mut state, workspace.change("index.rst", 2, &fixed));
+    replies.extend(render_all(&mut state));
+
+    // Then — the edit's publish drops it, and the render finds nothing new
+    assert_eq!(workspace.codes_for(&replies, "index.rst"), Some(Vec::new()));
+    assert!(!state.has_pending_renders());
+}

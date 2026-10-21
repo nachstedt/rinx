@@ -13,32 +13,67 @@
 //! with its own idea of the text would emit an `<img>` pointing at a file
 //! nothing compiled.
 
-use rinx_ast::{HashedContent, Uml};
-use rinx_uml::{UmlContext, expand};
+use rinx_ast::{HashedContent, Position, Span, Uml};
+use rinx_uml::{UmlContext, UmlError, expand};
 
 use crate::RenderCtx;
 use crate::uml_error::DiagramError;
 
-use super::diagram_figure::{DiagramFigure, record_diagram_source, render_diagram_figure};
+use super::diagram_figure::{
+    DiagramFigure, record_diagram_source, render_diagram_failure, render_diagram_figure,
+};
 
-/// Expands the diagram's template, recording a failure against the directive.
-fn expanded_content(uml: &Uml, ctx: &mut RenderCtx) -> Option<HashedContent> {
+/// Expands the diagram's template, recording a failure against the directive
+/// and returning its message.
+fn expanded_content(uml: &Uml, ctx: &mut RenderCtx) -> Result<HashedContent, String> {
     let uml_ctx =
         UmlContext::new(ctx.index, ctx.schema, ctx.original_doc_path).with_configs(ctx.uml_configs);
     match expand(uml, &uml_ctx) {
         Ok(content) => {
             record_diagram_source(ctx, &content);
-            Some(content)
+            Ok(content)
         }
         Err(error) => {
-            ctx.diagram_errors.push(DiagramError {
+            let failure = DiagramError {
                 directive: uml.source.as_str().to_string(),
+                span: template_error_span(uml, &error).or(uml.span),
                 error: error.into(),
-                span: uml.span,
-            });
-            None
+            };
+            let message = failure.message();
+            ctx.diagram_errors.push(failure);
+            Err(message)
         }
     }
+}
+
+/// The line of the document a template error was found on, when the engine
+/// named a line of the template and the parser recorded where the template
+/// starts — else `None`, and the error is reported on the directive.
+///
+/// The span covers that template line as written, in the file the template
+/// was written in, so an error inside an `.. include::`d fragment is shown
+/// there. A line past the template's end — `MiniJinja` counts the end of
+/// input as a line of its own — is clamped to its last line.
+fn template_error_span(uml: &Uml, error: &UmlError) -> Option<Span> {
+    let UmlError::Template {
+        line: Some(line), ..
+    } = error
+    else {
+        return None;
+    };
+    let start = uml.template_span?;
+    let lines: Vec<&str> = uml.template.split('\n').collect();
+    let index = line.checked_sub(1)?.min(lines.len().checked_sub(1)?);
+    let offset = u32::try_from(index).ok()?;
+    let width = u32::try_from(lines[index].chars().count()).ok()?;
+    let line = start.start.line + offset;
+    Some(
+        Span::new(
+            Position::new(line, start.start.column),
+            Position::new(line, start.start.column + width),
+        )
+        .with_file(start.file),
+    )
 }
 
 /// Renders a diagram directive.
@@ -47,8 +82,12 @@ pub(super) fn render_uml_directive(html: &mut String, uml: &Uml, ctx: &mut Rende
     // is no picture to point at. The failure is already recorded against the
     // directive; rendering a broken `<img>` on top of it would say the same
     // thing twice, once unhelpfully.
-    let Some(content) = expanded_content(uml, ctx) else {
-        return;
+    let content = match expanded_content(uml, ctx) {
+        Ok(content) => content,
+        Err(message) => {
+            render_diagram_failure(html, ctx, &message, Some(&uml.template));
+            return;
+        }
     };
 
     render_diagram_figure(
@@ -132,6 +171,159 @@ mod tests {
 
     fn diagram() -> Uml {
         Uml::new(UmlSource::PlantUml, "A -> B".to_string())
+    }
+
+    /// A templated diagram whose template starts at line 5, column 4.
+    fn templated(template: &str) -> Uml {
+        Uml {
+            template_span: Some(Span::new(Position::new(5, 4), Position::new(5, 10))),
+            ..Uml::new(UmlSource::NeedUml, template.to_string())
+        }
+    }
+
+    fn template_error(line: Option<usize>) -> UmlError {
+        UmlError::Template {
+            message: "syntax error".to_string(),
+            line,
+        }
+    }
+
+    #[test]
+    fn test_template_error_span_is_the_template_line_the_engine_named() {
+        // Given
+        let uml = templated("A -> B\n{{ broken\nC -> D");
+
+        // When
+        let span = template_error_span(&uml, &template_error(Some(2)));
+
+        // Then — line 2 of the template is line 6 of the document
+        assert_eq!(
+            span,
+            Some(Span::new(Position::new(6, 4), Position::new(6, 13)))
+        );
+    }
+
+    #[test]
+    fn test_template_error_span_keeps_the_file_the_template_was_written_in() {
+        // Given
+        let file = Some(rinx_ast::FileId::new(1));
+        let mut uml = templated("{{ broken");
+        uml.template_span = uml.template_span.map(|span| span.with_file(file));
+
+        // When
+        let span = template_error_span(&uml, &template_error(Some(1)));
+
+        // Then
+        assert_eq!(span.map(|span| span.file), Some(file));
+    }
+
+    #[test]
+    fn test_template_error_span_clamps_a_line_past_the_end_to_the_last_one() {
+        // Given
+        let uml = templated("A -> B\n{% if x %}");
+
+        // When
+        let span = template_error_span(&uml, &template_error(Some(3)));
+
+        // Then
+        assert_eq!(span.map(|span| span.start.line), Some(6));
+    }
+
+    #[test]
+    fn test_template_error_span_is_none_without_a_line() {
+        // Given
+        let uml = templated("{{ broken");
+
+        // When / Then
+        assert_eq!(template_error_span(&uml, &template_error(None)), None);
+    }
+
+    #[test]
+    fn test_template_error_span_is_none_without_a_template_span() {
+        // Given
+        let uml = Uml::new(UmlSource::NeedUml, "{{ broken".to_string());
+
+        // When / Then
+        assert_eq!(template_error_span(&uml, &template_error(Some(1))), None);
+    }
+
+    #[test]
+    fn test_template_error_span_is_none_for_an_error_that_is_not_the_templates() {
+        // Given
+        let uml = templated("{{ need('X') }}");
+
+        // When / Then
+        assert_eq!(
+            template_error_span(&uml, &UmlError::UnknownEntity("X".to_string())),
+            None
+        );
+    }
+
+    /// Renders `uml` as the preview shows a diagram: as its text.
+    fn render_as_source(uml: &Uml) -> String {
+        let index = ProjectIndex::default();
+        with_ctx_for(
+            &index,
+            "index.rst",
+            ResolvedLanguage::default(),
+            &EmbeddedAssets::new(),
+            |ctx| {
+                ctx.diagram_pictures = crate::DiagramPictures::Source;
+                let mut html = String::new();
+                render_uml_directive(&mut html, uml, ctx);
+                html
+            },
+        )
+    }
+
+    #[test]
+    fn test_a_diagram_shown_as_source_puts_its_text_where_the_picture_would_be() {
+        // Given
+        let uml = Uml {
+            caption: Some("Flow".to_string()),
+            width: Some(LengthOrPercentage::new("200px").expect("a valid length")),
+            ..diagram()
+        };
+
+        // When
+        let html = render_as_source(&uml);
+
+        // Then — the wrapper and caption as ever, the `<img>` replaced
+        assert_eq!(
+            html,
+            "<div class=\"plantuml-diagram\">\n  <pre class=\"plantuml-source\" data-rinx-plantuml \
+             style=\"width: 200px\"><code>@startuml\nA -&gt; B\n@enduml</code></pre>\n  <p \
+             class=\"caption\">Flow</p>\n</div>\n"
+        );
+    }
+
+    #[test]
+    fn test_a_diagram_that_failed_to_expand_shows_why_when_shown_as_source() {
+        // Given — an architecture diagram outside any entity, which is refused
+        let uml = Uml::new(UmlSource::EntityArch, "{{ need.id }}".to_string());
+
+        // When
+        let html = render_as_source(&uml);
+
+        // Then — the warning's words, and the template quoted below them
+        assert!(html.contains("class=\"directive-error\""), "{html}");
+        assert!(
+            html.contains("entity-arch: an architecture diagram"),
+            "{html}"
+        );
+        assert!(
+            html.contains("<pre class=\"directive-error-source\">{{ need.id }}</pre>"),
+            "{html}"
+        );
+    }
+
+    #[test]
+    fn test_a_diagram_that_failed_to_expand_shows_nothing_in_the_build() {
+        // Given
+        let uml = Uml::new(UmlSource::EntityArch, "{{ need.id }}".to_string());
+
+        // When / Then — its warning is in the build's log
+        assert_eq!(render(&uml), "");
     }
 
     #[test]

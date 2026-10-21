@@ -244,3 +244,49 @@ fn test_a_failure_carries_the_directives_own_position() {
     // Then
     assert_eq!(errors[0].span, Some(span));
 }
+
+/// Renders `flow` over `index` as the preview shows a diagram: as its text.
+fn render_as_source(index: &ProjectIndex, flow: &EntityFlow) -> String {
+    with_ctx_for(
+        index,
+        "index.rst",
+        ResolvedLanguage::default(),
+        &EmbeddedAssets::new(),
+        |ctx| {
+            ctx.diagram_pictures = crate::DiagramPictures::Source;
+            let mut html = String::new();
+            render_entity_flow(&mut html, flow, ctx);
+            html
+        },
+    )
+}
+
+#[test]
+fn test_a_flowchart_shown_as_source_carries_its_generated_text() {
+    // Given
+    let index = project();
+
+    // When
+    let html = render_as_source(&index, &linking_flow());
+
+    // Then — the text that exists nowhere else, for the webview to draw
+    assert!(
+        html.contains("<pre class=\"plantuml-source\" data-rinx-plantuml><code>@startuml"),
+        "{html}"
+    );
+    assert!(!html.contains("<img"), "{html}");
+}
+
+#[test]
+fn test_a_flowchart_that_drew_nothing_shows_why_when_shown_as_source() {
+    // Given
+    let index = ProjectIndex::default();
+
+    // When
+    let html = render_as_source(&index, &linking_flow());
+
+    // Then — the warning's own words, and nothing written to quote
+    assert!(html.contains("class=\"directive-error\""), "{html}");
+    assert!(html.contains("entity-flow: no entity matched"), "{html}");
+    assert!(!html.contains("<pre"), "{html}");
+}

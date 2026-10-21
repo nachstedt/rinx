@@ -34,7 +34,7 @@ use rinx_ast::Document;
 use rinx_entity::EntitySchema;
 use rinx_index::ProjectIndex;
 use rinx_renderer::config::SiteConfig;
-use rinx_renderer::{EmbeddedAssets, ImageLocator, PageAssets};
+use rinx_renderer::{DiagramPictures, EmbeddedAssets, ImageLocator, PageAssets};
 use serde::{Deserialize, Serialize};
 
 use crate::project::{BundledFiles, DEFAULT_ROOT_DOC, PageFile, Presentation};
@@ -219,6 +219,13 @@ pub fn render_preview(
         PageAssets {
             embedded: &embeddable,
             images: images.as_ref().map(|images| images as &dyn ImageLocator),
+            // A webview given a resource root draws each diagram itself; a
+            // page without one is the build's own.
+            diagrams: if images.is_some() {
+                DiagramPictures::Source
+            } else {
+                DiagramPictures::Compiled
+            },
         },
         settings.schema,
         &entity_templates,
@@ -521,6 +528,42 @@ mod tests {
             page.contains("src=\"https://webview/work/logo.svg\""),
             "{page}"
         );
+    }
+
+    const DIAGRAM: &str = "Intro\n=====\n\n.. plantuml::\n\n   A -> B\n";
+
+    #[test]
+    fn test_render_preview_puts_a_diagrams_text_on_the_page_for_the_webview_to_draw() {
+        // Given — the server compiles no diagram, so `_images/` holds none
+
+        // When
+        let page = preview_of(
+            "index.rst",
+            DIAGRAM,
+            &Presentation::default(),
+            Some("https://webview/"),
+            &[],
+        )
+        .unwrap();
+
+        // Then
+        assert!(
+            page.contains("<pre class=\"plantuml-source\" data-rinx-plantuml><code>@startuml"),
+            "{page}"
+        );
+        assert!(!page.contains("_images/"), "{page}");
+    }
+
+    #[test]
+    fn test_render_preview_links_a_diagram_into_the_site_without_a_resource_root() {
+        // Given — as the build writes the page, which the parity test compares
+
+        // When
+        let page = preview_of("index.rst", DIAGRAM, &Presentation::default(), None, &[]).unwrap();
+
+        // Then
+        assert!(page.contains("src=\"_images/"), "{page}");
+        assert!(!page.contains("data-rinx-plantuml"), "{page}");
     }
 
     #[test]

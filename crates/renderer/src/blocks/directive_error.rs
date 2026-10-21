@@ -36,13 +36,29 @@ pub(super) fn render_directive_error(html: &mut String, directive: &Directive) {
         } => (name, argument, body, message.clone()),
         _ => return,
     };
+    render_error_block(
+        html,
+        &message,
+        Some(&directive_source(name, argument, body)),
+    );
+}
+
+/// The visible error block itself: `message`, and the source it is about
+/// quoted below it when there is one to quote.
+///
+/// Shared with the preview's failed diagrams
+/// (`super::diagram_figure::render_diagram_failure`), which a page shows in
+/// the same words and the same place a reader already knows.
+pub(super) fn render_error_block(html: &mut String, message: &str, source: Option<&str>) {
     html.push_str("<div class=\"directive-error\">\n<p class=\"directive-error-message\">");
-    html.push_str(&html_escape::encode_text(&message));
-    html.push_str("</p>\n<pre class=\"directive-error-source\">");
-    html.push_str(&html_escape::encode_text(&directive_source(
-        name, argument, body,
-    )));
-    html.push_str("</pre>\n</div>\n");
+    html.push_str(&html_escape::encode_text(message));
+    html.push_str("</p>\n");
+    if let Some(source) = source {
+        html.push_str("<pre class=\"directive-error-source\">");
+        html.push_str(&html_escape::encode_text(source));
+        html.push_str("</pre>\n");
+    }
+    html.push_str("</div>\n");
 }
 
 /// Reassembles the directive as its author would have written it: the `.. `
@@ -165,5 +181,34 @@ mod tests {
 
         // Then
         assert_eq!(source, ".. mermaid::");
+    }
+
+    #[test]
+    fn test_render_error_block_quotes_the_source_below_the_message() {
+        // Given
+        let mut html = String::new();
+
+        // When
+        render_error_block(&mut html, "it <broke>", Some("A -> B"));
+
+        // Then
+        assert_eq!(
+            html,
+            "<div class=\"directive-error\">\n<p class=\"directive-error-message\">it \
+             &lt;broke&gt;</p>\n<pre class=\"directive-error-source\">A -&gt; B</pre>\n</div>\n"
+        );
+    }
+
+    #[test]
+    fn test_render_error_block_without_a_source_shows_only_the_message() {
+        // Given
+        let mut html = String::new();
+
+        // When
+        render_error_block(&mut html, "nothing matched", None);
+
+        // Then
+        assert!(!html.contains("<pre"), "{html}");
+        assert!(html.contains("nothing matched"), "{html}");
     }
 }

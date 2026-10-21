@@ -1,4 +1,9 @@
 LICENSE
 README.md
 dist/extension.js
+dist/plantuml/LICENSE
+dist/plantuml/openiconic.js
+dist/plantuml/plantuml.js
+dist/plantuml/themes.js
+dist/plantuml/viz-global.js
 package.json

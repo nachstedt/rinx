@@ -41,6 +41,9 @@ pub(super) fn parse_uml(
 
     let mut uml = Uml {
         span: directive_span,
+        template_span: unindented_lines
+            .get(body_start)
+            .and_then(|first| ctx.line_span(body_start, first)),
         // Whatever the spelling, a diagram written inside an entity records
         // the one it sits in: the expander needs it, and this is the only
         // phase that still knows it.
@@ -574,6 +577,46 @@ mod tests {
             uml.span.expect("the directive has a position").start.line,
             3
         );
+    }
+
+    #[test]
+    fn test_the_template_span_is_the_first_template_line() {
+        // Given — the body starts two lines below the marker
+        let input = "Intro.\n\n.. plantuml::\n\n   A -> B\n   B -> C\n";
+
+        // When
+        let (uml, _) = parse_document(input);
+
+        // Then — line 5, from the template's own indentation to its end
+        let span = uml.template_span.expect("the template has a position");
+        assert_eq!((span.start.line, span.start.column), (5, 4));
+        assert_eq!((span.end.line, span.end.column), (5, 10));
+    }
+
+    #[test]
+    fn test_the_template_span_skips_the_option_block_and_the_blank_line_after_it() {
+        // Given
+        let input = ".. needuml::\n   :debug:\n   :caption: Flow\n\n   {{ uml(\"x\") }}\n";
+
+        // When
+        let (uml, _) = parse_document(input);
+
+        // Then
+        let span = uml.template_span.expect("the template has a position");
+        assert_eq!(span.start.line, 5);
+        assert_eq!(uml.template.lines().next(), Some("{{ uml(\"x\") }}"));
+    }
+
+    #[test]
+    fn test_a_diagram_with_no_template_has_no_template_span() {
+        // Given
+        let input = ".. plantuml::\n   :debug:\n";
+
+        // When
+        let (uml, _) = parse_document(input);
+
+        // Then
+        assert_eq!(uml.template_span, None);
     }
 
     #[test]

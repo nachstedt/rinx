@@ -95,6 +95,13 @@ pub struct Uml {
     /// none, which is why a broken diagram could not be located at all.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub span: Option<Span>,
+    /// Where the template's first line was written, so a template error the
+    /// engine places on a line of the template can be reported on that line
+    /// of the document rather than on the directive. A span rather than a
+    /// line number because it carries the file of an `.. include::`d
+    /// fragment.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub template_span: Option<Span>,
 }
 
 impl Uml {
@@ -117,6 +124,7 @@ impl Uml {
             name: None,
             entity: None,
             span: None,
+            template_span: None,
         }
     }
 
@@ -145,6 +153,7 @@ impl Uml {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::span::Position;
 
     #[test]
     fn test_new_carries_the_spelling_and_template_with_no_options() {
@@ -167,6 +176,7 @@ mod tests {
         assert_eq!(uml.name, None);
         assert_eq!(uml.entity, None);
         assert_eq!(uml.span, None);
+        assert_eq!(uml.template_span, None);
     }
 
     #[test]
@@ -230,6 +240,7 @@ mod tests {
             name: Some(TargetName::new("my-diagram")),
             entity: Some(EntityId::new("REQ_001").expect("a valid id")),
             span: None,
+            template_span: Some(Span::new(Position::new(4, 4), Position::new(4, 23))),
         };
 
         // When
