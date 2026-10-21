@@ -38,7 +38,7 @@ finished one 🔶. A heading with no marker means the step has not started.
   #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
   #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315), #18 (PR #317),
   #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333),
-  #40 (PR #335) and #24.
+  #40 (PR #335) and #24 (PR #340).
 - **Next: #25, directive and option completion.**
 
 The pull request that finishes a step also updates this section and the
@@ -830,7 +830,7 @@ Not done here: a link opens its document at the first line, not the label's,
 until #28/#29 give definitions their spans. The panel keeps no history to go
 back through (issue #334).
 
-### 24. Diagram template errors ✅
+### 24. Diagram template errors ✅ (#340)
 
 **You experience:** mistakes in `.. uml::` and `.. entity-flow::` are
 underlined, the preview draws the diagrams, and no JVM runs.
