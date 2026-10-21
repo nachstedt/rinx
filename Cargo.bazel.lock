@@ -1,5 +1,5 @@
 {
-  "checksum": "a9cf4c72a1c85321c46d48cf4012552b5adfcc8a0c122425a0489d3721c9c5df",
+  "checksum": "969d819cf76174b643536d367cc658bf67565ba997a49c52ec29deaa4ece4ca0",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -5380,6 +5380,10 @@
           {
             "id": "anyhow 1.0.104",
             "target": "anyhow"
+          },
+          {
+            "id": "base64 0.23.1",
+            "target": "base64"
           },
           {
             "id": "crossbeam-channel 0.5.17",

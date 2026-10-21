@@ -42,9 +42,12 @@ pub use discover::{
 };
 pub use index::{IndexedDocument, Project};
 pub use inventories::Fetched;
+pub(crate) use model::DEFAULT_ROOT_DOC;
 #[cfg(test)]
 pub use model::{LibraryModel, Listing, ProjectSettings};
-pub use model::{Membership, ParseSettings, ProjectModel, ProjectSource, Splice};
+pub use model::{
+    Membership, PageFile, ParseSettings, Presentation, ProjectModel, ProjectSource, Splice,
+};
 pub use scan::{ScannedProject, scan_projects};
 #[cfg(test)]
 pub use scan::{parse_project_documents, scan_folder};

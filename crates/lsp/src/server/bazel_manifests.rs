@@ -3,7 +3,7 @@
 //!
 //! A `rinx_site`'s `lsp_manifest` output group describes every library's
 //! sources and parse settings; building it, and knowing where Bazel put it,
-//! is the editor's, which already runs Bazel for the preview. The server
+//! is the editor's, which already runs Bazel to find the binary. The server
 //! never runs Bazel and never queries its graph.
 //!
 //! - **The VS Code extension builds.** A client passing the `bazelManifests`

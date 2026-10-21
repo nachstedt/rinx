@@ -7,8 +7,8 @@
 //!
 //! - its **external** targets (`.. _name: https://…`), read from the
 //!   document itself. They are never put in the shared [`ProjectIndex`]: two
-//!   documents may each give a name a different URL. That is also why the
-//!   live preview finds them without any index at all.
+//!   documents may each give a name a different URL. That is also why a
+//!   document rendered on its own finds them without any index at all.
 //! - its **internal** targets — a `.. _label:`, a `:name:`, an entity —
 //!   read from the index entries recorded for this document, so the analyzer
 //!   stays the one place that decides what a target is and where it anchors.

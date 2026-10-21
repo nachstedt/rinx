@@ -232,7 +232,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Render a declared vocabulary's parts in the order the schema declares them, not in document order or a map's key order; instances of one type should be comparable at a glance.
 - When adding a rule for a class on an element a generic selector already styles (`.document code`, `table th`), match that selector's specificity or the new rule silently loses.
 - When two phases must agree on a derived value, have both call one pure function rather than passing a sidecar between them; a sidecar makes the agreement a protocol, a shared function makes it impossible to break.
-- When a second construct needs the same reporting plumbing, widen the existing error type with a code field rather than adding a parallel one; the duplicate would have to re-derive every downstream rule, including the ones nothing tests, like staying quiet in live preview.
+- When a second construct needs the same reporting plumbing, widen the existing error type with a code field rather than adding a parallel one; the duplicate would have to re-derive every downstream rule, including the ones nothing tests.
 - A value that two callers each supply separately is the one input they can supply differently — put it on the data being processed, not in a context each of them fills in.
 - Measure a plausible-sounding build optimization before keeping it; batching many small Bazel actions into one action with many outputs can be slower than the actions it replaced.
 - Record what an accepted regression actually costs, measured, in the ADR that accepts it — "some overhead" is not a decision anyone can revisit later.
@@ -260,6 +260,8 @@ entry under the heading it belongs to, as a single short sentence.
 - When renaming, rename consistently everywhere (package, library, build targets, docs) rather than keeping the old name alive as a compatibility shim.
 - A test asserting that a build step is or is not re-run detects it with `-s` (did the action's key change), never with `(cached)`, whose answer depends on what a disk or remote cache happens to hold.
 - Keep manual checklists (e.g. the PR template) to what a human must judge; never list a check CI already enforces.
+- Remove a code path once its last caller is gone, together with the helpers and tests only it used, rather than keeping it for hypothetical callers.
+- Defer a known gap only to a roadmap step whose stated scope covers it; when none does, add a step of its own rather than stretching an unrelated one.
 
 ## Python
 

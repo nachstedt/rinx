@@ -12,7 +12,7 @@
 //!
 //! An unreadable file is recorded as well as diagnosed, because the parser
 //! itself is deliberately error-resilient: it degrades the directive and
-//! carries on, which is right for the live preview but would otherwise let a
+//! carries on, which is right for the language server but would otherwise let a
 //! build silently ship a page with a whole table or section missing.
 //! [`DocumentRelativeFiles::failures`] is what lets the `parse` subcommand
 //! turn that into a failed build, the same way a missing diagram image does.

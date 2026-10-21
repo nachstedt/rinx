@@ -6,15 +6,21 @@
 //! nothing is pending, so the result holds both tiers of every document. Over
 //! a connection the same would need a timeout to guess when rendering is
 //! done, since a render that changes nothing publishes nothing.
+//!
+//! It also times the preview of the documents it is asked to, each right
+//! after an edit, which is how the preview's latency is measured.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use lsp_server::{Message, Notification};
-use lsp_types::notification::{DidOpenTextDocument, Notification as _, PublishDiagnostics};
+use lsp_types::notification::{
+    DidChangeTextDocument, DidOpenTextDocument, Notification as _, PublishDiagnostics,
+};
 use lsp_types::{
-    DidOpenTextDocumentParams, Position, PublishDiagnosticsParams, Range, TextDocumentItem, Uri,
+    DidChangeTextDocumentParams, DidOpenTextDocumentParams, Position, PublishDiagnosticsParams,
+    Range, TextDocumentContentChangeEvent, TextDocumentItem, Uri, VersionedTextDocumentIdentifier,
 };
 use serde::Serialize;
 
@@ -39,10 +45,25 @@ pub struct FolderCheck {
     /// any, with their edits — what a script applies to fix a build.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub quick_fixes: BTreeMap<Uri, Vec<lsp_types::CodeAction>>,
+    /// How each document [`CheckOptions::previews`] names was previewed.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub previews: BTreeMap<Uri, PreviewTiming>,
 }
 
-/// What a check grants that an editor would: an interpreter for `conf.py`,
-/// and the manifests of the folder's Bazel sites.
+/// How long previewing a document took right after an edit to it — the
+/// latency an author waits for between typing and the page.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct PreviewTiming {
+    /// From the edit to the page: the parse, the fold and the render.
+    pub milliseconds: f64,
+    /// Why no page was rendered, if none was.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+/// What a check grants that an editor would — an interpreter for `conf.py`,
+/// and the manifests of the folder's Bazel sites — and which previews it
+/// times.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct CheckOptions {
     /// The interpreter each `conf.py` that reading falls short for runs in.
@@ -50,6 +71,8 @@ pub struct CheckOptions {
     /// The `lsp_manifest` files of the folder's sites, their files found
     /// under the folder.
     pub manifests: Vec<PathBuf>,
+    /// The documents whose preview is timed, absolute.
+    pub previews: Vec<PathBuf>,
 }
 
 /// Scans `root`, a workspace folder, opens every document its projects
@@ -103,10 +126,32 @@ pub fn check_folder(root: &Path, options: &CheckOptions) -> FolderCheck {
             (!fixes.is_empty()).then_some((uri, fixes))
         })
         .collect();
+    let previews = options
+        .previews
+        .iter()
+        .filter_map(|path| Some((file_uri(path)?, std::fs::read_to_string(path).ok()?)))
+        .map(|(uri, text)| {
+            let timing = time_preview(&mut state, &uri, text);
+            (uri, timing)
+        })
+        .collect();
     FolderCheck {
         documents: documents.len(),
         published: last_published(&messages),
         quick_fixes,
+        previews,
+    }
+}
+
+/// How long previewing the open document `uri` takes after an edit leaving
+/// it holding `text`.
+fn time_preview(state: &mut ServerState, uri: &Uri, text: String) -> PreviewTiming {
+    let started = Instant::now();
+    handle_notification(state, did_change(uri.clone(), text));
+    let page = state.preview(uri, None);
+    PreviewTiming {
+        milliseconds: started.elapsed().as_secs_f64() * 1000.0,
+        error: page.err().map(|refusal| refusal.to_string()),
     }
 }
 
@@ -116,6 +161,21 @@ fn did_open(uri: Uri, text: String) -> Notification {
         DidOpenTextDocument::METHOD.to_string(),
         DidOpenTextDocumentParams {
             text_document: TextDocumentItem::new(uri, "restructuredtext".to_string(), 1, text),
+        },
+    )
+}
+
+/// A `didChange` replacing the text of the document at `uri` with `text`.
+fn did_change(uri: Uri, text: String) -> Notification {
+    Notification::new(
+        DidChangeTextDocument::METHOD.to_string(),
+        DidChangeTextDocumentParams {
+            text_document: VersionedTextDocumentIdentifier::new(uri, 2),
+            content_changes: vec![TextDocumentContentChangeEvent {
+                range: None,
+                range_length: None,
+                text,
+            }],
         },
     )
 }
@@ -233,6 +293,34 @@ mod tests {
                 vec!["Add //:guide to the deps of //:index"]
             )]
         );
+    }
+
+    #[test]
+    fn test_check_folder_times_the_preview_of_each_document_it_names() {
+        // Given
+        let workspace = Workspace::new(
+            "check_folder_previews",
+            &[
+                ("index.rst", "Home\n====\n"),
+                ("other.rst", "Other\n=====\n"),
+            ],
+        );
+        let options = CheckOptions {
+            previews: vec![workspace.root.join("index.rst")],
+            ..CheckOptions::default()
+        };
+
+        // When
+        let check = check_folder(&workspace.root, &options);
+
+        // Then — only the document named, previewed without an error
+        let timed: Vec<(&Uri, Option<&String>)> = check
+            .previews
+            .iter()
+            .map(|(uri, timing)| (uri, timing.error.as_ref()))
+            .collect();
+        assert_eq!(timed, [(&workspace.uri("index.rst"), None)]);
+        assert!(check.previews[&workspace.uri("index.rst")].milliseconds > 0.0);
     }
 
     #[test]

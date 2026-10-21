@@ -81,27 +81,12 @@
         "rinx.autoDiscover": {
           "type": "boolean",
           "default": true,
-          "description": "Automatically discover configuration from Bazel. Requires `bazel` to be on the PATH."
+          "description": "Whether the extension runs Bazel: to find the `rinx` binary a Bazel workspace builds, and to build its sites' manifests for the language server. Requires `bazel` to be on the PATH."
         },
         "rinx.site": {
           "type": "string",
           "default": "",
-          "description": "The `rinx_site` this workspace is about, such as `//docs:site`: the preview uses it without asking, and a document several sites list belongs to it in the language server. When empty, the site the preview was pointed at decides, and otherwise the first by label."
-        },
-        "rinx.configPath": {
-          "type": "string",
-          "default": "rinx.toml",
-          "description": "Fallback path to the rinx.toml config file (used when autoDiscover is disabled or fails)"
-        },
-        "rinx.templatePath": {
-          "type": "string",
-          "default": "templates/default.html",
-          "description": "Fallback path to the HTML template used for rendering (used when autoDiscover is disabled or fails)"
-        },
-        "rinx.indexPath": {
-          "type": "string",
-          "default": "bazel-bin/Doc/site.project.index",
-          "description": "Fallback path to the global project index (used when autoDiscover is disabled or fails)"
+          "description": "The `rinx_site` this workspace is about, such as `//docs:site`: a document several sites list belongs to it in the language server, and is previewed as part of it. When empty, the first site by label."
         },
         "rinx.previewMode": {
           "type": "string",

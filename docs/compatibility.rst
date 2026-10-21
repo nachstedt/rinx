@@ -788,9 +788,8 @@ Across domains
      - ✅
      -
    * - Default domain for unprefixed directives and roles
-     - 🔶
-     - - The VS Code preview always uses ``py``, ignoring the library's
-         ``default_domain``.
+     - ✅
+     -
    * - Target resolution order
      - ✅ ℹ️
      - - The requested object type is checked in every search tier.

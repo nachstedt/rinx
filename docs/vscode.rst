@@ -1,47 +1,40 @@
 .. _vscode:
 
-VS Code Extension Architecture for Rinx
-=======================================
+VS Code Extension
+=================
 
-This document outlines the proposed architecture for a high-performance VS Code extension providing live previews for ``rinx`` documentation. The extension also runs the ``rinx`` language server, which underlines problems as you type (see :ref:`vscode-diagnostics` below).
-
-Core Philosophy
----------------
-
-The extension prioritizes **instant feedback** (sub-100ms latency) by bypassing the full Bazel build graph during content editing. It leverages the modular design of the ``rinx`` binary to perform "dirty" but fast renders.
-
-Architecture Overview
----------------------
-
-The extension acts as an orchestrator between the VS Code editor, the ``rinx`` CLI, and the Bazel build artifacts.
+The VS Code extension runs the ``rinx`` language server, which underlines problems as you type (see :ref:`vscode-diagnostics` below), and shows a live preview of the page the build writes for the open document (see :ref:`vscode-preview`).
 
 1. Configuration
 ~~~~~~~~~~~~~~~~
 
 The extension provides the following settings:
 
-- ``rinx.binaryPath``: Path to the ``rinx`` binary, for the preview and the language server. When unset, the binary is discovered through Bazel, then taken from the extension itself if it was packaged with one (``npm run package:bundled``), falling back to ``rinx`` on the ``PATH``.
-- ``rinx.configPath``: Path to the ``rinx.toml`` config file (auto-detected from workspace).
-- ``rinx.templatePath``: Path to the HTML template used for rendering.
-- ``rinx.indexPath``: Path to the project index (default: auto-detected from ``bazel-bin``).
+- ``rinx.binaryPath``: Path to the ``rinx`` binary the language server runs. When unset, the binary is discovered through Bazel, then taken from the extension itself if it was packaged with one (``npm run package:bundled``), falling back to ``rinx`` on the ``PATH``.
 - ``rinx.previewMode``: ``onSave`` or ``onType`` (default: ``onType``).
 - ``rinx.trace.server``: ``off``, ``messages`` or ``verbose``; traces the language server's protocol traffic into the *Rinx* output channel.
 - ``rinx.inventories.download``: ``ask``, ``always`` or ``never``; whether the language server may download the inventories a Sphinx project links into (see :ref:`vscode-intersphinx`).
 - ``rinx.conf.execute``: whether the language server may run a Sphinx project's ``conf.py`` (default: off; see :ref:`vscode-running-conf`).
 - ``rinx.conf.pythonPath``: the Python interpreter ``conf.py`` runs in; when empty, the one selected with the Python extension.
-- ``rinx.site``: the ``rinx_site`` the workspace is about, such as ``//docs:site``. The preview uses it without asking, and a document several sites list belongs to it in the language server (see :ref:`vscode-bazel-projects`).
-- ``rinx.autoDiscover``: whether the extension runs Bazel at all, for the preview's configuration and the language server's manifests (default: on).
+- ``rinx.site``: the ``rinx_site`` the workspace is about, such as ``//docs:site``. A document several sites list belongs to it in the language server, and is previewed as part of it (see :ref:`vscode-bazel-projects`).
+- ``rinx.autoDiscover``: whether the extension runs Bazel at all, to find the binary a Bazel workspace builds and to build the language server's manifests (default: on).
 
-2. The Preview Pipeline (As-You-Type)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _vscode-preview:
 
-When the user edits a ``.rst`` file, the extension executes the following pipeline:
+2. The Preview
+~~~~~~~~~~~~~~
 
-1. **Parse**: The current editor content is piped into ``rinx parse``.
-2. **Local Analysis**: The resulting AST is analyzed locally using ``rinx index`` (on just this one file) to extract current targets and the document title.
-3. **Index Merging**: The local data is merged into the "stale" global index loaded from the ``bazel-bin`` directory. This ensures same-file references are always correct.
-4. **Render**: The AST is rendered into HTML using the merged index.
-5. **Webview Update**: The HTML is pushed to a VS Code Webview panel.
+*Rinx: Show Preview* opens a panel beside the editor, which keeps the focus, showing the page of the reStructuredText document last active in an editor. The language server renders it, with a ``rinx/preview`` request, from what it already holds: the document as you type it, and the project index it keeps current as every document changes. So the page is never stale: a title changed in another file, even unsaved, shows in the sidebar and in every link to it at once, without a build. With ``rinx.previewMode`` set to ``onType`` the page is asked for again 150 ms after you stop typing in any reStructuredText document, with ``onSave`` when you save one. The new page replaces the old one in place, so the preview keeps its scroll position; switching to another document starts at its top.
+
+The page is the one the build writes: the same renderer, the same template call, and the project's configuration as the server reads it (see :ref:`vscode-bazel-projects` and :ref:`vscode-sphinx-projects`). A ``rinx_site`` is drawn with its own ``template``, ``css`` and ``entity_templates``, read from the disk whenever the page is rendered, so editing one shows on the next page. Every other project, and a file outside every workspace folder, is drawn with the build's default template and stylesheet. The stylesheet is embedded in the page, since a webview reads no file it was not given.
+
+Rendering a page after an edit takes about 100 ms for CPython's ``library/os.rst`` and 155 ms for ``library/stdtypes.rst``, parse, index and render included. ``rinx lsp --check <folder> --preview <document>`` measures it.
+
+What the preview does not show yet:
+
+- Images, and anything else a page links beside it: the webview cannot reach them.
+- PlantUML diagrams, which are never compiled in the editor.
+- Working links: following one leads nowhere, since the page's links point into a built site.
 
 .. _vscode-diagnostics:
 
@@ -73,9 +66,7 @@ In a workspace folder holding ``MODULE.bazel`` or a ``WORKSPACE`` file, the exte
 
 What fails the build is an error in the editor, at the line to change: a toctree entry naming a document outside the library's ``deps`` (``toctree.undeclared-dependency``), a diagram in a library without ``diagrams = True``, and an image or a ``:download:`` no library of the site declares in ``images`` or ``downloads`` (``image.undeclared``, ``download.undeclared``). These are the build's own checks, and like the build no ``.. noqa:`` silences them: the fix is in ``BUILD.bazel``. For a toctree entry, the quick fix (Ctrl+.) makes it: it adds the library listing the document to the ``deps`` of the library writing the entry, in that library's ``BUILD.bazel``. The library is found among the site's, or else in the build file of the document's own package, whose ``rinx_library`` lists it in ``srcs`` — as a list, or a ``glob``. No fix is offered when ``deps`` or ``srcs`` is computed, or when the library is declared by a macro. The edit is made in the editor, so it can be undone; saving the file builds the manifests again, which clears the error. In a site setting ``strict_links``, a broken reference is an error too. Everything else is reported exactly as the build reports it, as a warning.
 
-The status bar then names the site, for example ``rinx: rinx project //docs:site · 105 docs (0.3 s)``, or counts them when there are several. A document two sites list belongs to the one ``rinx.site`` names, else to the one the preview was pointed at, else to the first by label; the other sites are read without it. What the manifests do not list — a ``README.rst``, a test fixture — stays the folder's, or a ``conf.py``'s. Editing a ``BUILD`` file, a ``.bzl`` file or ``MODULE.bazel`` builds the manifests again a moment later; until they arrive, the folder is read as it would be without Bazel. A manifest that cannot be read, and a setting in it the build would refuse — an invalid schema or ``rinx.toml``, a ``default_role`` no role answers to — is shown once in a notification, and the setting keeps its default. ``rinx lsp --check <folder> --manifest <manifest>`` (once per site) does the same from the command line.
-
-Jinja-templated libraries (``jinja = True``) are read without the Jinja pass for now.
+The status bar then names the site, for example ``rinx: rinx project //docs:site · 105 docs (0.3 s)``, or counts them when there are several. A document two sites list belongs to the one ``rinx.site`` names, else to the first by label; the other sites are read without it. What the manifests do not list — a ``README.rst``, a test fixture — stays the folder's, or a ``conf.py``'s. Editing a ``BUILD`` file, a ``.bzl`` file or ``MODULE.bazel`` builds the manifests again a moment later; until they arrive, the folder is read as it would be without Bazel. A manifest that cannot be read, and a setting in it the build would refuse — an invalid schema or ``rinx.toml``, a ``default_role`` no role answers to — is shown once in a notification, and the setting keeps its default. ``rinx lsp --check <folder> --manifest <manifest>`` (once per site) does the same from the command line.
 
 .. _vscode-sphinx-projects:
 
@@ -149,98 +140,6 @@ A Sphinx project declaring ``sphinx.ext.intersphinx`` links into the sites its `
 The address-keyed form older Sphinx versions took, ``{'https://docs.python.org/3': None}``, is reported as ``conf.invalid-value``: Sphinx 8 removed it. An entry none of whose inventories could be read — a missing file, or one that is no inventory — is reported on its line in ``conf.py`` as ``conf.inventory-unreadable``.
 
 Until an entry's inventory is loaded — not downloaded yet, declined, or unreadable — a domain reference that resolves nowhere may well be in it, so it is a *Hint* naming the inventory and why it is missing, as is an ``:external+python:`` reference to that inventory. Once every inventory is loaded, a reference still resolving nowhere is the warning the build reports. ``:ref:``, ``:doc:`` and ``:term:`` stay warnings either way. Editors other than VS Code download nothing, so there only file inventories load (see :ref:`editors`).
-
-4. Change Detection & Background Reconcile
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-To keep the global state (Sidebar, cross-references to other files) eventually consistent, the extension monitors the local index:
-
-- **Global Change Detection**: If a change in the local file affects **Global Metadata** (e.g., the document's ``<h1>`` title changed, a target was added/removed, or the ``.. toctree::`` was modified), the extension detects this by comparing the new local index against the cached global index.
-- **Background Build**: Upon detecting a global change, the extension triggers a background ``bazel build //Doc:site``.
-- **Silent Refresh**: Once Bazel completes, the extension re-loads the global index and refreshes the preview to reflect the now-correct global state (e.g., updated sidebar titles).
-
-Caveats & Required Changes
---------------------------
-
-Caveat 1: The CLI Requires File Paths, Not Stdin
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The current ``parse`` subcommand expects ``--input <file> --output <file>``. For as-you-type previews, the extension would need to either:
-
-- Write the editor buffer to a temporary file on every keystroke (adds I/O overhead and complexity), or
-- Add ``--stdin`` / ``--stdout`` support to the binary so the extension can pipe content directly.
-
-**Recommendation**: Add a ``preview`` subcommand that reads RST from stdin, accepts an ``--index`` path, and writes the final HTML to stdout. This collapses the parse → index → render pipeline into a single process invocation, avoiding three separate spawns per keystroke.
-
-Caveat 2: Index Merging Does Not Exist Yet
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The document describes "merging" a local single-file index into the global index. Currently, ``process_index`` builds a fresh ``ProjectIndex`` from a list of AST files — there is no "merge a partial update into an existing serialized index" capability.
-
-**Recommendation**: If using the single ``preview`` subcommand approach, the merging can happen in-process: deserialize the global index, run ``analyze()`` on the current document, and overwrite the relevant entries before rendering. No new CLI surface is needed — but the logic must be implemented in the binary.
-
-Caveat 3: The Render Step Requires Config and Template Files
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The ``render`` subcommand needs ``--config <config.toml>`` and ``--template <template.html>``. The extension must know where these files live. In Bazel projects, their paths are specified in ``BUILD.bazel`` and may use default labels like ``@@//:templates/default.html``.
-
-**Recommendation**: The extension should auto-detect the config and template by:
-1. Searching for ``rinx.toml`` upward from the active file.
-2. Falling back to reasonable defaults or prompting the user.
-3. Exposing ``configPath`` and ``templatePath`` as settings for manual override.
-
-Caveat 4: PlantUML Diagrams Are Not Rendered in Preview
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The preview pipeline skips the PlantUML compilation step (which requires a JVM). The HTML will contain ``<img>`` tags pointing to SVG files that may not exist yet.
-
-**Recommendation**: This is acceptable for a "content preview." The extension could:
-- Show a placeholder for missing diagram images.
-- Optionally trigger PlantUML compilation on save (not on every keystroke) for users who want diagram previews.
-
-Caveat 5: Process Spawn Overhead on Every Keystroke
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Spawning a new ``rinx`` process for every keystroke (even with debouncing) incurs OS-level overhead: fork, exec, dynamic linker, argument parsing.
-
-**Recommendation**: Consider a **long-running server mode** for the binary. The extension would start ``rinx serve`` once, then communicate via stdin/stdout JSON-RPC or a local socket. This eliminates per-request spawn costs and allows the binary to keep the global index in memory. This can be deferred to a later iteration — simple process spawning with ~50ms debounce will likely be fast enough for v1.
-
-Caveat 6: No Initial Index Without a Prior Bazel Build
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If the user opens a project that has never been built, there is no ``site.project.index`` in ``bazel-bin``. The extension would fail to load the global index.
-
-**Recommendation**: The extension should handle a missing index gracefully by:
-- Using an empty ``ProjectIndex`` (cross-references and sidebar will be empty, but the page content renders fine).
-- Showing a notification: *"No project index found. Run a full build for cross-references and navigation."*
-- Optionally triggering the initial ``bazel build`` in the background.
-
-Caveat 6b: External Links Come From the Last Build's Index
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-References into other sites (intersphinx, see :ref:`intersphinx`) resolve in the preview without any extra input, because the declared inventories are stored in the global index the preview merges into. But the index keeps only the external targets some document referenced when it was built, so a reference to an external target nothing else names stays unresolved in the preview until the next build — the same eventual consistency as titles and cross-references.
-
-Caveat 7: ``doc_path`` Must Be Relative to the Sphinx Root
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The renderer uses ``doc_path`` (e.g., ``library/os.rst``) to compute relative links for CSS, images, and cross-references. The extension must correctly compute this relative path from the workspace root or the Sphinx doc root — not use the absolute filesystem path.
-
-**Recommendation**: Derive ``doc_path`` by stripping the detected doc root (e.g., the directory containing ``rinx.toml``) from the absolute file path.
-
-Benefits
---------
-
-- **Live Feedback**: Users see their text and local links update as they type.
-- **Low Overhead**: No full-project re-indexing is required for 99% of edits (content changes).
-- **Correctness**: Leverages the same binary and logic used in the production build, ensuring "what you see is what you get."
-- **Native Experience**: No need to manage a separate dev-server or browser window.
-
-Future Enhancements
--------------------
-
-- **Long-Running Server Mode**: A ``rinx serve`` command that keeps the index in memory and accepts render requests over a local socket. This eliminates process spawn overhead and enables sub-10ms feedback.
-- **Scroll Sync**: Bidirectional scrolling between the ``.rst`` editor and the preview.
-- **Diagram Preview**: Optional PlantUML rendering on save for users who want to see diagrams in the preview.
 
 Development and Local Testing
 -----------------------------

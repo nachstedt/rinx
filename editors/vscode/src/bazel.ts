@@ -11,14 +11,6 @@ const BAZEL_TIMEOUT_MS = 30_000;
 // 120 second timeout for bazel build (compilation can be slow)
 const BAZEL_BUILD_TIMEOUT_MS = 120_000;
 
-export interface DiscoveredConfig {
-    siteTarget: string; // e.g. "//Doc:site"
-    binaryPath: string; // absolute filesystem path to the rinx binary
-    configPath: string; // absolute filesystem path to config.toml
-    templatePath: string; // absolute filesystem path to template.html
-    indexPath: string; // absolute filesystem path to site.project.index
-}
-
 type LogFn = (msg: string) => void;
 type Executor = (command: string, options: cp.ExecOptions) => Promise<{ stdout: string; stderr: string }>;
 
@@ -26,7 +18,6 @@ type Executor = (command: string, options: cp.ExecOptions) => Promise<{ stdout: 
 export const MANIFEST_SUFFIX = '.lsp_manifest.json';
 
 export class BazelScanner {
-    private outputBase: string | undefined;
     private executionRoot: string | undefined;
     private log: LogFn;
     private executor: Executor;
@@ -62,29 +53,6 @@ export class BazelScanner {
         }
     }
 
-    async queryAttribute(target: string, attribute: string, workspaceRoot: string): Promise<string | undefined> {
-        try {
-            const query = `labels(${attribute}, ${target})`;
-            const result = await this.bazelExec(`bazel query '${query}'`, workspaceRoot);
-            const label = result.split('\n')[0];
-            return label.length > 0 ? label : undefined;
-        } catch (error: unknown) {
-            this.log(`queryAttribute(${attribute}) failed: ${errorMessage(error)}`);
-            return undefined;
-        }
-    }
-
-    async getOutputBase(workspaceRoot: string): Promise<string> {
-        if (this.outputBase) return this.outputBase;
-        try {
-            this.outputBase = await this.bazelExec('bazel info output_base', workspaceRoot);
-            return this.outputBase;
-        } catch (error: unknown) {
-            this.log(`getOutputBase failed: ${errorMessage(error)}`);
-            return '';
-        }
-    }
-
     /** `bazel info execution_root`, under which a generated file is found. */
     async getExecutionRoot(workspaceRoot: string): Promise<string> {
         this.executionRoot ??= await this.bazelExec('bazel info execution_root', workspaceRoot);
@@ -115,31 +83,6 @@ export class BazelScanner {
             .map((line) => line.trim())
             .filter((line) => line.endsWith(MANIFEST_SUFFIX))
             .map((line) => (path.isAbsolute(line) ? line : path.join(workspaceRoot, line)));
-    }
-
-    async labelToFilesystemPath(label: string, workspaceRoot: string): Promise<string | undefined> {
-        // Handle Bzlmod labels: @@repo//pkg:file or //pkg:file
-        if (label.startsWith('@@')) {
-            const match = label.match(/^@@([^/]+)\/\/([^:]+):(.+)$/);
-            if (match) {
-                const [, repo, pkg, file] = match;
-                const outputBase = await this.getOutputBase(workspaceRoot);
-                if (!outputBase) return undefined;
-                return path.join(outputBase, 'external', repo, pkg, file);
-            }
-        }
-
-        const match = label.match(/^\/\/([^:]*):(.+)$/);
-        if (match) {
-            const [, pkg, file] = match;
-            return path.join(workspaceRoot, pkg, file);
-        }
-
-        return undefined;
-    }
-
-    deriveIndexPath(siteTarget: string, workspaceRoot: string): string {
-        return this.deriveBazelBinPath(siteTarget, workspaceRoot, '.project.index');
     }
 
     async deriveBinaryPath(workspaceRoot: string): Promise<string | undefined> {
@@ -178,19 +121,5 @@ export class BazelScanner {
         }
 
         return undefined;
-    }
-
-    private deriveBazelBinPath(target: string, workspaceRoot: string, suffix: string): string {
-        const match = target.match(/^\/\/([^:]+):(.+)$/);
-        if (match) {
-            const [, pkg, name] = match;
-            return path.join(workspaceRoot, 'bazel-bin', pkg, `${name}${suffix}`);
-        }
-        const rootMatch = target.match(/^\/\/:(.+)$/);
-        if (rootMatch) {
-            const [, name] = rootMatch;
-            return path.join(workspaceRoot, 'bazel-bin', `${name}${suffix}`);
-        }
-        return '';
     }
 }

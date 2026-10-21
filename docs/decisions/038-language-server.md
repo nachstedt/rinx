@@ -90,7 +90,7 @@ It is produced by one of two `ProjectSource`s:
   attributes, the schema, config and inventories. This is the same shape as
   `doctest_plans`: Bazel writes what a tool needs, and the tool never queries
   Bazel's graph itself. Building the group is the editor's, which already
-  runs Bazel for the preview: the server asks a client passing the
+  runs Bazel to find the binary: the server asks a client passing the
   `bazelManifests` initialization option with a `rinx/bazelManifests` request
   per Bazel workspace folder, and the client answers with the manifests' paths
   and the roots their files are under, as for `rinx/confInterpreter` (§4).
@@ -101,8 +101,9 @@ Nothing downstream of `ProjectModel` knows which source built it, except
 through `strictness`. In a monorepo, each `conf.py` or manifest is one model.
 A file a manifest lists belongs to that site, wherever it lies; any other file
 belongs to the nearest `conf.py` or folder above it. A document two sites list
-belongs to the one the user prefers — `rinx.site`, or the site the preview
-was pointed at — and otherwise to the first by label.
+belongs to the one the user prefers — `rinx.site` — and otherwise to the
+first by label. (Until roadmap #22 the site the preview was pointed at came
+second; the preview now follows the server's choice instead.)
 
 ### 3. The server indexes the workspace itself
 
@@ -333,10 +334,11 @@ PlantUML is never compiled in the editor.
 - Every feature is built once, against `ProjectModel`. Rinx mode is legacy
   mode with exact configuration and strictness switched to the build's.
 - The workspace scan is the server's own, so titles and references are
-  current without a `bazel build`. The preview's staleness problem
-  (`docs/vscode.rst`) is solved too, once the preview is served by the
-  server (a custom `rinx/preview` request) instead of a process per
-  keystroke.
+  current without a `bazel build`. The preview's staleness problem is
+  solved too: since roadmap #22 the preview is served by the server, with a
+  custom `rinx/preview` request rendering the page against the current fold,
+  instead of a `rinx preview` process per keystroke merging into the last
+  built index. That subcommand is gone.
 - Legacy mode is approximate, and says so. Its value depends on the extension
   table, which needs maintenance as projects bring extensions rinx has not
   met.
@@ -364,7 +366,7 @@ itself would not give.
   layer would add tokio for nothing it runs.
 - **A separate `rinx-lsp` binary.** Rejected: two artifacts to version and
   ship, which could then disagree about parsing.
-- **Starting from the Bazel-built index only, like the preview.** Rejected as
+- **Starting from the Bazel-built index only, like the preview then did.** Rejected as
   the foundation. It cannot serve legacy mode, and stays stale until a build.
 - **Querying Bazel from the server (`bazel cquery`) for library attributes.**
   Rejected: slow, a second interpreter of the build graph, and unavailable

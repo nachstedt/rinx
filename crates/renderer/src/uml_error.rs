@@ -61,16 +61,6 @@ impl DiagramFailure {
             Self::Sequence(error) => error.code(),
         }
     }
-
-    /// Whether this failure depends on knowing the whole project.
-    #[must_use]
-    pub const fn depends_on_the_project(&self) -> bool {
-        match self {
-            Self::Uml(error) => uml_depends_on_the_project(error),
-            Self::Flow(error) => flow_depends_on_the_project(error),
-            Self::Sequence(error) => sequence_depends_on_the_project(error),
-        }
-    }
 }
 
 impl fmt::Display for DiagramFailure {
@@ -101,53 +91,6 @@ impl From<FlowError> for DiagramFailure {
     }
 }
 
-/// Whether a flowchart failure depends on knowing the whole project.
-///
-/// The split a diagram's failures make: an empty result may be nothing but a
-/// stale preview index, while a `:config:` naming no preamble is a fault in
-/// the site config, which a preview reads for real.
-const fn flow_depends_on_the_project(error: &FlowError) -> bool {
-    match error {
-        FlowError::EmptyResult => true,
-        FlowError::UnknownConfig(_) => false,
-    }
-}
-
-/// Whether a sequence diagram's finding depends on knowing the whole project.
-///
-/// The same split again: which entities exist, and which messages they send,
-/// is exactly what a stale preview index gets wrong.
-const fn sequence_depends_on_the_project(error: &SequenceError) -> bool {
-    match error {
-        SequenceError::UnknownStart(_)
-        | SequenceError::EmptyResult
-        | SequenceError::Truncated { .. } => true,
-        SequenceError::UnknownConfig(_) => false,
-    }
-}
-
-/// Whether a template failure depends on knowing the whole project.
-///
-/// A live preview merges a *stale* global index, or none at all, so a template
-/// asking about an entity may fail there for a reason that does not exist in a
-/// real build. A syntax error in the template does not: it is the author's
-/// either way, and is worth seeing in an editor long before a build runs.
-const fn uml_depends_on_the_project(error: &UmlError) -> bool {
-    match error {
-        // An unknown `:config:` is a fault in the *site* config, which a
-        // preview reads for real — so it is worth reporting there too.
-        UmlError::Template { .. } | UmlError::ArchOutsideEntity | UmlError::UnknownConfig(_) => {
-            false
-        }
-        UmlError::UnknownEntity(_)
-        | UmlError::InvalidFilter { .. }
-        | UmlError::RecursiveImport { .. }
-        // An empty result usually means a filter matched nothing, which in a
-        // preview may only be because the merged index is stale.
-        | UmlError::EmptyDiagram => true,
-    }
-}
-
 impl DiagramError {
     /// The diagnostic code this reports under — what a `.. noqa:` names to
     /// suppress it.
@@ -158,15 +101,6 @@ impl DiagramError {
     #[must_use]
     pub const fn code(&self) -> DiagnosticCode {
         self.error.code()
-    }
-
-    /// Whether this failure depends on knowing the whole project.
-    ///
-    /// Delegated for the reason the code is: the answer belongs to the failure,
-    /// not to the phase reporting it.
-    #[must_use]
-    pub const fn depends_on_the_project(&self) -> bool {
-        self.error.depends_on_the_project()
     }
 
     /// The author-facing message.
@@ -195,27 +129,6 @@ mod tests {
 
         // When / Then
         assert_eq!(error.code(), DiagnosticCode::UmlUnknownEntity);
-    }
-
-    #[test]
-    fn test_a_syntax_error_does_not_depend_on_the_project() {
-        // Given — worth reporting in a live preview, which has no real index
-        let error = error_for(UmlError::Template {
-            message: "unexpected end of input".to_string(),
-            line: Some(1),
-        });
-
-        // When / Then
-        assert!(!error.depends_on_the_project());
-    }
-
-    #[test]
-    fn test_an_unknown_entity_depends_on_the_project() {
-        // Given — in a preview this may fail only because the index is stale
-        let error = error_for(UmlError::UnknownEntity("REQ_404".to_string()));
-
-        // When / Then
-        assert!(error.depends_on_the_project());
     }
 
     #[test]
@@ -262,17 +175,6 @@ mod tests {
     }
 
     #[test]
-    fn test_a_flowchart_that_drew_nothing_depends_on_the_project() {
-        // Given — in a preview it may be empty only because the index is stale
-        let empty = flow_error_for(FlowError::EmptyResult);
-        let config = flow_error_for(FlowError::UnknownConfig("mono".to_string()));
-
-        // When / Then
-        assert!(empty.depends_on_the_project());
-        assert!(!config.depends_on_the_project());
-    }
-
-    #[test]
     fn test_a_flowcharts_message_names_the_directive_the_author_wrote() {
         // Given
         let error = flow_error_for(FlowError::EmptyResult);
@@ -301,22 +203,5 @@ mod tests {
         // When / Then
         assert_eq!(error.code(), DiagnosticCode::EntitySequenceEmptyResult);
         assert!(error.message().starts_with("needsequence:"));
-    }
-
-    #[test]
-    fn test_only_a_sequence_diagrams_config_fault_is_independent_of_the_project() {
-        // Given
-        let graph = [
-            SequenceError::UnknownStart("COMP_404".to_string()),
-            SequenceError::EmptyResult,
-            SequenceError::Truncated { shown: 1, total: 2 },
-        ];
-        let config = sequence_error_for(SequenceError::UnknownConfig("mono".to_string()));
-
-        // When / Then — a stale preview index may explain the first three
-        for error in graph {
-            assert!(sequence_error_for(error).depends_on_the_project());
-        }
-        assert!(!config.depends_on_the_project());
     }
 }

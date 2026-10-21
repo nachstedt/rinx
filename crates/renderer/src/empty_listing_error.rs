@@ -17,10 +17,9 @@ use rinx_ast::{DiagnosticCode, Span};
 /// the construct, so an `.. entity-table::` reports
 /// `entity-table.empty-result` and an `.. entity-pie::` reports
 /// `entity-pie.empty-result` — but what happens to the report afterwards is
-/// identical, and that is the part worth sharing. In particular the live
-/// preview suppresses the whole vector when it has no project index, since
-/// there every listing would be empty through no fault of the author; a
-/// second, parallel vector would have to remember to do the same.
+/// identical, and that is the part worth sharing: the `.. noqa:` filter and
+/// the formatting are written once, and a second, parallel vector would have
+/// to remember to do the same.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EmptyListingError {
     /// The directive as the author spelled it — `entity-table` or `needtable`,

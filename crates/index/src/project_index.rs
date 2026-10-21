@@ -51,8 +51,8 @@ pub struct ProjectIndex {
     ///
     /// This is the navigation *graph*, stored instead of a pre-flattened tree
     /// so that each toctree's own options travel with its own entries. It is
-    /// per-document, so it merges, which is what keeps the live-preview path
-    /// from rendering navigation out of a stale global index.
+    /// per-document, so it merges, which is what lets the language server fold
+    /// one analysis per document into an index whose navigation is current.
     #[serde(default)]
     pub toctrees: BTreeMap<String, Vec<DocumentToctree>>,
     /// The documents nothing else references, in sorted order — the roots
@@ -156,8 +156,8 @@ pub struct ProjectIndex {
     /// Per-document data, so it merges — and a merge that finds one id twice
     /// reports it, the way a duplicate glossary term is reported. This is the
     /// entity *graph*: each record carries only its own outgoing edges, which
-    /// is what lets a single document's entities be merged into a stale index
-    /// on the live-preview path.
+    /// is what lets the language server fold each document's entities in on
+    /// their own.
     #[serde(default)]
     pub entities: BTreeMap<EntityId, EntityRecord>,
     /// Which entities point *at* each entity, keyed by the target's id and
@@ -195,14 +195,12 @@ pub struct ProjectIndex {
     ///
     /// A build input rather than anything a document says, so it is neither
     /// per-document nor derived: set once when the index is built and never
-    /// merged, which leaves a stale index's inventories in place when the
-    /// live preview merges a fresh document into it.
+    /// merged.
     #[serde(default)]
     pub external_inventories: Vec<ExternalInventory>,
     /// The domain index pages the site writes (`rinx_site`'s
     /// `domain_indices`). A build input like `external_inventories`, set once
-    /// when the index is built and never merged — so the live preview, which
-    /// merges into a stale index, still knows whether to link them.
+    /// when the index is built and never merged.
     #[serde(default)]
     pub domain_indices: BTreeSet<DomainIndex>,
     /// The definitions two or more documents claim, which the families above
@@ -493,9 +491,9 @@ mod tests {
 
     #[test]
     fn test_merge_carries_toctrees_and_outlines_from_the_other_index() {
-        // Given — the live-preview shape: a stale global index merged with a
-        // freshly analyzed local one. Both fields must survive, or the preview
-        // renders navigation the edited document no longer describes.
+        // Given — an index merged with a freshly analyzed document. Both
+        // fields must survive, or a page renders navigation the edited
+        // document no longer describes.
         let mut stale = ProjectIndex::default();
         stale.toctrees.insert(
             "index.rst".to_string(),

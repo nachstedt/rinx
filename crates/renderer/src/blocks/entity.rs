@@ -48,7 +48,7 @@ fn effective_attribute<'a>(
 /// missing from the index — a defensive path that should never actually
 /// trigger: every entity this renders was itself indexed before rendering
 /// starts, in both the full-build path (`build_project_index_reporting`) and
-/// live preview's own local `analyze()` + `.merge()`.
+/// the language server's fold (`build_project_index_from_analyses`).
 fn effective_relation_targets<'a>(
     entity: &'a EntityBody,
     relation: &str,
@@ -108,7 +108,7 @@ pub(crate) use rinx_index::entity_anchor;
 
 mod template;
 
-pub use template::EntityTemplates;
+pub use template::{EntityTemplates, load_entity_templates};
 
 /// Renders one entity, through its type's template when it declares one.
 pub(super) fn render_entity(html: &mut String, entity: &EntityBody, ctx: &mut RenderCtx<'_>) {

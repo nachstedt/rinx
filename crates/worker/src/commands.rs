@@ -6,11 +6,10 @@
 //! [`embed_assets`] are the per-document Phase 1 actions; [`index`] is the
 //! single Phase 2 merge;
 //! [`render`], [`genindex`] and [`modindex`] are Phase 3, [`validate_assets`] checks the
-//! bundled images and downloads after it, and [`preview`] collapses the first
-//! three phases into one process for the editor, and [`lsp`] serves the
-//! language server over stdio. [`cli_args`] holds the flag parsing
-//! they share, [`diagnostics`] the warning formatting [`render`] and
-//! [`preview`] share — each filtering through `rinx_ast::retain_reportable`
+//! bundled images and downloads after it, and [`lsp`] serves the language
+//! server over stdio, the editor's preview included. [`cli_args`] holds the flag parsing
+//! they share, [`diagnostics`] the warning formatting [`parse`] and
+//! [`render`] share — each filtering through `rinx_ast::retain_reportable`
 //! first, the `.. noqa:` filter the language server shares — and
 //! [`parse_files`] the filesystem loader that resolves `.. csv-table::`'s
 //! `:file:` option for both of them. [`entity_json_schema`] and
@@ -34,7 +33,6 @@ mod needs_schema;
 mod parse;
 mod parse_files;
 mod parse_inputs;
-mod preview;
 mod render;
 mod validate_assets;
 mod validate_toctree;
@@ -50,7 +48,6 @@ pub(crate) use lsp::cmd_lsp;
 pub(crate) use modindex::cmd_modindex;
 pub(crate) use needs_schema::cmd_needs_schema;
 pub(crate) use parse::cmd_parse;
-pub(crate) use preview::cmd_preview;
 pub(crate) use render::cmd_render;
 pub(crate) use validate_assets::cmd_validate_assets;
 pub(crate) use validate_toctree::cmd_validate_toctree;

@@ -55,13 +55,13 @@
   ],
   "site": {
     "config": { "source": "rinx.toml" },
-    "css": { "source": "default.css" },
+    "css": { "source": "site.css" },
     "domain_indices": [],
     "entity_schema": { "source": "reqs/entities.toml" },
     "entity_templates": [],
     "label": "//:site",
     "strict_links": false,
-    "template": { "source": "default.html" }
+    "template": { "source": "page.html" }
   },
   "version": 1
 }

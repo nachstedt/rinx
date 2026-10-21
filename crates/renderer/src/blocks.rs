@@ -61,8 +61,8 @@ mod uml;
 pub(crate) use dispatch::{collect_anonymous_targets, render_nodes};
 // Reused by `crate::inline::image` for an `InlineImage` node, whose `<img>`
 // element is built exactly the same way as a standalone `.. image::`'s.
-pub use entity::EntityTemplates;
 pub(crate) use entity::entity_anchor;
+pub use entity::{EntityTemplates, load_entity_templates};
 pub(crate) use entity_update::EntityUpdateVisibility;
 pub(crate) use image::render_linked_image;
 pub(crate) use math::equation_anchor_id;

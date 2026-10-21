@@ -10,9 +10,8 @@ use serde::{Deserialize, Serialize};
 /// An inventory this site links into — Sphinx's `intersphinx_mapping` entry.
 ///
 /// Held in the index rather than handed to each render action separately,
-/// so that every phase resolving a reference searches one universe: the
-/// live preview, which merges a fresh document into a stale index, finds
-/// external targets without being told about them.
+/// so that every phase resolving a reference searches one universe, and a
+/// render finds external targets without being told about them.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ExternalInventory {
     /// The name a document writes to pick this inventory out.
@@ -118,10 +117,8 @@ impl ExternalInventory {
     /// target as written, the part after a `name:` prefix, and — for an option —
     /// the target qualified by a program, never a scope-qualified name. So a
     /// target no written reference names can never be found, and dropping it
-    /// changes no link. The one thing it costs is the live preview, which resolves
-    /// against a stale index: a reference to an external target that no document
-    /// named when the index was last built stays unresolved there until the next
-    /// build.
+    /// changes no link. The language server, whose next edit may name any
+    /// target, keeps its inventories whole instead.
     pub fn retain_referenced(&mut self, written: &BTreeSet<String>) {
         let normalized: BTreeSet<String> = written
             .iter()
