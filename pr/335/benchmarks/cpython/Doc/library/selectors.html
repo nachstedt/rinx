@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>selectors — High-level I&#x2f;O multiplexing — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Networking and Interprocess Communication"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="asyncio.html">asyncio — Asynchronous I&#x2f;O</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="socket.html">socket — Low-level networking interface</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ssl.html">ssl — TLS&#x2f;SSL wrapper for socket objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="select.html">select — Waiting for I&#x2f;O completion</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="selectors.html">selectors — High-level I&#x2f;O multiplexing</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle selectors — High-level I&#x2f;O multiplexing"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="selectors.html#introduction">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="selectors.html#classes">Classes</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="selectors.html#examples">Examples</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="signal.html">signal — Set handlers for asynchronous events</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mmap.html">mmap — Memory-mapped file support</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="select.html">&larr; select — Waiting for I&#x2f;O completion</a>
+        <a class="next" href="signal.html">signal — Set handlers for asynchronous events &rarr;</a>
+      </nav>
+      
+      <h1 id="selectors-high-level-i-o-multiplexing"><code class="xref py module docutils literal">selectors</code> — High-level I/O multiplexing</h1>
+<dl class="py module">
+  <dt id="py:module:selectors"><code class="sig-name">selectors</code></dt>
+  <dd></dd>
+</dl>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/selectors.py`</p>
+<hr />
+<h2 id="introduction">Introduction</h2>
+<p>This module allows high-level and efficient I/O multiplexing, built upon the
+<a class="reference internal" href="select.html#py:module:select" title="select: Wait for I/O completion on multiple streams."><code class="xref py module docutils literal">select</code></a> module primitives. Users are encouraged to use this module
+instead, unless they want precise control over the OS-level primitives used.</p>
+<p>It defines a <a class="reference internal" href="selectors.html#py:class:selectors.baseselector"><code class="xref py class docutils literal">BaseSelector</code></a> abstract base class, along with several
+concrete implementations (<a class="reference internal" href="selectors.html#py:class:selectors.kqueueselector"><code class="xref py class docutils literal">KqueueSelector</code></a>, <a class="reference internal" href="selectors.html#py:class:selectors.epollselector"><code class="xref py class docutils literal">EpollSelector</code></a>…),
+that can be used to wait for I/O readiness notification on multiple file
+objects. In the following, "file object" refers to any object with a
+<a class="reference internal" href="io.html#py:method:io.iobase.fileno"><code class="xref py method docutils literal">fileno</code></a> method, or a raw file descriptor. See <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file object</span></a>.</p>
+<p><a class="reference internal" href="selectors.html#py:class:selectors.defaultselector"><code class="xref py class docutils literal">DefaultSelector</code></a> is an alias to the most efficient implementation
+available on the current platform: this should be the default choice for most
+users.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>The type of file objects supported depends on the platform: on Windows,
+sockets are supported, but not pipes, whereas on Unix, both are supported
+(some other types may be supported as well, such as fifos or special file
+devices).</p>
+</div>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt><a class="reference internal" href="select.html#py:module:select" title="select: Wait for I/O completion on multiple streams."><code class="xref py module docutils literal">select</code></a></dt>
+<dd><p>Low-level I/O multiplexing module.</p>
+</dd>
+</dl>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'availability'</p>
+<pre class="directive-error-source">.. availability:: not WASI.
+
+   This module does not work or is not available on WebAssembly. See
+   :ref:`wasm-availability` for more information.</pre>
+</div>
+<h2 id="classes">Classes</h2>
+<p>Classes hierarchy:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">BaseSelector</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">SelectSelector</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">PollSelector</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">EpollSelector</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">DevpollSelector</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">KqueueSelector</span></span></span></pre></div>
+<p>In the following, <em>events</em> is a bitwise mask indicating which I/O events should
+be waited for on a given file object. It can be a combination of the modules
+constants below:</p>
+<blockquote>
+<table>
+<thead>
+<tr>
+<th><p>Constant</p>
+</th>
+<th><p>Meaning</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:selectors.event_read"><code class="sig-name">EVENT_READ</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Available for read</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:selectors.event_write"><code class="sig-name">EVENT_WRITE</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Available for write</p>
+</td>
+</tr>
+</tbody>
+</table>
+</blockquote>
+<dl class="py class">
+  <dt id="py:class:selectors.selectorkey"><em class="property">class</em> <code class="sig-name">SelectorKey</code></dt>
+  <dd><p>A <a class="reference internal" href="selectors.html#py:class:selectors.selectorkey"><code class="xref py class docutils literal">SelectorKey</code></a> is a <a href="#" class="broken-link"><code class="xref py class docutils literal">namedtuple</code></a> used to
+associate a file object to its underlying file descriptor, selected event
+mask and attached data. It is returned by several <a class="reference internal" href="selectors.html#py:class:selectors.baseselector"><code class="xref py class docutils literal">BaseSelector</code></a>
+methods.</p>
+<dl class="py attribute">
+  <dt id="py:attribute:selectors.selectorkey.fileobj"><code class="sig-name">fileobj</code></dt>
+  <dd><p>File object registered.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:selectors.selectorkey.fd"><code class="sig-name">fd</code></dt>
+  <dd><p>Underlying file descriptor.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:selectors.selectorkey.events"><code class="sig-name">events</code></dt>
+  <dd><p>Events that must be waited for on this file object.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:selectors.selectorkey.data"><code class="sig-name">data</code></dt>
+  <dd><p>Optional opaque data associated to this file object: for example, this
+could be used to store a per-client session ID.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:selectors.baseselector"><em class="property">class</em> <code class="sig-name">BaseSelector</code></dt>
+  <dd><p>A <a class="reference internal" href="selectors.html#py:class:selectors.baseselector"><code class="xref py class docutils literal">BaseSelector</code></a> is used to wait for I/O event readiness on multiple
+file objects. It supports file stream registration, unregistration, and a
+method to wait for I/O events on those streams, with an optional timeout.
+It's an abstract base class, so cannot be instantiated. Use
+<a class="reference internal" href="selectors.html#py:class:selectors.defaultselector"><code class="xref py class docutils literal">DefaultSelector</code></a> instead, or one of <a class="reference internal" href="selectors.html#py:class:selectors.selectselector"><code class="xref py class docutils literal">SelectSelector</code></a>,
+<a class="reference internal" href="selectors.html#py:class:selectors.kqueueselector"><code class="xref py class docutils literal">KqueueSelector</code></a> etc. if you want to specifically use an
+implementation, and your platform supports it.
+<a class="reference internal" href="selectors.html#py:class:selectors.baseselector"><code class="xref py class docutils literal">BaseSelector</code></a> and its concrete implementations support the
+<a class="reference internal" href="../glossary.html#term-context-manager"><span class="xref std std-term">context manager</span></a> protocol.</p>
+<dl class="py method">
+  <dt id="py:method:selectors.baseselector.register"><em class="property">abstractmethod</em> <code class="sig-name">register(fileobj, events, data=None)</code></dt>
+  <dd><p>Register a file object for selection, monitoring it for I/O events.</p>
+<p><em>fileobj</em> is the file object to monitor.  It may either be an integer
+file descriptor or an object with a <code>fileno()</code> method.
+<em>events</em> is a bitwise mask of events to monitor.
+<em>data</em> is an opaque object.</p>
+<p>This returns a new <a class="reference internal" href="selectors.html#py:class:selectors.selectorkey"><code class="xref py class docutils literal">SelectorKey</code></a> instance, or raises a
+<a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> in case of invalid event mask or file descriptor, or
+<a class="reference internal" href="exceptions.html#py:exception:keyerror"><code class="xref py exception docutils literal">KeyError</code></a> if the file object is already registered.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:selectors.baseselector.unregister"><em class="property">abstractmethod</em> <code class="sig-name">unregister(fileobj)</code></dt>
+  <dd><p>Unregister a file object from selection, removing it from monitoring. A
+file object shall be unregistered prior to being closed.</p>
+<p><em>fileobj</em> must be a file object previously registered.</p>
+<p>This returns the associated <a class="reference internal" href="selectors.html#py:class:selectors.selectorkey"><code class="xref py class docutils literal">SelectorKey</code></a> instance, or raises a
+<a class="reference internal" href="exceptions.html#py:exception:keyerror"><code class="xref py exception docutils literal">KeyError</code></a> if <em>fileobj</em> is not registered.  It will raise
+<a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> if <em>fileobj</em> is invalid (e.g. it has no <code>fileno()</code>
+method or its <code>fileno()</code> method has an invalid return value).</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:selectors.baseselector.modify"><code class="sig-name">modify(fileobj, events, data=None)</code></dt>
+  <dd><p>Change a registered file object's monitored events or attached data.</p>
+<p>This is equivalent to <code>BaseSelector.unregister(fileobj)</code> followed
+by <code>BaseSelector.register(fileobj, events, data)</code>, except that it
+can be implemented more efficiently.</p>
+<p>This returns a new <a class="reference internal" href="selectors.html#py:class:selectors.selectorkey"><code class="xref py class docutils literal">SelectorKey</code></a> instance, or raises a
+<a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> in case of invalid event mask or file descriptor, or
+<a class="reference internal" href="exceptions.html#py:exception:keyerror"><code class="xref py exception docutils literal">KeyError</code></a> if the file object is not registered.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:selectors.baseselector.select"><em class="property">abstractmethod</em> <code class="sig-name">select(timeout=None)</code></dt>
+  <dd><p>Wait until some registered file objects become ready, or the timeout
+expires.</p>
+<p>If <code>timeout &gt; 0</code>, this specifies the maximum wait time, in seconds.
+If <code>timeout &lt;= 0</code>, the call won't block, and will report the currently
+ready file objects.
+If <em>timeout</em> is <code>None</code>, the call will block until a monitored file object
+becomes ready.</p>
+<p>This returns a list of <code>(key, events)</code> tuples, one for each ready file
+object.</p>
+<p><em>key</em> is the <a class="reference internal" href="selectors.html#py:class:selectors.selectorkey"><code class="xref py class docutils literal">SelectorKey</code></a> instance corresponding to a ready file
+object.
+<em>events</em> is a bitmask of events ready on this file object.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>This method can return before any file object becomes ready or the
+timeout has elapsed if the current process receives a signal: in this
+case, an empty list will be returned.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>The selector is now retried with a recomputed timeout when interrupted
+by a signal if the signal handler did not raise an exception (see
+<span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0475/"><strong>PEP 475</strong></a> for the rationale), instead of returning an empty list
+of events before the timeout.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:selectors.baseselector.close"><code class="sig-name">close()</code></dt>
+  <dd><p>Close the selector.</p>
+<p>This must be called to make sure that any underlying resource is freed.
+The selector shall not be used once it has been closed.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:selectors.baseselector.get_key"><code class="sig-name">get_key(fileobj)</code></dt>
+  <dd><p>Return the key associated with a registered file object.</p>
+<p>This returns the <a class="reference internal" href="selectors.html#py:class:selectors.selectorkey"><code class="xref py class docutils literal">SelectorKey</code></a> instance associated to this file
+object, or raises <a class="reference internal" href="exceptions.html#py:exception:keyerror"><code class="xref py exception docutils literal">KeyError</code></a> if the file object is not registered.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:selectors.baseselector.get_map"><em class="property">abstractmethod</em> <code class="sig-name">get_map()</code></dt>
+  <dd><p>Return a mapping of file objects to selector keys.</p>
+<p>This returns a <a class="reference internal" href="collections.abc.html#py:class:collections.abc.mapping"><code class="xref py class docutils literal">Mapping</code></a> instance mapping
+registered file objects to their associated <a class="reference internal" href="selectors.html#py:class:selectors.selectorkey"><code class="xref py class docutils literal">SelectorKey</code></a>
+instance.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:selectors.defaultselector"><em class="property">class</em> <code class="sig-name">DefaultSelector()</code></dt>
+  <dd><p>The default selector class, using the most efficient implementation
+available on the current platform. This should be the default choice for
+most users.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:selectors.selectselector"><em class="property">class</em> <code class="sig-name">SelectSelector()</code></dt>
+  <dd><p><a class="reference internal" href="select.html#py:function:select.select"><code class="xref py function docutils literal">select.select</code></a>-based selector.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:selectors.pollselector"><em class="property">class</em> <code class="sig-name">PollSelector()</code></dt>
+  <dd><p><a class="reference internal" href="select.html#py:function:select.poll"><code class="xref py function docutils literal">select.poll</code></a>-based selector.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:selectors.epollselector"><em class="property">class</em> <code class="sig-name">EpollSelector()</code></dt>
+  <dd><p><a class="reference internal" href="select.html#py:function:select.epoll"><code class="xref py function docutils literal">select.epoll</code></a>-based selector.</p>
+<dl class="py method">
+  <dt id="py:method:selectors.epollselector.fileno"><code class="sig-name">fileno()</code></dt>
+  <dd><p>This returns the file descriptor used by the underlying
+<a class="reference internal" href="select.html#py:function:select.epoll"><code class="xref py function docutils literal">select.epoll</code></a> object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:selectors.devpollselector"><em class="property">class</em> <code class="sig-name">DevpollSelector()</code></dt>
+  <dd><p><a class="reference internal" href="select.html#py:function:select.devpoll"><code class="xref py function docutils literal">select.devpoll</code></a>-based selector.</p>
+<dl class="py method">
+  <dt id="py:method:selectors.devpollselector.fileno"><code class="sig-name">fileno()</code></dt>
+  <dd><p>This returns the file descriptor used by the underlying
+<a class="reference internal" href="select.html#py:function:select.devpoll"><code class="xref py function docutils literal">select.devpoll</code></a> object.</p>
+</dd>
+</dl>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:selectors.kqueueselector"><em class="property">class</em> <code class="sig-name">KqueueSelector()</code></dt>
+  <dd><p><a class="reference internal" href="select.html#py:function:select.kqueue"><code class="xref py function docutils literal">select.kqueue</code></a>-based selector.</p>
+<dl class="py method">
+  <dt id="py:method:selectors.kqueueselector.fileno"><code class="sig-name">fileno()</code></dt>
+  <dd><p>This returns the file descriptor used by the underlying
+<a class="reference internal" href="select.html#py:function:select.kqueue"><code class="xref py function docutils literal">select.kqueue</code></a> object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<p>Here is a simple echo server implementation:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">selectors</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">socket</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sel</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">selectors</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">DefaultSelector</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">accept</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">sock</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">mask</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">conn</span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">addr</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sock</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">accept</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Should be ready
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">accepted<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">conn</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">from<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">addr</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">conn</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">setblocking</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-language hl-python">False</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sel</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">register</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">conn</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">selectors</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">EVENT_READ</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">read</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">read</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">conn</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">mask</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">data</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">conn</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">recv</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1000</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Should be ready
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">data</span></span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">echoing<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">repr</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">data</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">to<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">conn</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">conn</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">send</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">data</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Hope it won&#39;t block
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-conditional hl-else hl-python"><span class="hl-keyword hl-control hl-conditional hl-else hl-python">else</span><span class="hl-punctuation hl-section hl-block hl-conditional hl-else hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">closing<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">conn</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sel</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">unregister</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">conn</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">conn</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">close</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sock</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">socket</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">socket</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sock</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">bind</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">localhost<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1234</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sock</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">listen</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">100</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sock</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">setblocking</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-language hl-python">False</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sel</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">register</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sock</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">selectors</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">EVENT_READ</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">accept</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-loop hl-while hl-python"><span class="hl-keyword hl-control hl-loop hl-while hl-python">while</span> <span class="hl-constant hl-language hl-python">True</span><span class="hl-punctuation hl-section hl-block hl-loop hl-while hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">events</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sel</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">select</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">key</span><span class="hl-punctuation hl-separator hl-target-list hl-python">,</span> <span class="hl-meta hl-generic-name hl-python">mask</span> <span class="hl-keyword hl-control hl-loop hl-for hl-in hl-python">in</span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">events</span></span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-punctuation hl-section hl-block hl-loop hl-for hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">callback</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">key</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">data</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">callback</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">key</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">fileobj</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mask</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="select.html">&larr; select — Waiting for I&#x2f;O completion</a>
+        <a class="next" href="signal.html">signal — Set handlers for asynchronous events &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
