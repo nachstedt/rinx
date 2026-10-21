@@ -38,7 +38,7 @@ finished one 🔶. A heading with no marker means the step has not started.
   #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
   #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315), #18 (PR #317),
   #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333)
-  and #40.
+  and #40 (PR #335).
 - **Next: #24, diagram template errors.**
 
 The pull request that finishes a step also updates this section and the
@@ -795,7 +795,7 @@ generates, is not shown (issue #331); an image edited on the disk may show the
 webview's cached copy until the page loads again (issue #332); `:download:`
 links and compiled diagrams keep their site addresses (#40, #24).
 
-### 40. Preview navigation ✅
+### 40. Preview navigation ✅ (#335)
 
 Numbered last so the steps after it keep their numbers; it belongs here, after
 #23.
