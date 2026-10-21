@@ -1,5 +1,4 @@
 import * as assert from 'assert';
-import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import type { RinxApi } from '../../extension';
@@ -161,12 +160,14 @@ suite('Bazel project (e2e)', () => {
         // When
         await vscode.commands.executeCommand('rinx.showPreview');
 
-        // Then — `page.html`, which the manifest names, with `site.css` embedded
+        // Then — `page.html`, which the manifest names, with `site.css`
+        // linked where it lies, under the address the webview serves files at
         const page = await waitFor('the page in the site template', () => {
             const html = api.previewHtml();
             return html?.includes('· fixture site</title>') && html;
         });
-        const stylesheet = fs.readFileSync(workspaceFile('site.css').fsPath).toString('base64');
-        assert.ok(page.includes(`href="data:text/css;base64,${stylesheet}"`), page);
+        const href = /href="([^"]*)"/.exec(page)?.[1] ?? '';
+        assert.ok(href.startsWith('https://'), page);
+        assert.ok(href.endsWith(workspaceFile('site.css').path), page);
     });
 });

@@ -14,9 +14,13 @@
 //! on the next preview.
 //!
 //! A webview loads neither a `file:` address nor one relative to a page that
-//! was never written, so the stylesheet is linked under the `resourceRoot`
-//! the client serves the file system under, or else embedded as a `data:`
-//! address.
+//! was never written, so the files a page shows are linked under the
+//! `resourceRoot` the client serves the file system under ([`ResourceRoot`]):
+//! the stylesheet, and each authored image where it lies in the source tree
+//! rather than in the `_images/` the build would copy it into (roadmap #23).
+//! A file the client serves no folder of is out of its reach: the stylesheet
+//! is then embedded as a `data:` address, and an image links into `_images/`,
+//! drawn missing. Without a `resourceRoot` the page is the build's own.
 
 use std::collections::BTreeMap;
 use std::io;
@@ -30,6 +34,7 @@ use rinx_ast::Document;
 use rinx_entity::EntitySchema;
 use rinx_index::ProjectIndex;
 use rinx_renderer::config::SiteConfig;
+use rinx_renderer::{EmbeddedAssets, ImageLocator, PageAssets};
 use serde::{Deserialize, Serialize};
 
 use crate::project::{BundledFiles, DEFAULT_ROOT_DOC, PageFile, Presentation};
@@ -72,8 +77,55 @@ pub struct PreviewSettings<'a> {
     pub presentation: &'a Presentation,
     /// The images the site bundles, when the build declares them.
     pub bundled: Option<&'a BundledFiles>,
-    /// See [`PreviewParams::resource_root`].
-    pub resource_root: Option<&'a str>,
+    /// The directory the documents' names, and an image's path, are taken
+    /// from.
+    pub source_root: &'a Path,
+    /// Where the client serves files, when it does.
+    pub resources: Option<ResourceRoot<'a>>,
+}
+
+/// Where a client serves the file system: under the address
+/// [`PreviewParams::resource_root`] names, and only within its workspace
+/// folders — a VS Code webview's `localResourceRoots`.
+#[derive(Debug, Clone, Copy)]
+pub struct ResourceRoot<'a> {
+    address: &'a str,
+    folders: &'a [PathBuf],
+}
+
+impl<'a> ResourceRoot<'a> {
+    /// The files within `folders`, served under `address`.
+    #[must_use]
+    pub fn new(address: &'a str, folders: &'a [PathBuf]) -> Self {
+        Self { address, folders }
+    }
+
+    /// The address of the file at `path` — its path encoded as in a `file:`
+    /// URI — or `None` for a file under no folder, or one no URI spells.
+    fn href(&self, path: &Path) -> Option<String> {
+        if !self.folders.iter().any(|folder| path.starts_with(folder)) {
+            return None;
+        }
+        let uri = file_uri(path)?;
+        Some(format!(
+            "{}{}",
+            self.address.trim_end_matches('/'),
+            uri.path()
+        ))
+    }
+}
+
+/// Locates a page's images where they lie under the source root, as the
+/// client serves them.
+struct SourceImages<'a> {
+    resources: ResourceRoot<'a>,
+    source_root: &'a Path,
+}
+
+impl ImageLocator for SourceImages<'_> {
+    fn image_href(&self, resolved: &Path) -> Option<String> {
+        self.resources.href(&self.source_root.join(resolved))
+    }
 }
 
 /// Why a page could not be rendered.
@@ -148,18 +200,32 @@ pub fn render_preview(
         path,
         error: error.to_string(),
     })?;
-    let output = rinx_renderer::render_with_assets(
+    // Served, an image is linked where it lies, `:loading: embed` included:
+    // the server reads no image's bytes, and the table `embeddable_images`
+    // fills for the findings would draw an embedded one blank.
+    let embeddable = match settings.resources {
+        Some(_) => EmbeddedAssets::new(),
+        None => embeddable_images(settings.bundled),
+    };
+    let images = settings.resources.map(|resources| SourceImages {
+        resources,
+        source_root: settings.source_root,
+    });
+    let output = rinx_renderer::render_with_page_assets(
         document,
         index,
         &document.path,
         settings.config,
-        &embeddable_images(settings.bundled),
+        PageAssets {
+            embedded: &embeddable,
+            images: images.as_ref().map(|images| images as &dyn ImageLocator),
+        },
         settings.schema,
         &entity_templates,
     );
     let css_path = stylesheet_href(
         &settings.presentation.stylesheet,
-        settings.resource_root,
+        settings.resources,
         &read_file,
     )?;
     rinx_renderer::render_document_page(
@@ -175,14 +241,14 @@ pub fn render_preview(
 }
 
 /// The page of `document` as the only document of a project with the
-/// build's defaults — for a document in no project.
+/// build's defaults — for a document in no project. Its file lies outside
+/// every workspace folder, so no client serves its images.
 ///
 /// # Errors
 ///
 /// A [`PreviewError`] when the template fails.
 pub fn render_preview_alone(
     document: &Document,
-    resource_root: Option<&str>,
     read: &dyn Fn(&Path) -> io::Result<String>,
 ) -> Result<String, PreviewError> {
     let analyses = BTreeMap::from([(document.path.clone(), DocumentAnalysis::of(document))]);
@@ -198,36 +264,29 @@ pub fn render_preview_alone(
         schema: &schema,
         presentation: &Presentation::default(),
         bundled: None,
-        resource_root,
+        source_root: Path::new(""),
+        resources: None,
     };
     render_preview(document, &index, &settings, read)
 }
 
-/// Where the page finds `stylesheet`: under `resource_root` when it is a
-/// file the client serves, else embedded as a `data:` address.
+/// Where the page finds `stylesheet`: under `resources` when it is a file
+/// the client serves, else embedded as a `data:` address.
 fn stylesheet_href(
     stylesheet: &PageFile,
-    resource_root: Option<&str>,
+    resources: Option<ResourceRoot<'_>>,
     read_file: &dyn Fn(&Path) -> Result<String, PreviewError>,
 ) -> Result<String, PreviewError> {
-    let text = match (stylesheet, resource_root) {
-        (PageFile::File(path), Some(root)) => {
-            if let Some(href) = resource_href(root, path) {
+    let text = match stylesheet {
+        PageFile::File(path) => {
+            if let Some(href) = resources.and_then(|resources| resources.href(path)) {
                 return Ok(href);
             }
             read_file(path)?
         }
-        (PageFile::File(path), None) => read_file(path)?,
-        (PageFile::Builtin, _) => BUILTIN_STYLESHEET.to_string(),
+        PageFile::Builtin => BUILTIN_STYLESHEET.to_string(),
     };
     Ok(format!("data:text/css;base64,{}", BASE64.encode(text)))
-}
-
-/// The address of the file at `path` under `root`, its path encoded as in a
-/// `file:` URI — or `None` for a path no URI spells.
-fn resource_href(root: &str, path: &Path) -> Option<String> {
-    let uri = file_uri(path)?;
-    Some(format!("{}{}", root.trim_end_matches('/'), uri.path()))
 }
 
 #[cfg(test)]
@@ -276,14 +335,28 @@ mod tests {
         resource_root: Option<&str>,
         files: &[(&str, &str)],
     ) -> Result<String, PreviewError> {
-        let document = rinx_parser::parse("index.rst", DOCUMENT);
-        let index = index_of(&[("index.rst", DOCUMENT), ("setup.rst", SETUP)]);
+        preview_of("index.rst", DOCUMENT, presentation, resource_root, files)
+    }
+
+    /// The page of the document `path` holding `text`, beside `setup.rst`,
+    /// in a project whose source root is the workspace folder `/work`.
+    fn preview_of(
+        path: &str,
+        text: &str,
+        presentation: &Presentation,
+        resource_root: Option<&str>,
+        files: &[(&str, &str)],
+    ) -> Result<String, PreviewError> {
+        let document = rinx_parser::parse(path, text);
+        let index = index_of(&[(path, text), ("setup.rst", SETUP)]);
+        let folders = [PathBuf::from("/work")];
         let settings = PreviewSettings {
             config: &SiteConfig::default(),
             schema: &EntitySchema::empty(),
             presentation,
             bundled: None,
-            resource_root,
+            source_root: Path::new("/work"),
+            resources: resource_root.map(|address| ResourceRoot::new(address, &folders)),
         };
         render_preview(&document, &index, &settings, &disk(files))
     }
@@ -378,12 +451,143 @@ mod tests {
     }
 
     #[test]
+    fn test_render_preview_embeds_a_stylesheet_outside_every_folder() {
+        // Given — a file the client serves no folder of, as a Bazel site's
+        // stylesheet under the execution root is
+        let presentation = Presentation {
+            template: PageFile::File(PathBuf::from("/work/page.html")),
+            stylesheet: PageFile::File(PathBuf::from("/cache/site.css")),
+            ..Presentation::default()
+        };
+
+        // When
+        let page = preview(
+            &presentation,
+            Some("https://webview/"),
+            &[
+                ("/work/page.html", "{{ css_path }}"),
+                ("/cache/site.css", "p {}"),
+            ],
+        )
+        .unwrap();
+
+        // Then
+        assert_eq!(
+            page,
+            format!("data:text/css;base64,{}", BASE64.encode("p {}"))
+        );
+    }
+
+    #[test]
+    fn test_render_preview_links_an_image_where_it_lies() {
+        // Given — a page one directory down, showing a file whose name
+        // needs encoding
+        let text = "Intro\n=====\n\n.. image:: my logo.png\n";
+
+        // When
+        let page = preview_of(
+            "guide/intro.rst",
+            text,
+            &Presentation::default(),
+            Some("https://webview/"),
+            &[],
+        )
+        .unwrap();
+
+        // Then
+        assert!(
+            page.contains("src=\"https://webview/work/guide/my%20logo.png\""),
+            "{page}"
+        );
+    }
+
+    #[test]
+    fn test_render_preview_links_an_embedded_image_where_it_lies() {
+        // Given — the bytes the build would embed are not read for a preview
+        let text = "Intro\n=====\n\n.. image:: logo.svg\n   :loading: embed\n";
+
+        // When
+        let page = preview_of(
+            "index.rst",
+            text,
+            &Presentation::default(),
+            Some("https://webview/"),
+            &[],
+        )
+        .unwrap();
+
+        // Then
+        assert!(
+            page.contains("src=\"https://webview/work/logo.svg\""),
+            "{page}"
+        );
+    }
+
+    #[test]
+    fn test_render_preview_links_an_image_into_the_site_without_a_resource_root() {
+        // Given — as the build writes the page, which the parity test compares
+        let text = "Intro\n=====\n\n.. image:: logo.png\n";
+
+        // When
+        let page =
+            preview_of("guide/intro.rst", text, &Presentation::default(), None, &[]).unwrap();
+
+        // Then
+        assert!(page.contains("src=\"../_images/guide/logo.png\""), "{page}");
+    }
+
+    #[test]
+    fn test_resource_root_serves_a_file_under_a_folder() {
+        // Given
+        let folders = [PathBuf::from("/work")];
+        let resources = ResourceRoot::new("https://webview/", &folders);
+
+        // When
+        let href = resources.href(Path::new("/work/a b.png"));
+
+        // Then
+        assert_eq!(href.as_deref(), Some("https://webview/work/a%20b.png"));
+    }
+
+    #[test]
+    fn test_resource_root_serves_no_file_outside_every_folder() {
+        // Given — a sibling whose name merely starts like the folder's
+        let folders = [PathBuf::from("/work")];
+        let resources = ResourceRoot::new("https://webview/", &folders);
+
+        // When
+        let href = resources.href(Path::new("/workshop/logo.png"));
+
+        // Then
+        assert_eq!(href, None);
+    }
+
+    #[test]
+    fn test_source_images_locate_an_image_under_the_source_root() {
+        // Given
+        let folders = [PathBuf::from("/work")];
+        let images = SourceImages {
+            resources: ResourceRoot::new("https://webview", &folders),
+            source_root: Path::new("/work/docs"),
+        };
+
+        // When
+        let href = images.image_href(Path::new("img/logo.png"));
+
+        // Then
+        assert_eq!(
+            href.as_deref(),
+            Some("https://webview/work/docs/img/logo.png")
+        );
+    }
+
+    #[test]
     fn test_render_preview_alone_draws_a_document_with_the_defaults() {
         // Given — a document whose `:doc:` names one no project holds
         let document = rinx_parser::parse("notes.rst", DOCUMENT);
 
         // When
-        let page = render_preview_alone(&document, None, &disk(&[])).unwrap();
+        let page = render_preview_alone(&document, &disk(&[])).unwrap();
 
         // Then
         assert!(page.contains("<title>Guide"), "{page}");

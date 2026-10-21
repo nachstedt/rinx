@@ -21,7 +21,8 @@ use crate::asset_href::{AssetDir, relative_asset_href};
 ///
 /// An external URL is passed through untouched; a project file becomes a path
 /// into the site's `_images/` directory, unless the author asked for the bytes
-/// themselves and the build supplied them.
+/// themselves and the build supplied them, or the page has no `_images/` beside
+/// it and the context's [`crate::ImageLocator`] says where the file lies.
 fn image_src(options: &ImageOptions, ctx: &mut RenderCtx) -> String {
     let AssetUri::Document(written) = &options.uri else {
         // An external URL. `:loading: embed` on one is already reported by the
@@ -50,7 +51,9 @@ fn image_src(options: &ImageOptions, ctx: &mut RenderCtx) -> String {
         });
     }
 
-    relative_asset_href(AssetDir::Images, &resolved, ctx.doc_path)
+    ctx.image_locator
+        .and_then(|locator| locator.image_href(&resolved))
+        .unwrap_or_else(|| relative_asset_href(AssetDir::Images, &resolved, ctx.doc_path))
 }
 
 /// The `style` attribute value for an image's own dimensions, if it has any.
@@ -666,6 +669,164 @@ mod tests {
                 .contains("src=\"data:image/svg+xml;base64,BBB\""),
             "unexpected: {}",
             output.html
+        );
+    }
+
+    /// A locator placing every image under `/work/`, but `elsewhere.png`.
+    struct UnderWork;
+
+    impl crate::ImageLocator for UnderWork {
+        fn image_href(&self, resolved: &std::path::Path) -> Option<String> {
+            (resolved != std::path::Path::new("elsewhere.png"))
+                .then(|| format!("https://webview/work/{}", resolved.display()))
+        }
+    }
+
+    /// The page of a document at `doc_path` holding `nodes`, its images
+    /// located by [`UnderWork`] and embedding `embedded`.
+    fn render_located(
+        nodes: Vec<rinx_ast::Node>,
+        doc_path: &str,
+        embedded: &crate::EmbeddedAssets,
+    ) -> String {
+        let doc = rinx_ast::Document::new(doc_path.to_string(), nodes);
+        crate::render_with_page_assets(
+            &doc,
+            &ProjectIndex::default(),
+            doc_path,
+            &crate::config::SiteConfig::default(),
+            crate::PageAssets {
+                embedded,
+                images: Some(&UnderWork),
+            },
+            rinx_entity::EntitySchema::empty_ref(),
+            &crate::blocks::EntityTemplates::new(),
+        )
+        .html
+    }
+
+    fn image_node(options: ImageOptions) -> rinx_ast::Node {
+        rinx_ast::Node::Directive(Directive::Image(Box::new(options)))
+    }
+
+    #[test]
+    fn test_links_a_located_image_where_the_locator_says() {
+        // Given — a page one directory down
+        let nodes = vec![image_node(image("logo.png"))];
+
+        // When
+        let html = render_located(nodes, "guide/intro.rst", &crate::EmbeddedAssets::new());
+
+        // Then — the source-root-relative path, handed to the locator
+        assert!(
+            html.contains("src=\"https://webview/work/guide/logo.png\""),
+            "unexpected: {html}"
+        );
+    }
+
+    #[test]
+    fn test_links_an_image_the_locator_does_not_place_into_the_images_directory() {
+        // Given
+        let nodes = vec![image_node(image("elsewhere.png"))];
+
+        // When
+        let html = render_located(nodes, "index.rst", &crate::EmbeddedAssets::new());
+
+        // Then
+        assert!(
+            html.contains("src=\"_images/elsewhere.png\""),
+            "unexpected: {html}"
+        );
+    }
+
+    #[test]
+    fn test_embedded_bytes_win_over_the_locator() {
+        // Given
+        let mut options = image("logo.svg");
+        options.loading = ImageLoading::Embed;
+        let mut embedded = crate::EmbeddedAssets::new();
+        embedded.insert(
+            std::path::Path::new("logo.svg"),
+            "data:image/svg+xml;base64,AAA".to_string(),
+        );
+
+        // When
+        let html = render_located(vec![image_node(options)], "index.rst", &embedded);
+
+        // Then
+        assert!(
+            html.contains("src=\"data:image/svg+xml;base64,AAA\""),
+            "unexpected: {html}"
+        );
+    }
+
+    #[test]
+    fn test_locates_an_embed_whose_bytes_never_arrived() {
+        // Given — the preview's case: it embeds nothing
+        let mut options = image("logo.svg");
+        options.loading = ImageLoading::Embed;
+
+        // When
+        let html = render_located(
+            vec![image_node(options)],
+            "index.rst",
+            &crate::EmbeddedAssets::new(),
+        );
+
+        // Then
+        assert!(
+            html.contains("src=\"https://webview/work/logo.svg\""),
+            "unexpected: {html}"
+        );
+    }
+
+    #[test]
+    fn test_an_external_image_ignores_the_locator() {
+        // Given
+        let nodes = vec![image_node(image("https://example.com/logo.png"))];
+
+        // When
+        let html = render_located(nodes, "index.rst", &crate::EmbeddedAssets::new());
+
+        // Then
+        assert!(
+            html.contains("src=\"https://example.com/logo.png\""),
+            "unexpected: {html}"
+        );
+    }
+
+    #[test]
+    fn test_locates_a_figures_image() {
+        // Given
+        let figure = rinx_ast::Figure::new(image("chart.png"));
+        let nodes = vec![rinx_ast::Node::Directive(Directive::Figure(Box::new(
+            figure,
+        )))];
+
+        // When
+        let html = render_located(nodes, "index.rst", &crate::EmbeddedAssets::new());
+
+        // Then
+        assert!(
+            html.contains("src=\"https://webview/work/chart.png\""),
+            "unexpected: {html}"
+        );
+    }
+
+    #[test]
+    fn test_locates_an_inline_image() {
+        // Given — what a substitution defined by `.. image::` becomes
+        let nodes = vec![rinx_ast::Node::Paragraph(vec![
+            rinx_ast::InlineNode::InlineImage(Box::new(image("icon.png"))),
+        ])];
+
+        // When
+        let html = render_located(nodes, "index.rst", &crate::EmbeddedAssets::new());
+
+        // Then
+        assert!(
+            html.contains("src=\"https://webview/work/icon.png\""),
+            "unexpected: {html}"
         );
     }
 

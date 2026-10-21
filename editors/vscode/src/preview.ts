@@ -5,6 +5,11 @@
 // index, so the page is never stale: a title changed in another file shows at
 // once, and no process is started per edit (see docs/vscode.rst).
 //
+// The page links its stylesheet and images where they lie, under the address
+// the webview serves the file system at (`resourceRoot`), which reaches the
+// workspace folders alone (`localResourceRoots`) — the server links nothing
+// outside them.
+//
 // A page is loaded into the webview once; every later page of the same panel
 // is posted to it and swapped into the open document by the script loaded
 // with the first (`PAGE_UPDATER`), so the reader keeps their place. Assigning
@@ -20,6 +25,8 @@ export const PREVIEW_METHOD = 'rinx/preview';
 /** What a `rinx/preview` request asks for. */
 export interface PreviewParams {
     textDocument: { uri: string };
+    /** The address the webview serves the file system's root under. */
+    resourceRoot?: string;
 }
 
 /** The server's answer to a `rinx/preview` request. */
@@ -87,13 +94,19 @@ export interface Shown {
 
 /**
  * The page for `document`, asked of `client`, or a page saying why there is
- * none.
+ * none; its files are linked under `resourceRoot` when given.
  */
-export async function renderPage(client: PreviewClient | undefined, document: vscode.Uri): Promise<Shown> {
+export async function renderPage(
+    client: PreviewClient | undefined,
+    document: vscode.Uri,
+    resourceRoot?: string,
+): Promise<Shown> {
     const uri = document.toString();
     if (!client) return { kind: 'message', html: NO_SERVER_PAGE, document: uri };
+    const params: PreviewParams = { textDocument: { uri } };
+    if (resourceRoot !== undefined) params.resourceRoot = resourceRoot;
     try {
-        const result = await client.sendRequest(PREVIEW_METHOD, { textDocument: { uri } });
+        const result = await client.sendRequest(PREVIEW_METHOD, params);
         return { kind: 'page', html: result.html, document: uri };
     } catch (error: unknown) {
         return {
@@ -237,6 +250,11 @@ export class PageDelivery {
     }
 }
 
+/** The folders a page's files may be loaded from: the workspace's. */
+function workspaceFolderUris(): vscode.Uri[] {
+    return (vscode.workspace.workspaceFolders ?? []).map((folder) => folder.uri);
+}
+
 /** Whether `document` is one the preview can show. */
 function isRestructuredText(document: vscode.TextDocument): boolean {
     return document.languageId === 'restructuredtext';
@@ -277,6 +295,7 @@ export class PreviewPanel {
         }
         const panel = vscode.window.createWebviewPanel('rinxPreview', 'Rinx Preview', placement, {
             enableScripts: true,
+            localResourceRoots: workspaceFolderUris(),
         });
         PreviewPanel.currentPanel = new PreviewPanel(panel, client);
     }
@@ -325,6 +344,17 @@ export class PreviewPanel {
             this.disposables,
         );
         vscode.window.onDidChangeActiveTextEditor((editor) => this.followEditor(editor), null, this.disposables);
+        vscode.workspace.onDidChangeWorkspaceFolders(
+            () => {
+                this.panel.webview.options = {
+                    ...this.panel.webview.options,
+                    localResourceRoots: workspaceFolderUris(),
+                };
+                this.scheduleUpdate();
+            },
+            null,
+            this.disposables,
+        );
         void this.update();
     }
 
@@ -365,7 +395,8 @@ export class PreviewPanel {
         const document = this.document;
         if (!document) return;
         const request = this.requests.next();
-        const shown = await renderPage(this.client(), document);
+        const resourceRoot = this.panel.webview.asWebviewUri(vscode.Uri.file('/')).toString();
+        const shown = await renderPage(this.client(), document, resourceRoot);
         if (this.disposed || !this.requests.isLatest(request)) return;
         this.deliver(this.delivery.show(shown, this.panel.visible));
     }

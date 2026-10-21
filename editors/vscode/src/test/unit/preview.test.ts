@@ -60,6 +60,26 @@ suite('Preview Test Suite', () => {
         assert.deepStrictEqual(asked, [[PREVIEW_METHOD, { textDocument: { uri: document.toString() } }]]);
     });
 
+    test('renderPage: asks for the page under the resource root', async () => {
+        // Given
+        const asked: PreviewParams[] = [];
+        const client: PreviewClient = {
+            sendRequest: async (_method, params) => {
+                asked.push(params);
+                return { html: '<p>page</p>' };
+            },
+        };
+        const document = vscode.Uri.file('/docs/index.rst');
+
+        // When
+        await renderPage(client, document, 'https://webview/');
+
+        // Then
+        assert.deepStrictEqual(asked, [
+            { textDocument: { uri: document.toString() }, resourceRoot: 'https://webview/' },
+        ]);
+    });
+
     test('renderPage: says why the server rendered no page', async () => {
         // Given
         const client: PreviewClient = {

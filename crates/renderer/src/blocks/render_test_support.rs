@@ -100,6 +100,7 @@ fn with_ctx_over<R>(
         highlight_errors: &mut Vec::new(),
         image_errors: &mut Vec::new(),
         embedded_assets,
+        image_locator: None,
         highlighter: &highlighter,
         highlight_language: language,
         collapse_entities: true,

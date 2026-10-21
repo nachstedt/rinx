@@ -37,8 +37,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
   #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
   #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315), #18 (PR #317),
-  #19 (PR #319), #20 (PR #324), #21 (PR #328) and #22 (PR #330).
-- **Next: #23, the preview in legacy projects.**
+  #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330) and #23.
+- **Next: #40, preview navigation.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -764,7 +764,7 @@ Not done here: images and every other file a page links beside it (#23),
 links that lead somewhere (#40), and the version switcher's script, which a
 webview cannot load (issue #329).
 
-### 23. Preview in legacy projects
+### 23. Preview in legacy projects ✅
 
 **You experience:** the preview works in a Sphinx project with no Bazel.
 
@@ -772,6 +772,27 @@ webview cannot load (issue #329).
 - Images resolved against the workspace (`localResourceRoots`, and the
   request's `resourceRoot`)
 - Manual check on CPython
+
+The extension now sends the `resourceRoot` #22 added, which is
+`asWebviewUri(file:///)`, and sets the panel's `localResourceRoots` to the
+workspace folders. The server links an authored image under it where the image
+lies in the source tree, through a `rinx_renderer::ImageLocator` the preview
+injects (`render_with_page_assets`). The renderer still reads no file and
+knows no address. Only a file inside a workspace folder is linked, since the
+webview reads no other. A stylesheet outside them, such as a consuming
+module's default template under the execution root, stays embedded; sending
+the root would otherwise have broken it. A `:loading: embed` image is linked
+too, since the server reads no image's bytes. Without a `resourceRoot` the
+page is the build's own, `_images/` included, which keeps the parity test
+unchanged.
+
+Checked by hand on CPython's `Doc/` over stdio: every image of
+`library/pathlib.rst` and `using/windows.rst` links a file in the source tree.
+
+Not done here: an image outside every workspace folder, or one Bazel
+generates, is not shown (issue #331); an image edited on the disk may show the
+webview's cached copy until the page loads again (issue #332); `:download:`
+links and compiled diagrams keep their site addresses (#40, #24).
 
 ### 40. Preview navigation
 
