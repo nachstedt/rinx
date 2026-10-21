@@ -120,8 +120,9 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
 }
 
 /// The response to a request other than `shutdown`, which the loop answers
-/// itself: a completion, a hover, a definition, the quick fixes or a preview, or the refusal of a method
-/// rinx does not support or of parameters that do not parse.
+/// itself: a completion, a hover, a definition, the quick fixes or a
+/// preview, or the refusal of a method rinx does not support or of
+/// parameters that do not parse.
 pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
     let Request { id, method, params } = request;
     match method.as_str() {

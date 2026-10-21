@@ -81,8 +81,9 @@ pub(super) fn process_parse(
 }
 
 /// Parses the optional `--default-domain` flag, defaulting to `py` — this is
-/// how `rinx_library`'s Bazel attribute reaches the `parse` subcommand (see `rules/library.bzl`, whose `default_domain` attribute
-/// restricts to the same two values via `values = ["py", "c"]`).
+/// how `rinx_library`'s Bazel attribute reaches the `parse` subcommand (see
+/// `rules/library.bzl`, whose `default_domain` attribute restricts to the
+/// same two values via `values = ["py", "c"]`).
 ///
 /// Deliberately narrower than `ast::Domain::FromStr`, which also accepts
 /// `"std"` (needed so `ObjectType`'s `"std:cmdoption:..."` keys round-trip):

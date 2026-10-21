@@ -4,9 +4,10 @@
 //! [`layout`] owns the `MiniJinja` template rendering and the CSS path
 //! computation, delegating the sidebar's `.rst`-to-`.html` href rewriting to
 //! [`nav_hrefs`]; [`document_page`] assembles one document's page from it,
-//! for the build and the editor's preview alike; [`genindex`] and [`modindex`] render the standalone general
-//! index and Python Module Index pages from the project index. All of them
-//! read site metadata from [`crate::config`].
+//! for the build and the editor's preview alike; [`genindex`] and
+//! [`modindex`] render the standalone general index and Python Module Index
+//! pages from the project index. All of them read site metadata from
+//! [`crate::config`].
 
 mod document_page;
 mod genindex;

@@ -34,9 +34,10 @@ enum LspMode {
 /// Accepts `--stdio`, which clients such as `vscode-languageclient` append
 /// when told the transport, and which names the only one this server has, or
 /// `--check <folder>`, followed by any of `--python <exe>` (once),
-/// `--manifest <file>` (each a site) and `--preview <document>` (each timed). Anything else is refused rather than
-/// ignored, so a flag that a later version of the server would understand is
-/// not silently dropped by this one.
+/// `--manifest <file>` (each a site) and `--preview <document>` (each
+/// timed). Anything else is refused rather than ignored, so a flag that a
+/// later version of the server would understand is not silently dropped by
+/// this one.
 fn read_lsp_args(args: &[String]) -> Result<LspMode> {
     match args {
         [flag, rest @ ..] if flag == "--check" => {
