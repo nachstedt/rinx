@@ -15,12 +15,23 @@
 use std::fmt::Write;
 
 use rinx_ast::EntitySequence;
-use rinx_uml::{SequenceDrawing, UmlContext, build_sequence};
+use rinx_uml::{SequenceDrawing, SequenceError, UmlContext, build_sequence};
 
 use crate::RenderCtx;
 use crate::uml_error::DiagramError;
 
-use super::diagram_figure::{DiagramFigure, record_diagram_source, render_diagram_figure};
+use super::diagram_figure::{
+    DiagramFigure, record_diagram_source, render_diagram_failure, render_diagram_figure,
+};
+
+/// `problem`, reported against the directive it was found walking.
+fn reported(sequence: &EntitySequence, problem: &SequenceError) -> DiagramError {
+    DiagramError {
+        directive: sequence.source.as_str().to_string(),
+        error: problem.clone().into(),
+        span: sequence.span,
+    }
+}
 
 /// Walks the diagram, recording every problem against the directive.
 fn walked(sequence: &EntitySequence, ctx: &mut RenderCtx) -> SequenceDrawing {
@@ -28,11 +39,7 @@ fn walked(sequence: &EntitySequence, ctx: &mut RenderCtx) -> SequenceDrawing {
         UmlContext::new(ctx.index, ctx.schema, ctx.original_doc_path).with_configs(ctx.uml_configs);
     let drawing = build_sequence(sequence, &uml_ctx);
     for problem in &drawing.problems {
-        ctx.diagram_errors.push(DiagramError {
-            directive: sequence.source.as_str().to_string(),
-            error: problem.clone().into(),
-            span: sequence.span,
-        });
+        ctx.diagram_errors.push(reported(sequence, problem));
     }
     if let Some(content) = &drawing.content {
         record_diagram_source(ctx, content);
@@ -50,6 +57,12 @@ pub(super) fn render_entity_sequence(
     // A walk that drew nothing was never compiled, so there is no picture to
     // point at — the same reason a failed flowchart renders no `<img>`.
     let Some(content) = &drawing.content else {
+        let messages: Vec<String> = drawing
+            .problems
+            .iter()
+            .map(|problem| reported(sequence, problem).message())
+            .collect();
+        render_diagram_failure(html, ctx, &messages.join("\n"), None);
         return;
     };
 

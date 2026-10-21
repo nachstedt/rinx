@@ -7,4 +7,5 @@ Each document here holds a mistake only the whole project reveals.
 
    labels
    needs
+   diagrams
    gone

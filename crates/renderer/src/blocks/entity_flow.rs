@@ -17,28 +17,33 @@ use rinx_uml::{UmlContext, build_flow};
 use crate::RenderCtx;
 use crate::uml_error::DiagramError;
 
-use super::diagram_figure::{DiagramFigure, record_diagram_source, render_diagram_figure};
+use super::diagram_figure::{
+    DiagramFigure, record_diagram_source, render_diagram_failure, render_diagram_figure,
+};
 
 /// Draws the flowchart, recording a failure against the directive.
 ///
 /// The two things that can still fail here are the two that need the whole
 /// project: a filter that matched nothing, and a `:config:` naming a preamble
 /// the site does not declare. Everything else was settled while parsing.
-fn drawn_content(flow: &EntityFlow, ctx: &mut RenderCtx) -> Option<HashedContent> {
+/// A failure's message is returned for the page to show where it may.
+fn drawn_content(flow: &EntityFlow, ctx: &mut RenderCtx) -> Result<HashedContent, String> {
     let uml_ctx =
         UmlContext::new(ctx.index, ctx.schema, ctx.original_doc_path).with_configs(ctx.uml_configs);
     match build_flow(flow, &uml_ctx) {
         Ok(content) => {
             record_diagram_source(ctx, &content);
-            Some(content)
+            Ok(content)
         }
         Err(error) => {
-            ctx.diagram_errors.push(DiagramError {
+            let failure = DiagramError {
                 directive: flow.source.as_str().to_string(),
                 error: error.into(),
                 span: flow.span,
-            });
-            None
+            };
+            let message = failure.message();
+            ctx.diagram_errors.push(failure);
+            Err(message)
         }
     }
 }
@@ -47,8 +52,13 @@ fn drawn_content(flow: &EntityFlow, ctx: &mut RenderCtx) -> Option<HashedContent
 pub(super) fn render_entity_flow(html: &mut String, flow: &EntityFlow, ctx: &mut RenderCtx) {
     // A flowchart that drew nothing was never compiled, so there is no picture
     // to point at — the same reason a failed template renders no `<img>`.
-    let Some(content) = drawn_content(flow, ctx) else {
-        return;
+    let content = match drawn_content(flow, ctx) {
+        Ok(content) => content,
+        // A flowchart has no template: there is nothing written to quote.
+        Err(message) => {
+            render_diagram_failure(html, ctx, &message, None);
+            return;
+        }
     };
 
     render_diagram_figure(

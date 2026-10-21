@@ -313,11 +313,31 @@ fn import_one(
             &std::collections::BTreeMap::new(),
             Some(id),
         )
-        .map_err(|error| record(failure, error)),
+        .map_err(|error| record(failure, imported(error, id))),
         None => Ok(String::new()),
     };
     left(chain);
     Ok(Value::from(expanded?))
+}
+
+/// A failure inside the diagram imported from `id`, as the importing diagram
+/// reports it.
+///
+/// A template error's line is the *imported* template's, which the caller
+/// would place on the importing diagram's line of that number — so it moves
+/// into the message, naming the import, and the error keeps no line. Every
+/// other failure already names what it is about.
+fn imported(error: UmlError, id: &str) -> UmlError {
+    match error {
+        UmlError::Template {
+            message,
+            line: Some(line),
+        } => UmlError::Template {
+            message: format!("on line {line} of the diagram imported from '{id}': {message}"),
+            line: None,
+        },
+        other => other,
+    }
 }
 
 /// Pushes `id` onto the import chain, or reports the cycle it would close.

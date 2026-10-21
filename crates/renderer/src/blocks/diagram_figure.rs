@@ -12,12 +12,17 @@
 //! produced by a build action, and the only thing agreed between the two is the
 //! hash — which is why the text is hashed exactly once, here in the render, and
 //! handed back for the same process to write.
+//!
+//! The language server's preview compiles nothing, so under
+//! [`DiagramPictures::Source`] the picture's place holds the `PlantUML` text
+//! instead, for the webview to draw, and a diagram that could not be drawn
+//! shows why there ([`render_diagram_failure`]).
 
 use std::fmt::Write as _;
 
 use rinx_ast::{HashedContent, ImageAlign, LengthOrPercentage, TargetName};
 
-use crate::RenderCtx;
+use crate::{DiagramPictures, RenderCtx};
 
 use crate::asset_href::{AssetDir, relative_asset_href};
 
@@ -75,8 +80,6 @@ pub(super) fn render_diagram_figure(
     figure: &DiagramFigure<'_>,
     ctx: &RenderCtx<'_>,
 ) {
-    let src = diagram_src(figure.content, ctx);
-    let src = html_escape::encode_double_quoted_attribute(&src);
     let classes = wrapper_classes(figure);
     let classes = html_escape::encode_double_quoted_attribute(&classes);
 
@@ -87,13 +90,16 @@ pub(super) fn render_diagram_figure(
     }
     let _ = writeln!(html, ">");
 
-    let _ = write!(html, "  <img src=\"{src}\" alt=\"{DIAGRAM_ALT}\"");
-    if let Some(width) = &figure.width {
-        let style = format!("width: {width}");
-        let style = html_escape::encode_double_quoted_attribute(&style);
-        let _ = write!(html, " style=\"{style}\"");
+    match ctx.diagram_pictures {
+        DiagramPictures::Compiled => {
+            let src = diagram_src(figure.content, ctx);
+            let src = html_escape::encode_double_quoted_attribute(&src);
+            let _ = write!(html, "  <img src=\"{src}\" alt=\"{DIAGRAM_ALT}\"");
+            write_width_style(html, figure);
+            let _ = writeln!(html, " />");
+        }
+        DiagramPictures::Source => render_drawable_source(html, figure),
     }
-    let _ = writeln!(html, " />");
 
     if let Some(caption) = figure.caption {
         let text = html_escape::encode_text(caption);
@@ -104,6 +110,41 @@ pub(super) fn render_diagram_figure(
 
     if figure.debug {
         render_debug_source(html, figure.content);
+    }
+}
+
+/// The `style` giving the picture its `:width:`, if one was written.
+fn write_width_style(html: &mut String, figure: &DiagramFigure<'_>) {
+    if let Some(width) = &figure.width {
+        let style = format!("width: {width}");
+        let style = html_escape::encode_double_quoted_attribute(&style);
+        let _ = write!(html, " style=\"{style}\"");
+    }
+}
+
+/// The diagram's text where its picture would be, marked for a reader that
+/// draws `PlantUML` itself — the preview's webview, which replaces it with
+/// the picture and carries its `style` over. Any other reader sees the text.
+fn render_drawable_source(html: &mut String, figure: &DiagramFigure<'_>) {
+    let source = html_escape::encode_text(figure.content.body());
+    let _ = write!(html, "  <pre class=\"plantuml-source\" data-rinx-plantuml");
+    write_width_style(html, figure);
+    let _ = writeln!(html, "><code>{source}</code></pre>");
+}
+
+/// Shows why a diagram could not be drawn, where its picture would be — under
+/// [`DiagramPictures::Source`] only: the build's page shows nothing, its
+/// warning already in the log, while the preview is where the author looks.
+/// `source` is what the author wrote, when the diagram has a template to
+/// quote.
+pub(super) fn render_diagram_failure(
+    html: &mut String,
+    ctx: &RenderCtx<'_>,
+    message: &str,
+    source: Option<&str>,
+) {
+    if ctx.diagram_pictures == DiagramPictures::Source {
+        super::directive_error::render_error_block(html, message, source);
     }
 }
 

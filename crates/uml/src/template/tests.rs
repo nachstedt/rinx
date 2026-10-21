@@ -341,6 +341,37 @@ fn test_uml_reports_an_id_nothing_declares() {
 }
 
 #[test]
+fn test_a_syntax_error_in_an_imported_diagram_names_the_import_rather_than_a_line() {
+    // Given — the imported diagram's second line is unterminated
+    let index = index_with(vec![(
+        "COMP_A",
+        requirement_drawing("arch.rst", "A", "", "A -> B\n{{ unterminated"),
+    )]);
+
+    // When
+    let error = expand_against(&index, "{{ uml('COMP_A') }}").expect_err("a syntax error");
+
+    // Then — line 2 is the import's, not the importing diagram's
+    let UmlError::Template { message, line } = &error else {
+        panic!("expected a template error, found {error:?}");
+    };
+    assert_eq!(*line, None);
+    assert!(
+        message.starts_with("on line 2 of the diagram imported from 'COMP_A': "),
+        "{message}"
+    );
+}
+
+#[test]
+fn test_imported_keeps_a_failure_that_is_not_a_located_template_error() {
+    // Given
+    let error = UmlError::UnknownEntity("REQ_404".to_string());
+
+    // When / Then
+    assert_eq!(imported(error.clone(), "COMP_A"), error);
+}
+
+#[test]
 fn test_a_diagram_importing_itself_is_reported_as_a_cycle() {
     // Given — an entity whose own diagram imports itself
     let index = index_with(vec![(

@@ -37,9 +37,9 @@ finished one 🔶. A heading with no marker means the step has not started.
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
   #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
   #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315), #18 (PR #317),
-  #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333)
-  and #40 (PR #335).
-- **Next: #24, diagram template errors.**
+  #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333),
+  #40 (PR #335) and #24.
+- **Next: #25, directive and option completion.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -830,15 +830,48 @@ Not done here: a link opens its document at the first line, not the label's,
 until #28/#29 give definitions their spans. The panel keeps no history to go
 back through (issue #334).
 
-### 24. Diagram template errors
+### 24. Diagram template errors ✅
 
 **You experience:** mistakes in `.. uml::` and `.. entity-flow::` are
-underlined, and no JVM runs.
+underlined, the preview draws the diagrams, and no JVM runs.
 
-- Call `rinx_uml::expand`/`build_flow`/`build_sequence` in the server's render path
+- Call `rinx_uml::expand`/`build_flow`/`build_sequence` in the server's render path (there since #6)
 - Map the errors to diagnostics
-- Preview shows the diagram source in place of the picture
-- Optional: PlantUML if a jar is configured
+- Preview shows the diagram source in place of the picture (it draws the picture instead)
+- Optional: PlantUML if a jar is configured (not done; see below)
+
+The render tier had expanded every diagram since #6, so the step's first two
+items needed only tests, and the parity test now runs the build's `render`
+action too: `parity_project/diagrams.rst` holds one broken diagram of each
+kind. What changed is where a Jinja error lands. `Uml::template_span` records
+where the template starts, and a template error MiniJinja places on a line is
+reported on that line of the document, in the build and the editor alike. An
+error inside an imported diagram (`uml()`) names the import instead, since its
+line is another template's.
+
+The preview draws each diagram with PlantUML's own engine compiled to
+JavaScript, `@plantuml/core`, pinned to the build's jar (1.2026.8) and bundled
+into the extension (ADR-042; 1.7 MB in the VSIX). The server puts the
+expanded text where the picture would be, under
+`rinx_renderer::DiagramPictures::Source`, exactly when the request names a
+`resourceRoot`, so the parity test's page is unchanged. A diagram that could
+not be expanded shows the build's warning in its place. The webview draws one
+text at a time and keeps each picture by its text, so typing redraws only
+what changed. The Rust reimplementations were rejected: the most complete,
+`plantuml-little`, matches upstream only as of 1.2026.2 and links a native
+Graphviz.
+
+A PlantUML syntax error is PlantUML's to find. The preview shows PlantUML's
+error picture, naming the line, as the build's jar draws it; the problems list
+does not show it (issue #336).
+
+Not done here:
+- Diagrams including PlantUML's standard library do not draw in the preview
+  (issue #337).
+- The preview lays diagrams out with Graphviz, where the build uses ELK
+  (issue #338).
+- In a `jinja = True` document, a template error is misplaced when the
+  document's own Jinja splices lines into the diagram's body (issue #339).
 
 ---
 

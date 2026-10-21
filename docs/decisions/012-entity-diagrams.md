@@ -85,10 +85,13 @@ rediscover it by walking outwards from the node.
 
 Diagnostics come from the renderer, which holds the directive's span — so
 template errors get positions, `.. noqa:` suppression and the standard
-`warning: path:line:col: code: message` shape for free. A side benefit: live
-preview reports template *syntax* errors even though it cannot draw a picture.
-It stays quiet about failures that depend on the graph, since a preview merges
-a stale index — the same distinction an empty `.. entity-table::` already makes.
+`warning: path:line:col: code: message` shape for free. A Jinja error the
+engine places on a line of the template is reported on that line of the
+document, through the template's own position (`Uml::template_span`); one
+inside an imported diagram names the import instead, since its line is
+another template's. The language server renders against the project's
+current index, so the editor reports every one of these failures, graph
+included, and its preview draws the picture itself (ADR-042).
 
 ### 4. Diagrams are opt-in per library, and compiled by the site
 

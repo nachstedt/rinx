@@ -51,7 +51,7 @@ pub use page::{
     MODINDEX_PATH, MODINDEX_TITLE, PageMeta, css_relative_path, page_title, render_document_page,
     render_genindex, render_modindex, render_page,
 };
-pub use page_assets::{ImageLocator, PageAssets};
+pub use page_assets::{DiagramPictures, ImageLocator, PageAssets};
 pub use reference_target::{Destination, ReferenceResolver, ReferenceTarget};
 pub use uml_error::{DiagramError, DiagramFailure};
 
@@ -150,6 +150,9 @@ pub(crate) struct RenderCtx<'a> {
     /// Where an authored image lies, for a page with no `_images/` beside it
     /// — the language server's preview. `None` in the build.
     pub image_locator: Option<&'a dyn ImageLocator>,
+    /// How a diagram is shown — compiled into `_images/` by the build, or as
+    /// its text for the language server's preview to draw.
+    pub diagram_pictures: DiagramPictures,
     /// Turns source text into classed HTML. Held for the whole document so
     /// the grammar set is resolved once per page, not once per code block.
     pub highlighter: &'a Highlighter,
@@ -352,6 +355,7 @@ pub fn render_with_page_assets(
         image_errors: &mut image_errors,
         embedded_assets: assets.embedded,
         image_locator: assets.images,
+        diagram_pictures: assets.diagrams,
         highlighter: &highlighter,
         highlight_language: config.highlight_language.clone(),
         collapse_entities: config.collapse_entities,

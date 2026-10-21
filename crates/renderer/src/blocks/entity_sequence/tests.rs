@@ -219,3 +219,28 @@ fn test_a_failure_names_the_directive_the_author_wrote_at_its_position() {
     );
     assert_eq!(errors[0].span, Some(span));
 }
+
+#[test]
+fn test_a_walk_that_drew_nothing_shows_why_when_shown_as_source() {
+    // Given — a start no document declares
+    let index = project();
+    let sequence = sequence(EntitySequenceSource::EntitySequence, "COMP_404");
+
+    // When
+    let html = with_ctx_for(
+        &index,
+        "index.rst",
+        ResolvedLanguage::default(),
+        &EmbeddedAssets::new(),
+        |ctx| {
+            ctx.diagram_pictures = crate::DiagramPictures::Source;
+            let mut html = String::new();
+            render_entity_sequence(&mut html, &sequence, ctx);
+            html
+        },
+    );
+
+    // Then
+    assert!(html.contains("class=\"directive-error\""), "{html}");
+    assert!(html.contains("COMP_404"), "{html}");
+}

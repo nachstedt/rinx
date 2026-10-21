@@ -698,6 +698,7 @@ mod tests {
             crate::PageAssets {
                 embedded,
                 images: Some(&UnderWork),
+                diagrams: crate::DiagramPictures::Compiled,
             },
             rinx_entity::EntitySchema::empty_ref(),
             &crate::blocks::EntityTemplates::new(),

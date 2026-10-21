@@ -64,6 +64,26 @@ suite('Preview (e2e)', () => {
         assert.ok(src.endsWith(workspaceFile('sphinx/logo.svg').path), page);
     });
 
+    test('the preview draws a diagram, with no JVM', async () => {
+        // Given
+        const api = await rinx();
+        await vscode.window.showTextDocument(workspaceFile('drawn.rst'));
+
+        // When
+        await vscode.commands.executeCommand('rinx.showPreview');
+
+        // Then — the server sent the text, the webview drew the picture with
+        // PlantUML's JavaScript build; the broken template drew none
+        const page = await waitFor('the page of drawn.rst', () => {
+            const html = api.previewHtml();
+            return html?.includes('data-rinx-plantuml') && html;
+        });
+        assert.ok(!page.includes('_images/'), page);
+        assert.ok(page.includes('needuml: template error on line 2 of the diagram'), page);
+        const drawn = await waitFor('the diagram drawn', () => api.previewDiagrams());
+        assert.deepStrictEqual(drawn, { type: 'diagrams', drawn: 1, failed: [] });
+    });
+
     test('the preview shows a title changed a moment ago in another document', async () => {
         // Given — `navigating.rst` links to `labelled.rst`'s section by
         // label, so the link shows that section's title

@@ -23,8 +23,20 @@
 // `rinx/previewLink` request, which names the source it leads to — a
 // document, opened beside the panel and previewed at the link's anchor, or a
 // `:download:` file — or none, for a page the build writes on its own.
+//
+// A diagram arrives as its PlantUML text, which the page draws itself with
+// PlantUML's JavaScript build, loaded from the extension (`diagrams.ts`).
 
 import * as vscode from 'vscode';
+import {
+    DIAGRAM_DRAWER,
+    DiagramEngine,
+    DiagramsMessage,
+    diagramEngine,
+    engineDirectory,
+    engineScripts,
+    isDiagramsMessage,
+} from './diagrams';
 import { errorMessage } from './errors';
 
 /** The request the server answers with a document's page. */
@@ -218,9 +230,14 @@ export async function resolveLink(
  *
  * A click on a link is never the webview's to follow: a `#fragment` scrolls
  * the page, and any other link is posted to the panel as `link`.
+ *
+ * It draws the page's diagrams after each page, through the drawer, which the
+ * engine calls too once it has loaded.
  */
 const PAGE_UPDATER = `(() => {
     const vscode = acquireVsCodeApi();
+    const drawDiagrams = DRAWER((message) => vscode.postMessage(message), window, document);
+    window.rinxDrawDiagrams = drawDiagrams;
     let current = DOCUMENT;
     // A jump, not the theme's smooth scroll, whenever the position is restored.
     document.documentElement.style.scrollBehavior = 'auto';
@@ -272,8 +289,10 @@ const PAGE_UPDATER = `(() => {
         if (message.fragment) scrollToAnchor(message.fragment);
         else window.scrollTo(0, y);
         remember();
+        drawDiagrams();
         vscode.postMessage({ type: 'shown' });
     });
+    drawDiagrams();
     vscode.postMessage({ type: 'ready' });
 })();`;
 
@@ -284,13 +303,14 @@ function scriptLiteral(value: string | null): string {
 
 /**
  * `page`, the page of `document`, with the script that swaps later pages into
- * it, placed last in its body, and shown at the anchor `fragment` when given.
+ * it, placed last in its body, and shown at the anchor `fragment` when given;
+ * `engine`, when given, is loaded after it to draw the page's diagrams.
  */
-export function withPageUpdater(page: string, document: string, fragment?: string): string {
-    const updater = PAGE_UPDATER.replace('DOCUMENT', () => scriptLiteral(document)).replace('FRAGMENT', () =>
-        scriptLiteral(fragment ?? null),
-    );
-    const script = `<script>${updater}</script>`;
+export function withPageUpdater(page: string, document: string, fragment?: string, engine?: DiagramEngine): string {
+    const updater = PAGE_UPDATER.replace('DRAWER', () => DIAGRAM_DRAWER)
+        .replace('DOCUMENT', () => scriptLiteral(document))
+        .replace('FRAGMENT', () => scriptLiteral(fragment ?? null));
+    const script = `<script>${updater}</script>${engine ? engineScripts(engine) : ''}`;
     const end = page.lastIndexOf('</body>');
     return end < 0 ? page + script : page.slice(0, end) + script + page.slice(end);
 }
@@ -322,6 +342,9 @@ export class PageDelivery {
     private assigned = true;
     /** A page held back while the webview's page loads. */
     private pending: Shown | undefined;
+
+    /** `engine`, when given, draws the diagrams of every page loaded. */
+    constructor(private readonly engine?: DiagramEngine) {}
 
     /** How to show `shown` in a webview that is `visible`. */
     show(shown: Shown, visible: boolean): Delivery {
@@ -372,7 +395,10 @@ export class PageDelivery {
         this.pending = undefined;
         this.ready = false;
         this.loading = shown.kind === 'page';
-        const html = shown.kind === 'page' ? withPageUpdater(shown.html, shown.document, shown.fragment) : shown.html;
+        const html =
+            shown.kind === 'page'
+                ? withPageUpdater(shown.html, shown.document, shown.fragment, this.engine)
+                : shown.html;
         return { action: 'assign', html, shown };
     }
 }
@@ -384,9 +410,12 @@ function pageMessage(shown: Shown): PageMessage {
     return message;
 }
 
-/** The folders a page's files may be loaded from: the workspace's. */
-function workspaceFolderUris(): vscode.Uri[] {
-    return (vscode.workspace.workspaceFolders ?? []).map((folder) => folder.uri);
+/**
+ * The folders a page's files may be loaded from: the workspace's, and the
+ * extension's directory holding the diagram engine.
+ */
+function resourceRoots(extensionUri: vscode.Uri): vscode.Uri[] {
+    return [...(vscode.workspace.workspaceFolders ?? []).map((folder) => folder.uri), engineDirectory(extensionUri)];
 }
 
 /** What the panel asks of the language client: pages, and where their links lead. */
@@ -405,7 +434,7 @@ export class PreviewPanel {
     public static currentPanel: PreviewPanel | undefined;
     private readonly disposables: vscode.Disposable[] = [];
     private readonly requests = new LatestRequest();
-    private readonly delivery = new PageDelivery();
+    private readonly delivery: PageDelivery;
     private document: vscode.Uri | undefined;
     /** The editor column the shown document was last active in. */
     private sourceColumn: vscode.ViewColumn | undefined;
@@ -419,14 +448,17 @@ export class PreviewPanel {
     private loadingPage: string | undefined;
     /** The page last posted, shown once the webview says so. */
     private postedPage: string | undefined;
+    /** What the webview last reported of the diagrams it drew. */
+    private drawnDiagrams: DiagramsMessage | undefined;
 
     /**
      * Reveals the panel, creating it if there is none — beside the editor,
      * which keeps the focus, as Markdown's preview to the side opens, so the
      * page can be watched while typing; `client` gives the running language
-     * client, if any.
+     * client, if any, and `extensionUri` the extension, whose diagram engine
+     * the page loads.
      */
-    public static createOrShow(client: () => PanelClient | undefined): void {
+    public static createOrShow(client: () => PanelClient | undefined, extensionUri: vscode.Uri): void {
         const placement = { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true };
         if (PreviewPanel.currentPanel) {
             PreviewPanel.currentPanel.panel.reveal(placement.viewColumn, placement.preserveFocus);
@@ -434,21 +466,25 @@ export class PreviewPanel {
         }
         const panel = vscode.window.createWebviewPanel('rinxPreview', 'Rinx Preview', placement, {
             enableScripts: true,
-            localResourceRoots: workspaceFolderUris(),
+            localResourceRoots: resourceRoots(extensionUri),
         });
-        PreviewPanel.currentPanel = new PreviewPanel(panel, client);
+        PreviewPanel.currentPanel = new PreviewPanel(panel, client, extensionUri);
     }
 
     private constructor(
         private readonly panel: vscode.WebviewPanel,
         private readonly client: () => PanelClient | undefined,
+        private readonly extensionUri: vscode.Uri,
     ) {
+        this.delivery = new PageDelivery(diagramEngine(panel.webview, extensionUri));
         this.followEditor(vscode.window.activeTextEditor);
         this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
         this.panel.webview.onDidReceiveMessage(
             (message: { type?: string; href?: unknown }) => {
                 if (message.type === 'link' && typeof message.href === 'string') {
                     void this.followLink(message.href);
+                } else if (isDiagramsMessage(message)) {
+                    this.drawnDiagrams = message;
                 } else if (message.type === 'ready') {
                     this.displayed = this.loadingPage ?? this.displayed;
                     this.loadingPage = undefined;
@@ -489,7 +525,7 @@ export class PreviewPanel {
             () => {
                 this.panel.webview.options = {
                     ...this.panel.webview.options,
-                    localResourceRoots: workspaceFolderUris(),
+                    localResourceRoots: resourceRoots(this.extensionUri),
                 };
                 this.scheduleUpdate();
             },
@@ -505,6 +541,11 @@ export class PreviewPanel {
      */
     public get html(): string | undefined {
         return this.displayed;
+    }
+
+    /** What the webview last reported of the diagrams it drew, if anything. */
+    public get diagrams(): DiagramsMessage | undefined {
+        return this.drawnDiagrams;
     }
 
     /**

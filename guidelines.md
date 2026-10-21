@@ -207,6 +207,8 @@ entry under the heading it belongs to, as a single short sentence.
 - Let an unmigrated Sphinx project try a tool without adopting Bazel first, since a low barrier to trying is what leads to adoption.
 - When a borrowed construct has a sibling that differs in exactly one field, model that field as an enum from the first commit — one variant is enough — so adding the sibling later is a new arm rather than a change to every match and every already-serialized file.
 - When a borrowed feature depends on reference behaviour the local implementation lacks (a bare `:ref:` showing its section title), implement that behaviour for the local path too rather than only for the new one.
+- Make a preview show what the reader will see; showing source in place of rendered output is no fallback to settle for while a faithful renderer exists.
+- To render a third party's format where its native tool cannot run, prefer that tool's own code built for the new platform over a reimplementation, since only the original agrees with the build.
 
 ## Scope of a guideline
 
