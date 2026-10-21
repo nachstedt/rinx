@@ -31,7 +31,7 @@ import {
     debounced,
     ManifestDependencies,
 } from './manifests';
-import { PreviewClient, PreviewPanel } from './preview';
+import { PanelClient, PreviewPanel } from './preview';
 import { IndexStatus, IndexStatusItem, STATUS_METHOD } from './status';
 
 // A log channel rather than a plain one: the language client writes its own
@@ -46,8 +46,8 @@ let client: LanguageClient | undefined;
 // The binary the language server was started from, once it has been.
 let serverBinary: string | undefined;
 
-/** The language client, while it runs: what the preview asks for pages. */
-function runningClient(): PreviewClient | undefined {
+/** The language client, while it runs: what the preview asks for pages and links. */
+function runningClient(): PanelClient | undefined {
     return client?.isRunning() ? client : undefined;
 }
 
@@ -64,6 +64,8 @@ export interface RinxApi {
     serverBinary(): string | undefined;
     /** The page the preview panel shows, if it is open and shows one. */
     previewHtml(): string | undefined;
+    /** Follows `href` as a click on it in the preview panel does, if one is open. */
+    followPreviewLink(href: string): Promise<void>;
 }
 
 export function activate(context: vscode.ExtensionContext): RinxApi {
@@ -87,6 +89,9 @@ export function activate(context: vscode.ExtensionContext): RinxApi {
         indexStatus: () => statusItem.last,
         serverBinary: () => serverBinary,
         previewHtml: () => PreviewPanel.currentPanel?.html,
+        followPreviewLink: async (href) => {
+            await PreviewPanel.currentPanel?.followLink(href);
+        },
     };
 }
 

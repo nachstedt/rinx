@@ -450,6 +450,60 @@ fn test_lsp_previews_an_open_documents_page() {
 }
 
 #[test]
+fn test_lsp_follows_a_link_of_the_preview_to_its_source() {
+    // Given — a scanned folder whose `setup.rst` labels a section
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_preview_link");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    std::fs::write(
+        root.join("setup.rst"),
+        ".. _install:\n\nInstalling\n==========\n",
+    )
+    .expect("write");
+    let index = format!("file://{}", root.join("index.rst").display());
+    let mut server = Server::spawn();
+    server.initialize_with(json!({
+        "capabilities": {},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+    while !matches!(
+        server.receive(),
+        Message::Notification(notification)
+            if notification.method == "rinx/status" && notification.params["state"] == "ready"
+    ) {}
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": index, "languageId": "restructuredtext", "version": 1,
+            "text": "Home\n====\n\nSee :ref:`install`.\n",
+        }}),
+    );
+
+    // When
+    server.request(
+        2,
+        "rinx/previewLink",
+        json!({ "textDocument": { "uri": index }, "href": "setup.html#install" }),
+    );
+    let answered = std::iter::from_fn(|| Some(server.receive()))
+        .find_map(|message| match message {
+            Message::Response(response) => Some(response),
+            _ => None,
+        })
+        .expect("the link's target");
+
+    // Then
+    assert_eq!(
+        answered.response_result.expect("a target"),
+        json!({
+            "kind": "document",
+            "uri": format!("file://{}", root.join("setup.rst").display()),
+            "fragment": "install",
+        })
+    );
+}
+
+#[test]
 fn test_lsp_opens_the_document_a_reference_leads_to() {
     // Given — a scanned folder whose `setup.rst` labels a section
     let root = std::env::temp_dir().join("rinx_lsp_stdio_definition");

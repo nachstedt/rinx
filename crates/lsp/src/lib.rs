@@ -12,7 +12,8 @@
 //!   it leads, and `definition` opens the document it leads to;
 //! - `diagnostics` parses an open document and converts what the parser found;
 //! - `render` renders a document for the diagnostics only a render finds, and
-//!   `preview` renders its whole page for the editor's preview;
+//!   `preview` renders its whole page for the editor's preview, whose links
+//!   `preview_link` follows back to their sources;
 //! - `position` converts rinx's 1-based character positions to the protocol's
 //!   0-based, negotiated-unit ones;
 //! - `documents` holds the text of every open document;
@@ -34,6 +35,7 @@ mod include_summary;
 mod includes;
 mod position;
 mod preview;
+mod preview_link;
 mod progress;
 mod project;
 mod reference_at;

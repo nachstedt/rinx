@@ -71,6 +71,7 @@ use crate::position::{PositionEncoding, char_index_of, to_lsp_position, to_lsp_r
 use crate::preview::{
     PreviewRefusal, PreviewSettings, ResourceRoot, render_preview, render_preview_alone,
 };
+use crate::preview_link::{PageHref, PreviewLinkKind, PreviewLinkResult, resolve_page_href};
 use crate::progress::{IndexState, ScanProgress};
 use crate::project::{
     DiscoveredProject, IndexedDocument, ParseSettings, Project, ScannedProject, Strictness,
@@ -549,6 +550,62 @@ impl ServerState {
         };
         render_preview(document, project.project_index(), &settings, &read)
             .map_err(PreviewRefusal::Failed)
+    }
+
+    /// Where the link `href` on the preview of the open document `uri`
+    /// leads: the source of a document its project holds, or a file a
+    /// `:download:` names that exists — `None` for any other link, a page
+    /// the build writes on its own (`genindex`) among them. A document in no
+    /// project leads only to itself.
+    pub(super) fn preview_link(
+        &mut self,
+        uri: &Uri,
+        href: &str,
+    ) -> Result<Option<PreviewLinkResult>, PreviewRefusal> {
+        if self.documents.get(uri).is_none() {
+            return Err(PreviewRefusal::NotOpen);
+        }
+        let tracked = self.tracked.get(uri).ok_or(PreviewRefusal::NotOpen)?;
+        let doc_path = &tracked.parsed.document.path;
+        let Some(resolved) = resolve_page_href(doc_path, href) else {
+            return Ok(None);
+        };
+        let Some(project) = tracked.project.and_then(|id| self.projects.get_mut(&id)) else {
+            return Ok(match resolved {
+                PageHref::Document {
+                    doc_path: target,
+                    fragment,
+                } if &target == doc_path => Some(PreviewLinkResult {
+                    kind: PreviewLinkKind::Document,
+                    uri: uri.clone(),
+                    fragment,
+                }),
+                _ => None,
+            });
+        };
+        Ok(match resolved {
+            PageHref::Document { doc_path, fragment } => {
+                if project.project_index().find_document(&doc_path).is_none() {
+                    return Ok(None);
+                }
+                file_uri(&project.path_of(&doc_path)).map(|uri| PreviewLinkResult {
+                    kind: PreviewLinkKind::Document,
+                    uri,
+                    fragment,
+                })
+            }
+            PageHref::Download { source_relative } => {
+                let path = project.root().join(source_relative);
+                path.is_file()
+                    .then(|| file_uri(&path))
+                    .flatten()
+                    .map(|uri| PreviewLinkResult {
+                        kind: PreviewLinkKind::File,
+                        uri,
+                        fragment: None,
+                    })
+            }
+        })
     }
 
     /// The quick fixes for what the document `uri` fails the build on within

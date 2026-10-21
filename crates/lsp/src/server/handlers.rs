@@ -22,6 +22,7 @@ use super::conf_runs::CONF_INTERPRETER_CHANGED_METHOD;
 use super::state::ServerState;
 use crate::position::PositionEncoding;
 use crate::preview::{PREVIEW_METHOD, PreviewParams, PreviewRefusal, PreviewResult};
+use crate::preview_link::{PREVIEW_LINK_METHOD, PreviewLinkParams};
 
 /// The answer to `initialize` for a client announcing `capabilities`, and the
 /// position encoding the two have thereby agreed on.
@@ -121,7 +122,7 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
 
 /// The response to a request other than `shutdown`, which the loop answers
 /// itself: a completion, a hover, a definition, the quick fixes or a
-/// preview, or the refusal of a method rinx does not support or of
+/// preview or where one of its links leads, or the refusal of a method rinx does not support or of
 /// parameters that do not parse.
 pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
     let Request { id, method, params } = request;
@@ -180,6 +181,15 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
                     }
                 }
             }
+            Err(error) => invalid_params(id, &method, &error),
+        },
+        PREVIEW_LINK_METHOD => match serde_json::from_value::<PreviewLinkParams>(params) {
+            Ok(params) => match state.preview_link(&params.text_document.uri, &params.href) {
+                Ok(target) => Response::new_ok(id, target),
+                Err(refusal) => {
+                    Response::new_err(id, ErrorCode::InvalidParams as i32, refusal.to_string())
+                }
+            },
             Err(error) => invalid_params(id, &method, &error),
         },
         _ => Response::new_err(

@@ -37,8 +37,9 @@ finished one 🔶. A heading with no marker means the step has not started.
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
   #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
   #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315), #18 (PR #317),
-  #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330) and #23.
-- **Next: #40, preview navigation.**
+  #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333)
+  and #40.
+- **Next: #24, diagram template errors.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -764,7 +765,7 @@ Not done here: images and every other file a page links beside it (#23),
 links that lead somewhere (#40), and the version switcher's script, which a
 webview cannot load (issue #329).
 
-### 23. Preview in legacy projects ✅
+### 23. Preview in legacy projects ✅ (#333)
 
 **You experience:** the preview works in a Sphinx project with no Bazel.
 
@@ -794,7 +795,7 @@ generates, is not shown (issue #331); an image edited on the disk may show the
 webview's cached copy until the page loads again (issue #332); `:download:`
 links and compiled diagrams keep their site addresses (#40, #24).
 
-### 40. Preview navigation
+### 40. Preview navigation ✅
 
 Numbered last so the steps after it keep their numbers; it belongs here, after
 #23.
@@ -809,6 +810,25 @@ leads to, and the preview follows.
   scrolls the page; `genindex` and the domain indices have no source and are
   not followed
 - Tests
+
+The server reads an `href` as the inverse of what wrote it:
+`rinx_index::relative_doc_href` for a page, and the renderer's
+`relative_asset_href` for a `:download:` file, which the editor then opens.
+Neither encodes a path, so `rinx_lsp`'s `preview_link.rs` decodes none. A
+page leads to its document's file, `.txt` suffix and all, only when the
+project's fold holds the document, which is what leaves `genindex` and the
+domain indices unfollowed. A document in no project leads only to itself.
+The webview scrolls to a `#fragment` itself, and the extension opens an
+`http(s):` or `mailto:` link in the browser without asking the server. A
+document opens in the column its source was last shown in, keeping the focus
+on the panel, and the panel asks for its page at once, scrolled to the
+link's anchor. A page loaded again after the panel was hidden keeps the
+reader's place rather than the anchor. A test follows every link a rendered
+preview writes back to a source.
+
+Not done here: a link opens its document at the first line, not the label's,
+until #28/#29 give definitions their spans. The panel keeps no history to go
+back through (issue #334).
 
 ### 24. Diagram template errors
 

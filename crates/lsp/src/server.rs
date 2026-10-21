@@ -48,6 +48,8 @@ mod needs_tests;
 #[cfg(test)]
 mod notification_tests;
 #[cfg(test)]
+mod preview_link_tests;
+#[cfg(test)]
 mod preview_tests;
 #[cfg(test)]
 mod project_tests;
