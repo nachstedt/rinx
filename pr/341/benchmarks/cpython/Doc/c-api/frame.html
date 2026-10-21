@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Frame Objects — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python&#x2f;C API Reference Manual</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python&#x2f;C API Reference Manual"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stable.html">C API Stability</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="veryhigh.html">The Very High Level Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="refcounting.html">Reference Counting</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Exception Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="extension-modules.html">Defining extension modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="utilities.html">Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="abstract.html">Abstract Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="concrete.html">Concrete Objects Layer</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Concrete Objects Layer"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="concrete.html#fundamental-objects">Fundamental Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#numeric-objects">Numeric Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#sequence-objects">Sequence Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#container-objects">Container Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#function-objects">Function Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3 ancestor has-children">
+            <a href="concrete.html#other-objects">Other Objects</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Other Objects"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="file.html">File Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="module.html">Module Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="iterator.html">Iterator Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="descriptor.html">Descriptor Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="slice.html">Slice Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="memoryview.html">MemoryView objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="picklebuffer.html">Pickle buffer objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="weakref.html">Weak Reference Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="capsule.html">Capsules</a>
+            
+          </li>
+        
+          <li class="toctree-l4 current has-children">
+            <a href="frame.html">Frame Objects</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Frame Objects"></span></summary>
+              <ul>
+                
+          <li class="toctree-l5">
+            <a href="frame.html#frame-locals-proxies">Frame Locals Proxies</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="frame.html#legacy-local-variable-apis">Legacy Local Variable APIs</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="frame.html#internal-frames">Internal Frames</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="gen.html">Generator Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="coro.html">Coroutine Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="contextvars.html">Context Variables Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="typehints.html">Objects for Type Hinting</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#c-api-for-extension-modules">C API for extension modules</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init.html">Initialization, Finalization, and Threads</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init_config.html">Python Initialization Configuration</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="memory.html">Memory Management</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="objimpl.html">Object Implementation Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="apiabiversion.html">API and ABI Versioning</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="monitoring.html">Monitoring C API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="capsule.html">&larr; Capsules</a>
+        <a class="next" href="gen.html">Generator Objects &rarr;</a>
+      </nav>
+      
+      <h1 id="frame-objects">Frame Objects</h1>
+<dl class="c type">
+  <dt id="c:type:pyframeobject"><code class="sig-name">PyFrameObject</code></dt>
+  <dd><p>The C structure of the objects used to describe frame objects.</p>
+<p>There are no public members in this structure.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>The members of this structure were removed from the public C API.
+Refer to the <a href="../whatsnew/3.11.html#pyframeobject-3.11-hiding">What's New entry</a>
+for details.</p>
+</div>
+</dd>
+</dl>
+<p>The <a class="reference internal" href="reflection.html#c:function:pyeval_getframe"><code class="xref c function docutils literal">PyEval_GetFrame</code></a> and <a class="reference internal" href="init.html#c:function:pythreadstate_getframe"><code class="xref c function docutils literal">PyThreadState_GetFrame</code></a> functions
+can be used to get a frame object.</p>
+<p>See also <a href="reflection.html#reflection">Reflection</a>.</p>
+<dl class="c member">
+  <dt id="c:member:pyframe_type"><code class="sig-name">PyTypeObject PyFrame_Type</code></dt>
+  <dd><p>The type of frame objects.
+It is the same object as <a href="#" class="broken-link"><code class="xref py class docutils literal">types.FrameType</code></a> in the Python layer.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>Previously, this type was only available after including
+<code>&lt;frameobject.h&gt;</code>.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyframe_new"><code class="sig-name">PyFrameObject *PyFrame_New(PyThreadState *tstate, PyCodeObject *code, PyObject *globals, PyObject *locals)</code></dt>
+  <dd><p>Create a new frame object. This function returns a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a>
+to the new frame object on success, and returns <code>NULL</code> with an exception
+set on failure.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyframe_check"><code class="sig-name">int PyFrame_Check(PyObject *obj)</code></dt>
+  <dd><p>Return non-zero if <em>obj</em> is a frame object.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>Previously, this function was only available after including
+<code>&lt;frameobject.h&gt;</code>.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyframe_getback"><code class="sig-name">PyFrameObject* PyFrame_GetBack(PyFrameObject *frame)</code></dt>
+  <dd><p>Get the <em>frame</em> next outer frame.</p>
+<p>Return a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a>, or <code>NULL</code> if <em>frame</em> has no outer
+frame.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyframe_getbuiltins"><code class="sig-name">PyObject* PyFrame_GetBuiltins(PyFrameObject *frame)</code></dt>
+  <dd><p>Get the <em>frame</em>'s <a class="reference internal" href="../reference/datamodel.html#py:attribute:frame.f_builtins"><code class="xref py attribute docutils literal">f_builtins</code></a> attribute.</p>
+<p>Return a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a>. The result cannot be <code>NULL</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyframe_getcode"><code class="sig-name">PyCodeObject* PyFrame_GetCode(PyFrameObject *frame)</code></dt>
+  <dd><p>Get the <em>frame</em> code.</p>
+<p>Return a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a>.</p>
+<p>The result (frame code) cannot be <code>NULL</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyframe_getgenerator"><code class="sig-name">PyObject* PyFrame_GetGenerator(PyFrameObject *frame)</code></dt>
+  <dd><p>Get the generator, coroutine, or async generator that owns this frame,
+or <code>NULL</code> if this frame is not owned by a generator.
+Does not raise an exception, even if the return value is <code>NULL</code>.</p>
+<p>Return a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a>, or <code>NULL</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyframe_getglobals"><code class="sig-name">PyObject* PyFrame_GetGlobals(PyFrameObject *frame)</code></dt>
+  <dd><p>Get the <em>frame</em>'s <a class="reference internal" href="../reference/datamodel.html#py:attribute:frame.f_globals"><code class="xref py attribute docutils literal">f_globals</code></a> attribute.</p>
+<p>Return a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a>. The result cannot be <code>NULL</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyframe_getlasti"><code class="sig-name">int PyFrame_GetLasti(PyFrameObject *frame)</code></dt>
+  <dd><p>Get the <em>frame</em>'s <a class="reference internal" href="../reference/datamodel.html#py:attribute:frame.f_lasti"><code class="xref py attribute docutils literal">f_lasti</code></a> attribute.</p>
+<p>Returns -1 if <code>frame.f_lasti</code> is <code>None</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyframe_getvar"><code class="sig-name">PyObject* PyFrame_GetVar(PyFrameObject *frame, PyObject *name)</code></dt>
+  <dd><p>Get the variable <em>name</em> of <em>frame</em>.</p>
+<ul>
+<li><p>Return a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to the variable value on success.</p>
+</li>
+<li><p>Raise <a class="reference internal" href="../library/exceptions.html#py:exception:nameerror"><code class="xref py exception docutils literal">NameError</code></a> and return <code>NULL</code> if the variable does not exist.</p>
+</li>
+<li><p>Raise an exception and return <code>NULL</code> on error.</p>
+</li>
+</ul>
+<p><em>name</em> type must be a <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyframe_getvarstring"><code class="sig-name">PyObject* PyFrame_GetVarString(PyFrameObject *frame, const char *name)</code></dt>
+  <dd><p>Similar to <a class="reference internal" href="frame.html#c:function:pyframe_getvar"><code class="xref c function docutils literal">PyFrame_GetVar</code></a>, but the variable name is a C string
+encoded in UTF-8.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyframe_getlocals"><code class="sig-name">PyObject* PyFrame_GetLocals(PyFrameObject *frame)</code></dt>
+  <dd><p>Get the <em>frame</em>'s <a class="reference internal" href="../reference/datamodel.html#py:attribute:frame.f_locals"><code class="xref py attribute docutils literal">f_locals</code></a> attribute.
+If the frame refers to an <a class="reference internal" href="../glossary.html#term-optimized-scope"><span class="xref std std-term">optimized scope</span></a>, this returns a
+write-through proxy object that allows modifying the locals.
+In all other cases (classes, modules, <a class="reference internal" href="../library/functions.html#py:function:exec"><code class="xref py function docutils literal">exec</code></a>, <a class="reference internal" href="../library/functions.html#py:function:eval"><code class="xref py function docutils literal">eval</code></a>) it returns
+the mapping representing the frame locals directly (as described for
+<a class="reference internal" href="../library/functions.html#py:function:locals"><code class="xref py function docutils literal">locals</code></a>).</p>
+<p>Return a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>As part of <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a>, return an instance of <a class="reference internal" href="frame.html#c:member:pyframelocalsproxy_type"><code class="xref c member docutils literal">PyFrameLocalsProxy_Type</code></a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyframe_getlinenumber"><code class="sig-name">int PyFrame_GetLineNumber(PyFrameObject *frame)</code></dt>
+  <dd><p>Return the line number that <em>frame</em> is currently executing.</p>
+</dd>
+</dl>
+<h2 id="frame-locals-proxies">Frame Locals Proxies</h2>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+<p>The <a class="reference internal" href="../reference/datamodel.html#py:attribute:frame.f_locals"><code class="xref py attribute docutils literal">f_locals</code></a> attribute on a <a href="../reference/datamodel.html#frame-objects">frame object</a>
+is an instance of a "frame-locals proxy". The proxy object exposes a
+write-through view of the underlying locals dictionary for the frame. This
+ensures that the variables exposed by <code>f_locals</code> are always up to date with
+the live local variables in the frame itself.</p>
+<p>See <span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a> for more information.</p>
+<dl class="c member">
+  <dt id="c:member:pyframelocalsproxy_type"><code class="sig-name">PyTypeObject PyFrameLocalsProxy_Type</code></dt>
+  <dd><p>The type of frame <a class="reference internal" href="../library/functions.html#py:function:locals"><code class="xref py function docutils literal">locals</code></a> proxy objects.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyframelocalsproxy_check"><code class="sig-name">int PyFrameLocalsProxy_Check(PyObject *obj)</code></dt>
+  <dd><p>Return non-zero if <em>obj</em> is a frame <a class="reference internal" href="../library/functions.html#py:function:locals"><code class="xref py function docutils literal">locals</code></a> proxy.</p>
+</dd>
+</dl>
+<h2 id="legacy-local-variable-apis">Legacy Local Variable APIs</h2>
+<p>These APIs are <a class="reference internal" href="../glossary.html#term-soft-deprecated"><span class="xref std std-term">soft deprecated</span></a>. As of Python 3.13, they do nothing.
+They exist solely for backwards compatibility.</p>
+<dl class="c function">
+  <dt id="c:function:pyframe_localstofast"><code class="sig-name">void PyFrame_LocalsToFast(PyFrameObject *f, int clear)</code></dt>
+  <dd><p>This function is <a class="reference internal" href="../glossary.html#term-soft-deprecated"><span class="xref std std-term">soft deprecated</span></a> and does nothing.</p>
+<p>Prior to Python 3.13, this function would copy the <a class="reference internal" href="../reference/datamodel.html#py:attribute:frame.f_locals"><code class="xref py attribute docutils literal">f_locals</code></a>
+attribute of <em>f</em> to the internal "fast" array of local variables, allowing
+changes in frame objects to be visible to the interpreter. If <em>clear</em> was
+true, this function would process variables that were unset in the locals
+dictionary.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>This function now does nothing.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyframe_fasttolocals"><code class="sig-name">void PyFrame_FastToLocals(PyFrameObject *f)</code></dt>
+  <dd><p>This function is <a class="reference internal" href="../glossary.html#term-soft-deprecated"><span class="xref std std-term">soft deprecated</span></a> and does nothing.</p>
+<p>Prior to Python 3.13, this function would copy the internal "fast" array
+of local variables (which is used by the interpreter) to the
+<a class="reference internal" href="../reference/datamodel.html#py:attribute:frame.f_locals"><code class="xref py attribute docutils literal">f_locals</code></a> attribute of <em>f</em>, allowing changes in local
+variables to be visible to frame objects.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>This function now does nothing.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyframe_fasttolocalswitherror"><code class="sig-name">int PyFrame_FastToLocalsWithError(PyFrameObject *f)</code></dt>
+  <dd><p>This function is <a class="reference internal" href="../glossary.html#term-soft-deprecated"><span class="xref std std-term">soft deprecated</span></a> and does nothing.</p>
+<p>Prior to Python 3.13, this function was similar to
+<a class="reference internal" href="frame.html#c:function:pyframe_fasttolocals"><code class="xref c function docutils literal">PyFrame_FastToLocals</code></a>, but would return <code>0</code> on success, and
+<code>-1</code> with an exception set on failure.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>This function now does nothing.</p>
+</div>
+</dd>
+</dl>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p><span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a></p>
+</div>
+<h2 id="internal-frames">Internal Frames</h2>
+<p>Unless using <span class="target" id="index-3"></span><a class="pep reference external" href="https://peps.python.org/pep-0523/"><strong>PEP 523</strong></a>, you will not need this.</p>
+<dl class="c struct">
+  <dt id="c:struct:_pyinterpreterframe"><code class="sig-name">_PyInterpreterFrame</code></dt>
+  <dd><p>The interpreter's internal frame representation.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunstable_interpreterframe_getcode"><code class="sig-name">PyObject* PyUnstable_InterpreterFrame_GetCode(struct _PyInterpreterFrame *frame);</code></dt>
+  <dd><p>Return a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to the code object for the frame.</p>
+<p>. versionadded:: 3.12</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunstable_interpreterframe_getlasti"><code class="sig-name">int PyUnstable_InterpreterFrame_GetLasti(struct _PyInterpreterFrame *frame);</code></dt>
+  <dd><p>Return the byte offset into the last executed instruction.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunstable_interpreterframe_getline"><code class="sig-name">int PyUnstable_InterpreterFrame_GetLine(struct _PyInterpreterFrame *frame);</code></dt>
+  <dd><p>Return the currently executing line number, or -1 if there is no line number.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="capsule.html">&larr; Capsules</a>
+        <a class="next" href="gen.html">Generator Objects &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

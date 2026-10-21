@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Internet Data Handling — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Internet Data Handling"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="email.html">email — An email and MIME handling package</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="json.html">json — JSON encoder and decoder</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mailbox.html">mailbox — Manipulate mailboxes in various formats</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mimetypes.html">mimetypes — Map filenames to MIME types</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="base64.html">base64 — Base16, Base32, Base64, Base85 Data Encodings</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="binascii.html">binascii — Convert between binary and ASCII</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="quopri.html">quopri — Encode and decode MIME quoted-printable data</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="mmap.html">&larr; mmap — Memory-mapped file support</a>
+        <a class="next" href="email.html">email — An email and MIME handling package &rarr;</a>
+      </nav>
+      
+      <a id="netdata"></a>
+<h1 id="internet-data-handling">Internet Data Handling</h1>
+<p>This chapter describes modules which support handling data formats commonly used
+on the internet.</p>
+<ul>
+  <li><a href="email.html">email — An email and MIME handling package</a>
+<ul>
+  <li><a href="email.message.html">email.message: Representing an email message</a></li>
+  <li><a href="email.parser.html">email.parser: Parsing email messages</a>
+<ul>
+  <li><a href="email.parser.html#feedparser-api">FeedParser API</a></li>
+  <li><a href="email.parser.html#parser-api">Parser API</a></li>
+  <li><a href="email.parser.html#additional-notes">Additional notes</a></li>
+</ul>
+  </li>
+  <li><a href="email.generator.html">email.generator: Generating MIME documents</a></li>
+  <li><a href="email.policy.html">email.policy: Policy Objects</a></li>
+  <li><a href="email.errors.html">email.errors: Exception and Defect classes</a></li>
+  <li><a href="email.headerregistry.html">email.headerregistry: Custom Header Objects</a></li>
+  <li><a href="email.contentmanager.html">email.contentmanager: Managing MIME Content</a>
+<ul>
+  <li><a href="email.contentmanager.html#content-manager-instances">Content Manager Instances</a></li>
+</ul>
+  </li>
+  <li><a href="email.examples.html">email: Examples</a></li>
+  <li><a href="email.compat32-message.html">email.message.Message: Representing an email message using the compat32 API</a></li>
+  <li><a href="email.mime.html">email.mime: Creating email and MIME objects from scratch</a></li>
+  <li><a href="email.header.html">email.header: Internationalized headers</a></li>
+  <li><a href="email.charset.html">email.charset: Representing character sets</a></li>
+  <li><a href="email.encoders.html">email.encoders: Encoders</a></li>
+  <li><a href="email.utils.html">email.utils: Miscellaneous utilities</a></li>
+  <li><a href="email.iterators.html">email.iterators: Iterators</a></li>
+</ul>
+  </li>
+  <li><a href="json.html">json — JSON encoder and decoder</a>
+<ul>
+  <li><a href="json.html#basic-usage">Basic Usage</a></li>
+  <li><a href="json.html#encoders-and-decoders">Encoders and Decoders</a></li>
+  <li><a href="json.html#exceptions">Exceptions</a></li>
+  <li><a href="json.html#standard-compliance-and-interoperability">Standard Compliance and Interoperability</a>
+<ul>
+  <li><a href="json.html#character-encodings">Character Encodings</a></li>
+  <li><a href="json.html#infinite-and-nan-number-values">Infinite and NaN Number Values</a></li>
+  <li><a href="json.html#repeated-names-within-an-object">Repeated Names Within an Object</a></li>
+  <li><a href="json.html#top-level-non-object-non-array-values">Top-level Non-Object, Non-Array Values</a></li>
+  <li><a href="json.html#implementation-limitations">Implementation Limitations</a></li>
+</ul>
+  </li>
+  <li><a href="json.html#command-line-interface">Command-line interface</a>
+<ul>
+  <li><a href="json.html#command-line-options">Command-line options</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li><a href="mailbox.html">mailbox — Manipulate mailboxes in various formats</a>
+<ul>
+  <li><a href="mailbox.html#mailbox-objects">Mailbox objects</a>
+<ul>
+  <li><a href="mailbox.html#maildir-objects">Maildir objects</a></li>
+  <li><a href="mailbox.html#mbox-objects">mbox objects</a></li>
+  <li><a href="mailbox.html#mh-objects">MH objects</a></li>
+  <li><a href="mailbox.html#babyl-objects">Babyl objects</a></li>
+  <li><a href="mailbox.html#mmdf-objects">MMDF objects</a></li>
+</ul>
+  </li>
+  <li><a href="mailbox.html#message-objects">Message objects</a>
+<ul>
+  <li><a href="mailbox.html#maildirmessage-objects">MaildirMessage objects</a></li>
+  <li><a href="mailbox.html#mboxmessage-objects">mboxMessage objects</a></li>
+  <li><a href="mailbox.html#mhmessage-objects">MHMessage objects</a></li>
+  <li><a href="mailbox.html#babylmessage-objects">BabylMessage objects</a></li>
+  <li><a href="mailbox.html#mmdfmessage-objects">MMDFMessage objects</a></li>
+</ul>
+  </li>
+  <li><a href="mailbox.html#exceptions">Exceptions</a></li>
+  <li><a href="mailbox.html#examples">Examples</a></li>
+</ul>
+  </li>
+  <li><a href="mimetypes.html">mimetypes — Map filenames to MIME types</a>
+<ul>
+  <li><a href="mimetypes.html#mimetypes-objects">MimeTypes objects</a></li>
+  <li><a href="mimetypes.html#command-line-usage">Command-line usage</a></li>
+  <li><a href="mimetypes.html#command-line-example">Command-line example</a></li>
+</ul>
+  </li>
+  <li><a href="base64.html">base64 — Base16, Base32, Base64, Base85 Data Encodings</a>
+<ul>
+  <li><a href="base64.html#rfc-4648-encodings">RFC 4648 Encodings</a></li>
+  <li><a href="base64.html#base85-encodings">Base85 Encodings</a></li>
+  <li><a href="base64.html#legacy-interface">Legacy Interface</a></li>
+  <li><a href="base64.html#security-considerations">Security Considerations</a></li>
+</ul>
+  </li>
+  <li><a href="binascii.html">binascii — Convert between binary and ASCII</a></li>
+  <li><a href="quopri.html">quopri — Encode and decode MIME quoted-printable data</a></li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="mmap.html">&larr; mmap — Memory-mapped file support</a>
+        <a class="next" href="email.html">email — An email and MIME handling package &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
