@@ -1448,6 +1448,20 @@ figure.align-center {
   height: auto;
 }
 
+/* The editor's preview compiles no diagram: the picture's place holds the
+   PlantUML text, which the preview draws itself (ADR-042). The text shows
+   until the picture arrives, and wherever nothing draws it. */
+.plantuml-source {
+  margin: 0;
+  overflow-x: auto;
+  text-align: left;
+}
+
+.plantuml-picture svg {
+  max-width: 100%;
+  height: auto;
+}
+
 /* The notice under a sequence diagram `:max-items:` cut short. Set apart from
    the caption above it, since it says what the picture leaves out rather than
    what it shows. */
