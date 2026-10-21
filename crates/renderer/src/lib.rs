@@ -30,6 +30,7 @@ mod numbering;
 mod numfig_format;
 mod octicon;
 mod page;
+mod page_assets;
 mod reference_target;
 mod registry_base_url;
 mod reported;
@@ -50,6 +51,7 @@ pub use page::{
     MODINDEX_PATH, MODINDEX_TITLE, PageMeta, css_relative_path, page_title, render_document_page,
     render_genindex, render_modindex, render_page,
 };
+pub use page_assets::{ImageLocator, PageAssets};
 pub use reference_target::{Destination, ReferenceResolver, ReferenceTarget};
 pub use uml_error::{DiagramError, DiagramFailure};
 
@@ -145,6 +147,9 @@ pub(crate) struct RenderCtx<'a> {
     /// caller that renders without an asset sidecar, which then reports each
     /// embed request as unavailable rather than silently linking.
     pub embedded_assets: &'a EmbeddedAssets,
+    /// Where an authored image lies, for a page with no `_images/` beside it
+    /// — the language server's preview. `None` in the build.
+    pub image_locator: Option<&'a dyn ImageLocator>,
     /// Turns source text into classed HTML. Held for the whole document so
     /// the grammar set is resolved once per page, not once per code block.
     pub highlighter: &'a Highlighter,
@@ -267,6 +272,30 @@ pub fn render_with_assets(
     schema: &rinx_entity::EntitySchema,
     entity_templates: &blocks::EntityTemplates,
 ) -> RenderOutput {
+    render_with_page_assets(
+        doc,
+        index,
+        doc_path,
+        config,
+        PageAssets::embedding(embedded_assets),
+        schema,
+        entity_templates,
+    )
+}
+
+/// As [`render_with_assets`], with every file the page shows located by
+/// `assets` — which is how the language server's preview, writing no site,
+/// links an authored image where it lies rather than into `_images/`.
+#[must_use]
+pub fn render_with_page_assets(
+    doc: &Document,
+    index: &ProjectIndex,
+    doc_path: &str,
+    config: &config::SiteConfig,
+    assets: PageAssets<'_>,
+    schema: &rinx_entity::EntitySchema,
+    entity_templates: &blocks::EntityTemplates,
+) -> RenderOutput {
     let mut html = String::new();
 
     // Collect anonymous targets for local resolution recursively
@@ -321,7 +350,8 @@ pub fn render_with_assets(
         math: &math,
         highlight_errors: &mut highlight_errors,
         image_errors: &mut image_errors,
-        embedded_assets,
+        embedded_assets: assets.embedded,
+        image_locator: assets.images,
         highlighter: &highlighter,
         highlight_language: config.highlight_language.clone(),
         collapse_entities: config.collapse_entities,

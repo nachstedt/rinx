@@ -115,6 +115,48 @@ fn test_preview_draws_a_document_in_no_project_on_its_own() {
 }
 
 #[test]
+fn test_preview_links_an_image_where_it_lies_under_the_resource_root() {
+    // Given — a Sphinx project under `docs/`, whose page one directory down
+    // shows an image beside it
+    let page = "Intro\n=====\n\n.. image:: logo.png\n";
+    let (workspace, mut state) = scanned(
+        "preview_image",
+        &[
+            ("docs/conf.py", "project = 'Images'\n"),
+            ("docs/index.rst", INDEX),
+            ("docs/guide/intro.rst", page),
+        ],
+    );
+    handle_notification(&mut state, workspace.open("docs/guide/intro.rst", page));
+    let mut request = preview(workspace.uri("docs/guide/intro.rst"));
+    request.params["resourceRoot"] = serde_json::json!("https://webview/");
+
+    // When
+    let response = handle_request(&mut state, request);
+
+    // Then — the file in the source tree, not the site's `_images/` copy
+    let image = workspace.uri("docs/guide/logo.png");
+    let src = format!("src=\"https://webview{}\"", image.path().as_str());
+    let page = page_of(&response);
+    assert!(page.contains(&src), "{page}");
+}
+
+#[test]
+fn test_preview_links_an_image_into_the_site_without_a_resource_root() {
+    // Given
+    let page = "Intro\n=====\n\n.. image:: logo.png\n";
+    let (workspace, mut state) = scanned("preview_image_site", &[("guide/intro.rst", page)]);
+    handle_notification(&mut state, workspace.open("guide/intro.rst", page));
+
+    // When
+    let response = handle_request(&mut state, preview(workspace.uri("guide/intro.rst")));
+
+    // Then — the page the build writes
+    let page = page_of(&response);
+    assert!(page.contains("src=\"../_images/guide/logo.png\""), "{page}");
+}
+
+#[test]
 fn test_preview_refuses_a_document_that_is_not_open() {
     // Given
     let (workspace, mut state) = scanned("preview_closed", &[("index.rst", INDEX)]);

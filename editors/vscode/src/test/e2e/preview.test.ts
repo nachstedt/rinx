@@ -45,6 +45,25 @@ suite('Preview (e2e)', () => {
         await waitFor('the preview tab', () => tabLabelled('Rinx Preview'));
     });
 
+    test('the preview shows an image of a Sphinx project where it lies', async () => {
+        // Given
+        const api = await rinx();
+        await vscode.window.showTextDocument(workspaceFile('sphinx/pictured.rst'));
+
+        // When
+        await vscode.commands.executeCommand('rinx.showPreview');
+
+        // Then — linked under the address the webview serves files at, not
+        // into the `_images/` a build would copy it into
+        const page = await waitFor('the page with its image', () => {
+            const html = api.previewHtml();
+            return html?.includes('Pictured') && html;
+        });
+        const src = /<img src="([^"]*)"/.exec(page)?.[1] ?? '';
+        assert.ok(src.startsWith('https://'), page);
+        assert.ok(src.endsWith(workspaceFile('sphinx/logo.svg').path), page);
+    });
+
     test('the preview shows a title changed a moment ago in another document', async () => {
         // Given — `navigating.rst` links to `labelled.rst`'s section by
         // label, so the link shows that section's title

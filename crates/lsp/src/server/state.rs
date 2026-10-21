@@ -68,7 +68,9 @@ use crate::documents::DocumentStore;
 use crate::hover::reference_hover;
 use crate::includes::IncludeGraph;
 use crate::position::{PositionEncoding, char_index_of, to_lsp_position, to_lsp_range};
-use crate::preview::{PreviewRefusal, PreviewSettings, render_preview, render_preview_alone};
+use crate::preview::{
+    PreviewRefusal, PreviewSettings, ResourceRoot, render_preview, render_preview_alone,
+};
 use crate::progress::{IndexState, ScanProgress};
 use crate::project::{
     DiscoveredProject, IndexedDocument, ParseSettings, Project, ScannedProject, Strictness,
@@ -502,7 +504,8 @@ impl ServerState {
     }
 
     /// The page of the open document `uri`, as its project would build it,
-    /// with the stylesheet under `resource_root` (see [`PreviewParams`]).
+    /// with the stylesheet and the images under `resource_root` (see
+    /// [`PreviewParams`]) when they lie in a workspace folder.
     ///
     /// Read from the document's latest parse and its project's current
     /// index, which every change brings up to date before the next message
@@ -522,13 +525,14 @@ impl ServerState {
         let tracked = self.tracked.get(uri).ok_or(PreviewRefusal::NotOpen)?;
         let read = |path: &Path| std::fs::read_to_string(path);
         let Some(project) = tracked.project.and_then(|id| self.projects.get_mut(&id)) else {
-            return render_preview_alone(&tracked.parsed.document, resource_root, &read)
+            return render_preview_alone(&tracked.parsed.document, &read)
                 .map_err(PreviewRefusal::Failed);
         };
         let config = project.site_config();
         let model = project.model();
         let schema = Arc::clone(&model.settings.parse.schema);
         let presentation = model.settings.presentation.clone();
+        let source_root = project.root().to_path_buf();
         let document = &tracked.parsed.document;
         let bundled = model
             .parse_settings(Some(&document.path))
@@ -540,7 +544,8 @@ impl ServerState {
             schema: &schema,
             presentation: &presentation,
             bundled: bundled.as_deref(),
-            resource_root,
+            source_root: &source_root,
+            resources: resource_root.map(|address| ResourceRoot::new(address, &self.folders)),
         };
         render_preview(document, project.project_index(), &settings, &read)
             .map_err(PreviewRefusal::Failed)
