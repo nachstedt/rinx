@@ -28,14 +28,15 @@ The extension provides the following settings:
 
 The page is the one the build writes: the same renderer, the same template call, and the project's configuration as the server reads it (see :ref:`vscode-bazel-projects` and :ref:`vscode-sphinx-projects`). A ``rinx_site`` is drawn with its own ``template``, ``css`` and ``entity_templates``, read from the disk whenever the page is rendered, so editing one shows on the next page. Every other project, a Sphinx project's included, and a file outside every workspace folder, is drawn with the build's default template and stylesheet. A webview reads only the files of the workspace folders, so the page loads those from where they lie: a site's stylesheet, and every image a ``.. image::``, a ``.. figure::`` or a substitution shows, from the source tree rather than from the ``_images/`` a build copies it into. A ``:loading: embed`` image is linked the same way. A stylesheet outside every workspace folder, such as the default template's in a module depending on rinx, is embedded in the page instead.
 
+Links in the page are followed as a reader expects, although they point into a built site the editor never writes. A link to a document opens its source in the editor column it was last shown in, and the preview follows it to the link's anchor; it opens at the file's first line, not at the label. A ``#`` link scrolls the page, an ``http(s):`` or ``mailto:`` link opens in the browser, and a ``:download:`` link opens the file in VS Code. The language server, which knows every document's name and file, says where a link leads with a ``rinx/previewLink`` request. A link to a page the build writes on its own, such as the general index, leads to no source, so following it only says so in the status bar.
+
 Rendering a page after an edit takes about 100 ms for CPython's ``library/os.rst`` and 155 ms for ``library/stdtypes.rst``, parse, index and render included. ``rinx lsp --check <folder> --preview <document>`` measures it.
 
 What the preview does not show yet:
 
 - An image outside every workspace folder, which the webview cannot reach, and an image changed on the disk until the page is loaded again.
-- ``:download:`` files: their links point into a built site's ``_downloads/``.
 - PlantUML diagrams, which are never compiled in the editor.
-- Working links: following one leads nowhere, since the page's links point into a built site.
+- The general index and the domain indices, which have no source to open.
 
 .. _vscode-diagnostics:
 

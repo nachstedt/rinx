@@ -90,4 +90,42 @@ suite('Preview (e2e)', () => {
         });
         assert.ok(page.includes('before you start.'), 'still the page of navigating.rst');
     });
+    test('a link in the preview opens the document it leads to, and the preview follows', async () => {
+        // Given — the page of `navigating.rst`, which links `labelled.rst`
+        const api = await rinx();
+        await vscode.window.showTextDocument(workspaceFile('navigating.rst'));
+        await waitFor('the index to be ready', () => api.indexStatus()?.state === 'ready');
+        await vscode.commands.executeCommand('rinx.showPreview');
+        await waitFor('the page of navigating.rst', () => api.previewHtml()?.includes('before you start.'));
+
+        // When — the link to the label is clicked
+        await api.followPreviewLink('labelled.html#install-guide');
+
+        // Then — its source is open, and the preview shows its page
+        await waitFor('labelled.rst open in an editor', () =>
+            vscode.window.visibleTextEditors.some((editor) => editor.document.uri.fsPath.endsWith('labelled.rst')),
+        );
+        await waitFor('the page of labelled.rst', () => api.previewHtml()?.includes('How to install.'));
+    });
+
+    test('a link to a page the build writes alone leaves the preview as it was', async () => {
+        // Given
+        const api = await rinx();
+        await vscode.window.showTextDocument(workspaceFile('navigating.rst'));
+        await waitFor('the index to be ready', () => api.indexStatus()?.state === 'ready');
+        await vscode.commands.executeCommand('rinx.showPreview');
+        const page = await waitFor('the page of navigating.rst', () => {
+            const html = api.previewHtml();
+            return html?.includes('before you start.') && html;
+        });
+
+        // When
+        await api.followPreviewLink('genindex.html');
+
+        // Then
+        assert.strictEqual(api.previewHtml(), page);
+        assert.ok(
+            !vscode.window.visibleTextEditors.some((editor) => editor.document.uri.fsPath.endsWith('genindex.rst')),
+        );
+    });
 });
