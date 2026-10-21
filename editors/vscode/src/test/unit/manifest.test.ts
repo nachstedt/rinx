@@ -5,13 +5,27 @@ import * as path from 'path';
 /** The extension's root, from out/test/unit where this test runs. */
 const root = path.resolve(__dirname, '../../..');
 
-/** The string at `keys` in the JSON file `file`, if there is one. */
-function readString(file: string, ...keys: string[]): string | undefined {
+/** The value at `keys` in the JSON file `file`, if there is one. */
+function readJson(file: string, ...keys: string[]): unknown {
     let value: unknown = JSON.parse(fs.readFileSync(path.join(root, file), 'utf8'));
     for (const key of keys) {
         value = typeof value === 'object' && value !== null ? Reflect.get(value, key) : undefined;
     }
+    return value;
+}
+
+/** The string at `keys` in the JSON file `file`, if there is one. */
+function readString(file: string, ...keys: string[]): string | undefined {
+    const value = readJson(file, ...keys);
     return typeof value === 'string' ? value : undefined;
+}
+
+/** The objects of the array at `keys` in the JSON file `file`, if there is one. */
+function readObjects(file: string, ...keys: string[]): Record<string, unknown>[] {
+    const value = readJson(file, ...keys);
+    return Array.isArray(value)
+        ? value.filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
+        : [];
 }
 
 /** The `[major, minor]` a version or a `^`/`>=` range starts at. */
@@ -40,5 +54,23 @@ suite('Manifest Test Suite', () => {
             typesMajor < engineMajor || (typesMajor === engineMajor && typesMinor <= engineMinor),
             `@types/vscode ${types} is newer than engines.vscode ${engine}; raise engines.vscode to match`,
         );
+    });
+
+    // The icon in a reStructuredText editor's title bar, as Markdown has one:
+    // VS Code shows a `navigation` entry with an icon in the toolbar rather
+    // than in the overflow menu, and the API cannot observe either.
+    test('rinx.showPreview is an icon in the title bar of a reStructuredText editor', () => {
+        // Given the manifest's commands and title-bar menu
+        const command = readObjects('package.json', 'contributes', 'commands').find(
+            (entry) => entry.command === 'rinx.showPreview',
+        );
+        const menu = readObjects('package.json', 'contributes', 'menus', 'editor/title').find(
+            (entry) => entry.command === 'rinx.showPreview',
+        );
+
+        // When / Then the command has an icon, shown in the toolbar for reStructuredText only
+        assert.strictEqual(command?.icon, '$(open-preview)');
+        assert.strictEqual(menu?.group, 'navigation');
+        assert.match(String(menu?.when), /\beditorLangId == restructuredtext\b/);
     });
 });
