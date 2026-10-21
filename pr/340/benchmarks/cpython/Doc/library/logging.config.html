@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>logging.config — Logging configuration — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Generic Operating System Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="os.html">os — Miscellaneous operating system interfaces</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="io.html">io — Core tools for working with streams</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="time.html">time — Time access and conversions</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="logging.html">logging — Logging facility for Python</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="logging.config.html">logging.config — Logging configuration</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle logging.config — Logging configuration"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="logging.config.html#configuration-functions">Configuration functions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="logging.config.html#security-considerations">Security considerations</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="logging.config.html#configuration-dictionary-schema">Configuration dictionary schema</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="logging.config.html#configuration-file-format">Configuration file format</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="logging.handlers.html">logging.handlers — Logging handlers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="platform.html">platform —  Access to underlying platform&#x27;s identifying data</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="errno.html">errno — Standard errno system symbols</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ctypes.html">ctypes — A foreign function library for Python</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="logging.html">&larr; logging — Logging facility for Python</a>
+        <a class="next" href="logging.handlers.html">logging.handlers — Logging handlers &rarr;</a>
+      </nav>
+      
+      <h1 id="logging-config-logging-configuration"><code class="xref py module docutils literal">logging.config</code> — Logging configuration</h1>
+<dl class="py module">
+  <dt id="py:module:logging.config"><code class="sig-name">logging.config</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'moduleauthor'</p>
+<pre class="directive-error-source">.. moduleauthor:: Vinay Sajip &lt;vinay_sajip@red-dove.com&gt;</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Vinay Sajip &lt;vinay_sajip@red-dove.com&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/logging/config.py`</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sidebar'</p>
+<pre class="directive-error-source">.. sidebar:: Important
+
+   This page contains only reference information. For tutorials,
+   please see
+
+   * :ref:`Basic Tutorial &lt;logging-basic-tutorial&gt;`
+   * :ref:`Advanced Tutorial &lt;logging-advanced-tutorial&gt;`
+   * :ref:`Logging Cookbook &lt;logging-cookbook&gt;`</pre>
+</div>
+<hr />
+<p>This section describes the API for configuring the logging module.</p>
+<a id="logging-config-api"></a>
+<h2 id="configuration-functions">Configuration functions</h2>
+<p>The following functions configure the logging module. They are located in the
+<a class="reference internal" href="logging.config.html#py:module:logging.config" title="logging.config: Configuration of the logging module."><code class="xref py module docutils literal">logging.config</code></a> module.  Their use is optional — you can configure the
+logging module using these functions or by making calls to the main API (defined
+in <a class="reference internal" href="logging.html#py:module:logging" title="logging: Flexible event logging system for applications."><code class="xref py module docutils literal">logging</code></a> itself) and defining handlers which are declared either in
+<a class="reference internal" href="logging.html#py:module:logging" title="logging: Flexible event logging system for applications."><code class="xref py module docutils literal">logging</code></a> or <a class="reference internal" href="logging.handlers.html#py:module:logging.handlers" title="logging.handlers: Handlers for the logging module."><code class="xref py module docutils literal">logging.handlers</code></a>.</p>
+<dl class="py function">
+  <dt id="py:function:logging.config.dictconfig"><code class="sig-name">dictConfig(config)</code></dt>
+  <dd><p>Takes the logging configuration from a dictionary.  The contents of
+this dictionary are described in <a href="logging.config.html#logging-config-dictschema">Configuration dictionary schema</a>
+below.</p>
+<p>If an error is encountered during configuration, this function will
+raise a <a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a>, <a class="reference internal" href="exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a>, <a class="reference internal" href="exceptions.html#py:exception:attributeerror"><code class="xref py exception docutils literal">AttributeError</code></a>
+or <a class="reference internal" href="exceptions.html#py:exception:importerror"><code class="xref py exception docutils literal">ImportError</code></a> with a suitably descriptive message.  The
+following is a (possibly incomplete) list of conditions which will
+raise an error:</p>
+<ul>
+<li><p>A <code>level</code> which is not a string or which is a string not
+corresponding to an actual logging level.</p>
+</li>
+<li><p>A <code>propagate</code> value which is not a boolean.</p>
+</li>
+<li><p>An id which does not have a corresponding destination.</p>
+</li>
+<li><p>A non-existent handler id found during an incremental call.</p>
+</li>
+<li><p>An invalid logger name.</p>
+</li>
+<li><p>Inability to resolve to an internal or external object.</p>
+</li>
+</ul>
+<p>Parsing is performed by the <a href="#" class="broken-link"><code class="xref py class docutils literal">DictConfigurator</code></a> class, whose
+constructor is passed the dictionary used for configuration, and
+has a <a href="#" class="broken-link"><code class="xref py method docutils literal">configure</code></a> method.  The <a class="reference internal" href="logging.config.html#py:module:logging.config" title="logging.config: Configuration of the logging module."><code class="xref py module docutils literal">logging.config</code></a> module
+has a callable attribute <a href="#" class="broken-link"><code class="xref py attribute docutils literal">dictConfigClass</code></a>
+which is initially set to <a href="#" class="broken-link"><code class="xref py class docutils literal">DictConfigurator</code></a>.
+You can replace the value of <a href="#" class="broken-link"><code class="xref py attribute docutils literal">dictConfigClass</code></a> with a
+suitable implementation of your own.</p>
+<p><a class="reference internal" href="logging.config.html#py:function:logging.config.dictconfig"><code class="xref py function docutils literal">dictConfig</code></a> calls <a href="#" class="broken-link"><code class="xref py attribute docutils literal">dictConfigClass</code></a> passing
+the specified dictionary, and then calls the <a href="#" class="broken-link"><code class="xref py method docutils literal">configure</code></a> method on
+the returned object to put the configuration into effect:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">dictConfig</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">config</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">dictConfigClass</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">config</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">configure</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>For example, a subclass of <a href="#" class="broken-link"><code class="xref py class docutils literal">DictConfigurator</code></a> could call
+<code>DictConfigurator.__init__()</code> in its own <a href="#" class="broken-link"><code class="xref py method docutils literal">__init__</code></a>, then
+set up custom prefixes which would be usable in the subsequent
+<a href="#" class="broken-link"><code class="xref py method docutils literal">configure</code></a> call. <a href="#" class="broken-link"><code class="xref py attribute docutils literal">dictConfigClass</code></a> would be bound to
+this new subclass, and then <a class="reference internal" href="logging.config.html#py:function:logging.config.dictconfig"><code class="xref py function docutils literal">dictConfig</code></a> could be called exactly as
+in the default, uncustomized state.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:logging.config.fileconfig"><code class="sig-name">fileConfig(fname, defaults=None, disable_existing_loggers=True, encoding=None)</code></dt>
+  <dd><p>Reads the logging configuration from a <a class="reference internal" href="configparser.html#py:module:configparser" title="configparser: Configuration file parser."><code class="xref py module docutils literal">configparser</code></a>-format file. The
+format of the file should be as described in
+<a href="logging.config.html#logging-config-fileformat">Configuration file format</a>.
+This function can be called several times from an application, allowing an
+end user to select from various pre-canned configurations (if the developer
+provides a mechanism to present the choices and load the chosen
+configuration).</p>
+<p>It will raise <a class="reference internal" href="exceptions.html#py:exception:filenotfounderror"><code class="xref py exception docutils literal">FileNotFoundError</code></a> if the file
+doesn't exist and <a class="reference internal" href="exceptions.html#py:exception:runtimeerror"><code class="xref py exception docutils literal">RuntimeError</code></a> if the file is invalid or
+empty.</p>
+<dl>
+<dt>:param fname: A filename, or a file-like object, or an instance derived</dt>
+<dd><p>from <a class="reference internal" href="configparser.html#py:class:configparser.rawconfigparser"><code class="xref py class docutils literal">RawConfigParser</code></a>. If a
+<code class="xref py class docutils literal">RawConfigParser</code>-derived instance is passed, it is used as
+is. Otherwise, a <a class="reference internal" href="configparser.html#py:class:configparser.configparser"><code class="xref py class docutils literal">ConfigParser</code></a> is
+instantiated, and the configuration read by it from the
+object passed in <code>fname</code>. If that has a <a href="#" class="broken-link"><code class="xref py method docutils literal">readline</code></a>
+method, it is assumed to be a file-like object and read using
+<a class="reference internal" href="configparser.html#py:method:configparser.configparser.read_file"><code class="xref py method docutils literal">read_file</code></a>; otherwise,
+it is assumed to be a filename and passed to
+<a class="reference internal" href="configparser.html#py:method:configparser.configparser.read"><code class="xref py method docutils literal">read</code></a>.</p>
+</dd>
+<dt>:param defaults: Defaults to be passed to the <code class="xref py class docutils literal">ConfigParser</code> can be specified</dt>
+<dd><p>in this argument.</p>
+</dd>
+<dt>:param disable_existing_loggers: If specified as <code>False</code>, loggers which</dt>
+<dd><p>exist when this call is made are left
+enabled. The default is <code>True</code> because this
+enables old behaviour in a
+backward-compatible way. This behaviour is to
+disable any existing non-root loggers unless
+they or their ancestors are explicitly named
+in the logging configuration.</p>
+</dd>
+</dl>
+<p>:param encoding: The encoding used to open file when <em>fname</em> is filename.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>An instance of a subclass of <a class="reference internal" href="configparser.html#py:class:configparser.rawconfigparser"><code class="xref py class docutils literal">RawConfigParser</code></a> is
+now accepted as a value for <code>fname</code>. This facilitates:</p>
+<ul>
+<li><p>Use of a configuration file where logging configuration is just part
+of the overall application configuration.</p>
+</li>
+<li><p>Use of a configuration read from a file, and then modified by the using
+application (e.g. based on command-line parameters or other aspects
+of the runtime environment) before being passed to <code>fileConfig</code>.</p>
+</li>
+</ul>
+<blockquote>
+<p>versionchanged:: 3.10
+Added the <em>encoding</em> parameter.</p>
+<p>versionchanged:: 3.12
+An exception will be thrown if the provided file
+doesn't exist or is invalid or empty.</p>
+</blockquote>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:logging.config.listen"><code class="sig-name">listen(port=DEFAULT_LOGGING_CONFIG_PORT, verify=None)</code></dt>
+  <dd><p>Starts up a socket server on the specified port, and listens for new
+configurations. If no port is specified, the module's default
+<a href="#" class="broken-link"><code class="xref py data docutils literal">DEFAULT_LOGGING_CONFIG_PORT</code></a> is used. Logging configurations will be
+sent as a file suitable for processing by <a class="reference internal" href="logging.config.html#py:function:logging.config.dictconfig"><code class="xref py function docutils literal">dictConfig</code></a> or
+<a class="reference internal" href="logging.config.html#py:function:logging.config.fileconfig"><code class="xref py function docutils literal">fileConfig</code></a>. Returns a <a class="reference internal" href="threading.html#py:class:threading.thread"><code class="xref py class docutils literal">Thread</code></a> instance on which
+you can call <a class="reference internal" href="threading.html#py:method:threading.thread.start"><code class="xref py method docutils literal">start</code></a> to start the server, and which
+you can <a class="reference internal" href="threading.html#py:method:threading.thread.join"><code class="xref py method docutils literal">join</code></a> when appropriate. To stop the server,
+call <a class="reference internal" href="logging.config.html#py:function:logging.config.stoplistening"><code class="xref py function docutils literal">stopListening</code></a>.</p>
+<p>The <code>verify</code> argument, if specified, should be a callable which should
+verify whether bytes received across the socket are valid and should be
+processed. This could be done by encrypting and/or signing what is sent
+across the socket, such that the <code>verify</code> callable can perform
+signature verification and/or decryption. The <code>verify</code> callable is called
+with a single argument - the bytes received across the socket - and should
+return the bytes to be processed, or <code>None</code> to indicate that the bytes should
+be discarded. The returned bytes could be the same as the passed in bytes
+(e.g. when only verification is done), or they could be completely different
+(perhaps if decryption were performed).</p>
+<p>To send a configuration to the socket, read in the configuration file and
+send it to the socket as a sequence of bytes preceded by a four-byte length
+string packed in binary using <code>struct.pack('&gt;L', n)</code>.</p>
+<a id="logging-eval-security"></a>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Because portions of the configuration are passed through
+<a class="reference internal" href="functions.html#py:function:eval"><code class="xref py function docutils literal">eval</code></a>, use of this function may open its users to a security risk.
+While the function only binds to a socket on <code>localhost</code>, and so does
+not accept connections from remote machines, there are scenarios where
+untrusted code could be run under the account of the process which calls
+<a class="reference internal" href="logging.config.html#py:function:logging.config.listen"><code class="xref py function docutils literal">listen</code></a>. Specifically, if the process calling <a class="reference internal" href="logging.config.html#py:function:logging.config.listen"><code class="xref py function docutils literal">listen</code></a> runs
+on a multi-user machine where users cannot trust each other, then a
+malicious user could arrange to run essentially arbitrary code in a
+victim user's process, simply by connecting to the victim's
+<a class="reference internal" href="logging.config.html#py:function:logging.config.listen"><code class="xref py function docutils literal">listen</code></a> socket and sending a configuration which runs whatever
+code the attacker wants to have executed in the victim's process. This is
+especially easy to do if the default port is used, but not hard even if a
+different port is used. To avoid the risk of this happening, use the
+<code>verify</code> argument to <a class="reference internal" href="logging.config.html#py:function:logging.config.listen"><code class="xref py function docutils literal">listen</code></a> to prevent unrecognised
+configurations from being applied.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>The <code>verify</code> argument was added.</p>
+</div>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>If you want to send configurations to the listener which don't
+disable existing loggers, you will need to use a JSON format for
+the configuration, which will use <a class="reference internal" href="logging.config.html#py:function:logging.config.dictconfig"><code class="xref py function docutils literal">dictConfig</code></a> for configuration.
+This method allows you to specify <code>disable_existing_loggers</code> as
+<code>False</code> in the configuration you send.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:logging.config.stoplistening"><code class="sig-name">stopListening()</code></dt>
+  <dd><p>Stops the listening server which was created with a call to <a class="reference internal" href="logging.config.html#py:function:logging.config.listen"><code class="xref py function docutils literal">listen</code></a>.
+This is typically called before calling <a href="#" class="broken-link"><code class="xref py method docutils literal">join</code></a> on the return value from
+<a class="reference internal" href="logging.config.html#py:function:logging.config.listen"><code class="xref py function docutils literal">listen</code></a>.</p>
+</dd>
+</dl>
+<h2 id="security-considerations">Security considerations</h2>
+<p>The logging configuration functionality tries to offer convenience, and in part this
+is done by offering the ability to convert text in configuration files into Python
+objects used in logging configuration - for example, as described in
+<a href="logging.config.html#logging-config-dict-userdef">User-defined objects</a>. However, these same mechanisms (importing
+callables from user-defined modules and calling them with parameters from the
+configuration) could be used to invoke any code you like, and for this reason you
+should treat configuration files from untrusted sources with <em>extreme caution</em> and
+satisfy yourself that nothing bad can happen if you load them, before actually loading
+them.</p>
+<a id="logging-config-dictschema"></a>
+<h2 id="configuration-dictionary-schema">Configuration dictionary schema</h2>
+<p>Describing a logging configuration requires listing the various
+objects to create and the connections between them; for example, you
+may create a handler named 'console' and then say that the logger
+named 'startup' will send its messages to the 'console' handler.
+These objects aren't limited to those provided by the <a class="reference internal" href="logging.html#py:module:logging" title="logging: Flexible event logging system for applications."><code class="xref py module docutils literal">logging</code></a>
+module because you might write your own formatter or handler class.
+The parameters to these classes may also need to include external
+objects such as <code>sys.stderr</code>.  The syntax for describing these
+objects and connections is defined in <a href="logging.config.html#logging-config-dict-connections">Object connections</a>
+below.</p>
+<h3 id="dictionary-schema-details">Dictionary Schema Details</h3>
+<p>The dictionary passed to <a class="reference internal" href="logging.config.html#py:function:logging.config.dictconfig"><code class="xref py function docutils literal">dictConfig</code></a> must contain the following
+keys:</p>
+<ul>
+<li><p><em>version</em> - to be set to an integer value representing the schema
+version.  The only valid value at present is 1, but having this key
+allows the schema to evolve while still preserving backwards
+compatibility.</p>
+</li>
+</ul>
+<p>All other keys are optional, but if present they will be interpreted
+as described below.  In all cases below where a 'configuring dict' is
+mentioned, it will be checked for the special <code>'()'</code> key to see if a
+custom instantiation is required.  If so, the mechanism described in
+<a href="logging.config.html#logging-config-dict-userdef">User-defined objects</a> below is used to create an instance;
+otherwise, the context is used to determine what to instantiate.</p>
+<a id="logging-config-dictschema-formatters"></a>
+<ul>
+<li><p><em>formatters</em> - the corresponding value will be a dict in which each
+key is a formatter id and each value is a dict describing how to
+configure the corresponding <a class="reference internal" href="logging.html#py:class:logging.formatter"><code class="xref py class docutils literal">Formatter</code></a> instance.</p>
+<p>The configuring dict is searched for the following optional keys
+which correspond to the arguments passed to create a
+<a class="reference internal" href="logging.html#py:class:logging.formatter"><code class="xref py class docutils literal">Formatter</code></a> object:</p>
+<ul>
+<li><p><code>format</code></p>
+</li>
+<li><p><code>datefmt</code></p>
+</li>
+<li><p><code>style</code></p>
+</li>
+<li><p><code>validate</code> (since version &gt;=3.8)</p>
+</li>
+<li><p><code>defaults</code> (since version &gt;=3.12)</p>
+</li>
+</ul>
+<p>An optional <code>class</code> key indicates the name of the formatter's
+class (as a dotted module and class name).  The instantiation
+arguments are as for <a class="reference internal" href="logging.html#py:class:logging.formatter"><code class="xref py class docutils literal">Formatter</code></a>, thus this key is
+most useful for instantiating a customised subclass of
+<a class="reference internal" href="logging.html#py:class:logging.formatter"><code class="xref py class docutils literal">Formatter</code></a>.  For example, the alternative class
+might present exception tracebacks in an expanded or condensed
+format.  If your formatter requires different or extra configuration
+keys, you should use <a href="logging.config.html#logging-config-dict-userdef">User-defined objects</a>.</p>
+</li>
+<li><p><em>filters</em> - the corresponding value will be a dict in which each key
+is a filter id and each value is a dict describing how to configure
+the corresponding Filter instance.</p>
+<p>The configuring dict is searched for the key <code>name</code> (defaulting to the
+empty string) and this is used to construct a <a class="reference internal" href="logging.html#py:class:logging.filter"><code class="xref py class docutils literal">logging.Filter</code></a>
+instance.</p>
+</li>
+<li><p><em>handlers</em> - the corresponding value will be a dict in which each
+key is a handler id and each value is a dict describing how to
+configure the corresponding Handler instance.</p>
+<p>The configuring dict is searched for the following keys:</p>
+<ul>
+<li><p><code>class</code> (mandatory).  This is the fully qualified name of the
+handler class.</p>
+</li>
+<li><p><code>level</code> (optional).  The level of the handler.</p>
+</li>
+<li><p><code>formatter</code> (optional).  The id of the formatter for this
+handler.</p>
+</li>
+<li><p><code>filters</code> (optional).  A list of ids of the filters for this
+handler.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p><code>filters</code> can take filter instances in addition to ids.</p>
+</div>
+</li>
+</ul>
+<p>All <em>other</em> keys are passed through as keyword arguments to the
+handler's constructor.  For example, given the snippet:</p>
+<div class="highlight-yaml notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-yaml"><span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">handlers</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">  <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">console</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">class</span></span> <span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">logging.StreamHandler</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">formatter</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">brief</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">level</span></span>   <span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">INFO</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">filters</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-meta hl-flow-sequence hl-yaml"><span class="hl-punctuation hl-definition hl-sequence hl-begin hl-yaml">[</span><span class="hl-string hl-unquoted hl-plain hl-in hl-yaml">allow_foo</span><span class="hl-punctuation hl-definition hl-sequence hl-end hl-yaml">]</span></span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">stream</span></span>  <span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">ext://sys.stdout</span></span>
+<span class="hl-source hl-yaml">  <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">file</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">class</span></span> <span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">logging.handlers.RotatingFileHandler</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">formatter</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">precise</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">filename</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">logconfig.log</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">maxBytes</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-yaml">1024</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">backupCount</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-yaml">3</span></span></pre></div>
+</div>
+<p>the handler with id <code>console</code> is instantiated as a
+<a class="reference internal" href="logging.handlers.html#py:class:logging.streamhandler"><code class="xref py class docutils literal">logging.StreamHandler</code></a>, using <code>sys.stdout</code> as the underlying
+stream.  The handler with id <code>file</code> is instantiated as a
+<a class="reference internal" href="logging.handlers.html#py:class:logging.handlers.rotatingfilehandler"><code class="xref py class docutils literal">logging.handlers.RotatingFileHandler</code></a> with the keyword arguments
+<code>filename='logconfig.log', maxBytes=1024, backupCount=3</code>.</p>
+</li>
+<li><p><em>loggers</em> - the corresponding value will be a dict in which each key
+is a logger name and each value is a dict describing how to
+configure the corresponding Logger instance.</p>
+<p>The configuring dict is searched for the following keys:</p>
+<ul>
+<li><p><code>level</code> (optional).  The level of the logger.</p>
+</li>
+<li><p><code>propagate</code> (optional).  The propagation setting of the logger.</p>
+</li>
+<li><p><code>filters</code> (optional).  A list of ids of the filters for this
+logger.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p><code>filters</code> can take filter instances in addition to ids.</p>
+</div>
+</li>
+<li><p><code>handlers</code> (optional).  A list of ids of the handlers for this
+logger.</p>
+</li>
+</ul>
+<p>The specified loggers will be configured according to the level,
+propagation, filters and handlers specified.</p>
+</li>
+<li><p><em>root</em> - this will be the configuration for the root logger.
+Processing of the configuration will be as for any logger, except
+that the <code>propagate</code> setting will not be applicable.</p>
+</li>
+<li><p><em>incremental</em> - whether the configuration is to be interpreted as
+incremental to the existing configuration.  This value defaults to
+<code>False</code>, which means that the specified configuration replaces the
+existing configuration with the same semantics as used by the
+existing <a class="reference internal" href="logging.config.html#py:function:logging.config.fileconfig"><code class="xref py function docutils literal">fileConfig</code></a> API.</p>
+<p>If the specified value is <code>True</code>, the configuration is processed
+as described in the section on <a href="logging.config.html#logging-config-dict-incremental">Incremental Configuration</a>.</p>
+</li>
+<li><p><em>disable_existing_loggers</em> - whether any existing non-root loggers are
+to be disabled. This setting mirrors the parameter of the same name in
+<a class="reference internal" href="logging.config.html#py:function:logging.config.fileconfig"><code class="xref py function docutils literal">fileConfig</code></a>. If absent, this parameter defaults to <code>True</code>.
+This value is ignored if <em>incremental</em> is <code>True</code>.</p>
+</li>
+</ul>
+<a id="logging-config-dict-incremental"></a>
+<h3 id="incremental-configuration">Incremental Configuration</h3>
+<p>It is difficult to provide complete flexibility for incremental
+configuration.  For example, because objects such as filters
+and formatters are anonymous, once a configuration is set up, it is
+not possible to refer to such anonymous objects when augmenting a
+configuration.</p>
+<p>Furthermore, there is not a compelling case for arbitrarily altering
+the object graph of loggers, handlers, filters, formatters at
+run-time, once a configuration is set up; the verbosity of loggers and
+handlers can be controlled just by setting levels (and, in the case of
+loggers, propagation flags).  Changing the object graph arbitrarily in
+a safe way is problematic in a multi-threaded environment; while not
+impossible, the benefits are not worth the complexity it adds to the
+implementation.</p>
+<p>Thus, when the <code>incremental</code> key of a configuration dict is present
+and is <code>True</code>, the system will completely ignore any <code>formatters</code> and
+<code>filters</code> entries, and process only the <code>level</code>
+settings in the <code>handlers</code> entries, and the <code>level</code> and
+<code>propagate</code> settings in the <code>loggers</code> and <code>root</code> entries.</p>
+<p>Using a value in the configuration dict lets configurations to be sent
+over the wire as pickled dicts to a socket listener. Thus, the logging
+verbosity of a long-running application can be altered over time with
+no need to stop and restart the application.</p>
+<a id="logging-config-dict-connections"></a>
+<h3 id="object-connections">Object connections</h3>
+<p>The schema describes a set of logging objects - loggers,
+handlers, formatters, filters - which are connected to each other in
+an object graph.  Thus, the schema needs to represent connections
+between the objects.  For example, say that, once configured, a
+particular logger has attached to it a particular handler.  For the
+purposes of this discussion, we can say that the logger represents the
+source, and the handler the destination, of a connection between the
+two.  Of course in the configured objects this is represented by the
+logger holding a reference to the handler.  In the configuration dict,
+this is done by giving each destination object an id which identifies
+it unambiguously, and then using the id in the source object's
+configuration to indicate that a connection exists between the source
+and the destination object with that id.</p>
+<p>So, for example, consider the following YAML snippet:</p>
+<div class="highlight-yaml notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-yaml"><span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">formatters</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">  <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">brief</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-comment hl-line hl-number-sign hl-yaml"><span class="hl-punctuation hl-definition hl-comment hl-line hl-number-sign hl-yaml">#</span> configuration for formatter with id &#39;brief&#39; goes here
+</span></span>
+<span class="hl-source hl-yaml">  <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">precise</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-comment hl-line hl-number-sign hl-yaml"><span class="hl-punctuation hl-definition hl-comment hl-line hl-number-sign hl-yaml">#</span> configuration for formatter with id &#39;precise&#39; goes here
+</span></span>
+<span class="hl-source hl-yaml"><span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">handlers</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">  <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">h1</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-comment hl-line hl-number-sign hl-yaml"><span class="hl-punctuation hl-definition hl-comment hl-line hl-number-sign hl-yaml">#</span>This is an id
+</span></span>
+<span class="hl-source hl-yaml">   <span class="hl-comment hl-line hl-number-sign hl-yaml"><span class="hl-punctuation hl-definition hl-comment hl-line hl-number-sign hl-yaml">#</span> configuration of handler with id &#39;h1&#39; goes here
+</span></span>
+<span class="hl-source hl-yaml">   <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">formatter</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">brief</span></span>
+<span class="hl-source hl-yaml">  <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">h2</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-comment hl-line hl-number-sign hl-yaml"><span class="hl-punctuation hl-definition hl-comment hl-line hl-number-sign hl-yaml">#</span>This is another id
+</span></span>
+<span class="hl-source hl-yaml">   <span class="hl-comment hl-line hl-number-sign hl-yaml"><span class="hl-punctuation hl-definition hl-comment hl-line hl-number-sign hl-yaml">#</span> configuration of handler with id &#39;h2&#39; goes here
+</span></span>
+<span class="hl-source hl-yaml">   <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">formatter</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">precise</span></span>
+<span class="hl-source hl-yaml"><span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">loggers</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">  <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">foo.bar.baz</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-comment hl-line hl-number-sign hl-yaml"><span class="hl-punctuation hl-definition hl-comment hl-line hl-number-sign hl-yaml">#</span> other configuration for logger &#39;foo.bar.baz&#39;
+</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">handlers</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-meta hl-flow-sequence hl-yaml"><span class="hl-punctuation hl-definition hl-sequence hl-begin hl-yaml">[</span><span class="hl-string hl-unquoted hl-plain hl-in hl-yaml">h1</span><span class="hl-punctuation hl-separator hl-sequence hl-yaml">,</span> <span class="hl-string hl-unquoted hl-plain hl-in hl-yaml">h2</span><span class="hl-punctuation hl-definition hl-sequence hl-end hl-yaml">]</span></span></span></pre></div>
+</div>
+<p>(Note: YAML used here because it's a little more readable than the
+equivalent Python source form for the dictionary.)</p>
+<p>The ids for loggers are the logger names which would be used
+programmatically to obtain a reference to those loggers, e.g.
+<code>foo.bar.baz</code>.  The ids for Formatters and Filters can be any string
+value (such as <code>brief</code>, <code>precise</code> above) and they are transient,
+in that they are only meaningful for processing the configuration
+dictionary and used to determine connections between objects, and are
+not persisted anywhere when the configuration call is complete.</p>
+<p>The above snippet indicates that logger named <code>foo.bar.baz</code> should
+have two handlers attached to it, which are described by the handler
+ids <code>h1</code> and <code>h2</code>. The formatter for <code>h1</code> is that described by id
+<code>brief</code>, and the formatter for <code>h2</code> is that described by id
+<code>precise</code>.</p>
+<a id="logging-config-dict-userdef"></a>
+<h3 id="user-defined-objects">User-defined objects</h3>
+<p>The schema supports user-defined objects for handlers, filters and
+formatters.  (Loggers do not need to have different types for
+different instances, so there is no support in this configuration
+schema for user-defined logger classes.)</p>
+<p>Objects to be configured are described by dictionaries
+which detail their configuration.  In some places, the logging system
+will be able to infer from the context how an object is to be
+instantiated, but when a user-defined object is to be instantiated,
+the system will not know how to do this.  In order to provide complete
+flexibility for user-defined object instantiation, the user needs
+to provide a 'factory' - a callable which is called with a
+configuration dictionary and which returns the instantiated object.
+This is signalled by an absolute import path to the factory being
+made available under the special key <code>'()'</code>.  Here's a concrete
+example:</p>
+<div class="highlight-yaml notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-yaml"><span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">formatters</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">  <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">brief</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">format</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-quoted hl-single hl-yaml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-yaml">&#39;</span>%(message)s<span class="hl-punctuation hl-definition hl-string hl-end hl-yaml">&#39;</span></span></span>
+<span class="hl-source hl-yaml">  <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">default</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">format</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-quoted hl-single hl-yaml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-yaml">&#39;</span>%(asctime)s %(levelname)-8s %(name)-15s %(message)s<span class="hl-punctuation hl-definition hl-string hl-end hl-yaml">&#39;</span></span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">datefmt</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-quoted hl-single hl-yaml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-yaml">&#39;</span>%Y-%m-%d %H:%M:%S<span class="hl-punctuation hl-definition hl-string hl-end hl-yaml">&#39;</span></span></span>
+<span class="hl-source hl-yaml">  <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">custom</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">      <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">()</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">my.package.customFormatterFactory</span></span>
+<span class="hl-source hl-yaml">      <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">bar</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">baz</span></span>
+<span class="hl-source hl-yaml">      <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">spam</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-yaml">99<span class="hl-punctuation hl-separator hl-decimal hl-yaml">.</span>9</span></span>
+<span class="hl-source hl-yaml">      <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">answer</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-yaml">42</span></span></pre></div>
+</div>
+<p>The above YAML snippet defines three formatters.  The first, with id
+<code>brief</code>, is a standard <a class="reference internal" href="logging.html#py:class:logging.formatter"><code class="xref py class docutils literal">logging.Formatter</code></a> instance with the
+specified format string.  The second, with id <code>default</code>, has a
+longer format and also defines the time format explicitly, and will
+result in a <a class="reference internal" href="logging.html#py:class:logging.formatter"><code class="xref py class docutils literal">logging.Formatter</code></a> initialized with those two format
+strings.  Shown in Python source form, the <code>brief</code> and <code>default</code>
+formatters have configuration sub-dictionaries:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping-or-set hl-python"><span class="hl-punctuation hl-section hl-mapping-or-set hl-begin hl-python">{</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping-or-set hl-python">  <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">format<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> <span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-constant hl-other hl-placeholder hl-python">%(<span class="hl-variable hl-other hl-placeholder hl-python">message</span>)s</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-value hl-python"></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span></span></pre></div>
+<p>and:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping-or-set hl-python"><span class="hl-punctuation hl-section hl-mapping-or-set hl-begin hl-python">{</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping-or-set hl-python">  <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">format<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> <span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-constant hl-other hl-placeholder hl-python">%(<span class="hl-variable hl-other hl-placeholder hl-python">asctime</span>)s</span> <span class="hl-constant hl-other hl-placeholder hl-python">%(<span class="hl-variable hl-other hl-placeholder hl-python">levelname</span>)-8s</span> <span class="hl-constant hl-other hl-placeholder hl-python">%(<span class="hl-variable hl-other hl-placeholder hl-python">name</span>)-15s</span> <span class="hl-constant hl-other hl-placeholder hl-python">%(<span class="hl-variable hl-other hl-placeholder hl-python">message</span>)s</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-python">  </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">datefmt<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> </span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-constant hl-other hl-placeholder hl-python">%Y</span>-<span class="hl-constant hl-other hl-placeholder hl-python">%m</span>-<span class="hl-constant hl-other hl-placeholder hl-python">%d</span> <span class="hl-constant hl-other hl-placeholder hl-python">%H</span>:<span class="hl-constant hl-other hl-placeholder hl-python">%M</span>:<span class="hl-constant hl-other hl-placeholder hl-python">%S</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-value hl-python"></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span></span></pre></div>
+<p>respectively, and as these dictionaries do not contain the special key
+<code>'()'</code>, the instantiation is inferred from the context: as a result,
+standard <a class="reference internal" href="logging.html#py:class:logging.formatter"><code class="xref py class docutils literal">logging.Formatter</code></a> instances are created.  The
+configuration sub-dictionary for the third formatter, with id
+<code>custom</code>, is:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping-or-set hl-python"><span class="hl-punctuation hl-section hl-mapping-or-set hl-begin hl-python">{</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping-or-set hl-python">  <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">()<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> <span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">my.package.customFormatterFactory<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-python">  </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">bar<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> </span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">baz<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-python">  </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">spam<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> </span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">99<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>9</span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-python">  </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">answer<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> </span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">42</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-value hl-python"></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span></span></pre></div>
+<p>and this contains the special key <code>'()'</code>, which means that
+user-defined instantiation is wanted.  In this case, the specified
+factory callable will be used. If it is an actual callable it will be
+used directly - otherwise, if you specify a string (as in the example)
+the actual callable will be located using normal import mechanisms.
+The callable will be called with the <strong>remaining</strong> items in the
+configuration sub-dictionary as keyword arguments.  In the above
+example, the formatter with id <code>custom</code> will be assumed to be
+returned by the call:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">my</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">package</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">customFormatterFactory</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">bar</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">baz<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">spam</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">99<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>9</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">answer</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">42</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="admonition warning">
+  <p class="admonition-title">Warning</p>
+<p>The values for keys such as <code>bar</code>, <code>spam</code> and <code>answer</code> in
+the above example should not be configuration dictionaries or references such
+as <code>cfg://foo</code> or <code>ext://bar</code>, because they will not be processed by the
+configuration machinery, but passed to the callable as-is.</p>
+</div>
+<p>The key <code>'()'</code> has been used as the special key because it is not a
+valid keyword parameter name, and so will not clash with the names of
+the keyword arguments used in the call.  The <code>'()'</code> also serves as a
+mnemonic that the corresponding value is a callable.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>The <code>filters</code> member of <code>handlers</code> and <code>loggers</code> can take
+filter instances in addition to ids.</p>
+</div>
+<p>You can also specify a special key <code>'.'</code> whose value is a
+mapping of attribute names to values. If found, the specified attributes will
+be set on the user-defined object before it is returned. Thus, with the
+following configuration:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping-or-set hl-python"><span class="hl-punctuation hl-section hl-mapping-or-set hl-begin hl-python">{</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping-or-set hl-python">  <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">()<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> <span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">my.package.customFormatterFactory<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-python">  </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">bar<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> </span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">baz<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-python">  </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">spam<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> </span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">99<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>9</span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-python">  </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">answer<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> </span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">42</span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-python">  </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">.<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> <span class="hl-meta hl-mapping-or-set hl-python"><span class="hl-punctuation hl-section hl-mapping-or-set hl-begin hl-python">{</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-mapping-or-set hl-python">    <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">foo<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">bar<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-mapping hl-python">    </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">baz<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">bozz<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-mapping hl-value hl-python"></span><span class="hl-meta hl-mapping hl-python">  <span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-key hl-python"></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span></span></pre></div>
+<p>the returned formatter will have attribute <code>foo</code> set to <code>'bar'</code> and
+attribute <code>baz</code> set to <code>'bozz'</code>.</p>
+<div class="admonition warning">
+  <p class="admonition-title">Warning</p>
+<p>The values for attributes such as <code>foo</code> and <code>baz</code> in
+the above example should not be configuration dictionaries or references such
+as <code>cfg://foo</code> or <code>ext://bar</code>, because they will not be processed by the
+configuration machinery, but set as attribute values as-is.</p>
+</div>
+<a id="handler-config-dict-order"></a>
+<h3 id="handler-configuration-order">Handler configuration order</h3>
+<p>Handlers are configured in alphabetical order of their keys, and a configured
+handler replaces the configuration dictionary in (a working copy of) the
+<code>handlers</code> dictionary in the schema. If you use a construct such as
+<code>cfg://handlers.foo</code>, then initially <code>handlers['foo']</code> points to the
+configuration dictionary for the handler named <code>foo</code>, and later (once that
+handler has been configured) it points to the configured handler instance.
+Thus, <code>cfg://handlers.foo</code> could resolve to either a dictionary or a handler
+instance. In general, it is wise to name handlers in a way such that dependent
+handlers are configured <em>after</em> any handlers they depend on; that allows
+something like <code>cfg://handlers.foo</code> to be used in configuring a handler that
+depends on handler <code>foo</code>. If that dependent handler were named <code>bar</code>,
+problems would result, because the configuration of <code>bar</code> would be attempted
+before that of <code>foo</code>, and <code>foo</code> would not yet have been configured.
+However, if the dependent handler were named <code>foobar</code>, it would be configured
+after <code>foo</code>, with the result that <code>cfg://handlers.foo</code> would resolve to
+configured handler <code>foo</code>, and not its configuration dictionary.</p>
+<a id="logging-config-dict-externalobj"></a>
+<h3 id="access-to-external-objects">Access to external objects</h3>
+<p>There are times where a configuration needs to refer to objects
+external to the configuration, for example <code>sys.stderr</code>.  If the
+configuration dict is constructed using Python code, this is
+straightforward, but a problem arises when the configuration is
+provided via a text file (e.g. JSON, YAML).  In a text file, there is
+no standard way to distinguish <code>sys.stderr</code> from the literal string
+<code>'sys.stderr'</code>.  To facilitate this distinction, the configuration
+system looks for certain special prefixes in string values and
+treat them specially.  For example, if the literal string
+<code>'ext://sys.stderr'</code> is provided as a value in the configuration,
+then the <code>ext://</code> will be stripped off and the remainder of the
+value processed using normal import mechanisms.</p>
+<p>The handling of such prefixes is done in a way analogous to protocol
+handling: there is a generic mechanism to look for prefixes which
+match the regular expression <code>^(?P&lt;prefix&gt;[a-z]+)://(?P&lt;suffix&gt;.*)$</code>
+whereby, if the <code>prefix</code> is recognised, the <code>suffix</code> is processed
+in a prefix-dependent manner and the result of the processing replaces
+the string value.  If the prefix is not recognised, then the string
+value will be left as-is.</p>
+<a id="logging-config-dict-internalobj"></a>
+<h3 id="access-to-internal-objects">Access to internal objects</h3>
+<p>As well as external objects, there is sometimes also a need to refer
+to objects in the configuration.  This will be done implicitly by the
+configuration system for things that it knows about.  For example, the
+string value <code>'DEBUG'</code> for a <code>level</code> in a logger or handler will
+automatically be converted to the value <code>logging.DEBUG</code>, and the
+<code>handlers</code>, <code>filters</code> and <code>formatter</code> entries will take an
+object id and resolve to the appropriate destination object.</p>
+<p>However, a more generic mechanism is needed for user-defined
+objects which are not known to the <a class="reference internal" href="logging.html#py:module:logging" title="logging: Flexible event logging system for applications."><code class="xref py module docutils literal">logging</code></a> module.  For
+example, consider <a class="reference internal" href="logging.handlers.html#py:class:logging.handlers.memoryhandler"><code class="xref py class docutils literal">logging.handlers.MemoryHandler</code></a>, which takes
+a <code>target</code> argument which is another handler to delegate to. Since
+the system already knows about this class, then in the configuration,
+the given <code>target</code> just needs to be the object id of the relevant
+target handler, and the system will resolve to the handler from the
+id.  If, however, a user defines a <code>my.package.MyHandler</code> which has
+an <code>alternate</code> handler, the configuration system would not know that
+the <code>alternate</code> referred to a handler.  To cater for this, a generic
+resolution system allows the user to specify:</p>
+<div class="highlight-yaml notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-yaml"><span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">handlers</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">  <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">file</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-comment hl-line hl-number-sign hl-yaml"><span class="hl-punctuation hl-definition hl-comment hl-line hl-number-sign hl-yaml">#</span> configuration of file handler goes here
+</span></span>
+<span class="hl-source hl-yaml"></span>
+<span class="hl-source hl-yaml">  <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">custom</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">()</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">my.package.MyHandler</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">alternate</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">cfg://handlers.file</span></span></pre></div>
+</div>
+<p>The literal string <code>'cfg://handlers.file'</code> will be resolved in an
+analogous way to strings with the <code>ext://</code> prefix, but looking
+in the configuration itself rather than the import namespace.  The
+mechanism allows access by dot or by index, in a similar way to
+that provided by <code>str.format</code>.  Thus, given the following snippet:</p>
+<div class="highlight-yaml notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-yaml"><span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">handlers</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">  <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">email</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">class</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">logging.handlers.SMTPHandler</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">mailhost</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">localhost</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">fromaddr</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">my_app@domain.tld</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">toaddrs</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">      <span class="hl-punctuation hl-definition hl-block hl-sequence hl-item hl-yaml">-</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">support_team@domain.tld</span></span>
+<span class="hl-source hl-yaml">      <span class="hl-punctuation hl-definition hl-block hl-sequence hl-item hl-yaml">-</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">dev_team@domain.tld</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">subject</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">Houston, we have a problem.</span></span></pre></div>
+</div>
+<p>in the configuration, the string <code>'cfg://handlers'</code> would resolve to
+the dict with key <code>handlers</code>, the string <code>'cfg://handlers.email</code>
+would resolve to the dict with key <code>email</code> in the <code>handlers</code> dict,
+and so on.  The string <code>'cfg://handlers.email.toaddrs[1]</code> would
+resolve to <code>'dev_team@domain.tld'</code> and the string
+<code>'cfg://handlers.email.toaddrs[0]'</code> would resolve to the value
+<code>'support_team@domain.tld'</code>. The <code>subject</code> value could be accessed
+using either <code>'cfg://handlers.email.subject'</code> or, equivalently,
+<code>'cfg://handlers.email[subject]'</code>.  The latter form only needs to be
+used if the key contains spaces or non-alphanumeric characters. Please note
+that the characters <code>[</code> and <code>]</code> are not allowed in the keys. If an
+index value consists only of decimal digits, access will be attempted
+using the corresponding integer value, falling back to the string
+value if needed.</p>
+<p>Given a string <code>cfg://handlers.myhandler.mykey.123</code>, this will
+resolve to <code>config_dict['handlers']['myhandler']['mykey']['123']</code>.
+If the string is specified as <code>cfg://handlers.myhandler.mykey[123]</code>,
+the system will attempt to retrieve the value from
+<code>config_dict['handlers']['myhandler']['mykey'][123]</code>, and fall back
+to <code>config_dict['handlers']['myhandler']['mykey']['123']</code> if that
+fails.</p>
+<a id="logging-import-resolution"></a>
+<h3 id="import-resolution-and-custom-importers">Import resolution and custom importers</h3>
+<p>Import resolution, by default, uses the builtin <a class="reference internal" href="functions.html#py:function:__import__"><code class="xref py function docutils literal">__import__</code></a> function
+to do its importing. You may want to replace this with your own importing
+mechanism: if so, you can replace the <a href="#" class="broken-link"><code class="xref py attribute docutils literal">importer</code></a> attribute of the
+<a href="#" class="broken-link"><code class="xref py class docutils literal">DictConfigurator</code></a> or its superclass, the
+<a href="#" class="broken-link"><code class="xref py class docutils literal">BaseConfigurator</code></a> class. However, you need to be
+careful because of the way functions are accessed from classes via
+descriptors. If you are using a Python callable to do your imports, and you
+want to define it at class level rather than instance level, you need to wrap
+it with <a class="reference internal" href="functions.html#py:function:staticmethod"><code class="xref py function docutils literal">staticmethod</code></a>. For example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">importlib</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">import_module</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">logging</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-import-name hl-python">config</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">BaseConfigurator</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">BaseConfigurator</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">importer</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">staticmethod</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">import_module</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>You don't need to wrap with <a class="reference internal" href="functions.html#py:function:staticmethod"><code class="xref py function docutils literal">staticmethod</code></a> if you're setting the import
+callable on a configurator <em>instance</em>.</p>
+<a id="configure-queue"></a>
+<h3 id="configuring-queuehandler-and-queuelistener">Configuring QueueHandler and QueueListener</h3>
+<p>If you want to configure a <a class="reference internal" href="logging.handlers.html#py:class:logging.handlers.queuehandler"><code class="xref py class docutils literal">QueueHandler</code></a>, noting that this
+is normally used in conjunction with a <a class="reference internal" href="logging.handlers.html#py:class:logging.handlers.queuelistener"><code class="xref py class docutils literal">QueueListener</code></a>, you
+can configure both together. After the configuration, the <code>QueueListener</code> instance
+will be available as the <a class="reference internal" href="logging.handlers.html#py:attribute:logging.handlers.queuehandler.listener"><code class="xref py attribute docutils literal">listener</code></a> attribute of
+the created handler, and that in turn will be available to you using
+<a class="reference internal" href="logging.html#py:function:logging.gethandlerbyname"><code class="xref py function docutils literal">getHandlerByName</code></a> and passing the name you have used for the
+<code>QueueHandler</code> in your configuration. The dictionary schema for configuring the pair
+is shown in the example YAML snippet below.</p>
+<div class="highlight-yaml notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-yaml"><span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">handlers</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">  <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">qhand</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">class</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">logging.handlers.QueueHandler</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">queue</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">my.module.queue_factory</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">listener</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">my.package.CustomListener</span></span>
+<span class="hl-source hl-yaml">    <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml"><span class="hl-entity hl-name hl-tag hl-yaml">handlers</span></span><span class="hl-punctuation hl-separator hl-key-value hl-mapping hl-yaml">:</span></span>
+<span class="hl-source hl-yaml">      <span class="hl-punctuation hl-definition hl-block hl-sequence hl-item hl-yaml">-</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">hand_name_1</span></span>
+<span class="hl-source hl-yaml">      <span class="hl-punctuation hl-definition hl-block hl-sequence hl-item hl-yaml">-</span> <span class="hl-string hl-unquoted hl-plain hl-out hl-yaml">hand_name_2</span></span>
+<span class="hl-source hl-yaml">      <span class="hl-constant hl-numeric hl-float hl-decimal hl-yaml"><span class="hl-punctuation hl-separator hl-decimal hl-yaml">.</span>..</span></span></pre></div>
+</div>
+<p>The <code>queue</code> and <code>listener</code> keys are optional.</p>
+<p>If the <code>queue</code> key is present, the corresponding value can be one of the following:</p>
+<ul>
+<li><p>An object implementing the <a class="reference internal" href="queue.html#py:method:queue.queue.put_nowait"><code class="xref py method docutils literal">Queue.put_nowait</code></a>
+and <a class="reference internal" href="queue.html#py:method:queue.queue.get"><code class="xref py method docutils literal">Queue.get</code></a> public API. For instance, this may be
+an actual instance of <a class="reference internal" href="queue.html#py:class:queue.queue"><code class="xref py class docutils literal">queue.Queue</code></a> or a subclass thereof, or a proxy
+obtained by <a class="reference internal" href="multiprocessing.html#py:method:multiprocessing.managers.syncmanager.queue"><code class="xref py method docutils literal">multiprocessing.managers.SyncManager.Queue</code></a>.</p>
+<p>This is of course only possible if you are constructing or modifying
+the configuration dictionary in code.</p>
+</li>
+<li><p>A string that resolves to a callable which, when called with no arguments, returns
+the queue instance to use. That callable could be a <a class="reference internal" href="queue.html#py:class:queue.queue"><code class="xref py class docutils literal">queue.Queue</code></a> subclass
+or a function which returns a suitable queue instance,
+such as <code>my.module.queue_factory()</code>.</p>
+</li>
+<li><p>A dict with a <code>'()'</code> key which is constructed in the usual way as discussed in
+<a href="logging.config.html#logging-config-dict-userdef">User-defined objects</a>. The result of this construction should be a
+<a class="reference internal" href="queue.html#py:class:queue.queue"><code class="xref py class docutils literal">queue.Queue</code></a> instance.</p>
+</li>
+</ul>
+<p>If the  <code>queue</code> key is absent, a standard unbounded <a class="reference internal" href="queue.html#py:class:queue.queue"><code class="xref py class docutils literal">queue.Queue</code></a> instance is
+created and used.</p>
+<p>If the <code>listener</code> key is present, the corresponding value can be one of the following:</p>
+<ul>
+<li><p>A subclass of <a class="reference internal" href="logging.handlers.html#py:class:logging.handlers.queuelistener"><code class="xref py class docutils literal">logging.handlers.QueueListener</code></a>. This is of course only
+possible if you are constructing or modifying the configuration dictionary in
+code.</p>
+</li>
+<li><p>A string which resolves to a class which is a subclass of <code>QueueListener</code>, such as
+<code>'my.package.CustomListener'</code>.</p>
+</li>
+<li><p>A dict with a <code>'()'</code> key which is constructed in the usual way as discussed in
+<a href="logging.config.html#logging-config-dict-userdef">User-defined objects</a>. The result of this construction should be a
+callable with the same signature as the <code>QueueListener</code> initializer.</p>
+</li>
+</ul>
+<p>If the <code>listener</code> key is absent, <a class="reference internal" href="logging.handlers.html#py:class:logging.handlers.queuelistener"><code class="xref py class docutils literal">logging.handlers.QueueListener</code></a> is used.</p>
+<p>The values under the <code>handlers</code> key are the names of other handlers in the
+configuration (not shown in the above snippet) which will be passed to the queue
+listener.</p>
+<p>Any custom queue handler and listener classes will need to be defined with the same
+initialization signatures as <a class="reference internal" href="logging.handlers.html#py:class:logging.handlers.queuehandler"><code class="xref py class docutils literal">QueueHandler</code></a> and
+<a class="reference internal" href="logging.handlers.html#py:class:logging.handlers.queuelistener"><code class="xref py class docutils literal">QueueListener</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+<a id="logging-config-fileformat"></a>
+<h2 id="configuration-file-format">Configuration file format</h2>
+<p>The configuration file format understood by <a class="reference internal" href="logging.config.html#py:function:logging.config.fileconfig"><code class="xref py function docutils literal">fileConfig</code></a> is based on
+<a class="reference internal" href="configparser.html#py:module:configparser" title="configparser: Configuration file parser."><code class="xref py module docutils literal">configparser</code></a> functionality. The file must contain sections called
+<code>[loggers]</code>, <code>[handlers]</code> and <code>[formatters]</code> which identify by name the
+entities of each type which are defined in the file. For each such entity, there
+is a separate section which identifies how that entity is configured.  Thus, for
+a logger named <code>log01</code> in the <code>[loggers]</code> section, the relevant
+configuration details are held in a section <code>[logger_log01]</code>. Similarly, a
+handler called <code>hand01</code> in the <code>[handlers]</code> section will have its
+configuration held in a section called <code>[handler_hand01]</code>, while a formatter
+called <code>form01</code> in the <code>[formatters]</code> section will have its configuration
+specified in a section called <code>[formatter_form01]</code>. The root logger
+configuration must be specified in a section called <code>[logger_root]</code>.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>The <a class="reference internal" href="logging.config.html#py:function:logging.config.fileconfig"><code class="xref py function docutils literal">fileConfig</code></a> API is older than the <a class="reference internal" href="logging.config.html#py:function:logging.config.dictconfig"><code class="xref py function docutils literal">dictConfig</code></a> API and does
+not provide functionality to cover certain aspects of logging. For example,
+you cannot configure <a class="reference internal" href="logging.html#py:class:logging.filter"><code class="xref py class docutils literal">Filter</code></a> objects, which provide for
+filtering of messages beyond simple integer levels, using <a class="reference internal" href="logging.config.html#py:function:logging.config.fileconfig"><code class="xref py function docutils literal">fileConfig</code></a>.
+If you need to have instances of <a class="reference internal" href="logging.html#py:class:logging.filter"><code class="xref py class docutils literal">Filter</code></a> in your logging
+configuration, you will need to use <a class="reference internal" href="logging.config.html#py:function:logging.config.dictconfig"><code class="xref py function docutils literal">dictConfig</code></a>. Note that future
+enhancements to configuration functionality will be added to
+<a class="reference internal" href="logging.config.html#py:function:logging.config.dictconfig"><code class="xref py function docutils literal">dictConfig</code></a>, so it's worth considering transitioning to this newer
+API when it's convenient to do so.</p>
+</div>
+<p>Examples of these sections in the file are given below.</p>
+<div class="highlight-ini notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-ini"><span class="hl-meta hl-tag hl-section hl-ini"><span class="hl-punctuation hl-definition hl-section hl-ini">[</span><span class="hl-entity hl-section hl-ini">loggers</span><span class="hl-punctuation hl-definition hl-section hl-ini">]</span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">keys</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">root,log02,log03,log04,log05,log06,log07</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini">
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-tag hl-section hl-ini"><span class="hl-punctuation hl-definition hl-section hl-ini">[</span><span class="hl-entity hl-section hl-ini">handlers</span><span class="hl-punctuation hl-definition hl-section hl-ini">]</span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">keys</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">hand01,hand02,hand03,hand04,hand05,hand06,hand07,hand08,hand09</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini">
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-tag hl-section hl-ini"><span class="hl-punctuation hl-definition hl-section hl-ini">[</span><span class="hl-entity hl-section hl-ini">formatters</span><span class="hl-punctuation hl-definition hl-section hl-ini">]</span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">keys</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">form01,form02,form03,form04,form05,form06,form07,form08,form09</span></span></span></span></pre></div>
+</div>
+<p>The root logger must specify a level and a list of handlers. An example of a
+root logger section is given below.</p>
+<div class="highlight-ini notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-ini"><span class="hl-meta hl-tag hl-section hl-ini"><span class="hl-punctuation hl-definition hl-section hl-ini">[</span><span class="hl-entity hl-section hl-ini">logger_root</span><span class="hl-punctuation hl-definition hl-section hl-ini">]</span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">level</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">NOTSET</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">handlers</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">hand01</span></span></span></span></pre></div>
+</div>
+<p>The <code>level</code> entry can be one of <code>DEBUG, INFO, WARNING, ERROR, CRITICAL</code> or
+<code>NOTSET</code>. For the root logger only, <code>NOTSET</code> means that all messages will be
+logged. Level values are <a href="functions.html#func-eval">evaluated</a> in the context of the <code>logging</code>
+package's namespace.</p>
+<p>The <code>handlers</code> entry is a comma-separated list of handler names, which must
+appear in the <code>[handlers]</code> section. These names must appear in the
+<code>[handlers]</code> section and have corresponding sections in the configuration
+file.</p>
+<p>For loggers other than the root logger, some additional information is required.
+This is illustrated by the following example.</p>
+<div class="highlight-ini notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-ini"><span class="hl-meta hl-tag hl-section hl-ini"><span class="hl-punctuation hl-definition hl-section hl-ini">[</span><span class="hl-entity hl-section hl-ini">logger_parser</span><span class="hl-punctuation hl-definition hl-section hl-ini">]</span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">level</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">DEBUG</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">handlers</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">hand01</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">propagate</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">1</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">qualname</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">compiler.parser</span></span></span></span></pre></div>
+</div>
+<p>The <code>level</code> and <code>handlers</code> entries are interpreted as for the root logger,
+except that if a non-root logger's level is specified as <code>NOTSET</code>, the system
+consults loggers higher up the hierarchy to determine the effective level of the
+logger. The <code>propagate</code> entry is set to 1 to indicate that messages must
+propagate to handlers higher up the logger hierarchy from this logger, or 0 to
+indicate that messages are <strong>not</strong> propagated to handlers up the hierarchy. The
+<code>qualname</code> entry is the hierarchical channel name of the logger, that is to
+say the name used by the application to get the logger.</p>
+<p>Sections which specify handler configuration are exemplified by the following.</p>
+<div class="highlight-ini notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-ini"><span class="hl-meta hl-tag hl-section hl-ini"><span class="hl-punctuation hl-definition hl-section hl-ini">[</span><span class="hl-entity hl-section hl-ini">handler_hand01</span><span class="hl-punctuation hl-definition hl-section hl-ini">]</span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">class</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">StreamHandler</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">level</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">NOTSET</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">formatter</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">form01</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">args</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">(sys.stdout,)</span></span></span></span></pre></div>
+</div>
+<p>The <code>class</code> entry indicates the handler's class (as determined by <a class="reference internal" href="functions.html#py:function:eval"><code class="xref py function docutils literal">eval</code></a>
+in the <code>logging</code> package's namespace). The <code>level</code> is interpreted as for
+loggers, and <code>NOTSET</code> is taken to mean 'log everything'.</p>
+<p>The <code>formatter</code> entry indicates the key name of the formatter for this
+handler. If blank, a default formatter (<code>logging._defaultFormatter</code>) is used.
+If a name is specified, it must appear in the <code>[formatters]</code> section and have
+a corresponding section in the configuration file.</p>
+<p>The <code>args</code> entry, when <a href="functions.html#func-eval">evaluated</a> in the context of the <code>logging</code>
+package's namespace, is the list of arguments to the constructor for the handler
+class. Refer to the constructors for the relevant handlers, or to the examples
+below, to see how typical entries are constructed. If not provided, it defaults
+to <code>()</code>.</p>
+<p>The optional <code>kwargs</code> entry, when <a href="functions.html#func-eval">evaluated</a> in the context of the
+<code>logging</code> package's namespace, is the keyword argument dict to the constructor
+for the handler class. If not provided, it defaults to <code>{}</code>.</p>
+<div class="highlight-ini notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-ini"><span class="hl-meta hl-tag hl-section hl-ini"><span class="hl-punctuation hl-definition hl-section hl-ini">[</span><span class="hl-entity hl-section hl-ini">handler_hand02</span><span class="hl-punctuation hl-definition hl-section hl-ini">]</span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">class</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">FileHandler</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">level</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">DEBUG</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">formatter</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">form02</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">args</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">(&#39;python.log&#39;, &#39;w&#39;)</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini">
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-tag hl-section hl-ini"><span class="hl-punctuation hl-definition hl-section hl-ini">[</span><span class="hl-entity hl-section hl-ini">handler_hand03</span><span class="hl-punctuation hl-definition hl-section hl-ini">]</span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">class</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">handlers.SocketHandler</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">level</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">INFO</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">formatter</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">form03</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">args</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">(&#39;localhost&#39;, handlers.DEFAULT_TCP_LOGGING_PORT)</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini">
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-tag hl-section hl-ini"><span class="hl-punctuation hl-definition hl-section hl-ini">[</span><span class="hl-entity hl-section hl-ini">handler_hand04</span><span class="hl-punctuation hl-definition hl-section hl-ini">]</span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">class</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">handlers.DatagramHandler</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">level</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">WARN</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">formatter</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">form04</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">args</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">(&#39;localhost&#39;, handlers.DEFAULT_UDP_LOGGING_PORT)</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini">
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-tag hl-section hl-ini"><span class="hl-punctuation hl-definition hl-section hl-ini">[</span><span class="hl-entity hl-section hl-ini">handler_hand05</span><span class="hl-punctuation hl-definition hl-section hl-ini">]</span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">class</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">handlers.SysLogHandler</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">level</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">ERROR</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">formatter</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">form05</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">args</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">((&#39;localhost&#39;, handlers.SYSLOG_UDP_PORT), handlers.SysLogHandler.LOG_USER)</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini">
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-tag hl-section hl-ini"><span class="hl-punctuation hl-definition hl-section hl-ini">[</span><span class="hl-entity hl-section hl-ini">handler_hand06</span><span class="hl-punctuation hl-definition hl-section hl-ini">]</span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">class</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">handlers.NTEventLogHandler</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">level</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">CRITICAL</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">formatter</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">form06</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">args</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">(&#39;Python Application&#39;, &#39;&#39;, &#39;Application&#39;)</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini">
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-tag hl-section hl-ini"><span class="hl-punctuation hl-definition hl-section hl-ini">[</span><span class="hl-entity hl-section hl-ini">handler_hand07</span><span class="hl-punctuation hl-definition hl-section hl-ini">]</span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">class</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">handlers.SMTPHandler</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">level</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">WARN</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">formatter</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">form07</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">args</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">(&#39;localhost&#39;, &#39;from@abc&#39;, [&#39;user1@abc&#39;, &#39;user2@xyz&#39;], &#39;Logger Subject&#39;)</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">kwargs</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">{&#39;timeout&#39;: 10.0}</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini">
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-tag hl-section hl-ini"><span class="hl-punctuation hl-definition hl-section hl-ini">[</span><span class="hl-entity hl-section hl-ini">handler_hand08</span><span class="hl-punctuation hl-definition hl-section hl-ini">]</span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">class</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">handlers.MemoryHandler</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">level</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">NOTSET</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">formatter</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">form08</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">target</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">args</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">(10, ERROR)</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini">
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-tag hl-section hl-ini"><span class="hl-punctuation hl-definition hl-section hl-ini">[</span><span class="hl-entity hl-section hl-ini">handler_hand09</span><span class="hl-punctuation hl-definition hl-section hl-ini">]</span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">class</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">handlers.HTTPHandler</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">level</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">NOTSET</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">formatter</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">form09</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">args</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">(&#39;localhost:9022&#39;, &#39;/log&#39;, &#39;GET&#39;)</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">kwargs</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">{&#39;secure&#39;: True}</span></span></span></span></pre></div>
+</div>
+<p>Sections which specify formatter configuration are typified by the following.</p>
+<div class="highlight-ini notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-ini"><span class="hl-meta hl-tag hl-section hl-ini"><span class="hl-punctuation hl-definition hl-section hl-ini">[</span><span class="hl-entity hl-section hl-ini">formatter_form01</span><span class="hl-punctuation hl-definition hl-section hl-ini">]</span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">format</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">F1 %(asctime)s %(levelname)s %(message)s %(customfield)s</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">datefmt</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">style</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">%</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">validate</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">True</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">defaults</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">{&#39;customfield&#39;: &#39;defaultvalue&#39;}</span></span>
+</span></span>
+<span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">class</span><span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span><span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">logging.Formatter</span></span></span></span></pre></div>
+</div>
+<p>The arguments for the formatter configuration are the same as the keys
+in the dictionary schema <a href="logging.config.html#logging-config-dictschema-formatters">formatters section</a>.</p>
+<p>The <code>defaults</code> entry, when <a href="functions.html#func-eval">evaluated</a> in the context of
+the <code>logging</code> package's namespace, is a dictionary of default values for
+custom formatting fields. If not provided, it defaults to <code>None</code>.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Due to the use of <a class="reference internal" href="functions.html#py:function:eval"><code class="xref py function docutils literal">eval</code></a> as described above, there are
+potential security risks which result from using the <a class="reference internal" href="logging.config.html#py:function:logging.config.listen"><code class="xref py function docutils literal">listen</code></a> to send
+and receive configurations via sockets. The risks are limited to where
+multiple users with no mutual trust run code on the same machine; see the
+<a class="reference internal" href="logging.config.html#py:function:logging.config.listen"><code class="xref py function docutils literal">listen</code></a> documentation for more information.</p>
+</div>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>Module <a class="reference internal" href="logging.html#py:module:logging" title="logging: Flexible event logging system for applications."><code class="xref py module docutils literal">logging</code></a></dt>
+<dd><p>API reference for the logging module.</p>
+</dd>
+<dt>Module <a class="reference internal" href="logging.handlers.html#py:module:logging.handlers" title="logging.handlers: Handlers for the logging module."><code class="xref py module docutils literal">logging.handlers</code></a></dt>
+<dd><p>Useful handlers included with the logging module.</p>
+</dd>
+</dl>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="logging.html">&larr; logging — Logging facility for Python</a>
+        <a class="next" href="logging.handlers.html">logging.handlers — Logging handlers &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
