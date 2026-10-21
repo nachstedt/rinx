@@ -149,7 +149,7 @@
           </li>
         
           <li class="toctree-l1">
-            <a href="vscode.html">VS Code Extension Architecture for Rinx</a>
+            <a href="vscode.html">VS Code Extension</a>
             
           </li>
         
@@ -1007,9 +1007,7 @@ to be deterministic rather than merely stable within one run.</p>
 <h3 id="what-it-does-not-do">What it does not do</h3>
 <p>A table whose filter matches nothing renders its headings and reports
 <code>entity-table.empty-result</code> — an empty listing is far more often a filter that
-no longer matches than a deliberate statement. The live preview stays quiet
-about it when no project index is available, since every table would be empty
-through no fault of the author.</p>
+no longer matches than a deliberate statement.</p>
 <p><code>needflow</code>, <code>needsequence</code>, <code>needpie</code> and <code>needbar</code> <em>are</em> implemented — see
 "Flowcharts of the graph", "Sequence diagrams of the graph" and "Charting the
 graph" below, which ask about this same graph and draw the answer instead of
@@ -1316,8 +1314,7 @@ library — <code>examples/entities/charts.rst</code> does, beside the tables ra
 <ul>
 <li><p><strong>A chart whose every wedge counts zero</strong> is <code>entity-pie.empty-result</code> and no
 picture is drawn, for the reason an empty table is reported: a filter that no
-longer matches is far likelier than a deliberate statement. As with a table,
-the live preview stays quiet about it when no project index is available.</p>
+longer matches is far likelier than a deliberate statement.</p>
 </li>
 <li><p><strong>A body with no content line at all</strong> is <code>entity-pie.no-slices</code>, reported
 while parsing — the body is this document's own text, so no index is needed.</p>

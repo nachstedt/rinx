@@ -15,8 +15,8 @@ need: 8
 person: 6
 interface: 6
 component: 5
-release: 3
 spec: 3
+release: 3
 team: 1
 hazard: 1
 
