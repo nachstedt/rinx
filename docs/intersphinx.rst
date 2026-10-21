@@ -132,7 +132,7 @@ lists no equations.
 Live preview
 ------------
 
-The preview resolves against the last built index, which holds only the
-external targets some document referenced when it was built. A reference you
-have just written to an external target nothing else names stays unresolved in
-the preview until the next build.
+The VS Code preview resolves against the inventories the language server has
+loaded, kept whole rather than pruned as the build's index prunes them, so a
+reference you have just written to any external target resolves at once (see
+:ref:`vscode-preview`).

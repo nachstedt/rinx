@@ -176,7 +176,7 @@ fn conf_execution(params: &InitializeParams) -> ConfExecution {
 
 /// Where a Bazel folder's manifests come from: the client, when it passes
 /// the `bazelManifests` initialization option, which the VS Code extension
-/// does — building them with Bazel as it already does for the preview.
+/// does — building them with Bazel as it already does to find the binary.
 fn manifest_source(params: &InitializeParams) -> ManifestSource {
     let asks = params
         .initialization_options

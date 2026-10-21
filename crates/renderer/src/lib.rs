@@ -38,7 +38,7 @@ mod resolution;
 mod test_support;
 mod uml_error;
 
-pub use blocks::EntityTemplates;
+pub use blocks::{EntityTemplates, load_entity_templates};
 pub use broken_link::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
 pub use embedded_assets::EmbeddedAssets;
 pub use empty_listing_error::EmptyListingError;
@@ -47,8 +47,8 @@ pub use image_error::ImageError;
 pub use math::MathError;
 pub use nav::{PageLink, ResolvedNavEntry};
 pub use page::{
-    MODINDEX_PATH, MODINDEX_TITLE, PageMeta, css_relative_path, render_genindex, render_modindex,
-    render_page,
+    MODINDEX_PATH, MODINDEX_TITLE, PageMeta, css_relative_path, page_title, render_document_page,
+    render_genindex, render_modindex, render_page,
 };
 pub use reference_target::{Destination, ReferenceResolver, ReferenceTarget};
 pub use uml_error::{DiagramError, DiagramFailure};

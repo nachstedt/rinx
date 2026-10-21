@@ -218,3 +218,64 @@ fn test_run_publishes_what_rendering_found_once_the_client_is_quiet() {
     assert_eq!(codes, Some(vec!["link.broken-ref".to_string()]));
     let _ = handle.join().expect("server thread");
 }
+
+#[test]
+fn test_run_previews_a_document_as_edited_just_before() {
+    // Given — a workspace of two documents, the second named by the first's
+    // toctree
+    let index = "Home\n====\n\n.. toctree::\n\n   setup\n";
+    let workspace = Workspace::new(
+        "session_preview",
+        &[
+            ("index.rst", index),
+            ("setup.rst", "Installing\n==========\n"),
+        ],
+    );
+    let (server, client) = Connection::memory();
+    let handle = std::thread::spawn(move || run(&server));
+    initialize_with(
+        &client,
+        InitializeParams {
+            workspace_folders: Some(vec![lsp_types::WorkspaceFolder {
+                uri: crate::uri::file_uri(&workspace.root).expect("a folder uri"),
+                name: "docs".to_string(),
+            }]),
+            ..InitializeParams::default()
+        },
+    );
+
+    // When — the other document is retitled, and the preview asked for at once
+    for notification in [
+        workspace.open("index.rst", index),
+        workspace.open("setup.rst", "Installing\n==========\n"),
+        workspace.change("setup.rst", 2, "Getting started\n===============\n"),
+    ] {
+        client.sender.send(notification.into()).unwrap();
+    }
+    client
+        .sender
+        .send(
+            Request::new(
+                RequestId::from(3),
+                crate::preview::PREVIEW_METHOD.to_string(),
+                serde_json::json!({"textDocument": {"uri": workspace.uri("index.rst")}}),
+            )
+            .into(),
+        )
+        .unwrap();
+    let previewed = std::iter::from_fn(|| client.receiver.recv().ok())
+        .find_map(|message| match message {
+            Message::Response(response) if response.id == RequestId::from(3) => Some(response),
+            _ => None,
+        })
+        .expect("the preview");
+    drop(client);
+
+    // Then
+    let html = previewed.response_result.expect("a page")["html"]
+        .as_str()
+        .expect("html")
+        .to_string();
+    assert!(html.contains("Getting started"), "{html}");
+    let _ = handle.join().expect("server thread");
+}

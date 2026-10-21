@@ -1,4 +1,5 @@
 import * as assert from 'assert';
+import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import type { RinxApi } from '../../extension';
@@ -147,5 +148,25 @@ suite('Bazel project (e2e)', () => {
         );
         // The workspace is this run's copy, so the edit may be kept.
         assert.ok(await build.save());
+    });
+
+    test("the preview draws a page with the site's own template", async () => {
+        // Given
+        const api = await rinx();
+        await vscode.window.showTextDocument(workspaceFile('reqs/index.rst'));
+        await waitFor('the site to be read from its manifest', () =>
+            api.indexStatus()?.projects?.some((project) => project.kind === 'bazel'),
+        );
+
+        // When
+        await vscode.commands.executeCommand('rinx.showPreview');
+
+        // Then — `page.html`, which the manifest names, with `site.css` embedded
+        const page = await waitFor('the page in the site template', () => {
+            const html = api.previewHtml();
+            return html?.includes('· fixture site</title>') && html;
+        });
+        const stylesheet = fs.readFileSync(workspaceFile('site.css').fsPath).toString('base64');
+        assert.ok(page.includes(`href="data:text/css;base64,${stylesheet}"`), page);
     });
 });

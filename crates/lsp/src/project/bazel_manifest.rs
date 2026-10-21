@@ -21,10 +21,9 @@
 //! renders them (#20). Each library's `deps` labels and the documents it
 //! lists are kept for the quick fix adding a missing dependency (#21).
 //!
-//! The manifest holds more than this module reads — the site's template —
-//! for the step that uses it (#22);
-//! unknown fields are therefore ignored, and only the `version` guards the
-//! shape.
+//! The site's template, stylesheet and entity templates are its pages'
+//! [`Presentation`], which the preview renders with (#22). Unknown fields are
+//! ignored, and only the `version` guards the shape.
 //!
 //! Every file the manifest names is a source file, named by its path in the
 //! workspace, or a generated one, named by its path under the execution root,
@@ -48,8 +47,8 @@ use super::declarations::{BuildDeclarations, BundledFiles};
 use super::discover::DiscoveredProject;
 use super::intersphinx::{IntersphinxEntry, IntersphinxSettings, InventorySource};
 use super::model::{
-    LibraryModel, Listing, Membership, ParseSettings, ProjectModel, ProjectSettings, ProjectSource,
-    Splice,
+    LibraryModel, Listing, Membership, PageFile, ParseSettings, Presentation, ProjectModel,
+    ProjectSettings, ProjectSource, Splice,
 };
 use super::strictness::Strictness;
 
@@ -74,7 +73,7 @@ pub struct BazelGrant {
     pub roots: BazelRoots,
     pub manifests: Vec<PathBuf>,
     /// The label of the site a document listed by several belongs to — the
-    /// editor's `rinx.site`, or the one the preview was pointed at.
+    /// editor's `rinx.site`.
     pub preferred_site: Option<String>,
 }
 
@@ -172,6 +171,13 @@ struct ManifestSite {
     label: String,
     config: ManifestFile,
     entity_schema: Option<ManifestFile>,
+    /// The page template; absent, the one `rinx_site` defaults to.
+    #[serde(default)]
+    template: Option<ManifestFile>,
+    #[serde(default)]
+    css: Option<ManifestFile>,
+    #[serde(default)]
+    entity_templates: Vec<ManifestFile>,
     #[serde(default)]
     domain_indices: Vec<String>,
     #[serde(default)]
@@ -233,10 +239,15 @@ impl ManifestFile {
         }
     }
 
-    /// Where the file is on the disk.
+    /// Where the file is on the disk: a source file of another repository,
+    /// whose path starts `../<repository>/`, under the execution root's
+    /// `external/`, where Bazel puts that repository.
     fn path(&self, roots: &BazelRoots) -> PathBuf {
         match self {
-            Self::Source(path) => join(&roots.workspace, path),
+            Self::Source(path) => match path.strip_prefix("../") {
+                Some(external) => join(&roots.execution.join("external"), external),
+                None => join(&roots.workspace, path),
+            },
             Self::Generated(path) => join(&roots.execution, path),
         }
     }
@@ -383,6 +394,7 @@ impl Reader<'_> {
             intersphinx: self.intersphinx(parsed.inventories),
             domain_indices: self.domain_indices(&parsed.site.domain_indices),
             site: Some(site),
+            presentation: self.presentation(&parsed.site),
             config_files: std::mem::take(&mut self.files),
             ..ProjectSettings::default()
         };
@@ -397,6 +409,25 @@ impl Reader<'_> {
             },
             findings: std::mem::take(&mut self.findings),
             sources,
+        }
+    }
+
+    /// The files the site's pages are drawn with. Not read here: a page
+    /// reads them when it is rendered, so an edit shows on the next one.
+    fn presentation(&self, site: &ManifestSite) -> Presentation {
+        let page_file = |file: Option<&ManifestFile>| {
+            file.map_or(PageFile::Builtin, |file| {
+                PageFile::File(file.path(self.roots))
+            })
+        };
+        Presentation {
+            template: page_file(site.template.as_ref()),
+            stylesheet: page_file(site.css.as_ref()),
+            entity_templates: site
+                .entity_templates
+                .iter()
+                .map(|file| file.path(self.roots))
+                .collect(),
         }
     }
 
@@ -1007,6 +1038,58 @@ mod tests {
                 "g/made.rst".to_string(),
                 PathBuf::from("/cache/execroot/_main/bazel-out/k8-fastbuild/bin/g/made.rst")
             )]
+        );
+    }
+
+    #[test]
+    fn test_the_sites_template_stylesheet_and_entity_templates_are_its_presentation() {
+        // Given
+        let text = manifest(
+            Vec::new(),
+            json!({
+                "template": {"source": "docs/page.html"},
+                "css": {"generated": "bazel-out/k8-fastbuild/bin/docs/site.css"},
+                "entity_templates": [{"source": "docs/req.html"}],
+            }),
+        );
+
+        // When
+        let reading = read(&text, &[CONFIG]);
+
+        // Then
+        assert_eq!(
+            reading.model.settings.presentation,
+            Presentation {
+                template: PageFile::File(PathBuf::from("/work/docs/page.html")),
+                stylesheet: PageFile::File(PathBuf::from(
+                    "/cache/execroot/_main/bazel-out/k8-fastbuild/bin/docs/site.css"
+                )),
+                entity_templates: vec![PathBuf::from("/work/docs/req.html")],
+            }
+        );
+    }
+
+    #[test]
+    fn test_a_site_naming_no_template_is_presented_with_the_builtin_one() {
+        // Given
+        let text = manifest(Vec::new(), json!({}));
+
+        // When / Then
+        assert_eq!(
+            read(&text, &[CONFIG]).model.settings.presentation,
+            Presentation::default()
+        );
+    }
+
+    #[test]
+    fn test_a_source_file_of_another_repository_is_found_under_the_execution_root() {
+        // Given — what `rinx_site`'s default template is in a consuming module
+        let file = ManifestFile::Source("../rinx+/templates/default.html".to_string());
+
+        // When / Then
+        assert_eq!(
+            file.path(&roots()),
+            PathBuf::from("/cache/execroot/_main/external/rinx+/templates/default.html")
         );
     }
 

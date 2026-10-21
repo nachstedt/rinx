@@ -2,8 +2,10 @@
 //! `--check <folder>` — prints what it would show for every document of a
 //! folder, for measuring a corpus; `--python <exe>` after it runs each
 //! `conf.py` the server could not read exactly, as an editor allowed to
-//! would, and each `--manifest <file>` reads a Bazel site from the manifest
-//! its `lsp_manifest` output group wrote, as the VS Code extension builds.
+//! would, each `--manifest <file>` reads a Bazel site from the manifest
+//! its `lsp_manifest` output group wrote, as the VS Code extension builds,
+//! and each `--preview <document>` times that document's preview after an
+//! edit.
 //!
 //! The server itself is the `rinx_lsp` crate, whose handlers are already
 //! pure; what is left here is the one decision the command line makes —
@@ -31,8 +33,8 @@ enum LspMode {
 ///
 /// Accepts `--stdio`, which clients such as `vscode-languageclient` append
 /// when told the transport, and which names the only one this server has, or
-/// `--check <folder>`, followed by any of `--python <exe>` (once) and
-/// `--manifest <file>` (each a site). Anything else is refused rather than
+/// `--check <folder>`, followed by any of `--python <exe>` (once),
+/// `--manifest <file>` (each a site) and `--preview <document>` (each timed). Anything else is refused rather than
 /// ignored, so a flag that a later version of the server would understand is
 /// not silently dropped by this one.
 fn read_lsp_args(args: &[String]) -> Result<LspMode> {
@@ -63,6 +65,7 @@ fn read_check_options(mut args: &[String]) -> Result<CheckOptions> {
             match flag.as_str() {
                 "--python" => bail!("lsp: --python needs the interpreter to run conf.py in"),
                 "--manifest" => bail!("lsp: --manifest needs the manifest file to read"),
+                "--preview" => bail!("lsp: --preview needs the document to preview"),
                 _ => bail!("lsp: unknown argument '{flag}' after --check"),
             }
         };
@@ -70,6 +73,7 @@ fn read_check_options(mut args: &[String]) -> Result<CheckOptions> {
             "--python" if options.python.is_none() => options.python = Some(PathBuf::from(value)),
             "--python" => bail!("lsp: --python is given twice"),
             "--manifest" => options.manifests.push(absolute(Path::new(value))?),
+            "--preview" => options.previews.push(absolute(Path::new(value))?),
             _ => bail!("lsp: unknown argument '{flag}' after --check"),
         }
         args = rest;
@@ -156,7 +160,7 @@ mod tests {
                 folder: PathBuf::from("Doc"),
                 options: CheckOptions {
                     python: Some(PathBuf::from("python3")),
-                    manifests: Vec::new(),
+                    ..CheckOptions::default()
                 },
             })
         );
@@ -185,9 +189,39 @@ mod tests {
                 options: CheckOptions {
                     python: Some(PathBuf::from("python3")),
                     manifests: vec![PathBuf::from("/out/a.json"), PathBuf::from("/out/b.json")],
+                    ..CheckOptions::default()
                 },
             })
         );
+    }
+
+    #[test]
+    fn test_read_lsp_args_reads_each_document_to_preview_absolute() {
+        // Given / When
+        let Ok(LspMode::Check { options, .. }) = read_lsp_args(&args(&[
+            "--check",
+            "Doc",
+            "--preview",
+            "/doc/a.rst",
+            "--preview",
+            "b.rst",
+        ])) else {
+            panic!("a check");
+        };
+
+        // Then
+        assert_eq!(options.previews[0], PathBuf::from("/doc/a.rst"));
+        assert!(options.previews[1].is_absolute());
+        assert!(options.previews[1].ends_with("b.rst"));
+    }
+
+    #[test]
+    fn test_read_lsp_args_refuses_a_preview_without_its_document() {
+        // Given / When
+        let error = read_lsp_args(&args(&["--check", "Doc", "--preview"])).unwrap_err();
+
+        // Then
+        assert!(error.to_string().contains("--preview needs"), "{error}");
     }
 
     #[test]

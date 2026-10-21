@@ -3,7 +3,7 @@
 //! Split the way `toctrees` and `section_numbers` are split, and for the same
 //! reason. Each document's [`NumberingStep`]s and the labels it defines
 //! ([`NumrefTarget`]) depend only on that document, so they merge — which is
-//! what lets the live preview renumber with a fresh document in a stale index.
+//! what lets the language server renumber after an edit to one document.
 //! The numbers themselves ([`ElementNumbers`]) depend on the whole toctree
 //! graph, so they are recomputed rather than merged.
 

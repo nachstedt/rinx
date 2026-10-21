@@ -38,7 +38,7 @@ export interface BazelManifestsResult {
 export interface ManifestDependencies {
     /** `rinx.autoDiscover`: whether Bazel may be run at all. */
     autoDiscover: () => boolean;
-    /** `rinx.site` when set, else the site the preview was pointed at. */
+    /** `rinx.site`, when set. */
     preferredSite: () => string | undefined;
     /** Every `rinx_site` in the workspace at `root`. */
     findSiteTargets: (root: string) => Promise<string[]>;

@@ -64,8 +64,8 @@ impl AmbiguousDefinitions {
 /// result does not depend on the order documents are merged in: a key claimed
 /// by one document is defined; a key claimed by several is contested and
 /// defined by none. A definition from the document that already holds the key
-/// replaces it — that is a fresh analysis of the same document, as the live
-/// preview merges into a stale index, not a second claimant.
+/// replaces it — that is a fresh analysis of the same document, not a second
+/// claimant.
 pub(crate) fn merge_claims<K: Ord + Clone, V>(
     defined: &mut BTreeMap<K, V>,
     contested: &mut BTreeMap<K, BTreeSet<String>>,
@@ -182,8 +182,8 @@ mod tests {
 
     #[test]
     fn test_merge_claims_lets_a_document_replace_its_own_definition() {
-        // Given — the live preview merging a fresh analysis of `a.rst` into
-        // an index that already holds the old one.
+        // Given — a fresh analysis of `a.rst` merged into an index that
+        // already holds the old one.
         let mut stale = document("a.rst", &["intro"]);
         stale.insert("intro", "a.rst".to_string());
 

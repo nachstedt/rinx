@@ -21,6 +21,7 @@ use super::bazel_manifests::BAZEL_MANIFESTS_CHANGED_METHOD;
 use super::conf_runs::CONF_INTERPRETER_CHANGED_METHOD;
 use super::state::ServerState;
 use crate::position::PositionEncoding;
+use crate::preview::{PREVIEW_METHOD, PreviewParams, PreviewRefusal, PreviewResult};
 
 /// The answer to `initialize` for a client announcing `capabilities`, and the
 /// position encoding the two have thereby agreed on.
@@ -119,7 +120,7 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
 }
 
 /// The response to a request other than `shutdown`, which the loop answers
-/// itself: a completion, a hover, a definition or the quick fixes, or the refusal of a method
+/// itself: a completion, a hover, a definition, the quick fixes or a preview, or the refusal of a method
 /// rinx does not support or of parameters that do not parse.
 pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
     let Request { id, method, params } = request;
@@ -162,6 +163,21 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
                     .map(CodeActionOrCommand::CodeAction)
                     .collect();
                 Response::new_ok(id, actions)
+            }
+            Err(error) => invalid_params(id, &method, &error),
+        },
+        PREVIEW_METHOD => match serde_json::from_value::<PreviewParams>(params) {
+            Ok(params) => {
+                match state.preview(&params.text_document.uri, params.resource_root.as_deref()) {
+                    Ok(html) => Response::new_ok(id, PreviewResult { html }),
+                    Err(refusal) => {
+                        let code = match refusal {
+                            PreviewRefusal::NotOpen => ErrorCode::InvalidParams,
+                            PreviewRefusal::Failed(_) => ErrorCode::RequestFailed,
+                        };
+                        Response::new_err(id, code as i32, refusal.to_string())
+                    }
+                }
             }
             Err(error) => invalid_params(id, &method, &error),
         },

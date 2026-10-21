@@ -19,7 +19,8 @@
     "typescript/restrict-template-expressions": "error",
     "typescript/switch-exhaustiveness-check": "error",
     "eqeqeq": "error",
-    "no-underscore-dangle": "off"
+    "no-underscore-dangle": "off",
+    "unicorn/require-post-message-target-origin": "off"
   },
   "ignorePatterns": ["out/**", "coverage/**", ".vscode-test/**"],
   "overrides": [

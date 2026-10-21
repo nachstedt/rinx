@@ -10,6 +10,7 @@
 //! containment `math.rs` and `highlight.rs` give their backends.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::{Path, PathBuf};
 
 use minijinja::{Environment, Value, context};
 use rinx_ast::{EntityBody, EntityId, FieldMutationMode};
@@ -19,6 +20,29 @@ use crate::RenderCtx;
 
 /// Template sources the site supplied, keyed by the name a type refers to.
 pub type EntityTemplates = BTreeMap<String, String>;
+
+/// The templates in the files at `paths`, each keyed by its file name — the
+/// name a schema's `template = "…"` refers to — and read with `read`, since
+/// the renderer performs no I/O of its own.
+///
+/// # Errors
+///
+/// The path of the first file `read` fails on, with its error.
+pub fn load_entity_templates<'a, E>(
+    paths: impl IntoIterator<Item = &'a Path>,
+    mut read: impl FnMut(&Path) -> Result<String, E>,
+) -> Result<EntityTemplates, (PathBuf, E)> {
+    let mut templates = EntityTemplates::new();
+    for path in paths {
+        let name = path.file_name().map_or_else(
+            || path.to_string_lossy().into_owned(),
+            |name| name.to_string_lossy().into_owned(),
+        );
+        let source = read(path).map_err(|error| (path.to_path_buf(), error))?;
+        templates.insert(name, source);
+    }
+    Ok(templates)
+}
 
 /// Renders `entity` through its type's template, if it declares one.
 ///
@@ -364,6 +388,45 @@ fn render_nodes_to_html(nodes: &[rinx_ast::Node], ctx: &mut RenderCtx<'_>) -> St
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_load_entity_templates_keys_each_by_its_file_name() {
+        // Given
+        let paths = [Path::new("site/templates/req.html")];
+
+        // When
+        let templates = load_entity_templates(paths, |path| {
+            Ok::<_, ()>(format!("from {}", path.display()))
+        })
+        .unwrap();
+
+        // Then
+        assert_eq!(
+            templates,
+            EntityTemplates::from([(
+                "req.html".to_string(),
+                "from site/templates/req.html".to_string()
+            )])
+        );
+    }
+
+    #[test]
+    fn test_load_entity_templates_names_the_file_it_could_not_read() {
+        // Given
+        let paths = [Path::new("a.html"), Path::new("gone.html")];
+
+        // When
+        let result = load_entity_templates(paths, |path| {
+            if path == Path::new("gone.html") {
+                Err("missing")
+            } else {
+                Ok(String::new())
+            }
+        });
+
+        // Then
+        assert_eq!(result, Err((PathBuf::from("gone.html"), "missing")));
+    }
 
     #[test]
     fn test_template_key_makes_a_hyphenated_name_addressable() {

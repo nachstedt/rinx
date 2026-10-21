@@ -9,10 +9,9 @@ use serde::{Deserialize, Serialize};
 /// headings while rendering a *different* document, so the outline has to
 /// travel through the project index.
 ///
-/// This is per-document data, built by `analyze()` and merged like
-/// `document_titles`, which is what keeps the live-preview path correct: a
-/// fresh local analysis merged onto a stale global index still yields a usable
-/// outline. That is the reason sections are stored per document here and
+/// This is per-document data, built by `analyze()` and merged like 
+/// `document_titles`, which is what lets the language server fold one
+/// analysis per document into a current outline. That is the reason sections are stored per document here and
 /// expanded at render time, rather than being baked into a single
 /// section-expanded navigation tree — such a tree would repeat every section
 /// under every toctree that reaches it, and could not be merged per document.

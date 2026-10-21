@@ -142,26 +142,6 @@ pub(super) fn process_embed_assets(ast_json: &str, base_dir: &Path) -> Result<Em
     Ok(assets)
 }
 
-/// The embeddable assets for a document, skipping every one that could not be
-/// read.
-///
-/// The resilient counterpart to [`process_embed_assets`], for the live
-/// preview: an editor is routinely pointed at a document whose images are
-/// half-written or not yet saved, and failing the whole preview over one would
-/// leave the author with no page at all. Nothing is lost by degrading — an
-/// image missing from this table is reported by the renderer as
-/// `image.embed-unavailable` and falls back to a link, which is the same
-/// outcome by a gentler route.
-pub(super) fn embed_available_assets(doc: &ast::Document, base_dir: &Path) -> EmbeddedAssets {
-    let mut assets = EmbeddedAssets::new();
-    for path in collect_embed_paths(doc) {
-        if let Ok(data_uri) = embed_image(&base_dir.join(&path)) {
-            assets.insert(&path, data_uri);
-        }
-    }
-    assets
-}
-
 pub(crate) fn cmd_embed_assets(args: &[String]) -> Result<()> {
     let input = flag_value(args, "--input")?;
     let output = flag_value(args, "--output")?;
@@ -424,27 +404,6 @@ mod tests {
 
         // Then
         assert!(assets.is_empty());
-    }
-
-    #[test]
-    fn test_embed_available_assets_skips_what_it_cannot_read() {
-        // Given — one readable image and one that is not there
-        let dir = temp_dir_with("available.svg", b"<svg/>");
-        let doc = ast::Document::new(
-            "index.rst".to_string(),
-            vec![
-                Node::Directive(Directive::Image(Box::new(embedding("available.svg")))),
-                Node::Directive(Directive::Image(Box::new(embedding("gone.svg")))),
-            ],
-        );
-
-        // When
-        let assets = embed_available_assets(&doc, &dir);
-
-        // Then — the preview keeps what it has rather than failing outright
-        assert_eq!(assets.len(), 1);
-        assert!(assets.get(Path::new("available.svg")).is_some());
-        assert!(assets.get(Path::new("gone.svg")).is_none());
     }
 
     #[test]

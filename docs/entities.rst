@@ -697,9 +697,7 @@ What it does not do
 
 A table whose filter matches nothing renders its headings and reports
 ``entity-table.empty-result`` — an empty listing is far more often a filter that
-no longer matches than a deliberate statement. The live preview stays quiet
-about it when no project index is available, since every table would be empty
-through no fault of the author.
+no longer matches than a deliberate statement.
 
 ``needflow``, ``needsequence``, ``needpie`` and ``needbar`` *are* implemented — see
 "Flowcharts of the graph", "Sequence diagrams of the graph" and "Charting the
@@ -920,8 +918,7 @@ Three things are reported rather than passed over:
 
 - **A chart whose every wedge counts zero** is ``entity-pie.empty-result`` and no
   picture is drawn, for the reason an empty table is reported: a filter that no
-  longer matches is far likelier than a deliberate statement. As with a table,
-  the live preview stays quiet about it when no project index is available.
+  longer matches is far likelier than a deliberate statement.
 - **A body with no content line at all** is ``entity-pie.no-slices``, reported
   while parsing — the body is this document's own text, so no index is needed.
 - ``:labels:`` disagreeing with the wedge count is

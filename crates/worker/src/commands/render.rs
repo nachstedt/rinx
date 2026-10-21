@@ -73,33 +73,14 @@ pub(super) fn process_render(
         entities.templates,
     );
 
-    // Extract page title from the first H1 heading, if any.
-    let page_title = doc
-        .nodes
-        .iter()
-        .find_map(|n| {
-            if let ast::Node::Heading { level: 1, text } = n {
-                Some(ast::inline_plain_text(text))
-            } else {
-                None
-            }
-        })
-        .unwrap_or_default();
-
-    let css_path = renderer::css_relative_path(doc_path, "default.css");
-    let html = renderer::render_page(
+    let html = renderer::render_document_page(
         &render_output.html,
-        template_str,
+        &doc,
+        &index,
+        doc_path,
         config,
-        &renderer::PageMeta {
-            css_path: &css_path,
-            page_title: &page_title,
-            doc_path,
-            source_path: &doc.path,
-            has_genindex: index.has_genindex_entries(),
-            ..renderer::PageMeta::default()
-        }
-        .with_navigation(&index, config),
+        template_str,
+        &renderer::css_relative_path(doc_path, "default.css"),
     )?;
     Ok(RenderedPage {
         html,

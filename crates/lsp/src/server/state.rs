@@ -68,6 +68,7 @@ use crate::documents::DocumentStore;
 use crate::hover::reference_hover;
 use crate::includes::IncludeGraph;
 use crate::position::{PositionEncoding, char_index_of, to_lsp_position, to_lsp_range};
+use crate::preview::{PreviewRefusal, PreviewSettings, render_preview, render_preview_alone};
 use crate::progress::{IndexState, ScanProgress};
 use crate::project::{
     DiscoveredProject, IndexedDocument, ParseSettings, Project, ScannedProject, Strictness,
@@ -498,6 +499,51 @@ impl ServerState {
         Some(reference_hover(&target, range, |doc_path| {
             file_uri(&project.path_of(doc_path))
         }))
+    }
+
+    /// The page of the open document `uri`, as its project would build it,
+    /// with the stylesheet under `resource_root` (see [`PreviewParams`]).
+    ///
+    /// Read from the document's latest parse and its project's current
+    /// index, which every change brings up to date before the next message
+    /// is handled, so a preview is never stale and never waits for the render
+    /// tier. A document in no project — a file outside every workspace
+    /// folder — is drawn on its own, with the build's defaults.
+    ///
+    /// [`PreviewParams`]: crate::preview::PreviewParams
+    pub(super) fn preview(
+        &mut self,
+        uri: &Uri,
+        resource_root: Option<&str>,
+    ) -> Result<String, PreviewRefusal> {
+        if self.documents.get(uri).is_none() {
+            return Err(PreviewRefusal::NotOpen);
+        }
+        let tracked = self.tracked.get(uri).ok_or(PreviewRefusal::NotOpen)?;
+        let read = |path: &Path| std::fs::read_to_string(path);
+        let Some(project) = tracked.project.and_then(|id| self.projects.get_mut(&id)) else {
+            return render_preview_alone(&tracked.parsed.document, resource_root, &read)
+                .map_err(PreviewRefusal::Failed);
+        };
+        let config = project.site_config();
+        let model = project.model();
+        let schema = Arc::clone(&model.settings.parse.schema);
+        let presentation = model.settings.presentation.clone();
+        let document = &tracked.parsed.document;
+        let bundled = model
+            .parse_settings(Some(&document.path))
+            .declarations
+            .as_ref()
+            .map(|declared| Arc::clone(&declared.bundled));
+        let settings = PreviewSettings {
+            config: &config,
+            schema: &schema,
+            presentation: &presentation,
+            bundled: bundled.as_deref(),
+            resource_root,
+        };
+        render_preview(document, project.project_index(), &settings, &read)
+            .map_err(PreviewRefusal::Failed)
     }
 
     /// The quick fixes for what the document `uri` fails the build on within

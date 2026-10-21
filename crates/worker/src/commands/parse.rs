@@ -81,8 +81,7 @@ pub(super) fn process_parse(
 }
 
 /// Parses the optional `--default-domain` flag, defaulting to `py` — this is
-/// how `rinx_library`'s Bazel attribute reaches the `parse`/`preview`
-/// subcommands (see `rules/library.bzl`, whose `default_domain` attribute
+/// how `rinx_library`'s Bazel attribute reaches the `parse` subcommand (see `rules/library.bzl`, whose `default_domain` attribute
 /// restricts to the same two values via `values = ["py", "c"]`).
 ///
 /// Deliberately narrower than `ast::Domain::FromStr`, which also accepts
@@ -160,7 +159,7 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
     // from the page, so the build fails rather than shipping the gap — the
     // same stance `validate_assets` takes on a missing diagram. The parser
     // itself stays resilient (it degrades the directive and carries on), which
-    // is what the live preview needs; only this subcommand is strict.
+    // is what the language server needs; only this subcommand is strict.
     let failures = parse_files.failures();
     if !failures.is_empty() {
         for failure in &failures {

@@ -15,7 +15,7 @@
 //! rinx inventory --index <project.index> --output <objects.inv> --config <config.toml>
 //! rinx extract_doctests --input <file.ast> --output <file.doctests.json>
 //! rinx embed_assets --input <file.ast> --output <file.embeds.json>
-//! rinx lsp [--stdio | --check <folder>]
+//! rinx lsp [--stdio | --check <folder> [--python <exe>] [--manifest <file>]... [--preview <document>]...]
 //! rinx needs_schema --ubproject <ubproject.toml> [--schemas <schemas.json>] --output <entities.toml>
 //! rinx validate_assets [--image-dir <dir>] [--download-dir <dir>] [--diagram-dirs <puml_dir>...] --inputs <a.ast> [<b.ast> ...]
 //! ```
@@ -36,7 +36,7 @@ use std::fs;
 use commands::{
     cmd_diagnostic_codes_rst, cmd_embed_assets, cmd_entity_json_schema, cmd_extract_doctests,
     cmd_genindex, cmd_index, cmd_inventory, cmd_lsp, cmd_modindex, cmd_needs_schema, cmd_parse,
-    cmd_preview, cmd_render, cmd_validate_assets, cmd_validate_toctree,
+    cmd_render, cmd_validate_assets, cmd_validate_toctree,
 };
 
 fn cmd_legacy(path: &str) -> Result<()> {
@@ -58,7 +58,6 @@ fn run(args: &[String]) -> Result<()> {
         Some("genindex") => cmd_genindex(&args[2..]),
         Some("inventory") => cmd_inventory(&args[2..]),
         Some("modindex") => cmd_modindex(&args[2..]),
-        Some("preview") => cmd_preview(&args[2..]),
         // The language server, for an editor rather than a build phase.
         Some("lsp") => cmd_lsp(&args[2..]),
         // Developer tooling, not a pipeline phase: regenerates the checked-in
@@ -91,8 +90,7 @@ fn run(args: &[String]) -> Result<()> {
                    {program} genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html>\n\
                    {program} modindex --index <project.index> --output <py-modindex.html> --config <config.toml> --template <template.html>\n\
                    {program} inventory --index <project.index> --output <objects.inv> --config <config.toml>\n\
-                   {program} preview --doc-path <rel_path> --config <config.toml> --template <template.html> [--index <project.index>] [--default-domain <py|c>]\n\
-                   {program} lsp [--stdio | --check <folder>]\n\
+                   {program} lsp [--stdio | --check <folder> [--python <exe>] [--manifest <file>]... [--preview <document>]...]\n\
                    {program} needs_schema --ubproject <ubproject.toml> [--schemas <schemas.json>] --output <entities.toml>\n\
                    {program} validate_assets [--image-dir <dir>] [--download-dir <dir>] [--diagram-dirs <puml_dir>...] --inputs <a.ast> [<b.ast> ...]"
             );

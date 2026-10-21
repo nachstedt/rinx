@@ -5,10 +5,9 @@
 //! through, the entity schema that supplies the project's own directive
 //! vocabulary, the import keys it declares, whether the source is rendered as
 //! a Jinja template first, and the prolog and epilog added to every document.
-//! Both `parse` and `preview` take all seven, so they are one parameter rather
-//! than seven, for
-//! the same reason `ParseCtx` exists in the parser: the next parse-time
-//! setting should not have to touch every signature again.
+//! They are one parameter rather than seven, for the same reason `ParseCtx`
+//! exists in the parser: the next parse-time setting should not have to touch
+//! every signature again.
 
 use anyhow::{Result, anyhow};
 use rinx_ast as ast;

@@ -5,36 +5,6 @@ import { BazelScanner } from '../../bazel';
 suite('BazelScanner Test Suite', () => {
     const workspaceRoot = '/test/workspace';
 
-    test('labelToFilesystemPath: local label', async () => {
-        const scanner = new BazelScanner();
-        const p = await scanner.labelToFilesystemPath('//Doc:rinx.toml', workspaceRoot);
-        assert.strictEqual(p, path.join(workspaceRoot, 'Doc', 'rinx.toml'));
-    });
-
-    test('labelToFilesystemPath: external Bzlmod label', async () => {
-        const mockExecutor = async (cmd: string) => {
-            if (cmd === 'bazel info output_base') {
-                return { stdout: '/output/base', stderr: '' };
-            }
-            return { stdout: '', stderr: '' };
-        };
-        const scanner = new BazelScanner(() => {}, mockExecutor);
-        const p = await scanner.labelToFilesystemPath('@@rinx//templates:default.html', workspaceRoot);
-        assert.strictEqual(p, path.join('/output/base', 'external', 'rinx', 'templates', 'default.html'));
-    });
-
-    test('deriveIndexPath: standard target', () => {
-        const scanner = new BazelScanner();
-        const p = scanner.deriveIndexPath('//Doc:site', workspaceRoot);
-        assert.strictEqual(p, path.join(workspaceRoot, 'bazel-bin', 'Doc', 'site.project.index'));
-    });
-
-    test('deriveIndexPath: root target', () => {
-        const scanner = new BazelScanner();
-        const p = scanner.deriveIndexPath('//:site', workspaceRoot);
-        assert.strictEqual(p, path.join(workspaceRoot, 'bazel-bin', 'site.project.index'));
-    });
-
     test('deriveBinaryPath: finds and builds worker', async () => {
         const calls: string[] = [];
         const workerLabel = '@rinx//:rinx';

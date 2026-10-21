@@ -92,7 +92,7 @@ pub fn render_diagnostics(
 /// The images a page may embed: every one `bundled`, the build's embed
 /// action reading each declared one. Their bytes change nothing the server
 /// reports, so each stands as an empty `data:` URI.
-fn embeddable_images(bundled: Option<&BundledFiles>) -> EmbeddedAssets {
+pub(crate) fn embeddable_images(bundled: Option<&BundledFiles>) -> EmbeddedAssets {
     let mut assets = EmbeddedAssets::new();
     for image in bundled.into_iter().flat_map(|bundled| &bundled.images) {
         assets.insert(image, EMPTY_DATA_URI.to_string());

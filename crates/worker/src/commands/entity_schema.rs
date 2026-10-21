@@ -1,9 +1,9 @@
 //! Loading the project's entity schema for whichever subcommand needs it.
 //!
-//! Four of them do, for different reasons: `parse` needs the vocabulary to
+//! Three of them do, for different reasons: `parse` needs the vocabulary to
 //! recognise `.. req::` as a directive at all, `index` needs the relations to
-//! derive back-links, and `render`/`preview` need the labels and the
-//! presentation. All four read it through here so they cannot disagree about
+//! derive back-links, and `render` needs the labels and the presentation.
+//! All three read it through here so they cannot disagree about
 //! what a missing `--entity-schema` means.
 
 use anyhow::{Context, Result, anyhow};
@@ -71,16 +71,16 @@ pub(super) fn import_keys_from_args(
 ///
 /// Returns an error when a named file cannot be read.
 pub(super) fn load_entity_templates(args: &[String]) -> Result<EntityTemplates> {
-    let mut templates = EntityTemplates::new();
-    for path in flag_values_opt(args, "--entity-templates") {
-        let name = std::path::Path::new(&path)
-            .file_name()
-            .map_or_else(|| path.clone(), |name| name.to_string_lossy().into_owned());
-        let source = fs::read_to_string(&path)
-            .with_context(|| format!("Failed to read entity template '{path}'"))?;
-        templates.insert(name, source);
-    }
-    Ok(templates)
+    let paths = flag_values_opt(args, "--entity-templates");
+    rinx_renderer::load_entity_templates(paths.iter().map(std::path::Path::new), |path| {
+        fs::read_to_string(path)
+    })
+    .map_err(|(path, error)| {
+        anyhow::Error::new(error).context(format!(
+            "Failed to read entity template '{}'",
+            path.display()
+        ))
+    })
 }
 
 #[cfg(test)]

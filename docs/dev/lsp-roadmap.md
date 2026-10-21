@@ -18,6 +18,9 @@ rinx.
 - After #19, rinx projects get exact build parity.
 - After #31, it is a full language server.
 
+Steps are numbered in the order they were planned; #40, added later, belongs
+in M4.
+
 **Known risks:**
 
 - The directive and option table #25 needs does not exist yet.
@@ -34,8 +37,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   #7 (PR #273, prepared by #272), #8 (PR #275), #9 (PR #276), #10 (PR #281),
   #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
   #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315), #18 (PR #317),
-  #19 (PR #319), #20 (PR #324) and #21 (PR #328).
-- **Next: #22, a `rinx/preview` request.**
+  #19 (PR #319), #20 (PR #324), #21 (PR #328) and #22 (PR #TBD).
+- **Next: #23, the preview in legacy projects.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -713,7 +716,7 @@ Not done here:
 
 ## M4: Preview served by the language server
 
-### 22. A `rinx/preview` request
+### 22. A `rinx/preview` request ✅ (#TBD)
 
 **You experience:** the preview is faster and never stale; a title changed in
 another file shows up immediately.
@@ -723,13 +726,68 @@ another file shows up immediately.
 - Decide whether the `preview` subcommand stays for other callers
 - Latency measurement
 
+The page is rendered from the document's latest parse and its project's
+current fold, by `rinx_renderer::render_document_page`, now the one call the
+build's render action makes too; a parity test checks that the preview of a
+document is the page `rinx render` writes, but for the stylesheet's address.
+A `rinx_site`'s manifest already named its `template`, `css` and
+`entity_templates`; the server now reads them, mapping a file of another
+repository (`../rinx+/…`, as the default template is in a consuming module)
+under the execution root's `external/`, and reads each file when a page is
+rendered, so editing one shows on the next. Every other project, and a file
+outside every workspace folder, gets the build's default template and
+stylesheet, which #23 had planned to bundle. The stylesheet is embedded as a
+`data:` address, since a webview reads no file it was not given; the request
+takes a `resourceRoot` for #23's images, which no client sends yet.
+
+The subcommand is gone: the extension was its only caller. With it went the
+extension's own Bazel discovery (`rinx.configPath`, `rinx.templatePath`,
+`rinx.indexPath` and the site picker), and the preview no longer decides
+which site a shared document belongs to: `rinx.site` does, else the first by
+label. The panel shows the reStructuredText document last active in an
+editor, so it keeps its page while it has the focus, and any edit or save of
+a reStructuredText document asks again, since any of them may change it.
+Only the first page is loaded into the webview; each later one is posted to
+it and swapped into the open document, which keeps the scroll position — a
+reload had VS Code scroll back down, visibly under the theme's smooth
+scrolling. As in VS Code's own Markdown preview, a page is loaded again only
+when the panel was hidden, never because it gained or lost the focus; the
+panel opens beside the editor, which keeps the focus.
+Without a running server it says so.
+
+Measured on CPython's 522 documents with release builds, from an edit to the
+page (`rinx lsp --check <folder> --preview <document>`): `library/os.rst`
+100 ms and `library/stdtypes.rst` 155 ms, against 140 ms and 240 ms for the
+old `rinx preview` process with the built index, which was stale besides.
+
+Not done here: images and every other file a page links beside it (#23),
+links that lead somewhere (#40), and the version switcher's script, which a
+webview cannot load (issue #329).
+
 ### 23. Preview in legacy projects
 
 **You experience:** the preview works in a Sphinx project with no Bazel.
 
-- Bundled default template and CSS for `SphinxConf` models
-- Images resolved against the workspace (`localResourceRoots`)
+- Bundled default template and CSS for `SphinxConf` models (done early, in #22)
+- Images resolved against the workspace (`localResourceRoots`, and the
+  request's `resourceRoot`)
 - Manual check on CPython
+
+### 40. Preview navigation
+
+Numbered last so the steps after it keep their numbers; it belongs here, after
+#23.
+
+**You experience:** clicking a link in the preview opens the document it
+leads to, and the preview follows.
+
+- A click handler in the webview posts the link's `href` to the extension
+- A `rinx/previewLink` request: the server resolves the `href` against the
+  current document's name to a source URI and fragment (`Project::path_of`)
+- An `http(s):` link opens in the browser (`env.openExternal`), a `#fragment`
+  scrolls the page; `genindex` and the domain indices have no source and are
+  not followed
+- Tests
 
 ### 24. Diagram template errors
 

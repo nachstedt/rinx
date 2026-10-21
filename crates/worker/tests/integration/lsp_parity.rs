@@ -11,7 +11,9 @@
 //! undeclared toctree entries, diagrams, images and downloads fail the
 //! build's actions and are the editor's errors under its manifest, and one of
 //! whose libraries renders its document as a Jinja template, whose warnings
-//! both place on the lines they were written on.
+//! both place on the lines they were written on. A last check compares
+//! pages rather than diagnostics: what `rinx/preview` draws for a document is
+//! the page `rinx render` writes for it.
 //!
 //! The comparison is file by file: what the build warns about inside an
 //! `.. include::`d fragment, the server must publish on that fragment.
@@ -658,4 +660,131 @@ fn test_the_editor_places_a_templated_documents_warnings_as_the_build_does() {
         "{printed}"
     );
     assert_eq!(editor, build);
+}
+
+/// The page `rinx lsp` previews for `document` of the folder `project`,
+/// opened as it is on the disk.
+fn previewed_page(project: &Path, document: &str) -> String {
+    let uri = format!("file://{}", project.join(document).display());
+    let mut server = Server::spawn();
+    server.initialize_with(json!({
+        "capabilities": {},
+        "workspaceFolders": [{"uri": format!("file://{}", project.display()), "name": "docs"}],
+    }));
+    while !matches!(
+        server.receive(),
+        lsp_server::Message::Notification(notification)
+            if notification.method == "rinx/status" && notification.params["state"] == "ready"
+    ) {}
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": uri, "languageId": "restructuredtext", "version": 1,
+            "text": std::fs::read_to_string(project.join(document)).expect("the document"),
+        }}),
+    );
+    server.request(2, "rinx/preview", json!({ "textDocument": { "uri": uri } }));
+    let previewed = std::iter::from_fn(|| Some(server.receive()))
+        .find_map(|message| match message {
+            lsp_server::Message::Response(response) => Some(response),
+            _ => None,
+        })
+        .expect("the preview");
+    previewed.response_result.expect("a page")["html"]
+        .as_str()
+        .expect("html")
+        .to_string()
+}
+
+/// `page` with its stylesheet's address replaced by `STYLESHEET`.
+fn with_stylesheet_named(page: &str) -> String {
+    let start = page
+        .find("<link rel=\"stylesheet\" href=\"")
+        .expect("a stylesheet link")
+        + 29;
+    let end = start + page[start..].find('"').expect("the end of the address");
+    format!("{}STYLESHEET{}", &page[..start], &page[end..])
+}
+
+#[test]
+fn test_the_preview_draws_the_page_the_build_writes() {
+    // Given a folder of two documents, the root's toctree naming the other,
+    // which links back by label
+    let project =
+        std::env::temp_dir().join(format!("rinx_lsp_parity_preview_{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&project);
+    std::fs::create_dir_all(&project).expect("a project directory");
+    std::fs::write(
+        project.join("index.rst"),
+        ".. _home:\n\nHome\n====\n\nWelcome.\n\n.. toctree::\n   :numbered:\n\n   guide\n",
+    )
+    .expect("index.rst");
+    std::fs::write(
+        project.join("guide.rst"),
+        "Guide\n=====\n\nBack to :ref:`home`.\n\nSection\n-------\n",
+    )
+    .expect("guide.rst");
+    std::fs::write(project.join("rinx.toml"), "").expect("rinx.toml");
+    let template = repository_root().join("templates/default.html");
+    let template = template.to_str().expect("a UTF-8 path");
+
+    // When — the build parses, indexes and renders `guide.rst` with the
+    // default template, and the server previews it
+    for document in ["index", "guide"] {
+        rinx(
+            &project,
+            &[
+                "parse",
+                "--input",
+                &format!("{document}.rst"),
+                "--output",
+                &format!("{document}.ast"),
+            ],
+        );
+    }
+    rinx(
+        &project,
+        &[
+            "index",
+            "--output",
+            "project.index",
+            "--inputs",
+            "index.ast",
+            "guide.ast",
+        ],
+    );
+    rinx(
+        &project,
+        &[
+            "render",
+            "--input",
+            "guide.ast",
+            "--index",
+            "project.index",
+            "--doc-path",
+            "guide.rst",
+            "--output",
+            "guide.html",
+            "--config",
+            "rinx.toml",
+            "--template",
+            template,
+        ],
+    );
+    let built = std::fs::read_to_string(project.join("guide.html")).expect("the built page");
+    for generated in ["index.ast", "guide.ast", "project.index", "guide.html"] {
+        std::fs::remove_file(project.join(generated)).expect("a generated file");
+    }
+    let previewed = previewed_page(&project, "guide.rst");
+    let _ = std::fs::remove_dir_all(&project);
+
+    // Then — the same page, but for where it finds its stylesheet
+    assert!(
+        built.contains("<span class=\"section-number\">1.1. </span>Section"),
+        "the section numbers are drawn: {built}"
+    );
+    assert_eq!(
+        with_stylesheet_named(&previewed),
+        with_stylesheet_named(&built)
+    );
 }

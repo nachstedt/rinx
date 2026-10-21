@@ -1,5 +1,5 @@
 //! Warning formatting and the `--strict-links` enforcement, shared by the
-//! `parse`, `render` and `preview` subcommands.
+//! `parse` and `render` subcommands.
 //!
 //! Every warning this crate prints goes through one of the formatters here,
 //! so they all read the same way:

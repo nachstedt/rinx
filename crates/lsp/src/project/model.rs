@@ -116,6 +116,30 @@ impl Default for ParseSettings {
     }
 }
 
+/// How a project's pages look in the preview: the template and stylesheet
+/// a `rinx_site` names, else the build's defaults.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct Presentation {
+    /// The page template — a `rinx_site`'s `template`.
+    pub template: PageFile,
+    /// The stylesheet — a `rinx_site`'s `css`.
+    pub stylesheet: PageFile,
+    /// The per-type entity templates — a `rinx_site`'s `entity_templates`,
+    /// absolute.
+    pub entity_templates: Vec<PathBuf>,
+}
+
+/// One file of a [`Presentation`].
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub enum PageFile {
+    /// The one `rinx_site` uses when it names none.
+    #[default]
+    Builtin,
+    /// The file at this absolute path, read whenever a page is rendered, so
+    /// an edit shows on the next one.
+    File(PathBuf),
+}
+
 /// One `rinx_library` of a Bazel project.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LibraryModel {
@@ -222,6 +246,8 @@ pub struct ProjectSettings {
     /// declares one — a `rinx_site`'s `rinx.toml`; otherwise it is made of
     /// the settings here.
     pub site: Option<SiteConfig>,
+    /// The template and stylesheet the project's pages are previewed with.
+    pub presentation: Presentation,
     /// Whether captioned figures, tables and code blocks are numbered.
     pub numfig: bool,
     /// How many section-number components a `numfig` number starts with.
@@ -263,6 +289,7 @@ impl Default for ProjectSettings {
             membership: Membership::Matched,
             libraries: Vec::new(),
             site: None,
+            presentation: Presentation::default(),
             numfig: false,
             numfig_secnum_depth: rinx_index::DEFAULT_NUMFIG_SECNUM_DEPTH,
             highlight_language: ResolvedLanguage::default(),
