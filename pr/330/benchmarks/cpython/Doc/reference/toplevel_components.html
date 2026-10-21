@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Top-level components — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Language Reference</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Language Reference"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="introduction.html"><span class="section-number">1. </span>Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="lexical_analysis.html"><span class="section-number">2. </span>Lexical analysis</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datamodel.html"><span class="section-number">3. </span>Data model</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="executionmodel.html"><span class="section-number">4. </span>Execution model</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="import.html"><span class="section-number">5. </span>The import system</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="expressions.html"><span class="section-number">6. </span>Expressions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="simple_stmts.html"><span class="section-number">7. </span>Simple statements</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="compound_stmts.html"><span class="section-number">8. </span>Compound statements</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="toplevel_components.html"><span class="section-number">9. </span>Top-level components</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Top-level components"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="toplevel_components.html#complete-python-programs"><span class="section-number">9.1. </span>Complete Python programs</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="toplevel_components.html#file-input"><span class="section-number">9.2. </span>File input</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="toplevel_components.html#interactive-input"><span class="section-number">9.3. </span>Interactive input</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="toplevel_components.html#expression-input"><span class="section-number">9.4. </span>Expression input</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="grammar.html"><span class="section-number">10. </span>Full Grammar specification</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="compound_stmts.html">&larr; Compound statements</a>
+        <a class="next" href="grammar.html">Full Grammar specification &rarr;</a>
+      </nav>
+      
+      <a id="top-level"></a>
+<h1 id="top-level-components"><span class="section-number">9. </span>Top-level components</h1>
+<span id="index-0"></span>
+<p>The Python interpreter can get its input from a number of sources: from a script
+passed to it as standard input or as program argument, typed in interactively,
+from a module source file, etc.  This chapter gives the syntax used in these
+cases.</p>
+<a id="programs"></a>
+<h2 id="complete-python-programs"><span class="section-number">9.1. </span>Complete Python programs</h2>
+<span id="index-1"></span>
+<span id="index-2"></span>
+<p>While a language specification need not prescribe how the language interpreter
+is invoked, it is useful to have a notion of a complete Python program.  A
+complete Python program is executed in a minimally initialized environment: all
+built-in and standard modules are available, but none have been initialized,
+except for <a class="reference internal" href="../library/sys.html#py:module:sys" title="sys: Access system-specific parameters and functions."><code class="xref py module docutils literal">sys</code></a> (various system services), <a class="reference internal" href="../library/builtins.html#py:module:builtins" title="builtins: The module that provides the built-in namespace."><code class="xref py module docutils literal">builtins</code></a> (built-in
+functions, exceptions and <code>None</code>) and <a class="reference internal" href="../library/__main__.html#py:module:__main__" title="__main__: The environment where top-level code is run. Covers command-line interfaces, import-time behavior, and ``__name__ == '__main__'``."><code class="xref py module docutils literal">__main__</code></a>.  The latter is used to
+provide the local and global namespace for execution of the complete program.</p>
+<p>The syntax for a complete Python program is that for file input, described in
+the next section.</p>
+<span id="index-3"></span>
+<p>The interpreter may also be invoked in interactive mode; in this case, it does
+not read and execute a complete program but reads and executes one statement
+(possibly compound) at a time.  The initial environment is identical to that of
+a complete program; each statement is executed in the namespace of
+<a class="reference internal" href="../library/__main__.html#py:module:__main__" title="__main__: The environment where top-level code is run. Covers command-line interfaces, import-time behavior, and ``__name__ == '__main__'``."><code class="xref py module docutils literal">__main__</code></a>.</p>
+<span id="index-4"></span>
+<p>A complete program can be passed to the interpreter
+in three forms: with the <a class="reference internal" href="../using/cmdline.html#std:cmdoption:-c"><code class="xref std cmdoption docutils literal">-c</code></a> <em>string</em> command line option, as a file
+passed as the first command line argument, or as standard input.  If the file
+or standard input is a tty device, the interpreter enters interactive mode;
+otherwise, it executes the file as a complete program.</p>
+<a id="file-input"></a>
+<h2 id="file-input"><span class="section-number">9.2. </span>File input</h2>
+<p>All input read from non-interactive files has the same form:</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'grammar-snippet'</p>
+<pre class="directive-error-source">.. grammar-snippet::
+   :group: python-grammar
+
+   file_input: (NEWLINE | `statement`)* ENDMARKER</pre>
+</div>
+<p>This syntax is used in the following situations:</p>
+<ul>
+<li><p>when parsing a complete Python program (from a file or from a string);</p>
+</li>
+<li><p>when parsing a module;</p>
+</li>
+<li><p>when parsing a string passed to the <a class="reference internal" href="../library/functions.html#py:function:exec"><code class="xref py function docutils literal">exec</code></a> function;</p>
+</li>
+</ul>
+<a id="interactive"></a>
+<h2 id="interactive-input"><span class="section-number">9.3. </span>Interactive input</h2>
+<p>Input in interactive mode is parsed using the following grammar:</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'grammar-snippet'</p>
+<pre class="directive-error-source">.. grammar-snippet::
+   :group: python-grammar
+
+   interactive_input: [`stmt_list`] NEWLINE | `compound_stmt` NEWLINE | ENDMARKER</pre>
+</div>
+<p>Note that a (top-level) compound statement must be followed by a blank line in
+interactive mode; this is needed to help the parser detect the end of the input.</p>
+<a id="expression-input"></a>
+<h2 id="expression-input"><span class="section-number">9.4. </span>Expression input</h2>
+<span id="index-5"></span>
+<span id="index-6"></span>
+<p><a class="reference internal" href="../library/functions.html#py:function:eval"><code class="xref py function docutils literal">eval</code></a> is used for expression input.  It ignores leading whitespace. The
+string argument to <a class="reference internal" href="../library/functions.html#py:function:eval"><code class="xref py function docutils literal">eval</code></a> must have the following form:</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'grammar-snippet'</p>
+<pre class="directive-error-source">.. grammar-snippet::
+   :group: python-grammar
+
+   eval_input: `expression_list` NEWLINE* ENDMARKER</pre>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="compound_stmts.html">&larr; Compound statements</a>
+        <a class="next" href="grammar.html">Full Grammar specification &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
