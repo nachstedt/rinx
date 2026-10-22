@@ -12,15 +12,12 @@
 //! has a grammar behind it is the renderer's question, since only it knows the
 //! highlighting backend.
 
-use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{CodeBlock, CodeBlockSource, Directive};
 
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::body::body_span;
-use crate::directives::options::{report_unknown_options, scan_option_lines};
-use crate::indent::unindent_body_lines;
+use crate::directives::options::report_unknown_options;
 
 use super::dedent::apply_dedent;
 use super::emphasize::resolve_emphasize_lines;
@@ -31,12 +28,18 @@ use rinx_ast::DiagnosticCode;
 pub(in crate::directives) const CODE_BLOCK_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["code-block", "code"],
     doc: "A block of source code, highlighted.",
+    shape: DirectiveShape {
+        arguments: Arguments::OPTIONAL_WORD,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. code-block::` and docutils' `.. code::`, recording which
 /// spelling was written.
 pub(in crate::directives) fn interpret_code_block(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     let source = match input.name {
@@ -44,29 +47,21 @@ pub(in crate::directives) fn interpret_code_block(
         "code" => rinx_ast::CodeBlockSource::Code,
         _ => return unknown(input, state),
     };
-    single(parse_code_block(
-        source,
-        input.argument,
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_code_block(source, input, state.diagnostics))
 }
 
 /// Parses either code-block directive into a [`Directive::CodeBlock`].
 pub(in crate::directives) fn parse_code_block(
     source: CodeBlockSource,
-    argument: &str,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
     let directive = source.directive_name();
-    let language = parse_language_argument(argument);
+    let language = parse_language_argument(invocation.argument(0));
+    let ctx = &invocation.ctx;
 
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, opt_idx) = scan_option_lines(&unindented_lines);
-    let (options, unrecognized) = parse_code_block_options(source, &option_lines, diagnostics, ctx);
+    let (options, unrecognized) =
+        parse_code_block_options(source, &invocation.options, diagnostics, ctx);
     report_unknown_options(
         &unrecognized,
         directive,
@@ -75,10 +70,8 @@ pub(in crate::directives) fn parse_code_block(
         ctx,
     );
 
-    let body: Vec<&str> = unindented_lines[opt_idx..]
-        .iter()
-        .map(String::as_str)
-        .collect();
+    let content = invocation.content();
+    let body: Vec<&str> = content.lines.iter().map(String::as_str).collect();
     let content = apply_dedent(&body, options.dedent);
 
     let line_count = if content.is_empty() {
@@ -107,7 +100,7 @@ pub(in crate::directives) fn parse_code_block(
         lineno_start: options.lineno_start,
         emphasize_lines,
         force: options.force,
-        span: body_span(body_lines, ctx),
+        span: invocation.body_span(),
     })
 }
 

@@ -1,8 +1,8 @@
 use super::super::body::{ObjectOptions, parse_object_body};
 use super::dispatch::read_module_option;
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::domains::object_type::DirectiveObjectType;
+use crate::directives::invocation::DirectiveInvocation;
 use crate::directives::options::OptionLine;
 use crate::headings::Adornment;
 use rinx_ast::{DomainObjectBody, NonEmptyVector};
@@ -67,19 +67,13 @@ impl ForcedMethodFlags {
 /// against, since real Sphinx doesn't define one.
 pub(crate) fn parse_py_method(
     signatures: NonEmptyVector<String>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
     forced: ForcedMethodFlags,
 ) -> DomainObjectBody {
-    let parsed = parse_object_body::<MethodOptions>(
-        "py:method",
-        body_lines,
-        adornment_order,
-        diagnostics,
-        ctx,
-    );
+    let parsed =
+        parse_object_body::<MethodOptions>("py:method", invocation, adornment_order, diagnostics);
     let options = parsed.options;
     DomainObjectBody::PyMethod {
         flags: parsed.flags,

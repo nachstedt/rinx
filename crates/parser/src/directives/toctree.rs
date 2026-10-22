@@ -1,5 +1,5 @@
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use std::num::NonZeroUsize;
 
 use rinx_ast::{
@@ -10,9 +10,8 @@ use rinx_ast::{
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::explicit_title::split_explicit_title;
-use crate::indent::unindent_body_lines;
 
-use super::options::{OptionLine, parse_positive_depth, report_unknown_options, scan_option_lines};
+use super::options::{OptionLine, parse_positive_depth, report_unknown_options};
 
 const DIRECTIVE: &str = "toctree";
 
@@ -156,18 +155,20 @@ fn parse_entry(line: &str, glob: bool, span: Option<rinx_ast::Span>) -> TocEntry
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["toctree"],
     doc: "A table of contents linking other documents into the navigation.",
+    shape: DirectiveShape {
+        arguments: Arguments::NONE,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. toctree::`.
 pub(in crate::directives) fn interpret_toctree(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    single(parse_toctree(
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_toctree(input, state.diagnostics))
 }
 
 /// Parses a `.. toctree::` body into a [`Directive::Toctree`].
@@ -177,13 +178,11 @@ pub(in crate::directives) fn interpret_toctree(
 /// the parser does not have, and the phases that do have one each need a
 /// different list — see [`Toctree`]'s doc comment.
 pub(super) fn parse_toctree(
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
-    let (options, unrecognized) = parse_toctree_options(&option_lines, diagnostics, ctx);
+    let ctx = &invocation.ctx;
+    let (options, unrecognized) = parse_toctree_options(&invocation.options, diagnostics, ctx);
     report_unknown_options(
         &unrecognized,
         DIRECTIVE,
@@ -192,17 +191,18 @@ pub(super) fn parse_toctree(
         ctx,
     );
 
-    let entries = unindented_lines
+    let content = invocation.content();
+    let entries = content
+        .lines
         .iter()
         .enumerate()
-        .skip(body_start)
         .filter(|(_, line)| !line.trim().is_empty())
         .map(|(index, line)| {
             let trimmed = line.trim();
             parse_entry(
                 trimmed,
                 options.has(ToctreeFlag::Glob),
-                ctx.line_span(index, line),
+                content.ctx.line_span(index, line),
             )
         })
         .collect();
@@ -220,11 +220,16 @@ mod tests {
     /// tests about `parse_toctree` itself rather than about recognition.
     fn parse_body(body_lines: &[&str]) -> (Toctree, Diagnostics) {
         let mut diagnostics = Diagnostics::default();
-        let directive = parse_toctree(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "toctree",
+            SPEC.shape,
+            "",
             body_lines,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let directive = parse_toctree(&invocation, &mut diagnostics);
         match directive {
             Directive::Toctree(toctree) => (toctree, diagnostics),
             other => panic!("Expected Toctree, got {other:?}"),

@@ -1,9 +1,8 @@
 //! `.. csv-table::` — a table whose rows are CSV data.
 
 use crate::diagnostics::Diagnostics;
-use crate::directives::body::body_span;
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, Node, Span, TableCell, TableRow, TableSource,
 };
@@ -14,10 +13,9 @@ use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::directives::body::join_body_lines;
 use crate::directives::error_node::malformed_node;
-use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
+use crate::directives::options::{OptionLine, report_unknown_options};
 use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 
 /// The directive name, used throughout this module's diagnostics.
 const DIRECTIVE: &str = "csv-table";
@@ -53,19 +51,23 @@ impl CsvSource {
 pub(in crate::directives) const CSV_TABLE_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["csv-table"],
     doc: "A table written as comma-separated values, inline or in a file.",
+    shape: DirectiveShape {
+        arguments: Arguments::OPTIONAL_TEXT,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. csv-table::`.
 pub(in crate::directives) fn interpret_csv_table(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     single(parse_csv_table(
-        input.argument,
-        input.body_lines,
+        input,
         state.adornment_order,
         state.diagnostics,
-        input.body_ctx,
     ))
 }
 
@@ -75,22 +77,25 @@ pub(in crate::directives) fn interpret_csv_table(
 /// `collect_directive_body`, exactly as every other content-bearing directive
 /// parser receives it.
 pub(in crate::directives) fn parse_csv_table(
-    argument: &str,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
+    let argument = invocation.argument(0);
+    let body_lines = invocation.source_body;
+    let ctx = &invocation.ctx;
     let title = if argument.is_empty() {
         None
     } else {
         Some(argument.to_string())
     };
 
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
-    let (options, unrecognized) =
-        parse_shared_table_options(&option_lines, TableSource::Csv.as_str(), diagnostics, ctx);
+    let (options, unrecognized) = parse_shared_table_options(
+        &invocation.options,
+        TableSource::Csv.as_str(),
+        diagnostics,
+        ctx,
+    );
 
     let mut dialect = CsvDialect::default();
     let mut source = CsvSource::default();
@@ -106,8 +111,10 @@ pub(in crate::directives) fn parse_csv_table(
         ctx,
     );
 
+    let content = invocation.content();
     let inline_data = join_body_lines(
-        &unindented_lines[body_start..]
+        &content
+            .lines
             .iter()
             .map(String::as_str)
             .collect::<Vec<&str>>(),
@@ -117,7 +124,7 @@ pub(in crate::directives) fn parse_csv_table(
     // as a whole: the data may come from a `:file:`, and even inline data has
     // been through a CSV reader by the time a row is found wanting, so no
     // finer source position survives.
-    let table_span = body_span(body_lines, ctx);
+    let table_span = invocation.body_span();
 
     let Some(data) = resolve_csv_data(&inline_data, &source, ctx, diagnostics, table_span) else {
         return malformed_csv_table(argument, body_lines);
@@ -453,8 +460,16 @@ mod tests {
     fn parse_with(body_lines: &[&str], ctx: &ParseCtx<'_>) -> (Directive, Diagnostics) {
         let mut adornment_order = Vec::new();
         let mut diagnostics = Diagnostics::default();
-        let directive =
-            parse_csv_table("", body_lines, &mut adornment_order, &mut diagnostics, ctx);
+        let written = crate::directives::reader::written_after_blank(body_lines);
+        let invocation = crate::directives::reader::test_invocation(
+            "csv-table",
+            CSV_TABLE_SPEC.shape,
+            "",
+            &written,
+            &mut diagnostics,
+            ctx,
+        );
+        let directive = parse_csv_table(&invocation, &mut adornment_order, &mut diagnostics);
         (directive, diagnostics)
     }
 
@@ -522,13 +537,17 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When
-        let directive = parse_csv_table(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let written = crate::directives::reader::written_after_blank(&body_lines);
+        let invocation = crate::directives::reader::test_invocation(
+            "csv-table",
+            CSV_TABLE_SPEC.shape,
             "Popular Fruits",
-            &body_lines,
-            &mut adornment_order,
+            &written,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let directive = parse_csv_table(&invocation, &mut adornment_order, &mut diagnostics);
 
         // Then
         let Directive::DataTable { title, .. } = directive else {

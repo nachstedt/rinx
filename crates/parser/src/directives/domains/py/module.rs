@@ -1,42 +1,30 @@
-use crate::blocks::parse_blocks;
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
+use crate::directives::invocation::DirectiveInvocation;
+use crate::directives::options::{OptionLine, report_unknown_options};
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 use rinx_ast::{DiagnosticCode, DomainObjectBody, ModuleFlag, ModuleOptions};
 
-/// Parses a `.. py:module::` body: reads the option block off the front
-/// through the shared [`scan_option_lines`] (so a `:synopsis:` wrapped over
-/// several lines is one value), reports any option `py:module` does not take,
-/// and parses the rest as the module's body under a context rebased past the
-/// options.
+/// Parses a `.. py:module::` body: reads its options (a `:synopsis:` wrapped
+/// over several lines is one value), reports any option `py:module` does not
+/// take, and parses the rest as the module's body.
 pub(crate) fn parse_py_module(
     name: String,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
-    let (options, unrecognized) = read_module_options(&option_lines);
+    let (options, unrecognized) = read_module_options(&invocation.options);
     report_unknown_options(
         &unrecognized,
         "py:module",
         DiagnosticCode::DirectiveUnknownOption,
         diagnostics,
-        ctx,
+        &invocation.ctx,
     );
 
-    // The body starts below the option block, so every position inside it is
-    // short by that many lines unless the context is rebased first.
-    let body_ctx = ctx.nested(body_start, 0);
-    let body_content: Vec<&str> = unindented_lines[body_start..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, &body_ctx);
+    let body = invocation
+        .content_with_enclosing_titles()
+        .parse(adornment_order, diagnostics);
 
     DomainObjectBody::PyModule {
         name,
@@ -72,6 +60,7 @@ fn read_module_options(option_lines: &[OptionLine]) -> (ModuleOptions, Vec<&Opti
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::directives::options::scan_option_lines;
     use crate::parse;
     use rinx_ast::{Directive, Node};
 
@@ -279,11 +268,27 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_py_module_treats_a_following_line_as_body_not_a_second_name() {
-        // Given — real Sphinx's `module` directive takes exactly one
-        // argument, so an immediately following line is body content even
-        // though it looks like a continuation.
+    fn test_parse_py_module_reports_a_following_line_as_surplus_words() {
+        // Given — real Sphinx's `module` directive takes exactly one word, and
+        // docutils reads the line directly below the marker as the rest of the
+        // argument: "maximum 1 argument(s) allowed"
         let input = ".. py:module:: greetings\n   A module of greetings.";
+
+        // When
+        let doc = parse("test.rst", input);
+        let (name, _, body) = parse_module(input);
+
+        // Then — reported, and the module still named
+        let codes: Vec<DiagnosticCode> = doc.diagnostics.iter().map(|d| d.code).collect();
+        assert_eq!(codes, [DiagnosticCode::DirectiveTooManyArguments]);
+        assert_eq!(name, "greetings");
+        assert!(body.is_empty());
+    }
+
+    #[test]
+    fn test_parse_py_module_reads_its_body_below_a_blank_line() {
+        // Given
+        let input = ".. py:module:: greetings\n\n   A module of greetings.";
 
         // When
         let (name, _, body) = parse_module(input);

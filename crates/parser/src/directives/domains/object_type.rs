@@ -1,6 +1,8 @@
 use super::super::scope::split_domain_qualified_name;
 use rinx_ast::Domain;
 
+use crate::directives::spec::{Arguments, DirectiveShape};
+
 /// The domain-object directive names the parser recognizes, resolved from a
 /// directive's `domain:objtype` (or bare, default-domain-resolved) name.
 /// Deliberately independent of `ast::ObjectType`: directive-name syntax
@@ -61,6 +63,23 @@ pub(crate) fn resolve_domain_object_type(
     }
     let (domain, objtype_str) = split_domain_qualified_name(name, default_domain)?;
     find_object_directive(Some(domain), objtype_str)
+}
+
+/// How a block of a domain object of `object_type` splits, transcribed from
+/// Sphinx's classes: `ObjectDescription`'s one argument keeping the rest of
+/// its lines — one signature per line — options and content, but a single
+/// word for `PyModule`, which declares no `final_argument_whitespace`.
+pub(crate) const fn object_shape(object_type: DirectiveObjectType) -> DirectiveShape {
+    let arguments = match object_type {
+        DirectiveObjectType::PyModule => Arguments::ONE_WORD,
+        _ => Arguments::ONE_TEXT,
+    };
+    DirectiveShape {
+        arguments,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    }
 }
 
 /// Every name a domain-object directive is written as, unqualified — what an

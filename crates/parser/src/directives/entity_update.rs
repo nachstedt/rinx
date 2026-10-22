@@ -17,23 +17,21 @@
 //! The body is ordinary RST prose — the justification for the change — parsed
 //! exactly as `.. dropdown::`'s is.
 
-use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, EntityUpdate, EntityUpdateSource, FieldMutation,
-    FieldMutationMode, Span,
+    FieldMutationMode,
 };
 use rinx_entity::{AttributeType, parse_attribute_value};
 
-use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 
 use super::error_node::malformed_node;
 use super::filter_option::read_update_argument;
-use super::options::{OptionLine, scan_option_lines};
+use super::options::OptionLine;
 
 /// Identity fields this directive refuses to mutate — exactly
 /// `rinx_entity::field::BUILTIN_FIELDS`, spelled out rather than
@@ -49,12 +47,18 @@ const PROTECTED_FIELDS: [&str; 5] = ["id", "type", "type_name", "docname", "titl
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["entity-update", "needextend"],
     doc: "Changes fields of the entities a filter selects, project-wide.",
+    shape: DirectiveShape {
+        arguments: Arguments::ONE_TEXT,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. entity-update::` or `.. needextend::`, recording which was
 /// written.
 pub(in crate::directives) fn interpret_entity_update(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     let Ok(source) = input.name.parse::<rinx_ast::EntityUpdateSource>() else {
@@ -62,12 +66,9 @@ pub(in crate::directives) fn interpret_entity_update(
     };
     single(parse_entity_update(
         source,
-        input.argument,
-        input.span,
-        input.body_lines,
+        input,
         state.adornment_order,
         state.diagnostics,
-        input.body_ctx,
     ))
 }
 
@@ -75,14 +76,16 @@ pub(in crate::directives) fn interpret_entity_update(
 /// [`Directive::EntityUpdate`].
 pub(super) fn parse_entity_update(
     source: EntityUpdateSource,
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
     let directive = source.as_str();
+    let argument = invocation.argument(0);
+    let directive_span = invocation.span;
+    let body_lines = invocation.source_body;
+    let ctx = &invocation.ctx;
+    let option_lines = &invocation.options;
     let Some(target) = read_update_argument(argument, directive_span, directive, diagnostics)
     else {
         return malformed_node(
@@ -93,11 +96,8 @@ pub(super) fn parse_entity_update(
         );
     };
 
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
-
     let mut update = EntityUpdate::new(source, target);
-    for line in &option_lines {
+    for line in option_lines {
         if line.name == "strict" {
             update.strict = read_strict(line, directive, diagnostics, ctx);
             continue;
@@ -108,15 +108,7 @@ pub(super) fn parse_entity_update(
     }
     update.span = directive_span;
 
-    // The body starts below the option block, so every position inside it is
-    // short by that many lines unless the context is rebased first — the same
-    // reason `.. dropdown::`'s body is parsed this way.
-    let body_ctx = ctx.nested(body_start, 0);
-    let content: Vec<&str> = unindented_lines[body_start..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    update.body = parse_blocks(&content, adornment_order, diagnostics, &body_ctx);
+    update.body = invocation.content().parse(adornment_order, diagnostics);
 
     Directive::EntityUpdate(Box::new(update))
 }

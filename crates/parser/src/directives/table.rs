@@ -8,18 +8,14 @@
 //! [`rinx_ast::Node::Table`], produced by the same grid- or
 //! simple-table parsing every other table in the document goes through.
 
-use crate::blocks::parse_blocks;
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::body::body_span;
 use crate::directives::error_node::malformed_directive;
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::options::{OptionLine, report_unknown_options};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use crate::directives::table_options::parse_common_table_options;
 use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 use rinx_ast::{DiagnosticCode, Directive, Node};
 
 /// The directive name, used throughout this module's diagnostics.
@@ -29,41 +25,42 @@ const DIRECTIVE: &str = "table";
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["table"],
     doc: "A title and options for the table in its body.",
+    shape: DirectiveShape {
+        arguments: Arguments::OPTIONAL_TEXT,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. table::`.
 pub(in crate::directives) fn interpret_table(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     single(parse_table_directive(
-        input.argument,
-        input.body_lines,
+        input,
         state.adornment_order,
         state.diagnostics,
-        input.body_ctx,
     ))
 }
 
-/// Parses a `.. table::` directive. `body_lines` is the raw, still-indented
-/// body collected by `collect_directive_body`, exactly as every other
-/// content-bearing directive parser receives it.
+/// Parses a `.. table::` directive, its argument the table's title.
 pub(in crate::directives) fn parse_table_directive(
-    argument: &str,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
+    let argument = invocation.argument(0);
+    let body_lines = invocation.source_body;
+    let ctx = &invocation.ctx;
     let title = if argument.is_empty() {
         None
     } else {
         Some(argument.to_string())
     };
 
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, opt_idx) = scan_option_lines(&unindented_lines);
-    let option_line_refs: Vec<&OptionLine> = option_lines.iter().collect();
+    let option_line_refs: Vec<&OptionLine> = invocation.options.iter().collect();
     let (options, unrecognized) =
         parse_common_table_options(&option_line_refs, DIRECTIVE, diagnostics, ctx);
     report_unknown_options(
@@ -74,19 +71,13 @@ pub(in crate::directives) fn parse_table_directive(
         ctx,
     );
 
-    let body_content: Vec<&str> = unindented_lines[opt_idx..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    // The option lines scanned above are real lines this directive's content
-    // occupies — unlike list-table's rows (lowered from already-parsed nodes
-    // that carry no position of their own), a wrapped table's cells are full
-    // nested parses whose diagnostics must point at the right source line, so
-    // `opt_idx` must be rebased into `ctx` before parsing the remainder.
-    let body_ctx = ctx.nested(opt_idx, 0);
-    let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, &body_ctx);
+    // Unlike list-table's rows (lowered from already-parsed nodes that carry
+    // no position of their own), a wrapped table's cells are full nested
+    // parses whose diagnostics must point at the right source line, which the
+    // content's own context does.
+    let body_nodes = invocation.content().parse(adornment_order, diagnostics);
 
-    let span = body_span(body_lines, ctx);
+    let span = invocation.body_span();
     let node_count = body_nodes.len();
     let [
         Node::Table {
@@ -161,6 +152,7 @@ fn malformed_table_directive(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::ParseCtx;
     use rinx_ast::{Domain, TableAlign, TableWidths, TargetName};
 
     fn parse(body_lines: &[&str]) -> (Directive, Diagnostics) {
@@ -170,13 +162,17 @@ mod tests {
     fn parse_with(argument: &str, body_lines: &[&str]) -> (Directive, Diagnostics) {
         let mut adornment_order = Vec::new();
         let mut diagnostics = Diagnostics::default();
-        let directive = parse_table_directive(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let written = crate::directives::reader::written_after_blank(body_lines);
+        let invocation = crate::directives::reader::test_invocation(
+            "table",
+            SPEC.shape,
             argument,
-            body_lines,
-            &mut adornment_order,
+            &written,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let directive = parse_table_directive(&invocation, &mut adornment_order, &mut diagnostics);
         (directive, diagnostics)
     }
 

@@ -3,11 +3,13 @@
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use crate::headings::Adornment;
 use crate::indent::{indent_width, unindent_body_lines};
-use rinx_ast::{Directive, Node};
+use rinx_ast::{DiagnosticCode, Directive, Node};
+
+use super::options::{OptionLine, report_unknown_options};
 
 /// Dedents one accumulated definition body and parses it, rebasing `ctx` by
 /// both the lines skipped to reach it and its own indentation.
@@ -43,55 +45,50 @@ fn parse_definition_body(
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["glossary"],
     doc: "Terms and their definitions, for `:term:` to link to.",
+    shape: DirectiveShape {
+        arguments: Arguments::NONE,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. glossary::`.
 pub(in crate::directives) fn interpret_glossary(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     single(parse_glossary(
-        input.body_lines,
+        input,
         state.adornment_order,
         state.diagnostics,
-        input.body_ctx,
     ))
 }
 
 /// Parses a `.. glossary::` directive body into a `Directive::Glossary` node.
 pub(super) fn parse_glossary(
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
-    // Strip the base indentation from all lines.
-    let unindented = unindent_body_lines(body_lines);
-    if unindented.is_empty() {
-        return Directive::Glossary {
-            entries: vec![],
-            sorted: false,
-        };
-    }
+    let sorted = invocation.options.iter().any(|line| line.name == "sorted");
+    let unrecognized: Vec<&OptionLine> = invocation
+        .options
+        .iter()
+        .filter(|line| line.name != "sorted")
+        .collect();
+    report_unknown_options(
+        &unrecognized,
+        "glossary",
+        DiagnosticCode::DirectiveUnknownOption,
+        diagnostics,
+        &invocation.ctx,
+    );
 
-    // Parse the :sorted: option from the leading option lines.
-    let mut sorted = false;
-    let mut body_start = 0;
-    for (idx, line) in unindented.iter().enumerate() {
-        let trimmed = line.trim();
-        if trimmed.is_empty() {
-            body_start = idx + 1;
-            continue;
-        }
-        if trimmed == ":sorted:" {
-            sorted = true;
-            body_start = idx + 1;
-            continue;
-        }
-        // First non-option, non-blank line: definition body starts here.
-        body_start = idx;
-        break;
-    }
+    let content = invocation.content();
+    let ctx = &content.ctx;
+    let unindented = content.lines;
+    let body_start = 0;
 
     // Parse definition-list entries from the remaining lines.
     // A line with NO leading whitespace (after base-indent stripping) is a term.
@@ -201,12 +198,16 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When parsing the glossary directive body
-        let directive = parse_glossary(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "glossary",
+            SPEC.shape,
+            "",
             &body_lines,
-            &mut adornment_order,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let directive = parse_glossary(&invocation, &mut adornment_order, &mut diagnostics);
 
         // Then a single entry with the parsed term is produced
         if let Directive::Glossary { entries, sorted } = directive {
@@ -226,12 +227,16 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When parsing the glossary directive body
-        let directive = parse_glossary(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "glossary",
+            SPEC.shape,
+            "",
             &body_lines,
-            &mut adornment_order,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let directive = parse_glossary(&invocation, &mut adornment_order, &mut diagnostics);
 
         // Then the sorted flag is set
         if let Directive::Glossary { sorted, .. } = directive {
@@ -249,12 +254,16 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When parsing the glossary directive body
-        let directive = parse_glossary(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "glossary",
+            SPEC.shape,
+            "",
             &body_lines,
-            &mut adornment_order,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let directive = parse_glossary(&invocation, &mut adornment_order, &mut diagnostics);
 
         // Then no entries are produced
         if let Directive::Glossary { entries, sorted } = directive {
@@ -275,12 +284,16 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When parsing the glossary directive body
-        let directive = parse_glossary(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "glossary",
+            SPEC.shape,
+            "",
             &body_lines,
-            &mut adornment_order,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let directive = parse_glossary(&invocation, &mut adornment_order, &mut diagnostics);
 
         // Then it does not panic
         assert!(matches!(directive, Directive::Glossary { .. }));

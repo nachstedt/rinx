@@ -136,7 +136,7 @@ mod tests {
             "figure",
             "",
             &["   A caption."],
-            DiagnosticCode::ImageMissingUri,
+            DiagnosticCode::DirectiveMissingArgument,
             "figure: the directive needs an image path".to_string(),
             None,
             &mut diagnostics,
@@ -145,7 +145,7 @@ mod tests {
         // Then
         let (found, _, _) = diagnostics.into_parts();
         assert_eq!(found.len(), 1);
-        assert_eq!(found[0].code, DiagnosticCode::ImageMissingUri);
+        assert_eq!(found[0].code, DiagnosticCode::DirectiveMissingArgument);
         assert_eq!(
             directive,
             Directive::Malformed {

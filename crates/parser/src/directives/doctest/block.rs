@@ -2,11 +2,9 @@
 //! scanning the options off the body, splitting the group argument, and
 //! assembling the variant for the directive's kind.
 
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::body::body_span;
-use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, DocTestBlock, DocTestGroupSelector, HashedContent,
     NonEmptyVector, Span,
@@ -28,23 +26,23 @@ pub(in crate::directives) const DOCTEST_SPEC: DirectiveSpec = DirectiveSpec {
         "testcleanup",
     ],
     doc: "Code a doctest run executes, the output it expects, or its setup and cleanup.",
+    shape: DirectiveShape {
+        arguments: Arguments::OPTIONAL_TEXT,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets one of the five `sphinx.ext.doctest` directives.
 pub(in crate::directives) fn interpret_doctest(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     let Some(kind) = DocTestDirectiveKind::from_name(input.name) else {
         return unknown(input, state);
     };
-    single(parse_doctest_directive(
-        kind,
-        input.argument,
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_doctest_directive(kind, input, state.diagnostics))
 }
 
 /// Parses one directive of the family into a [`Directive`].
@@ -53,17 +51,18 @@ pub(in crate::directives) fn interpret_doctest(
 /// block with no code is unusable, and Sphinx warns about it too.
 pub(crate) fn parse_doctest_directive(
     kind: DocTestDirectiveKind,
-    argument: &str,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
-    let (options, content_start) = scan_options(kind, body_lines, diagnostics, ctx);
+    let argument = invocation.argument(0);
+    let body_lines = invocation.source_body;
+    let options = scan_options(kind, &invocation.options, diagnostics, &invocation.ctx);
     // The directive's body as a whole, for the diagnostics that are about the
     // block rather than about one option line.
-    let block_span = body_span(body_lines, ctx);
-    let content_lines = skip_leading_blank_lines(&body_lines[content_start..]);
-    let content_text = strip_common_indent(content_lines);
+    let block_span = invocation.body_span();
+    let content = invocation.content();
+    let content_lines: Vec<&str> = content.lines.iter().map(String::as_str).collect();
+    let content_text = strip_common_indent(&content_lines);
 
     if content_text.trim().is_empty() {
         return malformed_directive(
@@ -174,18 +173,10 @@ fn parse_group_argument(
         .unwrap_or_else(|_| NonEmptyVector::single(DocTestGroupSelector::new("")))
 }
 
-/// Drops blank lines separating the option block from the content.
-fn skip_leading_blank_lines<'a, 'b>(lines: &'a [&'b str]) -> &'a [&'b str] {
-    let start = lines
-        .iter()
-        .position(|line| !line.trim().is_empty())
-        .unwrap_or(lines.len());
-    &lines[start..]
-}
-
 #[cfg(test)]
 pub(super) mod tests {
     use super::*;
+    use crate::context::ParseCtx;
 
     /// Parses `body` under `kind`, returning the directive and any diagnostics.
     ///
@@ -199,13 +190,17 @@ pub(super) mod tests {
         body: &[&str],
     ) -> (Directive, Diagnostics) {
         let mut diagnostics = Diagnostics::default();
-        let directive = parse_doctest_directive(
-            kind,
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let written = crate::directives::reader::written_after_blank(body);
+        let invocation = crate::directives::reader::test_invocation(
+            kind.as_name(),
+            DOCTEST_SPEC.shape,
             argument,
-            body,
+            &written,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let directive = parse_doctest_directive(kind, &invocation, &mut diagnostics);
         (directive, diagnostics)
     }
 
@@ -348,29 +343,5 @@ pub(super) mod tests {
 
         // Then
         assert!(diagnostics[0].message.starts_with("testcleanup:"));
-    }
-
-    #[test]
-    fn test_skip_leading_blank_lines_drops_only_the_leading_run() {
-        // Given
-        let lines = ["", "  ", "code", "", "more"];
-
-        // When
-        let remaining = skip_leading_blank_lines(&lines);
-
-        // Then
-        assert_eq!(remaining, &["code", "", "more"]);
-    }
-
-    #[test]
-    fn test_skip_leading_blank_lines_handles_an_all_blank_slice() {
-        // Given
-        let lines = ["", "   "];
-
-        // When
-        let remaining = skip_leading_blank_lines(&lines);
-
-        // Then
-        assert!(remaining.is_empty());
     }
 }

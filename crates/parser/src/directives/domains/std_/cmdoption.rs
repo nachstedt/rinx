@@ -1,6 +1,6 @@
 use super::super::body::parse_object_body;
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::invocation::DirectiveInvocation;
 use crate::headings::Adornment;
 use rinx_ast::{Diagnostic, DiagnosticCode, DomainObjectBody, NonEmptyVector, Span};
 
@@ -21,10 +21,9 @@ use rinx_ast::{Diagnostic, DiagnosticCode, DomainObjectBody, NonEmptyVector, Spa
 /// `Scope::enter_definition`), rather than caching it on the AST.
 pub(crate) fn parse_cmdoption(
     signatures: NonEmptyVector<String>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
     span: Option<Span>,
 ) -> DomainObjectBody {
     for line in signatures.as_slice() {
@@ -41,7 +40,7 @@ pub(crate) fn parse_cmdoption(
         }
     }
 
-    let parsed = parse_object_body::<()>("option", body_lines, adornment_order, diagnostics, ctx);
+    let parsed = parse_object_body::<()>("option", invocation, adornment_order, diagnostics);
     DomainObjectBody::StdCmdoption {
         signatures,
         flags: parsed.flags,

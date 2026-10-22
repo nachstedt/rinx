@@ -488,8 +488,9 @@ mod tests {
     #[test]
     fn test_render_preview_links_an_image_where_it_lies() {
         // Given — a page one directory down, showing a file whose name
-        // needs encoding
-        let text = "Intro\n=====\n\n.. image:: my logo.png\n";
+        // needs encoding: an escaped space, the one docutils keeps in an
+        // image's address
+        let text = "Intro\n=====\n\n.. image:: my\\ logo.png\n";
 
         // When
         let page = preview_of(

@@ -282,10 +282,6 @@ diagnostic_codes! {
     /// why this is reported rather than left to the visible error block the
     /// renderer draws in its place.
     DirectiveUnknown => "directive.unknown",
-    /// A `.. c:namespace-push::` with no scope argument. Refused rather than
-    /// accepted as a no-op push, which a later `namespace-pop` would then
-    /// unbalance.
-    DirectiveNamespacePushArgumentMissing => "directive.namespace-push-argument-missing",
     /// A `.. toctree::` option this build does not recognize. The option is
     /// ignored.
     DirectiveToctreeUnknownOption => "directive.toctree-unknown-option",
@@ -324,11 +320,18 @@ diagnostic_codes! {
     /// An option this build does not recognize on a directive with no option code
     /// of its own. The option is ignored.
     DirectiveUnknownOption => "directive.unknown-option",
-    /// A `.. versionadded::`, `.. versionchanged::` or `.. deprecated::` with
-    /// no version argument.
-    DirectiveVersionArgumentMissing => "directive.version-argument-missing",
-    /// A generic `.. admonition::` with no title argument.
-    DirectiveTitleArgumentMissing => "directive.title-argument-missing",
+    /// A directive written with fewer arguments than it requires — an
+    /// `.. image::` with no address, a `.. versionadded::` with no version.
+    /// The directive is still read, without them.
+    DirectiveMissingArgument => "directive.missing-argument",
+    /// A directive written with more arguments than it accepts, when its last
+    /// one does not take the rest of the line — `.. code-block:: python extra`.
+    /// The surplus words are ignored.
+    DirectiveTooManyArguments => "directive.too-many-arguments",
+    /// Content written for a directive that takes none — below an
+    /// `.. image::`, or text after a `.. sectnum::`'s `::`. The content is
+    /// ignored.
+    DirectiveContentNotPermitted => "directive.content-not-permitted",
 
     // --- `list-table` / `csv-table` shared options -------------------------
     /// A `list-table` or `csv-table` whose `:widths:` gives a different number of
@@ -419,8 +422,6 @@ diagnostic_codes! {
     MathDuplicateLabel => "math.duplicate-label",
 
     // --- `.. code-block::` / `.. code::` / `.. highlight::` ----------------
-    /// A language argument, or a `.. highlight::`, naming nothing at all.
-    CodeBlockEmptyLanguage => "code-block.empty-language",
     /// A `:name:` option with no value, so nothing could `:ref:` the block.
     CodeBlockEmptyName => "code-block.empty-name",
     /// A `:lineno-start:`, `:dedent:`, `:number-lines:` or `:linenothreshold:`
@@ -461,9 +462,6 @@ diagnostic_codes! {
     /// An argument of more than one word, so the default role was left as
     /// it was.
     DefaultRoleInvalidArgument => "default-role.invalid-argument",
-    /// Options or a body, which the directive takes none of; the argument
-    /// still applies.
-    DefaultRoleUnexpectedContent => "default-role.unexpected-content",
 
     // --- interpreted text ----------------------------------------------------
     /// A role written both before and after the same text, as in
@@ -483,8 +481,6 @@ diagnostic_codes! {
     CodeRoleHighlightFailed => "code-role.highlight-failed",
 
     // --- `.. image::` / `.. figure::` --------------------------------------
-    /// The directive has no argument, so there is nothing to show.
-    ImageMissingUri => "image.missing-uri",
     /// A `:height:`, `:width:` or `:figwidth:` that is not a well-formed
     /// measurement, or that uses a unit CSS does not have.
     ImageInvalidLength => "image.invalid-length",
@@ -499,9 +495,6 @@ diagnostic_codes! {
     /// A `:target:` or `:name:` written with no value, so it could neither
     /// link anywhere nor be linked to.
     ImageEmptyOptionValue => "image.empty-option-value",
-    /// Content below an `.. image::`, which takes none. A `.. figure::` is
-    /// the directive that has a body.
-    ImageContentNotAllowed => "image.content-not-allowed",
     /// A `:scale:` with no `:width:` or `:height:` to apply it to. docutils
     /// would read the image file's own dimensions here; this build never opens
     /// the file while rendering, so the option is dropped rather than
@@ -532,8 +525,6 @@ diagnostic_codes! {
     ImageUndeclared => "image.undeclared",
 
     // --- `.. include::` ----------------------------------------------------
-    /// The directive has no argument, so it names no file to splice in.
-    IncludeMissingPath => "include.missing-path",
     /// The named file could not be read — in a Bazel build, usually one
     /// missing from the library's `parse_data` attribute.
     IncludeFileUnreadable => "include.file-unreadable",
@@ -689,10 +680,6 @@ diagnostic_codes! {
     ButtonLinkInvalidColor => "button-link.invalid-color",
     /// An `:align:` other than `left`, `right`, `center` or `justify`.
     ButtonLinkInvalidAlign => "button-link.invalid-align",
-    /// A `.. button-link::` written with no URL to point at. The directive is
-    /// drawn as an error block quoting its source, as an argument-less
-    /// `.. image::` is.
-    ButtonLinkMissingTarget => "button-link.missing-target",
     /// An option that needs a value but was written without one.
     ButtonLinkEmptyOptionValue => "button-link.empty-option-value",
     /// An option sphinx-design accepts here that this build refuses by name,
@@ -720,10 +707,6 @@ diagnostic_codes! {
     /// A `:suffix:` option with no value; docutils requires this option to
     /// carry one.
     SectnumEmptySuffix => "sectnum.empty-suffix",
-    /// An argument given to a directive docutils declares zero argument
-    /// slots for. Real docutils reports this as a directive error rather
-    /// than silently dropping it, so this build does too.
-    SectnumUnexpectedArgument => "sectnum.unexpected-argument",
 
     // --- `.. index::` ------------------------------------------------------
     /// A `single:` entry with no value — Sphinx's "invalid single index
@@ -1092,8 +1075,6 @@ diagnostic_codes! {
     // else, and the richer import this project may grow later should be free
     // to take the `entity-import` name and its own family with it. See
     // `docs/decisions/016-needimport.md`.
-    /// A `.. needimport::` with no file to read.
-    NeedImportMissingPath => "needimport.missing-path",
     /// An argument naming an `http`/`https` URL. Refused by name rather than
     /// fetched: a sandboxed build action may only read files declared before
     /// it runs, so a download would either fail or make the build
@@ -1271,11 +1252,6 @@ diagnostic_codes! {
     JinjaRecursiveInclude => "jinja.recursive-include",
 
     // --- `.. if-builder::` (sphinx-simplepdf) -------------------------------
-    /// The directive has no argument, so it names no builder to compare
-    /// against. Upstream gets docutils' generic "1 argument(s) required" here;
-    /// a code of its own lets a document suppress this without suppressing
-    /// every other malformed directive.
-    IfBuilderMissingBuilder => "if-builder.missing-builder",
     /// An argument that names no builder this build knows — including a
     /// multi-word one, since the directive takes the rest of its line.
     /// sphinx-simplepdf excludes the body silently, which makes a typo

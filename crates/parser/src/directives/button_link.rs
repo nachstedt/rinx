@@ -18,21 +18,20 @@
 //! An unreadable *option* never costs the button, the error-resilience every
 //! directive here follows.
 
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
     ButtonFlag, ButtonLink, ButtonTarget, Diagnostic, DiagnosticCode, Directive, InlineNode,
-    SemanticColor, Span, TextAlign,
+    SemanticColor, TextAlign,
 };
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::indent::unindent_body_lines;
 use crate::inline::{SourceMap, parse_inline_text_mapped};
 
 use super::classes::split_classes;
-use super::error_node::malformed_directive;
-use super::options::{OptionLine, report_unknown_options, scan_option_lines};
+use super::error_node::malformed_node;
+use super::options::{OptionLine, report_unknown_options, uri_argument};
 
 const DIRECTIVE: &str = "button-link";
 
@@ -40,49 +39,45 @@ const DIRECTIVE: &str = "button-link";
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["button-link"],
     doc: "A link drawn as a button.",
+    shape: DirectiveShape {
+        arguments: Arguments::ONE_TEXT,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. button-link::`.
 pub(in crate::directives) fn interpret_button_link(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    single(parse_button_link(
-        input.argument,
-        input.span,
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_button_link(input, state.diagnostics))
 }
 
 /// Parses a `.. button-link::` into a [`Directive::ButtonLink`].
 pub(super) fn parse_button_link(
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
+    let ctx = &invocation.ctx;
+    let directive_span = invocation.span;
+    let option_lines = &invocation.options;
 
-    let target = normalize_uri(argument);
+    let target = uri_argument(invocation.argument(0));
     if target.is_empty() {
-        return malformed_directive(
+        // The reader has reported the missing argument.
+        return malformed_node(
             DIRECTIVE,
             "",
-            body_lines,
-            DiagnosticCode::ButtonLinkMissingTarget,
+            invocation.source_body,
             format!("{DIRECTIVE}: the directive needs a URL as its argument"),
-            directive_span,
-            diagnostics,
         );
     }
 
     let mut button = ButtonLink::new(ButtonTarget::Url(target));
     button.span = directive_span;
-    let unrecognized = read_options(&mut button, &option_lines, diagnostics, ctx);
+    let unrecognized = read_options(&mut button, option_lines, diagnostics, ctx);
     report_unknown_options(
         &unrecognized,
         DIRECTIVE,
@@ -91,27 +86,12 @@ pub(super) fn parse_button_link(
         ctx,
     );
     if button.has_unusable_outline() {
-        report_unusable_outline(&option_lines, diagnostics, ctx);
+        report_unusable_outline(option_lines, diagnostics, ctx);
     }
 
-    button.label = parse_label(
-        &unindented_lines[body_start..],
-        body_start,
-        diagnostics,
-        ctx,
-    );
+    let content = invocation.content();
+    button.label = parse_label(&content.lines, 0, diagnostics, &content.ctx);
     Directive::ButtonLink(Box::new(button))
-}
-
-/// Normalizes the directive's argument into a URL.
-///
-/// docutils' `directives.uri` removes **every** whitespace character rather
-/// than trimming the ends, because an argument may be wrapped across lines and
-/// a URL split that way is still one URL. Written out here rather than reused
-/// from the image directives, which normalize a *path* through
-/// `ast::AssetUri` and carry resolution rules a button has no use for.
-fn normalize_uri(argument: &str) -> String {
-    argument.split_whitespace().collect()
 }
 
 /// Reads the directive's content as the button's label.

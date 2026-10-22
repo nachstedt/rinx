@@ -388,7 +388,7 @@ fn test_an_argument_is_answered_with_the_option_that_would_have_worked() {
     let reported = message(rst);
 
     // Then
-    assert_eq!(codes(rst), ["directive.entity-flow-unknown-option"]);
+    assert_eq!(codes(rst), ["directive.content-not-permitted"]);
     assert!(reported.contains(":filter:"), "{reported}");
 }
 
@@ -402,7 +402,7 @@ fn test_written_content_is_reported_and_points_at_the_directive_that_takes_some(
     let reported = message(rst);
 
     // Then
-    assert_eq!(codes(rst), ["directive.entity-flow-unknown-option"]);
+    assert_eq!(codes(rst), ["directive.content-not-permitted"]);
     assert!(reported.contains("entity-diagram"), "{reported}");
 }
 

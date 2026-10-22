@@ -8,8 +8,8 @@
 //! rather than the library's default, as Sphinx's directive does — it
 //! unregisters the document's default role, leaving docutils' own.
 
-use crate::directives::input::{DirectiveInput, ParseState};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{Diagnostic, DiagnosticCode, Node, Span};
 
 use crate::context::ParseCtx;
@@ -22,40 +22,31 @@ const DIRECTIVE: &str = "default-role";
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["default-role"],
     doc: "Sets the role interpreted text without one is read as.",
+    shape: DirectiveShape {
+        arguments: Arguments::OPTIONAL_WORD,
+        takes_options: false,
+        takes_content: false,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. default-role::`, which records the default role and yields
 /// no node.
 pub(in crate::directives) fn interpret_default_role(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    parse_default_role(
-        input.argument,
-        input.span,
-        input.body_lines,
-        state.diagnostics,
-        &input.splice_ctx(),
-    )
+    parse_default_role(input, state.diagnostics)
 }
 
 /// Parses a `.. default-role::`, making its role the document's default when
 /// it names one. Always answers with no nodes: a choice renders to nothing.
 pub(in crate::directives) fn parse_default_role(
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Vec<Node> {
-    if body_lines.iter().any(|line| !line.trim().is_empty()) {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::DefaultRoleUnexpectedContent,
-            format!("{DIRECTIVE}: takes no options and no content"),
-            directive_span,
-        ));
-    }
-    if let Some(role) = read_default_role(argument, directive_span, diagnostics, ctx)
+    let ctx = &invocation.ctx;
+    if let Some(role) = read_default_role(invocation.argument(0), invocation.span, diagnostics, ctx)
         && let Some(roles) = ctx.document_roles()
     {
         roles.set_default(role);
@@ -115,7 +106,15 @@ mod tests {
         let base = ParseCtx::with_domain(Domain::Py);
         let ctx = base.with_document_roles(roles);
         let mut diagnostics = Diagnostics::default();
-        let nodes = parse_default_role(argument, None, body, &mut diagnostics, &ctx);
+        let invocation = crate::directives::reader::test_invocation(
+            "default-role",
+            SPEC.shape,
+            argument,
+            body,
+            &mut diagnostics,
+            &ctx,
+        );
+        let nodes = parse_default_role(&invocation, &mut diagnostics);
         let (entries, _, _) = diagnostics.into_parts();
         (
             nodes,
@@ -168,23 +167,34 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_default_role_refuses_several_words() {
-        // Given / When
+    fn test_parse_default_role_reports_surplus_words_and_reads_the_first() {
+        // Given / When — docutils allows one argument, of one word
         let (_, default, codes) = choose("any ref", &[], &DocumentRoles::default());
 
         // Then
-        assert_eq!(default, None);
-        assert_eq!(codes, vec![DiagnosticCode::DefaultRoleInvalidArgument]);
+        assert_eq!(default, Some(role("any")));
+        assert_eq!(codes, vec![DiagnosticCode::DirectiveTooManyArguments]);
     }
 
     #[test]
-    fn test_parse_default_role_reports_content_and_still_applies() {
-        // Given / When
+    fn test_parse_default_role_reads_an_option_line_as_surplus_words_and_still_applies() {
+        // Given / When — the directive takes no options, so the line below
+        // its marker continues the argument, as docutils reads it
         let (_, default, codes) = choose("any", &["   :class: x"], &DocumentRoles::default());
 
         // Then
         assert_eq!(default, Some(role("any")));
-        assert_eq!(codes, vec![DiagnosticCode::DefaultRoleUnexpectedContent]);
+        assert_eq!(codes, vec![DiagnosticCode::DirectiveTooManyArguments]);
+    }
+
+    #[test]
+    fn test_parse_default_role_reports_content_and_still_applies() {
+        // Given / When — content below a blank line
+        let (_, default, codes) = choose("any", &["", "   text"], &DocumentRoles::default());
+
+        // Then
+        assert_eq!(default, Some(role("any")));
+        assert_eq!(codes, vec![DiagnosticCode::DirectiveContentNotPermitted]);
     }
 
     #[test]

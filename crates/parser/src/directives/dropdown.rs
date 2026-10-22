@@ -11,22 +11,20 @@
 //! never parses its body, so refusing the whole dropdown over a misspelled
 //! `:color:` would silently swallow every construct written inside it.
 
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
     Animation, Chevron, Diagnostic, DiagnosticCode, Directive, Dropdown, InvalidOcticonName,
-    OcticonName, SemanticColor, Spacing, SpacingKind, Span, TargetName,
+    OcticonName, SemanticColor, Spacing, SpacingKind, TargetName,
 };
 
-use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 use crate::inline::{SourceMap, parse_inline_text_mapped};
 
 use super::classes::split_classes;
-use super::options::{OptionLine, report_unknown_options, scan_option_lines};
+use super::options::{OptionLine, report_unknown_options};
 
 const DIRECTIVE: &str = "dropdown";
 
@@ -34,41 +32,39 @@ const DIRECTIVE: &str = "dropdown";
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["dropdown"],
     doc: "A collapsible container.",
+    shape: DirectiveShape {
+        arguments: Arguments::OPTIONAL_TEXT,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. dropdown::`.
 pub(in crate::directives) fn interpret_dropdown(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     single(parse_dropdown(
-        input.argument,
-        input.span,
-        input.body_lines,
+        input,
         state.adornment_order,
         state.diagnostics,
-        input.body_ctx,
     ))
 }
 
 /// Parses a `.. dropdown::` into a [`Directive::Dropdown`].
 pub(super) fn parse_dropdown(
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
-
+    let ctx = &invocation.ctx;
     let mut dropdown = Dropdown {
-        title: parse_title(argument, ctx),
-        span: directive_span,
+        title: parse_title(invocation.argument(0), ctx),
+        span: invocation.span,
         ..Dropdown::new()
     };
-    let unrecognized = read_options(&mut dropdown, &option_lines, diagnostics, ctx);
+    let unrecognized = read_options(&mut dropdown, &invocation.options, diagnostics, ctx);
     report_unknown_options(
         &unrecognized,
         DIRECTIVE,
@@ -77,14 +73,7 @@ pub(super) fn parse_dropdown(
         ctx,
     );
 
-    // The body starts below the option block, so every position inside it is
-    // short by that many lines unless the context is rebased first.
-    let body_ctx = ctx.nested(body_start, 0);
-    let content: Vec<&str> = unindented_lines[body_start..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    dropdown.body = parse_blocks(&content, adornment_order, diagnostics, &body_ctx);
+    dropdown.body = invocation.content().parse(adornment_order, diagnostics);
 
     Directive::Dropdown(Box::new(dropdown))
 }

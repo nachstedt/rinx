@@ -14,7 +14,7 @@ use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
-use crate::indent::{indent_width, strip_indent, unindent_body_lines};
+use crate::indent::{indent_width, strip_indent};
 use rinx_ast::{Node, Span};
 
 /// Collects the indented body belonging to a directive/comment whose own
@@ -104,45 +104,6 @@ pub(crate) fn collect_directive_body<'a>(
         lines: body_lines[start..].to_vec(),
         first_line_offset: start,
     }
-}
-
-/// Collects a domain object directive's *argument continuation lines*: the
-/// further signatures a single definition directive may declare, each on its
-/// own line immediately below the directive marker, e.g.
-///
-/// ```rst
-/// .. data:: AF_UNIX
-///           AF_INET
-///           AF_INET6
-/// ```
-///
-/// Unlike a directive body, continuation lines need no blank line to separate
-/// them from the marker — so scanning stops at the first blank line, at any
-/// line indented no more than `min_indent` (the marker's own indentation), or
-/// at an option field such as `:type: int`, whichever comes first. Everything
-/// after that belongs to [`collect_directive_body`] instead, which cannot
-/// make this distinction itself: to it a continuation line and a docstring
-/// line are both just "indented more than the marker".
-///
-/// Returns the number of lines consumed and each one's trimmed text.
-pub(super) fn collect_argument_continuation_lines(
-    lines: &[&str],
-    start_index: usize,
-    min_indent: usize,
-) -> (usize, Vec<String>) {
-    let mut continuations = Vec::new();
-    let mut current = start_index;
-    while current < lines.len() {
-        let line = lines[current].trim_end();
-        let trimmed = line.trim();
-        if trimmed.is_empty() || indent_width(line) <= min_indent || trimmed.starts_with(':') {
-            break;
-        }
-        continuations.push(trimmed.to_string());
-        current += 1;
-    }
-
-    (current - start_index, continuations)
 }
 
 /// The span covering a directive body's first line — the anchor for a
@@ -271,45 +232,6 @@ impl DirectiveContent<'_> {
     }
 }
 
-/// The content of the directive whose marker is line `marker_index` of `ctx`'s
-/// slice: `first_line`, when it is not empty, followed by the indented body.
-///
-/// This is docutils' rule for a directive taking no argument: text after the
-/// `::` is the content's first line, and lines indented below it continue it
-/// — `.. seealso:: a` over an indented `b` is the one paragraph "a b". The two
-/// start at different columns, which is why the context *hangs* its first
-/// line rather than shifting every line alike.
-///
-/// With no `first_line`, this is the body exactly as
-/// [`DirectiveBody::for_directive`] hands it over, keeping the blank line that
-/// tells an option scan there are no options.
-pub(in crate::directives) fn directive_content<'c>(
-    first_line: &MarkerText<'_>,
-    marker_index: usize,
-    body: &DirectiveBody<'_>,
-    ctx: &ParseCtx<'c>,
-) -> DirectiveContent<'c> {
-    let indent = body_indent(&body.lines);
-    if first_line.text.is_empty() {
-        let (lines, offset) = body.for_directive();
-        return DirectiveContent {
-            lines: unindent_body_lines(&lines),
-            ctx: ctx
-                .nested(marker_index + 1 + offset, indent)
-                .without_section_titles(),
-        };
-    }
-    let mut lines = vec![first_line.text.to_string()];
-    lines.extend(std::iter::repeat_n(String::new(), body.first_line_offset));
-    lines.extend(unindent_body_lines(&body.lines));
-    DirectiveContent {
-        lines,
-        ctx: ctx
-            .hanging(marker_index, first_line.column, indent)
-            .without_section_titles(),
-    }
-}
-
 /// Flattens a directive body back to plain text, one line per source line
 /// with each line's own leading whitespace dropped.
 pub(super) fn join_body_lines(body_lines: &[&str]) -> String {
@@ -326,105 +248,6 @@ pub(super) fn join_body_lines(body_lines: &[&str]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_collect_argument_continuation_lines_collects_every_further_signature() {
-        // Given — the shape `library/socket.rst` declares its address
-        // families in: three aliases for one object, no blank line between.
-        let lines = vec![
-            ".. data:: AF_UNIX",
-            "          AF_INET",
-            "          AF_INET6",
-        ];
-
-        // When
-        let (consumed, continuations) = collect_argument_continuation_lines(&lines, 1, 0);
-
-        // Then
-        assert_eq!(consumed, 2);
-        assert_eq!(continuations, ["AF_INET", "AF_INET6"]);
-    }
-
-    #[test]
-    fn test_collect_argument_continuation_lines_stops_at_a_blank_line() {
-        // Given — everything past the blank line is docstring body.
-        let lines = vec![
-            ".. data:: AF_UNIX",
-            "          AF_INET",
-            "",
-            "   The address families.",
-        ];
-
-        // When
-        let (consumed, continuations) = collect_argument_continuation_lines(&lines, 1, 0);
-
-        // Then
-        assert_eq!(consumed, 1);
-        assert_eq!(continuations, ["AF_INET"]);
-    }
-
-    #[test]
-    fn test_collect_argument_continuation_lines_stops_at_an_option_field() {
-        // Given — `:type:` opens the directive's option block, which ends the
-        // argument text even though it is indented like a continuation.
-        let lines = vec![
-            ".. data:: DEFAULT_TIMEOUT",
-            "   :type: int",
-            "   :value: 30",
-        ];
-
-        // When
-        let (consumed, continuations) = collect_argument_continuation_lines(&lines, 1, 0);
-
-        // Then
-        assert_eq!(consumed, 0);
-        assert!(continuations.is_empty());
-    }
-
-    #[test]
-    fn test_collect_argument_continuation_lines_stops_at_a_dedent() {
-        // Given — a line indented no further than the marker is a sibling
-        // block, not part of this directive at all.
-        let lines = vec![".. data:: AF_UNIX", "Next paragraph."];
-
-        // When
-        let (consumed, continuations) = collect_argument_continuation_lines(&lines, 1, 0);
-
-        // Then
-        assert_eq!(consumed, 0);
-        assert!(continuations.is_empty());
-    }
-
-    #[test]
-    fn test_collect_argument_continuation_lines_respects_a_nested_markers_indentation() {
-        // Given — a directive nested inside another block: its continuation
-        // lines are indented past *its* marker, not past column zero.
-        let lines = vec![
-            "   .. data:: AF_UNIX",
-            "             AF_INET",
-            "   Sibling text.",
-        ];
-
-        // When
-        let (consumed, continuations) = collect_argument_continuation_lines(&lines, 1, 3);
-
-        // Then
-        assert_eq!(consumed, 1);
-        assert_eq!(continuations, ["AF_INET"]);
-    }
-
-    #[test]
-    fn test_collect_argument_continuation_lines_returns_nothing_at_end_of_input() {
-        // Given — a bodyless directive on the document's last line.
-        let lines = vec![".. data:: AF_UNIX"];
-
-        // When
-        let (consumed, continuations) = collect_argument_continuation_lines(&lines, 1, 0);
-
-        // Then
-        assert_eq!(consumed, 0);
-        assert!(continuations.is_empty());
-    }
 
     // --- join_body_lines unit tests ---
 
@@ -691,110 +514,9 @@ mod tests {
     }
 
     #[test]
-    fn test_directive_content_of_marker_text_alone() {
-        // Given
-        let lines = vec![".. seealso:: Plain text"];
-        let body = collect_directive_body(&lines, 1, 0);
-        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
-
-        // When
-        let content = directive_content(&MarkerText::after_marker(lines[0]), 0, &body, &ctx);
-
-        // Then
-        assert_eq!(content.lines, ["Plain text"]);
-        let point = content.ctx.position(0, 0).expect("positioned");
-        assert_eq!(point.position, rinx_ast::Position::new(1, 14));
-    }
-
-    #[test]
-    fn test_directive_content_continues_marker_text_with_the_body() {
-        // Given
-        let lines = vec![".. seealso:: First", "   second"];
-        let body = collect_directive_body(&lines, 1, 0);
-        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
-
-        // When
-        let content = directive_content(&MarkerText::after_marker(lines[0]), 0, &body, &ctx);
-
-        // Then
-        assert_eq!(content.lines, ["First", "second"]);
-        let point = content.ctx.position(1, 0).expect("positioned");
-        assert_eq!(point.position, rinx_ast::Position::new(2, 4));
-    }
-
-    #[test]
-    fn test_directive_content_keeps_the_blank_lines_before_the_body() {
-        // Given
-        let lines = vec!["Intro", "", ".. note:: First", "", "", "   Body"];
-        let body = collect_directive_body(&lines, 3, 0);
-        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
-
-        // When
-        let content = directive_content(&MarkerText::after_marker(lines[2]), 2, &body, &ctx);
-
-        // Then
-        assert_eq!(content.lines, ["First", "", "", "Body"]);
-        let point = content.ctx.position(3, 0).expect("positioned");
-        assert_eq!(point.position, rinx_ast::Position::new(6, 4));
-    }
-
-    #[test]
-    fn test_directive_content_without_marker_text_is_the_body() {
-        // Given
-        let lines = vec![".. seealso::", "", "   Body"];
-        let body = collect_directive_body(&lines, 1, 0);
-        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
-
-        // When
-        let content = directive_content(&MarkerText::NONE, 0, &body, &ctx);
-
-        // Then the blank line marking "no options" is kept
-        assert_eq!(content.lines, ["", "Body"]);
-        let point = content.ctx.position(1, 0).expect("positioned");
-        assert_eq!(point.position, rinx_ast::Position::new(3, 4));
-    }
-
-    #[test]
-    fn test_directive_content_does_not_panic_on_a_short_multi_byte_line() {
-        // Given a body whose second line is less indented than the first and
-        // holds a multi-byte character where byte slicing would have panicked
-        let lines = vec![".. seealso::", "   First line normal indent.", "  éfoo"];
-        let body = collect_directive_body(&lines, 1, 0);
-        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
-
-        // When
-        let content = directive_content(&MarkerText::NONE, 0, &body, &ctx);
-
-        // Then it does not panic, and keeps both lines
-        assert_eq!(content.lines.len(), 2);
-    }
-
-    #[test]
     fn test_body_indent_is_the_first_non_blank_lines_indent() {
         // Given / When / Then
         assert_eq!(body_indent(&["", "    x", "  y"]), 4);
         assert_eq!(body_indent(&[]), 0);
-    }
-
-    #[test]
-    fn test_directive_content_parse_joins_marker_text_and_continuation() {
-        // Given
-        let lines = vec![".. seealso:: First", "   second"];
-        let body = collect_directive_body(&lines, 1, 0);
-        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
-        let content = directive_content(&MarkerText::after_marker(lines[0]), 0, &body, &ctx);
-
-        // When
-        let nodes = content.parse(&mut Vec::new(), &mut Diagnostics::default());
-
-        // Then
-        assert_eq!(nodes.len(), 1);
-        let Node::Paragraph(inlines) = &nodes[0] else {
-            panic!("Expected a paragraph, got {:?}", nodes[0]);
-        };
-        assert_eq!(
-            inlines,
-            &[rinx_ast::InlineNode::Text("First\nsecond".to_string())]
-        );
     }
 }

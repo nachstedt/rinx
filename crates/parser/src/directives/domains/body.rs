@@ -10,12 +10,10 @@
 //! not take from leaking into its content as text, and having one place
 //! slice the options off is what keeps every position below them right.
 
-use crate::blocks::parse_blocks;
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
+use crate::directives::invocation::DirectiveInvocation;
+use crate::directives::options::{OptionLine, report_unknown_options};
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 use rinx_ast::{DescriptionFlag, DescriptionFlags, DiagnosticCode, Node};
 
 /// The options one object type takes beyond the object-description flags.
@@ -40,35 +38,28 @@ pub(super) struct ObjectBody<O> {
     pub(super) content: Vec<Node>,
 }
 
-/// Parses a domain object's body: its option block, reporting every option
-/// `directive` does not take, and then its content under a context rebased
-/// past the options.
+/// Parses a domain object's body: its options, reporting every option
+/// `directive` does not take, and then its content — under a context keeping
+/// the section-title permission of wherever the object stands, as Sphinx
+/// parses an object description's content with `allow_section_headings=True`.
 pub(super) fn parse_object_body<O: ObjectOptions>(
     directive: &str,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> ObjectBody<O> {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
-    let (options, flags, unrecognized) = read_object_options::<O>(&option_lines);
+    let (options, flags, unrecognized) = read_object_options::<O>(&invocation.options);
     report_unknown_options(
         &unrecognized,
         directive,
         DiagnosticCode::DirectiveUnknownOption,
         diagnostics,
-        ctx,
+        &invocation.ctx,
     );
 
-    // The content starts below the option block, so every position inside it
-    // is short by that many lines unless the context is rebased first.
-    let content_ctx = ctx.nested(body_start, 0);
-    let content_lines: Vec<&str> = unindented_lines[body_start..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    let content = parse_blocks(&content_lines, adornment_order, diagnostics, &content_ctx);
+    let content = invocation
+        .content_with_enclosing_titles()
+        .parse(adornment_order, diagnostics);
     ObjectBody {
         options,
         flags,
@@ -96,7 +87,8 @@ fn read_object_options<O: ObjectOptions>(
 
 #[cfg(test)]
 pub(super) mod test_support {
-    use super::{ObjectOptions, read_object_options, scan_option_lines};
+    use super::{ObjectOptions, read_object_options};
+    use crate::directives::options::scan_option_lines;
     use rinx_ast::DescriptionFlags;
 
     /// What `body` — an object's body lines, already unindented — reads as:

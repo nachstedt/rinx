@@ -2,26 +2,15 @@
 //! generic `.. admonition::`.
 
 use crate::diagnostics::Diagnostics;
-use crate::directives::body::DirectiveContent;
-use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
-use crate::directives::options::take_option_block;
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use crate::headings::Adornment;
-use rinx_ast::{AdmonitionKind, Diagnostic, DiagnosticCode, Directive, Span};
+use rinx_ast::{AdmonitionKind, Directive};
 
-/// The title a generic `.. admonition::` shows: its argument, or — reported
-/// as missing — a placeholder.
-pub(super) fn generic_title(
-    argument: &str,
-    marker_span: Option<Span>,
-    diagnostics: &mut Diagnostics,
-) -> String {
+/// The title a generic `.. admonition::` shows: its argument, or a
+/// placeholder when the argument is missing — which the reader has reported.
+pub(super) fn generic_title(argument: &str) -> String {
     if argument.is_empty() {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::DirectiveTitleArgumentMissing,
-            "Generic 'admonition' directive requires a title argument.",
-            marker_span,
-        ));
         "Admonition".to_string()
     } else {
         argument.to_string()
@@ -42,33 +31,39 @@ pub(in crate::directives) const ADMONITION_SPEC: DirectiveSpec = DirectiveSpec {
         "warning",
     ],
     doc: "A callout of one of docutils' nine kinds, titled by its kind.",
+    shape: DirectiveShape {
+        arguments: Arguments::NONE,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// This directive's entry in the table of directives this build implements.
 pub(in crate::directives) const GENERIC_ADMONITION_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["admonition"],
     doc: "A callout titled by its argument.",
+    shape: DirectiveShape {
+        arguments: Arguments::ONE_TEXT,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. note::` and the other eight titled by their kind: the text
 /// after the `::` is the first line of the content.
 pub(in crate::directives) fn interpret_admonition(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     let Ok(kind) = input.name.parse::<rinx_ast::AdmonitionKind>() else {
         return unknown(input, state);
     };
-    let content = crate::directives::body::directive_content(
-        &input.marker.argument,
-        input.marker.index,
-        input.body,
-        input.ctx,
-    );
     single(parse_admonition(
         kind,
         None,
-        content,
+        input,
         state.adornment_order,
         state.diagnostics,
     ))
@@ -77,24 +72,13 @@ pub(in crate::directives) fn interpret_admonition(
 /// Interprets `.. admonition::`, whose marker text is its title rather than
 /// content.
 pub(in crate::directives) fn interpret_generic_admonition(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    let title = generic_title(
-        input.marker.argument.text,
-        input.marker.span,
-        state.diagnostics,
-    );
-    let content = crate::directives::body::directive_content(
-        &crate::directives::body::MarkerText::NONE,
-        input.marker.index,
-        input.body,
-        input.ctx,
-    );
     single(parse_admonition(
         rinx_ast::AdmonitionKind::Admonition,
-        Some(title),
-        content,
+        Some(generic_title(input.argument(0))),
+        input,
         state.adornment_order,
         state.diagnostics,
     ))
@@ -105,14 +89,15 @@ pub(in crate::directives) fn interpret_generic_admonition(
 pub(super) fn parse_admonition(
     kind: AdmonitionKind,
     title: Option<String>,
-    mut content: DirectiveContent<'_>,
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
 ) -> Directive {
     // Only `:collapsible:` means anything here; every other option is
     // skipped silently, as it always has been. `:collapsible:` alone or
     // `:collapsible: close` starts closed.
-    let collapsible = take_option_block(&mut content.lines)
+    let collapsible = invocation
+        .options
         .iter()
         .rfind(|option| option.name == "collapsible")
         .map(|option| option.value == "open");
@@ -120,7 +105,7 @@ pub(super) fn parse_admonition(
         kind,
         title,
         collapsible,
-        body: content.parse(adornment_order, diagnostics),
+        body: invocation.content().parse(adornment_order, diagnostics),
     }
 }
 
@@ -129,13 +114,22 @@ mod tests {
     use super::*;
     use crate::context::ParseCtx;
     use crate::parse;
-    use rinx_ast::{Domain, InlineNode, Node, Position};
+    use rinx_ast::{DiagnosticCode, Domain, InlineNode, Node, Position};
 
-    fn content(lines: &[&str]) -> DirectiveContent<'static> {
-        DirectiveContent {
-            lines: lines.iter().map(ToString::to_string).collect(),
-            ctx: ParseCtx::with_domain(Domain::Py),
-        }
+    /// Parses an admonition of `kind` titled `title`, with `body` below its
+    /// marker, as the reader hands it over.
+    fn admonition(kind: AdmonitionKind, title: Option<String>, body: &[&str]) -> Directive {
+        let mut diagnostics = Diagnostics::default();
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "note",
+            ADMONITION_SPEC.shape,
+            "",
+            body,
+            &mut diagnostics,
+            &ctx,
+        );
+        parse_admonition(kind, title, &invocation, &mut Vec::new(), &mut diagnostics)
     }
 
     fn only_admonition(input: &str) -> (Option<String>, Option<bool>, Vec<Node>) {
@@ -160,13 +154,7 @@ mod tests {
         let kind = AdmonitionKind::Note;
 
         // When
-        let directive = parse_admonition(
-            kind,
-            None,
-            content(&["Body line"]),
-            &mut Vec::new(),
-            &mut Diagnostics::default(),
-        );
+        let directive = admonition(kind, None, &["Body line"]);
 
         // Then
         let Directive::Admonition {
@@ -186,13 +174,7 @@ mod tests {
         let title = Some("Custom Title".to_string());
 
         // When
-        let directive = parse_admonition(
-            AdmonitionKind::Admonition,
-            title,
-            content(&["Body line"]),
-            &mut Vec::new(),
-            &mut Diagnostics::default(),
-        );
+        let directive = admonition(AdmonitionKind::Admonition, title, &["Body line"]);
 
         // Then
         let Directive::Admonition { title, .. } = directive else {
@@ -204,16 +186,10 @@ mod tests {
     #[test]
     fn test_parse_admonition_collapsible() {
         // Given
-        let lines = content(&[":collapsible: open", "", "Content"]);
+        let lines = [":collapsible: open", "", "Content"];
 
         // When
-        let directive = parse_admonition(
-            AdmonitionKind::Warning,
-            None,
-            lines,
-            &mut Vec::new(),
-            &mut Diagnostics::default(),
-        );
+        let directive = admonition(AdmonitionKind::Warning, None, &lines);
 
         // Then
         let Directive::Admonition {
@@ -228,28 +204,14 @@ mod tests {
 
     #[test]
     fn test_generic_title_is_the_argument() {
-        // Given
-        let mut diagnostics = Diagnostics::default();
-
-        // When
-        let title = generic_title("Custom Title", None, &mut diagnostics);
-
-        // Then
-        assert_eq!(title, "Custom Title");
-        assert!(diagnostics.is_empty());
+        // Given / When / Then
+        assert_eq!(generic_title("Custom Title"), "Custom Title");
     }
 
     #[test]
-    fn test_generic_title_reports_a_missing_argument() {
-        // Given
-        let mut diagnostics = Diagnostics::default();
-
-        // When
-        let title = generic_title("", None, &mut diagnostics);
-
-        // Then
-        assert_eq!(title, "Admonition");
-        assert!(diagnostics[0].message.contains("requires a title argument"));
+    fn test_generic_title_falls_back_to_a_placeholder() {
+        // Given / When / Then — the missing argument is the reader's to report
+        assert_eq!(generic_title(""), "Admonition");
     }
 
     #[test]
@@ -264,7 +226,7 @@ mod tests {
         let diagnostic = doc
             .diagnostics
             .iter()
-            .find(|d| d.code == DiagnosticCode::DirectiveTitleArgumentMissing)
+            .find(|d| d.code == DiagnosticCode::DirectiveMissingArgument)
             .expect("reported");
         assert_eq!(diagnostic.span.expect("positioned").start.line, 3);
     }
@@ -385,14 +347,17 @@ mod tests {
     #[test]
     fn test_interpret_admonition_refuses_a_name_no_admonition_kind_spells() {
         // Given — `seealso` is a directive of its own, no admonition kind
-        let lines = [".. seealso::"];
-        let body = crate::directives::body::collect_directive_body(&lines, 1, 0);
         let ctx = ParseCtx::with_domain(Domain::Py);
-        let body_ctx = ctx.without_section_titles();
-        let input =
-            crate::directives::input::test_input("seealso", &lines, &body, (&ctx, &body_ctx));
         let mut adornment_order = Vec::new();
         let mut diagnostics = Diagnostics::default();
+        let input = crate::directives::reader::test_invocation(
+            "seealso",
+            ADMONITION_SPEC.shape,
+            "",
+            &[],
+            &mut diagnostics,
+            &ctx,
+        );
 
         // When
         let nodes = interpret_admonition(

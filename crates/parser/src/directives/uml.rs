@@ -17,18 +17,17 @@
 //! sharper reason here — a diagram refused over a misspelled `:align:` is a
 //! page with a missing picture.
 
-use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
-    Diagnostic, DiagnosticCode, Directive, ImageAlign, LengthOrPercentage, Span, TargetName, Uml,
+    Diagnostic, DiagnosticCode, Directive, ImageAlign, LengthOrPercentage, TargetName, Uml,
     UmlSource,
 };
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::indent::unindent_body_lines;
 
-use super::options::{OptionLine, parse_percentage, report_unknown_options, scan_option_lines};
+use super::options::{OptionLine, parse_percentage, report_unknown_options};
 
 /// This directive's entry in the table of directives this build implements.
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
@@ -41,50 +40,50 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         "needarch",
     ],
     doc: "A PlantUML diagram, or a template of one over the entity graph.",
+    shape: DirectiveShape {
+        arguments: Arguments::OPTIONAL_TEXT,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets the six spellings of a `PlantUML` diagram, recording which was
 /// written.
 pub(in crate::directives) fn interpret_uml(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     let Ok(source) = input.name.parse::<rinx_ast::UmlSource>() else {
         return unknown(input, state);
     };
-    single(parse_uml(
-        source,
-        input.span,
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_uml(source, input, state.diagnostics))
 }
 
 /// Parses any of the six diagram spellings into a [`Directive::Uml`].
 pub(super) fn parse_uml(
     source: UmlSource,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
+    let ctx = &invocation.ctx;
+    let option_lines = &invocation.options;
+    let content = invocation.content();
 
     let mut uml = Uml {
-        span: directive_span,
-        template_span: unindented_lines
-            .get(body_start)
-            .and_then(|first| ctx.line_span(body_start, first)),
+        span: invocation.span,
+        template_span: content
+            .lines
+            .first()
+            .and_then(|first| content.ctx.line_span(0, first)),
         // Whatever the spelling, a diagram written inside an entity records
         // the one it sits in: the expander needs it, and this is the only
         // phase that still knows it.
         entity: ctx.enclosing_entity_id.cloned(),
-        ..Uml::new(source, join_template_lines(&unindented_lines[body_start..]))
+        ..Uml::new(source, join_template_lines(&content.lines))
     };
 
-    let unrecognized = read_options(&mut uml, &option_lines, diagnostics, ctx);
+    let unrecognized = read_options(&mut uml, option_lines, diagnostics, ctx);
     report_unknown_options(
         &unrecognized,
         source.as_str(),
@@ -93,7 +92,7 @@ pub(super) fn parse_uml(
         ctx,
     );
     if uml.has_unusable_scale() {
-        report_unusable_scale(&option_lines, source, diagnostics, ctx);
+        report_unusable_scale(option_lines, source, diagnostics, ctx);
     }
 
     Directive::Uml(Box::new(uml))

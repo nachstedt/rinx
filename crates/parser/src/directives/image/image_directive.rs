@@ -4,16 +4,14 @@
 //! the directive's two structural rules: the argument is required, and there
 //! is no body.
 
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{AssetUri, Diagnostic, DiagnosticCode, Directive, ImageLoading, ImageOptions, Span};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::body::body_span;
-use crate::directives::error_node::malformed_directive;
-use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
-use crate::indent::unindent_body_lines;
+use crate::directives::error_node::malformed_node;
+use crate::directives::options::{OptionLine, report_unknown_options, uri_argument};
 
 use super::options::{ImageContext, parse_common_image_options};
 
@@ -23,20 +21,20 @@ pub(in crate::directives) const DIRECTIVE: &str = "image";
 pub(in crate::directives) const IMAGE_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["image"],
     doc: "A picture.",
+    shape: DirectiveShape {
+        arguments: Arguments::ONE_TEXT,
+        takes_options: true,
+        takes_content: false,
+        content_hint: Some("use figure for a caption or legend"),
+    },
 };
 
 /// Interprets `.. image::`.
 pub(in crate::directives) fn interpret_image(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    single(parse_image_directive(
-        input.argument,
-        input.span,
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_image_directive(input, state.diagnostics))
 }
 
 /// Parses a `.. image::` directive into a [`Directive::Image`].
@@ -46,14 +44,11 @@ pub(in crate::directives) fn interpret_image(
 /// is to record what went wrong and carry on, leaving the build to decide
 /// whether that is fatal.
 pub(in crate::directives) fn parse_image_directive(
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
+    let ctx = &invocation.ctx;
+    let option_lines = &invocation.options;
     let refs: Vec<&OptionLine> = option_lines.iter().collect();
     let (common, unrecognized) =
         parse_common_image_options(&refs, DIRECTIVE, ImageContext::Standalone, diagnostics, ctx);
@@ -65,49 +60,32 @@ pub(in crate::directives) fn parse_image_directive(
         ctx,
     );
 
-    report_unexpected_content(&unindented_lines, body_start, diagnostics, ctx);
-
-    if argument.trim().is_empty() {
-        return malformed_directive(
+    let Some(uri) = image_uri(invocation) else {
+        // The reader has reported the missing argument.
+        return malformed_node(
             DIRECTIVE,
             "",
-            body_lines,
-            DiagnosticCode::ImageMissingUri,
+            invocation.source_body,
             "image: the directive needs an image path or URL as its argument".to_string(),
-            body_span(body_lines, ctx),
-            diagnostics,
         );
-    }
+    };
 
-    let mut options = common.with_uri(AssetUri::new(argument));
-    options.span = directive_span;
-    report_option_conflicts(&options, &option_lines, DIRECTIVE, diagnostics, ctx);
+    let mut options = common.with_uri(uri);
+    options.span = invocation.span;
+    report_option_conflicts(&options, option_lines, DIRECTIVE, diagnostics, ctx);
     Directive::Image(Box::new(options))
 }
 
-/// Reports body content below an `.. image::`, which takes none.
+/// The address an image directive's argument names, or `None` when none was
+/// written.
 ///
-/// docutils raises an error here. Ignoring it silently would be the worse
-/// failure: an author who indented a caption under an `.. image::` meant to
-/// write a `.. figure::`, and would otherwise see their text simply vanish.
-fn report_unexpected_content(
-    unindented_lines: &[String],
-    body_start: usize,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    let content_at = unindented_lines
-        .iter()
-        .enumerate()
-        .skip(body_start)
-        .find(|(_, line)| !line.trim().is_empty());
-    if let Some((index, line)) = content_at {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::ImageContentNotAllowed,
-            "image: the directive takes no content; use figure for a caption or legend",
-            ctx.line_span(index, line),
-        ));
-    }
+/// Read as docutils' `directives.uri` reads it, so a long address may be
+/// continued below the marker.
+pub(in crate::directives) fn image_uri(
+    invocation: &DirectiveInvocation<'_, '_>,
+) -> Option<AssetUri> {
+    let address = uri_argument(invocation.argument(0));
+    (!address.is_empty()).then(|| AssetUri::new(&address))
 }
 
 /// Reports the option combinations that only become wrong once the argument
@@ -181,7 +159,15 @@ mod tests {
     fn parse(argument: &str, body: &[&str]) -> (Directive, Diagnostics) {
         let mut diagnostics = Diagnostics::default();
         let ctx = ParseCtx::with_domain(Domain::Py);
-        let directive = parse_image_directive(argument, None, body, &mut diagnostics, &ctx);
+        let invocation = crate::directives::reader::test_invocation(
+            "image",
+            IMAGE_SPEC.shape,
+            argument,
+            body,
+            &mut diagnostics,
+            &ctx,
+        );
+        let directive = parse_image_directive(&invocation, &mut diagnostics);
         (directive, diagnostics)
     }
 
@@ -259,7 +245,10 @@ mod tests {
 
         // Then
         assert!(matches!(directive, Directive::Malformed { .. }));
-        assert_eq!(codes(&diagnostics), vec![DiagnosticCode::ImageMissingUri]);
+        assert_eq!(
+            codes(&diagnostics),
+            vec![DiagnosticCode::DirectiveMissingArgument]
+        );
     }
 
     #[test]
@@ -292,7 +281,7 @@ mod tests {
         assert_eq!(image_of(&directive).uri, AssetUri::new("logo.png"));
         assert_eq!(
             codes(&diagnostics),
-            vec![DiagnosticCode::ImageContentNotAllowed]
+            vec![DiagnosticCode::DirectiveContentNotPermitted]
         );
     }
 

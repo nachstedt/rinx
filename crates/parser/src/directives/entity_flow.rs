@@ -16,20 +16,19 @@
 //! sharper reason a diagram has for it: a picture refused over a misspelled
 //! `:align:` is a page with a hole in it.
 
-use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, EntityFlow, EntityFlowSource, FlowDirection, ImageAlign,
-    LengthOrPercentage, Span, TargetName,
+    LengthOrPercentage, TargetName,
 };
 use rinx_filter::Expr;
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::indent::unindent_body_lines;
 
 use super::filter_option::{FilterCodes, read_filter_option};
-use super::options::{OptionLine, parse_percentage, report_unknown_options, scan_option_lines};
+use super::options::{OptionLine, parse_percentage, report_unknown_options};
 
 /// The options sphinx-needs' `needflow` accepts that this build does not,
 /// each with what an author should reach for instead.
@@ -77,61 +76,47 @@ const UNSUPPORTED_OPTIONS: [(&str, &str); 16] = [
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["entity-flow", "needflow"],
     doc: "A flowchart of the entities a filter selects and their relations.",
+    shape: DirectiveShape {
+        arguments: Arguments::NONE,
+        takes_options: true,
+        takes_content: false,
+        content_hint: Some(
+            "its picture is generated from the entity graph: select the entities with :filter:, or write `.. entity-diagram::` to draw a diagram of your own",
+        ),
+    },
 };
 
 /// Interprets `.. entity-flow::` or `.. needflow::`, recording which was
 /// written.
 pub(in crate::directives) fn interpret_entity_flow(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     let Ok(source) = input.name.parse::<rinx_ast::EntityFlowSource>() else {
         return unknown(input, state);
     };
-    single(parse_entity_flow(
-        source,
-        input.argument,
-        input.span,
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_entity_flow(source, input, state.diagnostics))
 }
 
 /// Parses a `.. entity-flow::` / `.. needflow::` into a
 /// [`Directive::EntityFlow`].
 pub(super) fn parse_entity_flow(
     source: EntityFlowSource,
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
     let directive = source.as_str();
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
+    let directive_span = invocation.span;
+    let ctx = &invocation.ctx;
+    let unindented_lines = &invocation.lines;
+    let option_lines = &invocation.options;
 
     let mut flow = EntityFlow {
         span: directive_span,
         ..EntityFlow::new(source)
     };
 
-    report_argument(argument, directive, directive_span, diagnostics);
-    report_content(
-        &unindented_lines[body_start..],
-        directive,
-        directive_span,
-        diagnostics,
-    );
-
-    let unrecognized = read_options(
-        &mut flow,
-        &option_lines,
-        &unindented_lines,
-        diagnostics,
-        ctx,
-    );
+    let unrecognized = read_options(&mut flow, option_lines, unindented_lines, diagnostics, ctx);
     report_unknown_options(
         &unrecognized,
         directive,
@@ -140,58 +125,10 @@ pub(super) fn parse_entity_flow(
         ctx,
     );
     if flow.has_unusable_scale() {
-        report_unusable_scale(&option_lines, directive, diagnostics, ctx);
+        report_unusable_scale(option_lines, directive, diagnostics, ctx);
     }
 
     Directive::EntityFlow(Box::new(flow))
-}
-
-/// Reports an argument written on the directive's own line.
-///
-/// The directive takes none, and the one thing an author is likely to write
-/// there is the selection — so the message names the option that would have
-/// worked, exactly as `.. entity-table::`'s does.
-fn report_argument(
-    argument: &str,
-    directive: &str,
-    directive_span: Option<Span>,
-    diagnostics: &mut Diagnostics,
-) {
-    if argument.trim().is_empty() {
-        return;
-    }
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::DirectiveEntityFlowUnknownOption,
-        format!(
-            "{directive}: takes no argument; write the selection as :filter: instead of '{}'",
-            argument.trim()
-        ),
-        directive_span,
-    ));
-}
-
-/// Reports body content below the option block.
-///
-/// A flowchart's `PlantUML` is generated, so there is nowhere for written text
-/// to go. Saying so is worth a line: the directive sits one letter away from
-/// `.. entity-diagram::`, whose body *is* the picture.
-fn report_content(
-    content: &[String],
-    directive: &str,
-    directive_span: Option<Span>,
-    diagnostics: &mut Diagnostics,
-) {
-    if content.iter().all(|line| line.trim().is_empty()) {
-        return;
-    }
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::DirectiveEntityFlowUnknownOption,
-        format!(
-            "{directive}: takes no content, and its picture is generated from the entity graph; \
-             write `.. entity-diagram::` to draw a diagram of your own"
-        ),
-        directive_span,
-    ));
 }
 
 /// Reads every option onto `flow`, returning the lines nobody claimed.

@@ -19,8 +19,8 @@
 //! that is not a grid-item, and a grid-item written outside a grid, both warn
 //! and both still render.
 
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
     ChildAlign, ChildDirection, ColumnSpec, Diagnostic, DiagnosticCode, Directive, Grid, GridItem,
     Gutter, Node, Spacing, SpacingKind, Span,
@@ -30,10 +30,9 @@ use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 
 use super::classes::split_classes;
-use super::options::{OptionLine, report_unknown_options, scan_option_lines};
+use super::options::{OptionLine, report_unknown_options};
 
 const GRID: &str = "grid";
 const GRID_ITEM: &str = "grid-item";
@@ -42,26 +41,28 @@ const GRID_ITEM: &str = "grid-item";
 pub(in crate::directives) const GRID_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["grid"],
     doc: "A responsive row of grid items.",
+    shape: DirectiveShape {
+        arguments: Arguments::OPTIONAL_TEXT,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Parses a `.. grid::` into a [`Directive::Grid`].
 pub(super) fn parse_grid(
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
-
+    let ctx = &invocation.ctx;
+    let directive_span = invocation.span;
     let mut grid = Grid {
-        columns: parse_argument_columns(argument, directive_span, diagnostics, ctx),
+        columns: parse_argument_columns(invocation.argument(0), directive_span, diagnostics, ctx),
         span: directive_span,
         ..Grid::new()
     };
-    let unrecognized = read_grid_options(&mut grid, &option_lines, diagnostics, ctx);
+    let unrecognized = read_grid_options(&mut grid, &invocation.options, diagnostics, ctx);
     report_unknown_options(
         &unrecognized,
         GRID,
@@ -70,16 +71,12 @@ pub(super) fn parse_grid(
         ctx,
     );
 
-    // The body starts below the option block, so every position inside it is
-    // short by that many lines unless the context is rebased first. This is
-    // what keeps a diagram's span — and the `.. noqa:` that might silence it —
-    // pointing at the line it was written on.
-    let body_ctx = ctx.nested(body_start, 0).inside_grid_row();
-    let content: Vec<&str> = unindented_lines[body_start..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    grid.body = parse_blocks(&content, adornment_order, diagnostics, &body_ctx);
+    // The content's own context keeps a diagram's span — and the `.. noqa:`
+    // that might silence it — pointing at the line it was written on.
+    let content = invocation.content();
+    let lines: Vec<&str> = content.lines.iter().map(String::as_str).collect();
+    let body_ctx = content.ctx.inside_grid_row();
+    grid.body = parse_blocks(&lines, adornment_order, diagnostics, &body_ctx);
     report_unexpected_children(&grid.body, directive_span, diagnostics);
 
     Directive::Grid(Box::new(grid))
@@ -89,46 +86,43 @@ pub(super) fn parse_grid(
 pub(in crate::directives) const GRID_ITEM_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["grid-item"],
     doc: "One cell of a grid.",
+    shape: DirectiveShape {
+        arguments: Arguments::NONE,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. grid::`.
 pub(in crate::directives) fn interpret_grid(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    single(parse_grid(
-        input.argument,
-        input.span,
-        input.body_lines,
-        state.adornment_order,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_grid(input, state.adornment_order, state.diagnostics))
 }
 
 /// Interprets `.. grid-item::`, written inside a grid or not: outside one its
 /// content survives to be warned about rather than lost.
 pub(in crate::directives) fn interpret_grid_item(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     single(parse_grid_item(
-        input.span,
-        input.body_lines,
+        input,
         state.adornment_order,
         state.diagnostics,
-        input.body_ctx,
     ))
 }
 
 /// Parses a `.. grid-item::` into a [`Directive::GridItem`].
 pub(super) fn parse_grid_item(
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
+    let ctx = &invocation.ctx;
+    let directive_span = invocation.span;
     if !ctx.in_grid_row {
         diagnostics.push(Diagnostic::at(
             DiagnosticCode::GridItemOutsideGrid,
@@ -137,14 +131,11 @@ pub(super) fn parse_grid_item(
         ));
     }
 
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
-
     let mut item = GridItem {
         span: directive_span,
         ..GridItem::new()
     };
-    let unrecognized = read_item_options(&mut item, &option_lines, diagnostics, ctx);
+    let unrecognized = read_item_options(&mut item, &invocation.options, diagnostics, ctx);
     report_unknown_options(
         &unrecognized,
         GRID_ITEM,
@@ -153,12 +144,10 @@ pub(super) fn parse_grid_item(
         ctx,
     );
 
-    let body_ctx = ctx.nested(body_start, 0).outside_grid_row();
-    let content: Vec<&str> = unindented_lines[body_start..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    item.body = parse_blocks(&content, adornment_order, diagnostics, &body_ctx);
+    let content = invocation.content();
+    let lines: Vec<&str> = content.lines.iter().map(String::as_str).collect();
+    let body_ctx = content.ctx.outside_grid_row();
+    item.body = parse_blocks(&lines, adornment_order, diagnostics, &body_ctx);
 
     Directive::GridItem(Box::new(item))
 }

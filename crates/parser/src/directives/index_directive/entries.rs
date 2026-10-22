@@ -1,13 +1,12 @@
 //! Turning an `.. index::` directive's argument and body lines into
 //! [`rinx_ast::IndexEntry`]s, one physical line at a time.
 
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
-use crate::indent::unindent_body_lines;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{Diagnostic, DiagnosticCode, IndexEntry, IndexEntryType, InvalidIndexEntry};
 
+use super::super::options::report_unknown_options;
 use super::value_parsing::{parse_typed_entry, strip_main_prefix};
 
 /// Parses one physical line — either the directive's argument line or a
@@ -87,50 +86,43 @@ fn parse_directive_line(
 
 /// Parses a `.. index::` directive's argument and body into its entries.
 ///
-/// The argument line and each body line are parsed identically (see the
-/// module docs) — the two forms can be freely combined, matching how real
-/// Sphinx documents write a first entry on the directive line and further
-/// entries as continuation lines below it.
+/// Every line of the argument is parsed identically (see the module docs):
+/// docutils reads the directive's line and the lines directly below it as one
+/// argument, and Sphinx splits it into entries line by line, matching how real
+/// documents write a first entry on the directive line and further entries as
+/// continuation lines below it.
 pub(crate) fn parse_index_entries(
-    argument: &str,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Vec<IndexEntry> {
-    // The argument sits on the directive's marker line, which is above the
-    // body `ctx` is positioned at, so it has no span of its own here; the
-    // body's own lines do.
-    let mut entries = parse_directive_line(argument, diagnostics, None);
-
-    let unindented = unindent_body_lines(body_lines);
-    for (index, line) in unindented.iter().enumerate() {
-        entries.extend(parse_directive_line(
-            line,
-            diagnostics,
-            ctx.line_span(index, line),
-        ));
-    }
-
-    entries
+    invocation
+        .argument_lines
+        .clone()
+        .flat_map(|index| {
+            let line = &invocation.lines[index];
+            parse_directive_line(line, diagnostics, invocation.ctx.line_span(index, line))
+        })
+        .collect()
 }
 
 /// This directive's entry in the table of directives this build implements.
 pub(in crate::directives) const INDEX_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["index"],
     doc: "Entries for the general index.",
+    shape: DirectiveShape {
+        arguments: Arguments::ONE_TEXT,
+        takes_options: true,
+        takes_content: false,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. index::`.
 pub(in crate::directives) fn interpret_index(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    single(parse_index_directive(
-        input.argument,
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_index_directive(input, state.diagnostics))
 }
 
 /// Parses a `.. index::` directive into a `Directive::Index`. The anchor
@@ -138,13 +130,18 @@ pub(in crate::directives) fn interpret_index(
 /// `assign_index_ids` pass, since a bare-location directive like this has no
 /// content-derived identity to build one from at parse time.
 pub(crate) fn parse_index_directive(
-    argument: &str,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> rinx_ast::Directive {
+    report_unknown_options(
+        &invocation.options.iter().collect::<Vec<_>>(),
+        "index",
+        rinx_ast::DiagnosticCode::DirectiveUnknownOption,
+        diagnostics,
+        &invocation.ctx,
+    );
     rinx_ast::Directive::Index {
-        entries: parse_index_entries(argument, body_lines, diagnostics, ctx),
+        entries: parse_index_entries(invocation, diagnostics),
         id: String::new(),
     }
 }
@@ -152,6 +149,7 @@ pub(crate) fn parse_index_directive(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::ParseCtx;
     use rinx_ast::Domain;
 
     #[test]
@@ -442,12 +440,16 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_entries(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "index",
+            INDEX_SPEC.shape,
             argument,
             &body_lines,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let entries = parse_index_entries(&invocation, &mut diagnostics);
 
         // Then
         assert_eq!(entries.len(), 5);
@@ -468,12 +470,16 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_entries(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "index",
+            INDEX_SPEC.shape,
             argument,
             &body_lines,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let entries = parse_index_entries(&invocation, &mut diagnostics);
 
         // Then — pair expands to 2, plus 2 bare terms = 4
         assert_eq!(entries.len(), 4);
@@ -493,12 +499,16 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_entries(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "index",
+            INDEX_SPEC.shape,
             argument,
             &body_lines,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let entries = parse_index_entries(&invocation, &mut diagnostics);
 
         // Then
         assert_eq!(entries.len(), 3);
@@ -521,12 +531,16 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_entries(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "index",
+            INDEX_SPEC.shape,
             argument,
             &body_lines,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let entries = parse_index_entries(&invocation, &mut diagnostics);
 
         // Then
         assert_eq!(entries.len(), 2);
@@ -557,12 +571,16 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_entries(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "index",
+            INDEX_SPEC.shape,
             argument,
             &body_lines,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let entries = parse_index_entries(&invocation, &mut diagnostics);
 
         // Then
         assert_eq!(entries.len(), 2);
@@ -586,12 +604,16 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When
-        let directive = parse_index_directive(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "index",
+            INDEX_SPEC.shape,
             argument,
             &body_lines,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let directive = parse_index_directive(&invocation, &mut diagnostics);
 
         // Then
         if let rinx_ast::Directive::Index { entries, id } = directive {
@@ -610,16 +632,22 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_entries(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "index",
+            INDEX_SPEC.shape,
             argument,
             &body_lines,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let entries = parse_index_entries(&invocation, &mut diagnostics);
 
-        // Then
+        // Then — Sphinx requires the argument
         assert!(entries.is_empty());
-        assert!(diagnostics.is_empty());
+        let (found, _, _) = diagnostics.into_parts();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].code, DiagnosticCode::DirectiveMissingArgument);
     }
 
     #[test]
@@ -680,12 +708,16 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_entries(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "index",
+            INDEX_SPEC.shape,
             "",
             &body_lines,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let entries = parse_index_entries(&invocation, &mut diagnostics);
 
         // Then
         assert_eq!(entries.len(), 1);

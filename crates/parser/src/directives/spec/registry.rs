@@ -8,7 +8,7 @@
 //! here, in the entry.
 
 use crate::directives::domains::object_type::object_directive_names;
-use crate::directives::input::{DirectiveInput, ParseState};
+use crate::directives::invocation::{DirectiveInvocation, ParseState};
 use crate::directives::scope::scope_directive_names;
 use crate::directives::{
     admonitions, button_link, code_block, contents, data_table, default_role, doctest, dropdown,
@@ -30,7 +30,7 @@ pub(crate) struct RegisteredDirective {
 }
 
 /// The signature every directive's `interpret_*` shares.
-pub(crate) type Interpret = fn(&DirectiveInput<'_, '_>, &mut ParseState<'_>) -> Vec<Node>;
+pub(crate) type Interpret = fn(&DirectiveInvocation<'_, '_>, &mut ParseState<'_>) -> Vec<Node>;
 
 /// The [`RegisteredDirective`] pairing `spec` with `interpret`.
 const fn entry(spec: &'static DirectiveSpec, interpret: Interpret) -> RegisteredDirective {

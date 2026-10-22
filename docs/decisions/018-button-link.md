@@ -117,7 +117,9 @@ the parser reading names, the node answering `has()`, and the renderer drawing.
    ADR-011 set for a misplaced grid child: content that was written is never lost
    quietly.
 
-5. **The argument does not continue onto the next line.** docutils would fold a
+5. *(Superseded by ADR-043: every directive's block is now split by docutils'
+   rule, so the argument does continue onto the next line.)*
+   **The argument does not continue onto the next line.** docutils would fold a
    following line into the argument, since the directive declares
    `final_argument_whitespace`. No directive in this build continues an argument
    across lines except a domain object's signatures, so the line is read as the

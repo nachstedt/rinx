@@ -1,14 +1,13 @@
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
     Contents, ContentsBacklinks, ContentsOptions, Diagnostic, DiagnosticCode, Directive, TargetName,
 };
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::indent::unindent_body_lines;
 
-use super::options::{OptionLine, parse_positive_depth, report_unknown_options, scan_option_lines};
+use super::options::{OptionLine, parse_positive_depth, report_unknown_options};
 
 const DIRECTIVE: &str = "contents";
 
@@ -91,40 +90,33 @@ fn parse_backlinks(
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["contents"],
     doc: "A table of contents of this document's sections.",
+    shape: DirectiveShape {
+        arguments: Arguments::OPTIONAL_TEXT,
+        takes_options: true,
+        takes_content: false,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. contents::`.
 pub(in crate::directives) fn interpret_contents(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    single(parse_contents(
-        input.argument,
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_contents(input, state.diagnostics))
 }
 
 /// Parses a `.. contents::` body into a [`Directive::Contents`].
 ///
-/// `argument` is the directive's title, stored only when non-empty: an
+/// Its argument is the directive's title, stored only when non-empty: an
 /// absent title means "use the default", applied at render time rather than
 /// baked in here.
 pub(super) fn parse_contents(
-    argument: &str,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
-    let unindented_lines = unindent_body_lines(body_lines);
-    // `.. contents::` takes no body content beyond its options — whatever
-    // follows them is simply ignored, matching docutils, which treats the
-    // directive as empty-bodied once its option field list ends. So, unlike
-    // `.. toctree::`, the index where the option block ends is of no further
-    // interest here.
-    let (option_lines, _body_start) = scan_option_lines(&unindented_lines);
-    let (options, unrecognized) = parse_contents_options(&option_lines, diagnostics, ctx);
+    let ctx = &invocation.ctx;
+    let (options, unrecognized) = parse_contents_options(&invocation.options, diagnostics, ctx);
     report_unknown_options(
         &unrecognized,
         DIRECTIVE,
@@ -133,7 +125,7 @@ pub(super) fn parse_contents(
         ctx,
     );
 
-    let title = argument.trim();
+    let title = invocation.argument(0).trim();
     Directive::Contents(Contents {
         title: (!title.is_empty()).then(|| title.to_string()),
         options,
@@ -150,12 +142,16 @@ mod tests {
     /// tests about `parse_contents` itself rather than about recognition.
     fn parse_body(argument: &str, body_lines: &[&str]) -> (Contents, Diagnostics) {
         let mut diagnostics = Diagnostics::default();
-        let directive = parse_contents(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "contents",
+            SPEC.shape,
             argument,
             body_lines,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let directive = parse_contents(&invocation, &mut diagnostics);
         match directive {
             Directive::Contents(contents) => (contents, diagnostics),
             other => panic!("Expected Contents, got {other:?}"),

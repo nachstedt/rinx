@@ -18,8 +18,8 @@
 //! genuinely part of the including document, so editing it must re-parse and
 //! re-render every page that includes it. That is correct rather than a gap.
 
-use crate::directives::input::{DirectiveInput, ParseState};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
     CodeBlock, CodeBlockSource, CodeLanguage, Diagnostic, DiagnosticCode, Directive, IncludeSite,
     Node, Span,
@@ -29,9 +29,8 @@ use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::error_node::{malformed_directive, malformed_node};
-use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
+use crate::directives::options::{OptionLine, report_unknown_options};
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 
 use super::code_block::{Selection, check_encoding, expand_tabs};
 
@@ -64,21 +63,20 @@ struct IncludeOptions {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["include"],
     doc: "Splices another file's reStructuredText in where it stands.",
+    shape: DirectiveShape {
+        arguments: Arguments::ONE_TEXT,
+        takes_options: true,
+        takes_content: false,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. include::`, splicing the file's nodes in where it stands.
 pub(in crate::directives) fn interpret_include(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    parse_include(
-        input.argument,
-        input.span,
-        input.body_lines,
-        state.adornment_order,
-        state.diagnostics,
-        &input.splice_ctx(),
-    )
+    parse_include(input, state.adornment_order, state.diagnostics)
 }
 
 /// Parses a `.. include::`, returning the nodes its file contributed.
@@ -89,39 +87,38 @@ pub(in crate::directives) fn interpret_include(
 /// resilient, and the `parse` subcommand turns the loader's recorded failure
 /// into a failed build.
 pub(in crate::directives) fn parse_include(
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Vec<Node> {
+    let argument = invocation.argument(0);
+    let body_lines = invocation.source_body;
+    // A splice: its titles are allowed where the directive stands.
+    let content = invocation.content_with_enclosing_titles();
+    let ctx = &content.ctx;
     // The marker line: every problem with the directive as a whole is
     // reported there, and it is the line an editor points at when the
     // included file holds a problem.
-    let span = directive_span;
+    let span = invocation.span;
 
     let path = argument.trim();
     if path.is_empty() {
-        return vec![malformed(
+        // The reader has reported the missing argument.
+        return vec![Node::Directive(malformed_node(
+            DIRECTIVE,
             argument,
             body_lines,
-            DiagnosticCode::IncludeMissingPath,
             format!("{DIRECTIVE}: needs the path of a file to include"),
-            span,
-            diagnostics,
-        )];
+        ))];
     }
 
-    let unindented = unindent_body_lines(body_lines);
-    let (option_lines, _) = scan_option_lines(&unindented);
-    let (options, unclaimed) = parse_options(&option_lines, diagnostics, ctx);
+    let (options, unclaimed) = parse_options(&invocation.options, diagnostics, &invocation.ctx);
     report_unknown_options(
         &unclaimed,
         DIRECTIVE,
         DiagnosticCode::IncludeUnknownOption,
         diagnostics,
-        ctx,
+        &invocation.ctx,
     );
 
     if !check_encoding(options.encoding.as_deref(), DIRECTIVE, diagnostics, span) {
@@ -689,7 +686,10 @@ mod tests {
         let document = parse_document(&[], ".. include::\n");
 
         // Then
-        assert_eq!(codes(&document), vec![DiagnosticCode::IncludeMissingPath]);
+        assert_eq!(
+            codes(&document),
+            vec![DiagnosticCode::DirectiveMissingArgument]
+        );
     }
 
     #[test]

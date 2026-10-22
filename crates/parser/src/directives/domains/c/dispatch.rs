@@ -1,7 +1,7 @@
 //! The `c`-domain object-type dispatch and up-front signature parsing.
 
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::invocation::DirectiveInvocation;
 use rinx_ast::{
     CSignature, Diagnostic, DiagnosticCode, DomainObjectBody, NameSource, NonEmptyVector, Span,
 };
@@ -22,22 +22,16 @@ use super::union::parse_c_union;
 pub(crate) fn parse_c_domain_object(
     object_type: DirectiveObjectType,
     signatures: &NonEmptyVector<String>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
     signature_span: Option<Span>,
 ) -> DomainObjectBody {
     let signatures = parse_c_signatures(signatures, diagnostics, signature_span);
     match object_type {
         DirectiveObjectType::CFunction => {
-            let parsed = parse_object_body::<()>(
-                "c:function",
-                body_lines,
-                adornment_order,
-                diagnostics,
-                ctx,
-            );
+            let parsed =
+                parse_object_body::<()>("c:function", invocation, adornment_order, diagnostics);
             DomainObjectBody::CFunction {
                 signatures,
                 flags: parsed.flags,
@@ -46,7 +40,7 @@ pub(crate) fn parse_c_domain_object(
         }
         DirectiveObjectType::CMacro => {
             let parsed =
-                parse_object_body::<()>("c:macro", body_lines, adornment_order, diagnostics, ctx);
+                parse_object_body::<()>("c:macro", invocation, adornment_order, diagnostics);
             DomainObjectBody::CMacro {
                 signatures,
                 flags: parsed.flags,
@@ -54,16 +48,16 @@ pub(crate) fn parse_c_domain_object(
             }
         }
         DirectiveObjectType::CStruct => {
-            parse_c_struct(signatures, body_lines, adornment_order, diagnostics, ctx)
+            parse_c_struct(signatures, invocation, adornment_order, diagnostics)
         }
         DirectiveObjectType::CUnion => {
-            parse_c_union(signatures, body_lines, adornment_order, diagnostics, ctx)
+            parse_c_union(signatures, invocation, adornment_order, diagnostics)
         }
         DirectiveObjectType::CMember => {
-            parse_c_member(signatures, body_lines, adornment_order, diagnostics, ctx)
+            parse_c_member(signatures, invocation, adornment_order, diagnostics)
         }
         DirectiveObjectType::CType => {
-            parse_c_type(signatures, body_lines, adornment_order, diagnostics, ctx)
+            parse_c_type(signatures, invocation, adornment_order, diagnostics)
         }
         DirectiveObjectType::PyFunction
         | DirectiveObjectType::PyDecorator

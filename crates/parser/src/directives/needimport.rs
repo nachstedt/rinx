@@ -46,8 +46,8 @@
 //! rather than wrong, exactly as a `.. csv-table::`'s `:file:` rows already
 //! are.
 
-use crate::directives::input::{DirectiveInput, ParseState};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use std::collections::{BTreeMap, BTreeSet};
 
 use rinx_ast::{
@@ -64,15 +64,14 @@ use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 
 use super::entity_fields::{
     apply_defaults, collect_relation_targets, describe_options, report_id_pattern,
     report_missing_attributes, report_relation_cardinality, store_attribute,
 };
-use super::error_node::malformed_directive;
+use super::error_node::{malformed_directive, malformed_node};
 use super::filter_option::{FilterCodes, read_filter_option};
-use super::options::{OptionLine, report_unknown_options, scan_option_lines};
+use super::options::{OptionLine, report_unknown_options};
 
 /// The directive name, used throughout this module's diagnostics.
 const DIRECTIVE: &str = "needimport";
@@ -155,22 +154,21 @@ struct Import<'a> {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["needimport"],
     doc: "Imports the needs of a sphinx-needs `needs.json` as entities.",
+    shape: DirectiveShape {
+        arguments: Arguments::ONE_TEXT,
+        takes_options: true,
+        takes_content: false,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. needimport::`, splicing the imported entities in where it
 /// stands.
 pub(in crate::directives) fn interpret_needimport(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    parse_needimport(
-        input.argument,
-        input.span,
-        input.body_lines,
-        state.adornment_order,
-        state.diagnostics,
-        &input.splice_ctx(),
-    )
+    parse_needimport(input, state.adornment_order, state.diagnostics)
 }
 
 /// Parses a `.. needimport::`, returning the entities its file contributed.
@@ -180,21 +178,21 @@ pub(in crate::directives) fn interpret_needimport(
 /// and the `parse` subcommand turns the loader's recorded failure into a
 /// failed build.
 pub(in crate::directives) fn parse_needimport(
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Vec<Node> {
+    let argument = invocation.argument(0);
+    let body_lines = invocation.source_body;
+    let directive_span = invocation.span;
+    let content = invocation.content_with_enclosing_titles();
+    let ctx = &content.ctx;
     let path = match resolve_argument(argument, body_lines, directive_span, diagnostics, ctx) {
         Ok(path) => path,
         Err(refusal) => return vec![*refusal],
     };
 
-    let unindented = unindent_body_lines(body_lines);
-    let (option_lines, _) = scan_option_lines(&unindented);
-    let options = parse_options(&option_lines, diagnostics, ctx);
+    let options = parse_options(&invocation.options, diagnostics, &invocation.ctx);
 
     let file = match load_needs_file(path, ctx) {
         Ok(file) => file,
@@ -324,14 +322,13 @@ fn resolve_argument<'a>(
         None => written,
     };
     if path.is_empty() {
-        return Err(Box::new(refuse(
+        // The reader has reported the missing argument.
+        return Err(Box::new(Node::Directive(malformed_node(
+            DIRECTIVE,
             argument,
             body_lines,
-            DiagnosticCode::NeedImportMissingPath,
             format!("{DIRECTIVE}: needs the path of a needs.json to import"),
-            directive_span,
-            diagnostics,
-        )));
+        ))));
     }
     if is_url(path) {
         return Err(Box::new(refuse(

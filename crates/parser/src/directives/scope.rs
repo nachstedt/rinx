@@ -1,40 +1,24 @@
-use super::error_node::malformed_directive;
-use crate::context::ParseCtx;
-use crate::diagnostics::Diagnostics;
-use rinx_ast::{DiagnosticCode, Directive, Domain, Span};
+use super::error_node::malformed_node;
+use super::invocation::DirectiveInvocation;
+use super::spec::{Arguments, DirectiveShape};
+use rinx_ast::{Directive, Domain};
 
-/// Tries to parse `name`/`argument` as one of the *scope* directives: the
-/// content-less, domain-qualified directives that document nothing and only
-/// move the current scope the analyzer and renderer qualify against —
-/// `.. currentmodule::` in the `py` domain, and the `.. c:namespace::`
-/// family in the `c` domain.
+/// Interprets one of the *scope* directives, read by its
+/// [`ScopeDirective::shape`]: the content-less, domain-qualified directives
+/// that document nothing and only move the current scope the analyzer and
+/// renderer qualify against — `.. currentmodule::` in the `py` domain, and the
+/// `.. c:namespace::` family in the `c` domain.
 ///
-/// They share one function because they share one dispatch rule
-/// ([`split_domain_qualified_name`]), which is also what gates each to its
-/// own domain: a bare `.. currentmodule::` under a `c` default domain, or a
-/// bare `.. namespace::` under a `py` one, matches no arm and falls through
-/// to [`Directive::Unknown`].
-///
-/// The hyphenated namespace names need no special handling:
-/// `split_domain_qualified_name` only splits on `:`, so the hyphen rides
-/// along in the bare name exactly as `code-block`/`list-table` already do.
-///
-/// A `namespace-push` with no scope argument is malformed — it degrades to
-/// [`Directive::Malformed`] and reports itself, rather than being silently
-/// accepted as a no-op push that a later `namespace-pop` would then unbalance.
-/// It is the one arm here that is *malformed* rather than unrecognized: every
-/// other miss is a name this domain genuinely does not define, so letting it
-/// fall through to `Directive::Unknown` says the right thing.
-pub(super) fn try_parse_scope_directive(
-    name: &str,
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<Directive> {
-    let scope = resolve_scope_directive(name, ctx.default_domain)?;
-    Some(match scope {
+/// A `namespace-push` with no scope argument — reported by the reader — is
+/// malformed: it degrades to [`Directive::Malformed`] rather than being
+/// silently accepted as a no-op push that a later `namespace-pop` would then
+/// unbalance.
+pub(super) fn parse_scope_directive(
+    scope: ScopeDirective,
+    invocation: &DirectiveInvocation<'_, '_>,
+) -> Directive {
+    let argument = invocation.argument(0);
+    match scope {
         ScopeDirective::Program => Directive::StdProgram {
             name: parse_program_argument(argument),
         },
@@ -44,32 +28,50 @@ pub(super) fn try_parse_scope_directive(
         ScopeDirective::Namespace => Directive::CNamespace {
             namespace: parse_c_namespace_argument(argument),
         },
-        ScopeDirective::NamespacePush if argument.is_empty() => malformed_directive(
-            name,
+        ScopeDirective::NamespacePush if argument.is_empty() => malformed_node(
+            invocation.name,
             argument,
-            body_lines,
-            DiagnosticCode::DirectiveNamespacePushArgumentMissing,
-            format!("{name}: the directive needs a scope name as its argument"),
-            directive_span,
-            diagnostics,
+            invocation.source_body,
+            format!(
+                "{}: the directive needs a scope name as its argument",
+                invocation.name
+            ),
         ),
         ScopeDirective::NamespacePush => Directive::CNamespacePush {
             namespace: argument.to_string(),
         },
-        // Any argument is ignored: real Sphinx's pop takes none, and undoes
-        // the previous push whatever it was.
         ScopeDirective::NamespacePop => Directive::CNamespacePop,
-    })
+    }
 }
 
 /// The scope directives, by what each one moves.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum ScopeDirective {
+pub(super) enum ScopeDirective {
     Program,
     CurrentModule,
     Namespace,
     NamespacePush,
     NamespacePop,
+}
+
+impl ScopeDirective {
+    /// How a block of it splits, transcribed from Sphinx's classes: one
+    /// argument each — the whole line for a program or a C scope, a single
+    /// word for a Python module — but none for a pop, and no options or
+    /// content for any.
+    pub(super) const fn shape(self) -> DirectiveShape {
+        let arguments = match self {
+            Self::Program | Self::Namespace | Self::NamespacePush => Arguments::ONE_TEXT,
+            Self::CurrentModule => Arguments::ONE_WORD,
+            Self::NamespacePop => Arguments::NONE,
+        };
+        DirectiveShape {
+            arguments,
+            takes_options: false,
+            takes_content: false,
+            content_hint: None,
+        }
+    }
 }
 
 /// Every scope directive: the domain its name is qualified in — `None` for
@@ -98,7 +100,10 @@ const SCOPE_DIRECTIVES: &[(Option<Domain>, &str, ScopeDirective)] = &[
 
 /// Which scope directive `name` spells under `default_domain`: an unqualified
 /// row by its name alone, any other through [`split_domain_qualified_name`].
-fn resolve_scope_directive(name: &str, default_domain: Domain) -> Option<ScopeDirective> {
+pub(super) fn resolve_scope_directive(
+    name: &str,
+    default_domain: Domain,
+) -> Option<ScopeDirective> {
     let find = |domain: Option<Domain>, name: &str| {
         SCOPE_DIRECTIVES
             .iter()
@@ -136,7 +141,7 @@ fn parse_c_namespace_argument(argument: &str) -> Option<String> {
 /// Splits a directive name into its domain and bare name — either an
 /// explicit `domain:name` form (e.g. `py:function`), or a bare name (e.g.
 /// `function`) resolved via `default_domain`. Shared by
-/// [`resolve_domain_object_type`] and [`try_parse_scope_directive`], so both
+/// [`resolve_domain_object_type`] and [`resolve_scope_directive`], so both
 /// obey the same domain rules: a bare `.. currentmodule::` under a `c`
 /// default domain, or an explicit `.. c:currentmodule::`, must not match the
 /// `py`-only arm that consumes it, and likewise a bare `.. namespace::`
@@ -375,7 +380,7 @@ mod tests {
         assert!(
             doc.diagnostics
                 .iter()
-                .any(|d| d.code == rinx_ast::DiagnosticCode::DirectiveNamespacePushArgumentMissing)
+                .any(|d| d.code == rinx_ast::DiagnosticCode::DirectiveMissingArgument)
         );
     }
 

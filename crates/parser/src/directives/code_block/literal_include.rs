@@ -12,8 +12,8 @@
 //! selection half ([`super::selection`]). What is genuinely its own is here:
 //! naming a file, `:diff:`, `:prepend:`/`:append:`, and `:lineno-match:`.
 
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use std::num::NonZeroU32;
 
 use rinx_ast::{
@@ -22,10 +22,8 @@ use rinx_ast::{
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::body::body_span;
 use crate::directives::error_node::{malformed_directive, malformed_node};
-use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
-use crate::indent::unindent_body_lines;
+use crate::directives::options::{OptionLine, report_unknown_options};
 
 use super::dedent::apply_dedent;
 use super::diff::unified_diff;
@@ -57,19 +55,20 @@ struct LiteralIncludeOptions {
 pub(in crate::directives) const LITERAL_INCLUDE_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["literalinclude"],
     doc: "A code block read from a file.",
+    shape: DirectiveShape {
+        arguments: Arguments::ONE_TEXT,
+        takes_options: true,
+        takes_content: false,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. literalinclude::`.
 pub(in crate::directives) fn interpret_literal_include(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    single(parse_literal_include(
-        input.argument,
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_literal_include(input, state.diagnostics))
 }
 
 /// Parses a `.. literalinclude::` into a [`Directive::CodeBlock`], reading the
@@ -80,31 +79,28 @@ pub(in crate::directives) fn interpret_literal_include(
 /// reported why. The parser stays resilient, and the `parse` subcommand turns
 /// the loader's recorded failure into a failed build.
 pub(in crate::directives) fn parse_literal_include(
-    argument: &str,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
-    let span = body_span(body_lines, ctx).or_else(|| ctx.line_span(0, ""));
+    let argument = invocation.argument(0);
+    let body_lines = invocation.source_body;
+    let ctx = &invocation.ctx;
+    let span = invocation.body_span();
 
     let path = argument.trim();
     if path.is_empty() {
-        return malformed_directive(
+        // The reader has reported the missing argument.
+        return malformed_node(
             DIRECTIVE,
             argument,
             body_lines,
-            DiagnosticCode::IncludeMissingPath,
             format!("{DIRECTIVE}: needs the path of a file to show"),
-            span,
-            diagnostics,
         );
     }
 
-    let unindented = unindent_body_lines(body_lines);
-    let (option_lines, _) = scan_option_lines(&unindented);
     let (shared, unrecognized) = parse_code_block_options(
         CodeBlockSource::LiteralInclude,
-        &option_lines,
+        &invocation.options,
         diagnostics,
         ctx,
     );
@@ -414,7 +410,15 @@ mod tests {
         let loader = FakeFiles::with(files);
         let ctx = ParseCtx::new(Domain::Py, &loader);
         let mut diagnostics = Diagnostics::default();
-        let directive = parse_literal_include(argument, body_lines, &mut diagnostics, &ctx);
+        let invocation = crate::directives::reader::test_invocation(
+            "literalinclude",
+            LITERAL_INCLUDE_SPEC.shape,
+            argument,
+            body_lines,
+            &mut diagnostics,
+            &ctx,
+        );
+        let directive = parse_literal_include(&invocation, &mut diagnostics);
         (directive, diagnostics)
     }
 
@@ -458,7 +462,7 @@ mod tests {
         assert!(matches!(directive, Directive::Malformed { .. }));
         assert_eq!(
             codes(&diagnostics),
-            vec![DiagnosticCode::IncludeMissingPath]
+            vec![DiagnosticCode::DirectiveMissingArgument]
         );
     }
 

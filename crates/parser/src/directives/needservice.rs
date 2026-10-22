@@ -14,9 +14,9 @@
 
 use super::error_node::malformed_directive;
 use crate::diagnostics::Diagnostics;
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
-use rinx_ast::{DiagnosticCode, Directive, Span};
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use rinx_ast::{DiagnosticCode, Directive};
 
 /// Why `.. needservice::` is refused, and what to write instead — stored on the
 /// node as well as reported, so the page says the same as the build log.
@@ -29,20 +29,21 @@ const NEEDSERVICE_UNSUPPORTED_MESSAGE: &str = "needservice: querying an external
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["needservice"],
     doc: "sphinx-needs' import from an external service, refused by name.",
+    shape: DirectiveShape {
+        arguments: Arguments::ONE_TEXT,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. needservice::`, which is refused by name so its warning can
 /// say why and what to write instead.
 pub(in crate::directives) fn interpret_needservice(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    single(parse_needservice(
-        input.argument,
-        input.span,
-        input.body_lines,
-        state.diagnostics,
-    ))
+    single(parse_needservice(input, state.diagnostics))
 }
 
 /// Degrades a `.. needservice::` to a [`Directive::Malformed`] reporting
@@ -51,15 +52,14 @@ pub(in crate::directives) fn interpret_needservice(
 /// The body is never parsed: it is the service's content template, not prose
 /// of this document.
 pub(super) fn parse_needservice(
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
 ) -> Directive {
+    let directive_span = invocation.span;
     malformed_directive(
         "needservice",
-        argument,
-        body_lines,
+        &invocation.arguments.join(" "),
+        invocation.source_body,
         DiagnosticCode::NeedServiceUnsupported,
         NEEDSERVICE_UNSUPPORTED_MESSAGE.to_string(),
         directive_span,
@@ -81,7 +81,16 @@ mod tests {
         ];
 
         // When
-        let directive = parse_needservice("github-issues", None, &body, &mut diagnostics);
+        let ctx = crate::context::ParseCtx::with_domain(rinx_ast::Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "needservice",
+            SPEC.shape,
+            "github-issues",
+            &body,
+            &mut diagnostics,
+            &ctx,
+        );
+        let directive = parse_needservice(&invocation, &mut diagnostics);
 
         // Then
         assert_eq!(
@@ -101,7 +110,16 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When
-        parse_needservice("github-issues", None, &[], &mut diagnostics);
+        let ctx = crate::context::ParseCtx::with_domain(rinx_ast::Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "needservice",
+            SPEC.shape,
+            "github-issues",
+            &[],
+            &mut diagnostics,
+            &ctx,
+        );
+        parse_needservice(&invocation, &mut diagnostics);
 
         // Then
         let (found, _, _) = diagnostics.into_parts();

@@ -1,15 +1,13 @@
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use std::num::NonZeroU32;
 
 use rinx_ast::{Diagnostic, DiagnosticCode, Directive, SectnumOptions};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::body::body_span;
-use crate::indent::unindent_body_lines;
 
-use super::options::{OptionLine, parse_positive_depth, report_unknown_options, scan_option_lines};
+use super::options::{OptionLine, parse_positive_depth, report_unknown_options};
 
 const DIRECTIVE: &str = "sectnum";
 
@@ -117,45 +115,32 @@ fn parse_sectnum_options<'a>(
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["sectnum", "section-numbering"],
     doc: "Numbers this document's sections.",
+    shape: DirectiveShape {
+        arguments: Arguments::NONE,
+        takes_options: true,
+        takes_content: false,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. sectnum::` and `.. section-numbering::`.
 pub(in crate::directives) fn interpret_sectnum(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    single(parse_sectnum(
-        input.argument,
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_sectnum(input, state.diagnostics))
 }
 
-/// Parses a `.. sectnum::`/`.. section-numbering::` body into a
-/// [`Directive::Sectnum`]. Docutils declares zero argument slots for this
-/// directive, and really does reject one given anyway — as an inline
-/// directive error, not silently — so a non-empty `argument` is diagnosed
-/// here too, the same way [`super::admonitions::parse_version_change`]
-/// diagnoses a *missing* required argument against the same directive-marker
-/// span.
+/// Parses a `.. sectnum::`/`.. section-numbering::` into a
+/// [`Directive::Sectnum`]. docutils declares no argument and no content for
+/// it, so text after the `::` is reported by the reader, as content it takes
+/// none of.
 pub(super) fn parse_sectnum(
-    argument: &str,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
-    if !argument.trim().is_empty() {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::SectnumUnexpectedArgument,
-            format!("A {DIRECTIVE} directive takes no argument: '{argument}'"),
-            body_span(body_lines, ctx),
-        ));
-    }
-
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, _body_start) = scan_option_lines(&unindented_lines);
-    let (options, unrecognized) = parse_sectnum_options(&option_lines, diagnostics, ctx);
+    let ctx = &invocation.ctx;
+    let (options, unrecognized) = parse_sectnum_options(&invocation.options, diagnostics, ctx);
     report_unknown_options(
         &unrecognized,
         DIRECTIVE,
@@ -186,12 +171,16 @@ mod tests {
         body_lines: &[&str],
     ) -> (SectnumOptions, Diagnostics) {
         let mut diagnostics = Diagnostics::default();
-        let directive = parse_sectnum(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "sectnum",
+            SPEC.shape,
             argument,
             body_lines,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let directive = parse_sectnum(&invocation, &mut diagnostics);
         match directive {
             Directive::Sectnum(options) => (options, diagnostics),
             other => panic!("Expected Sectnum, got {other:?}"),
@@ -248,7 +237,7 @@ mod tests {
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(
             diagnostics.entries()[0].code,
-            DiagnosticCode::SectnumUnexpectedArgument
+            DiagnosticCode::DirectiveContentNotPermitted
         );
         assert!(diagnostics.entries()[0].message.contains("oops"));
     }
@@ -402,7 +391,7 @@ mod tests {
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(
             diagnostics[0].code,
-            DiagnosticCode::SectnumUnexpectedArgument
+            DiagnosticCode::DirectiveContentNotPermitted
         );
         assert!(diagnostics[0].message.contains("oops"));
     }
