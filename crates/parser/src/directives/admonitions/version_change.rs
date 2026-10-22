@@ -1,39 +1,40 @@
 //! `.. versionadded::`, `.. versionchanged::` and `.. deprecated::`.
 
 use crate::diagnostics::Diagnostics;
-use crate::directives::body::DirectiveContent;
-use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::body::{DirectiveContent, MarkerText};
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use crate::headings::Adornment;
-use rinx_ast::{Diagnostic, DiagnosticCode, Directive, Span, VersionChangeKind};
+use rinx_ast::{Directive, VersionChangeKind};
 
 /// This directive's entry in the table of directives this build implements.
 pub(in crate::directives) const VERSION_CHANGE_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["versionadded", "versionchanged", "deprecated"],
     doc: "A note on the version that added, changed or deprecated something.",
+    shape: DirectiveShape {
+        arguments: Arguments {
+            required: 1,
+            optional: 1,
+            final_whitespace: true,
+        },
+        takes_options: false,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets a version change: the first word after the `::` is the version,
 /// and only the rest — Sphinx's optional second argument — is content.
 pub(in crate::directives) fn interpret_version_change(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     let Ok(kind) = input.name.parse::<rinx_ast::VersionChangeKind>() else {
         return unknown(input, state);
     };
-    let (version, explanation) = input.marker.argument.split_first_word();
-    let content = crate::directives::body::directive_content(
-        &explanation,
-        input.marker.index,
-        input.body,
-        input.ctx,
-    );
     single(parse_version_change(
         kind,
-        version,
-        input.marker.span,
-        &content,
+        input,
         state.adornment_order,
         state.diagnostics,
     ))
@@ -46,26 +47,44 @@ pub(in crate::directives) fn interpret_version_change(
 /// content.
 pub(super) fn parse_version_change(
     kind: VersionChangeKind,
-    version: &str,
-    marker_span: Option<Span>,
-    content: &DirectiveContent<'_>,
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
 ) -> Directive {
-    let version = if version.is_empty() {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::DirectiveVersionArgumentMissing,
-            format!("'{}' requires a version argument.", kind.as_str()),
-            marker_span,
-        ));
-        "unknown".to_string()
-    } else {
-        version.to_string()
+    // A missing version is the reader's to report.
+    let version = match invocation.argument(0) {
+        "" => "unknown".to_string(),
+        version => version.to_string(),
     };
     Directive::VersionChange {
         kind,
         version,
-        body: content.parse(adornment_order, diagnostics),
+        body: explanation_and_content(invocation).parse(adornment_order, diagnostics),
+    }
+}
+
+/// The version change's second argument — the explanation Sphinx lets follow
+/// the version — and its content, as one positioned slice.
+///
+/// Sphinx parses the explanation as a paragraph of its own above the content,
+/// and the explanation is the rest of the argument block, so it is exactly
+/// the block's lines with the version cut off the first: that keeps every
+/// line where it was written, the version's line included.
+fn explanation_and_content<'c>(invocation: &DirectiveInvocation<'_, 'c>) -> DirectiveContent<'c> {
+    let marker_text = invocation.lines.first().map_or("", String::as_str);
+    if marker_text.is_empty() {
+        return invocation.content();
+    }
+    let (_, explanation) = MarkerText {
+        text: marker_text,
+        column: 0,
+    }
+    .split_first_word();
+    let mut lines = invocation.lines.clone();
+    lines[0] = explanation.text.to_string();
+    DirectiveContent {
+        lines,
+        ctx: invocation.ctx.hanging(0, explanation.column, 0),
     }
 }
 
@@ -144,7 +163,7 @@ mod tests {
         assert_eq!(doc.diagnostics.len(), 1);
         assert_eq!(
             doc.diagnostics[0].message,
-            "'versionchanged' requires a version argument."
+            "versionchanged: 1 argument(s) required, 0 supplied"
         );
         assert_eq!(doc.diagnostics[0].span.expect("positioned").start.line, 1);
         let (_, version, body) = only_version_change(input);

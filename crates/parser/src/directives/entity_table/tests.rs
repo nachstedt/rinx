@@ -379,7 +379,7 @@ fn test_an_argument_is_reported_since_the_directive_takes_none() {
     let (reported, text) = (codes(rst), message(rst));
 
     // Then
-    assert_eq!(reported, ["directive.entity-table-unknown-option"]);
+    assert_eq!(reported, ["directive.content-not-permitted"]);
     assert!(text.contains(":filter:"));
 }
 

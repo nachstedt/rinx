@@ -21,8 +21,8 @@
 //! chart over one mistake would be the larger failure. The options it cannot
 //! honour are refused **by name**, as the pie's are.
 
-use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
     BarArrangement, BarGrid, BarOrientation, ChartValue, Diagnostic, DiagnosticCode, Directive,
     EntityBar, EntityBarSource, LabelRotation, Span,
@@ -30,7 +30,6 @@ use rinx_ast::{
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::indent::unindent_body_lines;
 
 use super::chart_options::{
     ChartCodes, ChartOwner, FigureOption, FigureRead, read_color, read_colors, read_figure_option,
@@ -39,7 +38,7 @@ use super::chart_options::{
 use super::filter_option::{
     FilterCodes, FilterOwner, FilterSite, read_filter_option, read_filter_text,
 };
-use super::options::{OptionLine, report_unknown_options, scan_option_lines};
+use super::options::{OptionLine, report_unknown_options};
 
 /// The options sphinx-needs' `needbar` accepts that this build does not, each
 /// with what an author should reach for instead.
@@ -82,39 +81,39 @@ const FROM_DATA: &str = "FROM_DATA";
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["entity-bar", "needbar"],
     doc: "A bar chart of how many entities each filter selects.",
+    shape: DirectiveShape {
+        arguments: Arguments::OPTIONAL_TEXT,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. entity-bar::` or `.. needbar::`, recording which was
 /// written.
 pub(in crate::directives) fn interpret_entity_bar(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     let Ok(source) = input.name.parse::<rinx_ast::EntityBarSource>() else {
         return unknown(input, state);
     };
-    single(parse_entity_bar(
-        source,
-        input.argument,
-        input.span,
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_entity_bar(source, input, state.diagnostics))
 }
 
 /// Parses a `.. entity-bar::` / `.. needbar::` into a [`Directive::EntityBar`].
 pub(super) fn parse_entity_bar(
     source: EntityBarSource,
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
     let directive = source.as_str();
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
+    let argument = invocation.argument(0);
+    let directive_span = invocation.span;
+    let ctx = &invocation.ctx;
+    let unindented_lines = &invocation.lines;
+    let option_lines = &invocation.options;
+    let body_start = invocation.content_start;
 
     let mut bar = EntityBar {
         span: directive_span,
@@ -126,8 +125,8 @@ pub(super) fn parse_entity_bar(
     let unrecognized = read_options(
         &mut bar,
         &mut layout,
-        &option_lines,
-        &unindented_lines,
+        option_lines,
+        unindented_lines,
         diagnostics,
         ctx,
     );
@@ -140,13 +139,13 @@ pub(super) fn parse_entity_bar(
     );
 
     let body = BodyLines {
-        lines: &unindented_lines,
+        lines: unindented_lines,
         start: body_start,
     };
     bar.grid = read_grid(&layout, body, directive, directive_span, diagnostics, ctx);
 
     if bar.has_unusable_scale() {
-        report_unusable_scale(&option_lines, owner(directive), diagnostics, ctx);
+        report_unusable_scale(option_lines, owner(directive), diagnostics, ctx);
     }
 
     Directive::EntityBar(Box::new(bar))

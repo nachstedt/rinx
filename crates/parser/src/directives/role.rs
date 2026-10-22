@@ -11,8 +11,8 @@
 //! so a role applies from its definition onwards, as in docutils — and no
 //! later phase has anything to learn about it.
 
-use crate::directives::input::{DirectiveInput, ParseState};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{Diagnostic, DiagnosticCode, Node, ResolvedLanguage, ScriptPosition, Span};
 use std::sync::LazyLock;
 
@@ -21,11 +21,10 @@ use regex::Regex;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::document_roles::{CodeRole, CustomRole};
-use crate::indent::unindent_body_lines;
 use crate::inline::{is_fixed_role_name, is_writable_role_name};
 
 use super::classes::normalize_class_name;
-use super::options::{OptionLine, report_unknown_options, scan_option_lines};
+use super::options::{OptionLine, report_unknown_options};
 
 const DIRECTIVE: &str = "role";
 
@@ -76,38 +75,36 @@ fn split_role_argument(argument: &str) -> Option<RoleArgument<'_>> {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["role"],
     doc: "Defines a role for the rest of the document.",
+    shape: DirectiveShape {
+        arguments: Arguments::ONE_TEXT,
+        takes_options: true,
+        takes_content: false,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. role::`, which records a role and yields no node.
 pub(in crate::directives) fn interpret_role(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    parse_role(
-        input.argument,
-        input.span,
-        input.body_lines,
-        state.diagnostics,
-        &input.splice_ctx(),
-    )
+    parse_role(input, state.diagnostics)
 }
 
 /// Parses a `.. role::`, defining the role in the document's table when it
 /// can be. Always answers with no nodes: a definition renders to nothing.
 pub(in crate::directives) fn parse_role(
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Vec<Node> {
-    let Some((name, base)) = read_role_argument(argument, directive_span, diagnostics, ctx) else {
+    let ctx = &invocation.ctx;
+    let Some((name, base)) =
+        read_role_argument(invocation.argument(0), invocation.span, diagnostics, ctx)
+    else {
         return Vec::new();
     };
 
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, _) = scan_option_lines(&unindented_lines);
-    let role = read_custom_role(name, base, &option_lines, diagnostics, ctx);
+    let role = read_custom_role(name, base, &invocation.options, diagnostics, ctx);
 
     if let Some(roles) = ctx.document_roles() {
         roles.define(name, role);
@@ -290,7 +287,15 @@ mod tests {
         let base = ParseCtx::with_domain(Domain::Py).with_schema(schema);
         let ctx = base.with_document_roles(&roles);
         let mut diagnostics = Diagnostics::default();
-        let nodes = parse_role(argument, None, body, &mut diagnostics, &ctx);
+        let invocation = crate::directives::reader::test_invocation(
+            "role",
+            SPEC.shape,
+            argument,
+            body,
+            &mut diagnostics,
+            &ctx,
+        );
+        let nodes = parse_role(&invocation, &mut diagnostics);
         let (entries, _, _) = diagnostics.into_parts();
         (nodes, roles, entries.iter().map(|d| d.code).collect())
     }

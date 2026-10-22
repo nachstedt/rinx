@@ -29,16 +29,13 @@
 //! no unknown-directive reports, no targets, no toctree entries, and so no
 //! Bazel `deps` entry for documents only the PDF build would reach.
 
-use crate::directives::input::{DirectiveInput, ParseState};
-use crate::directives::spec::DirectiveSpec;
-use rinx_ast::{Diagnostic, DiagnosticCode, Node, Span};
+use crate::directives::invocation::{DirectiveInvocation, ParseState};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use rinx_ast::{Diagnostic, DiagnosticCode, Node};
 
-use crate::blocks::parse_blocks;
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::error_node::malformed_directive;
+use crate::directives::error_node::malformed_node;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 
 /// The directive name, used throughout this module's diagnostics.
 const DIRECTIVE: &str = "if-builder";
@@ -88,22 +85,21 @@ const KNOWN_BUILDERS: &[&str] = &[
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["if-builder"],
     doc: "Content kept only when building with the named builder.",
+    shape: DirectiveShape {
+        arguments: Arguments::ONE_TEXT,
+        takes_options: false,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. if-builder::`, splicing its body in when it names this
 /// build's builder.
 pub(in crate::directives) fn interpret_if_builder(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    parse_if_builder(
-        input.argument,
-        input.span,
-        input.body_lines,
-        state.adornment_order,
-        state.diagnostics,
-        &input.splice_ctx(),
-    )
+    parse_if_builder(input, state.adornment_order, state.diagnostics)
 }
 
 /// Parses a `.. if-builder::`, returning the nodes its body contributed.
@@ -113,23 +109,20 @@ pub(in crate::directives) fn interpret_if_builder(
 /// no builder at all, so the page shows what could not be decided instead of
 /// losing the block without trace.
 pub(in crate::directives) fn parse_if_builder(
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Vec<Node> {
+    let argument = invocation.argument(0);
+    let directive_span = invocation.span;
     let builder = argument.trim();
     if builder.is_empty() {
-        return vec![Node::Directive(malformed_directive(
+        // The reader has reported the missing argument.
+        return vec![Node::Directive(malformed_node(
             DIRECTIVE,
             argument,
-            body_lines,
-            DiagnosticCode::IfBuilderMissingBuilder,
+            invocation.source_body,
             format!("{DIRECTIVE}: needs the name of a builder, such as '{BUILDER_NAME}'"),
-            directive_span,
-            diagnostics,
         ))];
     }
 
@@ -147,8 +140,8 @@ pub(in crate::directives) fn parse_if_builder(
         return Vec::new();
     }
 
-    let content = unindent_body_lines(body_lines);
-    if content.is_empty() {
+    let content = invocation.content_with_enclosing_titles();
+    if content.lines.iter().all(|line| line.trim().is_empty()) {
         diagnostics.push(Diagnostic::at(
             DiagnosticCode::IfBuilderEmptyBody,
             format!("{DIRECTIVE}: '{builder}' is this build, but the block has no content"),
@@ -162,8 +155,7 @@ pub(in crate::directives) fn parse_if_builder(
     // document's own adornment sequence, which is what makes the splice
     // transparent. This is the local spelling of upstream's
     // `nested_parse_with_titles`.
-    let lines: Vec<&str> = content.iter().map(String::as_str).collect();
-    parse_blocks(&lines, adornment_order, diagnostics, ctx)
+    content.parse(adornment_order, diagnostics)
 }
 
 /// Whether `builder` names the builder this program is.
@@ -185,6 +177,7 @@ fn is_known_builder(builder: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::ParseCtx;
     use rinx_ast::{Directive, Document, Domain, InlineNode};
     use std::collections::HashSet;
 
@@ -371,7 +364,7 @@ mod tests {
         // source, so the content is not lost without trace.
         assert_eq!(
             codes(&document),
-            vec![DiagnosticCode::IfBuilderMissingBuilder]
+            vec![DiagnosticCode::DirectiveMissingArgument]
         );
         assert!(
             matches!(

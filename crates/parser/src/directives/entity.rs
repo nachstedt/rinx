@@ -24,12 +24,13 @@ use super::entity_fields::{
     apply_defaults, collect_relation_targets, describe_options, report_id_pattern,
     report_missing_attributes, report_relation_cardinality, store_attribute,
 };
-use super::options::{OptionLine, scan_option_lines};
+use super::options::OptionLine;
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::invocation::DirectiveInvocation;
+use crate::directives::spec::{Arguments, DirectiveShape};
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 
 /// Parses `.. <type>:: <argument>` into an [`EntityBody`].
 ///
@@ -39,38 +40,39 @@ use crate::indent::unindent_body_lines;
 pub(in crate::directives) struct EntityDirective<'a> {
     /// The type the directive's name resolved to.
     pub entity_type: &'a EntityType,
-    /// The text after the `::`.
-    pub argument: &'a str,
-    /// Where the directive marker was written.
-    pub span: Option<Span>,
-    /// The directive's body, indentation intact.
-    pub body_lines: &'a [&'a str],
+    /// The directive as written, split by [`ENTITY_SHAPE`].
+    pub invocation: &'a DirectiveInvocation<'a, 'a>,
     /// What distinguishes this entity from others of its type in the document.
     pub discriminator: u32,
     /// The document being parsed, for a generated id.
     pub doc_path: &'a str,
 }
 
+/// How a block of an entity splits, transcribed from sphinx-needs'
+/// `NeedDirective`: one optional argument keeping the rest of its lines, any
+/// options — the schema decides which — and content.
+pub(in crate::directives) const ENTITY_SHAPE: DirectiveShape = DirectiveShape {
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_options: true,
+    takes_content: true,
+    content_hint: None,
+};
+
 pub(in crate::directives) fn parse_entity(
     directive: &EntityDirective<'_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
     let &EntityDirective {
         entity_type,
-        argument,
-        span: directive_span,
-        body_lines,
+        invocation,
         discriminator,
         doc_path,
     } = directive;
-    // The body arrives with its directive indent intact; every option scan and
-    // nested parse below works on the unindented form, exactly as the
-    // admonition and table parsers do. The context was already rebased by the
-    // same amount by the caller, so positions still land on the right column.
-    let unindented = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented);
+    let argument = invocation.argument(0);
+    let directive_span = invocation.span;
+    let ctx = &invocation.ctx;
+    let option_lines = &invocation.options;
 
     let mut attributes = BTreeMap::new();
     collect_argument_attributes(
@@ -80,20 +82,15 @@ pub(in crate::directives) fn parse_entity(
         &mut attributes,
         diagnostics,
     );
-    let (relations, relation_spans) = collect_options(
-        entity_type,
-        &option_lines,
-        &mut attributes,
-        diagnostics,
-        ctx,
-    );
+    let (relations, relation_spans) =
+        collect_options(entity_type, option_lines, &mut attributes, diagnostics, ctx);
     apply_defaults(entity_type, &mut attributes);
     report_missing_attributes(entity_type, &attributes, directive_span, diagnostics);
     report_relation_cardinality(entity_type, &relations, directive_span, diagnostics);
 
     let id = determine_id(
         entity_type,
-        &option_lines,
+        option_lines,
         &attributes,
         discriminator,
         doc_path,
@@ -110,17 +107,18 @@ pub(in crate::directives) fn parse_entity(
         });
     report_id_pattern(entity_type, &id, id_span, diagnostics);
 
+    let content = invocation.content();
     let sections = parse_sections(
         &EnclosingEntity {
             entity_type,
             id: &id,
         },
-        &unindented[body_start.min(unindented.len())..],
-        body_start,
+        &content.lines,
+        0,
         directive_span,
         adornment_order,
         diagnostics,
-        ctx,
+        &content.ctx,
     );
 
     Directive::Entity(Box::new(EntityBody {

@@ -77,11 +77,12 @@ mod if_builder;
 mod image;
 mod include;
 pub(crate) mod index_directive;
-mod input;
+mod invocation;
 mod math;
 mod needimport;
 mod needservice;
 mod options;
+mod reader;
 mod role;
 mod scope;
 mod sectnum;
@@ -94,4 +95,6 @@ mod toctree;
 mod uml;
 
 pub(super) use dispatch::try_parse_directive;
-pub use spec::{DirectiveSpec, directive_specs, is_builtin_directive_name};
+pub use spec::{
+    Arguments, DirectiveShape, DirectiveSpec, directive_specs, is_builtin_directive_name,
+};

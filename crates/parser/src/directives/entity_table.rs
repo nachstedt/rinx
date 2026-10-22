@@ -11,17 +11,16 @@
 //! An unreadable option is dropped and reported, leaving the table itself
 //! intact, which is the error-resilience every directive here follows.
 
-use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
-use crate::directives::spec::DirectiveSpec;
-use rinx_ast::{Diagnostic, DiagnosticCode, Directive, EntityTable, EntityTableSource, Span};
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use rinx_ast::{Diagnostic, DiagnosticCode, Directive, EntityTable, EntityTableSource};
 use rinx_filter::FieldName;
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::indent::unindent_body_lines;
 
 use super::filter_option::{FilterCodes, read_filter_option, report_unknown_field};
-use super::options::{OptionLine, report_unknown_options, scan_option_lines};
+use super::options::{OptionLine, report_unknown_options};
 use super::table_options::parse_common_table_options;
 use super::table_widths::parse_widths_option;
 
@@ -37,40 +36,38 @@ const SUPPORTED_STYLE: &str = "table";
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["entity-table", "needtable"],
     doc: "A table of the entities a filter selects.",
+    shape: DirectiveShape {
+        arguments: Arguments::NONE,
+        takes_options: true,
+        takes_content: false,
+        content_hint: Some("write the selection as :filter:"),
+    },
 };
 
 /// Interprets `.. entity-table::` or `.. needtable::`, recording which was
 /// written.
 pub(in crate::directives) fn interpret_entity_table(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     let Ok(source) = input.name.parse::<rinx_ast::EntityTableSource>() else {
         return unknown(input, state);
     };
-    single(parse_entity_table(
-        source,
-        input.argument,
-        input.span,
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_entity_table(source, input, state.diagnostics))
 }
 
 /// Parses a `.. entity-table::` / `.. needtable::` into a
 /// [`Directive::EntityTable`].
 pub(super) fn parse_entity_table(
     source: EntityTableSource,
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
     let directive = source.as_str();
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, _) = scan_option_lines(&unindented_lines);
+    let directive_span = invocation.span;
+    let ctx = &invocation.ctx;
+    let unindented_lines = &invocation.lines;
+    let option_lines = &invocation.options;
     let refs: Vec<&OptionLine> = option_lines.iter().collect();
 
     let (common, remaining) = parse_common_table_options(&refs, directive, diagnostics, ctx);
@@ -84,17 +81,6 @@ pub(super) fn parse_entity_table(
         name: common.name,
         ..EntityTable::new(source)
     };
-
-    if !argument.trim().is_empty() {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::DirectiveEntityTableUnknownOption,
-            format!(
-                "{directive}: takes no argument; write the selection as :filter: instead of '{}'",
-                argument.trim()
-            ),
-            directive_span,
-        ));
-    }
 
     let mut colwidths = None;
     let mut unrecognized = Vec::new();

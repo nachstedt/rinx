@@ -802,7 +802,7 @@ fn reports_an_import_with_no_path() {
     let document = parse_with(&[], ".. needimport::\n");
 
     // Then it is refused and drawn as an error block quoting the source
-    assert_eq!(codes(&document), [DiagnosticCode::NeedImportMissingPath]);
+    assert_eq!(codes(&document), [DiagnosticCode::DirectiveMissingArgument]);
     assert!(matches!(
         document.nodes.first(),
         Some(Node::Directive(Directive::Malformed { .. }))

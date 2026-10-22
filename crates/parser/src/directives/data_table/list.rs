@@ -1,40 +1,40 @@
 //! `.. list-table::` — a table whose rows are a nested bullet list.
 
 use crate::diagnostics::Diagnostics;
-use crate::directives::body::body_span;
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, ListItem, Node, Span, TableCell, TableRow, TableSource,
     TableWidths,
 };
 
 use super::options::{SharedTableOptions, parse_shared_table_options};
-use crate::blocks::parse_blocks;
-use crate::context::ParseCtx;
 use crate::directives::error_node::malformed_directive;
-use crate::directives::options::{report_unknown_options, scan_option_lines};
+use crate::directives::options::report_unknown_options;
 use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 
 /// This directive's entry in the table of directives this build implements.
 pub(in crate::directives) const LIST_TABLE_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["list-table"],
     doc: "A table written as a two-level bullet list.",
+    shape: DirectiveShape {
+        arguments: Arguments::OPTIONAL_TEXT,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. list-table::`.
 pub(in crate::directives) fn interpret_list_table(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     single(parse_list_table(
-        input.argument,
-        input.body_lines,
+        input,
         state.adornment_order,
         state.diagnostics,
-        input.body_ctx,
     ))
 }
 
@@ -44,22 +44,25 @@ pub(in crate::directives) fn interpret_list_table(
 /// collected by `collect_directive_body`, exactly as every other
 /// content-bearing directive parser receives it.
 pub(in crate::directives) fn parse_list_table(
-    argument: &str,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
+    let argument = invocation.argument(0);
+    let body_lines = invocation.source_body;
+    let ctx = &invocation.ctx;
     let title = if argument.is_empty() {
         None
     } else {
         Some(argument.to_string())
     };
 
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, opt_idx) = scan_option_lines(&unindented_lines);
-    let (options, unrecognized) =
-        parse_shared_table_options(&option_lines, TableSource::List.as_str(), diagnostics, ctx);
+    let (options, unrecognized) = parse_shared_table_options(
+        &invocation.options,
+        TableSource::List.as_str(),
+        diagnostics,
+        ctx,
+    );
     report_unknown_options(
         &unrecognized,
         TableSource::List.as_str(),
@@ -68,11 +71,7 @@ pub(in crate::directives) fn parse_list_table(
         ctx,
     );
 
-    let body_content: Vec<&str> = unindented_lines[opt_idx..]
-        .iter()
-        .map(String::as_str)
-        .collect();
-    let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
+    let body_nodes = invocation.content().parse(adornment_order, diagnostics);
 
     let [
         Node::BulletList {
@@ -80,17 +79,12 @@ pub(in crate::directives) fn parse_list_table(
         },
     ] = body_nodes.as_slice()
     else {
-        return malformed_list_table(
-            argument,
-            body_lines,
-            diagnostics,
-            body_span(body_lines, ctx),
-        );
+        return malformed_list_table(argument, body_lines, diagnostics, invocation.body_span());
     };
 
     // Rows are lowered from already-parsed nodes, which carry no position of
     // their own, so every row-level diagnostic points at the directive body.
-    let table_span = body_span(body_lines, ctx);
+    let table_span = invocation.body_span();
     let (rows, ncols) = lower_list_table_rows(row_items, diagnostics, table_span);
     build_list_table(title, options, rows, ncols, diagnostics, table_span)
 }
@@ -205,18 +199,23 @@ fn malformed_list_table(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::ParseCtx;
     use rinx_ast::{Domain, InlineNode, TableAlign, TargetName};
 
     fn parse(body_lines: &[&str]) -> (Directive, Diagnostics) {
         let mut adornment_order = Vec::new();
         let mut diagnostics = Diagnostics::default();
-        let directive = parse_list_table(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let written = crate::directives::reader::written_after_blank(body_lines);
+        let invocation = crate::directives::reader::test_invocation(
+            "list-table",
+            LIST_TABLE_SPEC.shape,
             "",
-            body_lines,
-            &mut adornment_order,
+            &written,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let directive = parse_list_table(&invocation, &mut adornment_order, &mut diagnostics);
         (directive, diagnostics)
     }
 
@@ -260,13 +259,17 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When
-        let directive = parse_list_table(
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let written = crate::directives::reader::written_after_blank(&body_lines);
+        let invocation = crate::directives::reader::test_invocation(
+            "list-table",
+            LIST_TABLE_SPEC.shape,
             "My Title",
-            &body_lines,
-            &mut adornment_order,
+            &written,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let directive = parse_list_table(&invocation, &mut adornment_order, &mut diagnostics);
 
         // Then
         if let Directive::DataTable { title, .. } = directive {

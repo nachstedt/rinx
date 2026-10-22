@@ -13,14 +13,13 @@
 //! blank-line rule must *not* apply — a distinction that is invisible once the
 //! parts have been rejoined.
 
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{Diagnostic, DiagnosticCode, Directive, Span, TargetName};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
-use crate::indent::unindent_body_lines;
+use crate::directives::options::{OptionLine, report_unknown_options};
 
 const DIRECTIVE: &str = "math";
 
@@ -104,41 +103,36 @@ fn split_equations(body: &[String]) -> Vec<String> {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["math"],
     doc: "A displayed equation, written in LaTeX.",
+    shape: DirectiveShape {
+        arguments: Arguments::OPTIONAL_TEXT,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. math::`.
 pub(in crate::directives) fn interpret_math(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    single(parse_math_directive(
-        input.argument.to_string(),
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_math_directive(input, state.diagnostics))
 }
 
 /// Parses a `.. math::` directive body into a [`Directive::Math`].
 ///
-/// `argument` is the equation written on the directive line itself
+/// Its argument is the equation written on the directive line itself
 /// (`.. math:: e^{i\pi} + 1 = 0`), which RST allows as a shorthand for a
-/// one-line body. It is prepended to the body rather than special-cased, so
-/// the argument and body forms produce identical ASTs — and so the rare
-/// combination of both stays meaningful.
-///
-/// `body_lines` is the raw, still-indented body collected by
-/// `collect_directive_body`, exactly as every other content-bearing directive
-/// parser receives it.
+/// one-line body. Sphinx puts it before the content as an equation of its own,
+/// a blank line between, rather than special-casing it, so the argument and
+/// body forms produce identical ASTs — and so the rare combination of both
+/// stays meaningful.
 pub(in crate::directives) fn parse_math_directive(
-    argument: String,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
-    let (options, unrecognized) = parse_math_options(&option_lines, diagnostics, ctx);
+    let ctx = &invocation.ctx;
+    let (options, unrecognized) = parse_math_options(&invocation.options, diagnostics, ctx);
     report_unknown_options(
         &unrecognized,
         DIRECTIVE,
@@ -147,11 +141,14 @@ pub(in crate::directives) fn parse_math_directive(
         ctx,
     );
 
+    let body = invocation.content();
+    let argument = invocation.argument(0);
     let mut content: Vec<String> = Vec::new();
     if !argument.trim().is_empty() {
-        content.push(argument);
+        content.extend(argument.lines().map(str::to_string));
+        content.push(String::new());
     }
-    content.extend_from_slice(&unindented_lines[body_start..]);
+    content.extend_from_slice(&body.lines);
 
     // Under `:nowrap:` the author owns the whole body, blank lines included —
     // splitting it would break an environment that spans one.
@@ -171,7 +168,7 @@ pub(in crate::directives) fn parse_math_directive(
         label: options.label,
         nowrap: options.nowrap,
         classes: options.classes,
-        span: equation_span(&unindented_lines, body_start, ctx),
+        span: equation_span(invocation),
     }
 }
 
@@ -187,19 +184,13 @@ pub(in crate::directives) fn parse_math_directive(
 /// LaTeX, the offending part has been rejoined from several lines, so no
 /// finer position survives.
 ///
-/// The lines are the *unindented* body, because `ParseCtx` has already been
-/// shifted by the body's indent — passing the raw line would overshoot the
-/// span's end column by that width.
-fn equation_span(
-    unindented_lines: &[String],
-    body_start: usize,
-    ctx: &ParseCtx<'_>,
-) -> Option<Span> {
-    unindented_lines.get(body_start).map_or_else(
+fn equation_span(invocation: &DirectiveInvocation<'_, '_>) -> Option<Span> {
+    let index = invocation.content_start;
+    invocation.lines.get(index).map_or_else(
         // No body content: the argument form, whose equation is on the
         // directive line itself, and the degenerate options-only body.
-        || ctx.line_span(0, ""),
-        |line| ctx.line_span(body_start, line),
+        || invocation.ctx.line_span(0, invocation.argument(0)),
+        |line| invocation.ctx.line_span(index, line),
     )
 }
 
@@ -210,12 +201,16 @@ mod tests {
 
     fn parse(argument: &str, body: &[&str]) -> (Directive, Diagnostics) {
         let mut diagnostics = Diagnostics::default();
-        let directive = parse_math_directive(
-            argument.to_string(),
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "math",
+            SPEC.shape,
+            argument,
             body,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ctx,
         );
+        let directive = parse_math_directive(&invocation, &mut diagnostics);
         (directive, diagnostics)
     }
 

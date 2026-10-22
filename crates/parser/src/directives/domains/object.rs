@@ -1,9 +1,9 @@
 //! The top-level domain-object dispatch: routes a resolved
 //! [`DirectiveObjectType`] to the `c`, `std` or `py` domain's own parser.
 
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rinx_ast::{DomainObjectBody, NonEmptyVector, Span};
+use crate::directives::invocation::DirectiveInvocation;
+use rinx_ast::{DomainObjectBody, NonEmptyVector};
 
 use crate::headings::Adornment;
 
@@ -12,37 +12,23 @@ use super::object_type::DirectiveObjectType;
 use super::py::parse_py_domain_object;
 use super::std_::cmdoption::parse_cmdoption;
 
-/// What a domain-object directive declared, and where it declared it.
-///
-/// The three parts arrive together and stay together: a directive's argument
-/// and its continuation lines are one list of signatures split across lines
-/// (see [`crate::directives::body::collect_argument_continuation_lines`]), and
-/// `span` is the marker line they were all written on. It is worth carrying
-/// because it is *not* derivable downstream — the marker sits one line above
-/// the body every later `ParseCtx` is positioned at.
-pub(crate) struct DirectiveSignatures {
-    /// The directive's own argument, e.g. `AF_UNIX` in `.. data:: AF_UNIX`.
-    pub(crate) argument: String,
-    /// Any further signature lines written below the marker.
-    pub(crate) continuations: Vec<String>,
-    /// The marker line, for diagnostics about the signatures themselves.
-    pub(crate) span: Option<Span>,
-}
-
+/// Parses a domain object, its signatures read from its argument: Sphinx's
+/// `ObjectDescription` takes one argument keeping the rest of its lines, and
+/// splits it into one signature per line, so further signatures continue it
+/// on the lines below the marker. A `py:module` takes a single word instead.
 pub(crate) fn parse_domain_object(
     object_type: DirectiveObjectType,
-    declared: DirectiveSignatures,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
-    let DirectiveSignatures {
-        argument,
-        continuations,
-        span: signature_span,
-    } = declared;
-    let signatures = join_escaped_line_breaks(argument, continuations);
+    let signature_span = invocation.span;
+    let mut lines = invocation
+        .argument(0)
+        .lines()
+        .map(|line| line.trim().to_string());
+    let argument = lines.next().unwrap_or_default();
+    let signatures = join_escaped_line_breaks(argument, lines.collect());
     match object_type {
         DirectiveObjectType::CFunction
         | DirectiveObjectType::CMacro
@@ -52,27 +38,24 @@ pub(crate) fn parse_domain_object(
         | DirectiveObjectType::CType => parse_c_domain_object(
             object_type,
             &signatures,
-            body_lines,
+            invocation,
             adornment_order,
             diagnostics,
-            ctx,
             signature_span,
         ),
         DirectiveObjectType::StdCmdoption => parse_cmdoption(
             signatures,
-            body_lines,
+            invocation,
             adornment_order,
             diagnostics,
-            ctx,
             signature_span,
         ),
         _ => parse_py_domain_object(
             object_type,
             signatures,
-            body_lines,
+            invocation,
             adornment_order,
             diagnostics,
-            ctx,
         ),
     }
 }
@@ -110,6 +93,7 @@ fn join_escaped_line_breaks(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::ParseCtx;
     use crate::parse;
     use rinx_ast::Domain;
     use rinx_ast::{Directive, Node};
@@ -124,17 +108,21 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let written = crate::directives::reader::written_after_blank(&body_lines);
+        let invocation = crate::directives::reader::test_invocation(
+            "function",
+            super::super::object_type::object_shape(object_type),
+            &signature,
+            &written,
+            &mut diagnostics,
+            &ctx,
+        );
         let domain_object = parse_domain_object(
             object_type,
-            DirectiveSignatures {
-                argument: signature.clone(),
-                continuations: Vec::new(),
-                span: None,
-            },
-            &body_lines,
+            &invocation,
             &mut adornment_order,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
@@ -165,17 +153,21 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When
+        let ctx = ParseCtx::with_domain(Domain::C);
+        let written = crate::directives::reader::written_after_blank(&body_lines);
+        let invocation = crate::directives::reader::test_invocation(
+            "c:function",
+            super::super::object_type::object_shape(object_type),
+            &signature,
+            &written,
+            &mut diagnostics,
+            &ctx,
+        );
         let domain_object = parse_domain_object(
             object_type,
-            DirectiveSignatures {
-                argument: signature,
-                continuations: Vec::new(),
-                span: None,
-            },
-            &body_lines,
+            &invocation,
             &mut adornment_order,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::C),
         );
 
         // Then
@@ -196,17 +188,21 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let written = crate::directives::reader::written_after_blank(&body_lines);
+        let invocation = crate::directives::reader::test_invocation(
+            "function",
+            super::super::object_type::object_shape(object_type),
+            &signature,
+            &written,
+            &mut diagnostics,
+            &ctx,
+        );
         let domain_object = parse_domain_object(
             object_type,
-            DirectiveSignatures {
-                argument: signature,
-                continuations: Vec::new(),
-                span: None,
-            },
-            &body_lines,
+            &invocation,
             &mut adornment_order,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
@@ -226,17 +222,21 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let written = crate::directives::reader::written_after_blank(&body_lines);
+        let invocation = crate::directives::reader::test_invocation(
+            "function",
+            super::super::object_type::object_shape(object_type),
+            &signature,
+            &written,
+            &mut diagnostics,
+            &ctx,
+        );
         let domain_object = parse_domain_object(
             object_type,
-            DirectiveSignatures {
-                argument: signature,
-                continuations: Vec::new(),
-                span: None,
-            },
-            &body_lines,
+            &invocation,
             &mut adornment_order,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
@@ -265,17 +265,21 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
 
         // When parsing the domain object body
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let written = crate::directives::reader::written_after_blank(&body_lines);
+        let invocation = crate::directives::reader::test_invocation(
+            "function",
+            super::super::object_type::object_shape(object_type),
+            &signature,
+            &written,
+            &mut diagnostics,
+            &ctx,
+        );
         let domain_object = parse_domain_object(
             object_type,
-            DirectiveSignatures {
-                argument: signature,
-                continuations: Vec::new(),
-                span: None,
-            },
-            &body_lines,
+            &invocation,
             &mut adornment_order,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then it does not panic

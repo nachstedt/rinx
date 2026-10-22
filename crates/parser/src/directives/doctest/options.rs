@@ -6,6 +6,7 @@
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::options::OptionLine;
 use rinx_ast::{
     Diagnostic, DiagnosticCode, DocTestFlag, DocTestFlagName, DocTestTrim, PyVersionSpec, Span,
 };
@@ -62,18 +63,14 @@ pub(super) struct DocTestOptions {
     pub(super) trim: DocTestTrim,
 }
 
-/// Reads the contiguous option block at the start of `body_lines`.
-///
-/// Returns the options and the index at which content begins. The block ends at
-/// the first blank or non-`:` line, per RST's rule that a directive's options
-/// are contiguous and immediately follow it — scanning past a blank line would
-/// let a body line that happens to start with `:` be swallowed as an option.
+/// Reads the option lines the reader took off the directive's block, each
+/// positioned by `ctx`.
 pub(super) fn scan_options(
     kind: DocTestDirectiveKind,
-    body_lines: &[&str],
+    option_lines: &[OptionLine],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> (DocTestOptions, usize) {
+) -> DocTestOptions {
     let mut options = DocTestOptions {
         hide: false,
         flags: Vec::new(),
@@ -82,14 +79,9 @@ pub(super) fn scan_options(
         trim: DocTestTrim::Unset,
     };
 
-    let mut index = 0;
-    while index < body_lines.len() {
-        let line = body_lines[index].trim();
-        if line.is_empty() || !line.starts_with(':') {
-            break;
-        }
-
-        let span = ctx.line_span(index, body_lines[index]);
+    for option in option_lines {
+        let line = option.raw.as_str();
+        let span = ctx.line_span(option.line_index, line);
         match match_option(line) {
             Some((name, value)) => {
                 if kind.accepts(name) {
@@ -112,10 +104,9 @@ pub(super) fn scan_options(
                 span,
             )),
         }
-        index += 1;
     }
 
-    (options, index)
+    options
 }
 
 /// Matches an option line against the known spellings, returning the name and

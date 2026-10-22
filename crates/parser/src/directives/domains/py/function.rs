@@ -1,7 +1,7 @@
 use super::super::body::{ObjectOptions, parse_object_body};
 use super::dispatch::read_module_option;
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::invocation::DirectiveInvocation;
 use crate::directives::options::OptionLine;
 use crate::headings::Adornment;
 use rinx_ast::{DomainObjectBody, NonEmptyVector};
@@ -16,18 +16,16 @@ use rinx_ast::{DomainObjectBody, NonEmptyVector};
 /// `:decorator:` option, only the directive-name alias.
 pub(crate) fn parse_py_function(
     signatures: NonEmptyVector<String>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
     forced_decorator: bool,
 ) -> DomainObjectBody {
     let parsed = parse_object_body::<FunctionOptions>(
         "py:function",
-        body_lines,
+        invocation,
         adornment_order,
         diagnostics,
-        ctx,
     );
     DomainObjectBody::PyFunction {
         flags: parsed.flags,

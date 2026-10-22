@@ -340,6 +340,13 @@ Directives
    * - Feature
      - Status
      - Notes
+   * - A directive's block: arguments, options and content
+     - ✅ ℹ️
+     - - Missing or surplus arguments, and content for a directive that
+         takes none, are reported and the directive is read anyway, where
+         docutils discards it.
+       - Text directly below the options, before a blank line, starts the
+         content; docutils refuses it as an invalid option block.
    * - ``.. toctree::``
      - ✅
      -
@@ -517,7 +524,6 @@ always available, and its name cannot be used by an entity schema.
        - ``:ref-type:`` is refused.
        - ``:outline:`` without ``:color:`` warns.
        - A reference inside the label renders as its text.
-       - The URL argument does not continue onto the next line.
    * - ``:octicon:`` role, material icons, ``.. button-ref::``,
        ``.. card::``, ``.. grid-item-card::``, ``.. tab-set::``
        (sphinx-design)

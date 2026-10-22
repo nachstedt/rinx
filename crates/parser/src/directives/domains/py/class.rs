@@ -1,7 +1,7 @@
 use super::super::body::{ObjectOptions, parse_object_body};
 use super::dispatch::read_module_option;
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::invocation::DirectiveInvocation;
 use crate::directives::options::OptionLine;
 use crate::headings::Adornment;
 use rinx_ast::{DomainObjectBody, NonEmptyVector};
@@ -13,18 +13,12 @@ use rinx_ast::{DomainObjectBody, NonEmptyVector};
 /// analyzer/renderer's job, not the parser's.
 pub(crate) fn parse_py_class(
     signatures: NonEmptyVector<String>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
-    let parsed = parse_object_body::<ClassOptions>(
-        "py:class",
-        body_lines,
-        adornment_order,
-        diagnostics,
-        ctx,
-    );
+    let parsed =
+        parse_object_body::<ClassOptions>("py:class", invocation, adornment_order, diagnostics);
     DomainObjectBody::PyClass {
         flags: parsed.flags,
         module: parsed.options.module,
@@ -39,18 +33,12 @@ pub(crate) fn parse_py_class(
 /// object type (and thus the produced [`DomainObjectBody`] variant) differs.
 pub(crate) fn parse_py_exception(
     signatures: NonEmptyVector<String>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
-    let parsed = parse_object_body::<ClassOptions>(
-        "py:exception",
-        body_lines,
-        adornment_order,
-        diagnostics,
-        ctx,
-    );
+    let parsed =
+        parse_object_body::<ClassOptions>("py:exception", invocation, adornment_order, diagnostics);
     DomainObjectBody::PyException {
         flags: parsed.flags,
         module: parsed.options.module,

@@ -315,7 +315,7 @@ fn test_body_content_is_reported() {
     let rst = ".. entity-sequence::\n   :start: COMP_UI\n   :relations: sends\n\n   A -> B\n";
 
     // When / Then
-    assert_eq!(codes(rst), ["directive.entity-sequence-unknown-option"]);
+    assert_eq!(codes(rst), ["directive.content-not-permitted"]);
 }
 
 #[test]

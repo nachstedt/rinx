@@ -424,12 +424,6 @@ everything inside it is lost to every later phase — which is why this is
 reported rather than left to the visible error block the renderer draws in its
 place.
 
-directive.namespace-push-argument-missing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A ``.. c:namespace-push::`` with no scope argument. Refused rather than
-accepted as a no-op push, which a later ``namespace-pop`` would then unbalance.
-
 directive.toctree-unknown-option
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -505,16 +499,25 @@ directive.unknown-option
 An option this build does not recognize on a directive with no option code of
 its own. The option is ignored.
 
-directive.version-argument-missing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+directive.missing-argument
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A ``.. versionadded::``, ``.. versionchanged::`` or ``.. deprecated::`` with no
-version argument.
+A directive written with fewer arguments than it requires — an ``.. image::``
+with no address, a ``.. versionadded::`` with no version. The directive is
+still read, without them.
 
-directive.title-argument-missing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+directive.too-many-arguments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A generic ``.. admonition::`` with no title argument.
+A directive written with more arguments than it accepts, when its last one does
+not take the rest of the line — ``.. code-block:: python extra``. The surplus
+words are ignored.
+
+directive.content-not-permitted
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Content written for a directive that takes none — below an ``.. image::``, or
+text after a ``.. sectnum::``'s ``::``. The content is ignored.
 
 table
 -----
@@ -699,11 +702,6 @@ can be referenced until one label is changed.
 code-block
 ----------
 
-code-block.empty-language
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A language argument, or a ``.. highlight::``, naming nothing at all.
-
 code-block.empty-name
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -779,12 +777,6 @@ default-role.invalid-argument
 
 An argument of more than one word, so the default role was left as it was.
 
-default-role.unexpected-content
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Options or a body, which the directive takes none of; the argument still
-applies.
-
 interpreted
 -----------
 
@@ -818,11 +810,6 @@ unhighlighted.
 image
 -----
 
-image.missing-uri
-~~~~~~~~~~~~~~~~~
-
-The directive has no argument, so there is nothing to show.
-
 image.invalid-length
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -851,12 +838,6 @@ image.empty-option-value
 
 A ``:target:`` or ``:name:`` written with no value, so it could neither link
 anywhere nor be linked to.
-
-image.content-not-allowed
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Content below an ``.. image::``, which takes none. A ``.. figure::`` is the
-directive that has a body.
 
 image.scale-no-dimensions
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -906,11 +887,6 @@ the build: the page would otherwise show a broken picture.
 
 include
 -------
-
-include.missing-path
-~~~~~~~~~~~~~~~~~~~~
-
-The directive has no argument, so it names no file to splice in.
 
 include.file-unreadable
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -1200,12 +1176,6 @@ button-link.invalid-align
 
 An ``:align:`` other than ``left``, ``right``, ``center`` or ``justify``.
 
-button-link.missing-target
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A ``.. button-link::`` written with no URL to point at. The directive is drawn
-as an error block quoting its source, as an argument-less ``.. image::`` is.
-
 button-link.empty-option-value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1257,13 +1227,6 @@ sectnum.empty-suffix
 
 A ``:suffix:`` option with no value; docutils requires this option to carry
 one.
-
-sectnum.unexpected-argument
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An argument given to a directive docutils declares zero argument slots for.
-Real docutils reports this as a directive error rather than silently dropping
-it, so this build does too.
 
 index
 -----
@@ -1909,11 +1872,6 @@ author can independently suppress their own copy — see
 needimport
 ----------
 
-needimport.missing-path
-~~~~~~~~~~~~~~~~~~~~~~~
-
-A ``.. needimport::`` with no file to read.
-
 needimport.remote-source
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2198,14 +2156,6 @@ it.
 
 if-builder
 ----------
-
-if-builder.missing-builder
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The directive has no argument, so it names no builder to compare against.
-Upstream gets docutils' generic "1 argument(s) required" here; a code of its
-own lets a document suppress this without suppressing every other malformed
-directive.
 
 if-builder.unknown-builder
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

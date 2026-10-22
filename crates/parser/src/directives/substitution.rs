@@ -229,7 +229,7 @@ fn parse_image_kind(
 
     if argument.trim().is_empty() {
         diagnostics.push(Diagnostic::at(
-            DiagnosticCode::ImageMissingUri,
+            DiagnosticCode::DirectiveMissingArgument,
             format!("{IMAGE_DIRECTIVE}: the directive needs an image path or URL as its argument"),
             body_span(body_lines, ctx),
         ));

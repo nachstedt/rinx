@@ -7,15 +7,12 @@
 //! block with no language of its own resolves against whichever of these was
 //! last in force.
 
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
-use rinx_ast::{Diagnostic, DiagnosticCode, Directive, ResolvedLanguage};
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use rinx_ast::{DiagnosticCode, Directive, ResolvedLanguage};
 
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::body::body_span;
-use crate::directives::options::{report_unknown_options, scan_option_lines};
-use crate::indent::unindent_body_lines;
+use crate::directives::options::report_unknown_options;
 
 use super::options::parse_positive_integer;
 
@@ -23,52 +20,42 @@ use super::options::parse_positive_integer;
 pub(in crate::directives) const HIGHLIGHT_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["highlight"],
     doc: "Sets the language the code blocks below it are highlighted in.",
+    shape: DirectiveShape {
+        arguments: Arguments::ONE_WORD,
+        takes_options: true,
+        takes_content: false,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. highlight::`.
 pub(in crate::directives) fn interpret_highlight(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    single(parse_highlight(
-        input.argument,
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_highlight(input, state.diagnostics))
 }
 
 /// Parses a `.. highlight::`, which sets the language following blocks
 /// inherit.
 pub(in crate::directives) fn parse_highlight(
-    argument: &str,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
     const DIRECTIVE: &str = "highlight";
+    let ctx = &invocation.ctx;
 
-    let language = ResolvedLanguage::parse(argument).unwrap_or_else(|_| {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::CodeBlockEmptyLanguage,
-            format!(
-                "{DIRECTIVE}: needs a language argument; following blocks keep the current one"
-            ),
-            body_span(body_lines, ctx).or_else(|| ctx.line_span(0, "")),
-        ));
-        // Degrading to the Sphinx default rather than dropping the directive
-        // keeps the document renderable, which is the parser's job; the
-        // diagnostic is what tells the author.
-        ResolvedLanguage::default()
-    });
-
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, _) = scan_option_lines(&unindented_lines);
+    // A missing language is the reader's to report. Degrading to the Sphinx
+    // default rather than dropping the directive keeps the document
+    // renderable, which is the parser's job; the diagnostic is what tells the
+    // author.
+    let language = ResolvedLanguage::parse(invocation.argument(0)).unwrap_or_default();
+    let option_lines = &invocation.options;
     let mut linenothreshold = None;
     let mut force = false;
     let mut unrecognized = Vec::new();
 
-    for line in &option_lines {
+    for line in option_lines {
         match line.name.as_str() {
             "linenothreshold" => {
                 linenothreshold = parse_positive_integer(
@@ -129,7 +116,7 @@ mod tests {
         // Then — reported, but the document stays renderable
         assert_eq!(
             codes(&diagnostics),
-            vec![DiagnosticCode::CodeBlockEmptyLanguage]
+            vec![DiagnosticCode::DirectiveMissingArgument]
         );
         let Directive::Highlight { language, .. } = directive else {
             panic!("Expected Highlight, got {directive:?}");

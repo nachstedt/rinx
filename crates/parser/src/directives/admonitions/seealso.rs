@@ -1,10 +1,8 @@
 //! `.. seealso::`.
 
 use crate::diagnostics::Diagnostics;
-use crate::directives::body::DirectiveContent;
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::options::take_option_block;
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use crate::headings::Adornment;
 use rinx_ast::Directive;
 
@@ -12,22 +10,22 @@ use rinx_ast::Directive;
 pub(in crate::directives) const SEEALSO_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["seealso"],
     doc: "A callout pointing the reader to related material.",
+    shape: DirectiveShape {
+        arguments: Arguments::NONE,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. seealso::`: the text after the `::` is the first line of the
 /// content.
 pub(in crate::directives) fn interpret_seealso(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
-    let content = crate::directives::body::directive_content(
-        &input.marker.argument,
-        input.marker.index,
-        input.body,
-        input.ctx,
-    );
     single(parse_seealso(
-        content,
+        input,
         state.adornment_order,
         state.diagnostics,
     ))
@@ -39,13 +37,12 @@ pub(in crate::directives) fn interpret_seealso(
 /// Sphinx gives it `:class:` and `:name:`, neither of which this build draws;
 /// they are still taken off the content, so that they are not shown as text.
 pub(super) fn parse_seealso(
-    mut content: DirectiveContent<'_>,
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
 ) -> Directive {
-    take_option_block(&mut content.lines);
     Directive::SeeAlso {
-        body: content.parse(adornment_order, diagnostics),
+        body: invocation.content().parse(adornment_order, diagnostics),
     }
 }
 
@@ -67,14 +64,20 @@ mod tests {
     #[test]
     fn test_parse_seealso_basic() {
         // Given
-        let content = DirectiveContent {
-            lines: vec!["See the other page.".to_string()],
-            ctx: ParseCtx::with_domain(Domain::Py),
-        };
+        let body = ["   See the other page."];
         let mut diagnostics = Diagnostics::default();
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = crate::directives::reader::test_invocation(
+            "seealso",
+            SEEALSO_SPEC.shape,
+            "",
+            &body,
+            &mut diagnostics,
+            &ctx,
+        );
 
         // When
-        let directive = parse_seealso(content, &mut Vec::new(), &mut diagnostics);
+        let directive = parse_seealso(&invocation, &mut Vec::new(), &mut diagnostics);
 
         // Then
         let Directive::SeeAlso { body } = directive else {

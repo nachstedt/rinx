@@ -131,6 +131,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Generate an enum's string mapping and its parse-back from one table when both directions must be exact inverses.
 - Give each construct its own diagnostic family even when it shares a grammar and a parser with another, since a code names what the author wrote, not the code path that read it.
 - Report a mistake in the grammar every directive shares (an unknown option) under one code everywhere rather than one per directive, since the mistake is the same whichever directive it is written in.
+- Where the reference implementation discards a whole construct over a shape error (a missing argument, surplus words), report the error and keep interpreting what was written, so the document stays renderable.
 - Build a feature's diagnostics with the feature, not after it: deferring them ships the silent degradation the diagnostics exist to catch, and retrofitting one usually turns out to need a data-model change the feature could have made for free.
 - Attach a position's *file* to the position itself, not to the diagnostic quoting it, when a later phase reads that position out of a serialized artifact — a file recorded only on parse-time diagnostics cannot serve the render-time ones.
 - Intern a repeated identifier to a small integer rather than storing the string, when the type carrying it is `Copy` and appears once per node; the indirection buys back both the trait and the wire size.

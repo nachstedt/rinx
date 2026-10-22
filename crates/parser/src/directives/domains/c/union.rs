@@ -1,6 +1,6 @@
 use super::super::body::parse_object_body;
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::invocation::DirectiveInvocation;
 use crate::headings::Adornment;
 use rinx_ast::{CSignature, DomainObjectBody, NonEmptyVector};
 
@@ -9,12 +9,11 @@ use rinx_ast::{CSignature, DomainObjectBody, NonEmptyVector};
 /// variant.
 pub(crate) fn parse_c_union(
     signatures: NonEmptyVector<CSignature>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
-    let parsed = parse_object_body::<()>("c:union", body_lines, adornment_order, diagnostics, ctx);
+    let parsed = parse_object_body::<()>("c:union", invocation, adornment_order, diagnostics);
     DomainObjectBody::CUnion {
         signatures,
         flags: parsed.flags,

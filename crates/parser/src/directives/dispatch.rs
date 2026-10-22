@@ -9,17 +9,15 @@ use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::indent_width;
 
-use super::body::{
-    MarkerLine, MarkerText, body_indent, collect_argument_continuation_lines,
-    collect_directive_body,
-};
-use super::domains::object_type::{DirectiveObjectType, resolve_domain_object_type};
-use super::domains::{DirectiveSignatures, parse_domain_object};
-use super::entity::{EntityDirective, parse_entity};
+use super::body::{MarkerLine, MarkerText, body_indent, collect_directive_body};
+use super::domains::object_type::{object_shape, resolve_domain_object_type};
+use super::domains::parse_domain_object;
+use super::entity::{ENTITY_SHAPE, EntityDirective, parse_entity};
 use super::entity_section::{EntitySectionSite, try_parse_entity_section};
 use super::error_node::unknown_directive;
-use super::input::{DirectiveInput, ParseState};
-use super::scope::try_parse_scope_directive;
+use super::invocation::ParseState;
+use super::reader::read_directive_block;
+use super::scope::{parse_scope_directive, resolve_scope_directive};
 use super::spec::registered_directive;
 use super::substitution::{parse_substitution_definition, split_substitution_marker};
 use rinx_ast::{Directive, Node};
@@ -50,20 +48,13 @@ pub(crate) fn try_parse_directive(
         min_indent,
     };
 
-    // Checked before the generic body collection below, because a domain
-    // object splits the lines after its marker differently: any further
-    // argument lines are peeled off as extra signatures first, and only what
-    // remains is its body. No other directive name can reach this branch —
+    // A domain object is a *vocabulary* lookup: whether a name is one depends
+    // on the default domain. No other directive name can reach this branch —
     // `resolve_domain_object_type` matches a disjoint set of names from the
     // ones handled afterwards.
-    if let Some(result) = try_parse_domain_object_directive(
-        &name,
-        &argument,
-        &site,
-        adornment_order,
-        diagnostics,
-        ctx,
-    ) {
+    if let Some(result) =
+        try_parse_domain_object_directive(&name, &site, adornment_order, diagnostics, ctx)
+    {
         return Some(result);
     }
 
@@ -72,71 +63,103 @@ pub(crate) fn try_parse_directive(
     // fixed name — and because the entity parser needs the directive's own
     // line to discriminate a generated id.
     if let Some(result) =
-        try_parse_entity_directive(&name, &argument, &site, adornment_order, diagnostics, ctx)
+        try_parse_entity_directive(&name, &site, adornment_order, diagnostics, ctx)
     {
         return Some(result);
     }
 
     let body = collect_directive_body(lines, i + 1, min_indent);
-    // Every directive parser below receives a context already positioned at
-    // its own body's first line *and* column, so none of them has to know
-    // where in the document the directive was written. The column shift
-    // matters because the parsers unindent the body before parsing it.
-    //
-    // The directive's *own* line is therefore no longer reachable from that
-    // context, so it is captured here and passed alongside: a directive whose
+    // The directive's *own* line is reported against by any directive whose
     // content can still fail after parsing (an image whose bytes never reach
-    // the renderer) needs a position to report against, and a bare
-    // `.. image:: logo.png` has no body line to borrow one from.
+    // the renderer), and a bare `.. image:: logo.png` has no body line to
+    // borrow a position from.
     let directive_span = ctx.line_span(i, line);
     let (body_lines, first_line_offset) = body.for_directive();
-    // A directive's content takes no section titles — docutils' default for a
-    // nested parse. The splicing directives below opt back out.
-    let body_ctx = ctx
-        .nested(i + 1 + first_line_offset, body_indent(&body.lines))
-        .without_section_titles();
-    let input = DirectiveInput {
-        name: &name,
-        argument: &argument,
+    let marker = MarkerLine {
+        index: i,
         span: directive_span,
-        marker: MarkerLine {
-            index: i,
-            span: directive_span,
-            argument: MarkerText::after_marker(line),
-        },
-        body: &body,
-        body_lines: &body_lines,
-        ctx,
-        body_ctx: &body_ctx,
+        argument: MarkerText::after_marker(line),
     };
     let mut state = ParseState {
         adornment_order,
         diagnostics,
     };
-    let nodes = match registered_directive(&name) {
-        Some(directive) => (directive.interpret)(&input, &mut state),
-        None => vec![parse_vocabulary_directive(&input, &mut state)],
+    let nodes = if let Some(directive) = registered_directive(&name) {
+        let invocation = read_directive_block(
+            &name,
+            directive.spec.shape,
+            &marker,
+            &body,
+            &body_lines,
+            state.diagnostics,
+            ctx,
+        );
+        (directive.interpret)(&invocation, &mut state)
+    } else if let Some(scope) = resolve_scope_directive(&name, ctx.default_domain) {
+        let invocation = read_directive_block(
+            &name,
+            scope.shape(),
+            &marker,
+            &body,
+            &body_lines,
+            state.diagnostics,
+            ctx,
+        );
+        vec![Node::Directive(parse_scope_directive(scope, &invocation))]
+    } else {
+        // The names whose meaning depends on more than the name still read
+        // their own body, under a context positioned at its first line and
+        // column, taking no section titles — docutils' default for a nested
+        // parse.
+        let body_ctx = ctx
+            .nested(i + 1 + first_line_offset, body_indent(&body.lines))
+            .without_section_titles();
+        vec![parse_vocabulary_directive(
+            &VocabularyDirective {
+                name: &name,
+                argument: &argument,
+                span: directive_span,
+                body_lines: &body_lines,
+                ctx: &body_ctx,
+            },
+            &mut state,
+        )]
     };
     Some((1 + body.consumed, nodes))
 }
 
+/// A directive the table has no entry for, as written.
+struct VocabularyDirective<'a, 'c> {
+    /// The name, as written before the `::`.
+    name: &'a str,
+    /// What follows the `::`, trimmed.
+    argument: &'a str,
+    /// The whole marker line.
+    span: Option<rinx_ast::Span>,
+    /// The body's lines, their indentation intact.
+    body_lines: &'a [&'a str],
+    /// The context positioned at the body's first line and column.
+    ctx: &'a ParseCtx<'c>,
+}
+
 /// Parses a directive the table has no entry for: one whose meaning depends
 /// on more than its name — a substitution definition, an entity section the
-/// schema declares, a scope directive under the default domain — or else an
-/// unknown one.
+/// schema declares — or else an unknown one.
 ///
 /// Falls back to [`Directive::Unknown`] — reported as `directive.unknown` and
 /// drawn as a visible error block, and what the benchmark counts as an
 /// unsupported directive.
-fn parse_vocabulary_directive(input: &DirectiveInput<'_, '_>, state: &mut ParseState<'_>) -> Node {
-    let &DirectiveInput {
+fn parse_vocabulary_directive(
+    directive: &VocabularyDirective<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Node {
+    let &VocabularyDirective {
         name,
         argument,
         span,
         body_lines,
-        body_ctx,
-        ..
-    } = input;
+        ctx: body_ctx,
+    } = directive;
     if let Some(node) = try_parse_substitution_definition(
         name,
         argument,
@@ -156,16 +179,6 @@ fn parse_vocabulary_directive(input: &DirectiveInput<'_, '_>, state: &mut ParseS
         body_ctx,
     ) {
         return node;
-    }
-    if let Some(directive) = try_parse_scope_directive(
-        name,
-        argument,
-        span,
-        body_lines,
-        state.diagnostics,
-        body_ctx,
-    ) {
-        return Node::Directive(directive);
     }
     let directive = unknown_directive(
         name.to_string(),
@@ -223,7 +236,6 @@ struct DirectiveSite<'a> {
 /// count readable.
 fn try_parse_domain_object_directive(
     name: &str,
-    argument: &str,
     site: &DirectiveSite<'_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
@@ -236,35 +248,25 @@ fn try_parse_domain_object_directive(
         line,
         min_indent,
     } = site;
-    let (continuations_consumed, continuations) =
-        if object_type_supports_multiple_signatures(object_type) {
-            collect_argument_continuation_lines(lines, i + 1, min_indent)
-        } else {
-            (0, Vec::new())
-        };
-    let body = collect_directive_body(lines, i + 1 + continuations_consumed, min_indent);
-    let (body_lines, first_line_offset) = body.for_directive();
-    // Section titles keep the enclosing permission rather than being
-    // forbidden: Sphinx parses an object description's content with
-    // `allow_section_headings=True`.
-    let body_ctx = ctx.nested(
-        i + 1 + continuations_consumed + first_line_offset,
-        body_indent(&body.lines),
-    );
-    let domain_object = parse_domain_object(
-        object_type,
-        DirectiveSignatures {
-            argument: argument.to_string(),
-            continuations,
-            span: ctx.line_span(i, line),
-        },
+    let body = collect_directive_body(lines, i + 1, min_indent);
+    let (body_lines, _) = body.for_directive();
+    let marker = MarkerLine {
+        index: i,
+        span: ctx.line_span(i, line),
+        argument: MarkerText::after_marker(line),
+    };
+    let invocation = read_directive_block(
+        name,
+        object_shape(object_type),
+        &marker,
+        &body,
         &body_lines,
-        adornment_order,
         diagnostics,
-        &body_ctx,
+        ctx,
     );
+    let domain_object = parse_domain_object(object_type, &invocation, adornment_order, diagnostics);
     Some((
-        1 + continuations_consumed + body.consumed,
+        1 + body.consumed,
         vec![Node::Directive(Directive::DomainObject(domain_object))],
     ))
 }
@@ -276,7 +278,6 @@ fn try_parse_domain_object_directive(
 /// exists.
 fn try_parse_entity_directive(
     name: &str,
-    argument: &str,
     site: &DirectiveSite<'_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
@@ -290,37 +291,35 @@ fn try_parse_entity_directive(
         min_indent,
     } = site;
     let body = collect_directive_body(lines, i + 1, min_indent);
-    let (body_lines, first_line_offset) = body.for_directive();
+    let (body_lines, _) = body.for_directive();
+    let marker = MarkerLine {
+        index: i,
+        span: ctx.line_span(i, line),
+        argument: MarkerText::after_marker(line),
+    };
     // An entity's content takes no section titles, as sphinx-needs parses a
-    // need's content with `match_titles=False`.
-    let body_ctx = ctx
-        .nested(i + 1 + first_line_offset, body_indent(&body.lines))
-        .without_section_titles();
+    // need's content with `match_titles=False` — the reader's default.
+    let invocation = read_directive_block(
+        name,
+        ENTITY_SHAPE,
+        &marker,
+        &body,
+        &body_lines,
+        diagnostics,
+        ctx,
+    );
     let discriminator = ctx.position(i, 0).map_or(0, |point| point.position.line);
     let directive = parse_entity(
         &EntityDirective {
             entity_type,
-            argument,
-            span: ctx.line_span(i, line),
-            body_lines: &body_lines,
+            invocation: &invocation,
             discriminator,
             doc_path: ctx.doc_path,
         },
         adornment_order,
         diagnostics,
-        &body_ctx,
     );
     Some((1 + body.consumed, vec![Node::Directive(directive)]))
-}
-
-/// Whether a directive of this object type may declare more than one
-/// signature, as several argument lines below its marker.
-///
-/// Every object type may except `py:module`: real Sphinx's `module`
-/// directive takes exactly one argument, so a line below it is body content
-/// even when it looks like a further name.
-const fn object_type_supports_multiple_signatures(object_type: DirectiveObjectType) -> bool {
-    !matches!(object_type, DirectiveObjectType::PyModule)
 }
 
 #[cfg(test)]
@@ -439,7 +438,7 @@ mod tests {
     #[test]
     fn test_try_parse_directive_dispatches_the_doctest_family() {
         // Given
-        let body = ["   >>> 1"];
+        let body = ["", "   >>> 1"];
 
         // When
         let (node, _) = dispatch("doctest", "", &body);

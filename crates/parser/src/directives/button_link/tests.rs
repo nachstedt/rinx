@@ -81,12 +81,10 @@ fn test_whitespace_inside_an_argument_is_removed() {
 }
 
 #[test]
-fn test_an_argument_does_not_continue_onto_the_next_line() {
-    // Given — docutils would fold this line into the argument, since the
-    // directive declares `final_argument_whitespace`. This build continues no
-    // directive argument across lines except a domain object's signatures, so
-    // the line is read as the label instead — visible to the author rather
-    // than silently dropped. See `docs/compatibility.rst`.
+fn test_an_argument_continues_onto_the_next_line() {
+    // Given — the directive declares `final_argument_whitespace`, so docutils
+    // folds the line below the marker into the argument, and a URI drops the
+    // whitespace that brings in
     let input = ".. button-link:: https://example.com/a/very/\n   long/path\n";
 
     // When
@@ -95,12 +93,9 @@ fn test_an_argument_does_not_continue_onto_the_next_line() {
     // Then
     assert_eq!(
         button.target,
-        ButtonTarget::Url("https://example.com/a/very/".to_string())
+        ButtonTarget::Url("https://example.com/a/very/long/path".to_string())
     );
-    assert_eq!(
-        button.label,
-        vec![InlineNode::Text("long/path".to_string())]
-    );
+    assert!(button.label.is_empty());
     assert!(diagnostics.is_empty());
 }
 
@@ -210,7 +205,7 @@ fn test_a_missing_argument_becomes_a_malformed_directive() {
     ));
     assert_eq!(
         codes(&doc.diagnostics),
-        vec![DiagnosticCode::ButtonLinkMissingTarget]
+        vec![DiagnosticCode::DirectiveMissingArgument]
     );
 }
 

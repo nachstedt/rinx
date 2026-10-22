@@ -17,8 +17,8 @@
 //! name**, and an unreadable option is dropped and reported while the diagram
 //! itself survives — the error-resilience every directive here follows.
 
-use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
-use crate::directives::spec::DirectiveSpec;
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use std::num::NonZeroU32;
 
 use rinx_ast::{
@@ -29,11 +29,10 @@ use rinx_filter::Expr;
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::indent::unindent_body_lines;
 
 use super::error_node::malformed_node;
 use super::filter_option::{FilterCodes, read_filter_option};
-use super::options::{OptionLine, parse_percentage, report_unknown_options, scan_option_lines};
+use super::options::{OptionLine, parse_percentage, report_unknown_options};
 
 /// The options sphinx-needs' `needsequence` accepts that this build does not,
 /// each with what an author should reach for instead. Both spellings of every
@@ -124,25 +123,26 @@ struct ReadOptions {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["entity-sequence", "needsequence"],
     doc: "A sequence diagram walked along the entities' relations.",
+    shape: DirectiveShape {
+        arguments: Arguments::OPTIONAL_TEXT,
+        takes_options: true,
+        takes_content: false,
+        content_hint: Some(
+            "its picture is generated from the entity graph; write `.. entity-diagram::` to draw a diagram of your own",
+        ),
+    },
 };
 
 /// Interprets `.. entity-sequence::` or `.. needsequence::`, recording which
 /// was written.
 pub(in crate::directives) fn interpret_entity_sequence(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     let Ok(source) = input.name.parse::<rinx_ast::EntitySequenceSource>() else {
         return unknown(input, state);
     };
-    single(parse_entity_sequence(
-        source,
-        input.argument,
-        input.span,
-        input.body_lines,
-        state.diagnostics,
-        input.body_ctx,
-    ))
+    single(parse_entity_sequence(source, input, state.diagnostics))
 }
 
 /// Parses a `.. entity-sequence::` / `.. needsequence::` into a
@@ -150,22 +150,16 @@ pub(in crate::directives) fn interpret_entity_sequence(
 /// either mandatory option is missing.
 pub(super) fn parse_entity_sequence(
     source: EntitySequenceSource,
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
     let directive = source.as_str();
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
-
-    report_content(
-        &unindented_lines[body_start..],
-        directive,
-        directive_span,
-        diagnostics,
-    );
+    let argument = invocation.argument(0);
+    let directive_span = invocation.span;
+    let body_lines = invocation.source_body;
+    let ctx = &invocation.ctx;
+    let unindented_lines = &invocation.lines;
+    let option_lines = &invocation.options;
 
     let mut read = ReadOptions {
         caption: Some(argument.trim())
@@ -176,8 +170,8 @@ pub(super) fn parse_entity_sequence(
     let unrecognized = read_options(
         &mut read,
         directive,
-        &option_lines,
-        &unindented_lines,
+        option_lines,
+        unindented_lines,
         diagnostics,
         ctx,
     );
@@ -217,7 +211,7 @@ pub(super) fn parse_entity_sequence(
         ..EntitySequence::new(source, start, relations)
     };
     if sequence.has_unusable_scale() {
-        report_unusable_scale(&option_lines, directive, diagnostics, ctx);
+        report_unusable_scale(option_lines, directive, diagnostics, ctx);
     }
     Directive::EntitySequence(Box::new(sequence))
 }
@@ -257,27 +251,6 @@ fn mandatory_walk(
     let start = NonEmptyVector::try_from(read.start.clone()?).ok()?;
     let relations = NonEmptyVector::try_from(read.relations.clone()?).ok()?;
     Some((start, relations))
-}
-
-/// Reports body content below the option block: the diagram is generated, so
-/// there is nowhere for written text to go.
-fn report_content(
-    content: &[String],
-    directive: &str,
-    directive_span: Option<Span>,
-    diagnostics: &mut Diagnostics,
-) {
-    if content.iter().all(|line| line.trim().is_empty()) {
-        return;
-    }
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::DirectiveEntitySequenceUnknownOption,
-        format!(
-            "{directive}: takes no content, and its picture is generated from the entity graph; \
-             write `.. entity-diagram::` to draw a diagram of your own"
-        ),
-        directive_span,
-    ));
 }
 
 /// Reads every option onto `read`, returning the lines nobody claimed.

@@ -7,20 +7,18 @@
 //! caption writes an empty comment (`..`) first, which is the one piece of
 //! markup this parser consumes rather than parses.
 
-use crate::directives::input::{DirectiveInput, ParseState, single};
-use crate::directives::spec::DirectiveSpec;
-use rinx_ast::{AssetUri, DiagnosticCode, Directive, Figure, FigureWidth, InlineNode, Node, Span};
+use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use rinx_ast::{DiagnosticCode, Directive, Figure, FigureWidth, InlineNode, Node};
 
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::body::body_span;
-use crate::directives::error_node::malformed_directive;
-use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
+use crate::directives::error_node::malformed_node;
+use crate::directives::options::{OptionLine, report_unknown_options};
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
 
-use super::image_directive::report_option_conflicts;
+use super::image_directive::{image_uri, report_option_conflicts};
 use super::options::{ImageContext, parse_common_image_options, report_invalid_length};
 
 const DIRECTIVE: &str = "figure";
@@ -137,20 +135,23 @@ fn split_caption_and_legend(
 pub(in crate::directives) const FIGURE_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["figure"],
     doc: "A picture with a caption and a legend.",
+    shape: DirectiveShape {
+        arguments: Arguments::ONE_TEXT,
+        takes_options: true,
+        takes_content: true,
+        content_hint: None,
+    },
 };
 
 /// Interprets `.. figure::`.
 pub(in crate::directives) fn interpret_figure(
-    input: &DirectiveInput<'_, '_>,
+    input: &DirectiveInvocation<'_, '_>,
     state: &mut ParseState<'_>,
 ) -> Vec<rinx_ast::Node> {
     single(parse_figure_directive(
-        input.argument,
-        input.span,
-        input.body_lines,
+        input,
         state.adornment_order,
         state.diagnostics,
-        input.body_ctx,
     ))
 }
 
@@ -160,15 +161,12 @@ pub(in crate::directives) fn interpret_figure(
 /// `.. image::`'s does: there is no URI to show, and the body alone is not a
 /// figure.
 pub(in crate::directives) fn parse_figure_directive(
-    argument: &str,
-    directive_span: Option<Span>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> Directive {
-    let unindented_lines = unindent_body_lines(body_lines);
-    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
+    let ctx = &invocation.ctx;
+    let option_lines = &invocation.options;
     let refs: Vec<&OptionLine> = option_lines.iter().collect();
     let (common, after_image) =
         parse_common_image_options(&refs, DIRECTIVE, ImageContext::Standalone, diagnostics, ctx);
@@ -181,31 +179,22 @@ pub(in crate::directives) fn parse_figure_directive(
         ctx,
     );
 
-    if argument.trim().is_empty() {
-        return malformed_directive(
+    let Some(uri) = image_uri(invocation) else {
+        // The reader has reported the missing argument.
+        return malformed_node(
             DIRECTIVE,
             "",
-            body_lines,
-            DiagnosticCode::ImageMissingUri,
+            invocation.source_body,
             "figure: the directive needs an image path or URL as its argument".to_string(),
-            body_span(body_lines, ctx),
-            diagnostics,
         );
-    }
+    };
 
-    let mut image = common.with_uri(AssetUri::new(argument));
-    image.span = directive_span;
-    report_option_conflicts(&image, &option_lines, DIRECTIVE, diagnostics, ctx);
+    let mut image = common.with_uri(uri);
+    image.span = invocation.span;
+    report_option_conflicts(&image, option_lines, DIRECTIVE, diagnostics, ctx);
 
-    // The body starts below the option block, so every position inside it is
-    // short by that many lines unless the context is rebased first.
-    let body_ctx = ctx.nested(body_start, 0);
-    let body = split_caption_and_legend(
-        &unindented_lines[body_start..],
-        adornment_order,
-        diagnostics,
-        &body_ctx,
-    );
+    let content = invocation.content();
+    let body = split_caption_and_legend(&content.lines, adornment_order, diagnostics, &content.ctx);
 
     Directive::Figure(Box::new(Figure {
         image,
@@ -219,20 +208,24 @@ pub(in crate::directives) fn parse_figure_directive(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::ParseCtx;
+    use rinx_ast::AssetUri;
     use rinx_ast::{Domain, ImageAlign, inline_plain_text};
 
     fn parse(argument: &str, body: &[&str]) -> (Directive, Diagnostics) {
         let mut diagnostics = Diagnostics::default();
         let mut adornment_order = Vec::new();
         let ctx = ParseCtx::with_domain(Domain::Py);
-        let directive = parse_figure_directive(
+        let written = crate::directives::reader::written_after_blank(body);
+        let invocation = crate::directives::reader::test_invocation(
+            "figure",
+            FIGURE_SPEC.shape,
             argument,
-            None,
-            body,
-            &mut adornment_order,
+            &written,
             &mut diagnostics,
             &ctx,
         );
+        let directive = parse_figure_directive(&invocation, &mut adornment_order, &mut diagnostics);
         (directive, diagnostics)
     }
 
@@ -453,7 +446,10 @@ mod tests {
 
         // Then
         assert!(matches!(directive, Directive::Malformed { .. }));
-        assert_eq!(codes(&diagnostics), vec![DiagnosticCode::ImageMissingUri]);
+        assert_eq!(
+            codes(&diagnostics),
+            vec![DiagnosticCode::DirectiveMissingArgument]
+        );
     }
 
     #[test]

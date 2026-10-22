@@ -1,8 +1,8 @@
 //! The `py`-domain object-type dispatch, and the `:module:` option every
 //! `py` object description but `py:module` takes.
 
-use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::invocation::DirectiveInvocation;
 use crate::directives::options::OptionLine;
 use rinx_ast::{DomainObjectBody, NonEmptyVector};
 
@@ -25,57 +25,44 @@ use super::module::parse_py_module;
 pub(crate) fn parse_py_domain_object(
     object_type: DirectiveObjectType,
     signatures: NonEmptyVector<String>,
-    body_lines: &[&str],
+    invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
     match object_type {
-        DirectiveObjectType::PyFunction => parse_py_function(
-            signatures,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            ctx,
-            false,
-        ),
-        DirectiveObjectType::PyDecorator => parse_py_function(
-            signatures,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            ctx,
-            true,
-        ),
+        DirectiveObjectType::PyFunction => {
+            parse_py_function(signatures, invocation, adornment_order, diagnostics, false)
+        }
+        DirectiveObjectType::PyDecorator => {
+            parse_py_function(signatures, invocation, adornment_order, diagnostics, true)
+        }
         DirectiveObjectType::PyModule => parse_py_module(
             signatures.first().clone(),
-            body_lines,
+            invocation,
             adornment_order,
             diagnostics,
-            ctx,
         ),
         DirectiveObjectType::PyData => {
-            parse_py_data(signatures, body_lines, adornment_order, diagnostics, ctx)
+            parse_py_data(signatures, invocation, adornment_order, diagnostics)
         }
         DirectiveObjectType::PyMethod
         | DirectiveObjectType::PyClassmethod
         | DirectiveObjectType::PyStaticmethod
         | DirectiveObjectType::PyDecoratorMethod => parse_py_method(
             signatures,
-            body_lines,
+            invocation,
             adornment_order,
             diagnostics,
-            ctx,
             ForcedMethodFlags::for_directive(object_type),
         ),
         DirectiveObjectType::PyClass => {
-            parse_py_class(signatures, body_lines, adornment_order, diagnostics, ctx)
+            parse_py_class(signatures, invocation, adornment_order, diagnostics)
         }
         DirectiveObjectType::PyException => {
-            parse_py_exception(signatures, body_lines, adornment_order, diagnostics, ctx)
+            parse_py_exception(signatures, invocation, adornment_order, diagnostics)
         }
         DirectiveObjectType::PyAttribute => {
-            parse_py_attribute(signatures, body_lines, adornment_order, diagnostics, ctx)
+            parse_py_attribute(signatures, invocation, adornment_order, diagnostics)
         }
         DirectiveObjectType::CFunction
         | DirectiveObjectType::CMacro

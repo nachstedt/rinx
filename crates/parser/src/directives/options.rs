@@ -2,8 +2,9 @@
 //! the diagnostic for the ones nobody claimed.
 //!
 //! Nothing here knows what any particular option *means*: [`scan_option_lines`]
-//! splits the leading run of `:name: value` lines off a body without judging
-//! them, and [`report_unknown_options`] turns whatever the directive's own
+//! splits a run of `:name: value` lines off a block without judging them —
+//! the reader (`super::reader`) calls it on the lines its argument block ends
+//! with — and [`report_unknown_options`] turns whatever the directive's own
 //! parser handed back into diagnostics. Interpretation belongs to the
 //! directive — [`super::table_options`] layers the five presentation options
 //! the table directives share on top of this, and `super::math` reads
@@ -136,37 +137,6 @@ pub(in crate::directives) fn is_field_marker(line: &str) -> bool {
     false
 }
 
-/// Takes the options out of a directive's unindented `content`, as docutils
-/// does for a directive whose content may begin on its marker line.
-///
-/// The options are read from the content's first block — the lines before
-/// its first blank one — starting at the first [field marker](is_field_marker)
-/// in it, so that `.. note:: text` over an indented `:collapsible:` keeps the
-/// text and still reads the option. The option lines are blanked rather than
-/// removed: every line keeps its index, so every position below them stays
-/// right, and a blank line where the options stood ends a paragraph exactly
-/// where docutils' spliced content would.
-pub(in crate::directives) fn take_option_block(content: &mut [String]) -> Vec<OptionLine> {
-    let block_end = content
-        .iter()
-        .position(|line| line.trim().is_empty())
-        .unwrap_or(content.len());
-    let Some(start) = content[..block_end]
-        .iter()
-        .position(|line| is_field_marker(line))
-    else {
-        return Vec::new();
-    };
-    let (mut options, consumed) = scan_option_lines(&content[start..]);
-    for option in &mut options {
-        option.line_index += start;
-    }
-    for line in &mut content[start..start + consumed] {
-        line.clear();
-    }
-    options
-}
-
 /// Reports every option line neither a shared parser nor the directive's own
 /// parser claimed.
 ///
@@ -242,8 +212,47 @@ pub(in crate::directives) fn parse_percentage(raw: &str) -> Option<u32> {
     number.parse::<u32>().ok()
 }
 
+/// A URI argument as docutils' `directives.uri` reads it: every unescaped
+/// whitespace character removed — an argument wrapped onto the next line is
+/// still one address — and an escaped one (`my\ logo.png`) kept as a single
+/// space, with every other backslash escape resolved.
+pub(in crate::directives) fn uri_argument(argument: &str) -> String {
+    let mut parts = vec![String::new()];
+    let mut chars = argument.chars().peekable();
+    while let Some(character) = chars.next() {
+        let current = parts.last_mut().expect("parts is never empty");
+        if character == '\\' {
+            match chars.next() {
+                Some(escaped) if escaped.is_whitespace() => parts.push(String::new()),
+                Some(escaped) => current.push(escaped),
+                None => current.push(character),
+            }
+        } else if !character.is_whitespace() {
+            current.push(character);
+        }
+    }
+    parts.join(" ")
+}
+
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn test_uri_argument_drops_unescaped_whitespace() {
+        // Given / When / Then — a wrapped address, and a stray space
+        assert_eq!(
+            super::uri_argument("https://example.com/a/\nlong/path"),
+            "https://example.com/a/long/path"
+        );
+        assert_eq!(super::uri_argument("my logo.png"), "mylogo.png");
+    }
+
+    #[test]
+    fn test_uri_argument_keeps_an_escaped_space() {
+        // Given / When / Then
+        assert_eq!(super::uri_argument("my\\ logo.png"), "my logo.png");
+        assert_eq!(super::uri_argument("a\\_b"), "a_b");
+    }
+
     use super::*;
     use rinx_ast::Domain;
 
@@ -675,51 +684,5 @@ mod tests {
     fn test_is_field_marker_accepts_an_escaped_colon_in_the_name() {
         // Given / When / Then
         assert!(is_field_marker(r":a\:b: value"));
-    }
-
-    #[test]
-    fn test_take_option_block_reads_options_below_leading_text() {
-        // Given
-        let mut content = vec![
-            "Some text".to_string(),
-            ":collapsible: open".to_string(),
-            String::new(),
-            "Body".to_string(),
-        ];
-
-        // When
-        let options = take_option_block(&mut content);
-
-        // Then
-        assert_eq!(options.len(), 1);
-        assert_eq!(options[0].name, "collapsible");
-        assert_eq!(options[0].line_index, 1);
-        assert_eq!(content, ["Some text", "", "", "Body"]);
-    }
-
-    #[test]
-    fn test_take_option_block_keeps_a_role_as_content() {
-        // Given
-        let mut content = vec![":pep:`634` -- Specification".to_string()];
-
-        // When
-        let options = take_option_block(&mut content);
-
-        // Then
-        assert!(options.is_empty());
-        assert_eq!(content, [":pep:`634` -- Specification"]);
-    }
-
-    #[test]
-    fn test_take_option_block_ignores_fields_after_the_first_blank_line() {
-        // Given
-        let mut content = vec![String::new(), ":collapsible:".to_string()];
-
-        // When
-        let options = take_option_block(&mut content);
-
-        // Then
-        assert!(options.is_empty());
-        assert_eq!(content, ["", ":collapsible:"]);
     }
 }
