@@ -11,8 +11,8 @@ mod figure;
 mod image_directive;
 mod options;
 
-pub(super) use figure::parse_figure_directive;
-pub(super) use image_directive::{parse_image_directive, report_option_conflicts};
+pub(super) use figure::{FIGURE_SPEC, interpret_figure};
+pub(super) use image_directive::{IMAGE_SPEC, interpret_image, report_option_conflicts};
 // Reused by `super::substitution` to parse a `.. |name| image::` definition
 // with the same option vocabulary, gated to the substitution-only narrowings
 // by `ImageContext::Substitution`.

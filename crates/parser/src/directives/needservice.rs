@@ -14,6 +14,8 @@
 
 use super::error_node::malformed_directive;
 use crate::diagnostics::Diagnostics;
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{DiagnosticCode, Directive, Span};
 
 /// Why `.. needservice::` is refused, and what to write instead — stored on the
@@ -22,6 +24,26 @@ const NEEDSERVICE_UNSUPPORTED_MESSAGE: &str = "needservice: querying an external
      building is not supported, since a sandboxed build may only read files declared before it \
      runs; save the needs to a needs.json, declare it in the library's `parse_data` and read it \
      with `.. needimport::`";
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["needservice"],
+    doc: "sphinx-needs' import from an external service, refused by name.",
+};
+
+/// Interprets `.. needservice::`, which is refused by name so its warning can
+/// say why and what to write instead.
+pub(in crate::directives) fn interpret_needservice(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_needservice(
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.diagnostics,
+    ))
+}
 
 /// Degrades a `.. needservice::` to a [`Directive::Malformed`] reporting
 /// `needservice.unsupported`, keeping its source for the rendered error block.

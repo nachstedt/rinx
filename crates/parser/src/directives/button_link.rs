@@ -18,6 +18,8 @@
 //! An unreadable *option* never costs the button, the error-resilience every
 //! directive here follows.
 
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{
     ButtonFlag, ButtonLink, ButtonTarget, Diagnostic, DiagnosticCode, Directive, InlineNode,
     SemanticColor, Span, TextAlign,
@@ -33,6 +35,26 @@ use super::error_node::malformed_directive;
 use super::options::{OptionLine, report_unknown_options, scan_option_lines};
 
 const DIRECTIVE: &str = "button-link";
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["button-link"],
+    doc: "A link drawn as a button.",
+};
+
+/// Interprets `.. button-link::`.
+pub(in crate::directives) fn interpret_button_link(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_button_link(
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
+}
 
 /// Parses a `.. button-link::` into a [`Directive::ButtonLink`].
 pub(super) fn parse_button_link(

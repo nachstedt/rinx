@@ -2,6 +2,8 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::body::body_span;
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, ListItem, Node, Span, TableCell, TableRow, TableSource,
     TableWidths,
@@ -15,6 +17,26 @@ use crate::directives::options::{report_unknown_options, scan_option_lines};
 use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const LIST_TABLE_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["list-table"],
+    doc: "A table written as a two-level bullet list.",
+};
+
+/// Interprets `.. list-table::`.
+pub(in crate::directives) fn interpret_list_table(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_list_table(
+        input.argument,
+        input.body_lines,
+        state.adornment_order,
+        state.diagnostics,
+        input.body_ctx,
+    ))
+}
 
 /// Parses a `.. list-table::` directive: a table specified as a nested
 /// bullet list (outer list = rows, each row's own bullet list = cells)

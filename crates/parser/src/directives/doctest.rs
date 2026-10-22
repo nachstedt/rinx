@@ -19,5 +19,4 @@ mod block;
 mod kind;
 mod options;
 
-pub(super) use block::parse_doctest_directive;
-pub(super) use kind::DocTestDirectiveKind;
+pub(super) use block::{DOCTEST_SPEC, interpret_doctest};

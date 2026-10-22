@@ -17,6 +17,8 @@
 //! sharper reason here — a diagram refused over a misspelled `:align:` is a
 //! page with a missing picture.
 
+use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, ImageAlign, LengthOrPercentage, Span, TargetName, Uml,
     UmlSource,
@@ -27,6 +29,37 @@ use crate::diagnostics::Diagnostics;
 use crate::indent::unindent_body_lines;
 
 use super::options::{OptionLine, parse_percentage, report_unknown_options, scan_option_lines};
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &[
+        "plantuml",
+        "uml",
+        "entity-diagram",
+        "needuml",
+        "entity-arch",
+        "needarch",
+    ],
+    doc: "A PlantUML diagram, or a template of one over the entity graph.",
+};
+
+/// Interprets the six spellings of a `PlantUML` diagram, recording which was
+/// written.
+pub(in crate::directives) fn interpret_uml(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    let Ok(source) = input.name.parse::<rinx_ast::UmlSource>() else {
+        return unknown(input, state);
+    };
+    single(parse_uml(
+        source,
+        input.span,
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
+}
 
 /// Parses any of the six diagram spellings into a [`Directive::Uml`].
 pub(super) fn parse_uml(

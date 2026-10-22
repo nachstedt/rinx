@@ -34,6 +34,6 @@
 mod entries;
 mod value_parsing;
 
-pub(super) use entries::parse_index_directive;
 pub(crate) use entries::parse_index_line;
+pub(super) use entries::{INDEX_SPEC, interpret_index};
 pub(crate) use value_parsing::{parse_typed_entry, strip_main_prefix};

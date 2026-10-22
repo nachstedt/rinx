@@ -46,6 +46,8 @@
 //! rather than wrong, exactly as a `.. csv-table::`'s `:file:` rows already
 //! are.
 
+use crate::directives::input::{DirectiveInput, ParseState};
+use crate::directives::spec::DirectiveSpec;
 use std::collections::{BTreeMap, BTreeSet};
 
 use rinx_ast::{
@@ -147,6 +149,28 @@ struct Import<'a> {
     span: Option<Span>,
     /// The project's meta-model, for the back-links it derives.
     schema: &'a rinx_entity::EntitySchema,
+}
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["needimport"],
+    doc: "Imports the needs of a sphinx-needs `needs.json` as entities.",
+};
+
+/// Interprets `.. needimport::`, splicing the imported entities in where it
+/// stands.
+pub(in crate::directives) fn interpret_needimport(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    parse_needimport(
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.adornment_order,
+        state.diagnostics,
+        &input.splice_ctx(),
+    )
 }
 
 /// Parses a `.. needimport::`, returning the entities its file contributed.

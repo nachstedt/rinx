@@ -13,6 +13,8 @@
 //! blank-line rule must *not* apply — a distinction that is invisible once the
 //! parts have been rejoined.
 
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{Diagnostic, DiagnosticCode, Directive, Span, TargetName};
 
 use crate::context::ParseCtx;
@@ -96,6 +98,25 @@ fn split_equations(body: &[String]) -> Vec<String> {
         .map(|part| part.join("\n"))
         .filter(|part| !part.trim().is_empty())
         .collect()
+}
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["math"],
+    doc: "A displayed equation, written in LaTeX.",
+};
+
+/// Interprets `.. math::`.
+pub(in crate::directives) fn interpret_math(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_math_directive(
+        input.argument.to_string(),
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
 }
 
 /// Parses a `.. math::` directive body into a [`Directive::Math`].

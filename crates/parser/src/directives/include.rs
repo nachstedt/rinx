@@ -18,6 +18,8 @@
 //! genuinely part of the including document, so editing it must re-parse and
 //! re-render every page that includes it. That is correct rather than a gap.
 
+use crate::directives::input::{DirectiveInput, ParseState};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{
     CodeBlock, CodeBlockSource, CodeLanguage, Diagnostic, DiagnosticCode, Directive, IncludeSite,
     Node, Span,
@@ -56,6 +58,27 @@ struct IncludeOptions {
     classes: Vec<String>,
     name: Option<String>,
     selection: Selection,
+}
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["include"],
+    doc: "Splices another file's reStructuredText in where it stands.",
+};
+
+/// Interprets `.. include::`, splicing the file's nodes in where it stands.
+pub(in crate::directives) fn interpret_include(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    parse_include(
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.adornment_order,
+        state.diagnostics,
+        &input.splice_ctx(),
+    )
 }
 
 /// Parses a `.. include::`, returning the nodes its file contributed.

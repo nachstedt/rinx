@@ -3,6 +3,8 @@
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use crate::headings::Adornment;
 use crate::indent::{indent_width, unindent_body_lines};
 use rinx_ast::{Directive, Node};
@@ -35,6 +37,25 @@ fn parse_definition_body(
     let dedented_refs: Vec<&str> = dedented.iter().map(String::as_str).collect();
     let def_ctx = ctx.nested(body_start + definition_start, definition_indent);
     parse_blocks(&dedented_refs, adornment_order, diagnostics, &def_ctx)
+}
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["glossary"],
+    doc: "Terms and their definitions, for `:term:` to link to.",
+};
+
+/// Interprets `.. glossary::`.
+pub(in crate::directives) fn interpret_glossary(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_glossary(
+        input.body_lines,
+        state.adornment_order,
+        state.diagnostics,
+        input.body_ctx,
+    ))
 }
 
 /// Parses a `.. glossary::` directive body into a `Directive::Glossary` node.

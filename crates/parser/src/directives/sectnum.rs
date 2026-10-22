@@ -1,3 +1,5 @@
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use std::num::NonZeroU32;
 
 use rinx_ast::{Diagnostic, DiagnosticCode, Directive, SectnumOptions};
@@ -10,14 +12,6 @@ use crate::indent::unindent_body_lines;
 use super::options::{OptionLine, parse_positive_depth, report_unknown_options, scan_option_lines};
 
 const DIRECTIVE: &str = "sectnum";
-
-/// The name(s) `.. sectnum::` is spelled under. Docutils' own alias,
-/// `.. section-numbering::`, shares this directive's implementation
-/// completely — unlike `.. code-block::`/`.. code::`, the two spellings agree
-/// on every option, so there is no need to record which one an author wrote.
-pub(super) fn is_sectnum(name: &str) -> bool {
-    name == "sectnum" || name == "section-numbering"
-}
 
 /// Reads a `:start:` value: a positive integer, or the diagnosed default of
 /// `None` (docutils' own default of `1`) for anything else, `0` included —
@@ -114,6 +108,30 @@ fn parse_sectnum_options<'a>(
     (options, unrecognized)
 }
 
+/// This directive's entry in the table of directives this build implements.
+///
+/// Docutils' own alias, `.. section-numbering::`, shares this directive's
+/// implementation completely — unlike `.. code-block::`/`.. code::`, the two
+/// spellings agree on every option, so there is no need to record which one an
+/// author wrote.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["sectnum", "section-numbering"],
+    doc: "Numbers this document's sections.",
+};
+
+/// Interprets `.. sectnum::` and `.. section-numbering::`.
+pub(in crate::directives) fn interpret_sectnum(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_sectnum(
+        input.argument,
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
+}
+
 /// Parses a `.. sectnum::`/`.. section-numbering::` body into a
 /// [`Directive::Sectnum`]. Docutils declares zero argument slots for this
 /// directive, and really does reject one given anyway — as an inline
@@ -196,11 +214,16 @@ mod tests {
     }
 
     #[test]
-    fn test_is_sectnum_recognizes_both_spellings() {
+    fn test_both_spellings_parse_as_sectnum() {
         // Given / When / Then
-        assert!(is_sectnum("sectnum"));
-        assert!(is_sectnum("section-numbering"));
-        assert!(!is_sectnum("toctree"));
+        for name in ["sectnum", "section-numbering"] {
+            let doc = crate::parse("index.rst", &format!(".. {name}::\n"));
+            assert!(
+                matches!(doc.nodes[..], [Node::Directive(Directive::Sectnum(_))]),
+                "`{name}` parsed as {:?}",
+                doc.nodes
+            );
+        }
     }
 
     #[test]

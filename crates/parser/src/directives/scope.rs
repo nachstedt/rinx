@@ -33,43 +33,89 @@ pub(super) fn try_parse_scope_directive(
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Option<Directive> {
-    let default_domain = ctx.default_domain;
-    // `.. program::` is `std`-domain and bypasses `default_domain` entirely,
-    // exactly like `.. option::`/`.. cmdoption::` above (see
-    // `resolve_domain_object_type`) — recognized unconditionally rather than
-    // gated by `split_domain_qualified_name`.
-    if name == "program" {
-        return Some(Directive::StdProgram {
+    let scope = resolve_scope_directive(name, ctx.default_domain)?;
+    Some(match scope {
+        ScopeDirective::Program => Directive::StdProgram {
             name: parse_program_argument(argument),
-        });
-    }
-    match split_domain_qualified_name(name, default_domain) {
-        Some((Domain::Py, "currentmodule")) => Some(Directive::PyCurrentModule {
+        },
+        ScopeDirective::CurrentModule => Directive::PyCurrentModule {
             module: parse_current_module_argument(argument),
-        }),
-        Some((Domain::C, "namespace")) => Some(Directive::CNamespace {
+        },
+        ScopeDirective::Namespace => Directive::CNamespace {
             namespace: parse_c_namespace_argument(argument),
-        }),
-        Some((Domain::C, "namespace-push")) => Some(if argument.is_empty() {
-            malformed_directive(
-                name,
-                argument,
-                body_lines,
-                DiagnosticCode::DirectiveNamespacePushArgumentMissing,
-                format!("{name}: the directive needs a scope name as its argument"),
-                directive_span,
-                diagnostics,
-            )
-        } else {
-            Directive::CNamespacePush {
-                namespace: argument.to_string(),
-            }
-        }),
+        },
+        ScopeDirective::NamespacePush if argument.is_empty() => malformed_directive(
+            name,
+            argument,
+            body_lines,
+            DiagnosticCode::DirectiveNamespacePushArgumentMissing,
+            format!("{name}: the directive needs a scope name as its argument"),
+            directive_span,
+            diagnostics,
+        ),
+        ScopeDirective::NamespacePush => Directive::CNamespacePush {
+            namespace: argument.to_string(),
+        },
         // Any argument is ignored: real Sphinx's pop takes none, and undoes
         // the previous push whatever it was.
-        Some((Domain::C, "namespace-pop")) => Some(Directive::CNamespacePop),
-        _ => None,
+        ScopeDirective::NamespacePop => Directive::CNamespacePop,
+    })
+}
+
+/// The scope directives, by what each one moves.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ScopeDirective {
+    Program,
+    CurrentModule,
+    Namespace,
+    NamespacePush,
+    NamespacePop,
+}
+
+/// Every scope directive: the domain its name is qualified in — `None` for
+/// `.. program::`, which is `std`-domain and bypasses `default_domain`
+/// entirely, exactly like `.. option::`/`.. cmdoption::` (see
+/// `resolve_domain_object_type`) — the name, and what it moves.
+const SCOPE_DIRECTIVES: &[(Option<Domain>, &str, ScopeDirective)] = &[
+    (None, "program", ScopeDirective::Program),
+    (
+        Some(Domain::Py),
+        "currentmodule",
+        ScopeDirective::CurrentModule,
+    ),
+    (Some(Domain::C), "namespace", ScopeDirective::Namespace),
+    (
+        Some(Domain::C),
+        "namespace-push",
+        ScopeDirective::NamespacePush,
+    ),
+    (
+        Some(Domain::C),
+        "namespace-pop",
+        ScopeDirective::NamespacePop,
+    ),
+];
+
+/// Which scope directive `name` spells under `default_domain`: an unqualified
+/// row by its name alone, any other through [`split_domain_qualified_name`].
+fn resolve_scope_directive(name: &str, default_domain: Domain) -> Option<ScopeDirective> {
+    let find = |domain: Option<Domain>, name: &str| {
+        SCOPE_DIRECTIVES
+            .iter()
+            .find(|&&(row_domain, row_name, _)| row_domain == domain && row_name == name)
+            .map(|&(_, _, scope)| scope)
+    };
+    if let Some(scope) = find(None, name) {
+        return Some(scope);
     }
+    let (domain, bare_name) = split_domain_qualified_name(name, default_domain)?;
+    find(Some(domain), bare_name)
+}
+
+/// Every name a scope directive is written as, unqualified — what an entity
+/// schema's section may not be called.
+pub(super) fn scope_directive_names() -> impl Iterator<Item = &'static str> {
+    SCOPE_DIRECTIVES.iter().map(|&(_, name, _)| name)
 }
 
 /// Parses a `.. c:namespace::` argument. `NULL` and `0` (real Sphinx's two
@@ -420,5 +466,42 @@ mod tests {
     fn test_parse_program_argument_empty_clears() {
         // Given / When / Then
         assert_eq!(parse_program_argument(""), None);
+    }
+
+    #[test]
+    fn test_resolve_scope_directive_reads_a_qualified_name_in_its_own_domain() {
+        // Given / When / Then
+        assert_eq!(
+            resolve_scope_directive("c:namespace-push", Domain::Py),
+            Some(ScopeDirective::NamespacePush)
+        );
+        assert_eq!(resolve_scope_directive("py:namespace", Domain::Py), None);
+    }
+
+    #[test]
+    fn test_resolve_scope_directive_reads_program_under_any_default_domain() {
+        // Given / When / Then
+        assert_eq!(
+            resolve_scope_directive("program", Domain::C),
+            Some(ScopeDirective::Program)
+        );
+    }
+
+    #[test]
+    fn test_scope_directive_names_lists_every_scope_directive() {
+        // Given / When
+        let names: Vec<&str> = scope_directive_names().collect();
+
+        // Then
+        assert_eq!(
+            names,
+            [
+                "program",
+                "currentmodule",
+                "namespace",
+                "namespace-push",
+                "namespace-pop"
+            ]
+        );
     }
 }

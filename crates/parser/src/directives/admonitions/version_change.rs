@@ -2,8 +2,42 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::body::DirectiveContent;
+use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
+use crate::directives::spec::DirectiveSpec;
 use crate::headings::Adornment;
 use rinx_ast::{Diagnostic, DiagnosticCode, Directive, Span, VersionChangeKind};
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const VERSION_CHANGE_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["versionadded", "versionchanged", "deprecated"],
+    doc: "A note on the version that added, changed or deprecated something.",
+};
+
+/// Interprets a version change: the first word after the `::` is the version,
+/// and only the rest — Sphinx's optional second argument — is content.
+pub(in crate::directives) fn interpret_version_change(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    let Ok(kind) = input.name.parse::<rinx_ast::VersionChangeKind>() else {
+        return unknown(input, state);
+    };
+    let (version, explanation) = input.marker.argument.split_first_word();
+    let content = crate::directives::body::directive_content(
+        &explanation,
+        input.marker.index,
+        input.body,
+        input.ctx,
+    );
+    single(parse_version_change(
+        kind,
+        version,
+        input.marker.span,
+        &content,
+        state.adornment_order,
+        state.diagnostics,
+    ))
+}
 
 /// Parses a version change whose marker line named `version`, with the rest of
 /// that line, if any, already the first line of `content`.

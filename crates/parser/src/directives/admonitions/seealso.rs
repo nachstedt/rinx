@@ -2,9 +2,36 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::body::DirectiveContent;
+use crate::directives::input::{DirectiveInput, ParseState, single};
 use crate::directives::options::take_option_block;
+use crate::directives::spec::DirectiveSpec;
 use crate::headings::Adornment;
 use rinx_ast::Directive;
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SEEALSO_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["seealso"],
+    doc: "A callout pointing the reader to related material.",
+};
+
+/// Interprets `.. seealso::`: the text after the `::` is the first line of the
+/// content.
+pub(in crate::directives) fn interpret_seealso(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    let content = crate::directives::body::directive_content(
+        &input.marker.argument,
+        input.marker.index,
+        input.body,
+        input.ctx,
+    );
+    single(parse_seealso(
+        content,
+        state.adornment_order,
+        state.diagnostics,
+    ))
+}
 
 /// Parses a `.. seealso::` from its content, which may have begun on the
 /// marker line.

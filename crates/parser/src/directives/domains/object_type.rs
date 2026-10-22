@@ -53,38 +53,88 @@ pub(crate) fn resolve_domain_object_type(
     default_domain: Domain,
 ) -> Option<DirectiveObjectType> {
     // `std`-domain directives bypass `default_domain`/`split_domain_qualified_name`
-    // entirely, unlike every `py`/`c` arm below: they're recognized
-    // unconditionally, the same way `.. toctree::`/`.. index::` are matched
-    // by plain string equality before any domain logic runs. `cmdoption` is
-    // real Sphinx's legacy directive-name alias for the same directive.
-    if matches!(name, "option" | "cmdoption") {
-        return Some(DirectiveObjectType::StdCmdoption);
+    // entirely, unlike every `py`/`c` row: they're recognized unconditionally,
+    // the same way `.. toctree::`/`.. index::` are matched by plain string
+    // equality before any domain logic runs.
+    if let Some(object_type) = find_object_directive(None, name) {
+        return Some(object_type);
     }
     let (domain, objtype_str) = split_domain_qualified_name(name, default_domain)?;
-    match (domain, objtype_str) {
-        (Domain::Py, "function") => Some(DirectiveObjectType::PyFunction),
-        (Domain::Py, "decorator") => Some(DirectiveObjectType::PyDecorator),
-        (Domain::Py, "module") => Some(DirectiveObjectType::PyModule),
-        (Domain::Py, "data") => Some(DirectiveObjectType::PyData),
-        (Domain::Py, "method") => Some(DirectiveObjectType::PyMethod),
-        (Domain::Py, "classmethod") => Some(DirectiveObjectType::PyClassmethod),
-        (Domain::Py, "staticmethod") => Some(DirectiveObjectType::PyStaticmethod),
-        (Domain::Py, "decoratormethod") => Some(DirectiveObjectType::PyDecoratorMethod),
-        (Domain::Py, "class") => Some(DirectiveObjectType::PyClass),
-        (Domain::Py, "attribute") => Some(DirectiveObjectType::PyAttribute),
-        (Domain::Py, "exception") => Some(DirectiveObjectType::PyException),
-        (Domain::C, "function") => Some(DirectiveObjectType::CFunction),
-        (Domain::C, "macro") => Some(DirectiveObjectType::CMacro),
-        (Domain::C, "struct") => Some(DirectiveObjectType::CStruct),
-        (Domain::C, "union") => Some(DirectiveObjectType::CUnion),
-        // `.. c:var::` is a pure directive-name alias for `.. c:member::` in
-        // real Sphinx (both register the same handler) — no forced-flag
-        // distinction to carry, unlike `classmethod`/`staticmethod` above.
-        (Domain::C, "member" | "var") => Some(DirectiveObjectType::CMember),
-        (Domain::C, "type") => Some(DirectiveObjectType::CType),
-        _ => None,
-    }
+    find_object_directive(Some(domain), objtype_str)
 }
+
+/// Every name a domain-object directive is written as, unqualified — what an
+/// entity schema's section may not be called.
+pub(crate) fn object_directive_names() -> impl Iterator<Item = &'static str> {
+    OBJECT_DIRECTIVES.iter().map(|&(_, name, _)| name)
+}
+
+/// The object type the row for `name` in `domain` names, if any.
+fn find_object_directive(domain: Option<Domain>, name: &str) -> Option<DirectiveObjectType> {
+    OBJECT_DIRECTIVES
+        .iter()
+        .find(|&&(row_domain, row_name, _)| row_domain == domain && row_name == name)
+        .map(|&(_, _, object_type)| object_type)
+}
+
+/// Every domain-object directive: the domain its name is qualified in — `None`
+/// for a `std` one, recognized bare whatever the default domain — the name,
+/// and the object type it resolves to.
+///
+/// One row per spelling, so an alias is a row of its own: `cmdoption` is real
+/// Sphinx's legacy directive-name alias for `option`, and `.. c:var::` a pure
+/// directive-name alias for `.. c:member::` (both register the same handler) —
+/// no forced-flag distinction to carry, unlike `classmethod`/`staticmethod`.
+const OBJECT_DIRECTIVES: &[(Option<Domain>, &str, DirectiveObjectType)] = &[
+    (None, "option", DirectiveObjectType::StdCmdoption),
+    (None, "cmdoption", DirectiveObjectType::StdCmdoption),
+    (
+        Some(Domain::Py),
+        "function",
+        DirectiveObjectType::PyFunction,
+    ),
+    (
+        Some(Domain::Py),
+        "decorator",
+        DirectiveObjectType::PyDecorator,
+    ),
+    (Some(Domain::Py), "module", DirectiveObjectType::PyModule),
+    (Some(Domain::Py), "data", DirectiveObjectType::PyData),
+    (Some(Domain::Py), "method", DirectiveObjectType::PyMethod),
+    (
+        Some(Domain::Py),
+        "classmethod",
+        DirectiveObjectType::PyClassmethod,
+    ),
+    (
+        Some(Domain::Py),
+        "staticmethod",
+        DirectiveObjectType::PyStaticmethod,
+    ),
+    (
+        Some(Domain::Py),
+        "decoratormethod",
+        DirectiveObjectType::PyDecoratorMethod,
+    ),
+    (Some(Domain::Py), "class", DirectiveObjectType::PyClass),
+    (
+        Some(Domain::Py),
+        "attribute",
+        DirectiveObjectType::PyAttribute,
+    ),
+    (
+        Some(Domain::Py),
+        "exception",
+        DirectiveObjectType::PyException,
+    ),
+    (Some(Domain::C), "function", DirectiveObjectType::CFunction),
+    (Some(Domain::C), "macro", DirectiveObjectType::CMacro),
+    (Some(Domain::C), "struct", DirectiveObjectType::CStruct),
+    (Some(Domain::C), "union", DirectiveObjectType::CUnion),
+    (Some(Domain::C), "member", DirectiveObjectType::CMember),
+    (Some(Domain::C), "var", DirectiveObjectType::CMember),
+    (Some(Domain::C), "type", DirectiveObjectType::CType),
+];
 
 #[cfg(test)]
 mod tests {
@@ -349,5 +399,41 @@ mod tests {
 
         // Then
         assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_find_object_directive_matches_domain_and_name_together() {
+        // Given / When / Then — `function` is a row in both domains
+        assert_eq!(
+            find_object_directive(Some(Domain::C), "function"),
+            Some(DirectiveObjectType::CFunction)
+        );
+        assert_eq!(find_object_directive(Some(Domain::C), "class"), None);
+        assert_eq!(find_object_directive(None, "function"), None);
+    }
+
+    #[test]
+    fn test_object_directive_names_lists_every_spelling_once_per_row() {
+        // Given / When
+        let names: Vec<&str> = object_directive_names().collect();
+
+        // Then — aliases are rows of their own, and a name two domains share
+        // is listed for each
+        assert!(names.contains(&"cmdoption"));
+        assert!(names.contains(&"var"));
+        assert_eq!(names.iter().filter(|name| **name == "function").count(), 2);
+    }
+
+    #[test]
+    fn test_every_listed_name_resolves_in_its_own_domain() {
+        // Given / When / Then
+        for &(domain, name, object_type) in OBJECT_DIRECTIVES {
+            let default_domain = domain.unwrap_or(Domain::Py);
+            assert_eq!(
+                resolve_domain_object_type(name, default_domain),
+                Some(object_type),
+                "`{name}` does not resolve under {default_domain:?}"
+            );
+        }
     }
 }

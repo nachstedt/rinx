@@ -1,6 +1,7 @@
 //! `.. |name| replace::`/`unicode::`/`image::` — substitution definitions.
 //!
-//! Recognizing one is [`super::dispatch::parse_body_directive`]'s job: the
+//! Recognizing one is `super::dispatch`'s job, among the names the directive
+//! table has no entry for: the
 //! marker's own name, `|name| inner`, is not a directive name at all, so it
 //! is split with [`split_substitution_marker`] before anything here runs.
 //! What is particular to each of the three modelled directives is parsed

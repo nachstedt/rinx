@@ -13,7 +13,9 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::body::body_span;
 use crate::directives::error_node::malformed_directive;
+use crate::directives::input::{DirectiveInput, ParseState, single};
 use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
+use crate::directives::spec::DirectiveSpec;
 use crate::directives::table_options::parse_common_table_options;
 use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
@@ -22,6 +24,26 @@ use rinx_ast::{DiagnosticCode, Directive, Node};
 
 /// The directive name, used throughout this module's diagnostics.
 const DIRECTIVE: &str = "table";
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["table"],
+    doc: "A title and options for the table in its body.",
+};
+
+/// Interprets `.. table::`.
+pub(in crate::directives) fn interpret_table(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_table_directive(
+        input.argument,
+        input.body_lines,
+        state.adornment_order,
+        state.diagnostics,
+        input.body_ctx,
+    ))
+}
 
 /// Parses a `.. table::` directive. `body_lines` is the raw, still-indented
 /// body collected by `collect_directive_body`, exactly as every other

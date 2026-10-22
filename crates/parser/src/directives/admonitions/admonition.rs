@@ -3,7 +3,9 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::body::DirectiveContent;
+use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
 use crate::directives::options::take_option_block;
+use crate::directives::spec::DirectiveSpec;
 use crate::headings::Adornment;
 use rinx_ast::{AdmonitionKind, Diagnostic, DiagnosticCode, Directive, Span};
 
@@ -24,6 +26,78 @@ pub(super) fn generic_title(
     } else {
         argument.to_string()
     }
+}
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const ADMONITION_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &[
+        "attention",
+        "caution",
+        "danger",
+        "error",
+        "hint",
+        "important",
+        "note",
+        "tip",
+        "warning",
+    ],
+    doc: "A callout of one of docutils' nine kinds, titled by its kind.",
+};
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const GENERIC_ADMONITION_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["admonition"],
+    doc: "A callout titled by its argument.",
+};
+
+/// Interprets `.. note::` and the other eight titled by their kind: the text
+/// after the `::` is the first line of the content.
+pub(in crate::directives) fn interpret_admonition(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    let Ok(kind) = input.name.parse::<rinx_ast::AdmonitionKind>() else {
+        return unknown(input, state);
+    };
+    let content = crate::directives::body::directive_content(
+        &input.marker.argument,
+        input.marker.index,
+        input.body,
+        input.ctx,
+    );
+    single(parse_admonition(
+        kind,
+        None,
+        content,
+        state.adornment_order,
+        state.diagnostics,
+    ))
+}
+
+/// Interprets `.. admonition::`, whose marker text is its title rather than
+/// content.
+pub(in crate::directives) fn interpret_generic_admonition(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    let title = generic_title(
+        input.marker.argument.text,
+        input.marker.span,
+        state.diagnostics,
+    );
+    let content = crate::directives::body::directive_content(
+        &crate::directives::body::MarkerText::NONE,
+        input.marker.index,
+        input.body,
+        input.ctx,
+    );
+    single(parse_admonition(
+        rinx_ast::AdmonitionKind::Admonition,
+        Some(title),
+        content,
+        state.adornment_order,
+        state.diagnostics,
+    ))
 }
 
 /// Parses an admonition of `kind` from its content, which for every kind but
@@ -306,5 +380,33 @@ mod tests {
             .filter_map(|d| d.span.map(|span| span.start))
             .collect();
         assert_eq!(starts, [Position::new(1, 15), Position::new(2, 8)]);
+    }
+
+    #[test]
+    fn test_interpret_admonition_refuses_a_name_no_admonition_kind_spells() {
+        // Given — `seealso` is a directive of its own, no admonition kind
+        let lines = [".. seealso::"];
+        let body = crate::directives::body::collect_directive_body(&lines, 1, 0);
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let body_ctx = ctx.without_section_titles();
+        let input =
+            crate::directives::input::test_input("seealso", &lines, &body, (&ctx, &body_ctx));
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let nodes = interpret_admonition(
+            &input,
+            &mut ParseState {
+                adornment_order: &mut adornment_order,
+                diagnostics: &mut diagnostics,
+            },
+        );
+
+        // Then
+        assert!(matches!(
+            nodes[..],
+            [Node::Directive(Directive::Unknown { .. })]
+        ));
     }
 }

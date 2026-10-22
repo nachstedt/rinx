@@ -1,52 +1,28 @@
 //! Recognizing a directive at the head of a block and routing it to the
 //! parser for its kind — the domain-object family via [`super::domains`],
-//! everything else by directive name.
+//! an entity type via the schema, every directive the table in
+//! [`super::spec`] spells through its entry there, and what is left by the
+//! vocabularies that depend on more than a name.
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::indent_width;
 
-use super::admonitions::try_parse_admonition_family;
 use super::body::{
     MarkerLine, MarkerText, body_indent, collect_argument_continuation_lines,
     collect_directive_body,
 };
-use super::button_link::parse_button_link;
-use super::code_block::{parse_code_block, parse_highlight, parse_literal_include};
-use super::contents::parse_contents;
-use super::data_table::{parse_csv_table, parse_list_table};
-use super::default_role::parse_default_role;
-use super::doctest::{DocTestDirectiveKind, parse_doctest_directive};
 use super::domains::object_type::{DirectiveObjectType, resolve_domain_object_type};
 use super::domains::{DirectiveSignatures, parse_domain_object};
-use super::dropdown::parse_dropdown;
 use super::entity::{EntityDirective, parse_entity};
-use super::entity_bar::parse_entity_bar;
-use super::entity_flow::parse_entity_flow;
-use super::entity_pie::parse_entity_pie;
 use super::entity_section::{EntitySectionSite, try_parse_entity_section};
-use super::entity_sequence::parse_entity_sequence;
-use super::entity_table::parse_entity_table;
-use super::entity_update::parse_entity_update;
 use super::error_node::unknown_directive;
-use super::glossary::parse_glossary;
-use super::grid::{parse_grid, parse_grid_item};
-use super::if_builder::parse_if_builder;
-use super::image::{parse_figure_directive, parse_image_directive};
-use super::include::parse_include;
-use super::index_directive::parse_index_directive;
-use super::math::parse_math_directive;
-use super::needimport::parse_needimport;
-use super::needservice::parse_needservice;
-use super::role::parse_role;
+use super::input::{DirectiveInput, ParseState};
 use super::scope::try_parse_scope_directive;
-use super::sectnum::{is_sectnum, parse_sectnum};
+use super::spec::registered_directive;
 use super::substitution::{parse_substitution_definition, split_substitution_marker};
-use super::table::parse_table_directive;
-use super::toctree::parse_toctree;
-use super::uml::parse_uml;
-use rinx_ast::{CodeBlockSource, Directive, Node};
+use rinx_ast::{Directive, Node};
 
 pub(crate) fn try_parse_directive(
     lines: &[&str],
@@ -67,63 +43,37 @@ pub(crate) fn try_parse_directive(
 
     let min_indent = indent_width(line);
 
+    let site = DirectiveSite {
+        lines,
+        index: i,
+        line,
+        min_indent,
+    };
+
     // Checked before the generic body collection below, because a domain
     // object splits the lines after its marker differently: any further
     // argument lines are peeled off as extra signatures first, and only what
     // remains is its body. No other directive name can reach this branch —
     // `resolve_domain_object_type` matches a disjoint set of names from the
     // ones handled afterwards.
-    if let Some(object_type) = resolve_domain_object_type(&name, ctx.default_domain) {
-        let (continuations_consumed, continuations) =
-            if object_type_supports_multiple_signatures(object_type) {
-                collect_argument_continuation_lines(lines, i + 1, min_indent)
-            } else {
-                (0, Vec::new())
-            };
-        let body = collect_directive_body(lines, i + 1 + continuations_consumed, min_indent);
-        let (body_lines, first_line_offset) = body.for_directive();
-        // Section titles keep the enclosing permission rather than being
-        // forbidden: Sphinx parses an object description's content with
-        // `allow_section_headings=True`.
-        let body_ctx = ctx.nested(
-            i + 1 + continuations_consumed + first_line_offset,
-            body_indent(&body.lines),
-        );
-        let domain_object = parse_domain_object(
-            object_type,
-            DirectiveSignatures {
-                argument,
-                continuations,
-                span: ctx.line_span(i, line),
-            },
-            &body_lines,
-            adornment_order,
-            diagnostics,
-            &body_ctx,
-        );
-        return Some((
-            1 + continuations_consumed + body.consumed,
-            vec![Node::Directive(Directive::DomainObject(domain_object))],
-        ));
-    }
-
-    // Checked here rather than in the `if name ==` chain below because an
-    // entity type is a *vocabulary* lookup, like a domain object's, not a
-    // fixed name — and because the entity parser needs the directive's own
-    // line to discriminate a generated id.
-    if let Some(result) = try_parse_entity_directive(
+    if let Some(result) = try_parse_domain_object_directive(
         &name,
         &argument,
-        &DirectiveSite {
-            lines,
-            index: i,
-            line,
-            min_indent,
-        },
+        &site,
         adornment_order,
         diagnostics,
         ctx,
     ) {
+        return Some(result);
+    }
+
+    // Checked here rather than through the directive table because an
+    // entity type is a *vocabulary* lookup, like a domain object's, not a
+    // fixed name — and because the entity parser needs the directive's own
+    // line to discriminate a generated id.
+    if let Some(result) =
+        try_parse_entity_directive(&name, &argument, &site, adornment_order, diagnostics, ctx)
+    {
         return Some(result);
     }
 
@@ -145,144 +95,90 @@ pub(crate) fn try_parse_directive(
     let body_ctx = ctx
         .nested(i + 1 + first_line_offset, body_indent(&body.lines))
         .without_section_titles();
-    let consumed_lines = body.consumed;
-
-    // Checked before the chain below, because these are the directives whose
-    // content may begin on the marker line — above the body context.
-    if let Some(directive) = try_parse_admonition_family(
-        &name,
-        &MarkerLine {
+    let input = DirectiveInput {
+        name: &name,
+        argument: &argument,
+        span: directive_span,
+        marker: MarkerLine {
             index: i,
             span: directive_span,
             argument: MarkerText::after_marker(line),
         },
-        &body,
-        adornment_order,
-        diagnostics,
+        body: &body,
+        body_lines: &body_lines,
         ctx,
-    ) {
-        return Some((1 + consumed_lines, vec![Node::Directive(directive)]));
-    }
-
-    // Checked before the one-node chain below, because these are the
-    // directives that answer with any number of nodes rather than exactly one.
-    if let Some(nodes) = try_parse_splicing_directive(
-        &name,
-        &argument,
-        directive_span,
-        &body_lines,
+        body_ctx: &body_ctx,
+    };
+    let mut state = ParseState {
         adornment_order,
         diagnostics,
-        // A splice is transparent: its titles are allowed exactly where the
-        // directive itself stands allows them.
-        &body_ctx.with_section_titles(ctx.section_titles()),
-    ) {
-        return Some((1 + consumed_lines, nodes));
-    }
-
-    let node = parse_body_directive(
-        name,
-        argument,
-        directive_span,
-        &body_lines,
-        adornment_order,
-        diagnostics,
-        &body_ctx,
-    );
-    Some((1 + consumed_lines, vec![node]))
+    };
+    let nodes = match registered_directive(&name) {
+        Some(directive) => (directive.interpret)(&input, &mut state),
+        None => vec![parse_vocabulary_directive(&input, &mut state)],
+    };
+    Some((1 + body.consumed, nodes))
 }
 
-/// Dispatches the directives that contribute their nodes to the *enclosing*
-/// block instead of wrapping them in one of their own.
-///
-/// All three are transclusions rather than containers, and that is the
-/// property they share: a section heading, hyperlink target, index entry or
-/// `.. toctree::` written inside one belongs to this document exactly as if it
-/// had been typed here. Wrapping the result in a node would break every one of
-/// those — section nesting first — so none of them can live in
-/// [`try_parse_extension_directive`] or the chain below, which answer with a
-/// single [`Directive`].
-///
-/// `.. needimport::` is the one whose nodes are not reStructuredText the
-/// author wrote: it builds entities out of a `needs.json`. It belongs here
-/// all the same, and for the same reason — an imported entity must be an
-/// ordinary entity of this document, not something nested inside a directive
-/// that every later traversal would have to learn about.
-///
-/// Returns `None` for a name that is none of them, leaving it to that chain.
-fn try_parse_splicing_directive(
-    name: &str,
-    argument: &str,
-    directive_span: Option<rinx_ast::Span>,
-    body_lines: &[&str],
-    adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<Vec<Node>> {
-    match name {
-        // Splices another file's reStructuredText in where it stands.
-        "include" => Some(parse_include(
-            argument,
-            directive_span,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            ctx,
-        )),
-        // sphinx-needs': splices the entities it reads out of a needs.json,
-        // rather than its own body — the only one of the three whose nodes
-        // come from somewhere other than reStructuredText.
-        "needimport" => Some(parse_needimport(
-            argument,
-            directive_span,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            ctx,
-        )),
-        // Contributes no node at all: it records a role for the rest of the
-        // document, which only the parse itself reads. It sits here because
-        // this is the one dispatcher allowed to answer with *no* node.
-        "role" => Some(parse_role(
-            argument,
-            directive_span,
-            body_lines,
-            diagnostics,
-            ctx,
-        )),
-        // The same for the role interpreted text without one is read as.
-        "default-role" => Some(parse_default_role(
-            argument,
-            directive_span,
-            body_lines,
-            diagnostics,
-            ctx,
-        )),
-        // sphinx-simplepdf's: splices its own body, but only for the builder
-        // this build is.
-        "if-builder" => Some(parse_if_builder(
-            argument,
-            directive_span,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            ctx,
-        )),
-        _ => None,
-    }
-}
-
-/// Dispatches every directive whose body is collected the ordinary way — that
-/// is, all of them except domain objects, which peel extra signature lines off
-/// the argument before their body starts and so are handled by the caller.
+/// Parses a directive the table has no entry for: one whose meaning depends
+/// on more than its name — a substitution definition, an entity section the
+/// schema declares, a scope directive under the default domain — or else an
+/// unknown one.
 ///
 /// Falls back to [`Directive::Unknown`] — reported as `directive.unknown` and
 /// drawn as a visible error block, and what the benchmark counts as an
 /// unsupported directive.
+fn parse_vocabulary_directive(input: &DirectiveInput<'_, '_>, state: &mut ParseState<'_>) -> Node {
+    let &DirectiveInput {
+        name,
+        argument,
+        span,
+        body_lines,
+        body_ctx,
+        ..
+    } = input;
+    if let Some(node) = try_parse_substitution_definition(
+        name,
+        argument,
+        span,
+        body_lines,
+        state.diagnostics,
+        body_ctx,
+    ) {
+        return node;
+    }
+    if let Some(node) = try_parse_entity_section(
+        name,
+        argument,
+        &EntitySectionSite { span, body_lines },
+        state.adornment_order,
+        state.diagnostics,
+        body_ctx,
+    ) {
+        return node;
+    }
+    if let Some(directive) = try_parse_scope_directive(
+        name,
+        argument,
+        span,
+        body_lines,
+        state.diagnostics,
+        body_ctx,
+    ) {
+        return Node::Directive(directive);
+    }
+    let directive = unknown_directive(
+        name.to_string(),
+        argument.to_string(),
+        body_lines,
+        span,
+        state.diagnostics,
+    );
+    Node::Directive(directive)
+}
+
 /// Recognizes and parses a substitution definition's marker, `.. |name|
-/// inner::`, which is not a directive name at all — tried before every other
-/// name below, which would otherwise match nothing and fall all the way to
-/// [`Directive::Unknown`].
+/// inner::`, which is not a directive name at all.
 fn try_parse_substitution_definition(
     name: &str,
     argument: &str,
@@ -304,47 +200,6 @@ fn try_parse_substitution_definition(
     Some(Node::Directive(directive))
 }
 
-/// Recognizes and parses the two directives that each build a table of
-/// contents from a document set: project-wide `.. toctree::` and this
-/// document's own `.. contents::`. Grouped for the same reason
-/// [`try_parse_substitution_definition`] is split out — one more `if name ==`
-/// pair would have pushed [`parse_body_directive`] past its line limit.
-fn try_parse_contents_family(
-    name: &str,
-    argument: &str,
-    body_lines: &[&str],
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<Node> {
-    let directive = match name {
-        "toctree" => parse_toctree(body_lines, diagnostics, ctx),
-        "contents" => parse_contents(argument, body_lines, diagnostics, ctx),
-        _ => return None,
-    };
-    Some(Node::Directive(directive))
-}
-
-/// Recognizes and parses `.. sectnum::`/`.. section-numbering::`. Split out
-/// for the same reason [`try_parse_contents_family`] is: one more `if` in
-/// [`parse_body_directive`] would have pushed it past its line limit.
-fn try_parse_sectnum(
-    name: &str,
-    argument: &str,
-    body_lines: &[&str],
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<Node> {
-    if !is_sectnum(name) {
-        return None;
-    }
-    Some(Node::Directive(parse_sectnum(
-        argument,
-        body_lines,
-        diagnostics,
-        ctx,
-    )))
-}
-
 /// Where in the source a directive marker sits, and the lines it may claim.
 ///
 /// One value rather than four parameters, because every one of them is read
@@ -361,10 +216,64 @@ struct DirectiveSite<'a> {
     min_indent: usize,
 }
 
+/// Parses `.. <object type>::` when `name` resolves to a domain object under
+/// the default domain.
+///
+/// Split out of [`try_parse_directive`] purely to keep that function's line
+/// count readable.
+fn try_parse_domain_object_directive(
+    name: &str,
+    argument: &str,
+    site: &DirectiveSite<'_>,
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Option<(usize, Vec<Node>)> {
+    let object_type = resolve_domain_object_type(name, ctx.default_domain)?;
+    let &DirectiveSite {
+        lines,
+        index: i,
+        line,
+        min_indent,
+    } = site;
+    let (continuations_consumed, continuations) =
+        if object_type_supports_multiple_signatures(object_type) {
+            collect_argument_continuation_lines(lines, i + 1, min_indent)
+        } else {
+            (0, Vec::new())
+        };
+    let body = collect_directive_body(lines, i + 1 + continuations_consumed, min_indent);
+    let (body_lines, first_line_offset) = body.for_directive();
+    // Section titles keep the enclosing permission rather than being
+    // forbidden: Sphinx parses an object description's content with
+    // `allow_section_headings=True`.
+    let body_ctx = ctx.nested(
+        i + 1 + continuations_consumed + first_line_offset,
+        body_indent(&body.lines),
+    );
+    let domain_object = parse_domain_object(
+        object_type,
+        DirectiveSignatures {
+            argument: argument.to_string(),
+            continuations,
+            span: ctx.line_span(i, line),
+        },
+        &body_lines,
+        adornment_order,
+        diagnostics,
+        &body_ctx,
+    );
+    Some((
+        1 + continuations_consumed + body.consumed,
+        vec![Node::Directive(Directive::DomainObject(domain_object))],
+    ))
+}
+
 /// Parses `.. <type>::` when the schema declares an entity type of that name.
 ///
 /// Split out of [`try_parse_directive`] purely to keep that function's line
-/// count readable, the same reason `try_parse_contents_family` exists.
+/// count readable, the same reason [`try_parse_domain_object_directive`]
+/// exists.
 fn try_parse_entity_directive(
     name: &str,
     argument: &str,
@@ -404,332 +313,6 @@ fn try_parse_entity_directive(
     Some((1 + body.consumed, vec![Node::Directive(directive)]))
 }
 
-fn parse_body_directive(
-    name: String,
-    argument: String,
-    directive_span: Option<rinx_ast::Span>,
-    body_lines: &[&str],
-    adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Node {
-    if let Some(node) = try_parse_substitution_definition(
-        &name,
-        &argument,
-        directive_span,
-        body_lines,
-        diagnostics,
-        ctx,
-    ) {
-        return node;
-    }
-    if let Some(node) = try_parse_entity_section(
-        &name,
-        &argument,
-        &EntitySectionSite {
-            span: directive_span,
-            body_lines,
-        },
-        adornment_order,
-        diagnostics,
-        ctx,
-    ) {
-        return node;
-    }
-    if let Some(node) = try_parse_contents_family(&name, &argument, body_lines, diagnostics, ctx) {
-        return node;
-    }
-    parse_remaining_body_directive(
-        name,
-        argument,
-        directive_span,
-        body_lines,
-        adornment_order,
-        diagnostics,
-        ctx,
-    )
-}
-
-/// The rest of the directive chain, from `.. sectnum::` onwards.
-///
-/// Split from [`parse_body_directive`] only to keep both under the line limit
-/// as the chain grows; the order across the two is the order a name is tried
-/// in, and nothing else distinguishes them.
-fn parse_remaining_body_directive(
-    name: String,
-    argument: String,
-    directive_span: Option<rinx_ast::Span>,
-    body_lines: &[&str],
-    adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Node {
-    if let Some(node) = try_parse_sectnum(&name, &argument, body_lines, diagnostics, ctx) {
-        return node;
-    }
-    if let Some(directive) = parse_code_family(&name, &argument, body_lines, diagnostics, ctx) {
-        return Node::Directive(directive);
-    }
-    if let Some(directive) = try_parse_extension_directive(
-        &name,
-        &argument,
-        directive_span,
-        body_lines,
-        adornment_order,
-        diagnostics,
-        ctx,
-    ) {
-        return Node::Directive(directive);
-    }
-    if name == "glossary" {
-        let directive = parse_glossary(body_lines, adornment_order, diagnostics, ctx);
-        return Node::Directive(directive);
-    }
-    if name == "list-table" {
-        let directive = parse_list_table(&argument, body_lines, adornment_order, diagnostics, ctx);
-        return Node::Directive(directive);
-    }
-    if name == "csv-table" {
-        let directive = parse_csv_table(&argument, body_lines, adornment_order, diagnostics, ctx);
-        return Node::Directive(directive);
-    }
-    if let Some(directive) = parse_image_family(
-        &name,
-        &argument,
-        directive_span,
-        body_lines,
-        adornment_order,
-        diagnostics,
-        ctx,
-    ) {
-        return Node::Directive(directive);
-    }
-    if name == "math" {
-        let directive = parse_math_directive(argument, body_lines, diagnostics, ctx);
-        return Node::Directive(directive);
-    }
-    if name == "table" {
-        let directive =
-            parse_table_directive(&argument, body_lines, adornment_order, diagnostics, ctx);
-        return Node::Directive(directive);
-    }
-    if name == "index" {
-        let directive = parse_index_directive(&argument, body_lines, diagnostics, ctx);
-        return Node::Directive(directive);
-    }
-    if let Some(kind) = DocTestDirectiveKind::from_name(&name) {
-        let directive = parse_doctest_directive(kind, &argument, body_lines, diagnostics, ctx);
-        return Node::Directive(directive);
-    }
-    if let Some(directive) = try_parse_scope_directive(
-        &name,
-        &argument,
-        directive_span,
-        body_lines,
-        diagnostics,
-        ctx,
-    ) {
-        return Node::Directive(directive);
-    }
-    let directive = unknown_directive(name, argument, body_lines, directive_span, diagnostics);
-    Node::Directive(directive)
-}
-
-/// Parses the directives presenting one question asked of the entity graph —
-/// which entities, and how they relate — each in its own way.
-///
-/// Grouped apart from the other extension directives because they share more
-/// than their origin: none takes a body of document content, every one carries
-/// a question the project index answers while rendering, and each is spelled
-/// both this build's way and sphinx-needs'.
-fn try_parse_entity_view(
-    name: &str,
-    argument: &str,
-    directive_span: Option<rinx_ast::Span>,
-    body_lines: &[&str],
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<Directive> {
-    // This build's own listing directive, and sphinx-needs' spelling of it.
-    if let Ok(source) = name.parse::<rinx_ast::EntityTableSource>() {
-        return Some(parse_entity_table(
-            source,
-            argument,
-            directive_span,
-            body_lines,
-            diagnostics,
-            ctx,
-        ));
-    }
-    // This build's own flowchart, and sphinx-needs' spelling of it. A sibling
-    // of the listing directive above rather than of the diagram below: it
-    // carries a question, not a template, and its picture is generated.
-    if let Ok(source) = name.parse::<rinx_ast::EntityFlowSource>() {
-        return Some(parse_entity_flow(
-            source,
-            argument,
-            directive_span,
-            body_lines,
-            diagnostics,
-            ctx,
-        ));
-    }
-    // This build's own sequence diagram, and sphinx-needs' spelling of it —
-    // the flowchart's sibling: a question walked through the entity graph and
-    // drawn as generated PlantUML.
-    if let Ok(source) = name.parse::<rinx_ast::EntitySequenceSource>() {
-        return Some(parse_entity_sequence(
-            source,
-            argument,
-            directive_span,
-            body_lines,
-            diagnostics,
-            ctx,
-        ));
-    }
-    // This build's own pie chart, and sphinx-needs' spelling of it. The third
-    // presentation of the listing directive's question — rows, a graph, or
-    // proportions — and the only picture here that is never compiled: its SVG
-    // is drawn by the render action itself.
-    if let Ok(source) = name.parse::<rinx_ast::EntityPieSource>() {
-        return Some(parse_entity_pie(
-            source,
-            argument,
-            directive_span,
-            body_lines,
-            diagnostics,
-            ctx,
-        ));
-    }
-    // This build's own bar chart, and sphinx-needs' spelling of it: the pie's
-    // question with a second dimension, drawn along an axis and — like the
-    // pie — never compiled.
-    if let Ok(source) = name.parse::<rinx_ast::EntityBarSource>() {
-        return Some(parse_entity_bar(
-            source,
-            argument,
-            directive_span,
-            body_lines,
-            diagnostics,
-            ctx,
-        ));
-    }
-    None
-}
-
-/// Parses the directives that come from a *Sphinx extension* rather than from
-/// docutils or Sphinx itself.
-///
-/// Grouped because they share a rule the built-ins do not: this build has no
-/// `extensions =` config, so a supported extension directive is simply always
-/// available and its name is reserved against entity schemas. See
-/// `docs/compatibility.rst`'s "Extension directives" section, which lists
-/// exactly these.
-fn try_parse_extension_directive(
-    name: &str,
-    argument: &str,
-    directive_span: Option<rinx_ast::Span>,
-    body_lines: &[&str],
-    adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<Directive> {
-    // sphinx-design's collapsible container.
-    if name == "dropdown" {
-        return Some(parse_dropdown(
-            argument,
-            directive_span,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            ctx,
-        ));
-    }
-    // sphinx-design's responsive row, and the cell that goes in it. Two
-    // directives, one construct — a grid-item written anywhere else is still
-    // parsed, so its content survives to be warned about rather than lost.
-    if name == "grid" {
-        return Some(parse_grid(
-            argument,
-            directive_span,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            ctx,
-        ));
-    }
-    if name == "grid-item" {
-        return Some(parse_grid_item(
-            directive_span,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            ctx,
-        ));
-    }
-    // sphinx-design's button-shaped external link. Unlike the three above it
-    // has no block body at all — its content is a label, parsed as inline
-    // markup — so it is the one member of this group no block traversal has to
-    // learn about.
-    if name == "button-link" {
-        return Some(parse_button_link(
-            argument,
-            directive_span,
-            body_lines,
-            diagnostics,
-            ctx,
-        ));
-    }
-    // The views over the entity graph — rows, a flowchart, a sequence
-    // diagram, a pie chart — each in this build's spelling and sphinx-needs'.
-    if let Some(view) =
-        try_parse_entity_view(name, argument, directive_span, body_lines, diagnostics, ctx)
-    {
-        return Some(view);
-    }
-    // This build's own project-wide field-mutation directive, and
-    // sphinx-needs' spelling of it. Unlike its three siblings above, it
-    // carries a body — ordinary RST prose justifying the mutation — so it
-    // takes `adornment_order` exactly as `.. dropdown::` does.
-    if let Ok(source) = name.parse::<rinx_ast::EntityUpdateSource>() {
-        return Some(parse_entity_update(
-            source,
-            argument,
-            directive_span,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            ctx,
-        ));
-    }
-    // sphinx-needs' external-service directive, refused by name so its
-    // warning can say why and what to write instead — `directive.unknown`
-    // would read as a typo.
-    if name == "needservice" {
-        return Some(parse_needservice(
-            argument,
-            directive_span,
-            body_lines,
-            diagnostics,
-        ));
-    }
-    // sphinxcontrib-plantuml's two names, this build's two diagram names and
-    // sphinx-needs' two — one node, one parser. The plain PlantUML pair is
-    // nobody's extension in the sense the others are, but it belongs to the
-    // same construct, and splitting the six across two dispatch sites is
-    // exactly how the compiled set and the rendered set drift apart.
-    if let Ok(source) = name.parse::<rinx_ast::UmlSource>() {
-        return Some(parse_uml(
-            source,
-            directive_span,
-            body_lines,
-            diagnostics,
-            ctx,
-        ));
-    }
-    None
-}
-
 /// Whether a directive of this object type may declare more than one
 /// signature, as several argument lines below its marker.
 ///
@@ -740,95 +323,12 @@ const fn object_type_supports_multiple_signatures(object_type: DirectiveObjectTy
     !matches!(object_type, DirectiveObjectType::PyModule)
 }
 
-/// Parses `.. image::` or `.. figure::`, or `None` when `name` is neither.
-///
-/// Grouped the same way [`parse_code_family`] groups its four, purely to keep
-/// [`parse_body_directive`]'s own dispatch chain from growing past a readable
-/// length as directive families accumulate.
-fn parse_image_family(
-    name: &str,
-    argument: &str,
-    directive_span: Option<rinx_ast::Span>,
-    body_lines: &[&str],
-    adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<Directive> {
-    match name {
-        "image" => Some(parse_image_directive(
-            argument,
-            directive_span,
-            body_lines,
-            diagnostics,
-            ctx,
-        )),
-        "figure" => Some(parse_figure_directive(
-            argument,
-            directive_span,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            ctx,
-        )),
-        _ => None,
-    }
-}
-
-/// Parses the four directives [`super::code_block`] owns, or `None` when
-/// `name` is not one of them.
-///
-/// Grouped into one branch of the dispatcher because they share a module and a
-/// vocabulary, and because three of them produce the very same
-/// [`Directive::CodeBlock`]: `.. code-block::`, docutils' `.. code::`, and
-/// `.. literalinclude::`, which differ only in how their source spells the
-/// block. `.. highlight::` rides along as the directive the first three
-/// inherit their language from.
-fn parse_code_family(
-    name: &str,
-    argument: &str,
-    body_lines: &[&str],
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<Directive> {
-    if let Some(source) = code_block_source(name) {
-        return Some(parse_code_block(
-            source,
-            argument,
-            body_lines,
-            diagnostics,
-            ctx,
-        ));
-    }
-    match name {
-        "literalinclude" => Some(parse_literal_include(
-            argument,
-            body_lines,
-            diagnostics,
-            ctx,
-        )),
-        "highlight" => Some(parse_highlight(argument, body_lines, diagnostics, ctx)),
-        _ => None,
-    }
-}
-
-/// Which of the two inline code-block directives `name` spells, if either.
-///
-/// `.. code::` is docutils' name for the same construct; both lower to one
-/// [`Directive::CodeBlock`] carrying a [`CodeBlockSource`].
-fn code_block_source(name: &str) -> Option<CodeBlockSource> {
-    match name {
-        "code-block" => Some(CodeBlockSource::CodeBlock),
-        "code" => Some(CodeBlockSource::Code),
-        _ => None,
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::parse;
-    use rinx_ast::CodeLanguage;
     use rinx_ast::Domain;
+    use rinx_ast::{CodeBlockSource, CodeLanguage};
 
     /// A plain toctree document entry spanning the whole of source line
     /// `line`, which is the shape `parse_toctree` produces for an unindented
@@ -845,21 +345,49 @@ mod tests {
         }
     }
 
-    /// Dispatches `name`/`argument`/`body` through [`parse_body_directive`]
-    /// with throwaway state, returning the node and any diagnostics.
+    /// Dispatches `.. name:: argument` over the indented `body` through
+    /// [`try_parse_directive`] with throwaway state, returning the one node and
+    /// any diagnostics.
     fn dispatch(name: &str, argument: &str, body: &[&str]) -> (Node, Diagnostics) {
+        let (nodes, diagnostics) = dispatch_all(name, argument, body);
+        let [node] = <[Node; 1]>::try_from(nodes).expect("exactly one node");
+        (node, diagnostics)
+    }
+
+    /// [`dispatch`] for a directive answering with any number of nodes.
+    fn dispatch_all(name: &str, argument: &str, body: &[&str]) -> (Vec<Node>, Diagnostics) {
+        let marker = format!(".. {name}:: {argument}");
+        let lines: Vec<&str> = std::iter::once(marker.as_str())
+            .chain(body.iter().copied())
+            .collect();
         let mut adornment_order = Vec::new();
         let mut diagnostics = Diagnostics::default();
-        let node = parse_body_directive(
-            name.to_string(),
-            argument.to_string(),
-            None,
-            body,
+        let (_, nodes) = try_parse_directive(
+            &lines,
+            0,
             &mut adornment_order,
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),
-        );
-        (node, diagnostics)
+        )
+        .expect("a directive marker");
+        (nodes, diagnostics)
+    }
+
+    #[test]
+    fn test_try_parse_directive_reaches_a_parser_for_every_spelling_in_the_table() {
+        // Given / When / Then — whatever each parser makes of a bare argument
+        // and body, none of them may fall through to an unknown directive
+        for spec in crate::directives::directive_specs() {
+            for name in spec.names {
+                let (nodes, _) = dispatch_all(name, "x", &["   content"]);
+                assert!(
+                    !nodes
+                        .iter()
+                        .any(|node| matches!(node, Node::Directive(Directive::Unknown { .. }))),
+                    "`{name}` fell through to an unknown directive: {nodes:?}"
+                );
+            }
+        }
     }
 
     #[test]
@@ -897,7 +425,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_body_directive_dispatches_a_known_directive() {
+    fn test_try_parse_directive_dispatches_a_known_directive() {
         // Given
         let body = ["   term", "      Definition."];
 
@@ -909,7 +437,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_body_directive_dispatches_the_doctest_family() {
+    fn test_try_parse_directive_dispatches_the_doctest_family() {
         // Given
         let body = ["   >>> 1"];
 
@@ -921,7 +449,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_body_directive_routes_both_code_block_spellings() {
+    fn test_try_parse_directive_routes_both_code_block_spellings() {
         // Given — Sphinx's name and docutils' name for one construct
         let body = ["   print(1)"];
 
@@ -941,7 +469,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_body_directive_falls_back_to_unknown() {
+    fn test_try_parse_directive_falls_back_to_unknown() {
         // Given — this is what the benchmark counts as unsupported.
         let body = ["   content"];
 
@@ -995,7 +523,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_body_directive_routes_needsequence_to_the_sequence_parser() {
+    fn test_try_parse_directive_routes_needsequence_to_the_sequence_parser() {
         // Given — no schema is in hand here, so the relation is unknown and the
         // diagram degrades; what matters is which parser said so
         let body = ["   :start: COMP_UI", "   :link_types: sends"];
@@ -1013,7 +541,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_body_directive_refuses_needservice_by_name_rather_than_as_unknown() {
+    fn test_try_parse_directive_refuses_needservice_by_name_rather_than_as_unknown() {
         // Given
         let body = ["   :query: repo:useblocks/sphinx-needs"];
 
@@ -1034,7 +562,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_body_directive_forwards_diagnostics() {
+    fn test_try_parse_directive_forwards_diagnostics() {
         // Given
         let body = ["   :bogus:", "", "   >>> 1"];
 
@@ -1269,306 +797,5 @@ mod tests {
         };
         assert_eq!(block.language, CodeLanguage::Inherit);
         assert_eq!(block.content, "x = 1");
-    }
-}
-
-/// Every directive name this build already dispatches.
-///
-/// Kept beside the chain above deliberately: the two are edited together, and
-/// a name added there without being added here would let a project declare an
-/// entity section that silently shadows it. `is_builtin_directive_name` is the
-/// only consumer — the entity schema loader asks it through the worker, rather
-/// than `rinx_entity` keeping a copy that could drift.
-///
-/// Domain-object and scope directive names are included: they are resolved by
-/// [`resolve_domain_object_type`] and [`try_parse_scope_directive`] rather than
-/// by the chain, but they are just as much names a section must not take.
-const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
-    // Admonitions
-    "attention",
-    "caution",
-    "danger",
-    "error",
-    "hint",
-    "important",
-    "note",
-    "tip",
-    "warning",
-    "admonition",
-    "seealso",
-    // Version changes
-    "versionadded",
-    "versionchanged",
-    "deprecated",
-    // Doctests
-    "doctest",
-    "testcode",
-    "testoutput",
-    "testsetup",
-    "testcleanup",
-    // Code
-    "code-block",
-    "code",
-    "literalinclude",
-    "highlight",
-    // Images
-    "image",
-    "figure",
-    // Tables
-    "list-table",
-    "csv-table",
-    "table",
-    // Navigation and structure
-    "toctree",
-    "contents",
-    "sectnum",
-    "section-numbering",
-    "include",
-    "role",
-    "default-role",
-    "glossary",
-    "index",
-    // Other content
-    "dropdown",
-    "grid",
-    "grid-item",
-    "button-link",
-    // sphinx-simplepdf's conditional-on-the-builder content
-    "if-builder",
-    // Listing directives over the entity graph, in both spellings
-    "entity-table",
-    "needtable",
-    // This build's own flowchart over the entity graph, and sphinx-needs'
-    // spelling of it.
-    "entity-flow",
-    "needflow",
-    // This build's own sequence diagram over the entity graph, and
-    // sphinx-needs' spelling of it.
-    "entity-sequence",
-    "needsequence",
-    // This build's own pie chart over the entity graph, and sphinx-needs'
-    // spelling of it.
-    "entity-pie",
-    "needpie",
-    // This build's own bar chart over the entity graph, and sphinx-needs'
-    // spelling of it.
-    "entity-bar",
-    "needbar",
-    // This build's own project-wide field-mutation directive, and
-    // sphinx-needs' spelling of it — see
-    // `docs/decisions/019-entity-update.md`.
-    "entity-update",
-    "needextend",
-    // sphinx-needs' import, which keeps its own name alone — see
-    // `docs/decisions/016-needimport.md` for why `entity-import` is not
-    // claimed beside it.
-    "needimport",
-    // sphinx-needs' external-service directive: refused by name, but reserved
-    // all the same, so a schema section cannot quietly take the name over.
-    "needservice",
-    // Diagram directives: sphinxcontrib-plantuml's two names, this build's
-    // two and sphinx-needs' two
-    "plantuml",
-    "uml",
-    "entity-diagram",
-    "needuml",
-    "entity-arch",
-    "needarch",
-    "math",
-    // Domain objects and scope directives
-    "function",
-    "decorator",
-    "module",
-    "data",
-    "method",
-    "classmethod",
-    "staticmethod",
-    "decoratormethod",
-    "class",
-    "attribute",
-    "exception",
-    "macro",
-    "struct",
-    "union",
-    "member",
-    "var",
-    "type",
-    "option",
-    "cmdoption",
-    "currentmodule",
-    "program",
-    "namespace",
-    "namespace-push",
-    "namespace-pop",
-];
-
-/// Reports whether `name` is a directive this build already understands.
-///
-/// Used by the entity schema loader to refuse a section that would shadow one.
-/// Matches the bare name only: a domain-qualified spelling like `py:class`
-/// cannot collide with a section name, which never carries a colon.
-#[must_use]
-pub fn is_builtin_directive_name(name: &str) -> bool {
-    BUILTIN_DIRECTIVE_NAMES.contains(&name)
-}
-
-#[cfg(test)]
-mod builtin_name_tests {
-    use super::*;
-
-    /// The names derived from an enum elsewhere in the workspace, which is
-    /// where silent drift is likeliest: adding an `AdmonitionKind` variant is a
-    /// one-line change that would otherwise leave this list stale and let a
-    /// project declare a section shadowing the new directive.
-    ///
-    /// The hand-written remainder of `BUILTIN_DIRECTIVE_NAMES` is maintained
-    /// with the dispatch chain above, which is why the two sit in one file.
-    #[test]
-    fn test_every_admonition_kind_is_reserved() {
-        // Given — one per `AdmonitionKind`, via its own `FromStr`
-        let names = [
-            "attention",
-            "caution",
-            "danger",
-            "error",
-            "hint",
-            "important",
-            "note",
-            "tip",
-            "warning",
-            "admonition",
-        ];
-
-        // When / Then
-        for name in names {
-            assert!(
-                name.parse::<rinx_ast::AdmonitionKind>().is_ok(),
-                "`{name}` is no longer an admonition; this list is stale"
-            );
-            assert!(
-                is_builtin_directive_name(name),
-                "admonition `{name}` is not reserved"
-            );
-        }
-    }
-
-    #[test]
-    fn test_every_version_change_kind_is_reserved() {
-        // Given
-        let names = ["versionadded", "versionchanged", "deprecated"];
-
-        // When / Then
-        for name in names {
-            assert!(
-                name.parse::<rinx_ast::VersionChangeKind>().is_ok(),
-                "`{name}` is no longer a version change; this list is stale"
-            );
-            assert!(
-                is_builtin_directive_name(name),
-                "version change `{name}` is not reserved"
-            );
-        }
-    }
-
-    #[test]
-    fn test_every_doctest_directive_is_reserved() {
-        // Given
-        let names = [
-            "doctest",
-            "testcode",
-            "testoutput",
-            "testsetup",
-            "testcleanup",
-        ];
-
-        // When / Then
-        for name in names {
-            assert!(
-                DocTestDirectiveKind::from_name(name).is_some(),
-                "`{name}` is no longer a doctest directive; this list is stale"
-            );
-            assert!(
-                is_builtin_directive_name(name),
-                "doctest directive `{name}` is not reserved"
-            );
-        }
-    }
-
-    #[test]
-    fn test_every_domain_object_directive_name_is_reserved() {
-        // Given — both domains, since a bare name resolves through either
-        let domains = [rinx_ast::Domain::Py, rinx_ast::Domain::C];
-
-        // When / Then
-        for domain in domains {
-            for name in [
-                "function",
-                "module",
-                "data",
-                "method",
-                "class",
-                "attribute",
-                "exception",
-                "macro",
-                "struct",
-                "union",
-                "member",
-                "type",
-                "option",
-            ] {
-                if resolve_domain_object_type(name, domain).is_some() {
-                    assert!(
-                        is_builtin_directive_name(name),
-                        "domain object directive `{name}` is not reserved"
-                    );
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn test_the_reserved_list_holds_no_duplicates() {
-        // Given
-        let mut seen: Vec<&str> = Vec::new();
-
-        // When / Then
-        for name in BUILTIN_DIRECTIVE_NAMES {
-            assert!(!seen.contains(name), "`{name}` is listed twice");
-            seen.push(name);
-        }
-    }
-
-    #[test]
-    fn test_a_name_no_directive_uses_is_not_reserved() {
-        // Given / When / Then
-        assert!(!is_builtin_directive_name("verification-criteria"));
-        assert!(!is_builtin_directive_name("req"));
-        assert!(!is_builtin_directive_name("safety-comment"));
-    }
-
-    #[test]
-    fn test_a_representative_directive_name_from_each_family_is_reserved() {
-        // Given / When / Then
-        assert!(is_builtin_directive_name("note"));
-        assert!(is_builtin_directive_name("toctree"));
-        assert!(is_builtin_directive_name("csv-table"));
-        assert!(is_builtin_directive_name("code-block"));
-        assert!(is_builtin_directive_name("image"));
-        assert!(is_builtin_directive_name("include"));
-        assert!(is_builtin_directive_name("currentmodule"));
-    }
-
-    #[test]
-    fn test_a_directive_refused_by_name_is_still_reserved() {
-        // Given / When / Then — a section named `needservice` would otherwise
-        // turn a refused construct into a silently accepted one
-        assert!(is_builtin_directive_name("needservice"));
-    }
-
-    #[test]
-    fn test_both_spellings_of_the_sequence_diagram_are_reserved() {
-        // Given / When / Then
-        assert!(is_builtin_directive_name("entity-sequence"));
-        assert!(is_builtin_directive_name("needsequence"));
     }
 }

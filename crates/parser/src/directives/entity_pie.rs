@@ -21,6 +21,8 @@
 //! ones it does not are refused **by name**, not ignored: an author who asked
 //! for exploded wedges and silently got none has no way to find out why.
 
+use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{Diagnostic, DiagnosticCode, Directive, EntityPie, EntityPieSource, PieSlice, Span};
 
 use crate::context::ParseCtx;
@@ -61,6 +63,31 @@ const UNSUPPORTED_OPTIONS: [(&str, &str); 6] = [
         "an empty chart is reported as entity-pie.empty-result",
     ),
 ];
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["entity-pie", "needpie"],
+    doc: "A pie chart of how many entities each filter selects.",
+};
+
+/// Interprets `.. entity-pie::` or `.. needpie::`, recording which was
+/// written.
+pub(in crate::directives) fn interpret_entity_pie(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    let Ok(source) = input.name.parse::<rinx_ast::EntityPieSource>() else {
+        return unknown(input, state);
+    };
+    single(parse_entity_pie(
+        source,
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
+}
 
 /// Parses a `.. entity-pie::` / `.. needpie::` into a [`Directive::EntityPie`].
 pub(super) fn parse_entity_pie(

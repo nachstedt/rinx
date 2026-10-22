@@ -7,6 +7,8 @@
 //! caption writes an empty comment (`..`) first, which is the one piece of
 //! markup this parser consumes rather than parses.
 
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{AssetUri, DiagnosticCode, Directive, Figure, FigureWidth, InlineNode, Node, Span};
 
 use crate::blocks::parse_blocks;
@@ -129,6 +131,27 @@ fn split_caption_and_legend(
             legend: nodes,
         }
     }
+}
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const FIGURE_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["figure"],
+    doc: "A picture with a caption and a legend.",
+};
+
+/// Interprets `.. figure::`.
+pub(in crate::directives) fn interpret_figure(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_figure_directive(
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.adornment_order,
+        state.diagnostics,
+        input.body_ctx,
+    ))
 }
 
 /// Parses a `.. figure::` directive into a [`Directive::Figure`].

@@ -17,6 +17,8 @@
 //! The body is ordinary RST prose — the justification for the change — parsed
 //! exactly as `.. dropdown::`'s is.
 
+use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, EntityUpdate, EntityUpdateSource, FieldMutation,
     FieldMutationMode, Span,
@@ -42,6 +44,32 @@ use super::options::{OptionLine, scan_option_lines};
 /// `attributes["title"]`; allowing `Set` on the attribute alone would desync
 /// the two. See `docs/decisions/019-entity-update.md`.
 const PROTECTED_FIELDS: [&str; 5] = ["id", "type", "type_name", "docname", "title"];
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["entity-update", "needextend"],
+    doc: "Changes fields of the entities a filter selects, project-wide.",
+};
+
+/// Interprets `.. entity-update::` or `.. needextend::`, recording which was
+/// written.
+pub(in crate::directives) fn interpret_entity_update(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    let Ok(source) = input.name.parse::<rinx_ast::EntityUpdateSource>() else {
+        return unknown(input, state);
+    };
+    single(parse_entity_update(
+        source,
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.adornment_order,
+        state.diagnostics,
+        input.body_ctx,
+    ))
+}
 
 /// Parses a `.. entity-update::` / `.. needextend::` into a
 /// [`Directive::EntityUpdate`].
