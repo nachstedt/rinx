@@ -1,8 +1,8 @@
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::{OptionLine, report_unknown_options};
+use crate::directives::options::{OptionLine, classify_options, directive_options};
 use crate::headings::Adornment;
-use rinx_ast::{DiagnosticCode, DomainObjectBody, ModuleFlag, ModuleOptions};
+use rinx_ast::{DomainObjectBody, ModuleFlag, ModuleOptions};
 
 /// Parses a `.. py:module::` body: reads its options (a `:synopsis:` wrapped
 /// over several lines is one value), reports any option `py:module` does not
@@ -13,14 +13,15 @@ pub(crate) fn parse_py_module(
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
 ) -> DomainObjectBody {
-    let (options, unrecognized) = read_module_options(&invocation.options);
-    report_unknown_options(
-        &unrecognized,
+    let mut options = ModuleOptions::default();
+    for (option, line) in classify_options::<ModuleOption>(
+        &invocation.options,
         "py:module",
-        DiagnosticCode::DirectiveUnknownOption,
         diagnostics,
         &invocation.ctx,
-    );
+    ) {
+        read_module_option(option, line, &mut options);
+    }
 
     let body = invocation
         .content_with_enclosing_titles()
@@ -33,36 +34,64 @@ pub(crate) fn parse_py_module(
     }
 }
 
-/// Interprets the option lines of a `.. py:module::`, returning the options
-/// read and the lines that are not `py:module` options at all.
-///
-/// Every option of Sphinx 9.1's `PyModule.option_spec` is accepted.
-/// `:no-contents-entry:`/`:nocontentsentry:` and `:no-typesetting:` are
-/// consumed and dropped: Sphinx accepts them on a module but its `run` never
-/// reads them, so they have no effect there either.
-fn read_module_options(option_lines: &[OptionLine]) -> (ModuleOptions, Vec<&OptionLine>) {
-    let mut options = ModuleOptions::default();
-    let mut unrecognized = Vec::new();
-    for line in option_lines {
-        match line.name.as_str() {
-            "platform" => options.platform = Some(line.value.clone()),
-            "synopsis" => options.synopsis = Some(line.value.clone()),
-            "no-contents-entry" | "nocontentsentry" | "no-typesetting" => {}
-            name => match ModuleFlag::from_option_name(name) {
-                Some(flag) => options.set(flag),
-                None => unrecognized.push(line),
-            },
-        }
+directive_options! {
+    /// The options `.. py:module::` takes: every one of Sphinx 9.1's
+    /// `PyModule.option_spec`.
+    enum ModuleOption {
+        /// `:platform:`.
+        Platform => (["platform"], Text, "The platforms the module is available on."),
+        /// `:synopsis:`.
+        Synopsis => (["synopsis"], Text, "A one-sentence description of the module."),
+        /// `:deprecated:`.
+        Deprecated => (["deprecated"], Flag, "Marks the module as deprecated."),
+        /// `:no-index:`.
+        NoIndex => (["no-index", "noindex"], Flag, "Makes the module neither a reference target nor an index entry."),
+        /// `:no-index-entry:`.
+        NoIndexEntry => (["no-index-entry"], Flag, "Leaves the module out of the general index."),
+        /// `:no-contents-entry:`, which Sphinx accepts on a module but never
+        /// reads.
+        NoContentsEntry => (["no-contents-entry", "nocontentsentry"], Flag, "Has no effect on a module."),
+        /// `:no-typesetting:`, likewise.
+        NoTypesetting => (["no-typesetting"], Flag, "Has no effect on a module."),
     }
-    (options, unrecognized)
+}
+
+/// Records one option of a `.. py:module::`.
+///
+/// `:no-contents-entry:` and `:no-typesetting:` are consumed and dropped:
+/// Sphinx accepts them on a module but its `run` never reads them, so they
+/// have no effect there either.
+fn read_module_option(option: ModuleOption, line: &OptionLine, options: &mut ModuleOptions) {
+    match option {
+        ModuleOption::Platform => options.platform = Some(line.value.clone()),
+        ModuleOption::Synopsis => options.synopsis = Some(line.value.clone()),
+        ModuleOption::Deprecated => options.set(ModuleFlag::Deprecated),
+        ModuleOption::NoIndex => options.set(ModuleFlag::NoIndex),
+        ModuleOption::NoIndexEntry => options.set(ModuleFlag::NoIndexEntry),
+        ModuleOption::NoContentsEntry | ModuleOption::NoTypesetting => {}
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::directives::options::scan_option_lines;
+    use crate::directives::options::{DirectiveOptions, scan_option_lines};
     use crate::parse;
-    use rinx_ast::{Directive, Node};
+    use rinx_ast::{DiagnosticCode, Directive, Node};
+
+    /// The options `option_lines` read as, and the lines `py:module` does
+    /// not take.
+    fn read_module_options(option_lines: &[OptionLine]) -> (ModuleOptions, Vec<&OptionLine>) {
+        let mut options = ModuleOptions::default();
+        let mut unrecognized = Vec::new();
+        for line in option_lines {
+            match ModuleOption::from_name(&line.name) {
+                Some(option) => read_module_option(option, line, &mut options),
+                None => unrecognized.push(line),
+            }
+        }
+        (options, unrecognized)
+    }
 
     /// The option lines of `body`, as `parse_py_module` scans them.
     fn option_lines(body: &[&str]) -> Vec<OptionLine> {
@@ -261,7 +290,7 @@ mod tests {
         let span = doc
             .diagnostics
             .iter()
-            .find(|d| d.code == DiagnosticCode::DirectiveContentsUnknownOption)
+            .find(|d| d.code == DiagnosticCode::DirectiveUnknownOption)
             .and_then(|d| d.span)
             .expect("the nested option is reported with a span");
         assert_eq!(span.start.line, 6);

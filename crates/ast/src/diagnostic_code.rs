@@ -282,44 +282,11 @@ diagnostic_codes! {
     /// why this is reported rather than left to the visible error block the
     /// renderer draws in its place.
     DirectiveUnknown => "directive.unknown",
-    /// A `.. toctree::` option this build does not recognize. The option is
-    /// ignored.
-    DirectiveToctreeUnknownOption => "directive.toctree-unknown-option",
-    /// A `.. contents::` option this build does not recognize. The option is
-    /// ignored.
-    DirectiveContentsUnknownOption => "directive.contents-unknown-option",
-    /// A `.. sectnum::` option this build does not recognize. The option is
-    /// ignored.
-    DirectiveSectnumUnknownOption => "directive.sectnum-unknown-option",
-    /// A `.. dropdown::` option this build does not recognize. The option is
-    /// ignored.
-    DirectiveDropdownUnknownOption => "directive.dropdown-unknown-option",
-    /// A `.. grid::` option this build does not recognize. The option is ignored.
-    DirectiveGridUnknownOption => "directive.grid-unknown-option",
-    /// A `.. grid-item::` option this build does not recognize. The option is
-    /// ignored.
-    DirectiveGridItemUnknownOption => "directive.grid-item-unknown-option",
-    /// A `.. button-link::` option this build does not recognize. The option is
-    /// ignored.
-    DirectiveButtonLinkUnknownOption => "directive.button-link-unknown-option",
-    /// An `.. entity-table::` / `.. needtable::` option this build does not
-    /// recognize. The option is ignored.
-    DirectiveEntityTableUnknownOption => "directive.entity-table-unknown-option",
-    /// An `.. entity-flow::` / `.. needflow::` option this build does not
-    /// recognize. The option is ignored.
-    DirectiveEntityFlowUnknownOption => "directive.entity-flow-unknown-option",
-    /// An `.. entity-sequence::` / `.. needsequence::` option this build does not
-    /// recognize. The option is ignored.
-    DirectiveEntitySequenceUnknownOption => "directive.entity-sequence-unknown-option",
-    /// An `.. entity-pie::` / `.. needpie::` option this build does not recognize.
-    /// The option is ignored.
-    DirectiveEntityPieUnknownOption => "directive.entity-pie-unknown-option",
-    /// An `.. entity-bar::` / `.. needbar::` option this build does not recognize.
-    /// The option is ignored.
-    DirectiveEntityBarUnknownOption => "directive.entity-bar-unknown-option",
-    /// An option this build does not recognize on a directive with no option code
-    /// of its own. The option is ignored.
+    /// An option the directive does not take. The option is ignored.
     DirectiveUnknownOption => "directive.unknown-option",
+    /// An option Sphinx or the extension defining the directive takes, but this
+    /// build does not implement. The option is ignored.
+    DirectiveUnsupportedOption => "directive.unsupported-option",
     /// A directive written with fewer arguments than it requires — an
     /// `.. image::` with no address, a `.. versionadded::` with no version.
     /// The directive is still read, without them.
@@ -390,11 +357,6 @@ diagnostic_codes! {
     CsvDialectNonAscii => "csv.dialect-non-ascii",
 
     // --- `sphinx.ext.doctest` directives -----------------------------------
-    /// A doctest-family option that exists, but not on this directive — e.g.
-    /// `:options:` on a `.. testsetup::`.
-    DoctestOptionNotSupported => "doctest.option-not-supported",
-    /// An option no doctest-family directive recognizes.
-    DoctestUnknownOption => "doctest.unknown-option",
     /// A `:pyversion:` value that is not a comparison operator followed by a
     /// version, such as `>= 3.10`.
     DoctestPyVersionInvalid => "doctest.pyversion-invalid",
@@ -549,8 +511,6 @@ diagnostic_codes! {
     IncludeEncodingUnsupported => "include.encoding-unsupported",
     /// A `:tab-width:` that is not an integer.
     IncludeInvalidTabWidth => "include.invalid-tab-width",
-    /// An option this directive does not have.
-    IncludeUnknownOption => "include.unknown-option",
 
     // --- `.. literalinclude::` ---------------------------------------------
     /// The `:diff:` file could not be read. Separate from
@@ -682,9 +642,6 @@ diagnostic_codes! {
     ButtonLinkInvalidAlign => "button-link.invalid-align",
     /// An option that needs a value but was written without one.
     ButtonLinkEmptyOptionValue => "button-link.empty-option-value",
-    /// An option sphinx-design accepts here that this build refuses by name,
-    /// rather than accepting and ignoring it.
-    ButtonLinkUnsupportedOption => "button-link.unsupported-option",
     /// An `:outline:` with no `:color:` to outline. sphinx-design produces no
     /// class at all for that pair, so the option silently does nothing —
     /// reported for the reason `uml.unusable-scale` is.
@@ -815,6 +772,9 @@ diagnostic_codes! {
     /// once. Neither is guessed at, since the two disagreeing is exactly the
     /// case where picking one silently renders the wrong table.
     EntityTableDuplicateWidths => "entity-table.duplicate-widths",
+    /// A `:columns:` naming no column, or a `:sort:` naming several fields.
+    /// The option is ignored.
+    EntityTableInvalidValue => "entity-table.invalid-value",
     /// A `:style:` this build has no rendering for — `datatables`, which is a
     /// JavaScript feature. A static table is rendered instead.
     EntityTableUnsupportedStyle => "entity-table.unsupported-style",
@@ -857,10 +817,6 @@ diagnostic_codes! {
     EntityFlowUnusableScale => "entity-flow.unusable-scale",
     /// An option whose value is required but was left empty.
     EntityFlowEmptyOptionValue => "entity-flow.empty-option-value",
-    /// An option sphinx-needs' `needflow` has that this build does not
-    /// implement. Reported by name rather than ignored, so an author who asked
-    /// for a legend learns they did not get one.
-    EntityFlowUnsupportedOption => "entity-flow.unsupported-option",
     /// A flowchart whose filter matched no entity at all, so there was nothing
     /// to draw. Reported for the reason `entity-table.empty-result` is, and it
     /// has to be: `PlantUML` rejects an empty diagram, so compiling one would
@@ -911,9 +867,6 @@ diagnostic_codes! {
     EntitySequenceUnusableScale => "entity-sequence.unusable-scale",
     /// An option whose value is required but was left empty.
     EntitySequenceEmptyOptionValue => "entity-sequence.empty-option-value",
-    /// An option sphinx-needs' `needsequence` has that this build does not
-    /// implement, reported by name rather than ignored.
-    EntitySequenceUnsupportedOption => "entity-sequence.unsupported-option",
     /// A `:start:` entry naming no entity in the project. The other starts are
     /// still walked — sphinx-needs aborts the whole build here instead.
     EntitySequenceUnknownStart => "entity-sequence.unknown-start",
@@ -969,10 +922,6 @@ diagnostic_codes! {
     EntityPieUnusableScale => "entity-pie.unusable-scale",
     /// An option whose value is required but was left empty.
     EntityPieEmptyOptionValue => "entity-pie.empty-option-value",
-    /// An option sphinx-needs' `needpie` has that this build does not
-    /// implement. Reported by name rather than ignored, so an author who asked
-    /// for exploded wedges learns they did not get them.
-    EntityPieUnsupportedOption => "entity-pie.unsupported-option",
     /// A chart every one of whose wedges counted zero, so there is no chart to
     /// draw at all. Reported for the reason `entity-table.empty-result` is,
     /// and only the renderer can raise it: whether a filter selects anything
@@ -1021,9 +970,6 @@ diagnostic_codes! {
     EntityBarUnusableScale => "entity-bar.unusable-scale",
     /// An option whose value is required but was left empty.
     EntityBarEmptyOptionValue => "entity-bar.empty-option-value",
-    /// An option sphinx-needs' `needbar` has that this build does not
-    /// implement, reported by name with what to write instead.
-    EntityBarUnsupportedOption => "entity-bar.unsupported-option",
     /// A chart every one of whose cells counted zero, so there are no bars to
     /// draw. Only the renderer can raise it, for `entity-pie.empty-result`'s
     /// reason.
@@ -1115,13 +1061,6 @@ diagnostic_codes! {
     /// A `:filter:` naming a field no entity type declares and that is none of
     /// the built-ins.
     NeedImportUnknownFilterField => "needimport.unknown-filter-field",
-    /// An option sphinx-needs accepts that this build must refuse — the
-    /// presentation and templating family. Refused *by name*, with what to
-    /// write instead, since the common failure here is an unsupported feature
-    /// rather than a typo.
-    NeedImportUnsupportedOption => "needimport.unsupported-option",
-    /// An option `.. needimport::` does not accept at all.
-    NeedImportUnknownOption => "needimport.unknown-option",
     /// A `:tags:` written for a type declaring no list attribute called
     /// `tags`. Nothing in this model privileges that name, so there is nowhere
     /// to put the values.
@@ -1150,9 +1089,6 @@ diagnostic_codes! {
     // whose failures are the same failures. `uml` rather than
     // `entity-diagram`, because the family has to name the plain PlantUML
     // spellings too, and those have no entity in them.
-    /// An option no diagram directive accepts. The diagram still renders:
-    /// refusing it over a misspelled option would silently drop the picture.
-    UmlUnknownOption => "uml.unknown-option",
     /// An option whose value is required but was written empty, so the option
     /// was ignored.
     UmlEmptyOptionValue => "uml.empty-option-value",
@@ -1173,10 +1109,6 @@ diagnostic_codes! {
     /// An `:extra:` that is not a comma-separated list of `name: value` pairs.
     /// The pairs that did parse are still bound.
     UmlInvalidExtra => "uml.invalid-extra",
-    /// An option that only means something for a templated diagram — `:key:`,
-    /// `:extra:` — written on a plain `.. plantuml::`, where nothing would
-    /// ever read it.
-    UmlOptionNeedsTemplate => "uml.option-needs-template",
     /// A template that is not valid Jinja, or whose evaluation failed. The
     /// diagram is left out rather than compiled from half-expanded text, which
     /// would fail in `PlantUML` with a message about a construct the author
@@ -1210,11 +1142,6 @@ diagnostic_codes! {
     /// keeps the opt-in honest: a forgotten attribute fails on the directive's
     /// own line rather than shipping a page with a broken picture.
     UmlDiagramsDisabled => "uml.diagrams-disabled",
-    /// A `:save:`, which cannot be honoured: a sandboxed build action may only
-    /// write files declared before it runs, and this path is written inside the
-    /// document. The site's `diagram_sources` output group carries every
-    /// diagram's expanded source instead.
-    UmlSaveUnsupported => "uml.save-unsupported",
     /// A `:config:` naming a `PlantUML` preamble the site config does not
     /// declare. Refused rather than ignored: a diagram silently missing the
     /// styling its author asked for looks finished and is wrong.

@@ -1,16 +1,16 @@
 //! The two options `.. list-table::` and `.. csv-table::` have beyond the
 //! five every option-bearing table directive shares (see
 //! `crate::directives::table_options`): `:header-rows:` and `:stub-columns:`.
-//! [`parse_shared_table_options`] layers those on top of
-//! [`crate::directives::table_options::parse_common_table_options`], since
-//! `.. table::` has no use for either — its table already comes pre-split
-//! into header/body rows by its own grid or simple table syntax.
+//! [`DataTableOption`] is their group, read beside the presentation options'
+//! by a [`SharedTableReader`], since `.. table::` has no use for either — its
+//! table already comes pre-split into header/body rows by its own grid or
+//! simple table syntax.
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::options::OptionLine;
-use crate::directives::table_options::parse_common_table_options;
-use rinx_ast::{Diagnostic, DiagnosticCode, Span, TableAlign, TargetName};
+use crate::directives::options::{OptionLine, classify_options, directive_options};
+use crate::directives::table_options::{CommonTableOptions, TableOption, read_table_option};
+use rinx_ast::{Diagnostic, DiagnosticCode, Span, TableAlign, TableSource, TargetName};
 
 /// The seven options `.. list-table::` and `.. csv-table::` share — the five
 /// common options plus `header-rows`/`stub-columns`.
@@ -24,57 +24,113 @@ pub(super) struct SharedTableOptions {
     pub name: Option<TargetName>,
 }
 
-/// Consumes the shared options out of `option_lines`, returning them together
-/// with the lines it did not recognize, in source order.
-///
-/// `directive` only shapes the diagnostics' wording, so a `csv-table` author is
-/// never told about a `list-table` option.
-pub(super) fn parse_shared_table_options<'a>(
-    option_lines: &'a [OptionLine],
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> (SharedTableOptions, Vec<&'a OptionLine>) {
-    let mut header_rows = 0;
-    let mut stub_columns = 0;
-    let mut rest = Vec::new();
+directive_options! {
+    /// The two options `.. list-table::` and `.. csv-table::` take beyond the
+    /// five presentation ones.
+    pub(super) enum DataTableOption {
+        /// `:header-rows:`.
+        HeaderRows => (["header-rows"], Integer, "How many rows are the table's header."),
+        /// `:stub-columns:`.
+        StubColumns => (["stub-columns"], Integer, "How many columns are row headers."),
+    }
+}
 
-    for line in option_lines {
-        match line.name.as_str() {
-            "header-rows" => {
-                header_rows = parse_nonneg_int_option(
-                    &line.value,
-                    "header-rows",
-                    directive,
-                    diagnostics,
-                    ctx.line_span(line.line_index, &line.raw),
-                );
-            }
-            "stub-columns" => {
-                stub_columns = parse_nonneg_int_option(
-                    &line.value,
-                    "stub-columns",
-                    directive,
-                    diagnostics,
-                    ctx.line_span(line.line_index, &line.raw),
-                );
-            }
-            _ => rest.push(line),
+directive_options! {
+    /// The options `.. list-table::` takes: docutils' seven.
+    pub(super) enum ListTableOption {
+        ;
+        Data(DataTableOption),
+        Table(TableOption),
+    }
+}
+
+/// The shared options while they are read: the two data-table ones and the
+/// five presentation ones.
+pub(super) struct SharedTableReader {
+    header_rows: usize,
+    stub_columns: usize,
+    common: CommonTableOptions,
+}
+
+impl SharedTableReader {
+    /// Nothing read yet.
+    pub(super) fn new() -> Self {
+        Self {
+            header_rows: 0,
+            stub_columns: 0,
+            common: CommonTableOptions::empty(),
         }
     }
 
-    let (common, unrecognized) = parse_common_table_options(&rest, directive, diagnostics, ctx);
-    let options = SharedTableOptions {
-        header_rows,
-        stub_columns,
-        widths_raw: common.widths_raw,
-        width: common.width,
-        align: common.align,
-        classes: common.classes,
-        name: common.name,
-    };
+    /// Records one of the two data-table options.
+    pub(super) fn read_data(
+        &mut self,
+        option: DataTableOption,
+        line: &OptionLine,
+        directive: &str,
+        diagnostics: &mut Diagnostics,
+        ctx: &ParseCtx<'_>,
+    ) {
+        let (field, name) = match option {
+            DataTableOption::HeaderRows => (&mut self.header_rows, "header-rows"),
+            DataTableOption::StubColumns => (&mut self.stub_columns, "stub-columns"),
+        };
+        *field = parse_nonneg_int_option(
+            &line.value,
+            name,
+            directive,
+            diagnostics,
+            ctx.line_span(line.line_index, &line.raw),
+        );
+    }
 
-    (options, unrecognized)
+    /// Records one of the five presentation options.
+    pub(super) fn read_table(
+        &mut self,
+        option: TableOption,
+        line: &OptionLine,
+        directive: &str,
+        diagnostics: &mut Diagnostics,
+        ctx: &ParseCtx<'_>,
+    ) {
+        read_table_option(option, line, &mut self.common, directive, diagnostics, ctx);
+    }
+
+    /// What was read.
+    pub(super) fn finish(self) -> SharedTableOptions {
+        SharedTableOptions {
+            header_rows: self.header_rows,
+            stub_columns: self.stub_columns,
+            widths_raw: self.common.widths_raw,
+            width: self.common.width,
+            align: self.common.align,
+            classes: self.common.classes,
+            name: self.common.name,
+        }
+    }
+}
+
+/// Reads a `.. list-table::`'s options, reporting every one it does not take.
+pub(super) fn parse_list_table_options(
+    option_lines: &[OptionLine],
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> SharedTableOptions {
+    let directive = TableSource::List.as_str();
+    let mut reader = SharedTableReader::new();
+    for (option, line) in
+        classify_options::<ListTableOption>(option_lines, directive, diagnostics, ctx)
+    {
+        match option {
+            ListTableOption::Data(option) => {
+                reader.read_data(option, line, directive, diagnostics, ctx);
+            }
+            ListTableOption::Table(option) => {
+                reader.read_table(option, line, directive, diagnostics, ctx);
+            }
+        }
+    }
+    reader.finish()
 }
 
 /// Parses a nonnegative-integer option value (`:header-rows:`/
@@ -102,8 +158,33 @@ pub(super) fn parse_nonneg_int_option(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::directives::options::DirectiveOptions;
     use crate::directives::options::scan_option_lines;
     use rinx_ast::Domain;
+
+    /// The shared options read off `option_lines` as a list table reads
+    /// them, and the lines that are none of them.
+    fn parse_shared_table_options<'a>(
+        option_lines: &'a [OptionLine],
+        directive: &str,
+        diagnostics: &mut Diagnostics,
+        ctx: &ParseCtx<'_>,
+    ) -> (SharedTableOptions, Vec<&'a OptionLine>) {
+        let mut reader = SharedTableReader::new();
+        let mut unrecognized = Vec::new();
+        for line in option_lines {
+            match ListTableOption::from_name(&line.name) {
+                Some(ListTableOption::Data(option)) => {
+                    reader.read_data(option, line, directive, diagnostics, ctx);
+                }
+                Some(ListTableOption::Table(option)) => {
+                    reader.read_table(option, line, directive, diagnostics, ctx);
+                }
+                None => unrecognized.push(line),
+            }
+        }
+        (reader.finish(), unrecognized)
+    }
 
     fn lines(raw: &[&str]) -> Vec<String> {
         raw.iter().map(|s| (*s).to_string()).collect()

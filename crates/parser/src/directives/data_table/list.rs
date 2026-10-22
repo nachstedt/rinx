@@ -8,9 +8,9 @@ use rinx_ast::{
     TableWidths,
 };
 
-use super::options::{SharedTableOptions, parse_shared_table_options};
+use super::options::{ListTableOption, SharedTableOptions, parse_list_table_options};
 use crate::directives::error_node::malformed_directive;
-use crate::directives::options::report_unknown_options;
+use crate::directives::options::DirectiveOptions;
 use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
 
@@ -24,6 +24,7 @@ pub(in crate::directives) const LIST_TABLE_SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: <ListTableOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. list-table::`.
@@ -57,19 +58,7 @@ pub(in crate::directives) fn parse_list_table(
         Some(argument.to_string())
     };
 
-    let (options, unrecognized) = parse_shared_table_options(
-        &invocation.options,
-        TableSource::List.as_str(),
-        diagnostics,
-        ctx,
-    );
-    report_unknown_options(
-        &unrecognized,
-        TableSource::List.as_str(),
-        DiagnosticCode::DirectiveUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    let options = parse_list_table_options(&invocation.options, diagnostics, ctx);
 
     let body_nodes = invocation.content().parse(adornment_order, diagnostics);
 

@@ -91,6 +91,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: &[],
 };
 
 /// Interprets `.. if-builder::`, splicing its body in when it names this

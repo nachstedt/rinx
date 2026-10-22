@@ -11,9 +11,9 @@
 use crate::diagnostics::Diagnostics;
 use crate::directives::error_node::malformed_directive;
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
-use crate::directives::options::{OptionLine, report_unknown_options};
+use crate::directives::options::{DirectiveOptions, classify_options};
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
-use crate::directives::table_options::parse_common_table_options;
+use crate::directives::table_options::{CommonTableOptions, TableOption, read_table_option};
 use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
 use rinx_ast::{DiagnosticCode, Directive, Node};
@@ -31,6 +31,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: <TableOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. table::`.
@@ -60,16 +61,12 @@ pub(in crate::directives) fn parse_table_directive(
         Some(argument.to_string())
     };
 
-    let option_line_refs: Vec<&OptionLine> = invocation.options.iter().collect();
-    let (options, unrecognized) =
-        parse_common_table_options(&option_line_refs, DIRECTIVE, diagnostics, ctx);
-    report_unknown_options(
-        &unrecognized,
-        DIRECTIVE,
-        DiagnosticCode::DirectiveUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    let mut options = CommonTableOptions::empty();
+    for (option, line) in
+        classify_options::<TableOption>(&invocation.options, DIRECTIVE, diagnostics, ctx)
+    {
+        read_table_option(option, line, &mut options, DIRECTIVE, diagnostics, ctx);
+    }
 
     // Unlike list-table's rows (lowered from already-parsed nodes that carry
     // no position of their own), a wrapped table's cells are full nested

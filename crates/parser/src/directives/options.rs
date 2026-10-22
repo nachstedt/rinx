@@ -20,6 +20,8 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use rinx_ast::{Diagnostic, DiagnosticCode};
 
+use super::spec::{OptionSpec, OptionSupport};
+
 /// One `:name: value` line, with the source text kept so a diagnostic can
 /// quote the line exactly as the author wrote it.
 pub(in crate::directives) struct OptionLine {
@@ -137,25 +139,18 @@ pub(in crate::directives) fn is_field_marker(line: &str) -> bool {
     false
 }
 
-/// Reports every option line neither a shared parser nor the directive's own
-/// parser claimed.
-///
-/// `code` is the caller's, rather than always [`DiagnosticCode::DirectiveUnknownOption`],
-/// because `.. toctree::` reported its unknown options under
-/// `directive.toctree-unknown-option` long before this helper existed. A code
-/// is a stable, author-facing name a `.. noqa:` can spell, so keeping that one
-/// is not a style preference — renaming it would silently break every document
-/// already suppressing it.
+/// Reports every option line `directive` does not take, as
+/// `directive.unknown-option` — one code whichever directive it is written
+/// in, since the mistake is the same.
 pub(in crate::directives) fn report_unknown_options(
     unrecognized: &[&OptionLine],
     directive: &str,
-    code: DiagnosticCode,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) {
     for line in unrecognized {
         diagnostics.push(Diagnostic::at(
-            code,
+            DiagnosticCode::DirectiveUnknownOption,
             format!(
                 "Invalid or non-standard Sphinx {directive} option encountered: {}",
                 line.raw
@@ -234,8 +229,329 @@ pub(in crate::directives) fn uri_argument(argument: &str) -> String {
     parts.join(" ")
 }
 
+/// The options one directive takes, as an enum its parser matches on.
+///
+/// Implemented by [`directive_options!`], never by hand: the enum, its
+/// spellings and its [`OptionSpec`]s come from one table, so a `match` on it
+/// without a `_` arm makes an option that is listed but not read, or read but
+/// not listed, fail to compile.
+pub(in crate::directives) trait DirectiveOptions: Sized + Copy {
+    /// The directive's own options.
+    const OWN: &'static [OptionSpec];
+    /// Its own options, then each group it shares.
+    const GROUPS: &'static [&'static [OptionSpec]];
+    /// The option written as `name`, if the directive takes it.
+    fn from_name(name: &str) -> Option<Self>;
+}
+
+/// Declares one directive's option enum from a table of rows
+/// `Variant => (["spelling", "alias"], Value, "doc")`, then the options the
+/// reference implementation takes and this build does not, as rows
+/// `_ => (["spelling"], Value, "doc", "advice")` with the advice optional,
+/// followed after a `;` by any shared groups as `Variant(GroupEnum)`.
+///
+/// An unsupported row has no variant, so no parser reads it:
+/// [`classify_options`] reports it, with its advice, and completion still
+/// knows the name.
+///
+/// Generates the enum, its [`DirectiveOptions`] — the lookup by spelling and
+/// the [`OptionSpec`]s completion and documentation read — from those rows
+/// alone. A group is another enum declared by this macro with no groups of
+/// its own; its options keep their own variant so a shared reader handles
+/// them once for every directive using the group.
+macro_rules! directive_options {
+    (@advice) => {
+        None
+    };
+    (@advice $advice:expr) => {
+        Some($advice)
+    };
+    (
+        $(#[doc = $doc:literal])*
+        $vis:vis enum $name:ident {
+            $( $(#[doc = $variant_doc:literal])*
+               $variant:ident => ([$($spelling:literal),+], $value:ident $(($choices:expr))?, $help:literal) $(,)? )*
+            $( _ => ([$($u_spelling:literal),+], $u_value:ident $(($u_choices:expr))?, $u_help:literal $(, $u_advice:expr)?) $(,)? )*
+            $( ; $( $group:ident($group_type:ty) ),+ $(,)? )?
+        }
+    ) => {
+        $(#[doc = $doc])*
+        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+        $vis enum $name {
+            $( $(#[doc = $variant_doc])* $variant, )*
+            $( $( #[doc = concat!("One of the `", stringify!($group_type), "` options.")] $group($group_type), )+ )?
+        }
+
+        impl $crate::directives::options::DirectiveOptions for $name {
+            const OWN: &'static [$crate::directives::spec::OptionSpec] = &[
+                $( $crate::directives::spec::OptionSpec {
+                    names: &[$($spelling),+],
+                    value: $crate::directives::spec::OptionValue::$value $(($choices))?,
+                    doc: $help,
+                    support: $crate::directives::spec::OptionSupport::Supported,
+                }, )*
+                $( $crate::directives::spec::OptionSpec {
+                    names: &[$($u_spelling),+],
+                    value: $crate::directives::spec::OptionValue::$u_value $(($u_choices))?,
+                    doc: $u_help,
+                    support: $crate::directives::spec::OptionSupport::Unsupported {
+                        advice: directive_options!(@advice $($u_advice)?),
+                    },
+                }, )*
+            ];
+            const GROUPS: &'static [&'static [$crate::directives::spec::OptionSpec]] = &[
+                Self::OWN,
+                $( $( <$group_type as $crate::directives::options::DirectiveOptions>::OWN, )+ )?
+            ];
+
+            fn from_name(name: &str) -> Option<Self> {
+                let spellings: &[(&str, Self)] = &[ $( $( ($spelling, Self::$variant), )+ )* ];
+                if let Some((_, option)) = spellings.iter().find(|(spelling, _)| *spelling == name) {
+                    return Some(*option);
+                }
+                $( $(
+                    if let Some(option) =
+                        <$group_type as $crate::directives::options::DirectiveOptions>::from_name(name)
+                    {
+                        return Some(Self::$group(option));
+                    }
+                )+ )?
+                None
+            }
+        }
+    };
+}
+pub(in crate::directives) use directive_options;
+
+/// The option lines `O` takes, each with its option; every other line is
+/// reported as `directive.unknown-option` under `directive`'s name.
+pub(in crate::directives) fn classify_options<'l, O: DirectiveOptions>(
+    option_lines: &'l [OptionLine],
+    directive: &str,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Vec<(O, &'l OptionLine)> {
+    let mut known = Vec::new();
+    let mut unknown = Vec::new();
+    for line in option_lines {
+        if let Some(option) = O::from_name(&line.name) {
+            known.push((option, line));
+        } else if let Some(OptionSupport::Unsupported { advice }) =
+            declared_support::<O>(&line.name)
+        {
+            report_unsupported_option(line, directive, advice, diagnostics, ctx);
+        } else {
+            unknown.push(line);
+        }
+    }
+    report_unknown_options(&unknown, directive, diagnostics, ctx);
+    known
+}
+
+/// How the option written as `name` is supported, if `O` declares it at all.
+fn declared_support<O: DirectiveOptions>(name: &str) -> Option<OptionSupport> {
+    O::GROUPS
+        .iter()
+        .flat_map(|group| group.iter())
+        .find(|spec| spec.names.contains(&name))
+        .map(|spec| spec.support)
+}
+
+/// Reports an option the reference implementation takes and this build
+/// does not, as `directive.unsupported-option` — not as unknown, since the
+/// author wrote a valid name — with what to reach for instead, if anything.
+pub(in crate::directives) fn report_unsupported_option(
+    line: &OptionLine,
+    directive: &str,
+    advice: Option<&str>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) {
+    let refusal = format!(
+        "{directive}: option :{}: is not supported by this build and is ignored",
+        line.name
+    );
+    let message = match advice {
+        Some(advice) => format!("{refusal}; {advice}"),
+        None => refusal,
+    };
+    diagnostics.push(Diagnostic::at(
+        DiagnosticCode::DirectiveUnsupportedOption,
+        message,
+        ctx.line_span(line.line_index, &line.raw),
+    ));
+}
+
+/// The names of every value of an enum, for an [`OptionValue::Choice`]
+/// computed from the enum its parser reads the value into.
+///
+/// [`OptionValue::Choice`]: super::spec::OptionValue::Choice
+pub(in crate::directives) fn choice_names<T: Copy>(
+    values: &[T],
+    name_of: fn(T) -> &'static str,
+) -> Vec<&'static str> {
+    values.iter().map(|value| name_of(*value)).collect()
+}
+
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use rinx_ast::Domain;
+
+    super::directive_options! {
+        /// A group a test directive shares.
+        enum SharedOption {
+            /// A shared flag.
+            Wide => (["wide"], Flag, "Makes it wide."),
+        }
+    }
+
+    super::directive_options! {
+        /// A test directive's options.
+        enum SampleOption {
+            /// One with an alias.
+            LinkTypes => (["link_types", "link-types"], Text, "Which links."),
+            /// One with a choice.
+            Align => (["align"], Choice(|| vec!["left", "right"]), "Where it sits."),
+            _ => (["class"], Classes, "Classes for the output.", "write it on a container"),
+            _ => (["name"], Text, "A label for the output.");
+            Shared(SharedOption),
+        }
+    }
+
+    #[test]
+    fn test_from_name_reads_every_spelling_and_each_group() {
+        // Given / When / Then
+        assert_eq!(
+            SampleOption::from_name("link-types"),
+            Some(SampleOption::LinkTypes)
+        );
+        assert_eq!(
+            SampleOption::from_name("link_types"),
+            Some(SampleOption::LinkTypes)
+        );
+        assert_eq!(
+            SampleOption::from_name("wide"),
+            Some(SampleOption::Shared(SharedOption::Wide))
+        );
+        assert_eq!(SampleOption::from_name("other"), None);
+        assert_eq!(SampleOption::from_name("class"), None);
+    }
+
+    #[test]
+    fn test_groups_list_the_own_options_first_then_each_group() {
+        // Given / When
+        let names: Vec<&str> = SampleOption::GROUPS
+            .iter()
+            .flat_map(|group| group.iter())
+            .map(|spec| spec.names[0])
+            .collect();
+
+        // Then
+        assert_eq!(names, ["link_types", "align", "class", "name", "wide"]);
+        assert_eq!(SampleOption::OWN[0].names, ["link_types", "link-types"]);
+    }
+
+    #[test]
+    fn test_classify_options_keeps_the_known_and_reports_the_rest() {
+        // Given
+        let lines: Vec<String> = [":align: left", ":bogus: x"].map(String::from).to_vec();
+        let (option_lines, _) = scan_option_lines(&lines);
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let known = classify_options::<SampleOption>(
+            &option_lines,
+            "sample",
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
+
+        // Then
+        assert_eq!(known.len(), 1);
+        assert_eq!(known[0].0, SampleOption::Align);
+        let codes: Vec<DiagnosticCode> = diagnostics.iter().map(|d| d.code).collect();
+        assert_eq!(codes, [DiagnosticCode::DirectiveUnknownOption]);
+    }
+
+    #[test]
+    fn test_classify_options_reports_an_unsupported_option_with_its_advice() {
+        // Given
+        let lines: Vec<String> = [":class: wide"].map(String::from).to_vec();
+        let (option_lines, _) = scan_option_lines(&lines);
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let known = classify_options::<SampleOption>(
+            &option_lines,
+            "sample",
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
+
+        // Then
+        assert!(known.is_empty());
+        let found: Vec<_> = diagnostics.iter().collect();
+        assert_eq!(found[0].code, DiagnosticCode::DirectiveUnsupportedOption);
+        assert!(found[0].message.ends_with("; write it on a container"));
+    }
+
+    #[test]
+    fn test_declared_support_tells_supported_unsupported_and_undeclared_apart() {
+        // Given / When / Then
+        assert_eq!(
+            declared_support::<SampleOption>("wide"),
+            Some(OptionSupport::Supported)
+        );
+        assert_eq!(
+            declared_support::<SampleOption>("class"),
+            Some(OptionSupport::Unsupported {
+                advice: Some("write it on a container")
+            })
+        );
+        assert_eq!(
+            declared_support::<SampleOption>("name"),
+            Some(OptionSupport::Unsupported { advice: None })
+        );
+        assert_eq!(declared_support::<SampleOption>("bogus"), None);
+    }
+
+    #[test]
+    fn test_choice_names_lists_every_value_by_its_name() {
+        // Given / When / Then
+        assert_eq!(
+            choice_names(rinx_ast::Chevron::ALL, rinx_ast::Chevron::as_str),
+            ["right-down", "down-up"]
+        );
+    }
+
+    #[test]
+    fn test_report_unsupported_option_names_the_option() {
+        // Given
+        let lines: Vec<String> = vec![":class: wide".to_string()];
+        let (option_lines, _) = scan_option_lines(&lines);
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        report_unsupported_option(
+            &option_lines[0],
+            "note",
+            Some("write it on a container instead"),
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
+
+        // Then
+        let found: Vec<_> = diagnostics.iter().collect();
+        assert_eq!(found[0].code, DiagnosticCode::DirectiveUnsupportedOption);
+        assert!(found[0].message.contains(":class:"));
+        assert!(
+            found[0]
+                .message
+                .ends_with("; write it on a container instead")
+        );
+    }
+
     #[test]
     fn test_uri_argument_drops_unescaped_whitespace() {
         // Given / When / Then — a wrapped address, and a stray space
@@ -252,9 +568,6 @@ mod tests {
         assert_eq!(super::uri_argument("my\\ logo.png"), "my logo.png");
         assert_eq!(super::uri_argument("a\\_b"), "a_b");
     }
-
-    use super::*;
-    use rinx_ast::Domain;
 
     fn lines(raw: &[&str]) -> Vec<String> {
         raw.iter().map(|s| (*s).to_string()).collect()
@@ -469,7 +782,6 @@ mod tests {
         report_unknown_options(
             &unrecognized,
             "list-table",
-            DiagnosticCode::DirectiveUnknownOption,
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),
         );
@@ -486,8 +798,8 @@ mod tests {
     }
 
     #[test]
-    fn test_report_unknown_options_uses_the_code_the_caller_passed() {
-        // Given — a caller that does not use the generic directive code.
+    fn test_report_unknown_options_uses_one_code_for_every_directive() {
+        // Given
         let body = lines(&[":bogus:"]);
         let (option_lines, _) = scan_option_lines(&body);
         let unrecognized: Vec<&OptionLine> = option_lines.iter().collect();
@@ -497,17 +809,13 @@ mod tests {
         report_unknown_options(
             &unrecognized,
             "toctree",
-            DiagnosticCode::DirectiveToctreeUnknownOption,
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert_eq!(
-            diagnostics[0].code,
-            DiagnosticCode::DirectiveToctreeUnknownOption
-        );
+        assert_eq!(diagnostics[0].code, DiagnosticCode::DirectiveUnknownOption);
     }
 
     fn option_line(name: &str, value: &str) -> OptionLine {

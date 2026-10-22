@@ -6,7 +6,7 @@ use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{Diagnostic, DiagnosticCode, IndexEntry, IndexEntryType, InvalidIndexEntry};
 
-use super::super::options::report_unknown_options;
+use super::super::options::{DirectiveOptions, classify_options, directive_options};
 use super::value_parsing::{parse_typed_entry, strip_main_prefix};
 
 /// Parses one physical line — either the directive's argument line or a
@@ -105,6 +105,13 @@ pub(crate) fn parse_index_entries(
         .collect()
 }
 
+directive_options! {
+    /// The options `.. index::` takes: Sphinx's one, not supported here.
+    enum IndexOption {
+        _ => (["name"], Text, "A label to reference the index entries by."),
+    }
+}
+
 /// This directive's entry in the table of directives this build implements.
 pub(in crate::directives) const INDEX_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["index"],
@@ -115,6 +122,7 @@ pub(in crate::directives) const INDEX_SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: false,
         content_hint: None,
     },
+    options: <IndexOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. index::`.
@@ -133,13 +141,8 @@ pub(crate) fn parse_index_directive(
     invocation: &DirectiveInvocation<'_, '_>,
     diagnostics: &mut Diagnostics,
 ) -> rinx_ast::Directive {
-    report_unknown_options(
-        &invocation.options.iter().collect::<Vec<_>>(),
-        "index",
-        rinx_ast::DiagnosticCode::DirectiveUnknownOption,
-        diagnostics,
-        &invocation.ctx,
-    );
+    // Its one option is unsupported, so classifying it only reports.
+    classify_options::<IndexOption>(&invocation.options, "index", diagnostics, &invocation.ctx);
     rinx_ast::Directive::Index {
         entries: parse_index_entries(invocation, diagnostics),
         id: String::new(),

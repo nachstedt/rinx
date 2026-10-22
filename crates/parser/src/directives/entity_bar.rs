@@ -32,44 +32,62 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
 use super::chart_options::{
-    ChartCodes, ChartOwner, FigureOption, FigureRead, read_color, read_colors, read_figure_option,
-    report_empty_value, report_unsupported, report_unusable_scale, unsupported_advice,
+    ChartCodes, ChartFigureOption, ChartOwner, FigureOption, read_color, read_colors,
+    read_figure_option, report_empty_value, report_unusable_scale,
 };
 use super::filter_option::{
-    FilterCodes, FilterOwner, FilterSite, read_filter_option, read_filter_text,
+    FilterCodes, FilterOwner, FilterSite, ShorthandFilterOption, read_filter_option,
+    read_filter_text,
 };
-use super::options::{OptionLine, report_unknown_options};
+use super::options::{DirectiveOptions, OptionLine, classify_options, directive_options};
 
-/// The options sphinx-needs' `needbar` accepts that this build does not, each
-/// with what an author should reach for instead.
-///
-/// Written with underscores, sphinx-needs' spelling; an option name is
-/// normalised to it before it is looked up, so a hyphenated spelling is
-/// refused with the same sentence.
-const UNSUPPORTED_OPTIONS: [(&str, &str); 5] = [
-    (
-        "style",
-        "that names a matplotlib stylesheet, which this build does not use; \
-         use :colors: and :text_color:",
-    ),
-    (
-        "status",
-        "write the selection as :filter:, e.g. status == \"open\"",
-    ),
-    (
-        "tags",
-        "write the selection as :filter:, e.g. \"security\" in tags",
-    ),
-    (
-        "types",
-        "write the selection as :filter:, e.g. type == \"req\"",
-    ),
-    (
-        "cypher",
-        "that is a ubCode graph query, which this build does not evaluate; \
-         write the selection as :filter:",
-    ),
-];
+directive_options! {
+    /// The options `.. entity-bar::` takes: sphinx-needs' `needbar`'s
+    /// twenty-two, of which this build reads seventeen, and the figure
+    /// options. Every multiword name is written both with underscores,
+    /// sphinx-needs' spelling, and with hyphens; the ones this build does not
+    /// draw are refused by name, as the pie's are.
+    enum EntityBarOption {
+        /// `:filter:`.
+        Filter => (["filter"], Filter, "The entities every cell counts among, by a filter."),
+        /// `:legend:`.
+        Legend => (["legend"], Flag, "Draws a legend of the series."),
+        /// `:stacked:`.
+        Stacked => (["stacked"], Flag, "Stacks each category's bars on one another."),
+        /// `:show_sum:`.
+        ShowSum => (["show_sum", "show-sum"], Flag, "Writes each bar's count inside it."),
+        /// `:show_top_sum:`.
+        ShowTopSum => (["show_top_sum", "show-top-sum"], Flag, "Writes each stack's total at its end."),
+        /// `:horizontal:`.
+        Horizontal => (["horizontal"], Flag, "Draws the bars sideways."),
+        /// `:transpose:`.
+        Transpose => (["transpose"], Flag, "Swaps the content's rows and columns."),
+        /// `:separator:`.
+        Separator => (["separator"], Text, "The text a content line's cells are split on."),
+        /// `:xlabels:`.
+        Xlabels => (["xlabels"], Text, "The categories' names, comma-separated, or `FROM_DATA`."),
+        /// `:ylabels:`.
+        Ylabels => (["ylabels"], Text, "The series' names, comma-separated, or `FROM_DATA`."),
+        /// `:colors:`.
+        Colors => (["colors"], Text, "The series' colours, comma-separated."),
+        /// `:text_color:`.
+        TextColor => (["text_color", "text-color"], Text, "The colour of the chart's text."),
+        /// `:x_axis_title:`.
+        XAxisTitle => (["x_axis_title", "x-axis-title"], Text, "The title of the horizontal axis."),
+        /// `:y_axis_title:`.
+        YAxisTitle => (["y_axis_title", "y-axis-title"], Text, "The title of the vertical axis."),
+        /// `:xlabels_rotation:`.
+        XlabelsRotation => (["xlabels_rotation", "xlabels-rotation"], Integer, "The categories' names' angle, in degrees."),
+        /// `:ylabels_rotation:`.
+        YlabelsRotation => (["ylabels_rotation", "ylabels-rotation"], Integer, "The series' names' angle, in degrees."),
+        /// `:sum_rotation:`.
+        SumRotation => (["sum_rotation", "sum-rotation"], Integer, "The counts' angle, in degrees."),
+        _ => (["style"], Text, "A matplotlib stylesheet.", "that names a matplotlib stylesheet, which this build does not use; use :colors: and :text_color:"),
+        _ => (["cypher"], Text, "The entities counted, by a Cypher query.", "that is a ubCode graph query, which this build does not evaluate; write the selection as :filter:");
+        Figure(ChartFigureOption),
+        Shorthand(ShorthandFilterOption),
+    }
+}
 
 /// The separator sphinx-needs splits a content line on when none is written.
 const DEFAULT_SEPARATOR: &str = ",";
@@ -87,6 +105,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: <EntityBarOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. entity-bar::` or `.. needbar::`, recording which was
@@ -122,18 +141,11 @@ pub(super) fn parse_entity_bar(
     };
     let mut layout = Layout::default();
 
-    let unrecognized = read_options(
+    read_options(
         &mut bar,
         &mut layout,
         option_lines,
         unindented_lines,
-        diagnostics,
-        ctx,
-    );
-    report_unknown_options(
-        &unrecognized,
-        directive,
-        DiagnosticCode::DirectiveEntityBarUnknownOption,
         diagnostics,
         ctx,
     );
@@ -195,8 +207,8 @@ impl LabelSpec<'_> {
     }
 }
 
-/// Reads every option onto `bar` and `layout`, returning the lines nobody
-/// claimed.
+/// Reads every option onto `bar` and `layout`, reporting the ones it does
+/// not take.
 fn read_options<'a>(
     bar: &mut EntityBar,
     layout: &mut Layout<'a>,
@@ -204,14 +216,14 @@ fn read_options<'a>(
     unindented_lines: &[String],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> Vec<&'a OptionLine> {
+) {
     let directive = bar.source.as_str();
     let owner = owner(directive);
-    let mut unrecognized = Vec::new();
-    for line in option_lines {
-        let name = line.name.replace('-', "_");
-        match name.as_str() {
-            "filter" => {
+    for (option, line) in
+        classify_options::<EntityBarOption>(option_lines, directive, diagnostics, ctx)
+    {
+        match option {
+            EntityBarOption::Filter => {
                 let source_line = unindented_lines.get(line.line_index).map(String::as_str);
                 bar.filter = read_filter_option(
                     line,
@@ -222,45 +234,52 @@ fn read_options<'a>(
                     ctx,
                 );
             }
-            "legend" => bar.legend = true,
-            "stacked" => bar.arrangement = BarArrangement::Stacked,
-            "show_sum" => bar.value_labels.inside = true,
-            "show_top_sum" => bar.value_labels.at_end = true,
-            "horizontal" => bar.orientation = BarOrientation::Horizontal,
-            "transpose" => layout.transpose = true,
-            "separator" => {
+            EntityBarOption::Legend => bar.legend = true,
+            EntityBarOption::Stacked => bar.arrangement = BarArrangement::Stacked,
+            EntityBarOption::ShowSum => bar.value_labels.inside = true,
+            EntityBarOption::ShowTopSum => bar.value_labels.at_end = true,
+            EntityBarOption::Horizontal => bar.orientation = BarOrientation::Horizontal,
+            EntityBarOption::Transpose => layout.transpose = true,
+            EntityBarOption::Separator => {
                 if line.value.is_empty() {
                     report_empty_value(line, owner, diagnostics, ctx);
                 } else {
                     layout.separator.clone_from(&line.value);
                 }
             }
-            "xlabels" => layout.categories = read_label_spec(line, owner, diagnostics, ctx),
-            "ylabels" => layout.series = read_label_spec(line, owner, diagnostics, ctx),
-            "colors" => bar.colors = read_colors(line, owner, diagnostics, ctx),
-            "text_color" => {
+            EntityBarOption::Xlabels => {
+                layout.categories = read_label_spec(line, owner, diagnostics, ctx);
+            }
+            EntityBarOption::Ylabels => {
+                layout.series = read_label_spec(line, owner, diagnostics, ctx);
+            }
+            EntityBarOption::Colors => bar.colors = read_colors(line, owner, diagnostics, ctx),
+            EntityBarOption::TextColor => {
                 bar.text_color = read_color(&line.value, line, owner, diagnostics, ctx);
             }
-            "x_axis_title" => bar.x_axis_title = read_text(line, owner, diagnostics, ctx),
-            "y_axis_title" => bar.y_axis_title = read_text(line, owner, diagnostics, ctx),
-            "xlabels_rotation" => {
+            EntityBarOption::XAxisTitle => {
+                bar.x_axis_title = read_text(line, owner, diagnostics, ctx);
+            }
+            EntityBarOption::YAxisTitle => {
+                bar.y_axis_title = read_text(line, owner, diagnostics, ctx);
+            }
+            EntityBarOption::XlabelsRotation => {
                 bar.xlabels_rotation = read_rotation(line, directive, diagnostics, ctx);
             }
-            "ylabels_rotation" => {
+            EntityBarOption::YlabelsRotation => {
                 bar.ylabels_rotation = read_rotation(line, directive, diagnostics, ctx);
             }
-            "sum_rotation" => bar.sum_rotation = read_rotation(line, directive, diagnostics, ctx),
-            _ => match read_figure_option(line, owner, diagnostics, ctx) {
-                FigureRead::Read(option) => store_figure_option(bar, option),
-                FigureRead::Reported => {}
-                FigureRead::Unclaimed => match unsupported_advice(&UNSUPPORTED_OPTIONS, &name) {
-                    Some(advice) => report_unsupported(line, advice, owner, diagnostics, ctx),
-                    None => unrecognized.push(line),
-                },
-            },
+            EntityBarOption::SumRotation => {
+                bar.sum_rotation = read_rotation(line, directive, diagnostics, ctx);
+            }
+            EntityBarOption::Figure(option) => {
+                if let Some(option) = read_figure_option(option, line, owner, diagnostics, ctx) {
+                    store_figure_option(bar, option);
+                }
+            }
+            EntityBarOption::Shorthand(option) => match option {},
         }
     }
-    unrecognized
 }
 
 /// Reads `:xlabels:`/`:ylabels:` — `FROM_DATA`, or a list pairing by position.
@@ -624,7 +643,6 @@ const CHART_CODES: ChartCodes = ChartCodes {
     invalid_width: DiagnosticCode::EntityBarInvalidWidth,
     unusable_scale: DiagnosticCode::EntityBarUnusableScale,
     empty_option_value: DiagnosticCode::EntityBarEmptyOptionValue,
-    unsupported_option: DiagnosticCode::EntityBarUnsupportedOption,
 };
 
 #[cfg(test)]

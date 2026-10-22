@@ -1,10 +1,10 @@
-use super::super::body::{ObjectOptions, parse_object_body};
-use super::dispatch::read_module_option;
+use super::super::body::{DescriptionOption, ObjectOptions, parse_object_body};
+use super::dispatch::PyObjectOption;
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::OptionLine;
+use crate::directives::options::{OptionLine, directive_options};
 use crate::headings::Adornment;
-use rinx_ast::{DomainObjectBody, NonEmptyVector};
+use rinx_ast::{DescriptionFlags, DomainObjectBody, NonEmptyVector};
 
 /// Parses a `.. py:data::` body: its option block, then its content.
 pub(crate) fn parse_py_data(
@@ -34,15 +34,29 @@ struct DataOptions {
     module: Option<String>,
 }
 
+directive_options! {
+    /// The options `.. py:data::` takes: Sphinx's `PyVariable`'s.
+    enum DataOption {
+        /// `:type:`.
+        Type => (["type"], Text, "The value's type."),
+        /// `:value:`.
+        Value => (["value"], Text, "The value, as it is shown."),
+        _ => (["canonical"], Text, "The object's name where it is defined, if documented elsewhere."),;
+        Py(PyObjectOption),
+        Description(DescriptionOption),
+    }
+}
+
 impl ObjectOptions for DataOptions {
-    fn read(&mut self, line: &OptionLine) -> bool {
-        let field = match line.name.as_str() {
-            "type" => &mut self.type_,
-            "value" => &mut self.value,
-            _ => return read_module_option(line, &mut self.module),
-        };
-        *field = Some(line.value.clone());
-        true
+    type Option = DataOption;
+
+    fn read(&mut self, option: DataOption, line: &OptionLine, flags: &mut DescriptionFlags) {
+        match option {
+            DataOption::Type => self.type_ = Some(line.value.clone()),
+            DataOption::Value => self.value = Some(line.value.clone()),
+            DataOption::Py(PyObjectOption::Module) => self.module = Some(line.value.clone()),
+            DataOption::Description(option) => flags.set(option.flag()),
+        }
     }
 }
 

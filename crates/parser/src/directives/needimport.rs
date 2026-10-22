@@ -71,48 +71,10 @@ use super::entity_fields::{
 };
 use super::error_node::{malformed_directive, malformed_node};
 use super::filter_option::{FilterCodes, read_filter_option};
-use super::options::{OptionLine, report_unknown_options};
+use super::options::{DirectiveOptions, OptionLine, classify_options, directive_options};
 
 /// The directive name, used throughout this module's diagnostics.
 const DIRECTIVE: &str = "needimport";
-
-/// The options sphinx-needs' `needimport` accepts that this build does not,
-/// each with what an author should reach for instead.
-///
-/// A table rather than a match arm apiece, for the reason `.. entity-flow::`
-/// keeps one: the sentence beside each name *is* the diagnostic. Every entry
-/// here is presentation or Python — the two things an imported entity gets
-/// from this project's own schema and site config instead.
-const UNSUPPORTED_OPTIONS: [(&str, &str); 7] = [
-    (
-        "hide",
-        "every imported entity is rendered; presentation belongs in the site config",
-    ),
-    (
-        "collapse",
-        "collapsing is a render-time setting in rinx.toml, not a per-import one",
-    ),
-    (
-        "layout",
-        "rendering is the schema's `template`, declared per entity type",
-    ),
-    (
-        "style",
-        "rendering is the schema's `template`, declared per entity type",
-    ),
-    (
-        "setup",
-        "this build runs no Python; the schema decides what a type accepts",
-    ),
-    (
-        "pre_template",
-        "this build runs no Python; the schema decides what a type accepts",
-    ),
-    (
-        "post_template",
-        "this build runs no Python; the schema decides what a type accepts",
-    ),
-];
 
 /// The `:option:` lines this directive reads, as written.
 #[derive(Default)]
@@ -160,6 +122,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: false,
         content_hint: None,
     },
+    options: <NeedImportOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. needimport::`, splicing the imported entities in where it
@@ -409,6 +372,39 @@ fn refuse(
     ))
 }
 
+/// The advice for the options choosing how imported needs are drawn: every
+/// one is presentation, which an imported entity gets from this project's
+/// own schema instead.
+const BY_SCHEMA_TEMPLATE: &str = "rendering is the schema's `template`, declared per entity type";
+
+/// The advice for the options running Python, which this build does not.
+const NO_PYTHON: &str = "this build runs no Python; the schema decides what a type accepts";
+
+directive_options! {
+    /// The options `.. needimport::` takes: sphinx-needs' fourteen.
+    enum NeedImportOption {
+        /// `:version:`.
+        Version => (["version"], Text, "Which version of the file to import."),
+        /// `:ids:`.
+        Ids => (["ids"], Text, "The only needs to import, by id."),
+        /// `:id_prefix:`.
+        IdPrefix => (["id_prefix", "id-prefix"], Text, "Text prepended to every imported id."),
+        /// `:tags:`.
+        Tags => (["tags"], Text, "Tags added to every imported need."),
+        /// `:filter:`.
+        Filter => (["filter"], Filter, "The only needs to import, by a filter."),
+        _ => (["hide"], Flag, "Hides the imported needs.", "every imported entity is rendered; presentation belongs in the site config"),
+        _ => (["collapse"], Flag, "Collapses the imported needs.", "collapsing is a render-time setting in rinx.toml, not a per-import one"),
+        _ => (["layout"], Text, "The layout the imported needs are drawn with.", BY_SCHEMA_TEMPLATE),
+        _ => (["style"], Text, "The style the imported needs are drawn with.", BY_SCHEMA_TEMPLATE),
+        _ => (["template"], Text, "The template the imported needs are drawn with.", BY_SCHEMA_TEMPLATE),
+        _ => (["pre_template"], Text, "A template drawn before each imported need.", NO_PYTHON),
+        _ => (["post_template"], Text, "A template drawn after each imported need.", NO_PYTHON),
+        _ => (["allow_type_coercion"], Flag, "Converts values to the types the configuration declares.", NO_PYTHON),
+        _ => (["parse_by_doctype"], Flag, "Parses each need's content by its document type.", NO_PYTHON),
+    }
+}
+
 /// Reads every `:option:` line, refusing sphinx-needs' by name and reporting
 /// the rest as unknown.
 fn parse_options(
@@ -417,15 +413,16 @@ fn parse_options(
     ctx: &ParseCtx<'_>,
 ) -> ImportOptions {
     let mut options = ImportOptions::default();
-    let mut unclaimed: Vec<&OptionLine> = Vec::new();
 
-    for line in option_lines {
-        match line.name.as_str() {
-            "version" => options.version = Some(line.value.trim().to_string()),
-            "ids" => options.ids = Some(split_list(&line.value)),
-            "id_prefix" | "id-prefix" => options.id_prefix = line.value.trim().to_string(),
-            "tags" => options.tags = split_list(&line.value),
-            "filter" => {
+    for (option, line) in
+        classify_options::<NeedImportOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    {
+        match option {
+            NeedImportOption::Version => options.version = Some(line.value.trim().to_string()),
+            NeedImportOption::Ids => options.ids = Some(split_list(&line.value)),
+            NeedImportOption::IdPrefix => options.id_prefix = line.value.trim().to_string(),
+            NeedImportOption::Tags => options.tags = split_list(&line.value),
+            NeedImportOption::Filter => {
                 options.filter = read_filter_option(
                     line,
                     None,
@@ -438,37 +435,9 @@ fn parse_options(
                     ctx,
                 );
             }
-            name => match unsupported_advice(name) {
-                Some(advice) => diagnostics.push(Diagnostic::at(
-                    DiagnosticCode::NeedImportUnsupportedOption,
-                    format!(
-                        "{DIRECTIVE}: :{}: is not supported, so it was ignored — {advice}",
-                        line.name
-                    ),
-                    ctx.line_span(line.line_index, &line.raw),
-                )),
-                None => unclaimed.push(line),
-            },
         }
     }
-
-    report_unknown_options(
-        &unclaimed,
-        DIRECTIVE,
-        DiagnosticCode::NeedImportUnknownOption,
-        diagnostics,
-        ctx,
-    );
     options
-}
-
-/// What to tell an author who wrote one of sphinx-needs' own options that this
-/// build does not implement, or `None` when the name is not one of them.
-fn unsupported_advice(name: &str) -> Option<&'static str> {
-    UNSUPPORTED_OPTIONS
-        .iter()
-        .find(|(option, _)| *option == name)
-        .map(|(_, advice)| *advice)
 }
 
 /// Narrows the version's needs to the ones `:ids:` and `:filter:` select.

@@ -31,7 +31,9 @@ use crate::inline::{SourceMap, parse_inline_text_mapped};
 
 use super::classes::split_classes;
 use super::error_node::malformed_node;
-use super::options::{OptionLine, report_unknown_options, uri_argument};
+use super::options::{
+    DirectiveOptions, OptionLine, choice_names, classify_options, directive_options, uri_argument,
+};
 
 const DIRECTIVE: &str = "button-link";
 
@@ -45,6 +47,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: <ButtonLinkOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. button-link::`.
@@ -77,14 +80,7 @@ pub(super) fn parse_button_link(
 
     let mut button = ButtonLink::new(ButtonTarget::Url(target));
     button.span = directive_span;
-    let unrecognized = read_options(&mut button, option_lines, diagnostics, ctx);
-    report_unknown_options(
-        &unrecognized,
-        DIRECTIVE,
-        DiagnosticCode::DirectiveButtonLinkUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    read_options(&mut button, option_lines, diagnostics, ctx);
     if button.has_unusable_outline() {
         report_unusable_outline(option_lines, diagnostics, ctx);
     }
@@ -158,23 +154,57 @@ fn report_nested_references(
     }
 }
 
+directive_options! {
+    /// The options `.. button-link::` takes: sphinx-design's nine.
+    enum ButtonLinkOption {
+        /// `:color:`.
+        Color => (["color"], Choice(|| choice_names(SemanticColor::ALL, SemanticColor::as_str)), "The button's colour."),
+        /// `:align:`.
+        Align => (["align"], Choice(|| choice_names(TextAlign::ALL, TextAlign::as_str)), "Where the button sits on its line."),
+        /// `:tooltip:`.
+        Tooltip => (["tooltip"], Text, "Text shown when hovering the button."),
+        /// `:class:`.
+        Class => (["class"], Classes, "Classes for the button."),
+        /// `:outline:`.
+        Outline => (["outline"], Flag, "Draws the button as an outline."),
+        /// `:expand:`.
+        Expand => (["expand"], Flag, "Stretches the button across its line."),
+        /// `:click-parent:`.
+        ClickParent => (["click-parent"], Flag, "Makes the whole parent element clickable."),
+        /// `:shadow:`.
+        Shadow => (["shadow"], Flag, "Draws a shadow under the button."),
+        // Accepted by sphinx-design here only because both button directives
+        // share one option spec.
+        _ => (["ref-type"], Text, "How a button-ref resolves its target; meaningless here.", "it selects how a `.. button-ref::` resolves its target, and this directive's argument is a URL"),
+    }
+}
+
 /// Reads every option onto `button`, returning the lines nobody claimed.
-fn read_options<'a>(
+fn read_options(
     button: &mut ButtonLink,
-    option_lines: &'a [OptionLine],
+    option_lines: &[OptionLine],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> Vec<&'a OptionLine> {
-    let mut unrecognized = Vec::new();
-    for line in option_lines {
-        // Checked before the named options: `directives.flag` accepts no value
-        // at all, so what matters is only that one of the four was written.
-        if let Some(flag) = ButtonFlag::parse(&line.name) {
-            button.flags.insert(flag);
-            continue;
-        }
-        match line.name.as_str() {
-            "color" => match SemanticColor::parse(&line.value) {
+) {
+    for (option, line) in
+        classify_options::<ButtonLinkOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    {
+        match option {
+            // `directives.flag` accepts no value at all, so what matters is
+            // only that one of the four was written.
+            ButtonLinkOption::Outline => {
+                button.flags.insert(ButtonFlag::Outline);
+            }
+            ButtonLinkOption::Expand => {
+                button.flags.insert(ButtonFlag::Expand);
+            }
+            ButtonLinkOption::ClickParent => {
+                button.flags.insert(ButtonFlag::ClickParent);
+            }
+            ButtonLinkOption::Shadow => {
+                button.flags.insert(ButtonFlag::Shadow);
+            }
+            ButtonLinkOption::Color => match SemanticColor::parse(&line.value) {
                 Some(color) => button.color = Some(color),
                 None => report_invalid_choice(
                     line,
@@ -185,7 +215,7 @@ fn read_options<'a>(
                     ctx,
                 ),
             },
-            "align" => match TextAlign::parse(&line.value) {
+            ButtonLinkOption::Align => match TextAlign::parse(&line.value) {
                 Some(align) => button.align = Some(align),
                 None => report_invalid_choice(
                     line,
@@ -196,29 +226,16 @@ fn read_options<'a>(
                     ctx,
                 ),
             },
-            "tooltip" => {
+            ButtonLinkOption::Tooltip => {
                 if line.value.is_empty() {
                     report_empty_value(line, "tooltip", diagnostics, ctx);
                 } else {
                     button.tooltip = Some(line.value.clone());
                 }
             }
-            "class" => button.class = split_classes(&line.value),
-            // Accepted by sphinx-design here only because both button
-            // directives share one option spec; it selects how a
-            // `.. button-ref::` resolves its argument, and this directive's
-            // argument is a URL that resolves against nothing.
-            "ref-type" => report_unsupported(
-                line,
-                "it selects how a `.. button-ref::` resolves its target, and this directive's \
-                 argument is a URL",
-                diagnostics,
-                ctx,
-            ),
-            _ => unrecognized.push(line),
+            ButtonLinkOption::Class => button.class = split_classes(&line.value),
         }
     }
-    unrecognized
 }
 
 /// The written names of a closed option vocabulary, for a diagnostic.
@@ -263,23 +280,6 @@ fn report_empty_value(
         format!(
             "{DIRECTIVE}: a :{option}: option needs a value: {}",
             line.raw
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
-}
-
-/// Reports an option this build refuses by name rather than silently ignoring.
-fn report_unsupported(
-    line: &OptionLine,
-    advice: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::ButtonLinkUnsupportedOption,
-        format!(
-            "{DIRECTIVE}: :{}: is not supported, so it was ignored — {advice}",
-            line.name
         ),
         ctx.line_span(line.line_index, &line.raw),
     ));

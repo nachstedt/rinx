@@ -11,6 +11,9 @@ pub enum TableAlign {
 }
 
 impl TableAlign {
+    /// Every alignment, in the order docutils lists them.
+    pub const ALL: &'static [Self] = &[Self::Left, Self::Center, Self::Right];
+
     #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
@@ -25,12 +28,11 @@ impl std::str::FromStr for TableAlign {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "left" => Ok(Self::Left),
-            "center" => Ok(Self::Center),
-            "right" => Ok(Self::Right),
-            _ => Err(()),
-        }
+        Self::ALL
+            .iter()
+            .copied()
+            .find(|align| align.as_str() == s)
+            .ok_or(())
     }
 }
 

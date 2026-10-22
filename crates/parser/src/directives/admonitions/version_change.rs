@@ -21,6 +21,7 @@ pub(in crate::directives) const VERSION_CHANGE_SPEC: DirectiveSpec = DirectiveSp
         takes_content: true,
         content_hint: None,
     },
+    options: &[],
 };
 
 /// Interprets a version change: the first word after the `::` is the version,

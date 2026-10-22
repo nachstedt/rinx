@@ -29,7 +29,9 @@ use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::error_node::{malformed_directive, malformed_node};
-use crate::directives::options::{OptionLine, report_unknown_options};
+use crate::directives::options::{
+    DirectiveOptions, OptionLine, classify_options, directive_options,
+};
 use crate::headings::Adornment;
 
 use super::code_block::{Selection, check_encoding, expand_tabs};
@@ -69,6 +71,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: false,
         content_hint: None,
     },
+    options: <IncludeOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. include::`, splicing the file's nodes in where it stands.
@@ -112,14 +115,7 @@ pub(in crate::directives) fn parse_include(
         ))];
     }
 
-    let (options, unclaimed) = parse_options(&invocation.options, diagnostics, &invocation.ctx);
-    report_unknown_options(
-        &unclaimed,
-        DIRECTIVE,
-        DiagnosticCode::IncludeUnknownOption,
-        diagnostics,
-        &invocation.ctx,
-    );
+    let options = parse_options(&invocation.options, diagnostics, &invocation.ctx);
 
     if !check_encoding(options.encoding.as_deref(), DIRECTIVE, diagnostics, span) {
         return vec![contributed_nothing(argument, body_lines)];
@@ -263,35 +259,65 @@ fn as_code_block(options: &IncludeOptions, content: &str, span: Option<Span>) ->
     })
 }
 
+directive_options! {
+    /// The options `.. include::` takes: docutils' twelve.
+    enum IncludeOption {
+        /// `:encoding:`.
+        Encoding => (["encoding"], Text, "The file's text encoding."),
+        /// `:literal:`.
+        Literal => (["literal"], Flag, "Shows the file as a literal block rather than parsing it."),
+        /// `:code:`.
+        Code => (["code"], Text, "Shows the file as a code block, in the language given."),
+        /// `:number-lines:`.
+        NumberLines => (["number-lines"], Integer, "Numbers the lines of a code block, from the number given if any."),
+        /// `:class:`.
+        Class => (["class"], Classes, "Classes for a literal or code block."),
+        /// `:name:`.
+        Name => (["name"], Text, "A label to reference a literal or code block by."),
+        /// `:start-after:`.
+        StartAfter => (["start-after"], Text, "Includes the file from below the first line holding this text."),
+        /// `:end-before:`.
+        EndBefore => (["end-before"], Text, "Includes the file up to above the first line holding this text."),
+        /// `:start-line:`.
+        StartLine => (["start-line"], Integer, "The first line included, counted from zero."),
+        /// `:end-line:`.
+        EndLine => (["end-line"], Integer, "The line the inclusion stops before, counted from zero."),
+        /// `:tab-width:`.
+        TabWidth => (["tab-width"], Integer, "How many spaces a tab expands to."),
+        _ => (["parser"], Text, "The parser the file is read with."),
+    }
+}
+
 /// Consumes the options this directive knows, returning them with the lines it
 /// did not recognize.
-fn parse_options<'a>(
-    option_lines: &'a [OptionLine],
+fn parse_options(
+    option_lines: &[OptionLine],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> (IncludeOptions, Vec<&'a OptionLine>) {
+) -> IncludeOptions {
     let mut options = IncludeOptions::default();
-    let mut unclaimed = Vec::new();
 
-    for line in option_lines {
-        match line.name.as_str() {
-            "encoding" => options.encoding = Some(line.value.clone()),
-            "literal" => options.literal = true,
-            "code" => options.code = Some(line.value.clone()),
-            "number-lines" => options.number_lines = true,
-            "class" => {
+    for (option, line) in
+        classify_options::<IncludeOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    {
+        match option {
+            IncludeOption::Encoding => options.encoding = Some(line.value.clone()),
+            IncludeOption::Literal => options.literal = true,
+            IncludeOption::Code => options.code = Some(line.value.clone()),
+            IncludeOption::NumberLines => options.number_lines = true,
+            IncludeOption::Class => {
                 options.classes = line.value.split_whitespace().map(str::to_string).collect();
             }
-            "name" => options.name = Some(line.value.clone()),
-            "start-after" => options.selection.start_after = Some(line.value.clone()),
-            "end-before" => options.selection.end_before = Some(line.value.clone()),
-            "start-line" => {
+            IncludeOption::Name => options.name = Some(line.value.clone()),
+            IncludeOption::StartAfter => options.selection.start_after = Some(line.value.clone()),
+            IncludeOption::EndBefore => options.selection.end_before = Some(line.value.clone()),
+            IncludeOption::StartLine => {
                 options.selection.start_line = parse_index(line, "start-line", diagnostics, ctx);
             }
-            "end-line" => {
+            IncludeOption::EndLine => {
                 options.selection.end_line = parse_index(line, "end-line", diagnostics, ctx);
             }
-            "tab-width" => {
+            IncludeOption::TabWidth => {
                 let Ok(width) = line.value.trim().parse::<i32>() else {
                     diagnostics.push(Diagnostic::at(
                         DiagnosticCode::IncludeInvalidTabWidth,
@@ -305,10 +331,9 @@ fn parse_options<'a>(
                 };
                 options.tab_width = Some(width);
             }
-            _ => unclaimed.push(line),
         }
     }
-    (options, unclaimed)
+    options
 }
 
 /// Reads a `:start-line:`/`:end-line:` value: a **0-based** index, which is
@@ -971,7 +996,10 @@ mod tests {
         );
 
         // Then
-        assert_eq!(codes(&document), vec![DiagnosticCode::IncludeUnknownOption]);
+        assert_eq!(
+            codes(&document),
+            vec![DiagnosticCode::DirectiveUnknownOption]
+        );
     }
 
     #[test]

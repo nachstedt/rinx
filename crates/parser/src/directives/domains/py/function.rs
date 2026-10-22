@@ -1,10 +1,10 @@
-use super::super::body::{ObjectOptions, parse_object_body};
-use super::dispatch::read_module_option;
+use super::super::body::{DescriptionOption, ObjectOptions, parse_object_body};
+use super::dispatch::PyObjectOption;
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::OptionLine;
+use crate::directives::options::{OptionLine, directive_options};
 use crate::headings::Adornment;
-use rinx_ast::{DomainObjectBody, NonEmptyVector};
+use rinx_ast::{DescriptionFlags, DomainObjectBody, NonEmptyVector};
 
 /// Parses a `.. py:function::` body: its option block, then its content.
 ///
@@ -45,14 +45,25 @@ struct FunctionOptions {
     is_async: bool,
 }
 
+directive_options! {
+    /// The options Sphinx's `PyFunction` takes.
+    enum FunctionOption {
+        /// `:async:`.
+        Async => (["async"], Flag, "Marks the function as a coroutine."),
+        _ => (["canonical"], Text, "The object's name where it is defined, if documented elsewhere."),;
+        Py(PyObjectOption),
+        Description(DescriptionOption),
+    }
+}
+
 impl ObjectOptions for FunctionOptions {
-    fn read(&mut self, line: &OptionLine) -> bool {
-        match line.name.as_str() {
-            "async" => {
-                self.is_async = true;
-                true
-            }
-            _ => read_module_option(line, &mut self.module),
+    type Option = FunctionOption;
+
+    fn read(&mut self, option: FunctionOption, line: &OptionLine, flags: &mut DescriptionFlags) {
+        match option {
+            FunctionOption::Async => self.is_async = true,
+            FunctionOption::Py(PyObjectOption::Module) => self.module = Some(line.value.clone()),
+            FunctionOption::Description(option) => flags.set(option.flag()),
         }
     }
 }

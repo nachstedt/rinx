@@ -136,13 +136,7 @@ fn parse_unicode_kind(
             _ => unrecognized.push(line),
         }
     }
-    report_unknown_options(
-        &unrecognized,
-        UNICODE_DIRECTIVE,
-        DiagnosticCode::DirectiveUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    report_unknown_options(&unrecognized, UNICODE_DIRECTIVE, diagnostics, ctx);
 
     let span = directive_span.or_else(|| body_span(body_lines, ctx));
     let text = decode_unicode_codes(argument, span, diagnostics);
@@ -219,13 +213,7 @@ fn parse_image_kind(
         diagnostics,
         ctx,
     );
-    report_unknown_options(
-        &unrecognized,
-        IMAGE_DIRECTIVE,
-        DiagnosticCode::DirectiveUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    report_unknown_options(&unrecognized, IMAGE_DIRECTIVE, diagnostics, ctx);
 
     if argument.trim().is_empty() {
         diagnostics.push(Diagnostic::at(

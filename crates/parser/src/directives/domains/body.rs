@@ -2,9 +2,10 @@
 //! read the option block, then parse the rest as the object's content.
 //!
 //! Sphinx declares the object-description flags (`:no-index:` and its
-//! siblings) once, on `ObjectDescription`, so they are read here for every
-//! type; what a type adds of its own (`py:method`'s `:async:`, `py:data`'s
-//! `:type:`) arrives through its [`ObjectOptions`]. Reading the whole block
+//! siblings) once, on `ObjectDescription`, so they are one group,
+//! [`DescriptionOption`], that every type's option enum includes; what a type
+//! adds of its own (`py:method`'s `:async:`, `py:data`'s `:type:`) arrives
+//! through its [`ObjectOptions`]. Reading the whole block
 //! with the shared [`scan_option_lines`] — rather than letting each type stop
 //! at the first line it does not know — is what keeps an option a type does
 //! not take from leaking into its content as text, and having one place
@@ -12,22 +13,67 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::{OptionLine, report_unknown_options};
+use crate::directives::options::{
+    DirectiveOptions, OptionLine, classify_options, directive_options,
+};
 use crate::headings::Adornment;
-use rinx_ast::{DescriptionFlag, DescriptionFlags, DiagnosticCode, Node};
+use rinx_ast::{DescriptionFlag, DescriptionFlags, Node};
 
-/// The options one object type takes beyond the object-description flags.
-pub(super) trait ObjectOptions: Default {
-    /// Records `line` if it is one of this type's own options, and says
-    /// whether it was.
-    fn read(&mut self, line: &OptionLine) -> bool;
+directive_options! {
+    /// Sphinx's object-description flags, which every object type takes.
+    pub(super) enum DescriptionOption {
+        /// `:no-index:`.
+        Unindexed => (["no-index", "noindex"], Flag, "Makes the object neither a reference target nor an index entry."),
+        /// `:no-index-entry:`.
+        OutOfIndex => (["no-index-entry", "noindexentry"], Flag, "Leaves the object out of the general index."),
+        /// `:no-contents-entry:`.
+        OutOfContents => (["no-contents-entry", "nocontentsentry"], Flag, "Leaves the object out of the table of contents."),
+        _ => (["no-typesetting"], Flag, "Indexes the object without drawing it."),
+    }
 }
 
-/// A type that takes no option of its own — `c:function`, `c:struct`,
-/// `std:cmdoption` and every other type Sphinx gives only the flags.
+impl DescriptionOption {
+    /// The flag this option sets.
+    pub(super) const fn flag(self) -> DescriptionFlag {
+        match self {
+            Self::Unindexed => DescriptionFlag::NoIndex,
+            Self::OutOfIndex => DescriptionFlag::NoIndexEntry,
+            Self::OutOfContents => DescriptionFlag::NoContentsEntry,
+        }
+    }
+}
+
+/// The options one object type takes, the object-description flags among
+/// them.
+pub(super) trait ObjectOptions: Default {
+    /// The type's options, as an enum including [`DescriptionOption`].
+    type Option: DirectiveOptions;
+
+    /// Records one option, a description flag into `flags`.
+    fn read(&mut self, option: Self::Option, line: &OptionLine, flags: &mut DescriptionFlags);
+}
+
+directive_options! {
+    /// The options of a type Sphinx gives only the flags: `std:cmdoption`.
+    pub(super) enum PlainObjectOption {
+        ;
+        Description(DescriptionOption),
+    }
+}
+
+/// A type that takes no option of its own — `std:cmdoption`.
 impl ObjectOptions for () {
-    fn read(&mut self, _line: &OptionLine) -> bool {
-        false
+    type Option = PlainObjectOption;
+
+    fn read(
+        &mut self,
+        option: PlainObjectOption,
+        _line: &OptionLine,
+        flags: &mut DescriptionFlags,
+    ) {
+        match option {
+            PlainObjectOption::Description(option) => flags.set(option.flag()),
+        }
     }
 }
 
@@ -48,14 +94,13 @@ pub(super) fn parse_object_body<O: ObjectOptions>(
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
 ) -> ObjectBody<O> {
-    let (options, flags, unrecognized) = read_object_options::<O>(&invocation.options);
-    report_unknown_options(
-        &unrecognized,
-        directive,
-        DiagnosticCode::DirectiveUnknownOption,
-        diagnostics,
-        &invocation.ctx,
-    );
+    let mut options = O::default();
+    let mut flags = DescriptionFlags::default();
+    for (option, line) in
+        classify_options::<O::Option>(&invocation.options, directive, diagnostics, &invocation.ctx)
+    {
+        options.read(option, line, &mut flags);
+    }
 
     let content = invocation
         .content_with_enclosing_titles()
@@ -67,28 +112,10 @@ pub(super) fn parse_object_body<O: ObjectOptions>(
     }
 }
 
-/// Interprets a domain object's option lines: the object-description flags,
-/// the type's own options, and the lines that are neither.
-fn read_object_options<O: ObjectOptions>(
-    option_lines: &[OptionLine],
-) -> (O, DescriptionFlags, Vec<&OptionLine>) {
-    let mut options = O::default();
-    let mut flags = DescriptionFlags::default();
-    let mut unrecognized = Vec::new();
-    for line in option_lines {
-        if let Some(flag) = DescriptionFlag::from_option_name(&line.name) {
-            flags.set(flag);
-        } else if !options.read(line) {
-            unrecognized.push(line);
-        }
-    }
-    (options, flags, unrecognized)
-}
-
 #[cfg(test)]
 pub(super) mod test_support {
-    use super::{ObjectOptions, read_object_options};
-    use crate::directives::options::scan_option_lines;
+    use super::ObjectOptions;
+    use crate::directives::options::{DirectiveOptions, scan_option_lines};
     use rinx_ast::DescriptionFlags;
 
     /// What `body` — an object's body lines, already unindented — reads as:
@@ -99,9 +126,16 @@ pub(super) mod test_support {
     ) -> (O, DescriptionFlags, Vec<String>) {
         let lines: Vec<String> = body.iter().map(ToString::to_string).collect();
         let (option_lines, _) = scan_option_lines(&lines);
-        let (options, flags, unrecognized) = read_object_options::<O>(&option_lines);
-        let names = unrecognized.iter().map(|line| line.name.clone()).collect();
-        (options, flags, names)
+        let mut options = O::default();
+        let mut flags = DescriptionFlags::default();
+        let mut unrecognized = Vec::new();
+        for line in &option_lines {
+            match O::Option::from_name(&line.name) {
+                Some(option) => options.read(option, line, &mut flags),
+                None => unrecognized.push(line.name.clone()),
+            }
+        }
+        (options, flags, unrecognized)
     }
 }
 
@@ -110,7 +144,7 @@ mod tests {
     use super::test_support::read_options;
     use super::*;
     use crate::parse;
-    use rinx_ast::{DescriptionFlag, Directive, DomainObjectBody};
+    use rinx_ast::{DescriptionFlag, DiagnosticCode, Directive, DomainObjectBody};
 
     #[test]
     fn test_read_object_options_reads_every_flag_and_leaves_the_rest() {

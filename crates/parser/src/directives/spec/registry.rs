@@ -75,11 +75,13 @@ const DIRECTIVES: &[RegisteredDirective] = &[
     entry(&contents::SPEC, contents::interpret_contents),
     // `.. sectnum::`.
     entry(&sectnum::SPEC, sectnum::interpret_sectnum),
-    // `.. code-block::` and docutils' `.. code::`.
+    // `.. code-block::`.
     entry(
         &code_block::CODE_BLOCK_SPEC,
         code_block::interpret_code_block,
     ),
+    // docutils' `.. code::`.
+    entry(&code_block::CODE_SPEC, code_block::interpret_code_block),
     // `.. literalinclude::`.
     entry(
         &code_block::LITERAL_INCLUDE_SPEC,
@@ -111,6 +113,8 @@ const DIRECTIVES: &[RegisteredDirective] = &[
     ),
     // `.. doctest::` and the other four of `sphinx.ext.doctest`.
     entry(&doctest::DOCTEST_SPEC, doctest::interpret_doctest),
+    entry(&doctest::TESTCODE_SPEC, doctest::interpret_doctest),
+    entry(&doctest::TEST_SETUP_SPEC, doctest::interpret_doctest),
     // sphinx-design's `.. dropdown::`.
     entry(&dropdown::SPEC, dropdown::interpret_dropdown),
     // sphinx-design's `.. grid::`.
@@ -138,6 +142,8 @@ const DIRECTIVES: &[RegisteredDirective] = &[
     entry(&needservice::SPEC, needservice::interpret_needservice),
     // The six spellings of a `PlantUML` diagram.
     entry(&uml::SPEC, uml::interpret_uml),
+    // This build's two templated diagram spellings and sphinx-needs' two.
+    entry(&uml::TEMPLATED_SPEC, uml::interpret_uml),
 ];
 
 /// Every directive this build implements, in the registry's order.
@@ -215,6 +221,51 @@ mod tests {
     }
 
     #[test]
+    fn test_a_spec_declares_options_exactly_when_its_shape_takes_them() {
+        // Given — the two whose options are the fields the schema declares
+        let schema_options = ["entity-update", "needservice"];
+
+        // When / Then
+        for spec in directive_specs() {
+            let declares = spec.option_specs().next().is_some();
+            let dynamic = schema_options.contains(&spec.names[0]);
+            assert_eq!(
+                spec.shape.takes_options,
+                declares || dynamic,
+                "`{}` takes options but declares none, or the reverse",
+                spec.names[0]
+            );
+        }
+    }
+
+    #[test]
+    fn test_every_option_spelling_names_itself_and_says_what_it_does() {
+        // Given / When / Then
+        for spec in directive_specs() {
+            for option in spec.option_specs() {
+                assert!(!option.names.is_empty(), "{option:?} has no name");
+                assert!(!option.doc.is_empty(), "{option:?} has no doc");
+            }
+        }
+    }
+
+    #[test]
+    fn test_no_directive_declares_an_option_name_twice() {
+        // Given / When / Then
+        for spec in directive_specs() {
+            let mut seen: Vec<&str> = Vec::new();
+            for name in spec.option_specs().flat_map(|option| option.names) {
+                assert!(
+                    !seen.contains(name),
+                    "`{}` declares `:{name}:` twice",
+                    spec.names[0]
+                );
+                seen.push(name);
+            }
+        }
+    }
+
+    #[test]
     fn test_the_admonitions_together_spell_every_admonition_kind() {
         // Given — one per `AdmonitionKind`, via its own `as_str`
         let every_kind = [
@@ -254,20 +305,28 @@ mod tests {
     #[test]
     fn test_the_doctest_family_spells_every_doctest_directive() {
         // Given
-        let spec = &doctest::DOCTEST_SPEC;
+        let specs = [
+            &doctest::DOCTEST_SPEC,
+            &doctest::TESTCODE_SPEC,
+            &doctest::TEST_SETUP_SPEC,
+        ];
+        let names: Vec<&str> = specs
+            .iter()
+            .flat_map(|spec| spec.names.iter().copied())
+            .collect();
 
         // When / Then
         assert_eq!(
-            spec.names,
+            names,
             [
                 "doctest",
-                "testcode",
                 "testoutput",
+                "testcode",
                 "testsetup",
                 "testcleanup"
             ]
         );
-        for name in spec.names {
+        for name in names {
             let document = crate::parse("index.rst", &format!(".. {name}::\n\n   >>> 1\n"));
             assert!(
                 matches!(
@@ -280,15 +339,15 @@ mod tests {
     }
 
     #[test]
-    fn test_the_code_block_spells_both_of_its_sources() {
+    fn test_the_code_blocks_spell_both_of_their_sources() {
         // Given / When / Then
-        let spec = &code_block::CODE_BLOCK_SPEC;
         assert_eq!(
-            spec.names,
-            [
-                CodeBlockSource::CodeBlock.directive_name(),
-                CodeBlockSource::Code.directive_name(),
-            ]
+            code_block::CODE_BLOCK_SPEC.names,
+            [CodeBlockSource::CodeBlock.directive_name()]
+        );
+        assert_eq!(
+            code_block::CODE_SPEC.names,
+            [CodeBlockSource::Code.directive_name()]
         );
     }
 
@@ -340,15 +399,19 @@ mod tests {
     }
 
     #[test]
-    fn test_the_diagram_spells_every_uml_source() {
+    fn test_the_diagrams_spell_every_uml_source_by_whether_it_is_templated() {
         // Given
-        let every_source: Vec<&str> = UmlSource::ALL
-            .iter()
-            .map(|source| source.as_str())
-            .collect();
+        let spelled = |templated: bool| -> Vec<&str> {
+            UmlSource::ALL
+                .iter()
+                .filter(|source| source.is_templated() == templated)
+                .map(|source| source.as_str())
+                .collect()
+        };
 
         // When / Then
-        assert_spelled_as::<UmlSource>(&uml::SPEC, &every_source);
+        assert_spelled_as::<UmlSource>(&uml::SPEC, &spelled(false));
+        assert_spelled_as::<UmlSource>(&uml::TEMPLATED_SPEC, &spelled(true));
     }
 
     #[test]

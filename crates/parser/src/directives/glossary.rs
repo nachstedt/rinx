@@ -7,9 +7,9 @@ use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use crate::headings::Adornment;
 use crate::indent::{indent_width, unindent_body_lines};
-use rinx_ast::{DiagnosticCode, Directive, Node};
+use rinx_ast::{Directive, Node};
 
-use super::options::{OptionLine, report_unknown_options};
+use super::options::{DirectiveOptions, classify_options, directive_options};
 
 /// Dedents one accumulated definition body and parses it, rebasing `ctx` by
 /// both the lines skipped to reach it and its own indentation.
@@ -41,6 +41,14 @@ fn parse_definition_body(
     parse_blocks(&dedented_refs, adornment_order, diagnostics, &def_ctx)
 }
 
+directive_options! {
+    /// The options `.. glossary::` takes: Sphinx's one.
+    enum GlossaryOption {
+        /// `:sorted:`.
+        Sorted => (["sorted"], Flag, "Sorts the entries alphabetically."),
+    }
+}
+
 /// This directive's entry in the table of directives this build implements.
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["glossary"],
@@ -51,6 +59,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: <GlossaryOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. glossary::`.
@@ -71,19 +80,17 @@ pub(super) fn parse_glossary(
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
 ) -> Directive {
-    let sorted = invocation.options.iter().any(|line| line.name == "sorted");
-    let unrecognized: Vec<&OptionLine> = invocation
-        .options
-        .iter()
-        .filter(|line| line.name != "sorted")
-        .collect();
-    report_unknown_options(
-        &unrecognized,
+    let mut sorted = false;
+    for (option, _) in classify_options::<GlossaryOption>(
+        &invocation.options,
         "glossary",
-        DiagnosticCode::DirectiveUnknownOption,
         diagnostics,
         &invocation.ctx,
-    );
+    ) {
+        match option {
+            GlossaryOption::Sorted => sorted = true,
+        }
+    }
 
     let content = invocation.content();
     let ctx = &content.ctx;

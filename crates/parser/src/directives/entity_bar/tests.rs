@@ -415,9 +415,9 @@ fn test_every_unsupported_needbar_option_is_refused_by_name() {
     let reported = codes(rst);
 
     // Then
-    assert_eq!(reported, ["entity-bar.unsupported-option"; 5]);
+    assert_eq!(reported, ["directive.unsupported-option"; 5]);
     assert!(
-        diagnostic(rst, "entity-bar.unsupported-option")
+        diagnostic(rst, "directive.unsupported-option")
             .message
             .contains(":style:")
     );
@@ -429,7 +429,7 @@ fn test_types_is_refused_with_the_exact_filter_to_write() {
     let rst = ".. needbar::\n   :types: req\n\n   1\n";
 
     // When
-    let reported = diagnostic(rst, "entity-bar.unsupported-option");
+    let reported = diagnostic(rst, "directive.unsupported-option");
 
     // Then
     assert!(
@@ -448,7 +448,7 @@ fn test_an_option_nobody_claims_is_reported_as_unknown() {
     let reported = codes(rst);
 
     // Then
-    assert_eq!(reported, ["directive.entity-bar-unknown-option"]);
+    assert_eq!(reported, ["directive.unknown-option"]);
 }
 
 #[test]

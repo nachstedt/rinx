@@ -1,4 +1,5 @@
 use super::super::body::parse_object_body;
+use super::dispatch::CObjectOptions;
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
 use crate::headings::Adornment;
@@ -12,7 +13,8 @@ pub(crate) fn parse_c_struct(
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
 ) -> DomainObjectBody {
-    let parsed = parse_object_body::<()>("c:struct", invocation, adornment_order, diagnostics);
+    let parsed =
+        parse_object_body::<CObjectOptions>("c:struct", invocation, adornment_order, diagnostics);
     DomainObjectBody::CStruct {
         signatures,
         flags: parsed.flags,

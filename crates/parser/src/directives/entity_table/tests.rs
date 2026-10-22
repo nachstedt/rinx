@@ -261,7 +261,7 @@ fn test_a_sort_key_naming_several_fields_is_refused() {
     let (table, reported) = (parse_table(rst), codes(rst));
 
     // Then
-    assert_eq!(reported, ["directive.entity-table-unknown-option"]);
+    assert_eq!(reported, ["entity-table.invalid-value"]);
     assert_eq!(table.sort, None);
 }
 
@@ -358,7 +358,7 @@ fn test_the_shared_presentation_options_are_read() {
 }
 
 #[test]
-fn test_an_unknown_option_is_reported_under_the_directives_own_code() {
+fn test_an_option_sphinx_needs_has_and_this_build_lacks_is_unsupported() {
     // Given
     let rst = ".. entity-table::\n   :show_filters:\n";
 
@@ -366,7 +366,19 @@ fn test_an_unknown_option_is_reported_under_the_directives_own_code() {
     let reported = codes(rst);
 
     // Then
-    assert_eq!(reported, ["directive.entity-table-unknown-option"]);
+    assert_eq!(reported, ["directive.unsupported-option"]);
+}
+
+#[test]
+fn test_an_option_nobody_takes_is_unknown() {
+    // Given
+    let rst = ".. entity-table::\n   :colour: red\n";
+
+    // When
+    let reported = codes(rst);
+
+    // Then
+    assert_eq!(reported, ["directive.unknown-option"]);
 }
 
 #[test]

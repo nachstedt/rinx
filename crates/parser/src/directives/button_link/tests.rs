@@ -271,7 +271,7 @@ fn test_an_unknown_option_is_reported_and_the_button_survives() {
     assert!(button.has_label());
     assert_eq!(
         codes(&diagnostics),
-        vec![DiagnosticCode::DirectiveButtonLinkUnknownOption]
+        vec![DiagnosticCode::DirectiveUnknownOption]
     );
 }
 
@@ -287,7 +287,7 @@ fn test_ref_type_is_refused_by_name() {
     // Then
     assert_eq!(
         codes(&diagnostics),
-        vec![DiagnosticCode::ButtonLinkUnsupportedOption]
+        vec![DiagnosticCode::DirectiveUnsupportedOption]
     );
     assert!(
         diagnostics[0].message.contains("button-ref"),

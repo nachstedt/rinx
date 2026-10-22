@@ -23,12 +23,16 @@ use rinx_ast::{
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::error_node::{malformed_directive, malformed_node};
-use crate::directives::options::{OptionLine, report_unknown_options};
+use crate::directives::options::{
+    DirectiveOptions, OptionLine, classify_options, directive_options,
+};
 
 use super::dedent::apply_dedent;
 use super::diff::unified_diff;
 use super::emphasize::resolve_emphasize_lines;
-use super::options::parse_code_block_options;
+use super::options::{
+    CodeBlockOptions, CommonCodeOption, SphinxCodeOption, read_common_option, read_sphinx_option,
+};
 use super::selection::{Selection, check_encoding, expand_tabs};
 
 /// The directive name, used throughout this module's diagnostics.
@@ -61,6 +65,7 @@ pub(in crate::directives) const LITERAL_INCLUDE_SPEC: DirectiveSpec = DirectiveS
         takes_content: false,
         content_hint: None,
     },
+    options: <LiteralIncludeOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. literalinclude::`.
@@ -98,20 +103,7 @@ pub(in crate::directives) fn parse_literal_include(
         );
     }
 
-    let (shared, unrecognized) = parse_code_block_options(
-        CodeBlockSource::LiteralInclude,
-        &invocation.options,
-        diagnostics,
-        ctx,
-    );
-    let (own, unclaimed) = parse_own_options(&unrecognized, diagnostics, ctx);
-    report_unknown_options(
-        &unclaimed,
-        DIRECTIVE,
-        DiagnosticCode::IncludeUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    let (shared, own) = parse_options(&invocation.options, diagnostics, ctx);
 
     if own.pyobject.is_some() {
         return malformed_directive(
@@ -178,40 +170,85 @@ pub(in crate::directives) fn parse_literal_include(
     })
 }
 
-/// Consumes the options only this directive has, returning them with the lines
-/// nothing claimed.
-fn parse_own_options<'a>(
-    option_lines: &[&'a OptionLine],
+directive_options! {
+    /// The options `.. literalinclude::` takes: Sphinx's twenty-one.
+    enum LiteralIncludeOption {
+        /// `:language:`.
+        Language => (["language"], Text, "The language to highlight the file as."),
+        /// `:encoding:`.
+        Encoding => (["encoding"], Text, "The file's text encoding."),
+        /// `:prepend:`.
+        Prepend => (["prepend"], Text, "A line shown before the file's."),
+        /// `:append:`.
+        Append => (["append"], Text, "A line shown after the file's."),
+        /// `:diff:`.
+        Diff => (["diff"], Path, "A file to show the difference to, as a patch."),
+        /// `:pyobject:`.
+        PyObject => (["pyobject"], Text, "A Python object whose source is shown."),
+        /// `:lineno-match:`.
+        LinenoMatch => (["lineno-match"], Flag, "Numbers the lines as they are numbered in the file."),
+        /// `:lines:`.
+        Lines => (["lines"], Text, "The lines to show, as numbers and ranges."),
+        /// `:start-after:`.
+        StartAfter => (["start-after"], Text, "Shows the file from below the first line holding this text."),
+        /// `:end-before:`.
+        EndBefore => (["end-before"], Text, "Shows the file up to above the first line holding this text."),
+        /// `:start-at:`.
+        StartAt => (["start-at"], Text, "Shows the file from the first line holding this text."),
+        /// `:end-at:`.
+        EndAt => (["end-at"], Text, "Shows the file up to the first line holding this text."),
+        /// `:tab-width:`.
+        TabWidth => (["tab-width"], Integer, "How many spaces a tab expands to.");
+        Common(CommonCodeOption),
+        Sphinx(SphinxCodeOption),
+    }
+}
+
+/// Reads the options of a `.. literalinclude::`: the ones it shares with
+/// `.. code-block::` and its own.
+fn parse_options(
+    option_lines: &[OptionLine],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> (LiteralIncludeOptions, Vec<&'a OptionLine>) {
+) -> (CodeBlockOptions, LiteralIncludeOptions) {
+    let mut shared = CodeBlockOptions::empty();
     let mut options = LiteralIncludeOptions::default();
-    let mut unclaimed = Vec::new();
-
-    for line in option_lines {
-        match line.name.as_str() {
-            "language" => options.language = Some(line.value.clone()),
-            "encoding" => options.encoding = Some(line.value.clone()),
-            "prepend" => options.prepend = Some(line.value.clone()),
-            "append" => options.append = Some(line.value.clone()),
-            "diff" => options.diff = Some(line.value.clone()),
-            "pyobject" => options.pyobject = Some(line.value.clone()),
-            "lineno-match" => options.lineno_match = true,
-            // Reaches here only with an empty value: the shared parser claims
-            // a `:caption:` that has one.
-            "caption" => options.bare_caption = true,
-            "lines" => options.selection.lines = Some(line.value.clone()),
-            "start-after" => options.selection.start_after = Some(line.value.clone()),
-            "end-before" => options.selection.end_before = Some(line.value.clone()),
-            "start-at" => options.selection.start_at = Some(line.value.clone()),
-            "end-at" => options.selection.end_at = Some(line.value.clone()),
-            "tab-width" => {
+    for (option, line) in
+        classify_options::<LiteralIncludeOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    {
+        match option {
+            LiteralIncludeOption::Language => options.language = Some(line.value.clone()),
+            LiteralIncludeOption::Encoding => options.encoding = Some(line.value.clone()),
+            LiteralIncludeOption::Prepend => options.prepend = Some(line.value.clone()),
+            LiteralIncludeOption::Append => options.append = Some(line.value.clone()),
+            LiteralIncludeOption::Diff => options.diff = Some(line.value.clone()),
+            LiteralIncludeOption::PyObject => options.pyobject = Some(line.value.clone()),
+            LiteralIncludeOption::LinenoMatch => options.lineno_match = true,
+            LiteralIncludeOption::Lines => options.selection.lines = Some(line.value.clone()),
+            LiteralIncludeOption::StartAfter => {
+                options.selection.start_after = Some(line.value.clone());
+            }
+            LiteralIncludeOption::EndBefore => {
+                options.selection.end_before = Some(line.value.clone());
+            }
+            LiteralIncludeOption::StartAt => options.selection.start_at = Some(line.value.clone()),
+            LiteralIncludeOption::EndAt => options.selection.end_at = Some(line.value.clone()),
+            LiteralIncludeOption::TabWidth => {
                 options.tab_width = parse_tab_width(line, diagnostics, ctx);
             }
-            _ => unclaimed.push(*line),
+            // A `:caption:` with no value means "the file's path".
+            LiteralIncludeOption::Common(CommonCodeOption::Caption) if line.value.is_empty() => {
+                options.bare_caption = true;
+            }
+            LiteralIncludeOption::Common(common) => {
+                read_common_option(common, line, &mut shared, DIRECTIVE, diagnostics, ctx);
+            }
+            LiteralIncludeOption::Sphinx(sphinx) => {
+                read_sphinx_option(sphinx, line, &mut shared, DIRECTIVE, diagnostics, ctx);
+            }
         }
     }
-    (options, unclaimed)
+    (shared, options)
 }
 
 /// Reads a `:tab-width:`, which docutils allows to be negative — that is how
@@ -727,7 +764,7 @@ mod tests {
         // Then
         assert_eq!(
             codes(&diagnostics),
-            vec![DiagnosticCode::IncludeUnknownOption]
+            vec![DiagnosticCode::DirectiveUnknownOption]
         );
     }
 

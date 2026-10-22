@@ -6,49 +6,62 @@
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::options::OptionLine;
+use crate::directives::options::{OptionLine, classify_options, directive_options};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, DocTestFlag, DocTestFlagName, DocTestTrim, PyVersionSpec, Span,
 };
 
 use super::kind::DocTestDirectiveKind;
 
-/// An option name recognized somewhere in the family.
-///
-/// Kept separate from the per-kind acceptance rules so the shared scanner can
-/// recognize every spelling and then report the ones this particular directive
-/// does not take, rather than reporting them as unknown.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum DocTestOptionName {
-    Hide,
-    Options,
-    PyVersion,
-    SkipIf,
-    TrimDoctestFlags,
-    NoTrimDoctestFlags,
+directive_options! {
+    /// `:skipif:`, which every directive of the family takes.
+    pub(super) enum SkipOption {
+        /// `:skipif:`.
+        SkipIf => (["skipif"], Text, "A Python expression; the block is skipped when it is true."),
+    }
 }
 
-impl DocTestOptionName {
-    /// Every option name, paired with its `:spelling:`.
-    pub(super) const ALL: [(&'static str, Self); 6] = [
-        (":hide:", Self::Hide),
-        (":options:", Self::Options),
-        (":pyversion:", Self::PyVersion),
-        (":skipif:", Self::SkipIf),
-        (":trim-doctest-flags:", Self::TrimDoctestFlags),
-        (":no-trim-doctest-flags:", Self::NoTrimDoctestFlags),
-    ];
+directive_options! {
+    /// The options of the directives whose code is shown.
+    pub(super) enum ShownOption {
+        /// `:hide:`.
+        Hide => (["hide"], Flag, "Runs the block without showing it."),
+        /// `:pyversion:`.
+        PyVersion => (["pyversion"], Text, "The Python versions the block runs on, as `> 3.9`."),
+        /// `:trim-doctest-flags:`.
+        TrimDoctestFlags => (["trim-doctest-flags"], Flag, "Hides the block's doctest flags."),
+        /// `:no-trim-doctest-flags:`.
+        NoTrimDoctestFlags => (["no-trim-doctest-flags"], Flag, "Shows the block's doctest flags."),
+    }
+}
 
-    /// The option's spelling, including the surrounding colons.
-    const fn as_spelling(self) -> &'static str {
-        match self {
-            Self::Hide => ":hide:",
-            Self::Options => ":options:",
-            Self::PyVersion => ":pyversion:",
-            Self::SkipIf => ":skipif:",
-            Self::TrimDoctestFlags => ":trim-doctest-flags:",
-            Self::NoTrimDoctestFlags => ":no-trim-doctest-flags:",
-        }
+directive_options! {
+    /// The options `.. doctest::` and `.. testoutput::` take: every one, since
+    /// both state output a run is compared against.
+    pub(super) enum DocTestOption {
+        /// `:options:`.
+        Options => (["options"], Text, "Doctest flags the comparison runs with, as `+ELLIPSIS`.");
+        Shown(ShownOption),
+        Skip(SkipOption),
+    }
+}
+
+directive_options! {
+    /// The options `.. testcode::` takes: no `:options:`, since it states no
+    /// output of its own — its companion `.. testoutput::` carries them.
+    pub(super) enum TestCodeOption {
+        ;
+        Shown(ShownOption),
+        Skip(SkipOption),
+    }
+}
+
+directive_options! {
+    /// The options `.. testsetup::` and `.. testcleanup::` take: only
+    /// `:skipif:`, since they are never shown and never compared.
+    pub(super) enum TestSetupOption {
+        ;
+        Skip(SkipOption),
     }
 }
 
@@ -64,7 +77,7 @@ pub(super) struct DocTestOptions {
 }
 
 /// Reads the option lines the reader took off the directive's block, each
-/// positioned by `ctx`.
+/// positioned by `ctx`, reporting every one `kind` does not take.
 pub(super) fn scan_options(
     kind: DocTestDirectiveKind,
     option_lines: &[OptionLine],
@@ -78,60 +91,67 @@ pub(super) fn scan_options(
         skipif: None,
         trim: DocTestTrim::Unset,
     };
-
-    for option in option_lines {
-        let line = option.raw.as_str();
-        let span = ctx.line_span(option.line_index, line);
-        match match_option(line) {
-            Some((name, value)) => {
-                if kind.accepts(name) {
-                    apply_option(kind, name, value, &mut options, diagnostics, span);
-                } else {
-                    diagnostics.push(Diagnostic::at(
-                        DiagnosticCode::DoctestOptionNotSupported,
-                        format!(
-                            "{}: option {} is not supported by this directive",
-                            kind.as_name(),
-                            name.as_spelling()
-                        ),
-                        span,
-                    ));
+    let directive = kind.as_name();
+    let span = |line: &OptionLine| ctx.line_span(line.line_index, &line.raw);
+    match kind {
+        DocTestDirectiveKind::Doctest | DocTestDirectiveKind::TestOutput => {
+            for (option, line) in
+                classify_options::<DocTestOption>(option_lines, directive, diagnostics, ctx)
+            {
+                match option {
+                    DocTestOption::Options => {
+                        options.flags = parse_flag_list(kind, &line.value, diagnostics, span(line));
+                    }
+                    DocTestOption::Shown(option) => {
+                        read_shown(kind, option, line, &mut options, diagnostics, span(line));
+                    }
+                    DocTestOption::Skip(SkipOption::SkipIf) => {
+                        options.skipif = Some(line.value.clone());
+                    }
                 }
             }
-            None => diagnostics.push(Diagnostic::at(
-                DiagnosticCode::DoctestUnknownOption,
-                format!("{}: unknown option '{line}'", kind.as_name()),
-                span,
-            )),
+        }
+        DocTestDirectiveKind::TestCode => {
+            for (option, line) in
+                classify_options::<TestCodeOption>(option_lines, directive, diagnostics, ctx)
+            {
+                match option {
+                    TestCodeOption::Shown(option) => {
+                        read_shown(kind, option, line, &mut options, diagnostics, span(line));
+                    }
+                    TestCodeOption::Skip(SkipOption::SkipIf) => {
+                        options.skipif = Some(line.value.clone());
+                    }
+                }
+            }
+        }
+        DocTestDirectiveKind::TestSetup | DocTestDirectiveKind::TestCleanup => {
+            for (option, line) in
+                classify_options::<TestSetupOption>(option_lines, directive, diagnostics, ctx)
+            {
+                match option {
+                    TestSetupOption::Skip(SkipOption::SkipIf) => {
+                        options.skipif = Some(line.value.clone());
+                    }
+                }
+            }
         }
     }
-
     options
 }
 
-/// Matches an option line against the known spellings, returning the name and
-/// the text after it.
-fn match_option(line: &str) -> Option<(DocTestOptionName, &str)> {
-    DocTestOptionName::ALL
-        .iter()
-        .find_map(|(spelling, name)| line.strip_prefix(spelling).map(|rest| (*name, rest.trim())))
-}
-
-/// Records one recognized, accepted option.
-fn apply_option(
+/// Records one of the options of a directive whose code is shown.
+fn read_shown(
     kind: DocTestDirectiveKind,
-    name: DocTestOptionName,
-    value: &str,
+    option: ShownOption,
+    line: &OptionLine,
     options: &mut DocTestOptions,
     diagnostics: &mut Diagnostics,
     span: Option<Span>,
 ) {
-    match name {
-        DocTestOptionName::Hide => options.hide = true,
-        DocTestOptionName::Options => {
-            options.flags = parse_flag_list(kind, value, diagnostics, span);
-        }
-        DocTestOptionName::PyVersion => match PyVersionSpec::parse(value) {
+    match option {
+        ShownOption::Hide => options.hide = true,
+        ShownOption::PyVersion => match PyVersionSpec::parse(&line.value) {
             Ok(spec) => options.pyversion = Some(spec),
             // Reported, not silently dropped: ignoring a `:pyversion:` would
             // run a block that Sphinx would have skipped.
@@ -141,9 +161,8 @@ fn apply_option(
                 span,
             )),
         },
-        DocTestOptionName::SkipIf => options.skipif = Some(value.to_string()),
-        DocTestOptionName::TrimDoctestFlags => options.trim = DocTestTrim::Trim,
-        DocTestOptionName::NoTrimDoctestFlags => options.trim = DocTestTrim::NoTrim,
+        ShownOption::TrimDoctestFlags => options.trim = DocTestTrim::Trim,
+        ShownOption::NoTrimDoctestFlags => options.trim = DocTestTrim::NoTrim,
     }
 }
 
@@ -197,15 +216,6 @@ mod tests {
     use rinx_ast::{Directive, DocTestBlock, DocTestTrim};
 
     use super::super::block::tests::{block_of, parse};
-
-    #[test]
-    fn test_option_spellings_match_the_lookup_table() {
-        // Given — ALL and as_spelling are maintained by hand.
-        for (spelling, option) in DocTestOptionName::ALL {
-            // When / Then
-            assert_eq!(option.as_spelling(), spelling);
-        }
-    }
 
     #[test]
     fn test_reads_the_hide_flag() {
@@ -394,14 +404,10 @@ mod tests {
         // When
         let (directive, diagnostics) = parse(DocTestDirectiveKind::TestSetup, "", &body);
 
-        // Then — reported as unsupported-here, not as unknown, and kept.
+        // Then — reported as an option it does not take, and kept.
         assert!(matches!(directive, Directive::DocTest(_)));
         assert_eq!(diagnostics.len(), 1);
-        assert!(
-            diagnostics[0]
-                .message
-                .contains("not supported by this directive")
-        );
+        assert_eq!(diagnostics[0].code, DiagnosticCode::DirectiveUnknownOption);
     }
 
     #[test]
@@ -415,7 +421,7 @@ mod tests {
         // Then
         assert!(matches!(directive, Directive::DocTest(_)));
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].message.contains("unknown option"));
+        assert_eq!(diagnostics[0].code, DiagnosticCode::DirectiveUnknownOption);
     }
 
     #[test]
@@ -428,29 +434,5 @@ mod tests {
 
         // Then
         assert_eq!(block_of(directive).content().body(), "d = {}\nd[1] = 2");
-    }
-
-    #[test]
-    fn test_match_option_returns_the_value_after_the_spelling() {
-        // Given
-        let line = ":skipif: True";
-
-        // When
-        let matched = match_option(line);
-
-        // Then
-        assert_eq!(matched, Some((DocTestOptionName::SkipIf, "True")));
-    }
-
-    #[test]
-    fn test_match_option_returns_none_for_an_unrelated_field() {
-        // Given
-        let line = ":bogus: 1";
-
-        // When
-        let matched = match_option(line);
-
-        // Then
-        assert_eq!(matched, None);
     }
 }

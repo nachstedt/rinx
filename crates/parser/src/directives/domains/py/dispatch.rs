@@ -3,7 +3,7 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::OptionLine;
+use crate::directives::options::directive_options;
 use rinx_ast::{DomainObjectBody, NonEmptyVector};
 
 use crate::headings::Adornment;
@@ -76,48 +76,14 @@ pub(crate) fn parse_py_domain_object(
     }
 }
 
-/// Reads `line` into `module` if it is the `:module:` option every `py`
-/// object description but `py:module` itself takes, and says whether it was.
-///
-/// A bare `:module:` reads as `Some("")`, which is meaningful: Sphinx's
-/// falsy-`modname` check makes it un-qualify the object.
-pub(super) fn read_module_option(line: &OptionLine, module: &mut Option<String>) -> bool {
-    if line.name != "module" {
-        return false;
-    }
-    *module = Some(line.value.clone());
-    true
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::directives::options::scan_option_lines;
-
-    #[test]
-    fn test_read_module_option_reads_a_value_and_a_bare_option() {
-        // Given
-        let lines: Vec<String> = [":module: ctypes", ":module:", ":final:"]
-            .iter()
-            .map(ToString::to_string)
-            .collect();
-        let (option_lines, _) = scan_option_lines(&lines);
-        let mut module = None;
-
-        // When
-        let read: Vec<(bool, Option<String>)> = option_lines
-            .iter()
-            .map(|line| (read_module_option(line, &mut module), module.clone()))
-            .collect();
-
-        // Then
-        assert_eq!(
-            read,
-            [
-                (true, Some("ctypes".to_string())),
-                (true, Some(String::new())),
-                (false, Some(String::new())),
-            ]
-        );
+directive_options! {
+    /// The options every `py` object description but `py:module` itself
+    /// takes: Sphinx's `PyObject`'s.
+    pub(super) enum PyObjectOption {
+        /// `:module:`.
+        Module => (["module"], Text, "The module the object belongs to, if not the current one."),
+        _ => (["annotation"], Text, "Text shown after the signature."),
+        _ => (["single-line-parameter-list"], Flag, "Writes the parameters on one line, however long."),
+        _ => (["single-line-type-parameter-list"], Flag, "Writes the type parameters on one line, however long."),
     }
 }

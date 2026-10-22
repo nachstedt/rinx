@@ -19,9 +19,11 @@ use rinx_filter::FieldName;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
-use super::filter_option::{FilterCodes, read_filter_option, report_unknown_field};
-use super::options::{OptionLine, report_unknown_options};
-use super::table_options::parse_common_table_options;
+use super::filter_option::{
+    FilterCodes, ShorthandFilterOption, read_filter_option, report_unknown_field,
+};
+use super::options::{DirectiveOptions, OptionLine, classify_options, directive_options};
+use super::table_options::{CommonTableOptions, TableOption, read_table_option};
 use super::table_widths::parse_widths_option;
 
 /// The only `:style:` this build renders.
@@ -31,6 +33,41 @@ use super::table_widths::parse_widths_option;
 /// filtering in the browser and would otherwise get a static table with no
 /// indication that they did not.
 const SUPPORTED_STYLE: &str = "table";
+
+/// The advice for sphinx-needs' other ways of selecting entities, which a
+/// `:filter:` says in this build's own language.
+const WRITE_AS_FILTER: &str = "write the selection as :filter:";
+
+directive_options! {
+    /// The options `.. entity-table::` takes: sphinx-needs' `needtable`'s
+    /// nineteen, of which this build reads five, and the presentation options
+    /// every table takes.
+    enum EntityTableOption {
+        /// `:filter:`.
+        Filter => (["filter"], Filter, "The entities listed, by a filter."),
+        /// `:columns:`.
+        Columns => (["columns"], Text, "The fields shown as columns, comma-separated."),
+        /// `:sort:`.
+        Sort => (["sort"], Text, "The field the rows are sorted by."),
+        /// `:colwidths:`.
+        Colwidths => (["colwidths"], Text, "sphinx-needs' spelling of `:widths:`."),
+        /// `:style:`.
+        Style => (["style"], Text, "How the table is drawn: only `table` is supported."),
+        _ => (["filter-func"], Text, "The entities listed, by a Python function.", WRITE_AS_FILTER),
+        _ => (["filter_warning"], Text, "The text shown when nothing is listed."),
+        _ => (["cypher"], Text, "The entities listed, by a Cypher query.", WRITE_AS_FILTER),
+        _ => (["export_id"], Text, "The id the filter is exported under."),
+        _ => (["max_items"], Integer, "How many rows are listed at most."),
+        _ => (["page_size"], Integer, "How many rows a page of a `datatables` table shows."),
+        _ => (["show_filters"], Flag, "Shows the filter above the table."),
+        _ => (["show_parts"], Flag, "Lists each entity's parts as rows of their own."),
+        _ => (["sort_by"], Text, "The field the rows are sorted by.", "write it as :sort:"),
+        _ => (["style_row"], Text, "A class for each row."),
+        _ => (["style_col"], Text, "A class for each column.");
+        Shorthand(ShorthandFilterOption),
+        Table(TableOption),
+    }
+}
 
 /// This directive's entry in the table of directives this build implements.
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
@@ -42,6 +79,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: false,
         content_hint: Some("write the selection as :filter:"),
     },
+    options: <EntityTableOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. entity-table::` or `.. needtable::`, recording which was
@@ -68,53 +106,45 @@ pub(super) fn parse_entity_table(
     let ctx = &invocation.ctx;
     let unindented_lines = &invocation.lines;
     let option_lines = &invocation.options;
-    let refs: Vec<&OptionLine> = option_lines.iter().collect();
-
-    let (common, remaining) = parse_common_table_options(&refs, directive, diagnostics, ctx);
-
+    let mut common = CommonTableOptions::empty();
     let mut table = EntityTable {
-        source,
         span: directive_span,
-        width: common.width,
-        align: common.align,
-        classes: common.classes,
-        name: common.name,
         ..EntityTable::new(source)
     };
 
     let mut colwidths = None;
-    let mut unrecognized = Vec::new();
-    for line in remaining {
-        match line.name.as_str() {
-            "filter" => {
+    for (option, line) in
+        classify_options::<EntityTableOption>(option_lines, directive, diagnostics, ctx)
+    {
+        match option {
+            EntityTableOption::Filter => {
                 let source_line = unindented_lines.get(line.line_index).map(String::as_str);
                 table.filter = read_filter(line, source_line, directive, diagnostics, ctx);
             }
-            "columns" => {
+            EntityTableOption::Columns => {
                 if let Some(columns) = read_columns(line, directive, diagnostics, ctx) {
                     table.columns = columns;
                 }
             }
-            "sort" => table.sort = read_sort(line, directive, diagnostics, ctx),
-            "colwidths" => colwidths = Some(line),
-            "style" => check_style(line, directive, diagnostics, ctx),
-            _ => unrecognized.push(line),
+            EntityTableOption::Sort => table.sort = read_sort(line, directive, diagnostics, ctx),
+            EntityTableOption::Colwidths => colwidths = Some(line),
+            EntityTableOption::Style => check_style(line, directive, diagnostics, ctx),
+            EntityTableOption::Shorthand(option) => match option {},
+            EntityTableOption::Table(option) => {
+                read_table_option(option, line, &mut common, directive, diagnostics, ctx);
+            }
         }
     }
+    table.width = common.width;
+    table.align = common.align;
+    table.classes = common.classes;
+    table.name = common.name;
 
     table.widths = read_widths(
         common.widths_raw.as_deref(),
         colwidths,
         table.columns.len(),
         directive,
-        diagnostics,
-        ctx,
-    );
-
-    report_unknown_options(
-        &unrecognized,
-        directive,
-        DiagnosticCode::DirectiveEntityTableUnknownOption,
         diagnostics,
         ctx,
     );
@@ -167,7 +197,7 @@ fn read_columns(
     }
     if columns.is_empty() {
         diagnostics.push(Diagnostic::at(
-            DiagnosticCode::DirectiveEntityTableUnknownOption,
+            DiagnosticCode::EntityTableInvalidValue,
             format!("{directive}: :columns: names no column"),
             ctx.line_span(line.line_index, &line.raw),
         ));
@@ -186,7 +216,7 @@ fn read_sort(
     let written = line.value.trim();
     if written.contains(',') {
         diagnostics.push(Diagnostic::at(
-            DiagnosticCode::DirectiveEntityTableUnknownOption,
+            DiagnosticCode::EntityTableInvalidValue,
             format!("{directive}: :sort: takes one field, not a list: '{written}'"),
             ctx.line_span(line.line_index, &line.raw),
         ));

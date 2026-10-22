@@ -2,9 +2,20 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::options::{DirectiveOptions, classify_options, directive_options};
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use crate::headings::Adornment;
+
+use super::admonition::CalloutOption;
 use rinx_ast::Directive;
+
+directive_options! {
+    /// The options `.. seealso::` takes: Sphinx's three, none drawn here.
+    enum SeeAlsoOption {
+        _ => (["collapsible"], Flag, "Draws the callout folded.", "a `.. seealso::` is always drawn unfolded");
+        Callout(CalloutOption),
+    }
+}
 
 /// This directive's entry in the table of directives this build implements.
 pub(in crate::directives) const SEEALSO_SPEC: DirectiveSpec = DirectiveSpec {
@@ -16,6 +27,7 @@ pub(in crate::directives) const SEEALSO_SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: <SeeAlsoOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. seealso::`: the text after the `::` is the first line of the
@@ -34,13 +46,20 @@ pub(in crate::directives) fn interpret_seealso(
 /// Parses a `.. seealso::` from its content, which may have begun on the
 /// marker line.
 ///
-/// Sphinx gives it `:class:` and `:name:`, neither of which this build draws;
-/// they are still taken off the content, so that they are not shown as text.
+/// Sphinx gives it three options, none of which this build draws; each is
+/// reported, and taken off the content so that it is not shown as text.
 pub(super) fn parse_seealso(
     invocation: &DirectiveInvocation<'_, '_>,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
 ) -> Directive {
+    // Every option it takes is unsupported, so classifying them only reports.
+    classify_options::<SeeAlsoOption>(
+        &invocation.options,
+        invocation.name,
+        diagnostics,
+        &invocation.ctx,
+    );
     Directive::SeeAlso {
         body: invocation.content().parse(adornment_order, diagnostics),
     }

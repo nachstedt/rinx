@@ -35,6 +35,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: &[],
 };
 
 /// Interprets `.. needservice::`, which is refused by name so its warning can

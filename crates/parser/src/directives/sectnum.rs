@@ -7,7 +7,9 @@ use rinx_ast::{Diagnostic, DiagnosticCode, Directive, SectnumOptions};
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
-use super::options::{OptionLine, parse_positive_depth, report_unknown_options};
+use super::options::{
+    DirectiveOptions, OptionLine, classify_options, directive_options, parse_positive_depth,
+};
 
 const DIRECTIVE: &str = "sectnum";
 
@@ -56,19 +58,34 @@ fn parse_required_text(
     line.value.clone()
 }
 
+directive_options! {
+    /// The options `.. sectnum::` takes: docutils' four.
+    enum SectnumOption {
+        /// `:depth:`.
+        Depth => (["depth"], Integer, "How many section levels are numbered."),
+        /// `:start:`.
+        Start => (["start"], Integer, "The number the first section gets."),
+        /// `:prefix:`.
+        Prefix => (["prefix"], Text, "Text written before each number."),
+        /// `:suffix:`.
+        Suffix => (["suffix"], Text, "Text written after each number."),
+    }
+}
+
 /// Reads the four options `.. sectnum::` accepts, returning them with the
 /// lines it did not recognize, in source order.
-fn parse_sectnum_options<'a>(
-    option_lines: &'a [OptionLine],
+fn parse_sectnum_options(
+    option_lines: &[OptionLine],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> (SectnumOptions, Vec<&'a OptionLine>) {
+) -> SectnumOptions {
     let mut options = SectnumOptions::default();
-    let mut unrecognized = Vec::new();
 
-    for line in option_lines {
-        match line.name.as_str() {
-            "depth" => {
+    for (option, line) in
+        classify_options::<SectnumOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    {
+        match option {
+            SectnumOption::Depth => {
                 options.depth = parse_positive_depth(
                     line,
                     DIRECTIVE,
@@ -78,10 +95,10 @@ fn parse_sectnum_options<'a>(
                     ctx,
                 );
             }
-            "start" => {
+            SectnumOption::Start => {
                 options.start = parse_start(line, diagnostics, ctx);
             }
-            "prefix" => {
+            SectnumOption::Prefix => {
                 options.prefix = parse_required_text(
                     line,
                     "prefix",
@@ -90,7 +107,7 @@ fn parse_sectnum_options<'a>(
                     ctx,
                 );
             }
-            "suffix" => {
+            SectnumOption::Suffix => {
                 options.suffix = parse_required_text(
                     line,
                     "suffix",
@@ -99,11 +116,10 @@ fn parse_sectnum_options<'a>(
                     ctx,
                 );
             }
-            _ => unrecognized.push(line),
         }
     }
 
-    (options, unrecognized)
+    options
 }
 
 /// This directive's entry in the table of directives this build implements.
@@ -121,6 +137,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: false,
         content_hint: None,
     },
+    options: <SectnumOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. sectnum::` and `.. section-numbering::`.
@@ -140,14 +157,7 @@ pub(super) fn parse_sectnum(
     diagnostics: &mut Diagnostics,
 ) -> Directive {
     let ctx = &invocation.ctx;
-    let (options, unrecognized) = parse_sectnum_options(&invocation.options, diagnostics, ctx);
-    report_unknown_options(
-        &unrecognized,
-        DIRECTIVE,
-        DiagnosticCode::DirectiveSectnumUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    let options = parse_sectnum_options(&invocation.options, diagnostics, ctx);
 
     Directive::Sectnum(options)
 }
@@ -406,10 +416,7 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert_eq!(
-            diagnostics[0].code,
-            DiagnosticCode::DirectiveSectnumUnknownOption
-        );
+        assert_eq!(diagnostics[0].code, DiagnosticCode::DirectiveUnknownOption);
         assert!(diagnostics[0].message.contains(":invalid_opt:"));
     }
 

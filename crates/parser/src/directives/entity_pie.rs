@@ -29,39 +29,41 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
 use super::chart_options::{
-    ChartCodes, ChartOwner, FigureOption, FigureRead, read_color, read_colors, read_figure_option,
-    report_unsupported, report_unusable_scale, unsupported_advice,
+    ChartCodes, ChartFigureOption, ChartOwner, FigureOption, read_color, read_colors,
+    read_figure_option, report_unusable_scale,
 };
 use super::filter_option::{
-    FilterCodes, FilterOwner, FilterSite, read_filter_option, read_filter_text,
+    FilterCodes, FilterOwner, FilterSite, ShorthandFilterOption, read_filter_option,
+    read_filter_text,
 };
-use super::options::{OptionLine, report_unknown_options};
+use super::options::{DirectiveOptions, OptionLine, classify_options, directive_options};
 
-/// The options sphinx-needs' `needpie` accepts that this build does not, each
-/// with what an author should reach for instead.
-///
-/// A table rather than a match arm apiece for the reason `entity_flow.rs`'s
-/// own table gives: the option is being refused, so the sentence beside it is
-/// the entire feature. Both spellings of every multiword name are listed,
-/// since sphinx-needs writes them with underscores and this build with
-/// hyphens, and an author migrating a document will write either.
-const UNSUPPORTED_OPTIONS: [(&str, &str); 6] = [
-    (
-        "explode",
-        "every wedge is drawn in place; use :colors: to tell them apart",
-    ),
-    ("shadow", "wedges are drawn flat"),
-    (
-        "style",
-        "that names a matplotlib stylesheet, which this build does not use",
-    ),
-    ("filter-func", "write the selection as :filter:"),
-    ("filter_func", "write the selection as :filter:"),
-    (
-        "filter_warning",
-        "an empty chart is reported as entity-pie.empty-result",
-    ),
-];
+directive_options! {
+    /// The options `.. entity-pie::` takes: sphinx-needs' `needpie`'s
+    /// fourteen, of which this build reads five, and the figure options. The
+    /// ones it does not draw are refused by name, each with what to reach for
+    /// instead.
+    enum EntityPieOption {
+        /// `:filter:`.
+        Filter => (["filter"], Filter, "The entities every wedge counts among, by a filter."),
+        /// `:labels:`.
+        Labels => (["labels"], Text, "The wedges' names, comma-separated, in content order."),
+        /// `:legend:`.
+        Legend => (["legend"], Flag, "Draws a legend of the wedges."),
+        /// `:colors:`.
+        Colors => (["colors"], Text, "The wedges' colours, comma-separated, in content order."),
+        /// `:text_color:`.
+        TextColor => (["text_color", "text-color"], Text, "The colour of the chart's text."),
+        _ => (["explode"], Text, "How far each wedge is pulled out.", "every wedge is drawn in place; use :colors: to tell them apart"),
+        _ => (["shadow"], Flag, "Draws a shadow below the pie.", "wedges are drawn flat"),
+        _ => (["style"], Text, "A matplotlib stylesheet.", "that names a matplotlib stylesheet, which this build does not use"),
+        _ => (["filter-func", "filter_func"], Text, "The entities counted, by a Python function.", "write the selection as :filter:"),
+        _ => (["filter_warning"], Text, "The text shown when nothing is counted.", "an empty chart is reported as entity-pie.empty-result"),
+        _ => (["cypher"], Text, "The entities counted, by a Cypher query.", "write the selection as :filter:");
+        Figure(ChartFigureOption),
+        Shorthand(ShorthandFilterOption),
+    }
+}
 
 /// This directive's entry in the table of directives this build implements.
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
@@ -73,6 +75,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: <EntityPieOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. entity-pie::` or `.. needpie::`, recording which was
@@ -107,14 +110,7 @@ pub(super) fn parse_entity_pie(
         ..EntityPie::new(source)
     };
 
-    let unrecognized = read_options(&mut pie, option_lines, unindented_lines, diagnostics, ctx);
-    report_unknown_options(
-        &unrecognized,
-        directive,
-        DiagnosticCode::DirectiveEntityPieUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    read_options(&mut pie, option_lines, unindented_lines, diagnostics, ctx);
 
     pie.slices = read_slices(unindented_lines, body_start, directive, diagnostics, ctx);
     if pie.slices.is_empty() {
@@ -239,19 +235,20 @@ fn apply_labels(
     }
 }
 
-/// Reads every option onto `pie`, returning the lines nobody claimed.
-fn read_options<'a>(
+/// Reads every option onto `pie`, reporting the ones it does not take.
+fn read_options(
     pie: &mut EntityPie,
-    option_lines: &'a [OptionLine],
+    option_lines: &[OptionLine],
     unindented_lines: &[String],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> Vec<&'a OptionLine> {
+) {
     let directive = pie.source.as_str();
-    let mut unrecognized = Vec::new();
-    for line in option_lines {
-        match line.name.as_str() {
-            "filter" => {
+    for (option, line) in
+        classify_options::<EntityPieOption>(option_lines, directive, diagnostics, ctx)
+    {
+        match option {
+            EntityPieOption::Filter => {
                 let source_line = unindented_lines.get(line.line_index).map(String::as_str);
                 pie.filter = read_filter_option(
                     line,
@@ -264,25 +261,24 @@ fn read_options<'a>(
             }
             // Read after the body, since it pairs with the wedges by position
             // and they do not exist yet.
-            "labels" => {}
-            "legend" => pie.legend = true,
-            "colors" => pie.colors = read_colors(line, owner(directive), diagnostics, ctx),
-            "text_color" | "text-color" => {
+            EntityPieOption::Labels => {}
+            EntityPieOption::Legend => pie.legend = true,
+            EntityPieOption::Colors => {
+                pie.colors = read_colors(line, owner(directive), diagnostics, ctx);
+            }
+            EntityPieOption::TextColor => {
                 pie.text_color = read_color(&line.value, line, owner(directive), diagnostics, ctx);
             }
-            name => match read_figure_option(line, owner(directive), diagnostics, ctx) {
-                FigureRead::Read(option) => store_figure_option(pie, option),
-                FigureRead::Reported => {}
-                FigureRead::Unclaimed => match unsupported_advice(&UNSUPPORTED_OPTIONS, name) {
-                    Some(advice) => {
-                        report_unsupported(line, advice, owner(directive), diagnostics, ctx);
-                    }
-                    None => unrecognized.push(line),
-                },
-            },
+            EntityPieOption::Figure(option) => {
+                if let Some(option) =
+                    read_figure_option(option, line, owner(directive), diagnostics, ctx)
+                {
+                    store_figure_option(pie, option);
+                }
+            }
+            EntityPieOption::Shorthand(option) => match option {},
         }
     }
-    unrecognized
 }
 
 /// The codes a pie chart reports its filters' failures under.
@@ -336,7 +332,6 @@ const CHART_CODES: ChartCodes = ChartCodes {
     invalid_width: DiagnosticCode::EntityPieInvalidWidth,
     unusable_scale: DiagnosticCode::EntityPieUnusableScale,
     empty_option_value: DiagnosticCode::EntityPieEmptyOptionValue,
-    unsupported_option: DiagnosticCode::EntityPieUnsupportedOption,
 };
 
 #[cfg(test)]

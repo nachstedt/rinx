@@ -17,23 +17,37 @@ use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{CodeBlock, CodeBlockSource, Directive};
 
 use crate::diagnostics::Diagnostics;
-use crate::directives::options::report_unknown_options;
 
 use super::dedent::apply_dedent;
 use super::emphasize::resolve_emphasize_lines;
-use super::options::{parse_code_block_options, parse_language_argument};
-use rinx_ast::DiagnosticCode;
+use super::options::{
+    CodeBlockOption, CodeOption, parse_code_block_options, parse_language_argument,
+};
+use crate::directives::options::DirectiveOptions;
 
 /// This directive's entry in the table of directives this build implements.
 pub(in crate::directives) const CODE_BLOCK_SPEC: DirectiveSpec = DirectiveSpec {
-    names: &["code-block", "code"],
+    names: &["code-block"],
     doc: "A block of source code, highlighted.",
-    shape: DirectiveShape {
-        arguments: Arguments::OPTIONAL_WORD,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
+    shape: CODE_SHAPE,
+    options: <CodeBlockOption as DirectiveOptions>::GROUPS,
+};
+
+/// docutils' spelling of a code block, whose options number its lines
+/// docutils' way.
+pub(in crate::directives) const CODE_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["code"],
+    doc: "A block of source code, highlighted, in docutils' spelling.",
+    shape: CODE_SHAPE,
+    options: <CodeOption as DirectiveOptions>::GROUPS,
+};
+
+/// How both spellings' blocks split: an optional language and content.
+const CODE_SHAPE: DirectiveShape = DirectiveShape {
+    arguments: Arguments::OPTIONAL_WORD,
+    takes_options: true,
+    takes_content: true,
+    content_hint: None,
 };
 
 /// Interprets `.. code-block::` and docutils' `.. code::`, recording which
@@ -60,15 +74,7 @@ pub(in crate::directives) fn parse_code_block(
     let language = parse_language_argument(invocation.argument(0));
     let ctx = &invocation.ctx;
 
-    let (options, unrecognized) =
-        parse_code_block_options(source, &invocation.options, diagnostics, ctx);
-    report_unknown_options(
-        &unrecognized,
-        directive,
-        DiagnosticCode::DirectiveUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    let options = parse_code_block_options(source, &invocation.options, diagnostics, ctx);
 
     let content = invocation.content();
     let body: Vec<&str> = content.lines.iter().map(String::as_str).collect();

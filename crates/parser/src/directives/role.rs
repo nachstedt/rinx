@@ -24,7 +24,9 @@ use crate::document_roles::{CodeRole, CustomRole};
 use crate::inline::{is_fixed_role_name, is_writable_role_name};
 
 use super::classes::normalize_class_name;
-use super::options::{OptionLine, report_unknown_options};
+use super::options::{
+    DirectiveOptions, OptionLine, classify_options, directive_options, report_unknown_options,
+};
 
 const DIRECTIVE: &str = "role";
 
@@ -71,6 +73,17 @@ fn split_role_argument(argument: &str) -> Option<RoleArgument<'_>> {
     })
 }
 
+directive_options! {
+    /// The options `.. role::` takes: docutils' `:class:`, and the code
+    /// role's `:language:`.
+    enum RoleOption {
+        /// `:class:`.
+        Class => (["class"], Classes, "The classes the role's text is drawn with; its name by default."),
+        /// `:language:`.
+        Language => (["language"], Text, "The language a role derived from `code` highlights."),
+    }
+}
+
 /// This directive's entry in the table of directives this build implements.
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["role"],
@@ -81,6 +94,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: false,
         content_hint: None,
     },
+    options: <RoleOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. role::`, which records a role and yields no node.
@@ -198,22 +212,21 @@ fn read_custom_role(
 ) -> CustomRole {
     let mut language = ResolvedLanguage::None;
     let mut classes = None;
-    let mut unrecognized = Vec::new();
+    // A `:language:` belongs to the code role alone; on another base it is
+    // an option that role does not take.
+    let mut misplaced = Vec::new();
 
-    for line in option_lines {
-        match (line.name.as_str(), base) {
-            ("language", BaseRole::Code) => language = read_language(name, line, diagnostics, ctx),
-            ("class", _) => classes = Some(read_classes(line, diagnostics, ctx)),
-            _ => unrecognized.push(line),
+    for (option, line) in classify_options::<RoleOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    {
+        match (option, base) {
+            (RoleOption::Language, BaseRole::Code) => {
+                language = read_language(name, line, diagnostics, ctx);
+            }
+            (RoleOption::Language, BaseRole::Script(_)) => misplaced.push(line),
+            (RoleOption::Class, _) => classes = Some(read_classes(line, diagnostics, ctx)),
         }
     }
-    report_unknown_options(
-        &unrecognized,
-        DIRECTIVE,
-        DiagnosticCode::DirectiveUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    report_unknown_options(&misplaced, DIRECTIVE, diagnostics, ctx);
 
     let classes = classes.unwrap_or_else(|| normalize_class_name(name).into_iter().collect());
     match base {

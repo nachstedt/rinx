@@ -12,7 +12,9 @@ use rinx_ast::{CodeBlockSource, CodeLanguage, Diagnostic, DiagnosticCode, Target
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::options::OptionLine;
+use crate::directives::options::{
+    OptionLine, classify_options, directive_options, report_unknown_options,
+};
 
 use super::dedent::{Dedent, parse_dedent};
 
@@ -43,88 +45,176 @@ impl CodeBlockOptions {
     }
 }
 
-/// Consumes the options a code block knows, returning them with the lines it
-/// did not recognize, in source order.
-pub(super) fn parse_code_block_options<'a>(
+directive_options! {
+    /// The options every code block directive takes.
+    pub(super) enum CommonCodeOption {
+        /// `:name:`.
+        Name => (["name"], Text, "A label to reference the block by."),
+        /// `:class:`.
+        Class => (["class"], Classes, "Classes for the block."),
+        /// `:caption:`.
+        Caption => (["caption"], Text, "A caption shown above the block."),
+    }
+}
+
+directive_options! {
+    /// Sphinx's spelling of numbering, emphasis, dedent and highlighting,
+    /// shared by `.. code-block::` and `.. literalinclude::`.
+    pub(super) enum SphinxCodeOption {
+        /// `:linenos:`.
+        Linenos => (["linenos"], Flag, "Numbers the lines."),
+        /// `:lineno-start:`.
+        LinenoStart => (["lineno-start"], Integer, "The number the first line gets, which numbers the lines."),
+        /// `:emphasize-lines:`.
+        EmphasizeLines => (["emphasize-lines"], Text, "The lines to emphasize, as numbers and ranges."),
+        /// `:dedent:`.
+        Dedent => (["dedent"], Integer, "Strips this much indentation, or the common indentation with no value."),
+        /// `:force:`.
+        Force => (["force"], Flag, "Highlights even where the language does not fit."),
+    }
+}
+
+directive_options! {
+    /// The options `.. code-block::` takes: Sphinx's eight.
+    pub(super) enum CodeBlockOption {
+        ;
+        Common(CommonCodeOption),
+        Sphinx(SphinxCodeOption),
+    }
+}
+
+directive_options! {
+    /// The options docutils' `.. code::` takes, with Sphinx's `:force:`.
+    pub(super) enum CodeOption {
+        /// `:number-lines:`.
+        NumberLines => (["number-lines"], Integer, "Numbers the lines, from the number given if any."),
+        /// `:force:`.
+        Force => (["force"], Flag, "Highlights even where the language does not fit.");
+        Common(CommonCodeOption),
+    }
+}
+
+/// Reads the options of an inline code block, spelled `source`: `.. code::`
+/// numbers its lines docutils' way, `.. code-block::` Sphinx's.
+pub(super) fn parse_code_block_options(
     source: CodeBlockSource,
-    option_lines: &'a [OptionLine],
+    option_lines: &[OptionLine],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> (CodeBlockOptions, Vec<&'a OptionLine>) {
+) -> CodeBlockOptions {
     let directive = source.directive_name();
     let mut options = CodeBlockOptions::empty();
-    let mut unrecognized = Vec::new();
-
-    for line in option_lines {
-        match (source, line.name.as_str()) {
-            // Shared by both spellings.
-            (_, "name") => {
-                if line.value.is_empty() {
-                    diagnostics.push(Diagnostic::at(
-                        DiagnosticCode::CodeBlockEmptyName,
-                        format!(
-                            "{directive}: :name: needs a value, so nothing can reference this block"
-                        ),
-                        ctx.line_span(line.line_index, &line.raw),
-                    ));
-                } else {
-                    options.name = Some(TargetName::new(&line.value));
+    if source == CodeBlockSource::Code {
+        for (option, line) in
+            classify_options::<CodeOption>(option_lines, directive, diagnostics, ctx)
+        {
+            match option {
+                // One option carrying both facts.
+                CodeOption::NumberLines => {
+                    options.linenos = true;
+                    if !line.value.is_empty() {
+                        options.lineno_start = parse_positive_integer(
+                            &line.value,
+                            "number-lines",
+                            directive,
+                            line,
+                            diagnostics,
+                            ctx,
+                        );
+                    }
+                }
+                CodeOption::Force => options.force = true,
+                CodeOption::Common(common) => {
+                    read_common_option(common, line, &mut options, directive, diagnostics, ctx);
                 }
             }
-            (_, "class") => {
-                options.classes = line.value.split_whitespace().map(str::to_string).collect();
+        }
+        return options;
+    }
+    for (option, line) in
+        classify_options::<CodeBlockOption>(option_lines, directive, diagnostics, ctx)
+    {
+        match option {
+            CodeBlockOption::Common(common) => {
+                read_common_option(common, line, &mut options, directive, diagnostics, ctx);
             }
-            (_, "caption") => {
-                if line.value.is_empty() {
-                    unrecognized.push(line);
-                } else {
-                    options.caption = Some(line.value.clone());
-                }
+            CodeBlockOption::Sphinx(sphinx) => {
+                read_sphinx_option(sphinx, line, &mut options, directive, diagnostics, ctx);
             }
-            // Sphinx's spelling of line numbering, shared by `.. code-block::`
-            // and `.. literalinclude::`.
-            (CodeBlockSource::CodeBlock | CodeBlockSource::LiteralInclude, "linenos") => {
-                options.linenos = true;
-            }
-            (CodeBlockSource::CodeBlock | CodeBlockSource::LiteralInclude, "lineno-start") => {
-                options.lineno_start = parse_positive_integer(
-                    &line.value,
-                    "lineno-start",
-                    directive,
-                    line,
-                    diagnostics,
-                    ctx,
-                );
-            }
-            (CodeBlockSource::CodeBlock | CodeBlockSource::LiteralInclude, "emphasize-lines") => {
-                options.emphasize_lines_raw =
-                    Some((line.value.clone(), line.line_index, line.raw.clone()));
-            }
-            (CodeBlockSource::CodeBlock | CodeBlockSource::LiteralInclude, "dedent") => {
-                options.dedent = parse_dedent(&line.value, directive, line, diagnostics, ctx);
-            }
-            (CodeBlockSource::CodeBlock | CodeBlockSource::LiteralInclude, "force") => {
-                options.force = true;
-            }
-            // `.. code::`'s spelling: one option carrying both facts.
-            (CodeBlockSource::Code, "number-lines") => {
-                options.linenos = true;
-                if !line.value.is_empty() {
-                    options.lineno_start = parse_positive_integer(
-                        &line.value,
-                        "number-lines",
-                        directive,
-                        line,
-                        diagnostics,
-                        ctx,
-                    );
-                }
-            }
-            _ => unrecognized.push(line),
         }
     }
+    options
+}
 
-    (options, unrecognized)
+/// Records one of the options every code block takes. A `:caption:` with no
+/// value is reported, since the block would show an empty one; the caller
+/// that gives a bare caption a meaning of its own handles it before this.
+pub(super) fn read_common_option(
+    option: CommonCodeOption,
+    line: &OptionLine,
+    options: &mut CodeBlockOptions,
+    directive: &str,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) {
+    match option {
+        CommonCodeOption::Name => {
+            if line.value.is_empty() {
+                diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::CodeBlockEmptyName,
+                    format!(
+                        "{directive}: :name: needs a value, so nothing can reference this block"
+                    ),
+                    ctx.line_span(line.line_index, &line.raw),
+                ));
+            } else {
+                options.name = Some(TargetName::new(&line.value));
+            }
+        }
+        CommonCodeOption::Class => {
+            options.classes = line.value.split_whitespace().map(str::to_string).collect();
+        }
+        CommonCodeOption::Caption => {
+            if line.value.is_empty() {
+                report_unknown_options(&[line], directive, diagnostics, ctx);
+            } else {
+                options.caption = Some(line.value.clone());
+            }
+        }
+    }
+}
+
+/// Records one of Sphinx's numbering, emphasis, dedent and highlighting
+/// options.
+pub(super) fn read_sphinx_option(
+    option: SphinxCodeOption,
+    line: &OptionLine,
+    options: &mut CodeBlockOptions,
+    directive: &str,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) {
+    match option {
+        SphinxCodeOption::Linenos => options.linenos = true,
+        SphinxCodeOption::LinenoStart => {
+            options.lineno_start = parse_positive_integer(
+                &line.value,
+                "lineno-start",
+                directive,
+                line,
+                diagnostics,
+                ctx,
+            );
+        }
+        SphinxCodeOption::EmphasizeLines => {
+            options.emphasize_lines_raw =
+                Some((line.value.clone(), line.line_index, line.raw.clone()));
+        }
+        SphinxCodeOption::Dedent => {
+            options.dedent = parse_dedent(&line.value, directive, line, diagnostics, ctx);
+        }
+        SphinxCodeOption::Force => options.force = true,
+    }
 }
 
 /// Reads an option value that must be a positive integer.

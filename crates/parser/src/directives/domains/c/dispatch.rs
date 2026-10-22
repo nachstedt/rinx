@@ -3,17 +3,41 @@
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
 use rinx_ast::{
-    CSignature, Diagnostic, DiagnosticCode, DomainObjectBody, NameSource, NonEmptyVector, Span,
+    CSignature, DescriptionFlags, Diagnostic, DiagnosticCode, DomainObjectBody, NameSource,
+    NonEmptyVector, Span,
 };
 
 use crate::headings::Adornment;
 
-use super::super::body::parse_object_body;
+use super::super::body::{DescriptionOption, ObjectOptions, parse_object_body};
 use super::super::object_type::DirectiveObjectType;
 use super::member::parse_c_member;
 use super::struct_::parse_c_struct;
 use super::type_::parse_c_type;
 use super::union::parse_c_union;
+use crate::directives::options::{OptionLine, directive_options};
+
+directive_options! {
+    /// The options every `c` object type takes: Sphinx's `CObject`'s.
+    pub(super) enum CObjectOption {
+        _ => (["single-line-parameter-list"], Flag, "Writes the parameters on one line, however long.");
+        Description(DescriptionOption),
+    }
+}
+
+/// The options of a `c` object, which reads none of its own.
+#[derive(Default)]
+pub(super) struct CObjectOptions;
+
+impl ObjectOptions for CObjectOptions {
+    type Option = CObjectOption;
+
+    fn read(&mut self, option: CObjectOption, _line: &OptionLine, flags: &mut DescriptionFlags) {
+        match option {
+            CObjectOption::Description(option) => flags.set(option.flag()),
+        }
+    }
+}
 
 /// Dispatches the six `c`-domain object types to their respective parsers.
 /// Only ever called with a `DirectiveObjectType::C*` variant (enforced by
@@ -30,8 +54,12 @@ pub(crate) fn parse_c_domain_object(
     let signatures = parse_c_signatures(signatures, diagnostics, signature_span);
     match object_type {
         DirectiveObjectType::CFunction => {
-            let parsed =
-                parse_object_body::<()>("c:function", invocation, adornment_order, diagnostics);
+            let parsed = parse_object_body::<CObjectOptions>(
+                "c:function",
+                invocation,
+                adornment_order,
+                diagnostics,
+            );
             DomainObjectBody::CFunction {
                 signatures,
                 flags: parsed.flags,
@@ -39,8 +67,12 @@ pub(crate) fn parse_c_domain_object(
             }
         }
         DirectiveObjectType::CMacro => {
-            let parsed =
-                parse_object_body::<()>("c:macro", invocation, adornment_order, diagnostics);
+            let parsed = parse_object_body::<CObjectOptions>(
+                "c:macro",
+                invocation,
+                adornment_order,
+                diagnostics,
+            );
             DomainObjectBody::CMacro {
                 signatures,
                 flags: parsed.flags,

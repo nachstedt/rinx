@@ -15,7 +15,7 @@ A missing argument
 With no URL there is no button, so the directive is drawn as an error block
 quoting its source — what an argument-less ``.. image::`` does too:
 
-.. noqa: button-link.missing-target
+.. noqa: directive.missing-argument
 
 .. button-link::
 
@@ -69,7 +69,7 @@ directives share one option spec: it selects how a ``.. button-ref::``
 resolves its argument, and this directive's argument is a URL. It is refused
 by name rather than accepted and ignored:
 
-.. noqa: button-link.unsupported-option
+.. noqa: directive.unsupported-option
 
 .. button-link:: https://example.com/ref-type
    :ref-type: myst
@@ -106,7 +106,7 @@ An unknown option
 
 A misspelled option is reported and dropped, leaving the button intact:
 
-.. noqa: directive.button-link-unknown-option
+.. noqa: directive.unknown-option
 
 .. button-link:: https://example.com/unknown-option
    :colour: primary

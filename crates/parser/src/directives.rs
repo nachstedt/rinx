@@ -96,5 +96,6 @@ mod uml;
 
 pub(super) use dispatch::try_parse_directive;
 pub use spec::{
-    Arguments, DirectiveShape, DirectiveSpec, directive_specs, is_builtin_directive_name,
+    Arguments, DirectiveShape, DirectiveSpec, OptionSpec, OptionSupport, OptionValue,
+    directive_specs, is_builtin_directive_name,
 };

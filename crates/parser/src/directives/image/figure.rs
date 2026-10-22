@@ -9,17 +9,22 @@
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
-use rinx_ast::{DiagnosticCode, Directive, Figure, FigureWidth, InlineNode, Node};
+use rinx_ast::{Directive, Figure, FigureWidth, InlineNode, Node};
 
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::error_node::malformed_node;
-use crate::directives::options::{OptionLine, report_unknown_options};
+use crate::directives::options::{
+    DirectiveOptions, OptionLine, classify_options, directive_options,
+};
 use crate::headings::Adornment;
 
 use super::image_directive::{image_uri, report_option_conflicts};
-use super::options::{ImageContext, parse_common_image_options, report_invalid_length};
+use super::options::{
+    CommonImageOptions, ImageContext, ImageOption, ImageSite, read_image_option,
+    report_invalid_length,
+};
 
 const DIRECTIVE: &str = "figure";
 
@@ -29,35 +34,52 @@ struct FigureOptions {
     figclasses: Vec<String>,
 }
 
-/// Consumes `:figwidth:` and `:figclass:` out of the lines the shared image
-/// option parser did not recognize, returning the rest untouched.
-fn parse_figure_options<'a>(
-    option_lines: &[&'a OptionLine],
+directive_options! {
+    /// The options `.. figure::` takes: the image's nine, and docutils'
+    /// `:figwidth:` and `:figclass:`.
+    enum FigureOption {
+        /// `:figwidth:`.
+        Figwidth => (["figwidth"], Length, "The figure's width, or `image` for the picture's."),
+        /// `:figclass:`.
+        Figclass => (["figclass"], Classes, "Classes for the figure.");
+        Image(ImageOption),
+    }
+}
+
+/// Reads a `.. figure::`'s options: its own and its picture's.
+fn parse_figure_options(
+    option_lines: &[OptionLine],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> (FigureOptions, Vec<&'a OptionLine>) {
+) -> (CommonImageOptions, FigureOptions) {
+    let mut common = CommonImageOptions::empty();
     let mut options = FigureOptions {
         figwidth: None,
         figclasses: Vec::new(),
     };
-    let mut unrecognized = Vec::new();
-
-    for line in option_lines {
-        match line.name.as_str() {
-            "figwidth" => match FigureWidth::new(&line.value) {
+    let image = ImageSite {
+        directive: DIRECTIVE,
+        context: ImageContext::Standalone,
+    };
+    for (option, line) in
+        classify_options::<FigureOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    {
+        match option {
+            FigureOption::Figwidth => match FigureWidth::new(&line.value) {
                 Ok(figwidth) => options.figwidth = Some(figwidth),
                 Err(problem) => {
                     report_invalid_length(line, DIRECTIVE, &problem, diagnostics, ctx);
                 }
             },
-            "figclass" => {
+            FigureOption::Figclass => {
                 options.figclasses = line.value.split_whitespace().map(str::to_string).collect();
             }
-            _ => unrecognized.push(*line),
+            FigureOption::Image(option) => {
+                read_image_option(option, line, &mut common, image, diagnostics, ctx);
+            }
         }
     }
-
-    (options, unrecognized)
+    (common, options)
 }
 
 /// The caption and legend a figure's body content splits into.
@@ -141,6 +163,7 @@ pub(in crate::directives) const FIGURE_SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: <FigureOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. figure::`.
@@ -167,17 +190,7 @@ pub(in crate::directives) fn parse_figure_directive(
 ) -> Directive {
     let ctx = &invocation.ctx;
     let option_lines = &invocation.options;
-    let refs: Vec<&OptionLine> = option_lines.iter().collect();
-    let (common, after_image) =
-        parse_common_image_options(&refs, DIRECTIVE, ImageContext::Standalone, diagnostics, ctx);
-    let (figure_options, unrecognized) = parse_figure_options(&after_image, diagnostics, ctx);
-    report_unknown_options(
-        &unrecognized,
-        DIRECTIVE,
-        DiagnosticCode::DirectiveUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    let (common, figure_options) = parse_figure_options(option_lines, diagnostics, ctx);
 
     let Some(uri) = image_uri(invocation) else {
         // The reader has reported the missing argument.
@@ -210,7 +223,7 @@ mod tests {
     use super::*;
     use crate::context::ParseCtx;
     use rinx_ast::AssetUri;
-    use rinx_ast::{Domain, ImageAlign, inline_plain_text};
+    use rinx_ast::{DiagnosticCode, Domain, ImageAlign, inline_plain_text};
 
     fn parse(argument: &str, body: &[&str]) -> (Directive, Diagnostics) {
         let mut diagnostics = Diagnostics::default();

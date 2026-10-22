@@ -31,67 +31,62 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
 use super::error_node::malformed_node;
-use super::filter_option::{FilterCodes, read_filter_option};
-use super::options::{OptionLine, parse_percentage, report_unknown_options};
+use super::filter_option::{FilterCodes, ShorthandFilterOption, read_filter_option};
+use super::options::{
+    DirectiveOptions, OptionLine, choice_names, classify_options, directive_options,
+    parse_percentage,
+};
 
-/// The options sphinx-needs' `needsequence` accepts that this build does not,
-/// each with what an author should reach for instead. Both spellings of every
-/// multiword name are listed, as `.. entity-flow::`'s table does.
-const UNSUPPORTED_OPTIONS: [(&str, &str); 20] = [
-    (
-        "show_filters",
-        "the filter is visible in the document source",
-    ),
-    (
-        "show-filters",
-        "the filter is visible in the document source",
-    ),
-    ("show_legend", "no legend is drawn"),
-    ("show-legend", "no legend is drawn"),
-    (
-        "show_link_names",
-        "every message is labelled with its own title",
-    ),
-    (
-        "show-link-names",
-        "every message is labelled with its own title",
-    ),
-    ("highlight", "every participant is drawn the same way"),
-    ("filter-func", "write the receiver selection as :filter:"),
-    ("filter_func", "write the receiver selection as :filter:"),
-    (
-        "sort_by",
-        "messages are drawn in the order the walk reaches them",
-    ),
-    (
-        "sort-by",
-        "messages are drawn in the order the walk reaches them",
-    ),
-    ("export_id", "this build does not export filter results"),
-    ("export-id", "this build does not export filter results"),
-    (
-        "filter_warning",
-        "an empty walk is reported as entity-sequence.empty-result",
-    ),
-    (
-        "filter-warning",
-        "an empty walk is reported as entity-sequence.empty-result",
-    ),
-    ("height", "set :width:; the height follows from it"),
-    (
-        "tags",
-        "write the receiver selection as :filter:, e.g. \"api\" in tags",
-    ),
-    (
-        "status",
-        "write the receiver selection as :filter:, e.g. status == \"open\"",
-    ),
-    (
-        "types",
-        "write the receiver selection as :filter:, e.g. type == \"component\"",
-    ),
-    ("engine", "every diagram here is compiled by PlantUML"),
-];
+directive_options! {
+    /// Where the picture sits, in the image directives' vocabulary.
+    enum PlacementOption {
+        /// `:align:`.
+        Align => (["align"], Choice(|| choice_names(ImageAlign::ALL, ImageAlign::as_str)), "Where the diagram sits."),
+        /// `:scale:`.
+        Scale => (["scale"], Integer, "The diagram's size, as a percentage of its `:width:`."),
+        /// `:width:`.
+        Width => (["width"], Length, "The diagram's width."),
+    }
+}
+
+directive_options! {
+    /// The options `.. entity-sequence::` takes: sphinx-needs'
+    /// `needsequence`'s twenty-one, of which this build reads eight, and its
+    /// own `:relations:`, `:caption:`, `:class:` and `:name:`. The ones it does
+    /// not draw are refused by name, as `.. entity-flow::`'s are.
+    enum EntitySequenceOption {
+        /// `:start:`.
+        Start => (["start"], Text, "The entities the walk begins at, comma-separated."),
+        /// `:relations:`.
+        Relations => (["relations", "link_types", "link-types"], Text, "The relations leading from a sender to a message and on to its receivers."),
+        /// `:filter:`.
+        Filter => (["filter"], Filter, "The receivers drawn, by a filter."),
+        /// `:max-items:`.
+        MaxItems => (["max-items", "max_items"], Integer, "How many messages are drawn at most."),
+        /// `:config:`.
+        Config => (["config"], Text, "A PlantUML configuration the diagram is drawn with."),
+        /// `:debug:`.
+        Debug => (["debug"], Flag, "Shows the generated PlantUML source below the diagram."),
+        /// `:caption:`.
+        Caption => (["caption"], Text, "A caption shown below the diagram."),
+        /// `:class:`.
+        Class => (["class"], Classes, "Classes for the diagram."),
+        /// `:name:`.
+        Name => (["name"], Text, "A label to reference the diagram by."),
+        _ => (["show_filters", "show-filters"], Flag, "Shows the filter below the diagram.", "the filter is visible in the document source"),
+        _ => (["show_legend", "show-legend"], Flag, "Draws a legend of the entity types.", "no legend is drawn"),
+        _ => (["show_link_names", "show-link-names"], Flag, "Labels each message with its relation.", "every message is labelled with its own title"),
+        _ => (["highlight"], Filter, "The participants drawn highlighted, by a filter.", "every participant is drawn the same way"),
+        _ => (["filter-func", "filter_func"], Text, "The receivers drawn, by a Python function.", "write the receiver selection as :filter:"),
+        _ => (["sort_by", "sort-by"], Text, "The field the messages are ordered by.", "messages are drawn in the order the walk reaches them"),
+        _ => (["export_id", "export-id"], Text, "The id the filter is exported under.", "this build does not export filter results"),
+        _ => (["filter_warning", "filter-warning"], Text, "The text shown when nothing is drawn.", "an empty walk is reported as entity-sequence.empty-result"),
+        _ => (["height"], Length, "The diagram's height.", "set :width:; the height follows from it"),
+        _ => (["engine"], Text, "The program the diagram is laid out by.", "every diagram here is compiled by PlantUML");
+        Placement(PlacementOption),
+        Shorthand(ShorthandFilterOption),
+    }
+}
 
 /// The codes a sequence diagram reports its filter's failures under.
 const FILTER_CODES: FilterCodes = FilterCodes {
@@ -131,6 +126,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
             "its picture is generated from the entity graph; write `.. entity-diagram::` to draw a diagram of your own",
         ),
     },
+    options: <EntitySequenceOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. entity-sequence::` or `.. needsequence::`, recording which
@@ -167,18 +163,11 @@ pub(super) fn parse_entity_sequence(
             .map(str::to_string),
         ..ReadOptions::default()
     };
-    let unrecognized = read_options(
+    read_options(
         &mut read,
         directive,
         option_lines,
         unindented_lines,
-        diagnostics,
-        ctx,
-    );
-    report_unknown_options(
-        &unrecognized,
-        directive,
-        DiagnosticCode::DirectiveEntitySequenceUnknownOption,
         diagnostics,
         ctx,
     );
@@ -253,23 +242,26 @@ fn mandatory_walk(
     Some((start, relations))
 }
 
-/// Reads every option onto `read`, returning the lines nobody claimed.
-fn read_options<'a>(
+/// Reads every option onto `read`, reporting the ones it does not take.
+fn read_options(
     read: &mut ReadOptions,
     directive: &str,
-    option_lines: &'a [OptionLine],
+    option_lines: &[OptionLine],
     unindented_lines: &[String],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> Vec<&'a OptionLine> {
-    let mut unrecognized = Vec::new();
-    for line in option_lines {
-        match line.name.as_str() {
-            "start" => read.start = read_start(line, directive, diagnostics, ctx),
-            "relations" | "link_types" | "link-types" => {
+) {
+    for (option, line) in
+        classify_options::<EntitySequenceOption>(option_lines, directive, diagnostics, ctx)
+    {
+        match option {
+            EntitySequenceOption::Start => {
+                read.start = read_start(line, directive, diagnostics, ctx);
+            }
+            EntitySequenceOption::Relations => {
                 read.relations = read_relations(line, directive, diagnostics, ctx);
             }
-            "filter" => {
+            EntitySequenceOption::Filter => {
                 let source_line = unindented_lines.get(line.line_index).map(String::as_str);
                 read.filter = read_filter_option(
                     line,
@@ -280,38 +272,41 @@ fn read_options<'a>(
                     ctx,
                 );
             }
-            "max-items" | "max_items" => {
+            EntitySequenceOption::MaxItems => {
                 read.max_items = read_max_items(line, directive, diagnostics, ctx);
             }
-            "config" => read.config = non_empty_value(line, directive, diagnostics, ctx),
-            "debug" => read.debug = true,
-            "caption" => read.caption = Some(line.value.clone()),
-            "class" => read.classes = line.value.split_whitespace().map(str::to_string).collect(),
-            "name" => {
+            EntitySequenceOption::Config => {
+                read.config = non_empty_value(line, directive, diagnostics, ctx);
+            }
+            EntitySequenceOption::Debug => read.debug = true,
+            EntitySequenceOption::Caption => read.caption = Some(line.value.clone()),
+            EntitySequenceOption::Class => {
+                read.classes = line.value.split_whitespace().map(str::to_string).collect();
+            }
+            EntitySequenceOption::Name => {
                 read.name = non_empty_value(line, directive, diagnostics, ctx)
                     .map(|name| TargetName::new(&name));
             }
-            "align" | "scale" | "width" => read_placement(read, line, directive, diagnostics, ctx),
-            name => match unsupported_advice(name) {
-                Some(advice) => report_unsupported(line, advice, directive, diagnostics, ctx),
-                None => unrecognized.push(line),
-            },
+            EntitySequenceOption::Placement(option) => {
+                read_placement(read, option, line, directive, diagnostics, ctx);
+            }
+            EntitySequenceOption::Shorthand(option) => match option {},
         }
     }
-    unrecognized
 }
 
 /// Reads `:align:`, `:scale:` or `:width:`, in the image directives'
 /// vocabulary, reporting a value none of them accepts.
 fn read_placement(
     read: &mut ReadOptions,
+    option: PlacementOption,
     line: &OptionLine,
     directive: &str,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) {
-    let problem = match line.name.as_str() {
-        "align" => match ImageAlign::parse(&line.value) {
+    let problem = match option {
+        PlacementOption::Align => match ImageAlign::parse(&line.value) {
             Some(align) => {
                 read.align = Some(align);
                 return;
@@ -324,7 +319,7 @@ fn read_placement(
                 ),
             ),
         },
-        "scale" => match parse_percentage(&line.value) {
+        PlacementOption::Scale => match parse_percentage(&line.value) {
             Some(scale) => {
                 read.scale = Some(scale);
                 return;
@@ -337,7 +332,7 @@ fn read_placement(
                 ),
             ),
         },
-        _ => match LengthOrPercentage::new(&line.value) {
+        PlacementOption::Width => match LengthOrPercentage::new(&line.value) {
             Ok(width) => {
                 read.width = Some(width);
                 return;
@@ -480,33 +475,6 @@ fn non_empty_value(
         ctx.line_span(line.line_index, &line.raw),
     ));
     None
-}
-
-/// What to tell an author who wrote an option this build does not implement,
-/// or `None` when the name is not one of sphinx-needs' at all.
-fn unsupported_advice(name: &str) -> Option<&'static str> {
-    UNSUPPORTED_OPTIONS
-        .iter()
-        .find(|(option, _)| *option == name)
-        .map(|(_, advice)| *advice)
-}
-
-/// Reports an option this build does not implement, and what to write instead.
-fn report_unsupported(
-    line: &OptionLine,
-    advice: &str,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::EntitySequenceUnsupportedOption,
-        format!(
-            "{directive}: :{}: is not supported, so it was ignored — {advice}",
-            line.name
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
 }
 
 /// Reports a `:scale:` that has no `:width:` to apply to, against the

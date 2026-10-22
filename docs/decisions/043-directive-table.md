@@ -95,6 +95,48 @@ One leniency is this build's own: text directly below the options, before a
 blank line, starts the content, where docutils refuses the block as an invalid
 option block.
 
+### Options are an enum per directive, generated from one table
+
+Each directive declares its options with `directive_options!`
+(`directives/options.rs`), one row per option: its variant, its spellings —
+the canonical one first, an alias beside it (`link_types`, `link-types`) — what
+its value is (`OptionValue`: a flag, text, a length, a choice computed from the
+enum the value is read into, …) and what it does in one sentence. The macro
+generates the enum, its lookup by spelling, and the `OptionSpec`s the spec's
+`options` field holds. A shared set — the five table presentation options, the
+code blocks' common ones, a picture's, the chart figure options, the
+object-description flags, sphinx-needs' shorthand filters — is an enum of its
+own, included as a wrapped variant (`Table(TableOption)`), so one reader
+handles it for every directive taking it.
+
+`classify_options` turns the invocation's option lines into the enum, and the
+parser matches on it with no `_` arm: an option listed and not read, or read
+and not listed, does not compile, and completion cannot offer an option the
+parser does not take.
+
+An option the reference implementation takes and this build does not is a row
+too, written `_ => (["name"], Value, "doc", advice)`: it has no variant, so no
+parser reads it, and `classify_options` reports it as
+`directive.unsupported-option` with the advice — what to write instead — while
+completion still knows the name. Every other option is
+`directive.unknown-option`. Both are one code whichever directive it is
+written in, for the reason the argument codes are: the mistake is the same.
+The per-directive codes are removed rather than aliased
+(`directive.toctree-unknown-option` and eleven siblings, `include.`,
+`doctest.`, `uml.` and `needimport.unknown-option`,
+`doctest.option-not-supported`, the five `*.unsupported-option` codes,
+`uml.save-unsupported`, `uml.option-needs-template`), superseding what
+ADR-012, ADR-014, ADR-016, ADR-018, ADR-020 and ADR-021 say about them.
+
+The option sets are transcribed from the same classes as the shapes. Where one
+spelling serves several directives with different options, the spec is split:
+`.. code-block::` and `.. code::`, the plain and the templated diagrams, and
+the doctest directives (`doctest`/`testoutput`, `testcode`,
+`testsetup`/`testcleanup`) each have one per option set. Two directives'
+options are the fields the entity schema declares (`.. entity-update::`,
+`.. needservice::`), so their specs declare none; a registry test checks every
+other spec declares options exactly when its shape takes them.
+
 ## Consequences
 
 - Text directly below a marker continues the argument of a directive taking
@@ -115,6 +157,16 @@ option block.
   through the reader, so an option they take none of is reported.
 - No directive splits its own block any more. `collect_argument_continuation_lines`,
   `directive_content` and `take_option_block` are gone.
+- An option an admonition, `.. seealso::` or an entity view does not take was
+  ignored silently and is now reported; so are `:class:` and `:name:` on an
+  admonition, which Sphinx takes and this build does not draw.
+- `.. py:method::` reads `:abstract:` as Sphinx does, a spelling of
+  `:abstractmethod:`; `:setup:` on a `.. needimport::`, which sphinx-needs 9.1
+  does not take, is unknown rather than unsupported.
+- The options measured the same way as the reader below: CPython's warnings
+  are unchanged, 2628, and identical diagnostic for diagnostic but for 159
+  `:no-typesetting:` on an object, now `directive.unsupported-option` where it
+  was unknown; `//examples:site` builds byte-identical.
 - Measured with `rinx lsp --check` over CPython's `Doc/` (556 documents, in
   10 s before and after): one warning more, 2628 against 2627 — a
   `.. availability::` in `library/socket.rst` written at a smaller indent
@@ -140,8 +192,8 @@ option block.
 
 ## Not done
 
-- Options are still read per directive; the generated option enums and one
-  `directive.unknown-option` code are the next step (roadmap #25's second
-  preparatory pull request).
+- Completion itself, which reads these specs (roadmap #25).
+- A domain object's options are declared per object type but not yet listed
+  beside `OBJECT_DIRECTIVES`, which completion will need.
 - An entity *section* inside an entity, and a substitution definition's inner
   directive, still split their own block.

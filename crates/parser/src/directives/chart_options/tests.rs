@@ -10,7 +10,6 @@ const CODES: ChartCodes = ChartCodes {
     invalid_width: DiagnosticCode::EntityBarInvalidWidth,
     unusable_scale: DiagnosticCode::EntityBarUnusableScale,
     empty_option_value: DiagnosticCode::EntityBarEmptyOptionValue,
-    unsupported_option: DiagnosticCode::EntityBarUnsupportedOption,
 };
 
 const OWNER: ChartOwner<'static> = ChartOwner {
@@ -42,13 +41,11 @@ fn test_a_figure_option_is_read_into_its_value() {
     let line = option("align", "center");
 
     // When
-    let (read, reported) = run(|d, ctx| read_figure_option(&line, OWNER, d, ctx));
+    let (read, reported) =
+        run(|d, ctx| read_figure_option(ChartFigureOption::Align, &line, OWNER, d, ctx));
 
     // Then
-    assert_eq!(
-        read,
-        FigureRead::Read(FigureOption::Align(ImageAlign::Center))
-    );
+    assert_eq!(read, Some(FigureOption::Align(ImageAlign::Center)));
     assert!(reported.is_empty());
 }
 
@@ -58,12 +55,13 @@ fn test_classes_are_split_on_whitespace() {
     let line = option("class", "wide  framed");
 
     // When
-    let (read, _) = run(|d, ctx| read_figure_option(&line, OWNER, d, ctx));
+    let (read, _) =
+        run(|d, ctx| read_figure_option(ChartFigureOption::Class, &line, OWNER, d, ctx));
 
     // Then
     assert_eq!(
         read,
-        FigureRead::Read(FigureOption::Classes(vec![
+        Some(FigureOption::Classes(vec![
             "wide".to_string(),
             "framed".to_string()
         ]))
@@ -76,10 +74,11 @@ fn test_a_bad_figure_value_is_reported_under_the_callers_code() {
     let line = option("scale", "big");
 
     // When
-    let (read, reported) = run(|d, ctx| read_figure_option(&line, OWNER, d, ctx));
+    let (read, reported) =
+        run(|d, ctx| read_figure_option(ChartFigureOption::Scale, &line, OWNER, d, ctx));
 
     // Then
-    assert_eq!(read, FigureRead::Reported);
+    assert_eq!(read, None);
     assert_eq!(reported[0].code, DiagnosticCode::EntityBarInvalidScale);
     assert!(reported[0].message.starts_with("needbar: :scale:"));
 }
@@ -90,24 +89,12 @@ fn test_an_empty_name_is_reported_rather_than_registered() {
     let line = option("name", "");
 
     // When
-    let (read, reported) = run(|d, ctx| read_figure_option(&line, OWNER, d, ctx));
+    let (read, reported) =
+        run(|d, ctx| read_figure_option(ChartFigureOption::Name, &line, OWNER, d, ctx));
 
     // Then
-    assert_eq!(read, FigureRead::Reported);
+    assert_eq!(read, None);
     assert_eq!(reported[0].code, DiagnosticCode::EntityBarEmptyOptionValue);
-}
-
-#[test]
-fn test_an_option_that_places_nothing_is_left_to_the_caller() {
-    // Given
-    let line = option("stacked", "");
-
-    // When
-    let (read, reported) = run(|d, ctx| read_figure_option(&line, OWNER, d, ctx));
-
-    // Then
-    assert_eq!(read, FigureRead::Unclaimed);
-    assert!(reported.is_empty());
 }
 
 #[test]
@@ -126,39 +113,6 @@ fn test_a_bad_colour_is_dropped_and_the_rest_kept() {
         reported[0].message.contains("'mauve'"),
         "{}",
         reported[0].message
-    );
-}
-
-#[test]
-fn test_advice_is_found_only_for_a_listed_option() {
-    // Given
-    let refused = [("style", "no stylesheets here")];
-
-    // When
-    let found = (
-        unsupported_advice(&refused, "style"),
-        unsupported_advice(&refused, "stacked"),
-    );
-
-    // Then
-    assert_eq!(found, (Some("no stylesheets here"), None));
-}
-
-#[test]
-fn test_an_unsupported_option_is_reported_with_its_advice() {
-    // Given
-    let line = option("style", "ggplot");
-
-    // When
-    let ((), reported) = run(|d, ctx| {
-        report_unsupported(&line, "no stylesheets here", OWNER, d, ctx);
-    });
-
-    // Then
-    assert_eq!(reported[0].code, DiagnosticCode::EntityBarUnsupportedOption);
-    assert_eq!(
-        reported[0].message,
-        "needbar: :style: is not supported, so it was ignored — no stylesheets here"
     );
 }
 

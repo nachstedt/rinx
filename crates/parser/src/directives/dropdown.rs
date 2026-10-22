@@ -24,7 +24,9 @@ use crate::headings::Adornment;
 use crate::inline::{SourceMap, parse_inline_text_mapped};
 
 use super::classes::split_classes;
-use super::options::{OptionLine, report_unknown_options};
+use super::options::{
+    DirectiveOptions, OptionLine, choice_names, classify_options, directive_options,
+};
 
 const DIRECTIVE: &str = "dropdown";
 
@@ -38,6 +40,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: <DropdownOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. dropdown::`.
@@ -64,14 +67,7 @@ pub(super) fn parse_dropdown(
         span: invocation.span,
         ..Dropdown::new()
     };
-    let unrecognized = read_options(&mut dropdown, &invocation.options, diagnostics, ctx);
-    report_unknown_options(
-        &unrecognized,
-        DIRECTIVE,
-        DiagnosticCode::DirectiveDropdownUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    read_options(&mut dropdown, &invocation.options, diagnostics, ctx);
 
     dropdown.body = invocation.content().parse(adornment_order, diagnostics);
 
@@ -91,20 +87,47 @@ fn parse_title(argument: &str, ctx: &ParseCtx<'_>) -> Vec<rinx_ast::InlineNode> 
     parse_inline_text_mapped(title, ctx.default_domain, &SourceMap::none(), ctx)
 }
 
+directive_options! {
+    /// The options `.. dropdown::` takes: sphinx-design's ten.
+    enum DropdownOption {
+        /// `:open:`.
+        Open => (["open"], Flag, "Starts the dropdown open."),
+        /// `:color:`.
+        Color => (["color"], Choice(|| choice_names(SemanticColor::ALL, SemanticColor::as_str)), "The title bar's colour."),
+        /// `:icon:`.
+        Icon => (["icon"], Text, "An octicon shown before the title."),
+        /// `:chevron:`.
+        Chevron => (["chevron"], Choice(|| choice_names(Chevron::ALL, Chevron::as_str)), "Which way the chevron points, closed and open."),
+        /// `:animate:`.
+        Animate => (["animate"], Choice(|| choice_names(Animation::ALL, Animation::as_str)), "How the dropdown opens."),
+        /// `:margin:`.
+        Margin => (["margin"], Text, "The margin around the dropdown, by spacing level."),
+        /// `:name:`.
+        Name => (["name"], Text, "A label to reference the dropdown by."),
+        /// `:class-container:`.
+        ClassContainer => (["class-container"], Classes, "Classes for the whole dropdown."),
+        /// `:class-title:`.
+        ClassTitle => (["class-title"], Classes, "Classes for its title."),
+        /// `:class-body:`.
+        ClassBody => (["class-body"], Classes, "Classes for its body."),
+    }
+}
+
 /// Reads every option onto `dropdown`, returning the lines nobody claimed.
-fn read_options<'a>(
+fn read_options(
     dropdown: &mut Dropdown,
-    option_lines: &'a [OptionLine],
+    option_lines: &[OptionLine],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> Vec<&'a OptionLine> {
-    let mut unrecognized = Vec::new();
-    for line in option_lines {
-        match line.name.as_str() {
+) {
+    for (option, line) in
+        classify_options::<DropdownOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    {
+        match option {
             // A flag: `directives.flag` accepts no value at all, so what
             // matters is only that the option was written.
-            "open" => dropdown.open = true,
-            "color" => match SemanticColor::parse(&line.value) {
+            DropdownOption::Open => dropdown.open = true,
+            DropdownOption::Color => match SemanticColor::parse(&line.value) {
                 Some(color) => dropdown.color = Some(color),
                 None => report_invalid_choice(
                     line,
@@ -115,8 +138,8 @@ fn read_options<'a>(
                     ctx,
                 ),
             },
-            "icon" => dropdown.icon = parse_icon(line, diagnostics, ctx),
-            "chevron" => match Chevron::parse(&line.value) {
+            DropdownOption::Icon => dropdown.icon = parse_icon(line, diagnostics, ctx),
+            DropdownOption::Chevron => match Chevron::parse(&line.value) {
                 Some(chevron) => dropdown.chevron = chevron,
                 None => report_invalid_choice(
                     line,
@@ -127,7 +150,7 @@ fn read_options<'a>(
                     ctx,
                 ),
             },
-            "animate" => match Animation::parse(&line.value) {
+            DropdownOption::Animate => match Animation::parse(&line.value) {
                 Some(animation) => dropdown.animate = Some(animation),
                 None => report_invalid_choice(
                     line,
@@ -138,7 +161,7 @@ fn read_options<'a>(
                     ctx,
                 ),
             },
-            "margin" => match Spacing::parse(&line.value, SpacingKind::Margin) {
+            DropdownOption::Margin => match Spacing::parse(&line.value, SpacingKind::Margin) {
                 Ok(margin) => dropdown.margin = Some(margin),
                 Err(error) => diagnostics.push(Diagnostic::at(
                     DiagnosticCode::DropdownInvalidMargin,
@@ -146,20 +169,18 @@ fn read_options<'a>(
                     ctx.line_span(line.line_index, &line.raw),
                 )),
             },
-            "name" => {
+            DropdownOption::Name => {
                 if line.value.is_empty() {
                     report_empty_value(line, "name", diagnostics, ctx);
                 } else {
                     dropdown.name = Some(TargetName::new(&line.value));
                 }
             }
-            "class-container" => dropdown.class_container = split_classes(&line.value),
-            "class-title" => dropdown.class_title = split_classes(&line.value),
-            "class-body" => dropdown.class_body = split_classes(&line.value),
-            _ => unrecognized.push(line),
+            DropdownOption::ClassContainer => dropdown.class_container = split_classes(&line.value),
+            DropdownOption::ClassTitle => dropdown.class_title = split_classes(&line.value),
+            DropdownOption::ClassBody => dropdown.class_body = split_classes(&line.value),
         }
     }
-    unrecognized
 }
 
 /// Reads an `:icon:` value, checking it against the icon set that will draw it.
@@ -561,7 +582,7 @@ mod tests {
         // Then
         assert_eq!(
             codes(&diagnostics),
-            vec![DiagnosticCode::DirectiveDropdownUnknownOption]
+            vec![DiagnosticCode::DirectiveUnknownOption]
         );
     }
 
@@ -607,7 +628,7 @@ mod tests {
         // Then — the body context was rebased, so the position is the real one
         let span = diagnostics
             .iter()
-            .find(|d| d.code == DiagnosticCode::DirectiveContentsUnknownOption)
+            .find(|d| d.code == DiagnosticCode::DirectiveUnknownOption)
             .and_then(|d| d.span)
             .expect("the nested option is reported with a span");
         assert_eq!(span.start.line, 5);
