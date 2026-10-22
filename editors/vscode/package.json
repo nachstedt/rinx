@@ -23,15 +23,25 @@
     "commands": [
       {
         "command": "rinx.showPreview",
-        "title": "Rinx: Show Preview",
-        "category": "Rinx"
+        "title": "Show Preview",
+        "category": "Rinx",
+        "icon": "$(open-preview)"
       },
       {
         "command": "rinx.showLogs",
-        "title": "Rinx: Show Logs",
+        "title": "Show Logs",
         "category": "Rinx"
       }
     ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "rinx.showPreview",
+          "when": "editorLangId == restructuredtext && !notebookEditorFocused",
+          "group": "navigation"
+        }
+      ]
+    },
     "configuration": {
       "type": "object",
       "title": "Rinx",
