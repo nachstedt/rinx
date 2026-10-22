@@ -2,7 +2,7 @@
 
 Unsupported Directives Summary:
 -------------------------------
-availability: 432
+availability: 433
 audit-event: 221
 sectionauthor: 194
 opcode: 127
@@ -53,7 +53,7 @@ Toctree Options Exercised Summary:
 
 Parser Diagnostics Summary:
 ---------------------------
-directive.unknown: 1888
+directive.unknown: 1889
 c-decl.unparsed: 108
 option.malformed-spec: 63
 substitution.undefined: 23
@@ -65,7 +65,7 @@ default-role.unknown-role: 1
 
 Language Server Warnings Summary:
 ---------------------------------
-directive.unknown: 1857
+directive.unknown: 1858
 link.type-mismatch: 220
 link.broken-anonymous: 180
 c-decl.unparsed: 108
@@ -84,7 +84,7 @@ toctree.duplicate-entry: 1
 table.grid.inconsistent-column-boundary: 1
 default-role.unknown-role: 1
 
-Unresolved Domain-Object References (1866):
+Unresolved Domain-Object References (1872):
 -------------------------------------------
    14  Doc/whatsnew/2.4: 'Decimal' (referenced as py:class)
     7  Doc/c-api/buffer: 'PyBUF_WRITABLE' (referenced as c:macro)
@@ -155,6 +155,7 @@ Unresolved Domain-Object References (1866):
     3  Doc/library/pyexpat: 'ExternalEntityRefHandler' (referenced as py:function)
     3  Doc/library/select: 'POLLPRI' (referenced as py:data)
     3  Doc/library/stdtypes: 'int' (referenced as py:function)
+    3  Doc/library/stdtypes: 'tolist' (referenced as py:method)
     3  Doc/library/test: 'warnings.catch_warnings' (referenced as py:function)
     3  Doc/library/tkinter.ttk: 'Sizegrip' (referenced as py:class)
     3  Doc/library/tkinter: 'Wm' (referenced as py:class)
@@ -1109,6 +1110,9 @@ Unresolved Domain-Object References (1866):
     1  Doc/library/stdtypes: 'memoryview.tolist' (referenced as py:class)
     1  Doc/library/stdtypes: 'memoryview.itemsize' (referenced as py:class)
     1  Doc/library/stdtypes: 'memoryview.format' (referenced as py:class)
+    1  Doc/library/stdtypes: 'tobytes' (referenced as py:method)
+    1  Doc/library/stdtypes: 'memoryview.hex' (referenced as py:method)
+    1  Doc/library/stdtypes: 'release' (referenced as py:method)
     1  Doc/library/stdtypes: 'functools.cached_property' (referenced as py:class)
     1  Doc/library/stdtypes: 'typing.TypeVarTuple' (referenced as py:data)
     1  Doc/library/stdtypes: 'type' (referenced as py:function)
@@ -1844,6 +1848,7 @@ Unresolved Domain-Object References (1866):
     1  Doc/whatsnew/3.14: 'threading.current_thread' (referenced as py:method)
     1  Doc/whatsnew/3.14: 'threading.active_count' (referenced as py:method)
     1  Doc/whatsnew/3.14: 'functools.partial' (referenced as py:class)
+    1  Doc/whatsnew/3.2: 'memoryview.release' (referenced as py:method)
     1  Doc/whatsnew/3.2: '__wrapped__' (referenced as py:attribute)
     1  Doc/whatsnew/3.2: 'memoryview' (referenced as py:function)
     1  Doc/whatsnew/3.2: 'subprocess.Popen' (referenced as py:function)
@@ -1890,6 +1895,7 @@ Unresolved Domain-Object References (1866):
     1  Doc/whatsnew/3.4: 'urllib.request.Request' (referenced as py:module)
     1  Doc/whatsnew/3.4: 'super' (referenced as py:function)
     1  Doc/whatsnew/3.4: 'io.TextIOWrapper' (referenced as py:module)
+    1  Doc/whatsnew/3.5: 'memoryview.hex' (referenced as py:method)
     1  Doc/whatsnew/3.5: 'typing.Any' (referenced as py:class)
     1  Doc/whatsnew/3.5: 'select.devpoll.poll' (referenced as py:function)
     1  Doc/whatsnew/3.5: 'select.epoll.poll' (referenced as py:function)

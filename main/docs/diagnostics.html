@@ -281,9 +281,6 @@ line in between.</p>
 everything inside it is lost to every later phase — which is why this is
 reported rather than left to the visible error block the renderer draws in its
 place.</p>
-<h3 id="directive-namespace-push-argument-missing">directive.namespace-push-argument-missing</h3>
-<p>A <code>.. c:namespace-push::</code> with no scope argument. Refused rather than
-accepted as a no-op push, which a later <code>namespace-pop</code> would then unbalance.</p>
 <h3 id="directive-toctree-unknown-option">directive.toctree-unknown-option</h3>
 <p>A <code>.. toctree::</code> option this build does not recognize. The option is ignored.</p>
 <h3 id="directive-contents-unknown-option">directive.contents-unknown-option</h3>
@@ -320,11 +317,17 @@ The option is ignored.</p>
 <h3 id="directive-unknown-option">directive.unknown-option</h3>
 <p>An option this build does not recognize on a directive with no option code of
 its own. The option is ignored.</p>
-<h3 id="directive-version-argument-missing">directive.version-argument-missing</h3>
-<p>A <code>.. versionadded::</code>, <code>.. versionchanged::</code> or <code>.. deprecated::</code> with no
-version argument.</p>
-<h3 id="directive-title-argument-missing">directive.title-argument-missing</h3>
-<p>A generic <code>.. admonition::</code> with no title argument.</p>
+<h3 id="directive-missing-argument">directive.missing-argument</h3>
+<p>A directive written with fewer arguments than it requires — an <code>.. image::</code>
+with no address, a <code>.. versionadded::</code> with no version. The directive is
+still read, without them.</p>
+<h3 id="directive-too-many-arguments">directive.too-many-arguments</h3>
+<p>A directive written with more arguments than it accepts, when its last one does
+not take the rest of the line — <code>.. code-block:: python extra</code>. The surplus
+words are ignored.</p>
+<h3 id="directive-content-not-permitted">directive.content-not-permitted</h3>
+<p>Content written for a directive that takes none — below an <code>.. image::</code>, or
+text after a <code>.. sectnum::</code>'s <code>::</code>. The content is ignored.</p>
 <h2 id="table-1">table</h2>
 <h3 id="table-data-widths-count-mismatch">table.data.widths-count-mismatch</h3>
 <p>A <code>list-table</code> or <code>csv-table</code> whose <code>:widths:</code> gives a different number
@@ -408,8 +411,6 @@ renderer knows the math backend.</p>
 <p>An equation label another document gives its own equation too. Neither equation
 can be referenced until one label is changed.</p>
 <h2 id="code-block">code-block</h2>
-<h3 id="code-block-empty-language">code-block.empty-language</h3>
-<p>A language argument, or a <code>.. highlight::</code>, naming nothing at all.</p>
 <h3 id="code-block-empty-name">code-block.empty-name</h3>
 <p>A <code>:name:</code> option with no value, so nothing could <code>:ref:</code> the block.</p>
 <h3 id="code-block-invalid-integer">code-block.invalid-integer</h3>
@@ -445,9 +446,6 @@ over — the built-in one is matched first — so it was not defined.</p>
 was.</p>
 <h3 id="default-role-invalid-argument">default-role.invalid-argument</h3>
 <p>An argument of more than one word, so the default role was left as it was.</p>
-<h3 id="default-role-unexpected-content">default-role.unexpected-content</h3>
-<p>Options or a body, which the directive takes none of; the argument still
-applies.</p>
 <h2 id="interpreted">interpreted</h2>
 <h3 id="interpreted-multiple-roles">interpreted.multiple-roles</h3>
 <p>A role written both before and after the same text, as in <code>:sub:`2`:sup:</code>,
@@ -463,8 +461,6 @@ Reported while rendering, as for a code block.</p>
 <p>A grammar that failed part-way through highlighting, so the code was left
 unhighlighted.</p>
 <h2 id="image">image</h2>
-<h3 id="image-missing-uri">image.missing-uri</h3>
-<p>The directive has no argument, so there is nothing to show.</p>
 <h3 id="image-invalid-length">image.invalid-length</h3>
 <p>A <code>:height:</code>, <code>:width:</code> or <code>:figwidth:</code> that is not a well-formed
 measurement, or that uses a unit CSS does not have.</p>
@@ -479,9 +475,6 @@ substitution definition.</p>
 <h3 id="image-empty-option-value">image.empty-option-value</h3>
 <p>A <code>:target:</code> or <code>:name:</code> written with no value, so it could neither link
 anywhere nor be linked to.</p>
-<h3 id="image-content-not-allowed">image.content-not-allowed</h3>
-<p>Content below an <code>.. image::</code>, which takes none. A <code>.. figure::</code> is the
-directive that has a body.</p>
 <h3 id="image-scale-no-dimensions">image.scale-no-dimensions</h3>
 <p>A <code>:scale:</code> with no <code>:width:</code> or <code>:height:</code> to apply it to. docutils
 would read the image file's own dimensions here; this build never opens the
@@ -510,8 +503,6 @@ file that never reached the site's <code>_images/</code> directory — in a Baze
 file missing from the <code>images</code> attribute of every library of the site. Fails
 the build: the page would otherwise show a broken picture.</p>
 <h2 id="include">include</h2>
-<h3 id="include-missing-path">include.missing-path</h3>
-<p>The directive has no argument, so it names no file to splice in.</p>
 <h3 id="include-file-unreadable">include.file-unreadable</h3>
 <p>The named file could not be read — in a Bazel build, usually one missing from
 the library's <code>parse_data</code> attribute.</p>
@@ -653,9 +644,6 @@ still rendered.</p>
 unpainted rather than given a class no stylesheet defines.</p>
 <h3 id="button-link-invalid-align">button-link.invalid-align</h3>
 <p>An <code>:align:</code> other than <code>left</code>, <code>right</code>, <code>center</code> or <code>justify</code>.</p>
-<h3 id="button-link-missing-target">button-link.missing-target</h3>
-<p>A <code>.. button-link::</code> written with no URL to point at. The directive is drawn
-as an error block quoting its source, as an argument-less <code>.. image::</code> is.</p>
 <h3 id="button-link-empty-option-value">button-link.empty-option-value</h3>
 <p>An option that needs a value but was written without one.</p>
 <h3 id="button-link-unsupported-option">button-link.unsupported-option</h3>
@@ -682,10 +670,6 @@ one.</p>
 <h3 id="sectnum-empty-suffix">sectnum.empty-suffix</h3>
 <p>A <code>:suffix:</code> option with no value; docutils requires this option to carry
 one.</p>
-<h3 id="sectnum-unexpected-argument">sectnum.unexpected-argument</h3>
-<p>An argument given to a directive docutils declares zero argument slots for.
-Real docutils reports this as a directive error rather than silently dropping
-it, so this build does too.</p>
 <h2 id="index">index</h2>
 <h3 id="index-invalid-single">index.invalid-single</h3>
 <p>A <code>single:</code> entry with no value — Sphinx's "invalid single index entry". No
@@ -1003,8 +987,6 @@ per involved directive, each under its own span in its own file, so either
 author can independently suppress their own copy — see
 <code>docs/decisions/019-entity-update.md</code>.</p>
 <h2 id="needimport">needimport</h2>
-<h3 id="needimport-missing-path">needimport.missing-path</h3>
-<p>A <code>.. needimport::</code> with no file to read.</p>
 <h3 id="needimport-remote-source">needimport.remote-source</h3>
 <p>An argument naming an <code>http</code>/<code>https</code> URL. Refused by name rather than
 fetched: a sandboxed build action may only read files declared before it runs,
@@ -1157,11 +1139,6 @@ mid-render could never be one of them.</p>
 Reported with the whole chain, because the offending edit may be in any link of
 it.</p>
 <h2 id="if-builder">if-builder</h2>
-<h3 id="if-builder-missing-builder">if-builder.missing-builder</h3>
-<p>The directive has no argument, so it names no builder to compare against.
-Upstream gets docutils' generic "1 argument(s) required" here; a code of its
-own lets a document suppress this without suppressing every other malformed
-directive.</p>
 <h3 id="if-builder-unknown-builder">if-builder.unknown-builder</h3>
 <p>An argument that names no builder this build knows — including a multi-word
 one, since the directive takes the rest of its line. sphinx-simplepdf excludes

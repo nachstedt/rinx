@@ -395,16 +395,16 @@ hierarchy for new style classes:</p>
 <blockquote>
 <div class="highlight-none notranslate">
 <div class="highlight hl-code"><pre>
------------
-           |
-    O      |
-  /   \    |
-- X    Y  /
-  |  / | /
-  | /  |/
-  A    B
-  \   /
-    ?</pre></div>
+ -----------
+|           |
+|    O      |
+|  /   \    |
+ - X    Y  /
+   |  / | /
+   | /  |/
+   A    B
+   \   /
+     ?</pre></div>
 </div>
 </blockquote>
 <p>In this case, it is not possible to derive a new class C from A and B,
@@ -485,27 +485,27 @@ examples ;-)</p>
 <blockquote>
 <div class="highlight-none notranslate">
 <div class="highlight hl-code"><pre>
-6
---
-O |                  (more general)
---  \
-|    \                      |
-|     \                     |
-|      \                    |
---    ---                   |
-E |  | F | 5                |
---    ---                   |
-/       |                   |
- \ _    |                   |
-     \  |                   |
-     ---                    |
-    | C | 2                 |
-     ---                    |
-     /                      |
-    /                      \ /
- ---
-| A |                (more specialized)
- ---</pre></div>
+                          6
+                         ---
+Level 3                 | O |                  (more general)
+                      /  ---  \
+                     /    |    \                      |
+                    /     |     \                     |
+                   /      |      \                    |
+                  ---    ---    ---                   |
+Level 2        3 | D | 4| E |  | F | 5                |
+                  ---    ---    ---                   |
+                   \  \ _ /       |                   |
+                    \    / \ _    |                   |
+                     \  /      \  |                   |
+                      ---      ---                    |
+Level 1            1 | B |    | C | 2                 |
+                      ---      ---                    |
+                        \      /                      |
+                         \    /                      \ /
+                           ---
+Level 0                 0 | A |                (more specialized)
+                           ---</pre></div>
 </div>
 </blockquote>
 <p>The linearizations of O,D,E and F are trivial:</p>
@@ -561,27 +561,27 @@ ordering of the hierarchy:</p>
 <blockquote>
 <div class="highlight-none notranslate">
 <div class="highlight hl-code"><pre>
-6
---
-O |
---  \
-|    \
-|     \
-|      \
---    ---
-D |  | F | 5
---    ---
- \     /
-  \   /
-   \ /
-   ---
-  | C | 3
-   ---
-    /
-   /
---
-A |
---</pre></div>
+                           6
+                          ---
+Level 3                  | O |
+                       /  ---  \
+                      /    |    \
+                     /     |     \
+                    /      |      \
+                  ---     ---    ---
+Level 2        2 | E | 4 | D |  | F | 5
+                  ---     ---    ---
+                   \      / \     /
+                    \    /   \   /
+                     \  /     \ /
+                      ---     ---
+Level 1            1 | B |   | C | 3
+                      ---     ---
+                       \       /
+                        \     /
+                          ---
+Level 0                0 | A |
+                          ---</pre></div>
 </div>
 </blockquote>
 <p>Notice that the class E, which is in the second level of the hierarchy,
@@ -637,15 +637,15 @@ following example:</p>
 <blockquote>
 <div class="highlight-none notranslate">
 <div class="highlight hl-code"><pre>
-O
-|
-F
-| \
-| E   (buy eggs)
-| /
-G
+             O
+             |
+(buy spam)   F
+             | \
+             | E   (buy eggs)
+             | /
+             G
 
-gs or spam ?)</pre></div>
+      (buy eggs or spam ?)</pre></div>
 </div>
 </blockquote>
 <p>We see that class G inherits from F and E, with F <em>before</em> E:  therefore
@@ -693,14 +693,14 @@ case the MRO is GEF without any doubt.</p>
 <blockquote>
 <div class="highlight-none notranslate">
 <div class="highlight hl-code"><pre>
-O
-|
-F (spam)
-|
-|
-|
-G
-  (eggs, no doubt)</pre></div>
+           O
+           |
+           F (spam)
+         / |
+(eggs)   E |
+         \ |
+           G
+             (eggs, no doubt)</pre></div>
 </div>
 </blockquote>
 <p>Python 2.3 forces the programmer to write good hierarchies (or, at
@@ -737,13 +737,13 @@ trivial, it is enough to look at the diamond diagram:</p>
 <blockquote>
 <div class="highlight-none notranslate">
 <div class="highlight hl-code"><pre>
-C
- \
-  \
-   B
-  /
- /
-D</pre></div>
+   C
+  / \
+ /   \
+A     B
+ \   /
+  \ /
+   D</pre></div>
 </div>
 </blockquote>
 <p>One easily discerns the inconsistency:</p>

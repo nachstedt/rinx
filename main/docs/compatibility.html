@@ -885,6 +885,22 @@ is interpreted.</p>
 </thead>
 <tbody>
 <tr>
+<td><p>A directive's block: arguments, options and content</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Missing or surplus arguments, and content for a directive that
+takes none, are reported and the directive is read anyway, where
+docutils discards it.</p>
+</li>
+<li><p>Text directly below the options, before a blank line, starts the
+content; docutils refuses it as an invalid option block.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
 <td><p><code>.. toctree::</code></p>
 </td>
 <td><p>✅</p>
@@ -1309,8 +1325,6 @@ not bundled.</p>
 <li><p><code>:outline:</code> without <code>:color:</code> warns.</p>
 </li>
 <li><p>A reference inside the label renders as its text.</p>
-</li>
-<li><p>The URL argument does not continue onto the next line.</p>
 </li>
 </ul>
 </td>

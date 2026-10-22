@@ -4886,7 +4886,8 @@ of an object that supports the <a href="../c-api/buffer.html#bufferobjects">buff
 copying.</p>
 <dl class="py class">
   <dt id="py:class:memoryview"><em class="property">class</em> <code class="sig-name">memoryview(object)</code></dt>
-  <dd><p>Create a <a class="reference internal" href="stdtypes.html#py:class:memoryview"><code class="xref py class docutils literal">memoryview</code></a> that references <em>object</em>.  <em>object</em> must
+  <dd><blockquote>
+<p>Create a <a class="reference internal" href="stdtypes.html#py:class:memoryview"><code class="xref py class docutils literal">memoryview</code></a> that references <em>object</em>.  <em>object</em> must
 support the buffer protocol.  Built-in objects that support the buffer
 protocol include <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> and <a class="reference internal" href="stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a>.</p>
 <p>A <a class="reference internal" href="stdtypes.html#py:class:memoryview"><code class="xref py class docutils literal">memoryview</code></a> has the notion of an <em>element</em>, which is the
@@ -4989,7 +4990,7 @@ One-dimensional memoryviews with formats 'B', 'b' or 'c' are now <a class="refer
 equivalent and if all corresponding values are equal when the operands'
 respective format codes are interpreted using <a class="reference internal" href="struct.html#py:module:struct" title="struct: Interpret bytes as packed binary data."><code class="xref py module docutils literal">struct</code></a> syntax.</p>
 <p>For the subset of <a class="reference internal" href="struct.html#py:module:struct" title="struct: Interpret bytes as packed binary data."><code class="xref py module docutils literal">struct</code></a> format strings currently supported by
-<a class="reference internal" href="stdtypes.html#py:method:memoryview.tolist"><code class="xref py method docutils literal">tolist</code></a>, <code>v</code> and <code>w</code> are equal if <code>v.tolist() == w.tolist()</code>:</p>
+<a href="#" class="broken-link"><code class="xref py method docutils literal">tolist</code></a>, <code>v</code> and <code>w</code> are equal if <code>v.tolist() == w.tolist()</code>:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">array</span></span></span></span>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">a</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">array</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">array</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">I<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">4</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">5</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
@@ -5041,7 +5042,7 @@ calling the <a class="reference internal" href="stdtypes.html#py:class:bytes"><c
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-python">bytes</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">m</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python"><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">abc<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
 <p>For non-contiguous arrays the result is equal to the flattened list
-representation with all elements converted to bytes. <a class="reference internal" href="stdtypes.html#py:method:memoryview.tobytes"><code class="xref py method docutils literal">tobytes</code></a>
+representation with all elements converted to bytes. <a href="#" class="broken-link"><code class="xref py method docutils literal">tobytes</code></a>
 supports all format strings, including those that are not in
 <a class="reference internal" href="struct.html#py:module:struct" title="struct: Interpret bytes as packed binary data."><code class="xref py module docutils literal">struct</code></a> module syntax.</p>
 <div class="versionadded">
@@ -5068,7 +5069,7 @@ byte in the buffer. :</p>
 </div>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
-<p>Similar to <a class="reference internal" href="stdtypes.html#py:method:bytes.hex"><code class="xref py method docutils literal">bytes.hex</code></a>, <a class="reference internal" href="stdtypes.html#py:method:memoryview.hex"><code class="xref py method docutils literal">memoryview.hex</code></a> now supports
+<p>Similar to <a class="reference internal" href="stdtypes.html#py:method:bytes.hex"><code class="xref py method docutils literal">bytes.hex</code></a>, <a href="#" class="broken-link"><code class="xref py method docutils literal">memoryview.hex</code></a> now supports
 optional <em>sep</em> and <em>bytes_per_sep</em> parameters to insert separators
 between bytes in the hex output.</p>
 </div>
@@ -5087,7 +5088,7 @@ between bytes in the hex output.</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">1<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>1</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">2<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>2</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">3<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>3</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span></span></pre></div>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
-<p><a class="reference internal" href="stdtypes.html#py:method:memoryview.tolist"><code class="xref py method docutils literal">tolist</code></a> now supports all single character native formats in
+<p><a href="#" class="broken-link"><code class="xref py method docutils literal">tolist</code></a> now supports all single character native formats in
 <a class="reference internal" href="struct.html#py:module:struct" title="struct: Interpret bytes as packed binary data."><code class="xref py module docutils literal">struct</code></a> module syntax as well as multi-dimensional
 representations.</p>
 </div>
@@ -5122,7 +5123,7 @@ a <a class="reference internal" href="stdtypes.html#py:class:bytearray"><code cl
 calling release() is handy to remove these restrictions (and free any
 dangling resources) as soon as possible.</p>
 <p>After this method has been called, any further operation on the view
-raises a <a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py class docutils literal">ValueError</code></a> (except <a class="reference internal" href="stdtypes.html#py:method:memoryview.release"><code class="xref py method docutils literal">release</code></a> itself which can
+raises a <a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py class docutils literal">ValueError</code></a> (except <a href="#" class="broken-link"><code class="xref py method docutils literal">release</code></a> itself which can
 be called multiple times):</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">m</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-python">memoryview</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">abc<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
@@ -5247,8 +5248,10 @@ Note that all byte lengths may depend on the operating system.</p>
 </div>
 </dd>
 </dl>
-<p>. method:: index(value, start=0, stop=sys.maxsize, /)</p>
-<blockquote>
+</blockquote>
+<dl class="py method">
+  <dt id="py:method:memoryview.index"><code class="sig-name">index(value, start=0, stop=sys.maxsize, /)</code></dt>
+  <dd><blockquote>
 <p>Return the index of the first occurrence of <em>value</em> (at or after
 index <em>start</em> and before index <em>stop</em>).</p>
 <p>Raises a <a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> if <em>value</em> cannot be found.</p>
@@ -5316,7 +5319,7 @@ representation. It is not necessarily equal to <code>len(m)</code>:</p>
   <dt id="py:attribute:memoryview.format"><code class="sig-name">format</code></dt>
   <dd><p>A string containing the format (in <a class="reference internal" href="struct.html#py:module:struct" title="struct: Interpret bytes as packed binary data."><code class="xref py module docutils literal">struct</code></a> module style) for each
 element in the view. A memoryview can be created from exporters with
-arbitrary format strings, but some methods (e.g. <a class="reference internal" href="stdtypes.html#py:method:memoryview.tolist"><code class="xref py method docutils literal">tolist</code></a>) are
+arbitrary format strings, but some methods (e.g. <a href="#" class="broken-link"><code class="xref py method docutils literal">tolist</code></a>) are
 restricted to native single element formats.</p>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
@@ -5392,6 +5395,8 @@ access each element for each dimension of the array.</p>
 <div class="versionadded">
   <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
 </div>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd>

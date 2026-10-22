@@ -2072,16 +2072,18 @@ standard Python libraries (see :envvar:`PYTHONHOME`).</p>
 </dl>
 <dl class="c member">
   <dt id="c:member:pyconfig.import_time"><code class="sig-name">int import_time</code></dt>
-  <dd><p>If <code>1</code>, profile import time.
+  <dd><blockquote>
+<p>If <code>1</code>, profile import time.
 If <code>2</code>, include additional output that indicates
 when an imported module has already been loaded.</p>
 <p>Set by the <a class="reference internal" href="../using/cmdline.html#std:cmdoption:-x"><code class="xref std cmdoption docutils literal">-X importtime</code></a> option and the
 :envvar:`PYTHONPROFILEIMPORTTIME` environment variable.</p>
 <p>Default: <code>0</code>.</p>
-<p>. versionchanged:: 3.14</p>
-<blockquote>
-<p>Added support for <code>import_time = 2</code></p>
 </blockquote>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>Added support for <code>import_time = 2</code></p>
+</div>
 </dd>
 </dl>
 <dl class="c member">

@@ -509,6 +509,7 @@ in the logging configuration.</p>
 <p>:param encoding: The encoding used to open file when <em>fname</em> is filename.</p>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<blockquote>
 <p>An instance of a subclass of <a class="reference internal" href="configparser.html#py:class:configparser.rawconfigparser"><code class="xref py class docutils literal">RawConfigParser</code></a> is
 now accepted as a value for <code>fname</code>. This facilitates:</p>
 <ul>
@@ -520,13 +521,16 @@ application (e.g. based on command-line parameters or other aspects
 of the runtime environment) before being passed to <code>fileConfig</code>.</p>
 </li>
 </ul>
-<blockquote>
-<p>versionchanged:: 3.10
-Added the <em>encoding</em> parameter.</p>
-<p>versionchanged:: 3.12
-An exception will be thrown if the provided file
-doesn't exist or is invalid or empty.</p>
 </blockquote>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>Added the <em>encoding</em> parameter.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p>An exception will be thrown if the provided file
+doesn't exist or is invalid or empty.</p>
+</div>
 </div>
 </dd>
 </dl>

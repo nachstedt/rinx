@@ -564,23 +564,23 @@ shows logging from the main (initial) thread and another thread:</p>
 <p>When run, the script should print something like the following:</p>
 <div class="highlight-none notranslate">
 <div class="highlight hl-code"><pre>
-0 Thread-1 Hi from myfunc
-3 MainThread Hello from main
-5 Thread-1 Hi from myfunc
-5 MainThread Hello from main
-7 Thread-1 Hi from myfunc
-7 MainThread Hello from main
-8 Thread-1 Hi from myfunc
-0 Thread-1 Hi from myfunc
-8 MainThread Hello from main
-2 Thread-1 Hi from myfunc
-9 MainThread Hello from main
-3 Thread-1 Hi from myfunc
-5 Thread-1 Hi from myfunc
-1 MainThread Hello from main
-7 Thread-1 Hi from myfunc
-3 MainThread Hello from main
-8 Thread-1 Hi from myfunc</pre></div>
+   0 Thread-1 Hi from myfunc
+   3 MainThread Hello from main
+ 505 Thread-1 Hi from myfunc
+ 755 MainThread Hello from main
+1007 Thread-1 Hi from myfunc
+1507 MainThread Hello from main
+1508 Thread-1 Hi from myfunc
+2010 Thread-1 Hi from myfunc
+2258 MainThread Hello from main
+2512 Thread-1 Hi from myfunc
+3009 MainThread Hello from main
+3013 Thread-1 Hi from myfunc
+3515 Thread-1 Hi from myfunc
+3761 MainThread Hello from main
+4017 Thread-1 Hi from myfunc
+4513 MainThread Hello from main
+4518 Thread-1 Hi from myfunc</pre></div>
 </div>
 <p>This shows the logging output interspersed as one might expect. This approach
 works for more threads than shown here, of course.</p>
