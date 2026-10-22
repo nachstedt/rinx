@@ -11,6 +11,8 @@
 //! never parses its body, so refusing the whole dropdown over a misspelled
 //! `:color:` would silently swallow every construct written inside it.
 
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{
     Animation, Chevron, Diagnostic, DiagnosticCode, Directive, Dropdown, InvalidOcticonName,
     OcticonName, SemanticColor, Spacing, SpacingKind, Span, TargetName,
@@ -27,6 +29,27 @@ use super::classes::split_classes;
 use super::options::{OptionLine, report_unknown_options, scan_option_lines};
 
 const DIRECTIVE: &str = "dropdown";
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["dropdown"],
+    doc: "A collapsible container.",
+};
+
+/// Interprets `.. dropdown::`.
+pub(in crate::directives) fn interpret_dropdown(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_dropdown(
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.adornment_order,
+        state.diagnostics,
+        input.body_ctx,
+    ))
+}
 
 /// Parses a `.. dropdown::` into a [`Directive::Dropdown`].
 pub(super) fn parse_dropdown(

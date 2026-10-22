@@ -1,3 +1,5 @@
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use std::num::NonZeroUsize;
 
 use rinx_ast::{
@@ -148,6 +150,24 @@ fn parse_entry(line: &str, glob: bool, span: Option<rinx_ast::Span>) -> TocEntry
         docname: target,
         span,
     }
+}
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["toctree"],
+    doc: "A table of contents linking other documents into the navigation.",
+};
+
+/// Interprets `.. toctree::`.
+pub(in crate::directives) fn interpret_toctree(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_toctree(
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
 }
 
 /// Parses a `.. toctree::` body into a [`Directive::Toctree`].

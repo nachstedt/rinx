@@ -7,6 +7,8 @@
 //! block with no language of its own resolves against whichever of these was
 //! last in force.
 
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{Diagnostic, DiagnosticCode, Directive, ResolvedLanguage};
 
 use crate::context::ParseCtx;
@@ -16,6 +18,25 @@ use crate::directives::options::{report_unknown_options, scan_option_lines};
 use crate::indent::unindent_body_lines;
 
 use super::options::parse_positive_integer;
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const HIGHLIGHT_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["highlight"],
+    doc: "Sets the language the code blocks below it are highlighted in.",
+};
+
+/// Interprets `.. highlight::`.
+pub(in crate::directives) fn interpret_highlight(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_highlight(
+        input.argument,
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
+}
 
 /// Parses a `.. highlight::`, which sets the language following blocks
 /// inherit.

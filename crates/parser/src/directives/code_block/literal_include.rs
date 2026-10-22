@@ -12,6 +12,8 @@
 //! selection half ([`super::selection`]). What is genuinely its own is here:
 //! naming a file, `:diff:`, `:prepend:`/`:append:`, and `:lineno-match:`.
 
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use std::num::NonZeroU32;
 
 use rinx_ast::{
@@ -49,6 +51,25 @@ struct LiteralIncludeOptions {
     bare_caption: bool,
     pyobject: Option<String>,
     selection: Selection,
+}
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const LITERAL_INCLUDE_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["literalinclude"],
+    doc: "A code block read from a file.",
+};
+
+/// Interprets `.. literalinclude::`.
+pub(in crate::directives) fn interpret_literal_include(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_literal_include(
+        input.argument,
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
 }
 
 /// Parses a `.. literalinclude::` into a [`Directive::CodeBlock`], reading the

@@ -17,6 +17,8 @@
 //! name**, and an unreadable option is dropped and reported while the diagram
 //! itself survives — the error-resilience every directive here follows.
 
+use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
+use crate::directives::spec::DirectiveSpec;
 use std::num::NonZeroU32;
 
 use rinx_ast::{
@@ -116,6 +118,31 @@ struct ReadOptions {
     width: Option<LengthOrPercentage>,
     classes: Vec<String>,
     name: Option<TargetName>,
+}
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["entity-sequence", "needsequence"],
+    doc: "A sequence diagram walked along the entities' relations.",
+};
+
+/// Interprets `.. entity-sequence::` or `.. needsequence::`, recording which
+/// was written.
+pub(in crate::directives) fn interpret_entity_sequence(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    let Ok(source) = input.name.parse::<rinx_ast::EntitySequenceSource>() else {
+        return unknown(input, state);
+    };
+    single(parse_entity_sequence(
+        source,
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
 }
 
 /// Parses a `.. entity-sequence::` / `.. needsequence::` into a

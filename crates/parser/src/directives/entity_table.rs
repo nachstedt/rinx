@@ -11,6 +11,8 @@
 //! An unreadable option is dropped and reported, leaving the table itself
 //! intact, which is the error-resilience every directive here follows.
 
+use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{Diagnostic, DiagnosticCode, Directive, EntityTable, EntityTableSource, Span};
 use rinx_filter::FieldName;
 
@@ -30,6 +32,31 @@ use super::table_widths::parse_widths_option;
 /// filtering in the browser and would otherwise get a static table with no
 /// indication that they did not.
 const SUPPORTED_STYLE: &str = "table";
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["entity-table", "needtable"],
+    doc: "A table of the entities a filter selects.",
+};
+
+/// Interprets `.. entity-table::` or `.. needtable::`, recording which was
+/// written.
+pub(in crate::directives) fn interpret_entity_table(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    let Ok(source) = input.name.parse::<rinx_ast::EntityTableSource>() else {
+        return unknown(input, state);
+    };
+    single(parse_entity_table(
+        source,
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
+}
 
 /// Parses a `.. entity-table::` / `.. needtable::` into a
 /// [`Directive::EntityTable`].

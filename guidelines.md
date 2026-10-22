@@ -23,6 +23,11 @@ entry under the heading it belongs to, as a single short sentence.
 - Model a family of valueless flag options as one set of an enum rather than as several `bool` fields, so asking for one cannot be confused with asking for its neighbour.
 - Prefer a type that makes a meaningless value unrepresentable (`NonZeroUsize` for a depth) and resolve the ambiguity once, where the source text is read.
 - When a value is transformed once and then must never be re-transformed, give the result its own type that cannot express the untransformed state, so forgetting the step is a compile error.
+- Keep two views of one fact consistent through the compiler — an enum matched exhaustively, generated with its lookup and its data from one table — rather than through a test or a runtime assertion that only catches what happens to be exercised.
+- Keep a declarative fact beside the code that acts on it (a directive's spec in its parser's module), with only a data-free registry central, so the two are edited together.
+- Keep a declarative description free of behaviour and pair the two in a registry entry, so several consumers — a reader per input syntax, completion, documentation — can share the description.
+- Do not invent an identifier (an enum variant) for something the data already names; a registry entry holding the description and its behaviour needs no key.
+- Group cases by a real difference in how they are handled, never to work around a lint's length limit; if a `match` grows too long, give its arms one shared signature instead.
 - Keep the open-ended case of an enum as a validated newtype rather than enumerating a third party's whole vocabulary, which would import their knowledge into your own root crate and freeze it into serialized data.
 - Reserve special values of a field as their own variants, so a name that happens to collide with one cannot be mistaken for it.
 - Box a large enum variant's payload into its own struct, since an enum costs its largest variant everywhere it is stored.
@@ -125,6 +130,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Diagnose a suppression that names an unknown code, since one that silently matches nothing is the same silent degradation the diagnostics exist to catch.
 - Generate an enum's string mapping and its parse-back from one table when both directions must be exact inverses.
 - Give each construct its own diagnostic family even when it shares a grammar and a parser with another, since a code names what the author wrote, not the code path that read it.
+- Report a mistake in the grammar every directive shares (an unknown option) under one code everywhere rather than one per directive, since the mistake is the same whichever directive it is written in.
 - Build a feature's diagnostics with the feature, not after it: deferring them ships the silent degradation the diagnostics exist to catch, and retrofitting one usually turns out to need a data-model change the feature could have made for free.
 - Attach a position's *file* to the position itself, not to the diagnostic quoting it, when a later phase reads that position out of a serialized artifact — a file recorded only on parse-time diagnostics cannot serve the render-time ones.
 - Intern a repeated identifier to a small integer rather than storing the string, when the type carrying it is `Copy` and appears once per node; the indirection buys back both the trait and the wire size.

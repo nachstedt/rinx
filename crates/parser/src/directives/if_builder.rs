@@ -29,6 +29,8 @@
 //! no unknown-directive reports, no targets, no toctree entries, and so no
 //! Bazel `deps` entry for documents only the PDF build would reach.
 
+use crate::directives::input::{DirectiveInput, ParseState};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{Diagnostic, DiagnosticCode, Node, Span};
 
 use crate::blocks::parse_blocks;
@@ -81,6 +83,28 @@ const KNOWN_BUILDERS: &[&str] = &[
     "texinfo",
     "xml",
 ];
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["if-builder"],
+    doc: "Content kept only when building with the named builder.",
+};
+
+/// Interprets `.. if-builder::`, splicing its body in when it names this
+/// build's builder.
+pub(in crate::directives) fn interpret_if_builder(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    parse_if_builder(
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.adornment_order,
+        state.diagnostics,
+        &input.splice_ctx(),
+    )
+}
 
 /// Parses a `.. if-builder::`, returning the nodes its body contributed.
 ///

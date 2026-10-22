@@ -11,6 +11,8 @@
 //! so a role applies from its definition onwards, as in docutils — and no
 //! later phase has anything to learn about it.
 
+use crate::directives::input::{DirectiveInput, ParseState};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{Diagnostic, DiagnosticCode, Node, ResolvedLanguage, ScriptPosition, Span};
 use std::sync::LazyLock;
 
@@ -68,6 +70,26 @@ fn split_role_argument(argument: &str) -> Option<RoleArgument<'_>> {
         name: caps.name("name")?.as_str(),
         base: caps.name("base").map(|base| base.as_str()),
     })
+}
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["role"],
+    doc: "Defines a role for the rest of the document.",
+};
+
+/// Interprets `.. role::`, which records a role and yields no node.
+pub(in crate::directives) fn interpret_role(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    parse_role(
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.diagnostics,
+        &input.splice_ctx(),
+    )
 }
 
 /// Parses a `.. role::`, defining the role in the document's table when it

@@ -3,6 +3,8 @@
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use crate::indent::unindent_body_lines;
 use rinx_ast::{Diagnostic, DiagnosticCode, IndexEntry, IndexEntryType, InvalidIndexEntry};
 
@@ -110,6 +112,25 @@ pub(crate) fn parse_index_entries(
     }
 
     entries
+}
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const INDEX_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["index"],
+    doc: "Entries for the general index.",
+};
+
+/// Interprets `.. index::`.
+pub(in crate::directives) fn interpret_index(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_index_directive(
+        input.argument,
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
 }
 
 /// Parses a `.. index::` directive into a `Directive::Index`. The anchor

@@ -21,6 +21,8 @@
 //! chart over one mistake would be the larger failure. The options it cannot
 //! honour are refused **by name**, as the pie's are.
 
+use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{
     BarArrangement, BarGrid, BarOrientation, ChartValue, Diagnostic, DiagnosticCode, Directive,
     EntityBar, EntityBarSource, LabelRotation, Span,
@@ -75,6 +77,31 @@ const DEFAULT_SEPARATOR: &str = ",";
 
 /// The value of `:xlabels:`/`:ylabels:` that takes the labels from the body.
 const FROM_DATA: &str = "FROM_DATA";
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["entity-bar", "needbar"],
+    doc: "A bar chart of how many entities each filter selects.",
+};
+
+/// Interprets `.. entity-bar::` or `.. needbar::`, recording which was
+/// written.
+pub(in crate::directives) fn interpret_entity_bar(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    let Ok(source) = input.name.parse::<rinx_ast::EntityBarSource>() else {
+        return unknown(input, state);
+    };
+    single(parse_entity_bar(
+        source,
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
+}
 
 /// Parses a `.. entity-bar::` / `.. needbar::` into a [`Directive::EntityBar`].
 pub(super) fn parse_entity_bar(

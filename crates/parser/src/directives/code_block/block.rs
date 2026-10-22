@@ -12,6 +12,8 @@
 //! has a grammar behind it is the renderer's question, since only it knows the
 //! highlighting backend.
 
+use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{CodeBlock, CodeBlockSource, Directive};
 
 use crate::context::ParseCtx;
@@ -24,6 +26,32 @@ use super::dedent::apply_dedent;
 use super::emphasize::resolve_emphasize_lines;
 use super::options::{parse_code_block_options, parse_language_argument};
 use rinx_ast::DiagnosticCode;
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const CODE_BLOCK_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["code-block", "code"],
+    doc: "A block of source code, highlighted.",
+};
+
+/// Interprets `.. code-block::` and docutils' `.. code::`, recording which
+/// spelling was written.
+pub(in crate::directives) fn interpret_code_block(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    let source = match input.name {
+        "code-block" => rinx_ast::CodeBlockSource::CodeBlock,
+        "code" => rinx_ast::CodeBlockSource::Code,
+        _ => return unknown(input, state),
+    };
+    single(parse_code_block(
+        source,
+        input.argument,
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
+}
 
 /// Parses either code-block directive into a [`Directive::CodeBlock`].
 pub(in crate::directives) fn parse_code_block(

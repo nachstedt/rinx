@@ -5,6 +5,8 @@
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::body::body_span;
+use crate::directives::input::{DirectiveInput, ParseState, single, unknown};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, DocTestBlock, DocTestGroupSelector, HashedContent,
     NonEmptyVector, Span,
@@ -15,6 +17,35 @@ use crate::indent::strip_common_indent;
 
 use super::kind::DocTestDirectiveKind;
 use super::options::{DocTestOptions, scan_options};
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const DOCTEST_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &[
+        "doctest",
+        "testcode",
+        "testoutput",
+        "testsetup",
+        "testcleanup",
+    ],
+    doc: "Code a doctest run executes, the output it expects, or its setup and cleanup.",
+};
+
+/// Interprets one of the five `sphinx.ext.doctest` directives.
+pub(in crate::directives) fn interpret_doctest(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    let Some(kind) = DocTestDirectiveKind::from_name(input.name) else {
+        return unknown(input, state);
+    };
+    single(parse_doctest_directive(
+        kind,
+        input.argument,
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
+}
 
 /// Parses one directive of the family into a [`Directive`].
 ///

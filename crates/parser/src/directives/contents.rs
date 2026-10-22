@@ -1,3 +1,5 @@
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{
     Contents, ContentsBacklinks, ContentsOptions, Diagnostic, DiagnosticCode, Directive, TargetName,
 };
@@ -83,6 +85,25 @@ fn parse_backlinks(
         ctx.line_span(line.line_index, &line.raw),
     ));
     ContentsBacklinks::default()
+}
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["contents"],
+    doc: "A table of contents of this document's sections.",
+};
+
+/// Interprets `.. contents::`.
+pub(in crate::directives) fn interpret_contents(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_contents(
+        input.argument,
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
 }
 
 /// Parses a `.. contents::` body into a [`Directive::Contents`].

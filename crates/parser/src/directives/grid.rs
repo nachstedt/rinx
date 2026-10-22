@@ -19,6 +19,8 @@
 //! that is not a grid-item, and a grid-item written outside a grid, both warn
 //! and both still render.
 
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{
     ChildAlign, ChildDirection, ColumnSpec, Diagnostic, DiagnosticCode, Directive, Grid, GridItem,
     Gutter, Node, Spacing, SpacingKind, Span,
@@ -35,6 +37,12 @@ use super::options::{OptionLine, report_unknown_options, scan_option_lines};
 
 const GRID: &str = "grid";
 const GRID_ITEM: &str = "grid-item";
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const GRID_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["grid"],
+    doc: "A responsive row of grid items.",
+};
 
 /// Parses a `.. grid::` into a [`Directive::Grid`].
 pub(super) fn parse_grid(
@@ -75,6 +83,42 @@ pub(super) fn parse_grid(
     report_unexpected_children(&grid.body, directive_span, diagnostics);
 
     Directive::Grid(Box::new(grid))
+}
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const GRID_ITEM_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["grid-item"],
+    doc: "One cell of a grid.",
+};
+
+/// Interprets `.. grid::`.
+pub(in crate::directives) fn interpret_grid(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_grid(
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.adornment_order,
+        state.diagnostics,
+        input.body_ctx,
+    ))
+}
+
+/// Interprets `.. grid-item::`, written inside a grid or not: outside one its
+/// content survives to be warned about rather than lost.
+pub(in crate::directives) fn interpret_grid_item(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_grid_item(
+        input.span,
+        input.body_lines,
+        state.adornment_order,
+        state.diagnostics,
+        input.body_ctx,
+    ))
 }
 
 /// Parses a `.. grid-item::` into a [`Directive::GridItem`].

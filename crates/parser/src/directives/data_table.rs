@@ -19,5 +19,5 @@ mod csv_dialect;
 mod list;
 mod options;
 
-pub(super) use csv::parse_csv_table;
-pub(super) use list::parse_list_table;
+pub(super) use csv::{CSV_TABLE_SPEC, interpret_csv_table};
+pub(super) use list::{LIST_TABLE_SPEC, interpret_list_table};

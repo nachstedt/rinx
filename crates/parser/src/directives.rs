@@ -1,7 +1,12 @@
 //! Directive parsing: everything introduced by a `.. name::` marker.
 //!
 //! [`dispatch`] recognizes the marker and routes by name; [`body`] collects
-//! the lines belonging to it. Each directive family then owns its own
+//! the lines belonging to it. [`spec`] is the table of every directive this
+//! build implements by a fixed name — each one's spec lives in the module that
+//! parses it — and what [`dispatch`] matches a name's kind against, so a
+//! directive cannot be named without being dispatched, nor dispatched without
+//! being named; [`input`] is what every one of them is interpreted from, so
+//! one signature serves all. Each directive family then owns its own
 //! module — [`domains`] for the domain objects (`.. py:function::`,
 //! `.. c:struct::`, `.. option::`), [`data_table`] for the two table
 //! directives that share an AST node, [`table`] for `.. table::` (which
@@ -23,9 +28,10 @@
 //! to the enclosing block instead of wrapping them in one, so a heading,
 //! target or `.. toctree::` written inside one belongs to the document itself
 //! — and an entity [`needimport`] reads out of a `needs.json` is an entity of
-//! the document, not something nested inside a directive. [`dispatch`]'s
-//! `try_parse_splicing_directive` handles the three ahead of the chain that
-//! wraps a single node.
+//! the document, not something nested inside a directive. Every directive is
+//! interpreted into a `Vec<Node>`, so they need no dispatch of their own —
+//! only the [`input`]'s `splice_ctx`, which keeps the titles allowed where the
+//! directive stands.
 //!
 //! [`error_node`] is the other shared-on-purpose module: it owns the two nodes
 //! a directive degrades to when it cannot become itself — an unrecognized name
@@ -71,6 +77,7 @@ mod if_builder;
 mod image;
 mod include;
 pub(crate) mod index_directive;
+mod input;
 mod math;
 mod needimport;
 mod needservice;
@@ -78,6 +85,7 @@ mod options;
 mod role;
 mod scope;
 mod sectnum;
+mod spec;
 mod substitution;
 mod table;
 mod table_options;
@@ -85,5 +93,5 @@ mod table_widths;
 mod toctree;
 mod uml;
 
-pub use dispatch::is_builtin_directive_name;
 pub(super) use dispatch::try_parse_directive;
+pub use spec::{DirectiveSpec, directive_specs, is_builtin_directive_name};

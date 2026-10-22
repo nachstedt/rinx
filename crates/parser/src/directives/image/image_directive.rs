@@ -4,6 +4,8 @@
 //! the directive's two structural rules: the argument is required, and there
 //! is no body.
 
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{AssetUri, Diagnostic, DiagnosticCode, Directive, ImageLoading, ImageOptions, Span};
 
 use crate::context::ParseCtx;
@@ -16,6 +18,26 @@ use crate::indent::unindent_body_lines;
 use super::options::{ImageContext, parse_common_image_options};
 
 pub(in crate::directives) const DIRECTIVE: &str = "image";
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const IMAGE_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["image"],
+    doc: "A picture.",
+};
+
+/// Interprets `.. image::`.
+pub(in crate::directives) fn interpret_image(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_image_directive(
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.diagnostics,
+        input.body_ctx,
+    ))
+}
 
 /// Parses a `.. image::` directive into a [`Directive::Image`].
 ///

@@ -2,6 +2,8 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::body::body_span;
+use crate::directives::input::{DirectiveInput, ParseState, single};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, Node, Span, TableCell, TableRow, TableSource,
 };
@@ -45,6 +47,26 @@ impl CsvSource {
         }
         true
     }
+}
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const CSV_TABLE_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["csv-table"],
+    doc: "A table written as comma-separated values, inline or in a file.",
+};
+
+/// Interprets `.. csv-table::`.
+pub(in crate::directives) fn interpret_csv_table(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    single(parse_csv_table(
+        input.argument,
+        input.body_lines,
+        state.adornment_order,
+        state.diagnostics,
+        input.body_ctx,
+    ))
 }
 
 /// Parses a `.. csv-table::` directive: a table whose rows are CSV data,

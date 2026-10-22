@@ -8,6 +8,8 @@
 //! rather than the library's default, as Sphinx's directive does — it
 //! unregisters the document's default role, leaving docutils' own.
 
+use crate::directives::input::{DirectiveInput, ParseState};
+use crate::directives::spec::DirectiveSpec;
 use rinx_ast::{Diagnostic, DiagnosticCode, Node, Span};
 
 use crate::context::ParseCtx;
@@ -15,6 +17,27 @@ use crate::default_role::DefaultRole;
 use crate::diagnostics::Diagnostics;
 
 const DIRECTIVE: &str = "default-role";
+
+/// This directive's entry in the table of directives this build implements.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["default-role"],
+    doc: "Sets the role interpreted text without one is read as.",
+};
+
+/// Interprets `.. default-role::`, which records the default role and yields
+/// no node.
+pub(in crate::directives) fn interpret_default_role(
+    input: &DirectiveInput<'_, '_>,
+    state: &mut ParseState<'_>,
+) -> Vec<rinx_ast::Node> {
+    parse_default_role(
+        input.argument,
+        input.span,
+        input.body_lines,
+        state.diagnostics,
+        &input.splice_ctx(),
+    )
+}
 
 /// Parses a `.. default-role::`, making its role the document's default when
 /// it names one. Always answers with no nodes: a choice renders to nothing.
