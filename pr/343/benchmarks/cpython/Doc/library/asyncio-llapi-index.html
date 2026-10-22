@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Low-level API Index — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Networking and Interprocess Communication"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 ancestor has-children">
+            <a href="asyncio.html">asyncio — Asynchronous I&#x2f;O</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle asyncio — Asynchronous I&#x2f;O"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="asyncio-runner.html">Runners</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-task.html">Coroutines and Tasks</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-stream.html">Streams</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-sync.html">Synchronization Primitives</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-subprocess.html">Subprocesses</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-queue.html">Queues</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-exceptions.html">Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-graph.html">Call Graph Introspection</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-eventloop.html">Event Loop</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-future.html">Futures</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-protocol.html">Transports and Protocols</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-policy.html">Policies</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-platforms.html">Platform Support</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-extending.html">Extending</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-api-index.html">High-level API Index</a>
+            
+          </li>
+        
+          <li class="toctree-l4 current has-children">
+            <a href="asyncio-llapi-index.html">Low-level API Index</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Low-level API Index"></span></summary>
+              <ul>
+                
+          <li class="toctree-l5">
+            <a href="asyncio-llapi-index.html#obtaining-the-event-loop">Obtaining the Event Loop</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-llapi-index.html#event-loop-methods">Event Loop Methods</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-llapi-index.html#transports">Transports</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-llapi-index.html#protocols">Protocols</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-llapi-index.html#event-loop-policies">Event Loop Policies</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-dev.html">Developing with asyncio</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="socket.html">socket — Low-level networking interface</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ssl.html">ssl — TLS&#x2f;SSL wrapper for socket objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="select.html">select — Waiting for I&#x2f;O completion</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="selectors.html">selectors — High-level I&#x2f;O multiplexing</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="signal.html">signal — Set handlers for asynchronous events</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mmap.html">mmap — Memory-mapped file support</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="asyncio-api-index.html">&larr; High-level API Index</a>
+        <a class="next" href="asyncio-dev.html">Developing with asyncio &rarr;</a>
+      </nav>
+      
+      <h1 id="low-level-api-index">Low-level API Index</h1>
+<p>This page lists all low-level asyncio APIs.</p>
+<h2 id="obtaining-the-event-loop">Obtaining the Event Loop</h2>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:function:asyncio.get_running_loop"><code class="xref py function docutils literal">asyncio.get_running_loop</code></a></p>
+</td>
+<td><p>The <strong>preferred</strong> function to get the running event loop.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:function:asyncio.get_event_loop"><code class="xref py function docutils literal">asyncio.get_event_loop</code></a></p>
+</td>
+<td><p>Get an event loop instance (running or current via the current policy).</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:function:asyncio.set_event_loop"><code class="xref py function docutils literal">asyncio.set_event_loop</code></a></p>
+</td>
+<td><p>Set the event loop as current via the current policy.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:function:asyncio.new_event_loop"><code class="xref py function docutils literal">asyncio.new_event_loop</code></a></p>
+</td>
+<td><p>Create a new event loop.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Examples</pre>
+</div>
+<ul>
+<li><p><a href="asyncio-future.html#asyncio_example_future">Using asyncio.get_running_loop()</a>.</p>
+</li>
+</ul>
+<h2 id="event-loop-methods">Event Loop Methods</h2>
+<p>See also the main documentation section about the
+<a href="asyncio-eventloop.html#asyncio-event-loop-methods">Event Loop Methods</a>.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Lifecycle</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.run_until_complete"><code class="xref py method docutils literal">loop.run_until_complete</code></a></p>
+</td>
+<td><p>Run a Future/Task/awaitable until complete.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.run_forever"><code class="xref py method docutils literal">loop.run_forever</code></a></p>
+</td>
+<td><p>Run the event loop forever.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.stop"><code class="xref py method docutils literal">loop.stop</code></a></p>
+</td>
+<td><p>Stop the event loop.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.close"><code class="xref py method docutils literal">loop.close</code></a></p>
+</td>
+<td><p>Close the event loop.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.is_running"><code class="xref py method docutils literal">loop.is_running</code></a></p>
+</td>
+<td><p>Return <code>True</code> if the event loop is running.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.is_closed"><code class="xref py method docutils literal">loop.is_closed</code></a></p>
+</td>
+<td><p>Return <code>True</code> if the event loop is closed.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.shutdown_asyncgens"><code class="xref py method docutils literal">loop.shutdown_asyncgens</code></a></p>
+</td>
+<td><p>Close asynchronous generators.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Debugging</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.set_debug"><code class="xref py method docutils literal">loop.set_debug</code></a></p>
+</td>
+<td><p>Enable or disable the debug mode.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.get_debug"><code class="xref py method docutils literal">loop.get_debug</code></a></p>
+</td>
+<td><p>Get the current debug mode.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Scheduling Callbacks</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.call_soon"><code class="xref py method docutils literal">loop.call_soon</code></a></p>
+</td>
+<td><p>Invoke a callback soon.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.call_soon_threadsafe"><code class="xref py method docutils literal">loop.call_soon_threadsafe</code></a></p>
+</td>
+<td><p>A thread-safe variant of <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.call_soon"><code class="xref py method docutils literal">loop.call_soon</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.call_later"><code class="xref py method docutils literal">loop.call_later</code></a></p>
+</td>
+<td><p>Invoke a callback <em>after</em> the given time.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.call_at"><code class="xref py method docutils literal">loop.call_at</code></a></p>
+</td>
+<td><p>Invoke a callback <em>at</em> the given time.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Thread/Interpreter/Process Pool</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><code>await</code> <a href="#" class="broken-link"><code class="xref py method docutils literal">loop.run_in_executor</code></a></p>
+</td>
+<td><p>Run a CPU-bound or other blocking function in
+a <a class="reference internal" href="concurrent.futures.html#py:module:concurrent.futures" title="concurrent.futures: Execute computations concurrently using threads or processes."><code class="xref py module docutils literal">concurrent.futures</code></a> executor.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.set_default_executor"><code class="xref py method docutils literal">loop.set_default_executor</code></a></p>
+</td>
+<td><p>Set the default executor for <a href="#" class="broken-link"><code class="xref py method docutils literal">loop.run_in_executor</code></a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Tasks and Futures</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_future"><code class="xref py method docutils literal">loop.create_future</code></a></p>
+</td>
+<td><p>Create a <a class="reference internal" href="asyncio-future.html#py:class:asyncio.future"><code class="xref py class docutils literal">Future</code></a> object.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_task"><code class="xref py method docutils literal">loop.create_task</code></a></p>
+</td>
+<td><p>Schedule coroutine as a <a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">Task</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.set_task_factory"><code class="xref py method docutils literal">loop.set_task_factory</code></a></p>
+</td>
+<td><p>Set a factory used by <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_task"><code class="xref py method docutils literal">loop.create_task</code></a> to
+create <a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">Tasks</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.get_task_factory"><code class="xref py method docutils literal">loop.get_task_factory</code></a></p>
+</td>
+<td><p>Get the factory <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_task"><code class="xref py method docutils literal">loop.create_task</code></a> uses
+to create <a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">Tasks</code></a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: DNS</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.getaddrinfo"><code class="xref py method docutils literal">loop.getaddrinfo</code></a></p>
+</td>
+<td><p>Asynchronous version of <a href="#" class="broken-link"><code class="xref py method docutils literal">socket.getaddrinfo</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.getnameinfo"><code class="xref py method docutils literal">loop.getnameinfo</code></a></p>
+</td>
+<td><p>Asynchronous version of <a href="#" class="broken-link"><code class="xref py method docutils literal">socket.getnameinfo</code></a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Networking and IPC</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_connection"><code class="xref py method docutils literal">loop.create_connection</code></a></p>
+</td>
+<td><p>Open a TCP connection.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_server"><code class="xref py method docutils literal">loop.create_server</code></a></p>
+</td>
+<td><p>Create a TCP server.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_unix_connection"><code class="xref py method docutils literal">loop.create_unix_connection</code></a></p>
+</td>
+<td><p>Open a Unix socket connection.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_unix_server"><code class="xref py method docutils literal">loop.create_unix_server</code></a></p>
+</td>
+<td><p>Create a Unix socket server.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.connect_accepted_socket"><code class="xref py method docutils literal">loop.connect_accepted_socket</code></a></p>
+</td>
+<td><p>Wrap a <a class="reference internal" href="socket.html#py:class:socket.socket"><code class="xref py class docutils literal">socket</code></a> into a <code>(transport, protocol)</code>
+pair.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_datagram_endpoint"><code class="xref py method docutils literal">loop.create_datagram_endpoint</code></a></p>
+</td>
+<td><p>Open a datagram (UDP) connection.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.sendfile"><code class="xref py method docutils literal">loop.sendfile</code></a></p>
+</td>
+<td><p>Send a file over a transport.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.start_tls"><code class="xref py method docutils literal">loop.start_tls</code></a></p>
+</td>
+<td><p>Upgrade an existing connection to TLS.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.connect_read_pipe"><code class="xref py method docutils literal">loop.connect_read_pipe</code></a></p>
+</td>
+<td><p>Wrap a read end of a pipe into a <code>(transport, protocol)</code> pair.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.connect_write_pipe"><code class="xref py method docutils literal">loop.connect_write_pipe</code></a></p>
+</td>
+<td><p>Wrap a write end of a pipe into a <code>(transport, protocol)</code> pair.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Sockets</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.sock_recv"><code class="xref py method docutils literal">loop.sock_recv</code></a></p>
+</td>
+<td><p>Receive data from the <a class="reference internal" href="socket.html#py:class:socket.socket"><code class="xref py class docutils literal">socket</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.sock_recv_into"><code class="xref py method docutils literal">loop.sock_recv_into</code></a></p>
+</td>
+<td><p>Receive data from the <a class="reference internal" href="socket.html#py:class:socket.socket"><code class="xref py class docutils literal">socket</code></a> into a buffer.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.sock_recvfrom"><code class="xref py method docutils literal">loop.sock_recvfrom</code></a></p>
+</td>
+<td><p>Receive a datagram from the <a class="reference internal" href="socket.html#py:class:socket.socket"><code class="xref py class docutils literal">socket</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.sock_recvfrom_into"><code class="xref py method docutils literal">loop.sock_recvfrom_into</code></a></p>
+</td>
+<td><p>Receive a datagram from the <a class="reference internal" href="socket.html#py:class:socket.socket"><code class="xref py class docutils literal">socket</code></a> into a buffer.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.sock_sendall"><code class="xref py method docutils literal">loop.sock_sendall</code></a></p>
+</td>
+<td><p>Send data to the <a class="reference internal" href="socket.html#py:class:socket.socket"><code class="xref py class docutils literal">socket</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.sock_sendto"><code class="xref py method docutils literal">loop.sock_sendto</code></a></p>
+</td>
+<td><p>Send a datagram via the <a class="reference internal" href="socket.html#py:class:socket.socket"><code class="xref py class docutils literal">socket</code></a> to the given address.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.sock_connect"><code class="xref py method docutils literal">loop.sock_connect</code></a></p>
+</td>
+<td><p>Connect the <a class="reference internal" href="socket.html#py:class:socket.socket"><code class="xref py class docutils literal">socket</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.sock_accept"><code class="xref py method docutils literal">loop.sock_accept</code></a></p>
+</td>
+<td><p>Accept a <a class="reference internal" href="socket.html#py:class:socket.socket"><code class="xref py class docutils literal">socket</code></a> connection.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.sock_sendfile"><code class="xref py method docutils literal">loop.sock_sendfile</code></a></p>
+</td>
+<td><p>Send a file over the <a class="reference internal" href="socket.html#py:class:socket.socket"><code class="xref py class docutils literal">socket</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.add_reader"><code class="xref py method docutils literal">loop.add_reader</code></a></p>
+</td>
+<td><p>Start watching a file descriptor for read availability.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.remove_reader"><code class="xref py method docutils literal">loop.remove_reader</code></a></p>
+</td>
+<td><p>Stop watching a file descriptor for read availability.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.add_writer"><code class="xref py method docutils literal">loop.add_writer</code></a></p>
+</td>
+<td><p>Start watching a file descriptor for write availability.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.remove_writer"><code class="xref py method docutils literal">loop.remove_writer</code></a></p>
+</td>
+<td><p>Stop watching a file descriptor for write availability.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Unix Signals</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.add_signal_handler"><code class="xref py method docutils literal">loop.add_signal_handler</code></a></p>
+</td>
+<td><p>Add a handler for a <a class="reference internal" href="signal.html#py:module:signal" title="signal: Set handlers for asynchronous events."><code class="xref py module docutils literal">signal</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.remove_signal_handler"><code class="xref py method docutils literal">loop.remove_signal_handler</code></a></p>
+</td>
+<td><p>Remove a handler for a <a class="reference internal" href="signal.html#py:module:signal" title="signal: Set handlers for asynchronous events."><code class="xref py module docutils literal">signal</code></a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Subprocesses</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.subprocess_exec"><code class="xref py method docutils literal">loop.subprocess_exec</code></a></p>
+</td>
+<td><p>Spawn a subprocess.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.subprocess_shell"><code class="xref py method docutils literal">loop.subprocess_shell</code></a></p>
+</td>
+<td><p>Spawn a subprocess from a shell command.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Error Handling</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.call_exception_handler"><code class="xref py method docutils literal">loop.call_exception_handler</code></a></p>
+</td>
+<td><p>Call the exception handler.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.set_exception_handler"><code class="xref py method docutils literal">loop.set_exception_handler</code></a></p>
+</td>
+<td><p>Set a new exception handler.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.get_exception_handler"><code class="xref py method docutils literal">loop.get_exception_handler</code></a></p>
+</td>
+<td><p>Get the current exception handler.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.default_exception_handler"><code class="xref py method docutils literal">loop.default_exception_handler</code></a></p>
+</td>
+<td><p>The default exception handler implementation.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Examples</pre>
+</div>
+<ul>
+<li><p><a href="asyncio-eventloop.html#asyncio_example_lowlevel_helloworld">Using asyncio.new_event_loop() and loop.run_forever()</a>.</p>
+</li>
+<li><p><a href="asyncio-eventloop.html#asyncio_example_call_later">Using loop.call_later()</a>.</p>
+</li>
+<li><p>Using <code>loop.create_connection()</code> to implement
+<a href="asyncio-protocol.html#asyncio_example_tcp_echo_client_protocol">an echo-client</a>.</p>
+</li>
+<li><p>Using <code>loop.create_connection()</code> to
+<a href="asyncio-protocol.html#asyncio_example_create_connection">connect a socket</a>.</p>
+</li>
+<li><p><a href="asyncio-eventloop.html#asyncio_example_watch_fd">Using add_reader() to watch an FD for read events</a>.</p>
+</li>
+<li><p><a href="asyncio-eventloop.html#asyncio_example_unix_signals">Using loop.add_signal_handler()</a>.</p>
+</li>
+<li><p><a href="asyncio-protocol.html#asyncio_example_subprocess_proto">Using loop.subprocess_exec()</a>.</p>
+</li>
+</ul>
+<h2 id="transports">Transports</h2>
+<p>All transports implement the following methods:</p>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.basetransport.close"><code class="xref py method docutils literal">transport.close()</code></a></p>
+</td>
+<td><p>Close the transport.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.basetransport.is_closing"><code class="xref py method docutils literal">transport.is_closing()</code></a></p>
+</td>
+<td><p>Return <code>True</code> if the transport is closing or is closed.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.basetransport.get_extra_info"><code class="xref py method docutils literal">transport.get_extra_info()</code></a></p>
+</td>
+<td><p>Request for information about the transport.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.basetransport.set_protocol"><code class="xref py method docutils literal">transport.set_protocol()</code></a></p>
+</td>
+<td><p>Set a new protocol.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.basetransport.get_protocol"><code class="xref py method docutils literal">transport.get_protocol()</code></a></p>
+</td>
+<td><p>Return the current protocol.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Transports that can receive data (TCP and Unix connections,
+pipes, etc).  Returned from methods like
+<a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_connection"><code class="xref py method docutils literal">loop.create_connection</code></a>, <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_unix_connection"><code class="xref py method docutils literal">loop.create_unix_connection</code></a>,
+<a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.connect_read_pipe"><code class="xref py method docutils literal">loop.connect_read_pipe</code></a>, etc:</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Read Transports</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.readtransport.is_reading"><code class="xref py method docutils literal">transport.is_reading()</code></a></p>
+</td>
+<td><p>Return <code>True</code> if the transport is receiving.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.readtransport.pause_reading"><code class="xref py method docutils literal">transport.pause_reading()</code></a></p>
+</td>
+<td><p>Pause receiving.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.readtransport.resume_reading"><code class="xref py method docutils literal">transport.resume_reading()</code></a></p>
+</td>
+<td><p>Resume receiving.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Transports that can Send data (TCP and Unix connections,
+pipes, etc).  Returned from methods like
+<a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_connection"><code class="xref py method docutils literal">loop.create_connection</code></a>, <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_unix_connection"><code class="xref py method docutils literal">loop.create_unix_connection</code></a>,
+<a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.connect_write_pipe"><code class="xref py method docutils literal">loop.connect_write_pipe</code></a>, etc:</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Write Transports</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.writetransport.write"><code class="xref py method docutils literal">transport.write()</code></a></p>
+</td>
+<td><p>Write data to the transport.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.writetransport.writelines"><code class="xref py method docutils literal">transport.writelines()</code></a></p>
+</td>
+<td><p>Write buffers to the transport.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.writetransport.can_write_eof"><code class="xref py method docutils literal">transport.can_write_eof()</code></a></p>
+</td>
+<td><p>Return <a class="reference internal" href="constants.html#py:data:true"><code class="xref py data docutils literal">True</code></a> if the transport supports sending EOF.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.writetransport.write_eof"><code class="xref py method docutils literal">transport.write_eof()</code></a></p>
+</td>
+<td><p>Close and send EOF after flushing buffered data.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.writetransport.abort"><code class="xref py method docutils literal">transport.abort()</code></a></p>
+</td>
+<td><p>Close the transport immediately.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.writetransport.get_write_buffer_size"><code class="xref py method docutils literal">transport.get_write_buffer_size()</code></a></p>
+</td>
+<td><p>Return the current size of the output buffer.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.writetransport.get_write_buffer_limits"><code class="xref py method docutils literal">transport.get_write_buffer_limits()</code></a></p>
+</td>
+<td><p>Return high and low water marks for write flow control.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.writetransport.set_write_buffer_limits"><code class="xref py method docutils literal">transport.set_write_buffer_limits()</code></a></p>
+</td>
+<td><p>Set new high and low water marks for write flow control.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Transports returned by <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_datagram_endpoint"><code class="xref py method docutils literal">loop.create_datagram_endpoint</code></a>:</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Datagram Transports</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.datagramtransport.sendto"><code class="xref py method docutils literal">transport.sendto()</code></a></p>
+</td>
+<td><p>Send data to the remote peer.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.datagramtransport.abort"><code class="xref py method docutils literal">transport.abort()</code></a></p>
+</td>
+<td><p>Close the transport immediately.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Low-level transport abstraction over subprocesses.
+Returned by <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.subprocess_exec"><code class="xref py method docutils literal">loop.subprocess_exec</code></a> and
+<a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.subprocess_shell"><code class="xref py method docutils literal">loop.subprocess_shell</code></a>:</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Subprocess Transports</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.subprocesstransport.get_pid"><code class="xref py method docutils literal">transport.get_pid()</code></a></p>
+</td>
+<td><p>Return the subprocess process id.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.subprocesstransport.get_pipe_transport"><code class="xref py method docutils literal">transport.get_pipe_transport()</code></a></p>
+</td>
+<td><p>Return the transport for the requested communication pipe
+(<em>stdin</em>, <em>stdout</em>, or <em>stderr</em>).</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.subprocesstransport.get_returncode"><code class="xref py method docutils literal">transport.get_returncode()</code></a></p>
+</td>
+<td><p>Return the subprocess return code.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.subprocesstransport.kill"><code class="xref py method docutils literal">transport.kill()</code></a></p>
+</td>
+<td><p>Kill the subprocess.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.subprocesstransport.send_signal"><code class="xref py method docutils literal">transport.send_signal()</code></a></p>
+</td>
+<td><p>Send a signal to the subprocess.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.subprocesstransport.terminate"><code class="xref py method docutils literal">transport.terminate()</code></a></p>
+</td>
+<td><p>Stop the subprocess.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.subprocesstransport.close"><code class="xref py method docutils literal">transport.close()</code></a></p>
+</td>
+<td><p>Kill the subprocess and close all pipes.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="protocols">Protocols</h2>
+<p>Protocol classes can implement the following <strong>callback methods</strong>:</p>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><code>callback</code> <a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.baseprotocol.connection_made"><code class="xref py method docutils literal">connection_made()</code></a></p>
+</td>
+<td><p>Called when a connection is made.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>callback</code> <a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.baseprotocol.connection_lost"><code class="xref py method docutils literal">connection_lost()</code></a></p>
+</td>
+<td><p>Called when the connection is lost or closed.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>callback</code> <a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.baseprotocol.pause_writing"><code class="xref py method docutils literal">pause_writing()</code></a></p>
+</td>
+<td><p>Called when the transport's buffer goes over the high water mark.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>callback</code> <a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.baseprotocol.resume_writing"><code class="xref py method docutils literal">resume_writing()</code></a></p>
+</td>
+<td><p>Called when the transport's buffer drains below the low water mark.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Streaming Protocols (TCP, Unix Sockets, Pipes)</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><code>callback</code> <a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.protocol.data_received"><code class="xref py method docutils literal">data_received()</code></a></p>
+</td>
+<td><p>Called when some data is received.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>callback</code> <a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.protocol.eof_received"><code class="xref py method docutils literal">eof_received()</code></a></p>
+</td>
+<td><p>Called when an EOF is received.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Buffered Streaming Protocols</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><code>callback</code> <a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.bufferedprotocol.get_buffer"><code class="xref py method docutils literal">get_buffer()</code></a></p>
+</td>
+<td><p>Called to allocate a new receive buffer.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>callback</code> <a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.bufferedprotocol.buffer_updated"><code class="xref py method docutils literal">buffer_updated()</code></a></p>
+</td>
+<td><p>Called when the buffer was updated with the received data.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>callback</code> <a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.bufferedprotocol.eof_received"><code class="xref py method docutils literal">eof_received()</code></a></p>
+</td>
+<td><p>Called when an EOF is received.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Datagram Protocols</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><code>callback</code> <a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.datagramprotocol.datagram_received"><code class="xref py method docutils literal">datagram_received()</code></a></p>
+</td>
+<td><p>Called when a datagram is received.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>callback</code> <a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.datagramprotocol.error_received"><code class="xref py method docutils literal">error_received()</code></a></p>
+</td>
+<td><p>Called when a previous send or receive operation raises an
+<a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py class docutils literal">OSError</code></a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Subprocess Protocols</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><code>callback</code> <a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.subprocessprotocol.pipe_data_received"><code class="xref py method docutils literal">pipe_data_received</code></a></p>
+</td>
+<td><p>Called when the child process writes data into its
+<em>stdout</em> or <em>stderr</em> pipe.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>callback</code> <a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.subprocessprotocol.pipe_connection_lost"><code class="xref py method docutils literal">pipe_connection_lost</code></a></p>
+</td>
+<td><p>Called when one of the pipes communicating with
+the child process is closed.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>callback</code> <a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.subprocessprotocol.process_exited"><code class="xref py method docutils literal">process_exited()</code></a></p>
+</td>
+<td><p>Called when the child process has exited. It can be called before
+<a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.subprocessprotocol.pipe_data_received"><code class="xref py method docutils literal">pipe_data_received</code></a> and
+<a class="reference internal" href="asyncio-protocol.html#py:method:asyncio.subprocessprotocol.pipe_connection_lost"><code class="xref py method docutils literal">pipe_connection_lost</code></a> methods.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="event-loop-policies">Event Loop Policies</h2>
+<p>Policies is a low-level mechanism to alter the behavior of
+functions like <a class="reference internal" href="asyncio-eventloop.html#py:function:asyncio.get_event_loop"><code class="xref py function docutils literal">asyncio.get_event_loop</code></a>.  See also
+the main <a href="asyncio-policy.html#asyncio-policies">policies section</a> for more
+details.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Accessing Policies</pre>
+</div>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a href="#" class="broken-link"><code class="xref py method docutils literal">asyncio.get_event_loop_policy</code></a></p>
+</td>
+<td><p>Return the current process-wide policy.</p>
+</td>
+</tr>
+<tr>
+<td><p><a href="#" class="broken-link"><code class="xref py method docutils literal">asyncio.set_event_loop_policy</code></a></p>
+</td>
+<td><p>Set a new process-wide policy.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-policy.html#py:class:asyncio.abstracteventlooppolicy"><code class="xref py class docutils literal">AbstractEventLoopPolicy</code></a></p>
+</td>
+<td><p>Base class for policy objects.</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="asyncio-api-index.html">&larr; High-level API Index</a>
+        <a class="next" href="asyncio-dev.html">Developing with asyncio &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

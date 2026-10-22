@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Policies — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Networking and Interprocess Communication"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 ancestor has-children">
+            <a href="asyncio.html">asyncio — Asynchronous I&#x2f;O</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle asyncio — Asynchronous I&#x2f;O"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="asyncio-runner.html">Runners</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-task.html">Coroutines and Tasks</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-stream.html">Streams</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-sync.html">Synchronization Primitives</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-subprocess.html">Subprocesses</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-queue.html">Queues</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-exceptions.html">Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-graph.html">Call Graph Introspection</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-eventloop.html">Event Loop</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-future.html">Futures</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-protocol.html">Transports and Protocols</a>
+            
+          </li>
+        
+          <li class="toctree-l4 current has-children">
+            <a href="asyncio-policy.html">Policies</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Policies"></span></summary>
+              <ul>
+                
+          <li class="toctree-l5">
+            <a href="asyncio-policy.html#getting-and-setting-the-policy">Getting and Setting the Policy</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-policy.html#policy-objects">Policy Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-policy.html#custom-policies">Custom Policies</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-platforms.html">Platform Support</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-extending.html">Extending</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-api-index.html">High-level API Index</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-llapi-index.html">Low-level API Index</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-dev.html">Developing with asyncio</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="socket.html">socket — Low-level networking interface</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ssl.html">ssl — TLS&#x2f;SSL wrapper for socket objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="select.html">select — Waiting for I&#x2f;O completion</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="selectors.html">selectors — High-level I&#x2f;O multiplexing</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="signal.html">signal — Set handlers for asynchronous events</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mmap.html">mmap — Memory-mapped file support</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="asyncio-protocol.html">&larr; Transports and Protocols</a>
+        <a class="next" href="asyncio-platforms.html">Platform Support &rarr;</a>
+      </nav>
+      
+      <a id="asyncio-policies"></a>
+<h1 id="policies">Policies</h1>
+<div class="admonition warning">
+  <p class="admonition-title">Warning</p>
+<p>Policies are deprecated and will be removed in Python 3.16.
+Users are encouraged to use the <a class="reference internal" href="asyncio-runner.html#py:function:asyncio.run"><code class="xref py function docutils literal">asyncio.run</code></a> function
+or the <a class="reference internal" href="asyncio-runner.html#py:class:asyncio.runner"><code class="xref py class docutils literal">asyncio.Runner</code></a> with <em>loop_factory</em> to use
+the desired loop implementation.</p>
+</div>
+<p>An event loop policy is a global object
+used to get and set the current <a href="asyncio-eventloop.html#asyncio-event-loop">event loop</a>,
+as well as create new event loops.
+The default policy can be <a href="asyncio-policy.html#asyncio-policy-get-set">replaced</a> with
+<a href="asyncio-policy.html#asyncio-policy-builtin">built-in alternatives</a>
+to use different event loop implementations,
+or substituted by a <a href="asyncio-policy.html#asyncio-custom-policies">custom policy</a>
+that can override these behaviors.</p>
+<p>The <a href="asyncio-policy.html#asyncio-policy-objects">policy object</a>
+gets and sets a separate event loop per <em>context</em>.
+This is per-thread by default,
+though custom policies could define <em>context</em> differently.</p>
+<p>Custom event loop policies can control the behavior of
+<a class="reference internal" href="asyncio-eventloop.html#py:function:asyncio.get_event_loop"><code class="xref py function docutils literal">get_event_loop</code></a>, <a class="reference internal" href="asyncio-eventloop.html#py:function:asyncio.set_event_loop"><code class="xref py function docutils literal">set_event_loop</code></a>, and <a class="reference internal" href="asyncio-eventloop.html#py:function:asyncio.new_event_loop"><code class="xref py function docutils literal">new_event_loop</code></a>.</p>
+<p>Policy objects should implement the APIs defined
+in the <a class="reference internal" href="asyncio-policy.html#py:class:asyncio.abstracteventlooppolicy"><code class="xref py class docutils literal">AbstractEventLoopPolicy</code></a> abstract base class.</p>
+<a id="asyncio-policy-get-set"></a>
+<h2 id="getting-and-setting-the-policy">Getting and Setting the Policy</h2>
+<p>The following functions can be used to get and set the policy
+for the current process:</p>
+<dl class="py function">
+  <dt id="py:function:asyncio.get_event_loop_policy"><code class="sig-name">get_event_loop_policy()</code></dt>
+  <dd><p>Return the current process-wide policy.</p>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.14:</span></p>
+<p>The <a class="reference internal" href="asyncio-policy.html#py:function:asyncio.get_event_loop_policy"><code class="xref py function docutils literal">get_event_loop_policy</code></a> function is deprecated and
+will be removed in Python 3.16.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:asyncio.set_event_loop_policy"><code class="sig-name">set_event_loop_policy(policy)</code></dt>
+  <dd><p>Set the current process-wide policy to <em>policy</em>.</p>
+<p>If <em>policy</em> is set to <code>None</code>, the default policy is restored.</p>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.14:</span></p>
+<p>The <a class="reference internal" href="asyncio-policy.html#py:function:asyncio.set_event_loop_policy"><code class="xref py function docutils literal">set_event_loop_policy</code></a> function is deprecated and
+will be removed in Python 3.16.</p>
+</div>
+</dd>
+</dl>
+<a id="asyncio-policy-objects"></a>
+<h2 id="policy-objects">Policy Objects</h2>
+<p>The abstract event loop policy base class is defined as follows:</p>
+<dl class="py class">
+  <dt id="py:class:asyncio.abstracteventlooppolicy"><em class="property">class</em> <code class="sig-name">AbstractEventLoopPolicy</code></dt>
+  <dd><p>An abstract base class for asyncio policies.</p>
+<dl class="py method">
+  <dt id="py:method:asyncio.abstracteventlooppolicy.get_event_loop"><code class="sig-name">get_event_loop()</code></dt>
+  <dd><p>Get the event loop for the current context.</p>
+<p>Return an event loop object implementing the
+<a class="reference internal" href="asyncio-eventloop.html#py:class:asyncio.abstracteventloop"><code class="xref py class docutils literal">AbstractEventLoop</code></a> interface.</p>
+<p>This method should never return <code>None</code>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.abstracteventlooppolicy.set_event_loop"><code class="sig-name">set_event_loop(loop)</code></dt>
+  <dd><p>Set the event loop for the current context to <em>loop</em>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.abstracteventlooppolicy.new_event_loop"><code class="sig-name">new_event_loop()</code></dt>
+  <dd><p>Create and return a new event loop object.</p>
+<p>This method should never return <code>None</code>.</p>
+</dd>
+</dl>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.14:</span></p>
+<p>The <a class="reference internal" href="asyncio-policy.html#py:class:asyncio.abstracteventlooppolicy"><code class="xref py class docutils literal">AbstractEventLoopPolicy</code></a> class is deprecated and
+will be removed in Python 3.16.</p>
+</div>
+</dd>
+</dl>
+<a id="asyncio-policy-builtin"></a>
+<p>asyncio ships with the following built-in policies:</p>
+<dl class="py class">
+  <dt id="py:class:asyncio.defaulteventlooppolicy"><em class="property">class</em> <code class="sig-name">DefaultEventLoopPolicy</code></dt>
+  <dd><p>The default asyncio policy.  Uses <a class="reference internal" href="asyncio-eventloop.html#py:class:asyncio.selectoreventloop"><code class="xref py class docutils literal">SelectorEventLoop</code></a>
+on Unix and <a class="reference internal" href="asyncio-eventloop.html#py:class:asyncio.proactoreventloop"><code class="xref py class docutils literal">ProactorEventLoop</code></a> on Windows.</p>
+<p>There is no need to install the default policy manually. asyncio
+is configured to use the default policy automatically.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
+<p>On Windows, <a class="reference internal" href="asyncio-eventloop.html#py:class:asyncio.proactoreventloop"><code class="xref py class docutils literal">ProactorEventLoop</code></a> is now used by default.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>The <a href="#" class="broken-link"><code class="xref py method docutils literal">get_event_loop</code></a> method of the default asyncio policy now
+raises a <a class="reference internal" href="exceptions.html#py:exception:runtimeerror"><code class="xref py exception docutils literal">RuntimeError</code></a> if there is no set event loop.</p>
+</div>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.14:</span></p>
+<p>The <a class="reference internal" href="asyncio-policy.html#py:class:asyncio.defaulteventlooppolicy"><code class="xref py class docutils literal">DefaultEventLoopPolicy</code></a> class is deprecated and
+will be removed in Python 3.16.</p>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:asyncio.windowsselectoreventlooppolicy"><em class="property">class</em> <code class="sig-name">WindowsSelectorEventLoopPolicy</code></dt>
+  <dd><p>An alternative event loop policy that uses the
+<a class="reference internal" href="asyncio-eventloop.html#py:class:asyncio.selectoreventloop"><code class="xref py class docutils literal">SelectorEventLoop</code></a> event loop implementation.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'availability'</p>
+<pre class="directive-error-source">.. availability:: Windows.</pre>
+</div>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.14:</span></p>
+<p>The <a class="reference internal" href="asyncio-policy.html#py:class:asyncio.windowsselectoreventlooppolicy"><code class="xref py class docutils literal">WindowsSelectorEventLoopPolicy</code></a> class is deprecated and
+will be removed in Python 3.16.</p>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:asyncio.windowsproactoreventlooppolicy"><em class="property">class</em> <code class="sig-name">WindowsProactorEventLoopPolicy</code></dt>
+  <dd><p>An alternative event loop policy that uses the
+<a class="reference internal" href="asyncio-eventloop.html#py:class:asyncio.proactoreventloop"><code class="xref py class docutils literal">ProactorEventLoop</code></a> event loop implementation.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'availability'</p>
+<pre class="directive-error-source">.. availability:: Windows.</pre>
+</div>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.14:</span></p>
+<p>The <a class="reference internal" href="asyncio-policy.html#py:class:asyncio.windowsproactoreventlooppolicy"><code class="xref py class docutils literal">WindowsProactorEventLoopPolicy</code></a> class is deprecated and
+will be removed in Python 3.16.</p>
+</div>
+</dd>
+</dl>
+<a id="asyncio-custom-policies"></a>
+<h2 id="custom-policies">Custom Policies</h2>
+<p>To implement a new event loop policy, it is recommended to subclass
+<a class="reference internal" href="asyncio-policy.html#py:class:asyncio.defaulteventlooppolicy"><code class="xref py class docutils literal">DefaultEventLoopPolicy</code></a> and override the methods for which
+custom behavior is wanted, e.g.:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-class hl-python"><span class="hl-storage hl-type hl-class hl-python"><span class="hl-keyword hl-declaration hl-class hl-python">class</span></span> <span class="hl-entity hl-name hl-class hl-python"><span class="hl-meta hl-generic-name hl-python">MyEventLoopPolicy</span></span><span class="hl-meta hl-class hl-inheritance hl-python"><span class="hl-punctuation hl-section hl-inheritance hl-begin hl-python">(</span></span></span><span class="hl-meta hl-class hl-inheritance hl-python"><span class="hl-entity hl-other hl-inherited-class hl-python">asyncio<span class="hl-punctuation hl-accessor hl-dot hl-python">.</span>DefaultEventLoopPolicy</span><span class="hl-punctuation hl-section hl-inheritance hl-end hl-python">)</span></span><span class="hl-meta hl-class hl-python"><span class="hl-punctuation hl-section hl-class hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_event_loop</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-comment hl-block hl-documentation hl-python"><span class="hl-punctuation hl-definition hl-comment hl-begin hl-python">&quot;&quot;&quot;</span>Get the event loop.</span></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-block hl-documentation hl-python"></span></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-block hl-documentation hl-python">        This may be None or an instance of EventLoop.</span></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-block hl-documentation hl-python">        <span class="hl-punctuation hl-definition hl-comment hl-end hl-python">&quot;&quot;&quot;</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">loop</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">super</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_event_loop</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Do something with loop ...
+</span></span>
+<span class="hl-source hl-python">        <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">loop</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">set_event_loop_policy</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">MyEventLoopPolicy</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="asyncio-protocol.html">&larr; Transports and Protocols</a>
+        <a class="next" href="asyncio-platforms.html">Platform Support &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
