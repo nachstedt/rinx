@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Call Graph Introspection — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Networking and Interprocess Communication"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 ancestor has-children">
+            <a href="asyncio.html">asyncio — Asynchronous I&#x2f;O</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle asyncio — Asynchronous I&#x2f;O"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="asyncio-runner.html">Runners</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-task.html">Coroutines and Tasks</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-stream.html">Streams</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-sync.html">Synchronization Primitives</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-subprocess.html">Subprocesses</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-queue.html">Queues</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-exceptions.html">Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l4 current has-children">
+            <a href="asyncio-graph.html">Call Graph Introspection</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Call Graph Introspection"></span></summary>
+              <ul>
+                
+          <li class="toctree-l5">
+            <a href="asyncio-graph.html#low-level-utility-functions">Low level utility functions</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-eventloop.html">Event Loop</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-future.html">Futures</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-protocol.html">Transports and Protocols</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-policy.html">Policies</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-platforms.html">Platform Support</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-extending.html">Extending</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-api-index.html">High-level API Index</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-llapi-index.html">Low-level API Index</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-dev.html">Developing with asyncio</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="socket.html">socket — Low-level networking interface</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ssl.html">ssl — TLS&#x2f;SSL wrapper for socket objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="select.html">select — Waiting for I&#x2f;O completion</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="selectors.html">selectors — High-level I&#x2f;O multiplexing</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="signal.html">signal — Set handlers for asynchronous events</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mmap.html">mmap — Memory-mapped file support</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="asyncio-exceptions.html">&larr; Exceptions</a>
+        <a class="next" href="asyncio-eventloop.html">Event Loop &rarr;</a>
+      </nav>
+      
+      <a id="asyncio-graph"></a>
+<h1 id="call-graph-introspection">Call Graph Introspection</h1>
+<p><strong>Source code:</strong> :source:`Lib/asyncio/graph.py`</p>
+<hr />
+<p>asyncio has powerful runtime call graph introspection utilities
+to trace the entire call graph of a running <em>coroutine</em> or <em>task</em>, or
+a suspended <em>future</em>.  These utilities and the underlying machinery
+can be used from within a Python program or by external profilers
+and debuggers.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+<dl class="py function">
+  <dt id="py:function:asyncio.print_call_graph"><code class="sig-name">print_call_graph(future=None, /, *, file=None, depth=1, limit=None)</code></dt>
+  <dd><p>Print the async call graph for the current task or the provided
+<a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">Task</code></a> or <a class="reference internal" href="asyncio-future.html#py:class:asyncio.future"><code class="xref py class docutils literal">Future</code></a>.</p>
+<p>This function prints entries starting from the top frame and going
+down towards the invocation point.</p>
+<p>The function receives an optional <em>future</em> argument.
+If not passed, the current running task will be used.</p>
+<p>If the function is called on <em>the current task</em>, the optional
+keyword-only <em>depth</em> argument can be used to skip the specified
+number of frames from top of the stack.</p>
+<p>If the optional keyword-only <em>limit</em> argument is provided, each call stack
+in the resulting graph is truncated to include at most <code>abs(limit)</code>
+entries. If <em>limit</em> is positive, the entries left are the closest to
+the invocation point. If <em>limit</em> is negative, the topmost entries are
+left. If <em>limit</em> is omitted or <code>None</code>, all entries are present.
+If <em>limit</em> is <code>0</code>, the call stack is not printed at all, only
+"awaited by" information is printed.</p>
+<p>If <em>file</em> is omitted or <code>None</code>, the function will print
+to <a class="reference internal" href="sys.html#py:data:sys.stdout"><code class="xref py data docutils literal">sys.stdout</code></a>.</p>
+<p><strong>Example:</strong></p>
+<p>The following Python code:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async</span> <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">test</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">print_call_graph</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async</span> <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async </span><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">TaskGroup</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">g</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">g</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">create_task</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">test</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">name</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">test<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">run</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+</div>
+<p>will print:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Task</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">name</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">test<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">id</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0x</span>1039f0fe0</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Call</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">stack</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">|</span>   <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">t2.py<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">4</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">async</span></span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">test</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Awaited</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">by</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python">   <span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Task</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">name</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Task-1<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">id</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0x</span>103a5e060</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">      <span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Call</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">stack</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python">      <span class="hl-keyword hl-operator hl-arithmetic hl-python">|</span>   <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">taskgroups.py<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">107</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">async</span></span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">TaskGroup</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-magic hl-python">__aexit__</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">      <span class="hl-keyword hl-operator hl-arithmetic hl-python">|</span>   <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">t2.py<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">7</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">async</span></span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:asyncio.format_call_graph"><code class="sig-name">format_call_graph(future=None, /, *, depth=1, limit=None)</code></dt>
+  <dd><p>Like <a class="reference internal" href="asyncio-graph.html#py:function:asyncio.print_call_graph"><code class="xref py function docutils literal">print_call_graph</code></a>, but returns a string.
+If <em>future</em> is <code>None</code> and there's no current task,
+the function returns an empty string.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:asyncio.capture_call_graph"><code class="sig-name">capture_call_graph(future=None, /, *, depth=1, limit=None)</code></dt>
+  <dd><p>Capture the async call graph for the current task or the provided
+<a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">Task</code></a> or <a class="reference internal" href="asyncio-future.html#py:class:asyncio.future"><code class="xref py class docutils literal">Future</code></a>.</p>
+<p>The function receives an optional <em>future</em> argument.
+If not passed, the current running task will be used. If there's no
+current task, the function returns <code>None</code>.</p>
+<p>If the function is called on <em>the current task</em>, the optional
+keyword-only <em>depth</em> argument can be used to skip the specified
+number of frames from top of the stack.</p>
+<p>Returns a <code>FutureCallGraph</code> data class object:</p>
+<ul>
+<li><p><code>FutureCallGraph(future, call_stack, awaited_by)</code></p>
+<blockquote>
+<p>Where <em>future</em> is a reference to a <a class="reference internal" href="asyncio-future.html#py:class:asyncio.future"><code class="xref py class docutils literal">Future</code></a> or
+a <a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">Task</code></a> (or their subclasses.)</p>
+<p><code>call_stack</code> is a tuple of <code>FrameCallGraphEntry</code> objects.</p>
+<p><code>awaited_by</code> is a tuple of <code>FutureCallGraph</code> objects.</p>
+</blockquote>
+</li>
+<li><p><code>FrameCallGraphEntry(frame)</code></p>
+<blockquote>
+<p>Where <em>frame</em> is a frame object of a regular Python function
+in the call stack.</p>
+</blockquote>
+</li>
+</ul>
+</dd>
+</dl>
+<h2 id="low-level-utility-functions">Low level utility functions</h2>
+<p>To introspect an async call graph asyncio requires cooperation from
+control flow structures, such as <a href="#" class="broken-link"><code class="xref py function docutils literal">shield</code></a> or <a class="reference internal" href="asyncio-task.html#py:class:asyncio.taskgroup"><code class="xref py class docutils literal">TaskGroup</code></a>.
+Any time an intermediate <a class="reference internal" href="asyncio-future.html#py:class:asyncio.future"><code class="xref py class docutils literal">Future</code></a> object with low-level APIs like
+<a class="reference internal" href="asyncio-future.html#py:method:asyncio.future.add_done_callback"><code class="xref py method docutils literal">Future.add_done_callback()</code></a> is
+involved, the following two functions should be used to inform asyncio
+about how exactly such intermediate future objects are connected with
+the tasks they wrap or control.</p>
+<dl class="py function">
+  <dt id="py:function:asyncio.future_add_to_awaited_by"><code class="sig-name">future_add_to_awaited_by(future, waiter, /)</code></dt>
+  <dd><p>Record that <em>future</em> is awaited on by <em>waiter</em>.</p>
+<p>Both <em>future</em> and <em>waiter</em> must be instances of
+<a class="reference internal" href="asyncio-future.html#py:class:asyncio.future"><code class="xref py class docutils literal">Future</code></a> or <a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">Task</code></a> or their subclasses,
+otherwise the call would have no effect.</p>
+<p>A call to <code>future_add_to_awaited_by()</code> must be followed by an
+eventual call to the <a class="reference internal" href="asyncio-graph.html#py:function:asyncio.future_discard_from_awaited_by"><code class="xref py function docutils literal">future_discard_from_awaited_by</code></a> function
+with the same arguments.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:asyncio.future_discard_from_awaited_by"><code class="sig-name">future_discard_from_awaited_by(future, waiter, /)</code></dt>
+  <dd><p>Record that <em>future</em> is no longer awaited on by <em>waiter</em>.</p>
+<p>Both <em>future</em> and <em>waiter</em> must be instances of
+<a class="reference internal" href="asyncio-future.html#py:class:asyncio.future"><code class="xref py class docutils literal">Future</code></a> or <a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">Task</code></a> or their subclasses, otherwise
+the call would have no effect.</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="asyncio-exceptions.html">&larr; Exceptions</a>
+        <a class="next" href="asyncio-eventloop.html">Event Loop &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
