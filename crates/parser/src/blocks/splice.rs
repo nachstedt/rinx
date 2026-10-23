@@ -40,7 +40,7 @@ mod tests {
     use rinx_ast::{DiagnosticCode, Document, Domain, InlineNode, Node, Position};
 
     use crate::context::{ParseCtx, SplicedText};
-    use crate::{LoadedFile, ParseFileLoader, parse_with_ctx};
+    use crate::{DefaultRole, LoadedFile, ParseFileLoader, parse_prefix_with_ctx, parse_with_ctx};
 
     /// A loader resolving a path to itself.
     struct FakeFiles(HashMap<String, String>);
@@ -155,6 +155,52 @@ mod tests {
                 .iter()
                 .any(|part| matches!(part, InlineNode::Code { text, .. } if text == "f()")),
             "{inline:?}"
+        );
+    }
+
+    #[test]
+    fn test_a_prefix_parse_leaves_the_epilog_out() {
+        // Given
+        let ctx = ParseCtx::with_domain(Domain::Py).with_epilog(SplicedText {
+            name: "epilog.rst",
+            text: "Epilog.\n",
+        });
+
+        // When
+        let parsed = parse_prefix_with_ctx("guide.rst", "Document.\n", &ctx);
+
+        // Then
+        assert_eq!(
+            parsed.document.nodes,
+            [Node::Paragraph(vec![InlineNode::Text(
+                "Document.".to_string()
+            )])]
+        );
+    }
+
+    #[test]
+    fn test_a_prefix_parse_reports_the_roles_in_force_at_its_end() {
+        // Given — a role from the prolog, one from the text, and a default
+        let ctx = ParseCtx::with_domain(Domain::Py).with_prolog(SplicedText {
+            name: "prolog.rst",
+            text: ".. role:: python(code)\n",
+        });
+        let text = ".. role:: chem(sub)\n\n.. default-role:: math\n";
+
+        // When
+        let parsed = parse_prefix_with_ctx("guide.rst", text, &ctx);
+
+        // Then
+        let names: Vec<(&str, &str)> = parsed
+            .roles
+            .defined
+            .iter()
+            .map(|role| (role.name.as_str(), role.base))
+            .collect();
+        assert_eq!(names, [("chem", "sub"), ("python", "code")]);
+        assert_eq!(
+            parsed.roles.default_role,
+            Some(DefaultRole::parse("math", &ctx).unwrap())
         );
     }
 

@@ -28,4 +28,4 @@ mod transition;
 mod pipeline_tests;
 
 pub(crate) use dispatch::parse_blocks;
-pub use dispatch::{parse, parse_with_ctx, parse_with_domain};
+pub use dispatch::{PrefixParse, parse, parse_prefix_with_ctx, parse_with_ctx, parse_with_domain};

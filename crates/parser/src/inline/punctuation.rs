@@ -37,10 +37,14 @@ fn in_ranges(c: char, ranges: &[(char, char)]) -> bool {
 
 /// Whether `c` may sit directly before a markup start-string.
 ///
+/// Public, as `rinx_parser::can_precede_inline_markup`, for an editor
+/// deciding where a role being typed may start.
+///
 /// docutils' `start_string_prefix`. A backslash is deliberately in neither
 /// class, which is why `a \\*x*` renders a literal `\*x*` rather than emphasis:
 /// the surviving backslash cannot open markup.
-pub(super) fn can_precede_start_string(c: char) -> bool {
+#[must_use]
+pub fn can_precede_start_string(c: char) -> bool {
     c.is_whitespace() || in_ranges(c, OPENERS) || in_ranges(c, DELIMITERS)
 }
 

@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 
 use lsp_types::{CodeDescription, NumberOrString, Range, Uri};
 use rinx_ast::{Diagnostic, DiagnosticCode, Document, Span, retain_reportable, section_slug};
-use rinx_parser::{ParseCtx, RejectParseFiles, SplicedText};
+use rinx_parser::{ParseCtx, PrefixParse, RejectParseFiles, SplicedText};
 
 use crate::documents::DocumentStore;
 use crate::files::{FileReads, WorkspaceFiles};
@@ -89,37 +89,10 @@ pub fn parse_source(
     open: &DocumentStore,
 ) -> ParsedSource {
     let text = protocol_line_endings(text).into_owned();
-    let prolog = splice_text(settings.prolog.as_ref(), RST_PROLOG, open);
-    let epilog = splice_text(settings.epilog.as_ref(), RST_EPILOG, open);
-    let (document, mut reads) = if let Some(path) = file_path(uri) {
-        let files = WorkspaceFiles::for_document(&path, source_root, open)
-            .restricted_to(settings.parse_data.as_ref());
-        let name = doc_path.map_or_else(|| path.to_string_lossy(), Cow::Borrowed);
-        let ctx = configured(
-            ParseCtx::new(settings.domain, &files),
-            settings,
-            [&prolog, &epilog],
-        );
-        let document = rinx_parser::parse_with_ctx(&name, &text, &ctx);
-        (document, files.into_reads())
-    } else {
-        // An unsaved buffer has no directory to resolve a file against.
-        let ctx = configured(
-            ParseCtx::new(settings.domain, &RejectParseFiles),
-            settings,
-            [&prolog, &epilog],
-        );
-        (
-            rinx_parser::parse_with_ctx(uri.as_str(), &text, &ctx),
-            FileReads::default(),
-        )
-    };
-    for splice in [&prolog, &epilog].into_iter().flatten() {
-        if let Some(file) = &splice.file {
-            reads.paths.insert(file.clone());
-            reads.texts.insert(file.clone(), splice.text.clone());
-        }
-    }
+    let (document, reads) =
+        parse_configured(uri, doc_path, source_root, settings, open, |name, ctx| {
+            rinx_parser::parse_with_ctx(name, &text, ctx)
+        });
     let undeclared = settings
         .declarations
         .as_ref()
@@ -131,6 +104,77 @@ pub fn parse_source(
         reads,
         text,
     }
+}
+
+/// Parses `text` as the beginning of the document at `uri`, as
+/// [`parse_source`] parses the whole of it but without the epilog, and
+/// reports the roles in force at its end — what completion asks of the text
+/// above the cursor.
+#[must_use]
+pub fn parse_prefix(
+    uri: &Uri,
+    doc_path: Option<&str>,
+    source_root: Option<&Path>,
+    text: &str,
+    settings: &ParseSettings,
+    open: &DocumentStore,
+) -> PrefixParse {
+    let text = protocol_line_endings(text).into_owned();
+    parse_configured(uri, doc_path, source_root, settings, open, |name, ctx| {
+        rinx_parser::parse_prefix_with_ctx(name, &text, ctx)
+    })
+    .0
+}
+
+/// `text` up to the end of its line `line` (0-based): what a probe of the
+/// cursor's line parses, the whole text when it has fewer lines.
+#[must_use]
+pub fn text_through_line(text: &str, line: usize) -> &str {
+    text.match_indices('\n')
+        .nth(line)
+        .map_or(text, |(end, _)| &text[..=end])
+}
+
+/// What `parse` returns under the context the document at `uri` is parsed
+/// in — its project's settings, its files through the overlay, its prolog
+/// and epilog — together with every file the parse read.
+fn parse_configured<T>(
+    uri: &Uri,
+    doc_path: Option<&str>,
+    source_root: Option<&Path>,
+    settings: &ParseSettings,
+    open: &DocumentStore,
+    parse: impl FnOnce(&str, &ParseCtx<'_>) -> T,
+) -> (T, FileReads) {
+    let prolog = splice_text(settings.prolog.as_ref(), RST_PROLOG, open);
+    let epilog = splice_text(settings.epilog.as_ref(), RST_EPILOG, open);
+    let (parsed, mut reads) = if let Some(path) = file_path(uri) {
+        let files = WorkspaceFiles::for_document(&path, source_root, open)
+            .restricted_to(settings.parse_data.as_ref());
+        let name = doc_path.map_or_else(|| path.to_string_lossy(), Cow::Borrowed);
+        let ctx = configured(
+            ParseCtx::new(settings.domain, &files),
+            settings,
+            [&prolog, &epilog],
+        );
+        let parsed = parse(&name, &ctx);
+        (parsed, files.into_reads())
+    } else {
+        // An unsaved buffer has no directory to resolve a file against.
+        let ctx = configured(
+            ParseCtx::new(settings.domain, &RejectParseFiles),
+            settings,
+            [&prolog, &epilog],
+        );
+        (parse(uri.as_str(), &ctx), FileReads::default())
+    };
+    for splice in [&prolog, &epilog].into_iter().flatten() {
+        if let Some(file) = &splice.file {
+            reads.paths.insert(file.clone());
+            reads.texts.insert(file.clone(), splice.text.clone());
+        }
+    }
+    (parsed, reads)
 }
 
 /// What a span in a project's `rst_prolog` names as its file: Sphinx's own
@@ -1593,5 +1637,38 @@ mod tests {
         )
         .remove(&index)
         .unwrap_or_default()
+    }
+
+    #[test]
+    fn test_text_through_line_ends_after_that_line() {
+        // When / Then
+        assert_eq!(text_through_line("a\nb\nc\n", 1), "a\nb\n");
+        assert_eq!(text_through_line("a\nb", 1), "a\nb");
+        assert_eq!(text_through_line("a\n", 4), "a\n");
+    }
+
+    #[test]
+    fn test_parse_prefix_reports_the_roles_the_text_defined() {
+        // Given
+        let text = ".. role:: python(code)\n\nCall :\n";
+
+        // When
+        let parsed = parse_prefix(
+            &uri("untitled:notes"),
+            None,
+            None,
+            text,
+            &ParseSettings::default(),
+            &DocumentStore::default(),
+        );
+
+        // Then
+        let names: Vec<&str> = parsed
+            .roles
+            .defined
+            .iter()
+            .map(|role| role.name.as_str())
+            .collect();
+        assert_eq!(names, ["python"]);
     }
 }

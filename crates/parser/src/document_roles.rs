@@ -78,6 +78,62 @@ impl DocumentRoles {
     pub(crate) fn default_role(&self) -> Option<DefaultRole> {
         self.default.borrow().clone()
     }
+
+    /// What the table holds by now, as a caller outside the parse may read
+    /// it.
+    pub(crate) fn in_force(&self) -> RolesInForce {
+        RolesInForce {
+            defined: self
+                .roles
+                .borrow()
+                .iter()
+                .map(|(name, role)| DefinedRole {
+                    name: name.clone(),
+                    base: role.base_name(),
+                })
+                .collect(),
+            default_role: self.default_role(),
+        }
+    }
+}
+
+impl CustomRole {
+    /// The name of the role this one derives from, as `.. role::` names it.
+    const fn base_name(&self) -> &'static str {
+        match self {
+            Self::Code(_) => "code",
+            Self::Script {
+                position: ScriptPosition::Subscript,
+                ..
+            } => "sub",
+            Self::Script {
+                position: ScriptPosition::Superscript,
+                ..
+            } => "sup",
+        }
+    }
+}
+
+/// The roles a document has defined by some point of it, and the default
+/// role a `.. default-role::` has chosen by then — what an editor completing
+/// a role there may offer.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct RolesInForce {
+    /// Every role a `.. role::` has defined, by its lowercased name, in name
+    /// order.
+    pub defined: Vec<DefinedRole>,
+    /// The default role a `.. default-role::` chose, or `None` while the
+    /// library's own default applies.
+    pub default_role: Option<DefaultRole>,
+}
+
+/// A role a document defined with `.. role::`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DefinedRole {
+    /// Its name, lowercased as docutils normalizes it.
+    pub name: String,
+    /// The role it derives from: `code`, `sub` or `sup`.
+    pub base: &'static str,
 }
 
 #[cfg(test)]
@@ -103,6 +159,52 @@ mod tests {
             position: ScriptPosition::Subscript,
             classes: vec!["chem".to_string()],
         }
+    }
+
+    #[test]
+    fn test_in_force_lists_each_defined_role_with_its_base() {
+        // Given
+        let roles = DocumentRoles::default();
+        roles.define("Py", python());
+        roles.define("chem", chem());
+        roles.set_default(DefaultRole::TITLE_REFERENCE);
+
+        // When
+        let in_force = roles.in_force();
+
+        // Then
+        assert_eq!(
+            in_force.defined,
+            [
+                DefinedRole {
+                    name: "chem".to_string(),
+                    base: "sub",
+                },
+                DefinedRole {
+                    name: "py".to_string(),
+                    base: "code",
+                },
+            ]
+        );
+        assert_eq!(in_force.default_role, Some(DefaultRole::TITLE_REFERENCE));
+    }
+
+    #[test]
+    fn test_in_force_of_an_empty_table_holds_nothing() {
+        // Given / When / Then
+        assert_eq!(DocumentRoles::default().in_force(), RolesInForce::default());
+    }
+
+    #[test]
+    fn test_base_name_of_a_superscript_role_is_sup() {
+        // Given
+        let role = CustomRole::Script {
+            position: ScriptPosition::Superscript,
+            classes: Vec::new(),
+        };
+
+        // When / Then
+        assert_eq!(role.base_name(), "sup");
     }
 
     #[test]

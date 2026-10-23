@@ -5,7 +5,7 @@
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::try_parse_directive;
-use crate::document_roles::DocumentRoles;
+use crate::document_roles::{DocumentRoles, RolesInForce};
 use crate::headings::{Adornment, detect_adornment, try_parse_heading};
 use crate::inline::{SourceMap, parse_inline_text_mapped};
 use rinx_ast::{
@@ -69,6 +69,39 @@ pub fn parse_with_domain(path: &str, input: &str, default_domain: Domain) -> Doc
 /// to be non-empty by preceding checks.
 #[must_use]
 pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
+    parse_document(path, input, ctx, Epilog::Appended).document
+}
+
+/// A document's beginning, parsed: the document [`parse_prefix_with_ctx`]
+/// read, and the roles in force where the text ends.
+#[derive(Debug)]
+pub struct PrefixParse {
+    pub document: Document,
+    pub roles: RolesInForce,
+}
+
+/// Parses `input` as the beginning of a document, up to some point of it, as
+/// [`parse_with_ctx`] parses a whole one — but without the epilog, which
+/// follows the document's end — and reports the roles `.. role::` and
+/// `.. default-role::` have put in force by its end.
+///
+/// What an editor asks at the cursor: those directives apply from where they
+/// are written onwards, so the roles of the text above the cursor are the
+/// ones in force there.
+#[must_use]
+pub fn parse_prefix_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> PrefixParse {
+    parse_document(path, input, ctx, Epilog::Left)
+}
+
+/// Whether a parse appends the epilog to the document's lines.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Epilog {
+    Appended,
+    Left,
+}
+
+/// The parse both entry points share.
+fn parse_document(path: &str, input: &str, ctx: &ParseCtx<'_>, epilog: Epilog) -> PrefixParse {
     let mut diagnostics = Diagnostics::default();
     // The Jinja pass runs before anything reads a line, because it decides
     // what the lines *are*. Its map is what every position below it is
@@ -106,12 +139,14 @@ pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
         &mut diagnostics,
         ctx,
     ));
-    nodes.extend(parse_spliced(
-        ctx.epilog(),
-        &mut adornment_order,
-        &mut diagnostics,
-        ctx,
-    ));
+    if epilog == Epilog::Appended {
+        nodes.extend(parse_spliced(
+            ctx.epilog(),
+            &mut adornment_order,
+            &mut diagnostics,
+            ctx,
+        ));
+    }
 
     let mut index_id_counter = 0;
     super::index_ids::assign_index_ids(&mut nodes, &mut index_id_counter);
@@ -135,7 +170,10 @@ pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
     doc.suppressions = suppressions;
     doc.metadata = metadata;
     doc.source_files = source_files;
-    doc
+    PrefixParse {
+        document: doc,
+        roles: document_roles.in_force(),
+    }
 }
 pub(crate) fn parse_blocks(
     lines: &[&str],
