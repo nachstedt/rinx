@@ -7,10 +7,20 @@
 //! validation action, and where it is served from is computed while
 //! rendering. This handler only reads the markup.
 
-use rinx_ast::{AssetUri, InlineNode};
+use rinx_ast::{AssetUri, Domain, InlineNode};
 
 use crate::explicit_title::split_optional_title;
 use crate::inline::regexes::DOWNLOAD_ROLE_REGEX;
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
+
+/// `:download:`, also spelled `:std:download:`. No `:external:` prefix: it
+/// names a file this site serves, which no inventory lists.
+pub(crate) const SPEC: RoleSpec = RoleSpec {
+    names: &["download"],
+    domains: &[Domain::Std],
+    external: ExternalPrefix::Unread,
+    doc: "Link a file of the project for download.",
+};
 
 /// Builds the `InlineNode` for a matched `:download:` (or `:std:download:`)
 /// role.

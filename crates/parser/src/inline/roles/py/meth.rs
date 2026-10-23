@@ -1,8 +1,17 @@
 use rinx_ast::{Domain, InlineNode, ObjectType};
 
 use crate::inline::regexes::METH_ROLE_REGEX;
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
 
 use super::super::target::parse_domain_object_target;
+
+/// The role this module reads, as the role table lists it.
+pub(crate) const SPEC: RoleSpec = RoleSpec {
+    names: &["meth"],
+    domains: &[Domain::Py],
+    external: ExternalPrefix::Accepted,
+    doc: "Reference a method of a Python class.",
+};
 
 /// Builds the `InlineNode` for a matched `:meth:`/`:py:meth:` role, falling
 /// back to plain text if the role doesn't resolve for the given domain

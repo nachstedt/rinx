@@ -44,6 +44,8 @@ mod script_pipeline_tests;
 
 pub(crate) use interpreted::find_role_kind;
 pub(crate) use link_destination::read_target_destination;
+pub use regexes::role_specs;
 pub(crate) use regexes::{is_fixed_role_name, is_writable_role_name};
+pub use roles::spec::{ExternalPrefix, RoleSpec};
 pub(super) use source_map::SourceMap;
 pub(super) use text::parse_inline_text_mapped;

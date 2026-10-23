@@ -14,6 +14,23 @@
 use rinx_ast::InlineNode;
 
 use crate::inline::regexes::{EQ_ROLE_REGEX, MATH_ROLE_REGEX};
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
+
+/// `:math:`, as the role table lists it.
+pub(crate) const MATH_SPEC: RoleSpec = RoleSpec {
+    names: &["math"],
+    domains: &[],
+    external: ExternalPrefix::Unread,
+    doc: "Show inline LaTeX math.",
+};
+
+/// `:eq:`, as the role table lists it.
+pub(crate) const EQ_SPEC: RoleSpec = RoleSpec {
+    names: &["eq"],
+    domains: &[],
+    external: ExternalPrefix::Unread,
+    doc: "Reference a labelled equation by its number.",
+};
 
 /// Builds the `InlineNode` for a matched `:math:` role.
 ///

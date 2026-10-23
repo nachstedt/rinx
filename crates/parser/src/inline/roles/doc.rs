@@ -1,15 +1,24 @@
 //! The `:doc:` role, which links a whole document by its name.
 //!
-//! Flat under `roles/` for the reason `any.rs` is: it belongs to the `std`
-//! domain alone, which has no role family of its own here beyond `:option:`,
-//! and it takes no `default_domain`. Whether the document exists — and what
+//! Flat under `roles/` rather than in `std_/`, since it names a document
+//! rather than an object, and it takes no `default_domain`. Whether the document exists — and what
 //! its title is — is decided while rendering, against the merged project
 //! index; this handler only reads the markup.
 
-use rinx_ast::{InlineNode, InventorySelector};
+use rinx_ast::{Domain, InlineNode, InventorySelector};
 
 use crate::explicit_title::split_optional_title;
 use crate::inline::regexes::DOC_ROLE_REGEX;
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
+
+/// `:doc:`, also spelled `:std:doc:` — the only `std` role here Sphinx
+/// documents with its domain written out as often as without.
+pub(crate) const SPEC: RoleSpec = RoleSpec {
+    names: &["doc"],
+    domains: &[Domain::Std],
+    external: ExternalPrefix::Accepted,
+    doc: "Link a document by its name.",
+};
 
 /// Builds the `InlineNode` for a matched `:doc:` (or `:std:doc:`) role.
 ///

@@ -12,13 +12,10 @@ use rinx_ast::{
 
 use crate::context::ParseCtx;
 
-use crate::explicit_title::{split_display_and_target, split_optional_title};
-
 use super::escapes::unescape;
 use super::link_destination::read_link_destination;
 use super::regexes::{
     ANONYMOUS_PHRASED_REGEX, EMBEDDED_URI_REGEX, EXTERNAL_PREFIX_REGEX, PHRASED_LINK_REGEX,
-    PROGRAM_ROLE_REGEX, REF_REGEX, TERM_ROLE_REGEX,
 };
 use super::roles::any::handle_any_match;
 use super::roles::c::macro_::handle_macro_match;
@@ -35,7 +32,7 @@ use super::roles::numref::handle_numref_match;
 use super::roles::pep_reference::handle_pep_reference_match;
 use super::roles::py::attr::handle_attr_match;
 use super::roles::py::class::handle_class_match;
-use super::roles::py::data::handle_data_match;
+use super::roles::py::data::{handle_data_match, handle_member_match};
 use super::roles::py::exc::handle_exc_match;
 use super::roles::py::func::handle_func_match;
 use super::roles::py::meth::handle_meth_match;
@@ -44,6 +41,9 @@ use super::roles::registry::handle_registry_match;
 use super::roles::rfc_reference::handle_rfc_reference_match;
 use super::roles::script::handle_script_match;
 use super::roles::std_::option::handle_option_match;
+use super::roles::std_::program::handle_program_match;
+use super::roles::std_::ref_::handle_ref_match;
+use super::roles::std_::term::handle_term_match;
 use super::roles::title_reference::handle_title_reference_match;
 
 pub(super) fn handle_inline_match(
@@ -176,16 +176,7 @@ fn build_inline_node(
             .or_else(|| handle_custom_role_match(m_str, ctx.document_roles()))
             .unwrap_or_else(|| InlineNode::Text(m_str.to_string())),
         "inline" => node_opt.expect("inline node should be present"),
-        "ref" => {
-            let caps = REF_REGEX.captures(m_str).unwrap();
-            let (display, target) = split_optional_title(&caps["target"]);
-            InlineNode::Reference {
-                display,
-                target,
-                span: None,
-                inventory: InventorySelector::Any,
-            }
-        }
+        "ref" => handle_ref_match(m_str),
         "any" => handle_any_match(m_str),
         "doc" => handle_doc_match(m_str),
         "download" => handle_download_match(m_str),
@@ -194,13 +185,11 @@ fn build_inline_node(
         "pep-reference" => handle_pep_reference_match(m_str),
         "rfc-reference" => handle_rfc_reference_match(m_str),
         "index" => handle_index_match(m_str),
-        "program" => {
-            let caps = PROGRAM_ROLE_REGEX.captures(m_str).unwrap();
-            InlineNode::Program(caps["name"].to_string())
-        }
+        "program" => handle_program_match(m_str),
         "func" => handle_func_match(m_str, default_domain),
         "mod" => handle_mod_match(m_str, default_domain),
         "data" => handle_data_match(m_str, default_domain),
+        "member" => handle_member_match(m_str, default_domain),
         "meth" => handle_meth_match(m_str, default_domain),
         "class" => handle_class_match(m_str, default_domain),
         "attr" => handle_attr_match(m_str, default_domain),
@@ -209,16 +198,7 @@ fn build_inline_node(
         "struct" => handle_struct_match(m_str, default_domain),
         "union" => handle_union_match(m_str, default_domain),
         "type" => handle_type_match(m_str, default_domain),
-        "term" => {
-            let caps = TERM_ROLE_REGEX.captures(m_str).unwrap();
-            let (display, term) = split_display_and_target(&caps["content"]);
-            InlineNode::TermReference {
-                display,
-                term,
-                span: None,
-                inventory: InventorySelector::Any,
-            }
-        }
+        "term" => handle_term_match(m_str),
         "option" => handle_option_match(m_str),
         "math" => handle_math_match(m_str),
         "code" => handle_code_match(m_str),

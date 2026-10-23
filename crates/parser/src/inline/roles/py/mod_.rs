@@ -1,8 +1,17 @@
 use rinx_ast::{Domain, InlineNode, ObjectType};
 
 use crate::inline::regexes::MOD_ROLE_REGEX;
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
 
 use super::super::target::parse_domain_object_target;
+
+/// The role this module reads, as the role table lists it.
+pub(crate) const SPEC: RoleSpec = RoleSpec {
+    names: &["mod"],
+    domains: &[Domain::Py],
+    external: ExternalPrefix::Accepted,
+    doc: "Reference a Python module.",
+};
 
 /// Builds the `InlineNode` for a matched `:mod:`/`:py:mod:` role, falling
 /// back to plain text if the role doesn't resolve for the given domain

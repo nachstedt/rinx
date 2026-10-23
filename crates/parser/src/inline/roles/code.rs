@@ -11,6 +11,17 @@
 use rinx_ast::{InlineNode, ResolvedLanguage};
 
 use crate::inline::regexes::CODE_ROLE_REGEX;
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
+
+/// `:code:`. No `:external:` prefix and no domain: it is markup, not a
+/// reference. A role *derived* from it by `.. role::` has a name only the
+/// document knows, so it has no spec.
+pub(crate) const SPEC: RoleSpec = RoleSpec {
+    names: &["code"],
+    domains: &[],
+    external: ExternalPrefix::Unread,
+    doc: "Show inline code.",
+};
 
 /// Builds the `InlineNode` for a matched `:code:` role: unhighlighted, with
 /// no classes of its own.

@@ -7,11 +7,21 @@
 //! handler reads the markup and the explicit title's format, which is the one
 //! part of the role that can be wrong on its own.
 
-use rinx_ast::{InlineNode, NumberFormat, NumberReferenceRefusal, RoleRefusal};
+use rinx_ast::{Domain, InlineNode, NumberFormat, NumberReferenceRefusal, RoleRefusal};
 
 use crate::explicit_title::split_optional_title;
 use crate::inline::escapes::unescape;
 use crate::inline::regexes::NUMREF_ROLE_REGEX;
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
+
+/// `:numref:`, also spelled `:std:numref:`. It reads an `:external:`
+/// prefix only to refuse it by name: an inventory holds no numbers.
+pub(crate) const SPEC: RoleSpec = RoleSpec {
+    names: &["numref"],
+    domains: &[Domain::Std],
+    external: ExternalPrefix::Refused,
+    doc: "Reference a figure, table, code block or section by its number.",
+};
 
 /// Builds the `InlineNode` for a matched `:numref:` (or `:std:numref:`) role.
 ///

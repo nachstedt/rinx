@@ -2,6 +2,15 @@ use rinx_ast::InlineNode;
 
 use crate::explicit_title::split_display_and_target;
 use crate::inline::regexes::OPTION_ROLE_REGEX;
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
+
+/// The role this module reads, as the role table lists it.
+pub(crate) const SPEC: RoleSpec = RoleSpec {
+    names: &["option"],
+    domains: &[],
+    external: ExternalPrefix::Accepted,
+    doc: "Reference a command-line option of a program.",
+};
 
 /// Builds the `InlineNode` for a matched `:option:` role. Unlike the
 /// `py`/`c` domain-object roles, `:option:` does no per-domain resolution —

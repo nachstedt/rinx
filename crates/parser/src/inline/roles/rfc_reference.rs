@@ -11,6 +11,16 @@ use rinx_ast::{DocutilsRfcNumber, InlineNode, RoleRefusal};
 
 use crate::inline::escapes::unescape;
 use crate::inline::regexes::RFC_REFERENCE_ROLE_REGEX;
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
+
+/// docutils' `:rfc-reference:`, `:rfc:`'s plain sibling, for the same reason
+/// without a prefix or a domain.
+pub(crate) const SPEC: RoleSpec = RoleSpec {
+    names: &["rfc-reference"],
+    domains: &[],
+    external: ExternalPrefix::Unread,
+    doc: "Link an RFC by its number, without indexing it.",
+};
 
 /// Builds the `InlineNode` for a matched `:rfc-reference:` role.
 ///
