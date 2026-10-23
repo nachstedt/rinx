@@ -75,9 +75,9 @@ pub(crate) fn parse_doctest_directive(
     let argument = invocation.argument(0);
     let body_lines = invocation.source_body;
     let options = scan_options(kind, &invocation.options, diagnostics, &invocation.ctx);
-    // The directive's body as a whole, for the diagnostics that are about the
-    // block rather than about one option line.
-    let block_span = invocation.body_span();
+    // The directive's line, for the diagnostics that are about the block
+    // rather than about one option line.
+    let block_span = invocation.span;
     let content = invocation.content();
     let content_lines: Vec<&str> = content.lines.iter().map(String::as_str).collect();
     let content_text = strip_common_indent(&content_lines);
@@ -363,6 +363,30 @@ pub(super) mod tests {
             diagnostics[0].message.contains("testcleanup"),
             "{}",
             diagnostics[0].message
+        );
+    }
+
+    #[test]
+    fn test_a_block_without_code_is_reported_on_the_marker_line() {
+        // Given — an option and nothing else, then the next paragraph
+        let input = "Intro.\n\n.. testcode::\n   :hide:\n\nAfter.\n";
+
+        // When / Then — not on the option line
+        assert_eq!(
+            crate::diagnostics::lines_reported(input, DiagnosticCode::DoctestNoCode),
+            [3]
+        );
+    }
+
+    #[test]
+    fn test_an_empty_group_is_reported_on_the_marker_line() {
+        // Given
+        let input = "Intro.\n\n.. testcode:: a,,b\n\n   x = 1\n";
+
+        // When / Then — the argument is written there, not on the blank line
+        assert_eq!(
+            crate::diagnostics::lines_reported(input, DiagnosticCode::DoctestEmptyGroup),
+            [3]
         );
     }
 }

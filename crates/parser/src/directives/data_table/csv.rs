@@ -143,11 +143,11 @@ pub(in crate::directives) fn parse_csv_table(
             .collect::<Vec<&str>>(),
     );
 
-    // Every diagnostic about the table's *data* points at the directive body
-    // as a whole: the data may come from a `:file:`, and even inline data has
+    // Every diagnostic about the table's *data* points at its first line, or
+    // the marker when the data comes from a `:file:`: even inline data has
     // been through a CSV reader by the time a row is found wanting, so no
     // finer source position survives.
-    let table_span = invocation.body_span();
+    let table_span = invocation.content_span();
 
     let Some(data) = resolve_csv_data(&inline_data, &source, ctx, diagnostics, table_span) else {
         return malformed_csv_table(argument, body_lines);
@@ -1140,6 +1140,18 @@ mod tests {
                 body: "Apple, Red".to_string(),
                 message: "csv-table: this data could not be read as a table".to_string(),
             }
+        );
+    }
+
+    #[test]
+    fn test_a_data_finding_is_reported_on_the_first_content_line() {
+        // Given — more header rows asked for than the data has
+        let input = "Intro.\n\n.. csv-table::\n   :header-rows: 5\n\n   a,b\n";
+
+        // When / Then — the data's first line, never the option line
+        assert_eq!(
+            crate::diagnostics::lines_reported(input, DiagnosticCode::CsvHeaderRowsExceed),
+            [6]
         );
     }
 }

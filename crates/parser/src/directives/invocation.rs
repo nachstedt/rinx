@@ -46,9 +46,6 @@ pub(in crate::directives) struct DirectiveInvocation<'a, 'c> {
     pub(in crate::directives) ctx: ParseCtx<'c>,
     /// The index of the content's first line within [`Self::lines`].
     pub(in crate::directives) content_start: usize,
-    /// The index of the line a node standing for the whole body is positioned
-    /// on: the body's first line, or the blank line directly above it.
-    pub(in crate::directives) body_line: usize,
     /// Whether section titles are allowed where the directive stands.
     pub(in crate::directives) enclosing_titles: SectionTitles,
     /// The body as written below the marker, for a node that quotes its
@@ -57,11 +54,17 @@ pub(in crate::directives) struct DirectiveInvocation<'a, 'c> {
 }
 
 impl<'c> DirectiveInvocation<'_, 'c> {
-    /// The span of [`Self::body_line`], for a node or a diagnostic about the
-    /// directive's body as a whole.
-    pub(in crate::directives) fn body_span(&self) -> Option<Span> {
-        let text = self.lines.get(self.body_line).map_or("", String::as_str);
-        self.ctx.line_span(self.body_line, text)
+    /// The span of the content's first line, or of the marker when there is
+    /// no content: for a node standing for the content, or a finding inside it
+    /// that no longer knows its own line, such as a list table's row.
+    ///
+    /// A verdict about the directive as a whole is reported on
+    /// [`Self::span`] instead, as docutils reports one on the directive's line.
+    pub(in crate::directives) fn content_span(&self) -> Option<Span> {
+        match self.lines.get(self.content_start) {
+            Some(text) => self.ctx.line_span(self.content_start, text),
+            None => self.span,
+        }
     }
 
     /// The argument at `index`, or the empty string when it was not written.

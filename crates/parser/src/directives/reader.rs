@@ -78,7 +78,6 @@ pub(in crate::directives) fn read_directive_block<'a, 'c>(
         lines,
         ctx: block_ctx,
         content_start: split.content_start,
-        body_line: body.first_line_offset.max(1),
         option_lines: split.option_lines,
         enclosing_titles: ctx.section_titles(),
         source_body,
@@ -321,9 +320,10 @@ pub(in crate::directives) fn test_invocation<'a, 'c>(
         lines: body_lines[first..last].to_vec(),
         first_line_offset: first,
     };
+    let marker_text = format!(".. {name}:: {argument}");
     let marker = MarkerLine {
         index: 0,
-        span: None,
+        span: ctx.line_span(0, marker_text.trim_end()),
         argument: super::body::MarkerText {
             text: argument.trim(),
             column: 0,
@@ -616,5 +616,52 @@ mod tests {
         assert_eq!(written_after_blank(&["   text"]), ["", "   text"]);
         assert_eq!(written_after_blank(&["   :opt:"]), ["   :opt:"]);
         assert_eq!(written_after_blank(&["", "   text"]), ["", "   text"]);
+    }
+
+    /// The line [`DirectiveInvocation::content_span`] names for `.. x::
+    /// argument` on line 1 over `body`, read under `spec`.
+    fn content_line(spec: DirectiveSpec<'static>, argument: &str, body: &[&str]) -> Option<u32> {
+        let mut diagnostics = Diagnostics::default();
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let invocation = test_invocation("x", &spec, argument, body, &mut diagnostics, &ctx);
+        invocation.content_span().map(|span| span.start.line)
+    }
+
+    #[test]
+    fn test_content_span_skips_the_blank_line_above_the_content() {
+        // Given / When / Then — content on line 3
+        assert_eq!(content_line(NO_ARGUMENT, "", &["", "   Content."]), Some(3));
+    }
+
+    #[test]
+    fn test_content_span_skips_the_options_above_the_content() {
+        // Given / When / Then — options on 2 and 3, content on 5
+        assert_eq!(
+            content_line(
+                NO_ARGUMENT,
+                "",
+                &["   :class: wide", "   :name: n", "", "   Content."]
+            ),
+            Some(5)
+        );
+    }
+
+    #[test]
+    fn test_content_span_skips_an_argument_continued_below_the_marker() {
+        // Given / When / Then — the argument continues on 2, content on 4
+        assert_eq!(
+            content_line(TEXT_ARGUMENT, "a long", &["   title", "", "   Content."]),
+            Some(4)
+        );
+    }
+
+    #[test]
+    fn test_content_span_falls_back_to_the_marker_without_content() {
+        // Given / When / Then — options only, so the marker's line 1
+        assert_eq!(
+            content_line(TEXT_ARGUMENT, "a", &["   :class: wide"]),
+            Some(1)
+        );
+        assert_eq!(content_line(TEXT_ARGUMENT, "a", &[]), Some(1));
     }
 }

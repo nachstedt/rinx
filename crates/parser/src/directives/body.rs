@@ -14,7 +14,7 @@ use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
-use crate::indent::{indent_width, strip_indent};
+use crate::indent::indent_width;
 use rinx_ast::{Node, Span};
 
 /// Collects the indented body belonging to a directive/comment whose own
@@ -104,32 +104,6 @@ pub(crate) fn collect_directive_body<'a>(
         lines: body_lines[start..].to_vec(),
         first_line_offset: start,
     }
-}
-
-/// The span covering a directive body's first line — the anchor for a
-/// diagnostic about the body *as a whole* rather than about one line within
-/// it, which is what most content-bearing directives can offer once their
-/// content has been reassembled.
-///
-/// The body's own indent is deliberately not counted. `ParseCtx` has already
-/// been shifted by it (see `dispatch`'s `body_indent`), so the local column
-/// frame starts at the first content character; measuring the raw line would
-/// push the span's end past the line's real end by exactly the indent width.
-/// Only the end moves, and the terminal prints only the start — but the range
-/// is what a language server would highlight, so it has to be honest.
-pub(in crate::directives) fn body_span(body_lines: &[&str], ctx: &ParseCtx<'_>) -> Option<Span> {
-    let indent = body_lines
-        .iter()
-        .find(|line| !line.trim().is_empty())
-        .map_or(0, |line| indent_width(line));
-    let first = body_lines.first().map_or("", |line| {
-        if line.chars().count() >= indent {
-            strip_indent(line, indent)
-        } else {
-            line.trim()
-        }
-    });
-    ctx.line_span(0, first)
 }
 
 /// The indentation every directive-body parser strips before parsing, so a
@@ -403,51 +377,6 @@ mod tests {
         // Then — only the deeper-indented line is included
         assert_eq!(consumed, 2);
         assert_eq!(body, vec!["      Actual body."]);
-    }
-
-    #[test]
-    fn test_body_span_measures_the_line_without_its_indent() {
-        // Given a body indented by three, in a context already shifted by that
-        // indent — the shape every directive body parser is called with
-        let body_lines = vec!["   Apple, Red"];
-        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).nested(0, 3);
-
-        // When
-        let span = body_span(&body_lines, &ctx).expect("a placed context yields a span");
-
-        // Then the span covers columns 4..14 — the ten characters of
-        // "Apple, Red" itself. Measuring the raw line would count its three
-        // spaces too, putting the end three columns past the line's end.
-        assert_eq!(span.start.column, 4);
-        assert_eq!(span.end.column, 14);
-    }
-
-    #[test]
-    fn test_body_span_takes_the_indent_from_the_first_non_blank_line() {
-        // Given a body opening with a blank line
-        let body_lines = vec!["", "   a = b"];
-        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).nested(0, 3);
-
-        // When
-        let span = body_span(&body_lines, &ctx).expect("a placed context yields a span");
-
-        // Then the blank first line contributes no width, and the indent still
-        // came from the line below it
-        assert_eq!(span.start.column, 4);
-        assert_eq!(span.end.column, 4);
-    }
-
-    #[test]
-    fn test_body_span_handles_an_empty_body() {
-        // Given no body at all, as in a directive whose content is its argument
-        let body_lines: Vec<&str> = Vec::new();
-        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).nested(0, 0);
-
-        // When
-        let span = body_span(&body_lines, &ctx).expect("a placed context yields a span");
-
-        // Then it degenerates to a zero-width span rather than panicking
-        assert_eq!(span.start, span.end);
     }
 
     // --- marker text and directive content ---

@@ -104,7 +104,7 @@ pub(in crate::directives) fn parse_code_block(
         lineno_start: options.lineno_start,
         emphasize_lines,
         force: options.force,
-        span: invocation.body_span(),
+        span: invocation.content_span(),
     })
 }
 
@@ -199,5 +199,28 @@ mod tests {
         // Then
         assert_eq!(sphinx.source, CodeBlockSource::CodeBlock);
         assert_eq!(docutils.source, CodeBlockSource::Code);
+    }
+
+    #[test]
+    fn test_the_block_is_positioned_on_its_first_line_of_code() {
+        // Given — options, a blank line, then the code
+        let input = "Intro.\n\n.. code-block:: python\n   :linenos:\n\n   x = 1\n";
+
+        // When
+        let document = crate::parse("index.rst", input);
+
+        // Then — what a render-time finding about the code points at
+        let [
+            _,
+            rinx_ast::Node::Directive(rinx_ast::Directive::CodeBlock(block)),
+        ] = document.nodes.as_slice()
+        else {
+            panic!(
+                "expected a paragraph and a code block: {:?}",
+                document.nodes
+            );
+        };
+        let span = block.span.expect("a parsed document positions the block");
+        assert_eq!(span.start.line, 6);
     }
 }

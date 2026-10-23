@@ -124,6 +124,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Measure a source line against author-drawn markup in display columns, since the author drew it under what they saw, not under its encoded length.
 - Any code that dedents or re-slices lines before parsing them must rebase the position context by the same amount, so a helper that trims should return how much it trimmed rather than discarding it.
 - Report no position rather than a wrong one for content that corresponds to no source line.
+- Report a verdict about a construct as a whole on the line that introduces it (a directive's marker), and a finding inside its content that lost its own position on the content's first line — never on a blank or option line between them.
 - Author-facing suppression belongs in the document, spelled as a construct the reference implementation already ignores, so the file stays buildable by both tools.
 - Apply suppression at the reporting boundary, never where a problem is detected: the detecting phase must record everything, and only the reporting phase sees every phase's output.
 - A suppression must lift the consequence as well as the message — the strict-build failure and the machine-readable sidecar too — or it only hides the problem.
