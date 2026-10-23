@@ -16,10 +16,11 @@
 //! wraps an existing grid/simple table and needs these same five options
 //! without either of `data_table`'s own two extras.
 
+use super::option_value::{Classes, Located};
 use super::options::{OptionLine, directive_options};
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rinx_ast::{Diagnostic, DiagnosticCode, TableAlign, TargetName};
+use rinx_ast::{TableAlign, TableWidths, TargetName};
 
 /// The five presentation options every option-bearing table directive shares:
 /// `.. list-table::`, `.. csv-table::` and `.. table::` alike.
@@ -28,7 +29,7 @@ use rinx_ast::{Diagnostic, DiagnosticCode, TableAlign, TargetName};
 /// [`rinx_ast::TableWidths`]) because validating it needs the table's
 /// column count, which isn't known until the rows have been built.
 pub(in crate::directives) struct CommonTableOptions {
-    pub widths_raw: Option<String>,
+    pub widths: Option<Located<TableWidths>>,
     pub width: Option<String>,
     pub align: Option<TableAlign>,
     pub classes: Vec<String>,
@@ -38,7 +39,7 @@ pub(in crate::directives) struct CommonTableOptions {
 impl CommonTableOptions {
     pub(in crate::directives) fn empty() -> Self {
         Self {
-            widths_raw: None,
+            widths: None,
             width: None,
             align: None,
             classes: Vec::new(),
@@ -52,15 +53,15 @@ directive_options! {
     /// takes: docutils' `Table.option_spec`.
     pub(in crate::directives) enum TableOption {
         /// `:widths:`.
-        Widths => (["widths"], Text, "The columns' relative widths, or `auto` or `grid`."),
+        Widths(Located<TableWidths>) => (["widths"], TableDataWidthsInvalid, "The columns' relative widths, or `auto` or `grid`."),
         /// `:width:`.
         Width => (["width"], Length, "The table's width."),
         /// `:align:`.
-        Align => (["align"], Choice(|| TableAlign::ALL.iter().map(TableAlign::as_str).collect()), "Where the table sits."),
+        Align(TableAlign) => (["align"], TableDataAlignInvalid, "Where the table sits."),
         /// `:class:`.
-        Class => (["class"], Classes, "Classes for the table."),
+        Class(Classes) => (["class"], "Classes for the table."),
         /// `:name:`.
-        Name => (["name"], Text, "A label to reference the table by."),
+        Name(String) => (["name"], "A label to reference the table by."),
     }
 }
 
@@ -69,33 +70,22 @@ pub(in crate::directives) fn read_table_option(
     option: TableOption,
     line: &OptionLine,
     options: &mut CommonTableOptions,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
+    _directive: &str,
+    _diagnostics: &mut Diagnostics,
+    _ctx: &ParseCtx<'_>,
 ) {
     match option {
-        TableOption::Widths => options.widths_raw = Some(line.value.clone()),
+        TableOption::Widths(widths) => options.widths = Some(widths),
         TableOption::Width => options.width = Some(line.value.clone()),
-        TableOption::Align => match line.value.parse::<TableAlign>() {
-            Ok(parsed) => options.align = Some(parsed),
-            Err(()) => diagnostics.push(Diagnostic::at(
-                DiagnosticCode::TableDataAlignInvalid,
-                format!(
-                    "{directive}: invalid :align: value '{}', expected 'left', 'center', or 'right'",
-                    line.value
-                ),
-                ctx.line_span(line.line_index, &line.raw),
-            )),
-        },
-        TableOption::Class => {
-            options.classes = line.value.split_whitespace().map(str::to_string).collect();
-        }
-        TableOption::Name => options.name = Some(TargetName::new(&line.value)),
+        TableOption::Align(align) => options.align = Some(align),
+        TableOption::Class(classes) => options.classes = classes.0,
+        TableOption::Name(name) => options.name = Some(TargetName::new(&name)),
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::directives::options::{DirectiveOptions, OptionRead};
     /// The five presentation options read off `option_lines`, and the lines
     /// that are none of them.
     fn parse_common_table_options<'a>(
@@ -107,18 +97,19 @@ mod tests {
         let mut options = CommonTableOptions::empty();
         let mut unrecognized = Vec::new();
         for &line in option_lines {
-            match TableOption::from_name(&line.name) {
-                Some(option) => {
+            match TableOption::read(line, directive, diagnostics, ctx) {
+                OptionRead::Read(option) => {
                     read_table_option(option, line, &mut options, directive, diagnostics, ctx);
                 }
-                None => unrecognized.push(line),
+                OptionRead::Refused => {}
+                OptionRead::NotTaken => unrecognized.push(line),
             }
         }
         (options, unrecognized)
     }
 
     use super::*;
-    use crate::directives::options::DirectiveOptions;
+
     use crate::directives::options::scan_option_lines;
     use rinx_ast::Domain;
 
@@ -153,7 +144,10 @@ mod tests {
         // Then
         assert!(diagnostics.is_empty());
         assert!(unrecognized.is_empty());
-        assert_eq!(options.widths_raw.as_deref(), Some("30 70"));
+        assert_eq!(
+            options.widths.map(|widths| widths.value),
+            Some(TableWidths::Explicit(vec![30, 70]))
+        );
         assert_eq!(options.width.as_deref(), Some("50%"));
         assert_eq!(options.align, Some(TableAlign::Right));
         assert_eq!(options.classes, vec!["foo".to_string(), "bar".to_string()]);
@@ -204,7 +198,7 @@ mod tests {
         assert!(
             diagnostics[0]
                 .message
-                .starts_with("csv-table: invalid :align:"),
+                .starts_with("csv-table: :align: expects one of"),
             "{}",
             diagnostics[0].message
         );

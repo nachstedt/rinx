@@ -17,6 +17,8 @@
 //! `:align:` is a page with a hole in it.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
+use crate::directives::option_value::{Classes, NonEmptyText, OptionValueType, Percentage};
+use crate::directives::spec::OptionValue;
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, EntityFlow, EntityFlowSource, FlowDirection, ImageAlign,
@@ -28,10 +30,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
 use super::filter_option::{FilterCodes, ShorthandFilterOption, read_filter_option};
-use super::options::{
-    DirectiveOptions, OptionLine, choice_names, classify_options, directive_options,
-    parse_percentage,
-};
+use super::options::{DirectiveOptions, OptionLine, classify_options, directive_options};
 
 /// The advice for the options choosing the entities from a root.
 const SELECT_WITH_FILTER: &str = "select the entities to draw with :filter:";
@@ -56,23 +55,23 @@ directive_options! {
         /// `:show-link-names:`.
         ShowLinkNames => (["show-link-names", "show_link_names"], Flag, "Labels each edge with its relation."),
         /// `:direction:`.
-        Direction => (["direction"], Choice(FlowDirection::spellings), "Which way the chart is laid out."),
+        Direction(FlowDirection) => (["direction"], EntityFlowInvalidDirection, "Which way the chart is laid out."),
         /// `:config:`.
-        Config => (["config"], Text, "A PlantUML configuration the chart is drawn with."),
+        Config(NonEmptyText) => (["config"], "A PlantUML configuration the chart is drawn with."),
         /// `:debug:`.
         Debug => (["debug"], Flag, "Shows the generated PlantUML source below the chart."),
         /// `:caption:`.
-        Caption => (["caption"], Text, "A caption shown below the chart."),
+        Caption(String) => (["caption"], "A caption shown below the chart."),
         /// `:align:`.
-        Align => (["align"], Choice(|| choice_names(ImageAlign::ALL, ImageAlign::as_str)), "Where the chart sits."),
+        Align(ImageAlign) => (["align"], EntityFlowInvalidAlign, "Where the chart sits."),
         /// `:scale:`.
-        Scale => (["scale"], Integer, "The chart's size, as a percentage of its `:width:`."),
+        Scale(Percentage) => (["scale"], EntityFlowInvalidScale, "The chart's size, as a percentage of its `:width:`."),
         /// `:width:`.
-        Width => (["width"], Length, "The chart's width."),
+        Width(LengthOrPercentage) => (["width"], EntityFlowInvalidWidth, "The chart's width."),
         /// `:class:`.
-        Class => (["class"], Classes, "Classes for the chart."),
+        Class(Classes) => (["class"], "Classes for the chart."),
         /// `:name:`.
-        Name => (["name"], Text, "A label to reference the chart by."),
+        Name(TargetName) => (["name"], "A label to reference the chart by."),
         _ => (["show_filters", "show-filters"], Flag, "Shows the filter below the chart.", "the filter is visible in the document source"),
         _ => (["show_legend", "show-legend"], Flag, "Draws a legend of the entity types.", "no legend is drawn"),
         _ => (["filter-func", "filter_func"], Text, "The entities drawn, by a Python function.", "write the selection as :filter:"),
@@ -106,6 +105,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         ),
     },
     options: <EntityFlowOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. entity-flow::` or `.. needflow::`, recording which was
@@ -167,60 +167,15 @@ fn read_options(
                 flow.relations = read_relations(line, directive, diagnostics, ctx);
             }
             EntityFlowOption::ShowLinkNames => flow.show_link_names = true,
-            EntityFlowOption::Direction => {
-                if let Some(direction) = read_direction(line, directive, diagnostics, ctx) {
-                    flow.direction = direction;
-                }
-            }
-            EntityFlowOption::Config => {
-                if line.value.is_empty() {
-                    report_empty_value(line, directive, diagnostics, ctx);
-                } else {
-                    flow.config = Some(line.value.clone());
-                }
-            }
+            EntityFlowOption::Direction(direction) => flow.direction = direction,
+            EntityFlowOption::Config(config) => flow.config = Some(config.0),
             EntityFlowOption::Debug => flow.debug = true,
-            EntityFlowOption::Caption => flow.caption = Some(line.value.clone()),
-            EntityFlowOption::Align => match ImageAlign::parse(&line.value) {
-                Some(align) => flow.align = Some(align),
-                None => diagnostics.push(Diagnostic::at(
-                    DiagnosticCode::EntityFlowInvalidAlign,
-                    format!(
-                        "{directive}: :align: expects one of center, left, right, found '{}'",
-                        line.value
-                    ),
-                    ctx.line_span(line.line_index, &line.raw),
-                )),
-            },
-            EntityFlowOption::Scale => match parse_percentage(&line.value) {
-                Some(scale) => flow.scale = Some(scale),
-                None => diagnostics.push(Diagnostic::at(
-                    DiagnosticCode::EntityFlowInvalidScale,
-                    format!(
-                        "{directive}: :scale: expects a non-negative percentage, found '{}'",
-                        line.value
-                    ),
-                    ctx.line_span(line.line_index, &line.raw),
-                )),
-            },
-            EntityFlowOption::Width => match LengthOrPercentage::new(&line.value) {
-                Ok(width) => flow.width = Some(width),
-                Err(problem) => diagnostics.push(Diagnostic::at(
-                    DiagnosticCode::EntityFlowInvalidWidth,
-                    format!("{directive}: :width: {problem}"),
-                    ctx.line_span(line.line_index, &line.raw),
-                )),
-            },
-            EntityFlowOption::Class => {
-                flow.classes = line.value.split_whitespace().map(str::to_string).collect();
-            }
-            EntityFlowOption::Name => {
-                if line.value.is_empty() {
-                    report_empty_value(line, directive, diagnostics, ctx);
-                } else {
-                    flow.name = Some(TargetName::new(&line.value));
-                }
-            }
+            EntityFlowOption::Caption(caption) => flow.caption = Some(caption),
+            EntityFlowOption::Align(align) => flow.align = Some(align),
+            EntityFlowOption::Scale(scale) => flow.scale = Some(scale.0),
+            EntityFlowOption::Width(width) => flow.width = Some(width),
+            EntityFlowOption::Class(classes) => flow.classes = classes.0,
+            EntityFlowOption::Name(name) => flow.name = Some(name),
             EntityFlowOption::Shorthand(option) => match option {},
         }
     }
@@ -298,23 +253,13 @@ fn declared_relations(ctx: &ParseCtx<'_>) -> String {
     names.join(", ")
 }
 
-/// Reads `:direction:`, keeping the default when it names no layout.
-fn read_direction(
-    line: &OptionLine,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<FlowDirection> {
-    match FlowDirection::new(&line.value) {
-        Ok(direction) => Some(direction),
-        Err(problem) => {
-            diagnostics.push(Diagnostic::at(
-                DiagnosticCode::EntityFlowInvalidDirection,
-                format!("{directive}: :direction: {problem}; {DIRECTION_NOTE}"),
-                ctx.line_span(line.line_index, &line.raw),
-            ));
-            None
-        }
+/// A `:direction:`: one of the two layouts `PlantUML` has, in either spelling;
+/// any other keeps the default.
+impl OptionValueType for FlowDirection {
+    const VALUE: OptionValue = OptionValue::Choice(FlowDirection::spellings);
+
+    fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
+        FlowDirection::new(&line.value).map_err(|problem| format!("{problem}; {DIRECTION_NOTE}"))
     }
 }
 
@@ -349,23 +294,6 @@ fn report_unusable_scale(
              diagram is never opened while rendering, so it has no size of its own to scale"
         ),
         span,
-    ));
-}
-
-/// Reports an option whose value is required but was left empty.
-fn report_empty_value(
-    line: &OptionLine,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::EntityFlowEmptyOptionValue,
-        format!(
-            "{directive}: :{}: needs a value, so the option was ignored",
-            line.name
-        ),
-        ctx.line_span(line.line_index, &line.raw),
     ));
 }
 

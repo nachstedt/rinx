@@ -81,6 +81,7 @@ mod invocation;
 mod math;
 mod needimport;
 mod needservice;
+mod option_value;
 mod options;
 mod reader;
 mod role;

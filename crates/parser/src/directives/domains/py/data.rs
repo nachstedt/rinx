@@ -2,7 +2,7 @@ use super::super::body::{DescriptionOption, ObjectOptions, parse_object_body};
 use super::dispatch::PyObjectOption;
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::{OptionLine, directive_options};
+use crate::directives::options::directive_options;
 use crate::headings::Adornment;
 use rinx_ast::{DescriptionFlags, DomainObjectBody, NonEmptyVector};
 
@@ -38,9 +38,9 @@ directive_options! {
     /// The options `.. py:data::` takes: Sphinx's `PyVariable`'s.
     enum DataOption {
         /// `:type:`.
-        Type => (["type"], Text, "The value's type."),
+        Type(String) => (["type"], "The value's type."),
         /// `:value:`.
-        Value => (["value"], Text, "The value, as it is shown."),
+        Value(String) => (["value"], "The value, as it is shown."),
         _ => (["canonical"], Text, "The object's name where it is defined, if documented elsewhere."),;
         Py(PyObjectOption),
         Description(DescriptionOption),
@@ -50,11 +50,11 @@ directive_options! {
 impl ObjectOptions for DataOptions {
     type Option = DataOption;
 
-    fn read(&mut self, option: DataOption, line: &OptionLine, flags: &mut DescriptionFlags) {
+    fn read(&mut self, option: DataOption, flags: &mut DescriptionFlags) {
         match option {
-            DataOption::Type => self.type_ = Some(line.value.clone()),
-            DataOption::Value => self.value = Some(line.value.clone()),
-            DataOption::Py(PyObjectOption::Module) => self.module = Some(line.value.clone()),
+            DataOption::Type(value) => self.type_ = Some(value),
+            DataOption::Value(value) => self.value = Some(value),
+            DataOption::Py(PyObjectOption::Module(module)) => self.module = Some(module),
             DataOption::Description(option) => flags.set(option.flag()),
         }
     }

@@ -287,6 +287,19 @@ diagnostic_codes! {
     /// An option Sphinx or the extension defining the directive takes, but this
     /// build does not implement. The option is ignored.
     DirectiveUnsupportedOption => "directive.unsupported-option",
+    /// An option value that is not one the option takes, on an option with no
+    /// code of its own for it. The option is ignored.
+    DirectiveInvalidOptionValue => "directive.invalid-option-value",
+    /// An option written without the value it needs — a `:name:` with no
+    /// label, a `:width:` with no length. The option is ignored.
+    DirectiveEmptyOptionValue => "directive.empty-option-value",
+    /// An option written more than once, under the same spelling, in one
+    /// directive, which docutils refuses. Every one is read, in the order
+    /// written.
+    DirectiveDuplicateOption => "directive.duplicate-option",
+    /// A flag option written with a value, which docutils refuses. The flag
+    /// applies and the value is ignored.
+    DirectiveFlagWithValue => "directive.flag-with-value",
     /// A directive written with fewer arguments than it requires — an
     /// `.. image::` with no address, a `.. versionadded::` with no version.
     /// The directive is still read, without them.
@@ -372,9 +385,6 @@ diagnostic_codes! {
     DoctestEmptyGroup => "doctest.empty-group",
 
     // --- `.. math::` and the math roles ------------------------------------
-    /// A `:label:`/`:name:` option with no value, so nothing could reference
-    /// the equation and it stays unnumbered.
-    MathEmptyLabel => "math.empty-label",
     /// LaTeX the math renderer rejected, reported while rendering rather than
     /// while parsing — the parser deliberately never inspects the LaTeX, since
     /// only the renderer knows the math backend.
@@ -384,8 +394,6 @@ diagnostic_codes! {
     MathDuplicateLabel => "math.duplicate-label",
 
     // --- `.. code-block::` / `.. code::` / `.. highlight::` ----------------
-    /// A `:name:` option with no value, so nothing could `:ref:` the block.
-    CodeBlockEmptyName => "code-block.empty-name",
     /// A `:lineno-start:`, `:dedent:`, `:number-lines:` or `:linenothreshold:`
     /// whose value is not a positive integer.
     CodeBlockInvalidInteger => "code-block.invalid-integer",
@@ -411,8 +419,6 @@ diagnostic_codes! {
     /// never take over — the built-in one is matched first — so it was not
     /// defined.
     RoleBuiltinName => "role.builtin-name",
-    /// A `:language:` option with no value; the role is defined unhighlighted.
-    RoleEmptyLanguage => "role.empty-language",
     /// A `:class:` value that normalizes to no class name at all, so it was
     /// dropped.
     RoleInvalidClass => "role.invalid-class",
@@ -454,9 +460,6 @@ diagnostic_codes! {
     ImageInvalidAlign => "image.invalid-align",
     /// A `:loading:` naming none of `embed`/`link`/`lazy`.
     ImageInvalidLoading => "image.invalid-loading",
-    /// A `:target:` or `:name:` written with no value, so it could neither
-    /// link anywhere nor be linked to.
-    ImageEmptyOptionValue => "image.empty-option-value",
     /// A `:scale:` with no `:width:` or `:height:` to apply it to. docutils
     /// would read the image file's own dimensions here; this build never opens
     /// the file while rendering, so the option is dropped rather than
@@ -532,8 +535,6 @@ diagnostic_codes! {
     ToctreeMaxdepthInvalid => "toctree.maxdepth-invalid",
     /// A `:numbered:` whose value is present but is not a positive integer.
     ToctreeNumberedInvalid => "toctree.numbered-invalid",
-    /// A `:name:` option with no value, so nothing could `:ref:` the toctree.
-    ToctreeEmptyName => "toctree.empty-name",
     /// An entry naming a document the project does not contain. Detected while
     /// building the project index, since only there is the document list known.
     ToctreeMissingDocument => "toctree.missing-document",
@@ -575,9 +576,6 @@ diagnostic_codes! {
     ContentsDepthInvalid => "contents.depth-invalid",
     /// A `:backlinks:` value other than `entry`, `top` or `none`.
     ContentsBacklinksInvalid => "contents.backlinks-invalid",
-    /// A `:name:` option with no value, so nothing could `:ref:` the table of
-    /// contents.
-    ContentsEmptyName => "contents.empty-name",
 
     // --- `.. dropdown::` ----------------------------------------------------
     /// A `:color:` naming none of the eleven semantic colours. The summary is
@@ -594,8 +592,6 @@ diagnostic_codes! {
     /// A `:margin:` that is neither one nor four values, or that names a step
     /// off the 0–5 scale.
     DropdownInvalidMargin => "dropdown.invalid-margin",
-    /// An option that needs a value but was written without one.
-    DropdownEmptyOptionValue => "dropdown.empty-option-value",
 
     // --- `.. grid::` / `.. grid-item::` -------------------------------------
     //
@@ -626,8 +622,6 @@ diagnostic_codes! {
     /// A `.. grid-item::` written outside any `.. grid::`. Likewise reported
     /// and still rendered.
     GridItemOutsideGrid => "grid.item-outside-grid",
-    /// An option that needs a value but was written without one.
-    GridEmptyOptionValue => "grid.empty-option-value",
 
     // --- `.. button-link::` -------------------------------------------------
     //
@@ -640,8 +634,6 @@ diagnostic_codes! {
     ButtonLinkInvalidColor => "button-link.invalid-color",
     /// An `:align:` other than `left`, `right`, `center` or `justify`.
     ButtonLinkInvalidAlign => "button-link.invalid-align",
-    /// An option that needs a value but was written without one.
-    ButtonLinkEmptyOptionValue => "button-link.empty-option-value",
     /// An `:outline:` with no `:color:` to outline. sphinx-design produces no
     /// class at all for that pair, so the option silently does nothing —
     /// reported for the reason `uml.unusable-scale` is.
@@ -658,12 +650,6 @@ diagnostic_codes! {
     /// is no sensible number to display at that value). The default of `1`
     /// is kept instead.
     SectnumStartInvalid => "sectnum.start-invalid",
-    /// A `:prefix:` option with no value; docutils requires this option to
-    /// carry one.
-    SectnumEmptyPrefix => "sectnum.empty-prefix",
-    /// A `:suffix:` option with no value; docutils requires this option to
-    /// carry one.
-    SectnumEmptySuffix => "sectnum.empty-suffix",
 
     // --- `.. index::` ------------------------------------------------------
     /// A `single:` entry with no value — Sphinx's "invalid single index
@@ -815,8 +801,6 @@ diagnostic_codes! {
     /// `uml.unusable-scale` is: the compiled SVG is never opened while
     /// rendering, so it has no size of its own to scale.
     EntityFlowUnusableScale => "entity-flow.unusable-scale",
-    /// An option whose value is required but was left empty.
-    EntityFlowEmptyOptionValue => "entity-flow.empty-option-value",
     /// A flowchart whose filter matched no entity at all, so there was nothing
     /// to draw. Reported for the reason `entity-table.empty-result` is, and it
     /// has to be: `PlantUML` rejects an empty diagram, so compiling one would
@@ -865,8 +849,6 @@ diagnostic_codes! {
     /// A `:scale:` with no `:width:` to apply to, for `uml.unusable-scale`'s
     /// reason.
     EntitySequenceUnusableScale => "entity-sequence.unusable-scale",
-    /// An option whose value is required but was left empty.
-    EntitySequenceEmptyOptionValue => "entity-sequence.empty-option-value",
     /// A `:start:` entry naming no entity in the project. The other starts are
     /// still walked — sphinx-needs aborts the whole build here instead.
     EntitySequenceUnknownStart => "entity-sequence.unknown-start",
@@ -920,8 +902,6 @@ diagnostic_codes! {
     /// A `:scale:` with no `:width:` to apply to. The chart is drawn at a size
     /// this build chooses, so a bare percentage has nothing to scale.
     EntityPieUnusableScale => "entity-pie.unusable-scale",
-    /// An option whose value is required but was left empty.
-    EntityPieEmptyOptionValue => "entity-pie.empty-option-value",
     /// A chart every one of whose wedges counted zero, so there is no chart to
     /// draw at all. Reported for the reason `entity-table.empty-result` is,
     /// and only the renderer can raise it: whether a filter selects anything
@@ -968,8 +948,6 @@ diagnostic_codes! {
     EntityBarInvalidWidth => "entity-bar.invalid-width",
     /// A `:scale:` with no `:width:` to apply to.
     EntityBarUnusableScale => "entity-bar.unusable-scale",
-    /// An option whose value is required but was left empty.
-    EntityBarEmptyOptionValue => "entity-bar.empty-option-value",
     /// A chart every one of whose cells counted zero, so there are no bars to
     /// draw. Only the renderer can raise it, for `entity-pie.empty-result`'s
     /// reason.
@@ -1089,9 +1067,6 @@ diagnostic_codes! {
     // whose failures are the same failures. `uml` rather than
     // `entity-diagram`, because the family has to name the plain PlantUML
     // spellings too, and those have no entity in them.
-    /// An option whose value is required but was written empty, so the option
-    /// was ignored.
-    UmlEmptyOptionValue => "uml.empty-option-value",
     /// An `:align:` that is not one of the three horizontal placements. The
     /// diagram renders unaligned rather than not at all.
     UmlInvalidAlign => "uml.invalid-align",

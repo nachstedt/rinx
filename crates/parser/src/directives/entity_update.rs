@@ -23,7 +23,6 @@ use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, EntityUpdate, EntityUpdateSource, FieldMutation,
     FieldMutationMode,
 };
-use rinx_entity::{AttributeType, parse_attribute_value};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -31,7 +30,8 @@ use crate::headings::Adornment;
 
 use super::error_node::malformed_node;
 use super::filter_option::read_update_argument;
-use super::options::OptionLine;
+use super::option_value::Boolean;
+use super::options::{DirectiveOptions, OptionLine, OptionRead, directive_options};
 
 /// Identity fields this directive refuses to mutate — exactly
 /// `rinx_entity::field::BUILTIN_FIELDS`, spelled out rather than
@@ -43,6 +43,17 @@ use super::options::OptionLine;
 /// the two. See `docs/decisions/019-entity-update.md`.
 const PROTECTED_FIELDS: [&str; 5] = ["id", "type", "type_name", "docname", "title"];
 
+directive_options! {
+    /// The option `.. entity-update::` lists: `:strict:`. Every other line is
+    /// a field mutation — `:field:`, `:+field:` or `:-field:` for each field
+    /// the schema declares — which its spec says by `accepts_further`, and
+    /// [`read_field_mutation`] checks against the schema.
+    enum UpdateOption {
+        /// `:strict:`.
+        Strict(Boolean) => (["strict"], EntityUpdateInvalidStrict, "Whether matching no entity is reported; `true` unless set to `false`."),
+    }
+}
+
 /// This directive's entry in the table of directives this build implements.
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["entity-update", "needextend"],
@@ -53,7 +64,8 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
-    options: &[],
+    options: <UpdateOption as DirectiveOptions>::GROUPS,
+    accepts_further: true,
 };
 
 /// Interprets `.. entity-update::` or `.. needextend::`, recording which was
@@ -99,12 +111,16 @@ pub(super) fn parse_entity_update(
 
     let mut update = EntityUpdate::new(source, target);
     for line in option_lines {
-        if line.name == "strict" {
-            update.strict = read_strict(line, directive, diagnostics, ctx);
-            continue;
-        }
-        if let Some(mutation) = read_field_mutation(line, directive, diagnostics, ctx) {
-            update.fields.push(mutation);
+        match UpdateOption::read(line, directive, diagnostics, ctx) {
+            OptionRead::Read(UpdateOption::Strict(strict)) => update.strict = strict.0,
+            // A value that is not a boolean was reported, and leaves the safer
+            // default: a typo still gets the empty-result check.
+            OptionRead::Refused => {}
+            OptionRead::NotTaken => {
+                if let Some(mutation) = read_field_mutation(line, directive, diagnostics, ctx) {
+                    update.fields.push(mutation);
+                }
+            }
         }
     }
     update.span = directive_span;
@@ -118,7 +134,7 @@ pub(super) fn parse_entity_update(
 /// validates the name against the schema's *full* vocabulary — every type's
 /// fields, unioned, since the target may match several types at once — and
 /// stores the value unconverted: the matched entity's declared type, and so
-/// the [`AttributeType`] the text must fit, is only known at apply time.
+/// the [`rinx_entity::AttributeType`] the text must fit, is only known at apply time.
 fn read_field_mutation(
     line: &OptionLine,
     directive: &str,
@@ -201,31 +217,6 @@ fn is_declared_section(field: &str, ctx: &ParseCtx<'_>) -> bool {
         .types()
         .iter()
         .any(|entity_type| entity_type.section(field).is_some())
-}
-
-/// Reads `:strict:` as a boolean flag, defaulting to `true` on a bad value —
-/// the safer of the two, so a typo here still gets the empty-result check
-/// rather than silently suppressing it.
-fn read_strict(
-    line: &OptionLine,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> bool {
-    if let Ok(rinx_ast::AttributeValue::Bool(value)) =
-        parse_attribute_value(&AttributeType::Bool, &line.value)
-    {
-        return value;
-    }
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::EntityUpdateInvalidStrict,
-        format!(
-            "{directive}: :strict: expects true or false, found '{}'",
-            line.value
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
-    true
 }
 
 #[cfg(test)]

@@ -19,10 +19,10 @@
 //! re-render every page that includes it. That is correct rather than a gap.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState};
+use crate::directives::option_value::Classes;
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
-    CodeBlock, CodeBlockSource, CodeLanguage, Diagnostic, DiagnosticCode, Directive, IncludeSite,
-    Node, Span,
+    CodeBlock, CodeBlockSource, CodeLanguage, DiagnosticCode, Directive, IncludeSite, Node, Span,
 };
 
 use crate::blocks::parse_blocks;
@@ -72,6 +72,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <IncludeOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. include::`, splicing the file's nodes in where it stands.
@@ -263,27 +264,27 @@ directive_options! {
     /// The options `.. include::` takes: docutils' twelve.
     enum IncludeOption {
         /// `:encoding:`.
-        Encoding => (["encoding"], Text, "The file's text encoding."),
+        Encoding(String) => (["encoding"], "The file's text encoding."),
         /// `:literal:`.
         Literal => (["literal"], Flag, "Shows the file as a literal block rather than parsing it."),
         /// `:code:`.
-        Code => (["code"], Text, "Shows the file as a code block, in the language given."),
+        Code(String) => (["code"], "Shows the file as a code block, in the language given."),
         /// `:number-lines:`.
         NumberLines => (["number-lines"], Integer, "Numbers the lines of a code block, from the number given if any."),
         /// `:class:`.
-        Class => (["class"], Classes, "Classes for a literal or code block."),
+        Class(Classes) => (["class"], "Classes for a literal or code block."),
         /// `:name:`.
-        Name => (["name"], Text, "A label to reference a literal or code block by."),
+        Name(String) => (["name"], "A label to reference a literal or code block by."),
         /// `:start-after:`.
-        StartAfter => (["start-after"], Text, "Includes the file from below the first line holding this text."),
+        StartAfter(String) => (["start-after"], "Includes the file from below the first line holding this text."),
         /// `:end-before:`.
-        EndBefore => (["end-before"], Text, "Includes the file up to above the first line holding this text."),
+        EndBefore(String) => (["end-before"], "Includes the file up to above the first line holding this text."),
         /// `:start-line:`.
-        StartLine => (["start-line"], Integer, "The first line included, counted from zero."),
+        StartLine(usize) => (["start-line"], IncludeInvalidLineRange, "The first line included, counted from zero."),
         /// `:end-line:`.
-        EndLine => (["end-line"], Integer, "The line the inclusion stops before, counted from zero."),
+        EndLine(usize) => (["end-line"], IncludeInvalidLineRange, "The line the inclusion stops before, counted from zero."),
         /// `:tab-width:`.
-        TabWidth => (["tab-width"], Integer, "How many spaces a tab expands to."),
+        TabWidth(i32) => (["tab-width"], IncludeInvalidTabWidth, "How many spaces a tab expands to."),
         _ => (["parser"], Text, "The parser the file is read with."),
     }
 }
@@ -297,65 +298,23 @@ fn parse_options(
 ) -> IncludeOptions {
     let mut options = IncludeOptions::default();
 
-    for (option, line) in
-        classify_options::<IncludeOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    for (option, _) in classify_options::<IncludeOption>(option_lines, DIRECTIVE, diagnostics, ctx)
     {
         match option {
-            IncludeOption::Encoding => options.encoding = Some(line.value.clone()),
+            IncludeOption::Encoding(encoding) => options.encoding = Some(encoding),
             IncludeOption::Literal => options.literal = true,
-            IncludeOption::Code => options.code = Some(line.value.clone()),
+            IncludeOption::Code(language) => options.code = Some(language),
             IncludeOption::NumberLines => options.number_lines = true,
-            IncludeOption::Class => {
-                options.classes = line.value.split_whitespace().map(str::to_string).collect();
-            }
-            IncludeOption::Name => options.name = Some(line.value.clone()),
-            IncludeOption::StartAfter => options.selection.start_after = Some(line.value.clone()),
-            IncludeOption::EndBefore => options.selection.end_before = Some(line.value.clone()),
-            IncludeOption::StartLine => {
-                options.selection.start_line = parse_index(line, "start-line", diagnostics, ctx);
-            }
-            IncludeOption::EndLine => {
-                options.selection.end_line = parse_index(line, "end-line", diagnostics, ctx);
-            }
-            IncludeOption::TabWidth => {
-                let Ok(width) = line.value.trim().parse::<i32>() else {
-                    diagnostics.push(Diagnostic::at(
-                        DiagnosticCode::IncludeInvalidTabWidth,
-                        format!(
-                            "{DIRECTIVE}: :tab-width: needs an integer, got '{}'",
-                            line.value
-                        ),
-                        ctx.line_span(line.line_index, &line.raw),
-                    ));
-                    continue;
-                };
-                options.tab_width = Some(width);
-            }
+            IncludeOption::Class(classes) => options.classes = classes.0,
+            IncludeOption::Name(name) => options.name = Some(name),
+            IncludeOption::StartAfter(text) => options.selection.start_after = Some(text),
+            IncludeOption::EndBefore(text) => options.selection.end_before = Some(text),
+            IncludeOption::StartLine(index) => options.selection.start_line = Some(index),
+            IncludeOption::EndLine(index) => options.selection.end_line = Some(index),
+            IncludeOption::TabWidth(width) => options.tab_width = Some(width),
         }
     }
     options
-}
-
-/// Reads a `:start-line:`/`:end-line:` value: a **0-based** index, which is
-/// docutils' choice and the one place in reST that counts from zero.
-fn parse_index(
-    line: &OptionLine,
-    option: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<usize> {
-    let Ok(index) = line.value.trim().parse::<usize>() else {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::IncludeInvalidLineRange,
-            format!(
-                "{DIRECTIVE}: :{option}: needs a non-negative line index, got '{}'",
-                line.value
-            ),
-            ctx.line_span(line.line_index, &line.raw),
-        ));
-        return None;
-    };
-    Some(index)
 }
 
 /// The degraded node for an include that produced nothing, reporting `code`

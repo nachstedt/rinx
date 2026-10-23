@@ -411,7 +411,7 @@ fn test_a_name_with_no_value_is_reported_rather_than_registered() {
 
     // Then
     assert_eq!(pie.name, None);
-    assert_eq!(codes(rst), ["entity-pie.empty-option-value"]);
+    assert_eq!(codes(rst), ["directive.empty-option-value"]);
 }
 
 #[test]

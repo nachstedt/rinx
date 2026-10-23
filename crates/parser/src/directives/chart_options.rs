@@ -20,6 +20,7 @@ use rinx_ast::{
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
+use super::option_value::report_missing_value;
 use super::options::{OptionLine, choice_names, directive_options, parse_percentage};
 
 /// Which codes a chart reports the shared options' failures under.
@@ -35,8 +36,6 @@ pub(in crate::directives) struct ChartCodes {
     pub invalid_width: DiagnosticCode,
     /// A `:scale:` with no `:width:` to apply to.
     pub unusable_scale: DiagnosticCode,
-    /// A required value left empty.
-    pub empty_option_value: DiagnosticCode,
 }
 
 /// Which chart a diagnostic names, and under which codes.
@@ -80,7 +79,7 @@ directive_options! {
 /// Reads one figure option, reporting a bad value against the line it was
 /// written on and answering `None` for it.
 pub(in crate::directives) fn read_figure_option(
-    option: ChartFigureOption,
+    option: &ChartFigureOption,
     line: &OptionLine,
     owner: ChartOwner<'_>,
     diagnostics: &mut Diagnostics,
@@ -132,7 +131,7 @@ pub(in crate::directives) fn read_figure_option(
         )),
         ChartFigureOption::Name => {
             if line.value.is_empty() {
-                report_empty_value(line, owner, diagnostics, ctx);
+                report_missing_value(line, owner.directive, diagnostics, ctx);
                 None
             } else {
                 Some(FigureOption::Name(TargetName::new(&line.value)))
@@ -182,23 +181,6 @@ pub(in crate::directives) fn read_color(
             None
         }
     }
-}
-
-/// Reports an option whose value is required but was left empty.
-pub(in crate::directives) fn report_empty_value(
-    line: &OptionLine,
-    owner: ChartOwner<'_>,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        owner.codes.empty_option_value,
-        format!(
-            "{}: :{}: needs a value, so the option was ignored",
-            owner.directive, line.name
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
 }
 
 /// Reports a `:scale:` that has no `:width:` to apply to.

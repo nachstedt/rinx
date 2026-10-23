@@ -60,6 +60,7 @@ pub(in crate::directives) const ADMONITION_SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <AdmonitionOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// This directive's entry in the table of directives this build implements.
@@ -73,6 +74,7 @@ pub(in crate::directives) const GENERIC_ADMONITION_SPEC: DirectiveSpec = Directi
         content_hint: None,
     },
     options: <AdmonitionOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. note::` and the other eight titled by their kind: the text

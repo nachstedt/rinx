@@ -435,6 +435,30 @@ directive.unsupported-option
 An option Sphinx or the extension defining the directive takes, but this build
 does not implement. The option is ignored.
 
+directive.invalid-option-value
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An option value that is not one the option takes, on an option with no code of
+its own for it. The option is ignored.
+
+directive.empty-option-value
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An option written without the value it needs — a ``:name:`` with no label, a
+``:width:`` with no length. The option is ignored.
+
+directive.duplicate-option
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An option written more than once, under the same spelling, in one directive,
+which docutils refuses. Every one is read, in the order written.
+
+directive.flag-with-value
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A flag option written with a value, which docutils refuses. The flag applies
+and the value is ignored.
+
 directive.missing-argument
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -605,12 +629,6 @@ joins the ``default`` group.
 math
 ----
 
-math.empty-label
-~~~~~~~~~~~~~~~~
-
-A ``:label:``/``:name:`` option with no value, so nothing could reference the
-equation and it stays unnumbered.
-
 math.invalid-latex
 ~~~~~~~~~~~~~~~~~~
 
@@ -626,11 +644,6 @@ can be referenced until one label is changed.
 
 code-block
 ----------
-
-code-block.empty-name
-~~~~~~~~~~~~~~~~~~~~~
-
-A ``:name:`` option with no value, so nothing could ``:ref:`` the block.
 
 code-block.invalid-integer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -677,11 +690,6 @@ role.builtin-name
 
 A name this build already gives a role, which a custom role could never take
 over — the built-in one is matched first — so it was not defined.
-
-role.empty-language
-~~~~~~~~~~~~~~~~~~~
-
-A ``:language:`` option with no value; the role is defined unhighlighted.
 
 role.invalid-class
 ~~~~~~~~~~~~~~~~~~
@@ -757,12 +765,6 @@ image.invalid-loading
 ~~~~~~~~~~~~~~~~~~~~~
 
 A ``:loading:`` naming none of ``embed``/``link``/``lazy``.
-
-image.empty-option-value
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-A ``:target:`` or ``:name:`` written with no value, so it could neither link
-anywhere nor be linked to.
 
 image.scale-no-dimensions
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -899,11 +901,6 @@ toctree.numbered-invalid
 
 A ``:numbered:`` whose value is present but is not a positive integer.
 
-toctree.empty-name
-~~~~~~~~~~~~~~~~~~
-
-A ``:name:`` option with no value, so nothing could ``:ref:`` the toctree.
-
 toctree.missing-document
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -986,12 +983,6 @@ contents.backlinks-invalid
 
 A ``:backlinks:`` value other than ``entry``, ``top`` or ``none``.
 
-contents.empty-name
-~~~~~~~~~~~~~~~~~~~
-
-A ``:name:`` option with no value, so nothing could ``:ref:`` the table of
-contents.
-
 dropdown
 --------
 
@@ -1023,11 +1014,6 @@ dropdown.invalid-margin
 
 A ``:margin:`` that is neither one nor four values, or that names a step off
 the 0–5 scale.
-
-dropdown.empty-option-value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An option that needs a value but was written without one.
 
 grid
 ----
@@ -1077,11 +1063,6 @@ grid.item-outside-grid
 A ``.. grid-item::`` written outside any ``.. grid::``. Likewise reported and
 still rendered.
 
-grid.empty-option-value
-~~~~~~~~~~~~~~~~~~~~~~~
-
-An option that needs a value but was written without one.
-
 button-link
 -----------
 
@@ -1095,11 +1076,6 @@ button-link.invalid-align
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An ``:align:`` other than ``left``, ``right``, ``center`` or ``justify``.
-
-button-link.empty-option-value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An option that needs a value but was written without one.
 
 button-link.unusable-outline
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1129,18 +1105,6 @@ sectnum.start-invalid
 A ``:start:`` whose value is not a positive integer (``0`` included — there is
 no sensible number to display at that value). The default of ``1`` is kept
 instead.
-
-sectnum.empty-prefix
-~~~~~~~~~~~~~~~~~~~~
-
-A ``:prefix:`` option with no value; docutils requires this option to carry
-one.
-
-sectnum.empty-suffix
-~~~~~~~~~~~~~~~~~~~~
-
-A ``:suffix:`` option with no value; docutils requires this option to carry
-one.
 
 index
 -----
@@ -1419,11 +1383,6 @@ A ``:scale:`` with no ``:width:`` to apply to. Reported for the reason
 ``uml.unusable-scale`` is: the compiled SVG is never opened while rendering, so
 it has no size of its own to scale.
 
-entity-flow.empty-option-value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An option whose value is required but was left empty.
-
 entity-flow.empty-result
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1509,11 +1468,6 @@ entity-sequence.unusable-scale
 
 A ``:scale:`` with no ``:width:`` to apply to, for ``uml.unusable-scale``'s
 reason.
-
-entity-sequence.empty-option-value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An option whose value is required but was left empty.
 
 entity-sequence.unknown-start
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1605,11 +1559,6 @@ entity-pie.unusable-scale
 A ``:scale:`` with no ``:width:`` to apply to. The chart is drawn at a size
 this build chooses, so a bare percentage has nothing to scale.
 
-entity-pie.empty-option-value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An option whose value is required but was left empty.
-
 entity-pie.empty-result
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1686,11 +1635,6 @@ entity-bar.unusable-scale
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A ``:scale:`` with no ``:width:`` to apply to.
-
-entity-bar.empty-option-value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An option whose value is required but was left empty.
 
 entity-bar.empty-result
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -1866,12 +1810,6 @@ building, which a sandboxed action cannot do. The message points at a
 
 uml
 ---
-
-uml.empty-option-value
-~~~~~~~~~~~~~~~~~~~~~~
-
-An option whose value is required but was written empty, so the option was
-ignored.
 
 uml.invalid-align
 ~~~~~~~~~~~~~~~~~

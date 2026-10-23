@@ -3,17 +3,16 @@ use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use std::num::NonZeroUsize;
 
 use rinx_ast::{
-    Diagnostic, DiagnosticCode, Directive, NumberedDepth, TargetName, TocEntry, Toctree,
-    ToctreeFlag, ToctreeOptions,
+    Directive, NumberedDepth, TargetName, TocEntry, Toctree, ToctreeFlag, ToctreeOptions,
 };
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::explicit_title::split_explicit_title;
 
-use super::options::{
-    DirectiveOptions, OptionLine, classify_options, directive_options, parse_positive_depth,
-};
+use super::option_value::{DepthLimit, OptionValueType};
+use super::options::{DirectiveOptions, OptionLine, classify_options, directive_options};
+use super::spec::OptionValue;
 
 const DIRECTIVE: &str = "toctree";
 
@@ -32,13 +31,13 @@ directive_options! {
     /// The options `.. toctree::` takes: Sphinx's ten.
     enum ToctreeOption {
         /// `:maxdepth:`.
-        Maxdepth => (["maxdepth"], Integer, "How many heading levels the tree shows; zero or less shows all."),
+        Maxdepth(DepthLimit) => (["maxdepth"], ToctreeMaxdepthInvalid, "How many heading levels the tree shows; zero or less shows all."),
         /// `:numbered:`.
-        Numbered => (["numbered"], Integer, "Numbers the sections, to the depth given if any."),
+        Numbered(Numbering) => (["numbered"], ToctreeNumberedInvalid, "Numbers the sections, to the depth given if any."),
         /// `:caption:`.
-        Caption => (["caption"], Text, "A caption shown above the tree."),
+        Caption(String) => (["caption"], "A caption shown above the tree."),
         /// `:name:`.
-        Name => (["name"], Text, "A label to reference the tree by."),
+        Name(TargetName) => (["name"], "A label to reference the tree by."),
         /// `:titlesonly:`.
         TitlesOnly => (["titlesonly"], Flag, "Lists each document's title only, not its sections."),
         /// `:reversed:`.
@@ -54,50 +53,19 @@ directive_options! {
 }
 
 /// Reads the options `.. toctree::` accepts, reporting every other one.
-///
-/// Both depth options treat a zero as *unset* rather than as a real limit,
-/// which is what Sphinx does: `:maxdepth: 0` renders an unlimited tree and
-/// `:numbered: 0` numbers nothing. That ambiguity is resolved here, in the one
-/// place that sees the source text, so [`ToctreeOptions`] can use
-/// `NonZeroUsize` and make the meaningless state unrepresentable downstream.
-///
-/// A negative `:maxdepth:` is Sphinx's documented spelling of "unlimited" and
-/// is accepted silently; any other non-integer value is a diagnostic, because
-/// silently switching to unlimited would render a far larger tree than the
-/// author asked for.
 fn parse_toctree_options(
     option_lines: &[OptionLine],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> ToctreeOptions {
     let mut options = ToctreeOptions::default();
-    for (option, line) in
-        classify_options::<ToctreeOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    for (option, _) in classify_options::<ToctreeOption>(option_lines, DIRECTIVE, diagnostics, ctx)
     {
         match option {
-            ToctreeOption::Maxdepth => {
-                options.maxdepth = parse_positive_depth(
-                    line,
-                    DIRECTIVE,
-                    "maxdepth",
-                    DiagnosticCode::ToctreeMaxdepthInvalid,
-                    diagnostics,
-                    ctx,
-                );
-            }
-            ToctreeOption::Numbered => options.numbered = parse_numbered(line, diagnostics, ctx),
-            ToctreeOption::Caption => options.caption = Some(line.value.clone()),
-            ToctreeOption::Name => {
-                if line.value.is_empty() {
-                    diagnostics.push(Diagnostic::at(
-                        DiagnosticCode::ToctreeEmptyName,
-                        format!("A {DIRECTIVE} :name: option needs a value: {}", line.raw),
-                        ctx.line_span(line.line_index, &line.raw),
-                    ));
-                } else {
-                    options.name = Some(TargetName::new(&line.value));
-                }
-            }
+            ToctreeOption::Maxdepth(depth) => options.maxdepth = depth.0,
+            ToctreeOption::Numbered(numbering) => options.numbered = numbering.0,
+            ToctreeOption::Caption(caption) => options.caption = Some(caption),
+            ToctreeOption::Name(name) => options.name = Some(name),
             ToctreeOption::TitlesOnly => options.set(ToctreeFlag::TitlesOnly),
             ToctreeOption::Reversed => options.set(ToctreeFlag::Reversed),
             ToctreeOption::Hidden => options.set(ToctreeFlag::Hidden),
@@ -108,33 +76,31 @@ fn parse_toctree_options(
     options
 }
 
-/// Reads a `:numbered:` value: absent means unlimited, a positive number
-/// limits the depth, zero disables numbering, and anything else is diagnosed.
-fn parse_numbered(
-    line: &OptionLine,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<NumberedDepth> {
-    let value = line.value.trim();
-    if value.is_empty() {
-        return Some(NumberedDepth::Unlimited);
-    }
-    match value.parse::<isize>() {
-        Ok(value) if value <= 0 => None,
-        Ok(value) => {
-            NonZeroUsize::new(usize::try_from(value).unwrap_or(0)).map(NumberedDepth::Levels)
+/// A `:numbered:`: no value numbers every level, a positive number limits the
+/// depth, and zero or less numbers nothing — Sphinx's reading, with any other
+/// value reported.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Numbering(Option<NumberedDepth>);
+
+impl OptionValueType for Numbering {
+    const VALUE: OptionValue = OptionValue::Integer;
+
+    fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
+        let value = line.value.trim();
+        if value.is_empty() {
+            return Ok(Self(Some(NumberedDepth::Unlimited)));
         }
-        Err(_) => {
-            diagnostics.push(Diagnostic::at(
-                DiagnosticCode::ToctreeNumberedInvalid,
-                format!(
-                    "A {DIRECTIVE} :numbered: option needs a whole number or no value: {}",
-                    line.raw
-                ),
-                ctx.line_span(line.line_index, &line.raw),
-            ));
-            None
-        }
+        value
+            .parse::<isize>()
+            .map(|value| {
+                Self(
+                    usize::try_from(value)
+                        .ok()
+                        .and_then(NonZeroUsize::new)
+                        .map(NumberedDepth::Levels),
+                )
+            })
+            .map_err(|_| format!("needs a whole number or no value, found '{value}'"))
     }
 }
 
@@ -188,6 +154,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <ToctreeOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. toctree::`.
@@ -234,6 +201,7 @@ pub(super) fn parse_toctree(
 mod tests {
     use super::*;
     use crate::parse;
+    use rinx_ast::{Diagnostic, DiagnosticCode};
     use rinx_ast::{Domain, Node};
 
     /// Parses a directive body directly, bypassing the block dispatcher, for
@@ -566,7 +534,7 @@ mod tests {
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(
             diagnostics.entries()[0].code,
-            DiagnosticCode::ToctreeEmptyName
+            DiagnosticCode::DirectiveEmptyOptionValue
         );
     }
 

@@ -55,13 +55,13 @@ impl CsvDialect {
     /// Applies one `:delim:`/`:quote:`/`:escape:`/`:keepspace:` option line.
     pub(super) fn read_option(
         &mut self,
-        option: CsvDialectOption,
+        option: &CsvDialectOption,
         line: &OptionLine,
         diagnostics: &mut Diagnostics,
         ctx: &ParseCtx<'_>,
     ) {
         let span = ctx.line_span(line.line_index, &line.raw);
-        match option {
+        match *option {
             CsvDialectOption::Delim => {
                 if let Some(byte) =
                     parse_single_char_option(&line.value, "delim", diagnostics, span)
@@ -285,7 +285,7 @@ mod tests {
 
         // When
         dialect.read_option(
-            CsvDialectOption::Delim,
+            &CsvDialectOption::Delim,
             &option("delim", ";"),
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),
@@ -304,13 +304,13 @@ mod tests {
 
         // When
         dialect.read_option(
-            CsvDialectOption::Quote,
+            &CsvDialectOption::Quote,
             &option("quote", "'"),
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),
         );
         dialect.read_option(
-            CsvDialectOption::Escape,
+            &CsvDialectOption::Escape,
             &option("escape", "\\"),
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),
@@ -330,7 +330,7 @@ mod tests {
 
         // When
         dialect.read_option(
-            CsvDialectOption::Keepspace,
+            &CsvDialectOption::Keepspace,
             &option("keepspace", ""),
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),

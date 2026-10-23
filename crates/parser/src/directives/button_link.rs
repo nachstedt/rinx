@@ -29,10 +29,10 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::inline::{SourceMap, parse_inline_text_mapped};
 
-use super::classes::split_classes;
 use super::error_node::malformed_node;
+use super::option_value::{Classes, NonEmptyText};
 use super::options::{
-    DirectiveOptions, OptionLine, choice_names, classify_options, directive_options, uri_argument,
+    DirectiveOptions, OptionLine, classify_options, directive_options, uri_argument,
 };
 
 const DIRECTIVE: &str = "button-link";
@@ -48,6 +48,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <ButtonLinkOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. button-link::`.
@@ -158,13 +159,13 @@ directive_options! {
     /// The options `.. button-link::` takes: sphinx-design's nine.
     enum ButtonLinkOption {
         /// `:color:`.
-        Color => (["color"], Choice(|| choice_names(SemanticColor::ALL, SemanticColor::as_str)), "The button's colour."),
+        Color(SemanticColor) => (["color"], ButtonLinkInvalidColor, "The button's colour."),
         /// `:align:`.
-        Align => (["align"], Choice(|| choice_names(TextAlign::ALL, TextAlign::as_str)), "Where the button sits on its line."),
+        Align(TextAlign) => (["align"], ButtonLinkInvalidAlign, "Where the button sits on its line."),
         /// `:tooltip:`.
-        Tooltip => (["tooltip"], Text, "Text shown when hovering the button."),
+        Tooltip(NonEmptyText) => (["tooltip"], "Text shown when hovering the button."),
         /// `:class:`.
-        Class => (["class"], Classes, "Classes for the button."),
+        Class(Classes) => (["class"], "Classes for the button."),
         /// `:outline:`.
         Outline => (["outline"], Flag, "Draws the button as an outline."),
         /// `:expand:`.
@@ -186,7 +187,7 @@ fn read_options(
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) {
-    for (option, line) in
+    for (option, _line) in
         classify_options::<ButtonLinkOption>(option_lines, DIRECTIVE, diagnostics, ctx)
     {
         match option {
@@ -204,85 +205,12 @@ fn read_options(
             ButtonLinkOption::Shadow => {
                 button.flags.insert(ButtonFlag::Shadow);
             }
-            ButtonLinkOption::Color => match SemanticColor::parse(&line.value) {
-                Some(color) => button.color = Some(color),
-                None => report_invalid_choice(
-                    line,
-                    "color",
-                    &names(SemanticColor::ALL, SemanticColor::as_str),
-                    DiagnosticCode::ButtonLinkInvalidColor,
-                    diagnostics,
-                    ctx,
-                ),
-            },
-            ButtonLinkOption::Align => match TextAlign::parse(&line.value) {
-                Some(align) => button.align = Some(align),
-                None => report_invalid_choice(
-                    line,
-                    "align",
-                    &names(TextAlign::ALL, TextAlign::as_str),
-                    DiagnosticCode::ButtonLinkInvalidAlign,
-                    diagnostics,
-                    ctx,
-                ),
-            },
-            ButtonLinkOption::Tooltip => {
-                if line.value.is_empty() {
-                    report_empty_value(line, "tooltip", diagnostics, ctx);
-                } else {
-                    button.tooltip = Some(line.value.clone());
-                }
-            }
-            ButtonLinkOption::Class => button.class = split_classes(&line.value),
+            ButtonLinkOption::Color(color) => button.color = Some(color),
+            ButtonLinkOption::Align(align) => button.align = Some(align),
+            ButtonLinkOption::Tooltip(tooltip) => button.tooltip = Some(tooltip.0),
+            ButtonLinkOption::Class(classes) => button.class = classes.0,
         }
     }
-}
-
-/// The written names of a closed option vocabulary, for a diagnostic.
-fn names<T: Copy>(values: &[T], name_of: fn(T) -> &'static str) -> String {
-    values
-        .iter()
-        .copied()
-        .map(name_of)
-        .collect::<Vec<_>>()
-        .join(", ")
-}
-
-/// Reports a value that is not one of the ones the option accepts, listing
-/// them in the order sphinx-design declares them.
-fn report_invalid_choice(
-    line: &OptionLine,
-    option: &str,
-    accepted: &str,
-    code: DiagnosticCode,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        code,
-        format!(
-            "{DIRECTIVE}: :{option}: expects one of {accepted}, found '{}'",
-            line.value
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
-}
-
-/// Reports an option written without the value it needs.
-fn report_empty_value(
-    line: &OptionLine,
-    option: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::ButtonLinkEmptyOptionValue,
-        format!(
-            "{DIRECTIVE}: a :{option}: option needs a value: {}",
-            line.raw
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
 }
 
 /// Reports an `:outline:` with no `:color:` to outline.

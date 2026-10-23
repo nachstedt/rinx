@@ -12,6 +12,7 @@
 //! later phase has anything to learn about it.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState};
+use crate::directives::option_value::report_missing_value;
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{Diagnostic, DiagnosticCode, Node, ResolvedLanguage, ScriptPosition, Span};
 use std::sync::LazyLock;
@@ -95,6 +96,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <RoleOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. role::`, which records a role and yields no node.
@@ -220,7 +222,7 @@ fn read_custom_role(
     {
         match (option, base) {
             (RoleOption::Language, BaseRole::Code) => {
-                language = read_language(name, line, diagnostics, ctx);
+                language = read_language(line, diagnostics, ctx);
             }
             (RoleOption::Language, BaseRole::Script(_)) => misplaced.push(line),
             (RoleOption::Class, _) => classes = Some(read_classes(line, diagnostics, ctx)),
@@ -238,19 +240,12 @@ fn read_custom_role(
 /// Reads a code role's `:language:`, reporting and falling back to no
 /// language when it names none.
 fn read_language(
-    name: &str,
     line: &OptionLine,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> ResolvedLanguage {
     ResolvedLanguage::parse(&line.value).unwrap_or_else(|_| {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::RoleEmptyLanguage,
-            format!(
-                "{DIRECTIVE}: ':language:' names no language; ':{name}:' is left unhighlighted"
-            ),
-            ctx.line_span(line.line_index, &line.raw),
-        ));
+        report_missing_value(line, DIRECTIVE, diagnostics, ctx);
         ResolvedLanguage::None
     })
 }
@@ -589,7 +584,7 @@ mod tests {
         let (_, roles, codes) = define("py(code)", &["   :language:"]);
 
         // Then
-        assert_eq!(codes, vec![DiagnosticCode::RoleEmptyLanguage]);
+        assert_eq!(codes, vec![DiagnosticCode::DirectiveEmptyOptionValue]);
         assert_eq!(
             roles.lookup("py"),
             Some(CustomRole::Code(CodeRole {

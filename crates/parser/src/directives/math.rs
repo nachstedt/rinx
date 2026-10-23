@@ -14,8 +14,9 @@
 //! parts have been rejoined.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::option_value::Classes;
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
-use rinx_ast::{Diagnostic, DiagnosticCode, Directive, Span, TargetName};
+use rinx_ast::{Directive, Span, TargetName};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -46,11 +47,11 @@ directive_options! {
     /// The options `.. math::` takes: Sphinx's five spellings.
     enum MathOption {
         /// `:label:`.
-        Label => (["label", "name"], Text, "A label to reference the equation by, which numbers it."),
+        Label(TargetName) => (["label", "name"], "A label to reference the equation by, which numbers it."),
         /// `:nowrap:`.
         NoWrap => (["nowrap", "no-wrap"], Flag, "Leaves the LaTeX unwrapped, its environment written by the author."),
         /// `:class:`.
-        Class => (["class"], Classes, "Classes for the equation."),
+        Class(Classes) => (["class"], "Classes for the equation."),
     }
 }
 
@@ -72,27 +73,11 @@ fn parse_math_options(
 ) -> MathOptions {
     let mut options = MathOptions::empty();
 
-    for (option, line) in classify_options::<MathOption>(option_lines, DIRECTIVE, diagnostics, ctx)
-    {
+    for (option, _) in classify_options::<MathOption>(option_lines, DIRECTIVE, diagnostics, ctx) {
         match option {
-            MathOption::Label => {
-                if line.value.is_empty() {
-                    diagnostics.push(Diagnostic::at(
-                        DiagnosticCode::MathEmptyLabel,
-                        format!(
-                            "{DIRECTIVE}: :{}: needs a label, so the equation is left unnumbered",
-                            line.name
-                        ),
-                        ctx.line_span(line.line_index, &line.raw),
-                    ));
-                } else {
-                    options.label = Some(TargetName::new(&line.value));
-                }
-            }
+            MathOption::Label(label) => options.label = Some(label),
             MathOption::NoWrap => options.nowrap = true,
-            MathOption::Class => {
-                options.classes = line.value.split_whitespace().map(str::to_string).collect();
-            }
+            MathOption::Class(classes) => options.classes = classes.0,
         }
     }
 
@@ -123,6 +108,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <MathOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. math::`.
@@ -204,6 +190,7 @@ fn equation_span(invocation: &DirectiveInvocation<'_, '_>) -> Option<Span> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rinx_ast::DiagnosticCode;
     use rinx_ast::Domain;
 
     fn parse(argument: &str, body: &[&str]) -> (Directive, Diagnostics) {
@@ -319,7 +306,10 @@ mod tests {
         };
         assert_eq!(label.as_ref(), None);
         assert_eq!(diagnostics.len(), 1);
-        assert_eq!(diagnostics[0].code, DiagnosticCode::MathEmptyLabel);
+        assert_eq!(
+            diagnostics[0].code,
+            DiagnosticCode::DirectiveEmptyOptionValue
+        );
     }
 
     #[test]

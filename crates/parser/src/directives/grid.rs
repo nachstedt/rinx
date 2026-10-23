@@ -20,10 +20,11 @@
 //! and both still render.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::option_value::{Margin, Padding};
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
     ChildAlign, ChildDirection, ColumnSpec, Diagnostic, DiagnosticCode, Directive, Grid, GridItem,
-    Gutter, Node, Spacing, SpacingKind, Span,
+    Gutter, Node, Span,
 };
 
 use crate::blocks::parse_blocks;
@@ -31,10 +32,8 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 
-use super::classes::split_classes;
-use super::options::{
-    DirectiveOptions, OptionLine, choice_names, classify_options, directive_options,
-};
+use super::option_value::Classes;
+use super::options::{DirectiveOptions, OptionLine, classify_options, directive_options};
 
 const GRID: &str = "grid";
 const GRID_ITEM: &str = "grid-item";
@@ -50,6 +49,7 @@ pub(in crate::directives) const GRID_SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <GridOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Parses a `.. grid::` into a [`Directive::Grid`].
@@ -89,6 +89,7 @@ pub(in crate::directives) const GRID_ITEM_SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <GridItemOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. grid::`.
@@ -174,19 +175,19 @@ directive_options! {
     /// The options `.. grid::` takes: sphinx-design's seven.
     enum GridOption {
         /// `:gutter:`.
-        Gutter => (["gutter"], Text, "The space between items, by spacing level, per breakpoint."),
+        Gutter(Gutter) => (["gutter"], GridInvalidGutter, "The space between items, by spacing level, per breakpoint."),
         /// `:margin:`.
-        Margin => (["margin"], Text, "The margin around the grid, by spacing level."),
+        Margin(Margin) => (["margin"], GridInvalidSpacing, "The margin around the grid, by spacing level."),
         /// `:padding:`.
-        Padding => (["padding"], Text, "The padding inside the grid, by spacing level."),
+        Padding(Padding) => (["padding"], GridInvalidSpacing, "The padding inside the grid, by spacing level."),
         /// `:outline:`.
         Outline => (["outline"], Flag, "Draws an outline around the grid."),
         /// `:reverse:`.
         Reverse => (["reverse"], Flag, "Reverses the order of the items."),
         /// `:class-container:`.
-        ClassContainer => (["class-container"], Classes, "Classes for the grid's container."),
+        ClassContainer(Classes) => (["class-container"], "Classes for the grid's container."),
         /// `:class-row:`.
-        ClassRow => (["class-row"], Classes, "Classes for the grid's row."),
+        ClassRow(Classes) => (["class-row"], "Classes for the grid's row."),
     }
 }
 
@@ -198,32 +199,17 @@ fn read_grid_options(
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) {
-    for (option, line) in classify_options::<GridOption>(option_lines, GRID, diagnostics, ctx) {
+    for (option, _) in classify_options::<GridOption>(option_lines, GRID, diagnostics, ctx) {
         match option {
-            GridOption::Gutter => match Gutter::parse(&line.value) {
-                Ok(gutter) => grid.gutter = Some(gutter),
-                Err(error) => report_invalid_value(
-                    line,
-                    GRID,
-                    "gutter",
-                    &error.to_string(),
-                    DiagnosticCode::GridInvalidGutter,
-                    diagnostics,
-                    ctx,
-                ),
-            },
-            GridOption::Margin => {
-                grid.margin = parse_spacing(line, GRID, SpacingKind::Margin, diagnostics, ctx);
-            }
-            GridOption::Padding => {
-                grid.padding = parse_spacing(line, GRID, SpacingKind::Padding, diagnostics, ctx);
-            }
+            GridOption::Gutter(gutter) => grid.gutter = Some(gutter),
+            GridOption::Margin(margin) => grid.margin = Some(margin.0),
+            GridOption::Padding(padding) => grid.padding = Some(padding.0),
             // Flags: `directives.flag` accepts no value at all, so what
             // matters is only that the option was written.
             GridOption::Outline => grid.outline = true,
             GridOption::Reverse => grid.reverse = true,
-            GridOption::ClassContainer => grid.class_container = split_classes(&line.value),
-            GridOption::ClassRow => grid.class_row = split_classes(&line.value),
+            GridOption::ClassContainer(classes) => grid.class_container = classes.0,
+            GridOption::ClassRow(classes) => grid.class_row = classes.0,
         }
     }
 }
@@ -232,19 +218,19 @@ directive_options! {
     /// The options `.. grid-item::` takes: sphinx-design's seven.
     enum GridItemOption {
         /// `:columns:`.
-        Columns => (["columns"], Text, "How many of the twelve columns the item spans, per breakpoint."),
+        Columns(ColumnSpec) => (["columns"], GridInvalidColumns, "How many of the twelve columns the item spans, per breakpoint."),
         /// `:margin:`.
-        Margin => (["margin"], Text, "The margin around the item, by spacing level."),
+        Margin(Margin) => (["margin"], GridInvalidSpacing, "The margin around the item, by spacing level."),
         /// `:padding:`.
-        Padding => (["padding"], Text, "The padding inside the item, by spacing level."),
+        Padding(Padding) => (["padding"], GridInvalidSpacing, "The padding inside the item, by spacing level."),
         /// `:child-direction:`.
-        ChildDirection => (["child-direction"], Choice(|| choice_names(ChildDirection::ALL, ChildDirection::as_str)), "How the item's children are laid out."),
+        ChildDirection(ChildDirection) => (["child-direction"], GridInvalidChildDirection, "How the item's children are laid out."),
         /// `:child-align:`.
-        ChildAlign => (["child-align"], Choice(|| choice_names(ChildAlign::ALL, ChildAlign::as_str)), "How the item's children are aligned."),
+        ChildAlign(ChildAlign) => (["child-align"], GridInvalidChildAlign, "How the item's children are aligned."),
         /// `:outline:`.
         Outline => (["outline"], Flag, "Draws an outline around the item."),
         /// `:class:`.
-        Class => (["class"], Classes, "Classes for the item."),
+        Class(Classes) => (["class"], "Classes for the item."),
     }
 }
 
@@ -256,86 +242,16 @@ fn read_item_options(
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) {
-    for (option, line) in
-        classify_options::<GridItemOption>(option_lines, GRID_ITEM, diagnostics, ctx)
+    for (option, _) in classify_options::<GridItemOption>(option_lines, GRID_ITEM, diagnostics, ctx)
     {
         match option {
-            GridItemOption::Columns => match ColumnSpec::parse(&line.value) {
-                Ok(columns) => item.columns = Some(columns),
-                Err(error) => report_invalid_value(
-                    line,
-                    GRID_ITEM,
-                    "columns",
-                    &error.to_string(),
-                    DiagnosticCode::GridInvalidColumns,
-                    diagnostics,
-                    ctx,
-                ),
-            },
-            GridItemOption::Margin => {
-                item.margin = parse_spacing(line, GRID_ITEM, SpacingKind::Margin, diagnostics, ctx);
-            }
-            GridItemOption::Padding => {
-                item.padding =
-                    parse_spacing(line, GRID_ITEM, SpacingKind::Padding, diagnostics, ctx);
-            }
-            GridItemOption::ChildDirection => match ChildDirection::parse(&line.value) {
-                Some(direction) => item.child_direction = direction,
-                None => report_invalid_choice(
-                    line,
-                    "child-direction",
-                    &names(ChildDirection::ALL, ChildDirection::as_str),
-                    DiagnosticCode::GridInvalidChildDirection,
-                    diagnostics,
-                    ctx,
-                ),
-            },
-            GridItemOption::ChildAlign => match ChildAlign::parse(&line.value) {
-                Some(align) => item.child_align = Some(align),
-                None => report_invalid_choice(
-                    line,
-                    "child-align",
-                    &names(ChildAlign::ALL, ChildAlign::as_str),
-                    DiagnosticCode::GridInvalidChildAlign,
-                    diagnostics,
-                    ctx,
-                ),
-            },
+            GridItemOption::Columns(columns) => item.columns = Some(columns),
+            GridItemOption::Margin(margin) => item.margin = Some(margin.0),
+            GridItemOption::Padding(padding) => item.padding = Some(padding.0),
+            GridItemOption::ChildDirection(direction) => item.child_direction = direction,
+            GridItemOption::ChildAlign(align) => item.child_align = Some(align),
             GridItemOption::Outline => item.outline = true,
-            GridItemOption::Class => item.classes = split_classes(&line.value),
-        }
-    }
-}
-
-/// Reads a `:margin:` or `:padding:` value for either directive.
-fn parse_spacing(
-    line: &OptionLine,
-    directive: &str,
-    kind: SpacingKind,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<Spacing> {
-    let option = match kind {
-        SpacingKind::Margin => "margin",
-        SpacingKind::Padding => "padding",
-    };
-    if line.value.is_empty() {
-        report_empty_value(line, directive, option, diagnostics, ctx);
-        return None;
-    }
-    match Spacing::parse(&line.value, kind) {
-        Ok(spacing) => Some(spacing),
-        Err(error) => {
-            report_invalid_value(
-                line,
-                directive,
-                option,
-                &error.to_string(),
-                DiagnosticCode::GridInvalidSpacing,
-                diagnostics,
-                ctx,
-            );
-            None
+            GridItemOption::Class(classes) => item.classes = classes.0,
         }
     }
 }
@@ -366,75 +282,11 @@ fn is_grid_item(node: &Node) -> bool {
     matches!(node, Node::Directive(Directive::GridItem(_)))
 }
 
-/// The written names of a closed option vocabulary, for a diagnostic.
-fn names<T: Copy>(values: &[T], name_of: fn(T) -> &'static str) -> String {
-    values
-        .iter()
-        .copied()
-        .map(name_of)
-        .collect::<Vec<_>>()
-        .join(", ")
-}
-
-/// Reports an option value the option's own type refused, quoting its reason.
-fn report_invalid_value(
-    line: &OptionLine,
-    directive: &str,
-    option: &str,
-    reason: &str,
-    code: DiagnosticCode,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        code,
-        format!("{directive}: :{option}: {reason}: {}", line.raw),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
-}
-
-/// Reports a value that is not one of the ones the option accepts, listing
-/// them in the order sphinx-design declares them.
-fn report_invalid_choice(
-    line: &OptionLine,
-    option: &str,
-    accepted: &str,
-    code: DiagnosticCode,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        code,
-        format!(
-            "{GRID_ITEM}: :{option}: expects one of {accepted}, found '{}'",
-            line.value
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
-}
-
-/// Reports an option written without the value it needs.
-fn report_empty_value(
-    line: &OptionLine,
-    directive: &str,
-    option: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::GridEmptyOptionValue,
-        format!(
-            "{directive}: a :{option}: option needs a value: {}",
-            line.raw
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::parse;
+    use rinx_ast::Spacing;
     use rinx_ast::{InlineNode, SpacingValue, Uml, walk_nodes};
 
     /// Parses a whole document and returns its single `.. grid::` with the
@@ -777,7 +629,7 @@ mod tests {
         // Then
         assert_eq!(
             codes(&diagnostics),
-            vec![DiagnosticCode::GridEmptyOptionValue]
+            vec![DiagnosticCode::DirectiveEmptyOptionValue]
         );
         assert_eq!(grid.margin, None);
     }
@@ -887,12 +739,12 @@ mod tests {
     }
 
     #[test]
-    fn test_names_lists_a_vocabulary_in_declaration_order() {
+    fn test_a_choice_lists_its_vocabulary_in_declaration_order() {
         // Given / When
-        let listed = names(ChildAlign::ALL, ChildAlign::as_str);
+        let listed = <ChildAlign as crate::directives::option_value::ChoiceValue>::choices();
 
         // Then
-        assert_eq!(listed, "start, end, center, justify, spaced");
+        assert_eq!(listed, ["start", "end", "center", "justify", "spaced"]);
     }
 
     #[test]

@@ -28,6 +28,7 @@ pub(in crate::directives) const SEEALSO_SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <SeeAlsoOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. seealso::`: the text after the `::` is the first line of the

@@ -81,7 +81,7 @@ directive_options! {
     /// takes: Sphinx's `PyObject`'s.
     pub(super) enum PyObjectOption {
         /// `:module:`.
-        Module => (["module"], Text, "The module the object belongs to, if not the current one."),
+        Module(String) => (["module"], "The module the object belongs to, if not the current one."),
         _ => (["annotation"], Text, "Text shown after the signature."),
         _ => (["single-line-parameter-list"], Flag, "Writes the parameters on one line, however long."),
         _ => (["single-line-type-parameter-list"], Flag, "Writes the type parameters on one line, however long."),

@@ -14,13 +14,11 @@
 //! any of the table options, so the generic half stops being named after one
 //! caller's construct.
 
-use std::num::NonZeroUsize;
-
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use rinx_ast::{Diagnostic, DiagnosticCode};
 
-use super::spec::{OptionSpec, OptionSupport};
+use super::spec::{OptionSpec, OptionSupport, OptionValue};
 
 /// One `:name: value` line, with the source text kept so a diagnostic can
 /// quote the line exactly as the author wrote it.
@@ -160,47 +158,13 @@ pub(in crate::directives) fn report_unknown_options(
     }
 }
 
-/// Reads an option whose value is a depth limit: a positive integer limits
-/// the depth, and Sphinx's documented "unlimited" spelling — zero or a
-/// negative number — clears it rather than being treated as a real limit.
-///
-/// Shared by `.. toctree::`'s `:maxdepth:` and `.. contents::`'s `:depth:`,
-/// which agree on this exact ambiguity; `directive` and `option` name the
-/// caller's own directive and option spelling for the diagnostic message, and
-/// `code` lets each caller keep its own stable, `.. noqa:`-suppressible code.
-pub(in crate::directives) fn parse_positive_depth(
-    line: &OptionLine,
-    directive: &str,
-    option: &str,
-    code: DiagnosticCode,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<NonZeroUsize> {
-    match line.value.trim().parse::<isize>() {
-        Ok(value) if value <= 0 => None,
-        Ok(value) => NonZeroUsize::new(usize::try_from(value).unwrap_or(0)),
-        Err(_) => {
-            diagnostics.push(Diagnostic::at(
-                code,
-                format!(
-                    "A {directive} :{option}: option needs a whole number: {}",
-                    line.raw
-                ),
-                ctx.line_span(line.line_index, &line.raw),
-            ));
-            None
-        }
-    }
-}
-
 /// Reads an option whose value is a percentage — `.. image::`'s `:scale:`
 /// and a diagram's alike.
 ///
 /// docutils' `directives.percentage` strips one trailing `%` and then demands
 /// a non-negative integer, so `50` and `50%` are the same option and `-50` is
-/// no option at all. Shared for the reason [`parse_positive_depth`] is: two
-/// directives agreeing on one ambiguity should not each own a copy of the
-/// answer.
+/// no option at all. Shared because two directives agreeing on one ambiguity
+/// should not each own a copy of the answer.
 pub(in crate::directives) fn parse_percentage(raw: &str) -> Option<u32> {
     let trimmed = raw.trim();
     let number = trimmed.strip_suffix('%').unwrap_or(trimmed).trim();
@@ -235,30 +199,58 @@ pub(in crate::directives) fn uri_argument(argument: &str) -> String {
 /// spellings and its [`OptionSpec`]s come from one table, so a `match` on it
 /// without a `_` arm makes an option that is listed but not read, or read but
 /// not listed, fail to compile.
-pub(in crate::directives) trait DirectiveOptions: Sized + Copy {
+pub(in crate::directives) trait DirectiveOptions: Sized {
     /// The directive's own options.
     const OWN: &'static [OptionSpec];
     /// Its own options, then each group it shares.
     const GROUPS: &'static [&'static [OptionSpec]];
-    /// The option written as `name`, if the directive takes it.
-    fn from_name(name: &str) -> Option<Self>;
+    /// Reads `line` as one of these options: its value parsed, reported when
+    /// it does not read, or not one of them at all.
+    fn read(
+        line: &OptionLine,
+        directive: &str,
+        diagnostics: &mut Diagnostics,
+        ctx: &ParseCtx<'_>,
+    ) -> OptionRead<Self>;
 }
 
-/// Declares one directive's option enum from a table of rows
-/// `Variant => (["spelling", "alias"], Value, "doc")`, then the options the
-/// reference implementation takes and this build does not, as rows
-/// `_ => (["spelling"], Value, "doc", "advice")` with the advice optional,
-/// followed after a `;` by any shared groups as `Variant(GroupEnum)`.
+/// What [`DirectiveOptions::read`] made of one option line.
+#[derive(Debug, Clone, PartialEq)]
+pub(in crate::directives) enum OptionRead<O> {
+    /// One of the options, its value read.
+    Read(O),
+    /// One of the options, whose value did not read; reported.
+    Refused,
+    /// None of the options.
+    NotTaken,
+}
+
+/// Declares one directive's option enum from a table of rows, then the
+/// options the reference implementation takes and this build does not, then
+/// after a `;` any shared groups as `Variant(GroupEnum)`.
 ///
-/// An unsupported row has no variant, so no parser reads it:
+/// A row is one of two kinds:
+///
+/// - `Variant(Type) => (["spelling", "alias"], Code, "doc")` — the value is
+///   read into `Type`, an [`OptionValueType`], and the variant carries it;
+///   one that does not read is reported under `Code`, or under
+///   `directive.invalid-option-value` when the row names none. What
+///   completion offers comes from the type.
+/// - `Variant => (["spelling"], Value, "doc")` — a flag, or a value the
+///   directive reads itself from the line handed over with the variant (a
+///   filter, which needs the schema and its column); `Value` says what
+///   completion offers.
+///
+/// An unsupported row, `_ => (["spelling"], Value, "doc", "advice")` with the
+/// advice optional, has no variant, so no parser reads it:
 /// [`classify_options`] reports it, with its advice, and completion still
 /// knows the name.
 ///
-/// Generates the enum, its [`DirectiveOptions`] — the lookup by spelling and
-/// the [`OptionSpec`]s completion and documentation read — from those rows
-/// alone. A group is another enum declared by this macro with no groups of
-/// its own; its options keep their own variant so a shared reader handles
-/// them once for every directive using the group.
+/// A group is another enum declared by this macro with no groups of its own;
+/// its options keep their own variant so a shared reader handles them once
+/// for every directive using the group.
+///
+/// [`OptionValueType`]: super::option_value::OptionValueType
 macro_rules! directive_options {
     (@advice) => {
         None
@@ -266,19 +258,50 @@ macro_rules! directive_options {
     (@advice $advice:expr) => {
         Some($advice)
     };
+    (@value [] [$kind:ident $(($choices:expr))?]) => {
+        $crate::directives::spec::OptionValue::$kind $(($choices))?
+    };
+    (@value [$ty:ty] [$($code:ident)?]) => {
+        <$ty as $crate::directives::option_value::OptionValueType>::VALUE
+    };
+    (@code) => {
+        rinx_ast::DiagnosticCode::DirectiveInvalidOptionValue
+    };
+    (@code $code:ident) => {
+        rinx_ast::DiagnosticCode::$code
+    };
+    (@read $variant:ident [] [$($second:tt)*] $line:ident $directive:ident $diagnostics:ident $ctx:ident) => {
+        $crate::directives::options::OptionRead::Read(Self::$variant)
+    };
+    (@read $variant:ident [$ty:ty] [$($code:ident)?] $line:ident $directive:ident $diagnostics:ident $ctx:ident) => {
+        match <$ty as $crate::directives::option_value::OptionValueType>::read($line, $ctx) {
+            Ok(value) => $crate::directives::options::OptionRead::Read(Self::$variant(value)),
+            Err(problem) => {
+                $crate::directives::option_value::report_unread_value(
+                    $line,
+                    $directive,
+                    directive_options!(@code $($code)?),
+                    &problem,
+                    $diagnostics,
+                    $ctx,
+                );
+                $crate::directives::options::OptionRead::Refused
+            }
+        }
+    };
     (
         $(#[doc = $doc:literal])*
         $vis:vis enum $name:ident {
             $( $(#[doc = $variant_doc:literal])*
-               $variant:ident => ([$($spelling:literal),+], $value:ident $(($choices:expr))?, $help:literal) $(,)? )*
+               $variant:ident $(($ty:ty))? => ([$($spelling:literal),+], $( $second:ident $(($choices:expr))? , )? $help:literal) $(,)? )*
             $( _ => ([$($u_spelling:literal),+], $u_value:ident $(($u_choices:expr))?, $u_help:literal $(, $u_advice:expr)?) $(,)? )*
             $( ; $( $group:ident($group_type:ty) ),+ $(,)? )?
         }
     ) => {
         $(#[doc = $doc])*
-        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+        #[derive(Debug, Clone, PartialEq)]
         $vis enum $name {
-            $( $(#[doc = $variant_doc])* $variant, )*
+            $( $(#[doc = $variant_doc])* $variant $(($ty))?, )*
             $( $( #[doc = concat!("One of the `", stringify!($group_type), "` options.")] $group($group_type), )+ )?
         }
 
@@ -286,7 +309,7 @@ macro_rules! directive_options {
             const OWN: &'static [$crate::directives::spec::OptionSpec] = &[
                 $( $crate::directives::spec::OptionSpec {
                     names: &[$($spelling),+],
-                    value: $crate::directives::spec::OptionValue::$value $(($choices))?,
+                    value: directive_options!(@value [$($ty)?] [$($second $(($choices))?)?]),
                     doc: $help,
                     support: $crate::directives::spec::OptionSupport::Supported,
                 }, )*
@@ -304,27 +327,52 @@ macro_rules! directive_options {
                 $( $( <$group_type as $crate::directives::options::DirectiveOptions>::OWN, )+ )?
             ];
 
-            fn from_name(name: &str) -> Option<Self> {
-                let spellings: &[(&str, Self)] = &[ $( $( ($spelling, Self::$variant), )+ )* ];
-                if let Some((_, option)) = spellings.iter().find(|(spelling, _)| *spelling == name) {
-                    return Some(*option);
-                }
+            fn read(
+                line: &$crate::directives::options::OptionLine,
+                directive: &str,
+                diagnostics: &mut $crate::diagnostics::Diagnostics,
+                ctx: &$crate::context::ParseCtx<'_>,
+            ) -> $crate::directives::options::OptionRead<Self> {
+                let name = line.name.as_str();
+                $(
+                    if matches!(name, $($spelling)|+) {
+                        return directive_options!(
+                            @read $variant [$($ty)?] [$($second)?] line directive diagnostics ctx
+                        );
+                    }
+                )*
                 $( $(
-                    if let Some(option) =
-                        <$group_type as $crate::directives::options::DirectiveOptions>::from_name(name)
-                    {
-                        return Some(Self::$group(option));
+                    match <$group_type as $crate::directives::options::DirectiveOptions>::read(
+                        line, directive, diagnostics, ctx,
+                    ) {
+                        $crate::directives::options::OptionRead::Read(option) => {
+                            return $crate::directives::options::OptionRead::Read(Self::$group(option));
+                        }
+                        $crate::directives::options::OptionRead::Refused => {
+                            return $crate::directives::options::OptionRead::Refused;
+                        }
+                        $crate::directives::options::OptionRead::NotTaken => {}
                     }
                 )+ )?
-                None
+                // A table of only unsupported rows reads nothing at all.
+                let _ = (name, directive, diagnostics, ctx);
+                $crate::directives::options::OptionRead::NotTaken
             }
         }
     };
 }
 pub(in crate::directives) use directive_options;
 
-/// The option lines `O` takes, each with its option; every other line is
-/// reported as `directive.unknown-option` under `directive`'s name.
+/// The option lines `O` takes, each with its option — its value read — and
+/// the line it was written on, in the order written.
+///
+/// A value that does not read is reported and left out. An option written
+/// again under the same spelling is reported each further time and still
+/// handed over, as is a flag written with a value. Two spellings of one
+/// option (`:noindex:` and `:no-index:`) are not a repeat: docutils keys
+/// options by spelling, and a page writing both for two Sphinx versions is
+/// deliberate. Every other line is reported as unsupported when `O`
+/// declares it so, as `directive.unknown-option` otherwise.
 pub(in crate::directives) fn classify_options<'l, O: DirectiveOptions>(
     option_lines: &'l [OptionLine],
     directive: &str,
@@ -333,28 +381,92 @@ pub(in crate::directives) fn classify_options<'l, O: DirectiveOptions>(
 ) -> Vec<(O, &'l OptionLine)> {
     let mut known = Vec::new();
     let mut unknown = Vec::new();
+    let mut written: Vec<&str> = Vec::new();
     for line in option_lines {
-        if let Some(option) = O::from_name(&line.name) {
-            known.push((option, line));
-        } else if let Some(OptionSupport::Unsupported { advice }) =
-            declared_support::<O>(&line.name)
-        {
-            report_unsupported_option(line, directive, advice, diagnostics, ctx);
-        } else {
-            unknown.push(line);
+        let spec = declared_spec::<O>(&line.name);
+        if spec.is_some_and(|spec| spec.support == OptionSupport::Supported) {
+            if written.contains(&line.name.as_str()) {
+                report_duplicate_option(line, directive, diagnostics, ctx);
+            } else {
+                written.push(&line.name);
+            }
+        }
+        match O::read(line, directive, diagnostics, ctx) {
+            OptionRead::Read(option) => {
+                if spec.is_some_and(|spec| matches!(spec.value, OptionValue::Flag))
+                    && !line.value.is_empty()
+                {
+                    report_flag_with_value(line, directive, diagnostics, ctx);
+                }
+                known.push((option, line));
+            }
+            OptionRead::Refused => {}
+            OptionRead::NotTaken => match spec.map(|spec| spec.support) {
+                Some(OptionSupport::Unsupported { advice }) => {
+                    report_unsupported_option(line, directive, advice, diagnostics, ctx);
+                }
+                _ => unknown.push(line),
+            },
         }
     }
     report_unknown_options(&unknown, directive, diagnostics, ctx);
     known
 }
 
-/// How the option written as `name` is supported, if `O` declares it at all.
-fn declared_support<O: DirectiveOptions>(name: &str) -> Option<OptionSupport> {
+/// Reports an option written again, which docutils refuses; the line is still
+/// read, so which one counts stays the directive's to decide.
+fn report_duplicate_option(
+    line: &OptionLine,
+    directive: &str,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) {
+    diagnostics.push(Diagnostic::at(
+        DiagnosticCode::DirectiveDuplicateOption,
+        format!("{directive}: :{}: is given more than once", line.name),
+        ctx.line_span(line.line_index, &line.raw),
+    ));
+}
+
+/// Reports a flag written with a value, which docutils refuses; the flag still
+/// applies.
+fn report_flag_with_value(
+    line: &OptionLine,
+    directive: &str,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) {
+    diagnostics.push(Diagnostic::at(
+        DiagnosticCode::DirectiveFlagWithValue,
+        format!(
+            "{directive}: :{}: takes no value, so '{}' was ignored",
+            line.name, line.value
+        ),
+        ctx.line_span(line.line_index, &line.raw),
+    ));
+}
+
+/// The option `line` is, read with nothing reported — for tests about a
+/// table's spellings rather than its diagnostics.
+#[cfg(test)]
+pub(in crate::directives) fn read_quietly<O: DirectiveOptions>(line: &OptionLine) -> Option<O> {
+    match O::read(
+        line,
+        "test",
+        &mut Diagnostics::default(),
+        &ParseCtx::with_domain(rinx_ast::Domain::Py),
+    ) {
+        OptionRead::Read(option) => Some(option),
+        OptionRead::Refused | OptionRead::NotTaken => None,
+    }
+}
+
+/// The option written as `name`, if `O` declares it at all.
+fn declared_spec<O: DirectiveOptions>(name: &str) -> Option<&'static OptionSpec> {
     O::GROUPS
         .iter()
         .flat_map(|group| group.iter())
         .find(|spec| spec.names.contains(&name))
-        .map(|spec| spec.support)
 }
 
 /// Reports an option the reference implementation takes and this build
@@ -396,6 +508,7 @@ pub(in crate::directives) fn choice_names<T: Copy>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::directives::spec::OptionValue;
     use rinx_ast::Domain;
 
     super::directive_options! {
@@ -413,29 +526,39 @@ mod tests {
             LinkTypes => (["link_types", "link-types"], Text, "Which links."),
             /// One with a choice.
             Align => (["align"], Choice(|| vec!["left", "right"]), "Where it sits."),
+            /// One read into a type, under a code of its own.
+            Count(usize) => (["count"], TableDataIntegerInvalid, "How many."),
+            /// One read into a type, under the shared code.
+            Title(crate::directives::option_value::NonEmptyText) => (["title"], "Its title."),
+            /// Another, which a written value can fail.
+            Ratio(crate::directives::option_value::Percentage) => (["ratio"], "How much."),
             _ => (["class"], Classes, "Classes for the output.", "write it on a container"),
             _ => (["name"], Text, "A label for the output.");
             Shared(SharedOption),
         }
     }
 
+    /// The option written as `name`, with no value.
+    fn named(name: &str) -> Option<SampleOption> {
+        read_quietly(&OptionLine {
+            name: name.to_string(),
+            value: String::new(),
+            raw: format!(":{name}:"),
+            line_index: 0,
+        })
+    }
+
     #[test]
-    fn test_from_name_reads_every_spelling_and_each_group() {
+    fn test_read_takes_every_spelling_and_each_group() {
         // Given / When / Then
+        assert_eq!(named("link-types"), Some(SampleOption::LinkTypes));
+        assert_eq!(named("link_types"), Some(SampleOption::LinkTypes));
         assert_eq!(
-            SampleOption::from_name("link-types"),
-            Some(SampleOption::LinkTypes)
-        );
-        assert_eq!(
-            SampleOption::from_name("link_types"),
-            Some(SampleOption::LinkTypes)
-        );
-        assert_eq!(
-            SampleOption::from_name("wide"),
+            named("wide"),
             Some(SampleOption::Shared(SharedOption::Wide))
         );
-        assert_eq!(SampleOption::from_name("other"), None);
-        assert_eq!(SampleOption::from_name("class"), None);
+        assert_eq!(named("other"), None);
+        assert_eq!(named("class"), None);
     }
 
     #[test]
@@ -448,8 +571,163 @@ mod tests {
             .collect();
 
         // Then
-        assert_eq!(names, ["link_types", "align", "class", "name", "wide"]);
+        assert_eq!(
+            names,
+            [
+                "link_types",
+                "align",
+                "count",
+                "title",
+                "ratio",
+                "class",
+                "name",
+                "wide"
+            ]
+        );
         assert_eq!(SampleOption::OWN[0].names, ["link_types", "link-types"]);
+    }
+
+    #[test]
+    fn test_a_typed_row_takes_its_value_kind_from_its_type() {
+        // Given / When / Then
+        assert!(matches!(SampleOption::OWN[2].value, OptionValue::Integer));
+        assert!(matches!(SampleOption::OWN[3].value, OptionValue::Text));
+    }
+
+    #[test]
+    fn test_classify_options_hands_over_a_typed_value_parsed() {
+        // Given
+        let lines: Vec<String> = [":count: 3", ":title: Hello"].map(String::from).to_vec();
+        let (option_lines, _) = scan_option_lines(&lines);
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let known = classify_options::<SampleOption>(
+            &option_lines,
+            "sample",
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
+
+        // Then
+        assert!(diagnostics.is_empty());
+        let options: Vec<SampleOption> = known.into_iter().map(|(option, _)| option).collect();
+        assert_eq!(
+            options,
+            [
+                SampleOption::Count(3),
+                SampleOption::Title(crate::directives::option_value::NonEmptyText(
+                    "Hello".to_string()
+                )),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_classify_options_reports_a_bad_value_and_leaves_it_out() {
+        // Given — one under the row's own code, one under the shared code,
+        // one missing
+        let lines: Vec<String> = [":count: many", ":ratio: half", ":title:", ":align: left"]
+            .map(String::from)
+            .to_vec();
+        let (option_lines, _) = scan_option_lines(&lines);
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let known = classify_options::<SampleOption>(
+            &option_lines,
+            "sample",
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
+
+        // Then
+        assert_eq!(known.len(), 1);
+        assert_eq!(known[0].0, SampleOption::Align);
+        let codes: Vec<DiagnosticCode> = diagnostics.iter().map(|d| d.code).collect();
+        assert_eq!(
+            codes,
+            [
+                DiagnosticCode::TableDataIntegerInvalid,
+                DiagnosticCode::DirectiveInvalidOptionValue,
+                DiagnosticCode::DirectiveEmptyOptionValue,
+            ]
+        );
+        assert!(
+            diagnostics
+                .iter()
+                .next()
+                .is_some_and(|d| d.message.starts_with("sample: :count: "))
+        );
+    }
+
+    #[test]
+    fn test_classify_options_reports_a_repeated_option_and_hands_every_one_over() {
+        // Given — `:link_types:` twice, and its alias once, which is no repeat
+        let lines: Vec<String> = [":link_types: a", ":link-types: b", ":link_types: c"]
+            .map(String::from)
+            .to_vec();
+        let (option_lines, _) = scan_option_lines(&lines);
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let known = classify_options::<SampleOption>(
+            &option_lines,
+            "sample",
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
+
+        // Then
+        assert_eq!(known.len(), 3);
+        let found: Vec<_> = diagnostics.iter().collect();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].code, DiagnosticCode::DirectiveDuplicateOption);
+        assert_eq!(found[0].span.map(|span| span.start.line), Some(3));
+    }
+
+    #[test]
+    fn test_classify_options_reports_a_value_written_on_a_flag_and_keeps_the_flag() {
+        // Given
+        let lines: Vec<String> = [":wide: yes"].map(String::from).to_vec();
+        let (option_lines, _) = scan_option_lines(&lines);
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let known = classify_options::<SampleOption>(
+            &option_lines,
+            "sample",
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
+
+        // Then
+        assert_eq!(known[0].0, SampleOption::Shared(SharedOption::Wide));
+        let found: Vec<_> = diagnostics.iter().collect();
+        assert_eq!(found[0].code, DiagnosticCode::DirectiveFlagWithValue);
+        assert!(found[0].message.contains("'yes'"), "{}", found[0].message);
+    }
+
+    #[test]
+    fn test_read_answers_not_taken_for_a_name_of_no_row() {
+        // Given
+        let line = OptionLine {
+            name: "bogus".to_string(),
+            value: String::new(),
+            raw: ":bogus:".to_string(),
+            line_index: 0,
+        };
+
+        // When
+        let read = SampleOption::read(
+            &line,
+            "sample",
+            &mut Diagnostics::default(),
+            &ParseCtx::with_domain(Domain::Py),
+        );
+
+        // Then
+        assert_eq!(read, OptionRead::NotTaken);
     }
 
     #[test]
@@ -497,23 +775,26 @@ mod tests {
     }
 
     #[test]
-    fn test_declared_support_tells_supported_unsupported_and_undeclared_apart() {
+    fn test_declared_spec_tells_supported_unsupported_and_undeclared_apart() {
         // Given / When / Then
         assert_eq!(
-            declared_support::<SampleOption>("wide"),
+            declared_spec::<SampleOption>("wide").map(|spec| spec.support),
             Some(OptionSupport::Supported)
         );
         assert_eq!(
-            declared_support::<SampleOption>("class"),
+            declared_spec::<SampleOption>("class").map(|spec| spec.support),
             Some(OptionSupport::Unsupported {
                 advice: Some("write it on a container")
             })
         );
         assert_eq!(
-            declared_support::<SampleOption>("name"),
+            declared_spec::<SampleOption>("name").map(|spec| spec.support),
             Some(OptionSupport::Unsupported { advice: None })
         );
-        assert_eq!(declared_support::<SampleOption>("bogus"), None);
+        assert_eq!(
+            declared_spec::<SampleOption>("bogus").map(|spec| spec.support),
+            None
+        );
     }
 
     #[test]
@@ -816,104 +1097,6 @@ mod tests {
         // Then
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(diagnostics[0].code, DiagnosticCode::DirectiveUnknownOption);
-    }
-
-    fn option_line(name: &str, value: &str) -> OptionLine {
-        OptionLine {
-            name: name.to_string(),
-            value: value.to_string(),
-            raw: format!(":{name}: {value}"),
-            line_index: 0,
-        }
-    }
-
-    #[test]
-    fn test_parse_positive_depth_reads_a_positive_value() {
-        // Given
-        let line = option_line("depth", "2");
-        let mut diagnostics = Diagnostics::default();
-
-        // When
-        let depth = parse_positive_depth(
-            &line,
-            "contents",
-            "depth",
-            DiagnosticCode::ContentsDepthInvalid,
-            &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
-        );
-
-        // Then
-        assert_eq!(depth, NonZeroUsize::new(2));
-        assert!(diagnostics.is_empty());
-    }
-
-    #[test]
-    fn test_parse_positive_depth_treats_zero_as_unlimited() {
-        // Given
-        let line = option_line("depth", "0");
-        let mut diagnostics = Diagnostics::default();
-
-        // When
-        let depth = parse_positive_depth(
-            &line,
-            "contents",
-            "depth",
-            DiagnosticCode::ContentsDepthInvalid,
-            &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
-        );
-
-        // Then
-        assert_eq!(depth, None);
-        assert!(diagnostics.is_empty());
-    }
-
-    #[test]
-    fn test_parse_positive_depth_treats_a_negative_value_as_unlimited() {
-        // Given — Sphinx's documented spelling of "no limit".
-        let line = option_line("maxdepth", "-1");
-        let mut diagnostics = Diagnostics::default();
-
-        // When
-        let depth = parse_positive_depth(
-            &line,
-            "toctree",
-            "maxdepth",
-            DiagnosticCode::ToctreeMaxdepthInvalid,
-            &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
-        );
-
-        // Then
-        assert_eq!(depth, None);
-        assert!(diagnostics.is_empty());
-    }
-
-    #[test]
-    fn test_parse_positive_depth_diagnoses_a_non_numeric_value_under_the_callers_code() {
-        // Given
-        let line = option_line("depth", "deep");
-        let mut diagnostics = Diagnostics::default();
-
-        // When
-        let depth = parse_positive_depth(
-            &line,
-            "contents",
-            "depth",
-            DiagnosticCode::ContentsDepthInvalid,
-            &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
-        );
-
-        // Then
-        assert_eq!(depth, None);
-        assert_eq!(diagnostics.len(), 1);
-        assert_eq!(
-            diagnostics.entries()[0].code,
-            DiagnosticCode::ContentsDepthInvalid
-        );
-        assert!(diagnostics.entries()[0].message.contains(":depth:"));
     }
 
     #[test]

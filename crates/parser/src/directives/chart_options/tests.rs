@@ -9,7 +9,6 @@ const CODES: ChartCodes = ChartCodes {
     invalid_scale: DiagnosticCode::EntityBarInvalidScale,
     invalid_width: DiagnosticCode::EntityBarInvalidWidth,
     unusable_scale: DiagnosticCode::EntityBarUnusableScale,
-    empty_option_value: DiagnosticCode::EntityBarEmptyOptionValue,
 };
 
 const OWNER: ChartOwner<'static> = ChartOwner {
@@ -42,7 +41,7 @@ fn test_a_figure_option_is_read_into_its_value() {
 
     // When
     let (read, reported) =
-        run(|d, ctx| read_figure_option(ChartFigureOption::Align, &line, OWNER, d, ctx));
+        run(|d, ctx| read_figure_option(&ChartFigureOption::Align, &line, OWNER, d, ctx));
 
     // Then
     assert_eq!(read, Some(FigureOption::Align(ImageAlign::Center)));
@@ -56,7 +55,7 @@ fn test_classes_are_split_on_whitespace() {
 
     // When
     let (read, _) =
-        run(|d, ctx| read_figure_option(ChartFigureOption::Class, &line, OWNER, d, ctx));
+        run(|d, ctx| read_figure_option(&ChartFigureOption::Class, &line, OWNER, d, ctx));
 
     // Then
     assert_eq!(
@@ -75,7 +74,7 @@ fn test_a_bad_figure_value_is_reported_under_the_callers_code() {
 
     // When
     let (read, reported) =
-        run(|d, ctx| read_figure_option(ChartFigureOption::Scale, &line, OWNER, d, ctx));
+        run(|d, ctx| read_figure_option(&ChartFigureOption::Scale, &line, OWNER, d, ctx));
 
     // Then
     assert_eq!(read, None);
@@ -90,11 +89,11 @@ fn test_an_empty_name_is_reported_rather_than_registered() {
 
     // When
     let (read, reported) =
-        run(|d, ctx| read_figure_option(ChartFigureOption::Name, &line, OWNER, d, ctx));
+        run(|d, ctx| read_figure_option(&ChartFigureOption::Name, &line, OWNER, d, ctx));
 
     // Then
     assert_eq!(read, None);
-    assert_eq!(reported[0].code, DiagnosticCode::EntityBarEmptyOptionValue);
+    assert_eq!(reported[0].code, DiagnosticCode::DirectiveEmptyOptionValue);
 }
 
 #[test]

@@ -1,5 +1,6 @@
 //! `.. list-table::` — a table whose rows are a nested bullet list.
 
+use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
@@ -11,7 +12,7 @@ use rinx_ast::{
 use super::options::{ListTableOption, SharedTableOptions, parse_list_table_options};
 use crate::directives::error_node::malformed_directive;
 use crate::directives::options::DirectiveOptions;
-use crate::directives::table_widths::parse_widths_option;
+use crate::directives::table_widths::widths_for_columns;
 use crate::headings::Adornment;
 
 /// This directive's entry in the table of directives this build implements.
@@ -25,6 +26,7 @@ pub(in crate::directives) const LIST_TABLE_SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <ListTableOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. list-table::`.
@@ -75,7 +77,7 @@ pub(in crate::directives) fn parse_list_table(
     // their own, so every row-level diagnostic points at the directive body.
     let table_span = invocation.body_span();
     let (rows, ncols) = lower_list_table_rows(row_items, diagnostics, table_span);
-    build_list_table(title, options, rows, ncols, diagnostics, table_span)
+    build_list_table(title, options, rows, ncols, diagnostics, ctx)
 }
 
 /// Assembles the parsed pieces into the AST node, resolving `:widths:` (which
@@ -92,11 +94,11 @@ fn build_list_table(
     rows: Vec<TableRow>,
     ncols: usize,
     diagnostics: &mut Diagnostics,
-    span: Option<Span>,
+    ctx: &ParseCtx<'_>,
 ) -> Directive {
     let widths: Option<TableWidths> = options
-        .widths_raw
-        .and_then(|raw| parse_widths_option(&raw, ncols, "list-table", diagnostics, span));
+        .widths
+        .and_then(|widths| widths_for_columns(widths, ncols, "list-table", diagnostics, ctx));
 
     Directive::DataTable {
         source: TableSource::List,

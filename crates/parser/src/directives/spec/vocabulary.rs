@@ -31,6 +31,10 @@ pub struct DirectiveSpec {
     /// The options it takes, in groups: its own first, then each group it
     /// shares with other directives (the table presentation options, …).
     pub options: &'static [&'static [OptionSpec]],
+    /// Whether it also takes options beyond those, which its interpreter
+    /// reads itself: `.. entity-update::`'s field mutations, the schema's
+    /// fields, and `.. needservice::`'s, the external service's.
+    pub accepts_further: bool,
 }
 
 impl DirectiveSpec {

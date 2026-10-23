@@ -23,14 +23,16 @@
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
-use rinx_ast::{Diagnostic, DiagnosticCode, Directive, EntityPie, EntityPieSource, PieSlice, Span};
+use rinx_ast::{
+    ChartColor, Diagnostic, DiagnosticCode, Directive, EntityPie, EntityPieSource, PieSlice, Span,
+};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
 use super::chart_options::{
-    ChartCodes, ChartFigureOption, ChartOwner, FigureOption, read_color, read_colors,
-    read_figure_option, report_unusable_scale,
+    ChartCodes, ChartFigureOption, ChartOwner, FigureOption, read_colors, read_figure_option,
+    report_unusable_scale,
 };
 use super::filter_option::{
     FilterCodes, FilterOwner, FilterSite, ShorthandFilterOption, read_filter_option,
@@ -53,7 +55,7 @@ directive_options! {
         /// `:colors:`.
         Colors => (["colors"], Text, "The wedges' colours, comma-separated, in content order."),
         /// `:text_color:`.
-        TextColor => (["text_color", "text-color"], Text, "The colour of the chart's text."),
+        TextColor(ChartColor) => (["text_color", "text-color"], EntityPieInvalidColor, "The colour of the chart's text."),
         _ => (["explode"], Text, "How far each wedge is pulled out.", "every wedge is drawn in place; use :colors: to tell them apart"),
         _ => (["shadow"], Flag, "Draws a shadow below the pie.", "wedges are drawn flat"),
         _ => (["style"], Text, "A matplotlib stylesheet.", "that names a matplotlib stylesheet, which this build does not use"),
@@ -76,6 +78,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <EntityPieOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. entity-pie::` or `.. needpie::`, recording which was
@@ -266,12 +269,10 @@ fn read_options(
             EntityPieOption::Colors => {
                 pie.colors = read_colors(line, owner(directive), diagnostics, ctx);
             }
-            EntityPieOption::TextColor => {
-                pie.text_color = read_color(&line.value, line, owner(directive), diagnostics, ctx);
-            }
+            EntityPieOption::TextColor(color) => pie.text_color = Some(color),
             EntityPieOption::Figure(option) => {
                 if let Some(option) =
-                    read_figure_option(option, line, owner(directive), diagnostics, ctx)
+                    read_figure_option(&option, line, owner(directive), diagnostics, ctx)
                 {
                     store_figure_option(pie, option);
                 }
@@ -331,7 +332,6 @@ const CHART_CODES: ChartCodes = ChartCodes {
     invalid_scale: DiagnosticCode::EntityPieInvalidScale,
     invalid_width: DiagnosticCode::EntityPieInvalidWidth,
     unusable_scale: DiagnosticCode::EntityPieUnusableScale,
-    empty_option_value: DiagnosticCode::EntityPieEmptyOptionValue,
 };
 
 #[cfg(test)]

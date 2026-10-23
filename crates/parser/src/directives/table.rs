@@ -14,7 +14,7 @@ use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::options::{DirectiveOptions, classify_options};
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use crate::directives::table_options::{CommonTableOptions, TableOption, read_table_option};
-use crate::directives::table_widths::parse_widths_option;
+use crate::directives::table_widths::widths_for_columns;
 use crate::headings::Adornment;
 use rinx_ast::{DiagnosticCode, Directive, Node};
 
@@ -32,6 +32,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <TableOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. table::`.
@@ -91,8 +92,8 @@ pub(in crate::directives) fn parse_table_directive(
         .or_else(|| header_rows.first())
         .map_or(0, |row| row.cells.len());
     let widths = options
-        .widths_raw
-        .and_then(|raw| parse_widths_option(&raw, ncols, DIRECTIVE, diagnostics, span));
+        .widths
+        .and_then(|widths| widths_for_columns(widths, ncols, DIRECTIVE, diagnostics, ctx));
 
     Directive::Table {
         title,

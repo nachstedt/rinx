@@ -18,6 +18,7 @@
 //! page with a missing picture.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
+use crate::directives::option_value::{Classes, NonEmptyText, Percentage};
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, ImageAlign, LengthOrPercentage, TargetName, Uml,
@@ -27,10 +28,7 @@ use rinx_ast::{
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
-use super::options::{
-    DirectiveOptions, OptionLine, choice_names, classify_options, directive_options,
-    parse_percentage,
-};
+use super::options::{DirectiveOptions, OptionLine, classify_options, directive_options};
 
 /// The plain `PlantUML` directives' entry in the table of directives this
 /// build implements: sphinxcontrib-plantuml's two spellings.
@@ -39,6 +37,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     doc: "A PlantUML diagram.",
     shape: UML_SHAPE,
     options: <PlantUmlOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// The templated diagrams' entry in the table: this build's two spellings and
@@ -48,6 +47,7 @@ pub(in crate::directives) const TEMPLATED_SPEC: DirectiveSpec = DirectiveSpec {
     doc: "A PlantUML diagram written as a template over the entity graph.",
     shape: UML_SHAPE,
     options: <TemplatedUmlOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// How every diagram's block splits: an optional argument — a file to read in
@@ -63,19 +63,19 @@ directive_options! {
     /// The options every diagram takes, whatever its spelling.
     enum UmlCommonOption {
         /// `:caption:`.
-        Caption => (["caption"], Text, "A caption shown below the diagram."),
+        Caption(String) => (["caption"], "A caption shown below the diagram."),
         /// `:align:`.
-        Align => (["align"], Choice(|| choice_names(ImageAlign::ALL, ImageAlign::as_str)), "Where the diagram sits."),
+        Align(ImageAlign) => (["align"], UmlInvalidAlign, "Where the diagram sits."),
         /// `:scale:`.
-        Scale => (["scale"], Text, "The diagram's size, as a percentage."),
+        Scale(Percentage) => (["scale"], UmlInvalidScale, "The diagram's size, as a percentage."),
         /// `:width:`.
-        Width => (["width"], Length, "The diagram's width."),
+        Width(LengthOrPercentage) => (["width"], UmlInvalidWidth, "The diagram's width."),
         /// `:class:`.
-        Class => (["class"], Classes, "Classes for the diagram."),
+        Class(Classes) => (["class"], "Classes for the diagram."),
         /// `:name:`.
-        Name => (["name"], Text, "A label to reference the diagram by."),
+        Name(TargetName) => (["name"], "A label to reference the diagram by."),
         /// `:config:`.
-        Config => (["config"], Text, "PlantUML configuration written before the diagram."),
+        Config(NonEmptyText) => (["config"], "PlantUML configuration written before the diagram."),
         /// `:debug:`.
         Debug => (["debug"], Flag, "Shows the expanded PlantUML source below the diagram."),
     }
@@ -99,7 +99,7 @@ directive_options! {
     /// ones every diagram takes.
     enum TemplatedUmlOption {
         /// `:key:`.
-        Key => (["key"], Text, "Which of the entity's diagrams this is."),
+        Key(NonEmptyText) => (["key"], "Which of the entity's diagrams this is."),
         /// `:extra:`.
         Extra => (["extra"], Text, "Values the template reads, as `name:value` pairs."),
         _ => (["save"], Path, "A file the expanded source is written to.", "a build action may only write files declared before it runs; build the site's `diagram_sources` output group to get every diagram's expanded source instead");
@@ -175,12 +175,12 @@ fn read_options(
 ) {
     let directive = uml.source.as_str();
     if !uml.source.is_templated() {
-        for (option, line) in
+        for (option, _line) in
             classify_options::<PlantUmlOption>(option_lines, directive, diagnostics, ctx)
         {
             match option {
                 PlantUmlOption::Common(common) => {
-                    read_common_option(uml, common, line, diagnostics, ctx);
+                    read_common_option(uml, common);
                 }
             }
         }
@@ -190,82 +190,27 @@ fn read_options(
         classify_options::<TemplatedUmlOption>(option_lines, directive, diagnostics, ctx)
     {
         match option {
-            TemplatedUmlOption::Key => {
-                if line.value.is_empty() {
-                    report_empty_value(line, uml.source, diagnostics, ctx);
-                } else {
-                    uml.key = Some(line.value.clone());
-                }
-            }
+            TemplatedUmlOption::Key(key) => uml.key = Some(key.0),
             TemplatedUmlOption::Extra => read_extra(uml, line, diagnostics, ctx),
             TemplatedUmlOption::Common(common) => {
-                read_common_option(uml, common, line, diagnostics, ctx);
+                read_common_option(uml, common);
             }
         }
     }
 }
 
 /// Records one of the options every diagram takes.
-fn read_common_option(
-    uml: &mut Uml,
-    option: UmlCommonOption,
-    line: &OptionLine,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
+fn read_common_option(uml: &mut Uml, option: UmlCommonOption) {
     match option {
-        UmlCommonOption::Config => {
-            if line.value.is_empty() {
-                report_empty_value(line, uml.source, diagnostics, ctx);
-            } else {
-                uml.config = Some(line.value.clone());
-            }
-        }
+        UmlCommonOption::Config(config) => uml.config = Some(config.0),
         // A flag: what matters is only that the option was written.
         UmlCommonOption::Debug => uml.debug = true,
-        UmlCommonOption::Caption => uml.caption = Some(line.value.clone()),
-        UmlCommonOption::Align => match ImageAlign::parse(&line.value) {
-            Some(align) => uml.align = Some(align),
-            None => diagnostics.push(Diagnostic::at(
-                DiagnosticCode::UmlInvalidAlign,
-                format!(
-                    "{}: :align: expects one of center, left, right, found '{}'",
-                    uml.source.as_str(),
-                    line.value
-                ),
-                ctx.line_span(line.line_index, &line.raw),
-            )),
-        },
-        UmlCommonOption::Scale => match parse_percentage(&line.value) {
-            Some(scale) => uml.scale = Some(scale),
-            None => diagnostics.push(Diagnostic::at(
-                DiagnosticCode::UmlInvalidScale,
-                format!(
-                    "{}: :scale: expects a non-negative percentage, found '{}'",
-                    uml.source.as_str(),
-                    line.value
-                ),
-                ctx.line_span(line.line_index, &line.raw),
-            )),
-        },
-        UmlCommonOption::Width => match LengthOrPercentage::new(&line.value) {
-            Ok(width) => uml.width = Some(width),
-            Err(problem) => diagnostics.push(Diagnostic::at(
-                DiagnosticCode::UmlInvalidWidth,
-                format!("{}: :width: {problem}", uml.source.as_str()),
-                ctx.line_span(line.line_index, &line.raw),
-            )),
-        },
-        UmlCommonOption::Class => {
-            uml.classes = line.value.split_whitespace().map(str::to_string).collect();
-        }
-        UmlCommonOption::Name => {
-            if line.value.is_empty() {
-                report_empty_value(line, uml.source, diagnostics, ctx);
-            } else {
-                uml.name = Some(TargetName::new(&line.value));
-            }
-        }
+        UmlCommonOption::Caption(caption) => uml.caption = Some(caption),
+        UmlCommonOption::Align(align) => uml.align = Some(align),
+        UmlCommonOption::Scale(scale) => uml.scale = Some(scale.0),
+        UmlCommonOption::Width(width) => uml.width = Some(width),
+        UmlCommonOption::Class(classes) => uml.classes = classes.0,
+        UmlCommonOption::Name(name) => uml.name = Some(name),
     }
 }
 
@@ -321,24 +266,6 @@ fn report_unusable_scale(
             source.as_str()
         ),
         span,
-    ));
-}
-
-/// Reports an option whose value is required but was left empty.
-fn report_empty_value(
-    line: &OptionLine,
-    source: UmlSource,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::UmlEmptyOptionValue,
-        format!(
-            "{}: :{}: needs a value, so the option was ignored",
-            source.as_str(),
-            line.name
-        ),
-        ctx.line_span(line.line_index, &line.raw),
     ));
 }
 
@@ -629,7 +556,10 @@ mod tests {
 
         // Then
         assert_eq!(uml.key, None);
-        assert_eq!(codes(&diagnostics), [DiagnosticCode::UmlEmptyOptionValue]);
+        assert_eq!(
+            codes(&diagnostics),
+            [DiagnosticCode::DirectiveEmptyOptionValue]
+        );
     }
 
     #[test]

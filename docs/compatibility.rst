@@ -352,6 +352,10 @@ Directives
          rinx does not, as ``directive.unsupported-option``, saying what to
          write instead. Both are ignored, where docutils discards the
          directive.
+       - An option given twice under the same spelling warns as
+         ``directive.duplicate-option`` and a flag written with a value as
+         ``directive.flag-with-value``; both are read, where docutils
+         discards the directive.
    * - ``.. toctree::``
      - 🔶
      - - ``:class:`` is not supported.

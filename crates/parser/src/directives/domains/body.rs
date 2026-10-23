@@ -13,9 +13,7 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::{
-    DirectiveOptions, OptionLine, classify_options, directive_options,
-};
+use crate::directives::options::{DirectiveOptions, classify_options, directive_options};
 use crate::headings::Adornment;
 use rinx_ast::{DescriptionFlag, DescriptionFlags, Node};
 
@@ -50,7 +48,7 @@ pub(super) trait ObjectOptions: Default {
     type Option: DirectiveOptions;
 
     /// Records one option, a description flag into `flags`.
-    fn read(&mut self, option: Self::Option, line: &OptionLine, flags: &mut DescriptionFlags);
+    fn read(&mut self, option: Self::Option, flags: &mut DescriptionFlags);
 }
 
 directive_options! {
@@ -65,12 +63,7 @@ directive_options! {
 impl ObjectOptions for () {
     type Option = PlainObjectOption;
 
-    fn read(
-        &mut self,
-        option: PlainObjectOption,
-        _line: &OptionLine,
-        flags: &mut DescriptionFlags,
-    ) {
+    fn read(&mut self, option: PlainObjectOption, flags: &mut DescriptionFlags) {
         match option {
             PlainObjectOption::Description(option) => flags.set(option.flag()),
         }
@@ -96,10 +89,10 @@ pub(super) fn parse_object_body<O: ObjectOptions>(
 ) -> ObjectBody<O> {
     let mut options = O::default();
     let mut flags = DescriptionFlags::default();
-    for (option, line) in
+    for (option, _line) in
         classify_options::<O::Option>(&invocation.options, directive, diagnostics, &invocation.ctx)
     {
-        options.read(option, line, &mut flags);
+        options.read(option, &mut flags);
     }
 
     let content = invocation
@@ -115,7 +108,7 @@ pub(super) fn parse_object_body<O: ObjectOptions>(
 #[cfg(test)]
 pub(super) mod test_support {
     use super::ObjectOptions;
-    use crate::directives::options::{DirectiveOptions, scan_option_lines};
+    use crate::directives::options::scan_option_lines;
     use rinx_ast::DescriptionFlags;
 
     /// What `body` — an object's body lines, already unindented — reads as:
@@ -130,8 +123,8 @@ pub(super) mod test_support {
         let mut flags = DescriptionFlags::default();
         let mut unrecognized = Vec::new();
         for line in &option_lines {
-            match O::Option::from_name(&line.name) {
-                Some(option) => options.read(option, line, &mut flags),
+            match crate::directives::options::read_quietly::<O::Option>(line) {
+                Some(option) => options.read(option, &mut flags),
                 None => unrecognized.push(line.name.clone()),
             }
         }

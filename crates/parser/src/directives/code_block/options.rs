@@ -8,15 +8,17 @@
 
 use std::num::NonZeroU32;
 
-use rinx_ast::{CodeBlockSource, CodeLanguage, Diagnostic, DiagnosticCode, TargetName};
+use rinx_ast::{CodeBlockSource, CodeLanguage, TargetName};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::option_value::{Classes, Located, OptionValueType};
 use crate::directives::options::{
     OptionLine, classify_options, directive_options, report_unknown_options,
 };
+use crate::directives::spec::OptionValue;
 
-use super::dedent::{Dedent, parse_dedent};
+use super::dedent::Dedent;
 
 /// The options recognized on a code block, before validation against the body.
 pub(super) struct CodeBlockOptions {
@@ -25,7 +27,7 @@ pub(super) struct CodeBlockOptions {
     pub(super) classes: Vec<String>,
     pub(super) linenos: bool,
     pub(super) lineno_start: Option<NonZeroU32>,
-    pub(super) emphasize_lines_raw: Option<(String, usize, String)>,
+    pub(super) emphasize_lines_raw: Option<Located<String>>,
     pub(super) dedent: Option<Dedent>,
     pub(super) force: bool,
 }
@@ -49,9 +51,9 @@ directive_options! {
     /// The options every code block directive takes.
     pub(super) enum CommonCodeOption {
         /// `:name:`.
-        Name => (["name"], Text, "A label to reference the block by."),
+        Name(TargetName) => (["name"], "A label to reference the block by."),
         /// `:class:`.
-        Class => (["class"], Classes, "Classes for the block."),
+        Class(Classes) => (["class"], "Classes for the block."),
         /// `:caption:`.
         Caption => (["caption"], Text, "A caption shown above the block."),
     }
@@ -64,11 +66,11 @@ directive_options! {
         /// `:linenos:`.
         Linenos => (["linenos"], Flag, "Numbers the lines."),
         /// `:lineno-start:`.
-        LinenoStart => (["lineno-start"], Integer, "The number the first line gets, which numbers the lines."),
+        LinenoStart(NonZeroU32) => (["lineno-start"], CodeBlockInvalidInteger, "The number the first line gets, which numbers the lines."),
         /// `:emphasize-lines:`.
-        EmphasizeLines => (["emphasize-lines"], Text, "The lines to emphasize, as numbers and ranges."),
+        EmphasizeLines(Located<String>) => (["emphasize-lines"], "The lines to emphasize, as numbers and ranges."),
         /// `:dedent:`.
-        Dedent => (["dedent"], Integer, "Strips this much indentation, or the common indentation with no value."),
+        Dedent(Dedent) => (["dedent"], CodeBlockInvalidInteger, "Strips this much indentation, or the common indentation with no value."),
         /// `:force:`.
         Force => (["force"], Flag, "Highlights even where the language does not fit."),
     }
@@ -87,7 +89,7 @@ directive_options! {
     /// The options docutils' `.. code::` takes, with Sphinx's `:force:`.
     pub(super) enum CodeOption {
         /// `:number-lines:`.
-        NumberLines => (["number-lines"], Integer, "Numbers the lines, from the number given if any."),
+        NumberLines(LineNumbering) => (["number-lines"], CodeBlockInvalidInteger, "Numbers the lines, from the number given if any."),
         /// `:force:`.
         Force => (["force"], Flag, "Highlights even where the language does not fit.");
         Common(CommonCodeOption),
@@ -110,18 +112,9 @@ pub(super) fn parse_code_block_options(
         {
             match option {
                 // One option carrying both facts.
-                CodeOption::NumberLines => {
+                CodeOption::NumberLines(numbering) => {
                     options.linenos = true;
-                    if !line.value.is_empty() {
-                        options.lineno_start = parse_positive_integer(
-                            &line.value,
-                            "number-lines",
-                            directive,
-                            line,
-                            diagnostics,
-                            ctx,
-                        );
-                    }
+                    options.lineno_start = numbering.0;
                 }
                 CodeOption::Force => options.force = true,
                 CodeOption::Common(common) => {
@@ -158,22 +151,8 @@ pub(super) fn read_common_option(
     ctx: &ParseCtx<'_>,
 ) {
     match option {
-        CommonCodeOption::Name => {
-            if line.value.is_empty() {
-                diagnostics.push(Diagnostic::at(
-                    DiagnosticCode::CodeBlockEmptyName,
-                    format!(
-                        "{directive}: :name: needs a value, so nothing can reference this block"
-                    ),
-                    ctx.line_span(line.line_index, &line.raw),
-                ));
-            } else {
-                options.name = Some(TargetName::new(&line.value));
-            }
-        }
-        CommonCodeOption::Class => {
-            options.classes = line.value.split_whitespace().map(str::to_string).collect();
-        }
+        CommonCodeOption::Name(name) => options.name = Some(name),
+        CommonCodeOption::Class(classes) => options.classes = classes.0,
         CommonCodeOption::Caption => {
             if line.value.is_empty() {
                 report_unknown_options(&[line], directive, diagnostics, ctx);
@@ -188,59 +167,19 @@ pub(super) fn read_common_option(
 /// options.
 pub(super) fn read_sphinx_option(
     option: SphinxCodeOption,
-    line: &OptionLine,
+    _line: &OptionLine,
     options: &mut CodeBlockOptions,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
+    _directive: &str,
+    _diagnostics: &mut Diagnostics,
+    _ctx: &ParseCtx<'_>,
 ) {
     match option {
         SphinxCodeOption::Linenos => options.linenos = true,
-        SphinxCodeOption::LinenoStart => {
-            options.lineno_start = parse_positive_integer(
-                &line.value,
-                "lineno-start",
-                directive,
-                line,
-                diagnostics,
-                ctx,
-            );
-        }
-        SphinxCodeOption::EmphasizeLines => {
-            options.emphasize_lines_raw =
-                Some((line.value.clone(), line.line_index, line.raw.clone()));
-        }
-        SphinxCodeOption::Dedent => {
-            options.dedent = parse_dedent(&line.value, directive, line, diagnostics, ctx);
-        }
+        SphinxCodeOption::LinenoStart(start) => options.lineno_start = Some(start),
+        SphinxCodeOption::EmphasizeLines(lines) => options.emphasize_lines_raw = Some(lines),
+        SphinxCodeOption::Dedent(dedent) => options.dedent = Some(dedent),
         SphinxCodeOption::Force => options.force = true,
     }
-}
-
-/// Reads an option value that must be a positive integer.
-///
-/// Returns `None` on a bad value *after* reporting it, so a mistyped option is
-/// dropped rather than silently becoming a plausible-looking default.
-pub(super) fn parse_positive_integer(
-    value: &str,
-    option: &str,
-    directive: &str,
-    line: &OptionLine,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<NonZeroU32> {
-    let Ok(parsed) = value.trim().parse::<NonZeroU32>() else {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::CodeBlockInvalidInteger,
-            format!(
-                "{directive}: :{option}: needs a positive integer, got '{}'",
-                line.value
-            ),
-            ctx.line_span(line.line_index, &line.raw),
-        ));
-        return None;
-    };
-    Some(parsed)
 }
 
 /// Reads the directive's argument as a language.
@@ -288,7 +227,7 @@ mod tests {
         // Then
         assert_eq!(
             codes(&diagnostics),
-            vec![DiagnosticCode::CodeBlockEmptyName]
+            vec![DiagnosticCode::DirectiveEmptyOptionValue]
         );
         assert_eq!(block.name, None);
     }
@@ -422,5 +361,20 @@ mod tests {
             vec![DiagnosticCode::DirectiveUnknownOption]
         );
         assert!(!block.linenos);
+    }
+}
+
+/// A `:number-lines:`: line numbers, from the number given if any.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct LineNumbering(Option<NonZeroU32>);
+
+impl OptionValueType for LineNumbering {
+    const VALUE: OptionValue = OptionValue::Integer;
+
+    fn read(line: &OptionLine, ctx: &ParseCtx<'_>) -> Result<Self, String> {
+        if line.value.trim().is_empty() {
+            return Ok(Self(None));
+        }
+        NonZeroU32::read(line, ctx).map(|start| Self(Some(start)))
     }
 }
