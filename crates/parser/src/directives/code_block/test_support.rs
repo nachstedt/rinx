@@ -32,7 +32,7 @@ pub(super) fn parse_as(
     let written = written_after_blank(body_lines);
     let invocation = test_invocation(
         source.directive_name(),
-        CODE_BLOCK_SPEC.shape,
+        &CODE_BLOCK_SPEC,
         argument,
         &written,
         &mut diagnostics,
@@ -51,7 +51,7 @@ pub(super) fn highlight(argument: &str, body_lines: &[&str]) -> (Directive, Diag
     let ctx = ParseCtx::with_domain(Domain::Py);
     let invocation = test_invocation(
         "highlight",
-        HIGHLIGHT_SPEC.shape,
+        &HIGHLIGHT_SPEC,
         argument,
         body_lines,
         &mut diagnostics,

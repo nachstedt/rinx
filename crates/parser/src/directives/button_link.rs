@@ -19,7 +19,7 @@
 //! directive here follows.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     ButtonFlag, ButtonLink, ButtonTarget, Diagnostic, DiagnosticCode, Directive, InlineNode,
     SemanticColor, TextAlign,
@@ -41,13 +41,10 @@ const DIRECTIVE: &str = "button-link";
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["button-link"],
     doc: "A link drawn as a button.",
-    shape: DirectiveShape {
-        arguments: Arguments::ONE_TEXT,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <ButtonLinkOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <ButtonLinkOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 

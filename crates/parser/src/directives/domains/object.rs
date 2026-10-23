@@ -112,7 +112,7 @@ mod tests {
         let written = crate::directives::reader::written_after_blank(&body_lines);
         let invocation = crate::directives::reader::test_invocation(
             "function",
-            super::super::object_type::object_shape(object_type),
+            super::super::object_type::object_spec(object_type),
             &signature,
             &written,
             &mut diagnostics,
@@ -157,7 +157,7 @@ mod tests {
         let written = crate::directives::reader::written_after_blank(&body_lines);
         let invocation = crate::directives::reader::test_invocation(
             "c:function",
-            super::super::object_type::object_shape(object_type),
+            super::super::object_type::object_spec(object_type),
             &signature,
             &written,
             &mut diagnostics,
@@ -192,7 +192,7 @@ mod tests {
         let written = crate::directives::reader::written_after_blank(&body_lines);
         let invocation = crate::directives::reader::test_invocation(
             "function",
-            super::super::object_type::object_shape(object_type),
+            super::super::object_type::object_spec(object_type),
             &signature,
             &written,
             &mut diagnostics,
@@ -226,7 +226,7 @@ mod tests {
         let written = crate::directives::reader::written_after_blank(&body_lines);
         let invocation = crate::directives::reader::test_invocation(
             "function",
-            super::super::object_type::object_shape(object_type),
+            super::super::object_type::object_spec(object_type),
             &signature,
             &written,
             &mut diagnostics,
@@ -269,7 +269,7 @@ mod tests {
         let written = crate::directives::reader::written_after_blank(&body_lines);
         let invocation = crate::directives::reader::test_invocation(
             "function",
-            super::super::object_type::object_shape(object_type),
+            super::super::object_type::object_spec(object_type),
             &signature,
             &written,
             &mut diagnostics,

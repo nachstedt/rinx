@@ -21,7 +21,7 @@
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::option_value::{Margin, Padding};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     ChildAlign, ChildDirection, ColumnSpec, Diagnostic, DiagnosticCode, Directive, Grid, GridItem,
     Gutter, Node, Span,
@@ -42,13 +42,10 @@ const GRID_ITEM: &str = "grid-item";
 pub(in crate::directives) const GRID_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["grid"],
     doc: "A responsive row of grid items.",
-    shape: DirectiveShape {
-        arguments: Arguments::OPTIONAL_TEXT,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <GridOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <GridOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -82,13 +79,10 @@ pub(super) fn parse_grid(
 pub(in crate::directives) const GRID_ITEM_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["grid-item"],
     doc: "One cell of a grid.",
-    shape: DirectiveShape {
-        arguments: Arguments::NONE,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <GridItemOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::NONE,
+    takes_content: true,
+    content_hint: None,
+    options: <GridItemOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 

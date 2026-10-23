@@ -13,7 +13,7 @@
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState};
 use crate::directives::option_value::report_missing_value;
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{Diagnostic, DiagnosticCode, Node, ResolvedLanguage, ScriptPosition, Span};
 use std::sync::LazyLock;
 
@@ -89,13 +89,10 @@ directive_options! {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["role"],
     doc: "Defines a role for the rest of the document.",
-    shape: DirectiveShape {
-        arguments: Arguments::ONE_TEXT,
-        takes_options: true,
-        takes_content: false,
-        content_hint: None,
-    },
-    options: <RoleOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::ONE_TEXT,
+    takes_content: false,
+    content_hint: None,
+    options: <RoleOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -297,7 +294,7 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
         let invocation = crate::directives::reader::test_invocation(
             "role",
-            SPEC.shape,
+            &SPEC,
             argument,
             body,
             &mut diagnostics,

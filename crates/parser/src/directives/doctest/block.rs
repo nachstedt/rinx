@@ -4,7 +4,7 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, DocTestBlock, DocTestGroupSelector, HashedContent,
     NonEmptyVector, Span,
@@ -19,21 +19,14 @@ use super::options::{
 };
 use crate::directives::options::DirectiveOptions;
 
-/// How every directive of the family splits: an optional group name, its
-/// options, and its code.
-const DOCTEST_SHAPE: DirectiveShape = DirectiveShape {
-    arguments: Arguments::OPTIONAL_TEXT,
-    takes_options: true,
-    takes_content: true,
-    content_hint: None,
-};
-
 /// The entry of the two directives stating output a run is compared against.
 pub(in crate::directives) const DOCTEST_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["doctest", "testoutput"],
     doc: "Code a doctest run executes, or the output it expects.",
-    shape: DOCTEST_SHAPE,
-    options: <DocTestOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <DocTestOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -41,8 +34,10 @@ pub(in crate::directives) const DOCTEST_SPEC: DirectiveSpec = DirectiveSpec {
 pub(in crate::directives) const TESTCODE_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["testcode"],
     doc: "Code a doctest run executes, its output stated by a `testoutput`.",
-    shape: DOCTEST_SHAPE,
-    options: <TestCodeOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <TestCodeOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -50,8 +45,10 @@ pub(in crate::directives) const TESTCODE_SPEC: DirectiveSpec = DirectiveSpec {
 pub(in crate::directives) const TEST_SETUP_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["testsetup", "testcleanup"],
     doc: "Code a doctest run executes before or after its group, never shown.",
-    shape: DOCTEST_SHAPE,
-    options: <TestSetupOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <TestSetupOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -215,7 +212,7 @@ pub(super) mod tests {
         let written = crate::directives::reader::written_after_blank(body);
         let invocation = crate::directives::reader::test_invocation(
             kind.as_name(),
-            DOCTEST_SHAPE,
+            &DOCTEST_SPEC,
             argument,
             &written,
             &mut diagnostics,

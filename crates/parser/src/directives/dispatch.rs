@@ -10,10 +10,11 @@ use crate::headings::Adornment;
 use crate::indent::indent_width;
 
 use super::body::{MarkerLine, MarkerText, body_indent, collect_directive_body};
-use super::domains::object_type::{object_shape, resolve_domain_object_type};
+use super::domains::object_type::{object_spec, resolve_domain_object_type};
 use super::domains::parse_domain_object;
-use super::entity::{ENTITY_SHAPE, EntityDirective, parse_entity};
+use super::entity::{EntityDirective, parse_entity};
 use super::entity_section::{EntitySectionSite, try_parse_entity_section};
+use super::entity_spec::EntitySpec;
 use super::error_node::unknown_directive;
 use super::invocation::ParseState;
 use super::reader::read_directive_block;
@@ -87,7 +88,7 @@ pub(crate) fn try_parse_directive(
     let nodes = if let Some(directive) = registered_directive(&name) {
         let invocation = read_directive_block(
             &name,
-            directive.spec.shape,
+            directive.spec,
             &marker,
             &body,
             &body_lines,
@@ -98,7 +99,7 @@ pub(crate) fn try_parse_directive(
     } else if let Some(scope) = resolve_scope_directive(&name, ctx.default_domain) {
         let invocation = read_directive_block(
             &name,
-            scope.shape(),
+            scope.spec(),
             &marker,
             &body,
             &body_lines,
@@ -257,7 +258,7 @@ fn try_parse_domain_object_directive(
     };
     let invocation = read_directive_block(
         name,
-        object_shape(object_type),
+        object_spec(object_type),
         &marker,
         &body,
         &body_lines,
@@ -301,7 +302,7 @@ fn try_parse_entity_directive(
     // need's content with `match_titles=False` — the reader's default.
     let invocation = read_directive_block(
         name,
-        ENTITY_SHAPE,
+        &EntitySpec::new(entity_type).spec(),
         &marker,
         &body,
         &body_lines,

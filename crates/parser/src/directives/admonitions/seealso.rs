@@ -3,7 +3,7 @@
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::options::{DirectiveOptions, classify_options, directive_options};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use crate::headings::Adornment;
 
 use super::admonition::CalloutOption;
@@ -21,13 +21,10 @@ directive_options! {
 pub(in crate::directives) const SEEALSO_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["seealso"],
     doc: "A callout pointing the reader to related material.",
-    shape: DirectiveShape {
-        arguments: Arguments::NONE,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <SeeAlsoOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::NONE,
+    takes_content: true,
+    content_hint: None,
+    options: <SeeAlsoOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -89,7 +86,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "seealso",
-            SEEALSO_SPEC.shape,
+            &SEEALSO_SPEC,
             "",
             &body,
             &mut diagnostics,

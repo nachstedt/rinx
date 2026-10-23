@@ -1,7 +1,8 @@
 //! Reading a reStructuredText directive's block into a
 //! [`DirectiveInvocation`], by docutils' own rule (`RSTState.
 //! parse_directive_block` and `parse_directive_arguments`) over the
-//! directive's [`DirectiveShape`].
+//! directive's [`DirectiveSpec`]: the arguments it takes, and whether it
+//! takes options and content.
 //!
 //! The block is the text after the marker's `::` and the indented lines below
 //! it. When the directive takes arguments or options, its first lines up to a
@@ -26,16 +27,16 @@ use rinx_ast::{Diagnostic, DiagnosticCode};
 use super::body::{DirectiveBody, MarkerLine};
 use super::invocation::DirectiveInvocation;
 use super::options::{is_field_marker, scan_option_lines};
-use super::spec::{Arguments, DirectiveShape};
+use super::spec::{Arguments, DirectiveSpec};
 
 /// The directive written as `name` on `marker`, with `body` below it, read by
-/// `shape`.
+/// `spec`.
 ///
 /// `source_body` is the body as written, for a node quoting it back; `ctx` is
 /// the context the marker line was read in.
 pub(in crate::directives) fn read_directive_block<'a, 'c>(
     name: &'a str,
-    shape: DirectiveShape,
+    spec: &DirectiveSpec<'_>,
     marker: &MarkerLine<'_>,
     body: &DirectiveBody<'_>,
     source_body: &'a [&'a str],
@@ -47,18 +48,18 @@ pub(in crate::directives) fn read_directive_block<'a, 'c>(
     let block_ctx = ctx
         .hanging(marker.index, marker.argument.column, indent)
         .without_section_titles();
-    let split = split_block(&lines, shape);
+    let split = split_block(&lines, spec);
     let arguments = read_arguments(
         &lines[split.arguments.clone()].join("\n"),
-        shape.arguments,
+        spec.arguments,
         name,
         marker,
         diagnostics,
     );
-    if !shape.takes_content {
+    if !spec.takes_content {
         let refused = RefusedContent {
             directive: name,
-            hint: shape.content_hint,
+            hint: spec.content_hint,
         };
         report_content(
             &lines,
@@ -124,12 +125,13 @@ struct BlockSplit {
     content_start: usize,
 }
 
-/// Splits `lines` by `shape`, as `parse_directive_block` does.
-fn split_block(lines: &[String], shape: DirectiveShape) -> BlockSplit {
+/// Splits `lines` by `spec`, as `parse_directive_block` does.
+fn split_block(lines: &[String], spec: &DirectiveSpec<'_>) -> BlockSplit {
     // An empty marker line is no part of the block.
     let start = usize::from(lines.first().is_some_and(|line| line.trim().is_empty()));
-    let takes_arguments = shape.arguments.takes_any();
-    let argument_block_end = if takes_arguments || shape.takes_options {
+    let takes_arguments = spec.arguments.takes_any();
+    let takes_options = spec.takes_options();
+    let argument_block_end = if takes_arguments || takes_options {
         lines[start..]
             .iter()
             .position(|line| line.trim().is_empty())
@@ -138,7 +140,7 @@ fn split_block(lines: &[String], shape: DirectiveShape) -> BlockSplit {
         start
     };
 
-    let (arguments_end, options, option_lines) = if shape.takes_options {
+    let (arguments_end, options, option_lines) = if takes_options {
         read_option_lines(lines, start, argument_block_end)
     } else {
         (
@@ -295,12 +297,12 @@ fn report_content(
 }
 
 /// A test's invocation of `name` with `argument` on its marker line and
-/// `body_lines` below it, read by `shape` as the dispatcher would, under
+/// `body_lines` below it, read by `spec` as the dispatcher would, under
 /// `ctx` positioned at the marker line.
 #[cfg(test)]
 pub(in crate::directives) fn test_invocation<'a, 'c>(
     name: &'a str,
-    shape: DirectiveShape,
+    spec: &DirectiveSpec<'_>,
     argument: &'a str,
     body_lines: &'a [&'a str],
     diagnostics: &mut Diagnostics,
@@ -327,7 +329,7 @@ pub(in crate::directives) fn test_invocation<'a, 'c>(
             column: 0,
         },
     };
-    read_directive_block(name, shape, &marker, &body, body_lines, diagnostics, ctx)
+    read_directive_block(name, spec, &marker, &body, body_lines, diagnostics, ctx)
 }
 
 /// `body` as a document writes a directive's content below its marker: after
@@ -352,31 +354,34 @@ mod tests {
     use super::*;
     use rinx_ast::{Domain, Position};
 
-    /// The shape of a directive taking one argument keeping the rest of its
-    /// line, options and content — an image with a legend, say.
-    const TEXT_ARGUMENT: DirectiveShape = DirectiveShape {
+    /// A directive taking one argument keeping the rest of its line, options
+    /// and content — an image with a legend, say.
+    const TEXT_ARGUMENT: DirectiveSpec = DirectiveSpec {
+        names: &["x"],
+        doc: "A test directive.",
         arguments: Arguments::ONE_TEXT,
-        takes_options: true,
         takes_content: true,
         content_hint: None,
+        options: crate::directives::spec::OptionSet::NONE,
+        accepts_further: true,
     };
 
-    /// The shape of an admonition: no argument, options and content.
-    const NO_ARGUMENT: DirectiveShape = DirectiveShape {
+    /// An admonition: no argument, options and content.
+    const NO_ARGUMENT: DirectiveSpec = DirectiveSpec {
         arguments: Arguments::NONE,
         ..TEXT_ARGUMENT
     };
 
-    /// What `.. x:: argument` over `body` reads as under `shape`: the
+    /// What `.. x:: argument` over `body` reads as under `spec`: the
     /// arguments, option names, content lines and diagnostic codes.
     fn read(
-        shape: DirectiveShape,
+        spec: DirectiveSpec<'static>,
         argument: &str,
         body: &[&str],
     ) -> (Vec<String>, Vec<String>, Vec<String>, Vec<DiagnosticCode>) {
         let mut diagnostics = Diagnostics::default();
         let ctx = ParseCtx::with_domain(Domain::Py);
-        let invocation = test_invocation("x", shape, argument, body, &mut diagnostics, &ctx);
+        let invocation = test_invocation("x", &spec, argument, body, &mut diagnostics, &ctx);
         let options = invocation.options.iter().map(|o| o.name.clone()).collect();
         let content = invocation.content().lines;
         let codes = diagnostics.iter().map(|d| d.code).collect();
@@ -467,13 +472,13 @@ mod tests {
     #[test]
     fn test_surplus_words_are_reported_and_ignored_without_final_whitespace() {
         // Given
-        let shape = DirectiveShape {
+        let spec = DirectiveSpec {
             arguments: Arguments::OPTIONAL_WORD,
             ..TEXT_ARGUMENT
         };
 
         // When
-        let (arguments, _, _, codes) = read(shape, "python extra", &[]);
+        let (arguments, _, _, codes) = read(spec, "python extra", &[]);
 
         // Then
         assert_eq!(arguments, ["python"]);
@@ -483,7 +488,7 @@ mod tests {
     #[test]
     fn test_the_last_argument_keeps_the_rest_with_final_whitespace() {
         // Given
-        let shape = DirectiveShape {
+        let spec = DirectiveSpec {
             arguments: Arguments {
                 required: 1,
                 optional: 1,
@@ -493,7 +498,7 @@ mod tests {
         };
 
         // When — a version change's version and explanation
-        let (arguments, _, _, codes) = read(shape, "3.1 Some  text", &["   continued"]);
+        let (arguments, _, _, codes) = read(spec, "3.1 Some  text", &["   continued"]);
 
         // Then
         assert_eq!(arguments, ["3.1", "Some  text\ncontinued"]);
@@ -510,7 +515,7 @@ mod tests {
     #[test]
     fn test_content_is_reported_for_a_directive_taking_none() {
         // Given
-        let shape = DirectiveShape {
+        let spec = DirectiveSpec {
             takes_content: false,
             content_hint: Some("use figure for a caption"),
             ..TEXT_ARGUMENT
@@ -520,7 +525,7 @@ mod tests {
         let body = ["", "   A caption."];
 
         // When
-        test_invocation("image", shape, "logo.png", &body, &mut diagnostics, &ctx);
+        test_invocation("image", &spec, "logo.png", &body, &mut diagnostics, &ctx);
 
         // Then
         let found: Vec<_> = diagnostics.iter().collect();
@@ -535,7 +540,7 @@ mod tests {
     #[test]
     fn test_text_after_the_marker_is_named_when_a_directive_takes_neither() {
         // Given
-        let shape = DirectiveShape {
+        let spec = DirectiveSpec {
             arguments: Arguments::NONE,
             takes_content: false,
             ..TEXT_ARGUMENT
@@ -544,7 +549,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
 
         // When
-        test_invocation("sectnum", shape, "oops", &[], &mut diagnostics, &ctx);
+        test_invocation("sectnum", &spec, "oops", &[], &mut diagnostics, &ctx);
 
         // Then
         let found: Vec<_> = diagnostics.iter().collect();

@@ -14,7 +14,7 @@
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::option_value::OptionValueType;
 use crate::directives::spec::OptionValue;
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{Animation, Chevron, Directive, Dropdown, OcticonName, SemanticColor, TargetName};
 
 use crate::context::ParseCtx;
@@ -31,13 +31,10 @@ const DIRECTIVE: &str = "dropdown";
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["dropdown"],
     doc: "A collapsible container.",
-    shape: DirectiveShape {
-        arguments: Arguments::OPTIONAL_TEXT,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <DropdownOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <DropdownOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -146,7 +143,7 @@ fn read_options(
 struct Octicon(OcticonName);
 
 impl OptionValueType for Octicon {
-    const VALUE: OptionValue = OptionValue::Text;
+    const VALUE: OptionValue<'static> = OptionValue::Text;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         let name = OcticonName::new(&line.value).map_err(|error| error.to_string())?;

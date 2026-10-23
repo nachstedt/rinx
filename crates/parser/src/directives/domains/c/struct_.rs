@@ -1,7 +1,9 @@
 use super::super::body::parse_object_body;
-use super::dispatch::CObjectOptions;
+use super::dispatch::{CObjectOption, CObjectOptions};
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
+use crate::directives::options::DirectiveOptions;
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use crate::headings::Adornment;
 use rinx_ast::{CSignature, DomainObjectBody, NonEmptyVector};
 
@@ -21,6 +23,17 @@ pub(crate) fn parse_c_struct(
         body: parsed.content,
     }
 }
+
+/// `.. c:struct::`'s entry among the domain objects.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["struct"],
+    doc: "Describes a C struct.",
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <CObjectOption as DirectiveOptions>::OPTIONS,
+    accepts_further: false,
+};
 
 #[cfg(test)]
 mod tests {

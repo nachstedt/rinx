@@ -30,7 +30,7 @@
 //! Bazel `deps` entry for documents only the PDF build would reach.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec, OptionSet};
 use rinx_ast::{Diagnostic, DiagnosticCode, Node};
 
 use crate::diagnostics::Diagnostics;
@@ -85,13 +85,10 @@ const KNOWN_BUILDERS: &[&str] = &[
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["if-builder"],
     doc: "Content kept only when building with the named builder.",
-    shape: DirectiveShape {
-        arguments: Arguments::ONE_TEXT,
-        takes_options: false,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: &[],
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: OptionSet::NONE,
     accepts_further: false,
 };
 

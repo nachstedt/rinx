@@ -24,7 +24,5 @@ mod registry;
 mod vocabulary;
 
 pub(crate) use registry::registered_directive;
-pub use registry::{directive_specs, is_builtin_directive_name};
-pub use vocabulary::{
-    Arguments, DirectiveShape, DirectiveSpec, OptionSpec, OptionSupport, OptionValue,
-};
+pub use registry::{directive_specs, domain_directive_specs, is_builtin_directive_name};
+pub use vocabulary::{Arguments, DirectiveSpec, OptionSet, OptionSpec, OptionSupport, OptionValue};

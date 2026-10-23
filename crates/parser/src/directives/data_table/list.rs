@@ -3,7 +3,7 @@
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, ListItem, Node, Span, TableCell, TableRow, TableSource,
     TableWidths,
@@ -19,13 +19,10 @@ use crate::headings::Adornment;
 pub(in crate::directives) const LIST_TABLE_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["list-table"],
     doc: "A table written as a two-level bullet list.",
-    shape: DirectiveShape {
-        arguments: Arguments::OPTIONAL_TEXT,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <ListTableOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <ListTableOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -200,7 +197,7 @@ mod tests {
         let written = crate::directives::reader::written_after_blank(body_lines);
         let invocation = crate::directives::reader::test_invocation(
             "list-table",
-            LIST_TABLE_SPEC.shape,
+            &LIST_TABLE_SPEC,
             "",
             &written,
             &mut diagnostics,
@@ -254,7 +251,7 @@ mod tests {
         let written = crate::directives::reader::written_after_blank(&body_lines);
         let invocation = crate::directives::reader::test_invocation(
             "list-table",
-            LIST_TABLE_SPEC.shape,
+            &LIST_TABLE_SPEC,
             "My Title",
             &written,
             &mut diagnostics,

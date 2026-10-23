@@ -13,7 +13,7 @@ use super::spec::OptionValue;
 /// widths. Whether a list has one width per column only the content says, so
 /// that is [`widths_for_columns`]'s to check.
 impl OptionValueType for TableWidths {
-    const VALUE: OptionValue = OptionValue::Text;
+    const VALUE: OptionValue<'static> = OptionValue::Text;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         match line.value.as_str() {

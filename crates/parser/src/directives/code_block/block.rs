@@ -13,7 +13,7 @@
 //! highlighting backend.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{CodeBlock, CodeBlockSource, Directive};
 
 use crate::diagnostics::Diagnostics;
@@ -29,8 +29,10 @@ use crate::directives::options::DirectiveOptions;
 pub(in crate::directives) const CODE_BLOCK_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["code-block"],
     doc: "A block of source code, highlighted.",
-    shape: CODE_SHAPE,
-    options: <CodeBlockOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::OPTIONAL_WORD,
+    takes_content: true,
+    content_hint: None,
+    options: <CodeBlockOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -39,17 +41,11 @@ pub(in crate::directives) const CODE_BLOCK_SPEC: DirectiveSpec = DirectiveSpec {
 pub(in crate::directives) const CODE_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["code"],
     doc: "A block of source code, highlighted, in docutils' spelling.",
-    shape: CODE_SHAPE,
-    options: <CodeOption as DirectiveOptions>::GROUPS,
-    accepts_further: false,
-};
-
-/// How both spellings' blocks split: an optional language and content.
-const CODE_SHAPE: DirectiveShape = DirectiveShape {
     arguments: Arguments::OPTIONAL_WORD,
-    takes_options: true,
     takes_content: true,
     content_hint: None,
+    options: <CodeOption as DirectiveOptions>::OPTIONS,
+    accepts_further: false,
 };
 
 /// Interprets `.. code-block::` and docutils' `.. code::`, recording which

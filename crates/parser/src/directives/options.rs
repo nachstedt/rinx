@@ -18,7 +18,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use rinx_ast::{Diagnostic, DiagnosticCode};
 
-use super::spec::{OptionSpec, OptionSupport, OptionValue};
+use super::spec::{OptionSet, OptionSpec, OptionSupport, OptionValue};
 
 /// One `:name: value` line, with the source text kept so a diagnostic can
 /// quote the line exactly as the author wrote it.
@@ -201,9 +201,9 @@ pub(in crate::directives) fn uri_argument(argument: &str) -> String {
 /// not listed, fail to compile.
 pub(in crate::directives) trait DirectiveOptions: Sized {
     /// The directive's own options.
-    const OWN: &'static [OptionSpec];
-    /// Its own options, then each group it shares.
-    const GROUPS: &'static [&'static [OptionSpec]];
+    const OWN: &'static [OptionSpec<'static>];
+    /// Its own options, then each group it shares — what its spec lists.
+    const OPTIONS: OptionSet<'static>;
     /// Reads `line` as one of these options: its value parsed, reported when
     /// it does not read, or not one of them at all.
     fn read(
@@ -293,8 +293,8 @@ macro_rules! directive_options {
         $(#[doc = $doc:literal])*
         $vis:vis enum $name:ident {
             $( $(#[doc = $variant_doc:literal])*
-               $variant:ident $(($ty:ty))? => ([$($spelling:literal),+], $( $second:ident $(($choices:expr))? , )? $help:literal) $(,)? )*
-            $( _ => ([$($u_spelling:literal),+], $u_value:ident $(($u_choices:expr))?, $u_help:literal $(, $u_advice:expr)?) $(,)? )*
+               $variant:ident $(($ty:ty))? => ([$spelling:literal $(, $alias:literal)*], $( $second:ident $(($choices:expr))? , )? $help:literal) $(,)? )*
+            $( _ => ([$u_spelling:literal $(, $u_alias:literal)*], $u_value:ident $(($u_choices:expr))?, $u_help:literal $(, $u_advice:expr)?) $(,)? )*
             $( ; $( $group:ident($group_type:ty) ),+ $(,)? )?
         }
     ) => {
@@ -306,15 +306,17 @@ macro_rules! directive_options {
         }
 
         impl $crate::directives::options::DirectiveOptions for $name {
-            const OWN: &'static [$crate::directives::spec::OptionSpec] = &[
+            const OWN: &'static [$crate::directives::spec::OptionSpec<'static>] = &[
                 $( $crate::directives::spec::OptionSpec {
-                    names: &[$($spelling),+],
+                    name: $spelling,
+                    aliases: &[$($alias),*],
                     value: directive_options!(@value [$($ty)?] [$($second $(($choices))?)?]),
                     doc: $help,
                     support: $crate::directives::spec::OptionSupport::Supported,
                 }, )*
                 $( $crate::directives::spec::OptionSpec {
-                    names: &[$($u_spelling),+],
+                    name: $u_spelling,
+                    aliases: &[$($u_alias),*],
                     value: $crate::directives::spec::OptionValue::$u_value $(($u_choices))?,
                     doc: $u_help,
                     support: $crate::directives::spec::OptionSupport::Unsupported {
@@ -322,10 +324,13 @@ macro_rules! directive_options {
                     },
                 }, )*
             ];
-            const GROUPS: &'static [&'static [$crate::directives::spec::OptionSpec]] = &[
-                Self::OWN,
-                $( $( <$group_type as $crate::directives::options::DirectiveOptions>::OWN, )+ )?
-            ];
+            const OPTIONS: $crate::directives::spec::OptionSet<'static> =
+                $crate::directives::spec::OptionSet {
+                    own: Self::OWN,
+                    shared: &[
+                        $( $( <$group_type as $crate::directives::options::DirectiveOptions>::OWN, )+ )?
+                    ],
+                };
 
             fn read(
                 line: &$crate::directives::options::OptionLine,
@@ -335,7 +340,7 @@ macro_rules! directive_options {
             ) -> $crate::directives::options::OptionRead<Self> {
                 let name = line.name.as_str();
                 $(
-                    if matches!(name, $($spelling)|+) {
+                    if matches!(name, $spelling $(| $alias)*) {
                         return directive_options!(
                             @read $variant [$($ty)?] [$($second)?] line directive diagnostics ctx
                         );
@@ -462,11 +467,8 @@ pub(in crate::directives) fn read_quietly<O: DirectiveOptions>(line: &OptionLine
 }
 
 /// The option written as `name`, if `O` declares it at all.
-fn declared_spec<O: DirectiveOptions>(name: &str) -> Option<&'static OptionSpec> {
-    O::GROUPS
-        .iter()
-        .flat_map(|group| group.iter())
-        .find(|spec| spec.names.contains(&name))
+fn declared_spec<O: DirectiveOptions>(name: &str) -> Option<&'static OptionSpec<'static>> {
+    O::OPTIONS.iter().find(|spec| spec.is_spelled(name))
 }
 
 /// Reports an option the reference implementation takes and this build
@@ -562,13 +564,9 @@ mod tests {
     }
 
     #[test]
-    fn test_groups_list_the_own_options_first_then_each_group() {
+    fn test_options_list_the_own_options_first_then_each_group() {
         // Given / When
-        let names: Vec<&str> = SampleOption::GROUPS
-            .iter()
-            .flat_map(|group| group.iter())
-            .map(|spec| spec.names[0])
-            .collect();
+        let names: Vec<&str> = SampleOption::OPTIONS.iter().map(|spec| spec.name).collect();
 
         // Then
         assert_eq!(
@@ -584,7 +582,8 @@ mod tests {
                 "wide"
             ]
         );
-        assert_eq!(SampleOption::OWN[0].names, ["link_types", "link-types"]);
+        assert_eq!(SampleOption::OWN[0].name, "link_types");
+        assert_eq!(SampleOption::OWN[0].aliases, ["link-types"]);
     }
 
     #[test]

@@ -18,7 +18,7 @@
 //! itself survives — the error-resilience every directive here follows.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use std::num::NonZeroU32;
 
 use rinx_ast::{
@@ -117,15 +117,12 @@ struct ReadOptions {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["entity-sequence", "needsequence"],
     doc: "A sequence diagram walked along the entities' relations.",
-    shape: DirectiveShape {
-        arguments: Arguments::OPTIONAL_TEXT,
-        takes_options: true,
-        takes_content: false,
-        content_hint: Some(
-            "its picture is generated from the entity graph; write `.. entity-diagram::` to draw a diagram of your own",
-        ),
-    },
-    options: <EntitySequenceOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_content: false,
+    content_hint: Some(
+        "its picture is generated from the entity graph; write `.. entity-diagram::` to draw a diagram of your own",
+    ),
+    options: <EntitySequenceOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -380,7 +377,7 @@ fn declared_relations(ctx: &ParseCtx<'_>) -> String {
 struct ItemLimit(Option<NonZeroU32>);
 
 impl OptionValueType for ItemLimit {
-    const VALUE: OptionValue = OptionValue::Integer;
+    const VALUE: OptionValue<'static> = OptionValue::Integer;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         line.value

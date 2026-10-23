@@ -22,8 +22,8 @@ re-implement every directive.
 ### The spec is data, beside its parser
 
 Each directive module holds a `DirectiveSpec` (`toctree.rs`'s `SPEC`, …):
-its names and purpose, and its `DirectiveShape` — the arguments it takes, and
-whether it takes options and content. It is built from the leaf
+its names and purpose, the arguments it takes, whether it takes content, and
+its options — whether it takes any is derived from them. It is built from the leaf
 `spec/vocabulary.rs` alone and holds no behaviour, so any reader of any
 syntax, completion and documentation can share it.
 
@@ -193,8 +193,42 @@ variant that carries none, where one type cannot say what is valid:
 option lines beyond the ones it lists: `.. entity-update::` lists `:strict:`
 and reads every other line as a field mutation checked against the schema,
 and `.. needservice::` takes whatever options the external service defines.
-A registry test checks every spec takes options exactly when it declares some
-or accepts further ones, and that only those two accept further ones.
+A spec takes options exactly when it declares some or accepts further ones
+(`DirectiveSpec::takes_options`), so the two cannot disagree; a registry test
+checks that only those two accept further ones.
+
+### Every directive has a spec
+
+The directives whose name is not fixed have specs too, so the reader splits
+every block by a spec, and completion lists every directive from one kind of
+record:
+
+- **A domain object** has a static spec per object type, beside its parser
+  (`py/function.rs`'s `FUNCTION_SPEC`, …), its options the type's option enum.
+  Its names are the bare spellings in its domain (`function`; `member` and
+  `var`): `OBJECT_DIRECTIVES` pairs each object type with the domain it is
+  qualified in, and the names are the spec's, never a second list. The scope
+  directives (`.. py:currentmodule::`, `.. c:namespace::`, …) likewise, taking
+  no options. `domain_directive_specs` lists both with their domain, so a
+  caller resolves `function` against the default domain as the dispatcher
+  does.
+- **An entity type's** spec is the schema's, known only once it loads. A spec
+  is therefore `DirectiveSpec<'a>`, a built-in's `'static`, and an entity
+  type's is lent by an `EntitySpec` built from the `EntityType`: `:id:`, then
+  its attributes and relations as options, borrowing their names and labels.
+  A type's sections are directives written in its content, not options, so
+  they are not listed. A choice the schema declares is
+  `OptionValue::Declared`, borrowing the type's list, where a built-in's
+  choice is computed from an enum. The dispatcher builds the spec where it
+  reads the block, rather than once beside the schema: it is a handful of
+  borrowed records, and building it there keeps `ParseCtx` and every caller
+  constructing one unchanged.
+
+Two consequences shape the vocabulary. An option is a canonical `name` and
+its `aliases` rather than one list of spellings, so an entity's option borrows
+its name from the schema with no list to own; and a spec's options are an
+`OptionSet` of its own options and the shared groups, so an entity's own list
+needs no slice of groups beside it.
 
 ## Consequences
 
@@ -259,7 +293,5 @@ or accepts further ones, and that only those two accept further ones.
 ## Not done
 
 - Completion itself, which reads these specs (roadmap #25).
-- A domain object's options are declared per object type but not yet listed
-  beside `OBJECT_DIRECTIVES`, which completion will need.
 - An entity *section* inside an entity, and a substitution definition's inner
   directive, still split their own block.

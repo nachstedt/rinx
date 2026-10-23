@@ -15,7 +15,7 @@
 use super::error_node::malformed_directive;
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec, OptionSet};
 use rinx_ast::{DiagnosticCode, Directive};
 
 /// Why `.. needservice::` is refused, and what to write instead — stored on the
@@ -29,13 +29,10 @@ const NEEDSERVICE_UNSUPPORTED_MESSAGE: &str = "needservice: querying an external
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["needservice"],
     doc: "sphinx-needs' import from an external service, refused by name.",
-    shape: DirectiveShape {
-        arguments: Arguments::ONE_TEXT,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: &[],
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: OptionSet::NONE,
     // Its options are whatever the external service defines; the directive
     // is refused whole, so none is read.
     accepts_further: true,
@@ -88,7 +85,7 @@ mod tests {
         let ctx = crate::context::ParseCtx::with_domain(rinx_ast::Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "needservice",
-            SPEC.shape,
+            &SPEC,
             "github-issues",
             &body,
             &mut diagnostics,
@@ -117,7 +114,7 @@ mod tests {
         let ctx = crate::context::ParseCtx::with_domain(rinx_ast::Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "needservice",
-            SPEC.shape,
+            &SPEC,
             "github-issues",
             &[],
             &mut diagnostics,

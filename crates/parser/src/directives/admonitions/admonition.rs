@@ -4,7 +4,7 @@
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
 use crate::directives::options::{DirectiveOptions, classify_options, directive_options};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use crate::headings::Adornment;
 use rinx_ast::{AdmonitionKind, Directive};
 
@@ -53,13 +53,10 @@ pub(in crate::directives) const ADMONITION_SPEC: DirectiveSpec = DirectiveSpec {
         "warning",
     ],
     doc: "A callout of one of docutils' nine kinds, titled by its kind.",
-    shape: DirectiveShape {
-        arguments: Arguments::NONE,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <AdmonitionOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::NONE,
+    takes_content: true,
+    content_hint: None,
+    options: <AdmonitionOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -67,13 +64,10 @@ pub(in crate::directives) const ADMONITION_SPEC: DirectiveSpec = DirectiveSpec {
 pub(in crate::directives) const GENERIC_ADMONITION_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["admonition"],
     doc: "A callout titled by its argument.",
-    shape: DirectiveShape {
-        arguments: Arguments::ONE_TEXT,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <AdmonitionOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <AdmonitionOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -154,7 +148,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "note",
-            ADMONITION_SPEC.shape,
+            &ADMONITION_SPEC,
             "",
             body,
             &mut diagnostics,
@@ -383,7 +377,7 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
         let input = crate::directives::reader::test_invocation(
             "seealso",
-            ADMONITION_SPEC.shape,
+            &ADMONITION_SPEC,
             "",
             &[],
             &mut diagnostics,

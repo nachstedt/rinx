@@ -3,7 +3,7 @@
 use crate::diagnostics::Diagnostics;
 use crate::directives::body::{DirectiveContent, MarkerText};
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec, OptionSet};
 use crate::headings::Adornment;
 use rinx_ast::{Directive, VersionChangeKind};
 
@@ -11,17 +11,14 @@ use rinx_ast::{Directive, VersionChangeKind};
 pub(in crate::directives) const VERSION_CHANGE_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["versionadded", "versionchanged", "deprecated"],
     doc: "A note on the version that added, changed or deprecated something.",
-    shape: DirectiveShape {
-        arguments: Arguments {
-            required: 1,
-            optional: 1,
-            final_whitespace: true,
-        },
-        takes_options: false,
-        takes_content: true,
-        content_hint: None,
+    arguments: Arguments {
+        required: 1,
+        optional: 1,
+        final_whitespace: true,
     },
-    options: &[],
+    takes_content: true,
+    content_hint: None,
+    options: OptionSet::NONE,
     accepts_further: false,
 };
 
