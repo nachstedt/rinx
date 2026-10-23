@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Generator Objects — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python&#x2f;C API Reference Manual</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python&#x2f;C API Reference Manual"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stable.html">C API Stability</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="veryhigh.html">The Very High Level Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="refcounting.html">Reference Counting</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Exception Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="extension-modules.html">Defining extension modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="utilities.html">Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="abstract.html">Abstract Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="concrete.html">Concrete Objects Layer</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Concrete Objects Layer"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="concrete.html#fundamental-objects">Fundamental Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#numeric-objects">Numeric Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#sequence-objects">Sequence Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#container-objects">Container Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#function-objects">Function Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3 ancestor has-children">
+            <a href="concrete.html#other-objects">Other Objects</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Other Objects"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="file.html">File Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="module.html">Module Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="iterator.html">Iterator Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="descriptor.html">Descriptor Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="slice.html">Slice Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="memoryview.html">MemoryView objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="picklebuffer.html">Pickle buffer objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="weakref.html">Weak Reference Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="capsule.html">Capsules</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="frame.html">Frame Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4 current has-children">
+            <a href="gen.html">Generator Objects</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Generator Objects"></span></summary>
+              <ul>
+                
+          <li class="toctree-l5">
+            <a href="gen.html#asynchronous-generator-objects">Asynchronous Generator Objects</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="coro.html">Coroutine Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="contextvars.html">Context Variables Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="typehints.html">Objects for Type Hinting</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#c-api-for-extension-modules">C API for extension modules</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init.html">Initialization, Finalization, and Threads</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init_config.html">Python Initialization Configuration</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="memory.html">Memory Management</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="objimpl.html">Object Implementation Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="apiabiversion.html">API and ABI Versioning</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="monitoring.html">Monitoring C API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="frame.html">&larr; Frame Objects</a>
+        <a class="next" href="coro.html">Coroutine Objects &rarr;</a>
+      </nav>
+      
+      <a id="gen-objects"></a>
+<h1 id="generator-objects">Generator Objects</h1>
+<p>Generator objects are what Python uses to implement generator iterators. They
+are normally created by iterating over a function that yields values, rather
+than explicitly calling <a class="reference internal" href="gen.html#c:function:pygen_new"><code class="xref c function docutils literal">PyGen_New</code></a> or <a class="reference internal" href="gen.html#c:function:pygen_newwithqualname"><code class="xref c function docutils literal">PyGen_NewWithQualName</code></a>.</p>
+<dl class="c type">
+  <dt id="c:type:pygenobject"><code class="sig-name">PyGenObject</code></dt>
+  <dd><p>The C structure used for generator objects.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pygen_type"><code class="sig-name">PyTypeObject PyGen_Type</code></dt>
+  <dd><p>The type object corresponding to generator objects.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pygen_check"><code class="sig-name">int PyGen_Check(PyObject *ob)</code></dt>
+  <dd><p>Return true if <em>ob</em> is a generator object; <em>ob</em> must not be <code>NULL</code>.  This
+function always succeeds.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pygen_checkexact"><code class="sig-name">int PyGen_CheckExact(PyObject *ob)</code></dt>
+  <dd><p>Return true if <em>ob</em>'s type is <a href="#" class="broken-link"><code class="xref c type docutils literal">PyGen_Type</code></a>; <em>ob</em> must not be
+<code>NULL</code>.  This function always succeeds.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pygen_new"><code class="sig-name">PyObject* PyGen_New(PyFrameObject *frame)</code></dt>
+  <dd><p>Create and return a new generator object based on the <em>frame</em> object.
+A reference to <em>frame</em> is stolen by this function. The argument must not be
+<code>NULL</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pygen_newwithqualname"><code class="sig-name">PyObject* PyGen_NewWithQualName(PyFrameObject *frame, PyObject *name, PyObject *qualname)</code></dt>
+  <dd><p>Create and return a new generator object based on the <em>frame</em> object,
+with <code>__name__</code> and <code>__qualname__</code> set to <em>name</em> and <em>qualname</em>.
+A reference to <em>frame</em> is stolen by this function.  The <em>frame</em> argument
+must not be <code>NULL</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pygen_getcode"><code class="sig-name">PyCodeObject* PyGen_GetCode(PyGenObject *gen)</code></dt>
+  <dd><p>Return a new <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to the code object wrapped by <em>gen</em>.
+This function always succeeds.</p>
+</dd>
+</dl>
+<h2 id="asynchronous-generator-objects">Asynchronous Generator Objects</h2>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p><span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0525/"><strong>PEP 525</strong></a></p>
+</div>
+<dl class="c member">
+  <dt id="c:member:pyasyncgen_type"><code class="sig-name">PyTypeObject PyAsyncGen_Type</code></dt>
+  <dd><p>The type object corresponding to asynchronous generator objects. This is
+available as <a href="#" class="broken-link"><code class="xref py class docutils literal">types.AsyncGeneratorType</code></a> in the Python layer.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyasyncgen_new"><code class="sig-name">PyObject *PyAsyncGen_New(PyFrameObject *frame, PyObject *name, PyObject *qualname)</code></dt>
+  <dd><p>Create a new asynchronous generator wrapping <em>frame</em>, with <code>__name__</code> and
+<code>__qualname__</code> set to <em>name</em> and <em>qualname</em>. <em>frame</em> is stolen by this
+function and must not be <code>NULL</code>.</p>
+<p>On success, this function returns a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to the
+new asynchronous generator. On failure, this function returns <code>NULL</code>
+with an exception set.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyasyncgen_checkexact"><code class="sig-name">int PyAsyncGen_CheckExact(PyObject *op)</code></dt>
+  <dd><p>Return true if <em>op</em> is an asynchronous generator object, false otherwise.
+This function always succeeds.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="frame.html">&larr; Frame Objects</a>
+        <a class="next" href="coro.html">Coroutine Objects &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

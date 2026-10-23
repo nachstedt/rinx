@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>urllib.robotparser —  Parser for robots.txt — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Internet Protocols and Support"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="webbrowser.html">webbrowser — Convenient web-browser controller</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="wsgiref.html">wsgiref — WSGI Utilities and Reference Implementation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.html">urllib — URL handling modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.request.html">urllib.request — Extensible library for opening URLs</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.parse.html">urllib.parse — Parse URLs into components</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.error.html">urllib.error — Exception classes raised by urllib.request</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current">
+            <a href="urllib.robotparser.html">urllib.robotparser —  Parser for robots.txt</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.html">http — HTTP modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.client.html">http.client — HTTP protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ftplib.html">ftplib — FTP protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="poplib.html">poplib — POP3 protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="imaplib.html">imaplib — IMAP4 protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="smtplib.html">smtplib — SMTP protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="uuid.html">uuid — UUID objects according to RFC 9562</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="socketserver.html">socketserver — A framework for network servers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.server.html">http.server — HTTP servers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.cookies.html">http.cookies — HTTP state management</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.cookiejar.html">http.cookiejar — Cookie handling for HTTP clients</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xmlrpc.html">xmlrpc — XMLRPC server and client modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xmlrpc.client.html">xmlrpc.client — XML-RPC client access</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xmlrpc.server.html">xmlrpc.server — Basic XML-RPC servers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ipaddress.html">ipaddress — IPv4&#x2f;IPv6 manipulation library</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="urllib.error.html">&larr; urllib.error — Exception classes raised by urllib.request</a>
+        <a class="next" href="http.html">http — HTTP modules &rarr;</a>
+      </nav>
+      
+      <h1 id="urllib-robotparser-parser-for-robots-txt"><code class="xref py module docutils literal">urllib.robotparser</code> —  Parser for robots.txt</h1>
+<dl class="py module">
+  <dt id="py:module:urllib.robotparser"><code class="sig-name">urllib.robotparser</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Skip Montanaro &lt;skip.montanaro@gmail.com&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/urllib/robotparser.py`</p>
+<span id="index-0"></span>
+<hr />
+<p>This module provides a single class, <a class="reference internal" href="urllib.robotparser.html#py:class:urllib.robotparser.robotfileparser"><code class="xref py class docutils literal">RobotFileParser</code></a>, which answers
+questions about whether or not a particular user agent can fetch a URL on the
+website that published the :file:`robots.txt` file.  For more details on the
+structure of :file:`robots.txt` files, see http://www.robotstxt.org/orig.html.</p>
+<dl class="py class">
+  <dt id="py:class:urllib.robotparser.robotfileparser"><em class="property">class</em> <code class="sig-name">RobotFileParser(url='')</code></dt>
+  <dd><p>This class provides methods to read, parse and answer questions about the
+:file:`robots.txt` file at <em>url</em>.</p>
+<dl class="py method">
+  <dt id="py:method:urllib.robotparser.robotfileparser.set_url"><code class="sig-name">set_url(url)</code></dt>
+  <dd><p>Sets the URL referring to a :file:`robots.txt` file.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:urllib.robotparser.robotfileparser.read"><code class="sig-name">read()</code></dt>
+  <dd><p>Reads the :file:`robots.txt` URL and feeds it to the parser.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:urllib.robotparser.robotfileparser.parse"><code class="sig-name">parse(lines)</code></dt>
+  <dd><p>Parses the lines argument.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:urllib.robotparser.robotfileparser.can_fetch"><code class="sig-name">can_fetch(useragent, url)</code></dt>
+  <dd><p>Returns <code>True</code> if the <em>useragent</em> is allowed to fetch the <em>url</em>
+according to the rules contained in the parsed :file:`robots.txt`
+file.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:urllib.robotparser.robotfileparser.mtime"><code class="sig-name">mtime()</code></dt>
+  <dd><p>Returns the time the <code>robots.txt</code> file was last fetched.  This is
+useful for long-running web spiders that need to check for new
+<code>robots.txt</code> files periodically.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:urllib.robotparser.robotfileparser.modified"><code class="sig-name">modified()</code></dt>
+  <dd><p>Sets the time the <code>robots.txt</code> file was last fetched to the current
+time.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:urllib.robotparser.robotfileparser.crawl_delay"><code class="sig-name">crawl_delay(useragent)</code></dt>
+  <dd><p>Returns the value of the <code>Crawl-delay</code> parameter from <code>robots.txt</code>
+for the <em>useragent</em> in question.  If there is no such parameter or it
+doesn't apply to the <em>useragent</em> specified or the <code>robots.txt</code> entry
+for this parameter has invalid syntax, return <code>None</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:urllib.robotparser.robotfileparser.request_rate"><code class="sig-name">request_rate(useragent)</code></dt>
+  <dd><p>Returns the contents of the <code>Request-rate</code> parameter from
+<code>robots.txt</code> as a <a class="reference internal" href="../glossary.html#term-named-tuple"><span class="xref std std-term">named tuple</span></a> <code>RequestRate(requests, seconds)</code>.
+If there is no such parameter or it doesn't apply to the <em>useragent</em>
+specified or the <code>robots.txt</code> entry for this parameter has invalid
+syntax, return <code>None</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:urllib.robotparser.robotfileparser.site_maps"><code class="sig-name">site_maps()</code></dt>
+  <dd><p>Returns the contents of the <code>Sitemap</code> parameter from
+<code>robots.txt</code> in the form of a <a href="#" class="broken-link"><code class="xref py function docutils literal">list</code></a>. If there is no such
+parameter or the <code>robots.txt</code> entry for this parameter has
+invalid syntax, return <code>None</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.8:</span></p>
+</div>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>The following example demonstrates basic use of the <a class="reference internal" href="urllib.robotparser.html#py:class:urllib.robotparser.robotfileparser"><code class="xref py class docutils literal">RobotFileParser</code></a>
+class:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">urllib</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">robotparser</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rp</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">urllib</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">robotparser</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">RobotFileParser</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">set_url</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">http://www.musi-cal.com/robots.txt<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">read</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rrate</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">request_rate</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">*<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rrate</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">requests</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rrate</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">seconds</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">20</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">crawl_delay</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">*<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">6</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">can_fetch</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">*<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">http://www.musi-cal.com/cgi-bin/search?city=San+Francisco<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">False</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">can_fetch</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">*<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">http://www.musi-cal.com/<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">True</span></span></pre></div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="urllib.error.html">&larr; urllib.error — Exception classes raised by urllib.request</a>
+        <a class="next" href="http.html">http — HTTP modules &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

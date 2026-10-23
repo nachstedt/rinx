@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>asynchat — Asynchronous socket command&#x2f;response handler — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="removed.html">Removed Modules</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Removed Modules"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="aifc.html">aifc — Read and write AIFF and AIFC files</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current">
+            <a href="asynchat.html">asynchat — Asynchronous socket command&#x2f;response handler</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="asyncore.html">asyncore — Asynchronous socket handler</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="audioop.html">audioop — Manipulate raw audio data</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="cgi.html">cgi — Common Gateway Interface support</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="cgitb.html">cgitb — Traceback manager for CGI scripts</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="chunk.html">chunk — Read IFF chunked data</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="crypt.html">crypt — Function to check Unix passwords</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="distutils.html">distutils — Building and installing Python modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="imghdr.html">imghdr — Determine the type of an image</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="imp.html">imp — Access the import internals</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mailcap.html">mailcap — Mailcap file handling</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="msilib.html">msilib — Read and write Microsoft Installer files</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="nis.html">nis — Interface to Sun’s NIS (Yellow Pages)</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="nntplib.html">nntplib — NNTP protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ossaudiodev.html">ossaudiodev — Access to OSS-compatible audio devices</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pipes.html">pipes — Interface to shell pipelines</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="smtpd.html">smtpd — SMTP Server</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="sndhdr.html">sndhdr — Determine type of sound file</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="spwd.html">spwd — The shadow password database</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="sunau.html">sunau — Read and write Sun AU files</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="telnetlib.html">telnetlib — Telnet client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="uu.html">uu — Encode and decode uuencode files</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xdrlib.html">xdrlib — Encode and decode XDR data</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="aifc.html">&larr; aifc — Read and write AIFF and AIFC files</a>
+        <a class="next" href="asyncore.html">asyncore — Asynchronous socket handler &rarr;</a>
+      </nav>
+      
+      <h1 id="asynchat-asynchronous-socket-command-response-handler"><code class="xref py module docutils literal">asynchat</code> — Asynchronous socket command/response handler</h1>
+<dl class="py module">
+  <dt id="py:module:asynchat"><code class="sig-name">asynchat</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'deprecated-removed'</p>
+<pre class="directive-error-source">.. deprecated-removed:: 3.6 3.12</pre>
+</div>
+<p>This module is no longer part of the Python standard library.
+It was <a href="../whatsnew/3.12.html#whatsnew312-removed">removed in Python 3.12</a> after
+being deprecated in Python 3.6.  The removal was decided in <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0594/"><strong>PEP 594</strong></a>.</p>
+<p>Applications should use the <a class="reference internal" href="asyncio.html#py:module:asyncio" title="asyncio: Asynchronous I/O."><code class="xref py module docutils literal">asyncio</code></a> module instead.</p>
+<p>The last version of Python that provided the <code class="xref py module docutils literal">asynchat</code> module was
+<a href="https://docs.python.org/3.11/library/asynchat.html">Python 3.11</a>.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="aifc.html">&larr; aifc — Read and write AIFF and AIFC files</a>
+        <a class="next" href="asyncore.html">asyncore — Asynchronous socket handler &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
