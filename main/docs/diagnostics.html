@@ -286,6 +286,18 @@ place.</p>
 <h3 id="directive-unsupported-option">directive.unsupported-option</h3>
 <p>An option Sphinx or the extension defining the directive takes, but this build
 does not implement. The option is ignored.</p>
+<h3 id="directive-invalid-option-value">directive.invalid-option-value</h3>
+<p>An option value that is not one the option takes, on an option with no code of
+its own for it. The option is ignored.</p>
+<h3 id="directive-empty-option-value">directive.empty-option-value</h3>
+<p>An option written without the value it needs — a <code>:name:</code> with no label, a
+<code>:width:</code> with no length. The option is ignored.</p>
+<h3 id="directive-duplicate-option">directive.duplicate-option</h3>
+<p>An option written more than once, under the same spelling, in one directive,
+which docutils refuses. Every one is read, in the order written.</p>
+<h3 id="directive-flag-with-value">directive.flag-with-value</h3>
+<p>A flag option written with a value, which docutils refuses. The flag applies
+and the value is ignored.</p>
 <h3 id="directive-missing-argument">directive.missing-argument</h3>
 <p>A directive written with fewer arguments than it requires — an <code>.. image::</code>
 with no address, a <code>.. versionadded::</code> with no version. The directive is
@@ -364,9 +376,6 @@ define.</p>
 <p>An empty group name in a doctest-family directive's group argument. The block
 joins the <code>default</code> group.</p>
 <h2 id="math">math</h2>
-<h3 id="math-empty-label">math.empty-label</h3>
-<p>A <code>:label:</code>/<code>:name:</code> option with no value, so nothing could reference the
-equation and it stays unnumbered.</p>
 <h3 id="math-invalid-latex">math.invalid-latex</h3>
 <p>LaTeX the math renderer rejected, reported while rendering rather than while
 parsing — the parser deliberately never inspects the LaTeX, since only the
@@ -375,8 +384,6 @@ renderer knows the math backend.</p>
 <p>An equation label another document gives its own equation too. Neither equation
 can be referenced until one label is changed.</p>
 <h2 id="code-block">code-block</h2>
-<h3 id="code-block-empty-name">code-block.empty-name</h3>
-<p>A <code>:name:</code> option with no value, so nothing could <code>:ref:</code> the block.</p>
 <h3 id="code-block-invalid-integer">code-block.invalid-integer</h3>
 <p>A <code>:lineno-start:</code>, <code>:dedent:</code>, <code>:number-lines:</code> or <code>:linenothreshold:</code>
 whose value is not a positive integer.</p>
@@ -400,8 +407,6 @@ build can derive — so the role was not defined.</p>
 <h3 id="role-builtin-name">role.builtin-name</h3>
 <p>A name this build already gives a role, which a custom role could never take
 over — the built-in one is matched first — so it was not defined.</p>
-<h3 id="role-empty-language">role.empty-language</h3>
-<p>A <code>:language:</code> option with no value; the role is defined unhighlighted.</p>
 <h3 id="role-invalid-class">role.invalid-class</h3>
 <p>A <code>:class:</code> value that normalizes to no class name at all, so it was dropped.</p>
 <h2 id="default-role">default-role</h2>
@@ -436,9 +441,6 @@ three vertical alignments, which docutils accepts only on an image inside a
 substitution definition.</p>
 <h3 id="image-invalid-loading">image.invalid-loading</h3>
 <p>A <code>:loading:</code> naming none of <code>embed</code>/<code>link</code>/<code>lazy</code>.</p>
-<h3 id="image-empty-option-value">image.empty-option-value</h3>
-<p>A <code>:target:</code> or <code>:name:</code> written with no value, so it could neither link
-anywhere nor be linked to.</p>
 <h3 id="image-scale-no-dimensions">image.scale-no-dimensions</h3>
 <p>A <code>:scale:</code> with no <code>:width:</code> or <code>:height:</code> to apply it to. docutils
 would read the image file's own dimensions here; this build never opens the
@@ -510,8 +512,6 @@ directive as having no depth limit at all, which silently renders a far larger
 tree than the author asked for.</p>
 <h3 id="toctree-numbered-invalid">toctree.numbered-invalid</h3>
 <p>A <code>:numbered:</code> whose value is present but is not a positive integer.</p>
-<h3 id="toctree-empty-name">toctree.empty-name</h3>
-<p>A <code>:name:</code> option with no value, so nothing could <code>:ref:</code> the toctree.</p>
 <h3 id="toctree-missing-document">toctree.missing-document</h3>
 <p>An entry naming a document the project does not contain. Detected while
 building the project index, since only there is the document list known.</p>
@@ -553,9 +553,6 @@ directive as having no depth limit at all, which silently lists a far deeper
 tree than the author asked for.</p>
 <h3 id="contents-backlinks-invalid">contents.backlinks-invalid</h3>
 <p>A <code>:backlinks:</code> value other than <code>entry</code>, <code>top</code> or <code>none</code>.</p>
-<h3 id="contents-empty-name">contents.empty-name</h3>
-<p>A <code>:name:</code> option with no value, so nothing could <code>:ref:</code> the table of
-contents.</p>
 <h2 id="dropdown">dropdown</h2>
 <h3 id="dropdown-invalid-color">dropdown.invalid-color</h3>
 <p>A <code>:color:</code> naming none of the eleven semantic colours. The summary is left
@@ -571,8 +568,6 @@ against the icon set the renderer draws from.</p>
 <h3 id="dropdown-invalid-margin">dropdown.invalid-margin</h3>
 <p>A <code>:margin:</code> that is neither one nor four values, or that names a step off
 the 0–5 scale.</p>
-<h3 id="dropdown-empty-option-value">dropdown.empty-option-value</h3>
-<p>An option that needs a value but was written without one.</p>
 <h2 id="grid">grid</h2>
 <h3 id="grid-invalid-columns">grid.invalid-columns</h3>
 <p>A <code>.. grid::</code> argument or a <code>:columns:</code> that is neither one nor four
@@ -598,16 +593,12 @@ is wrong, but dropping the content would be worse.</p>
 <h3 id="grid-item-outside-grid">grid.item-outside-grid</h3>
 <p>A <code>.. grid-item::</code> written outside any <code>.. grid::</code>. Likewise reported and
 still rendered.</p>
-<h3 id="grid-empty-option-value">grid.empty-option-value</h3>
-<p>An option that needs a value but was written without one.</p>
 <h2 id="button-link">button-link</h2>
 <h3 id="button-link-invalid-color">button-link.invalid-color</h3>
 <p>A <code>:color:</code> naming none of the eleven semantic colours. The button is left
 unpainted rather than given a class no stylesheet defines.</p>
 <h3 id="button-link-invalid-align">button-link.invalid-align</h3>
 <p>An <code>:align:</code> other than <code>left</code>, <code>right</code>, <code>center</code> or <code>justify</code>.</p>
-<h3 id="button-link-empty-option-value">button-link.empty-option-value</h3>
-<p>An option that needs a value but was written without one.</p>
 <h3 id="button-link-unusable-outline">button-link.unusable-outline</h3>
 <p>An <code>:outline:</code> with no <code>:color:</code> to outline. sphinx-design produces no
 class at all for that pair, so the option silently does nothing — reported for
@@ -623,12 +614,6 @@ matching <code>.. contents::</code>'s own <code>:depth:</code>.</p>
 <p>A <code>:start:</code> whose value is not a positive integer (<code>0</code> included — there is
 no sensible number to display at that value). The default of <code>1</code> is kept
 instead.</p>
-<h3 id="sectnum-empty-prefix">sectnum.empty-prefix</h3>
-<p>A <code>:prefix:</code> option with no value; docutils requires this option to carry
-one.</p>
-<h3 id="sectnum-empty-suffix">sectnum.empty-suffix</h3>
-<p>A <code>:suffix:</code> option with no value; docutils requires this option to carry
-one.</p>
 <h2 id="index">index</h2>
 <h3 id="index-invalid-single">index.invalid-single</h3>
 <p>A <code>single:</code> entry with no value — Sphinx's "invalid single index entry". No
@@ -763,8 +748,6 @@ instead.</p>
 <p>A <code>:scale:</code> with no <code>:width:</code> to apply to. Reported for the reason
 <code>uml.unusable-scale</code> is: the compiled SVG is never opened while rendering, so
 it has no size of its own to scale.</p>
-<h3 id="entity-flow-empty-option-value">entity-flow.empty-option-value</h3>
-<p>An option whose value is required but was left empty.</p>
 <h3 id="entity-flow-empty-result">entity-flow.empty-result</h3>
 <p>A flowchart whose filter matched no entity at all, so there was nothing to
 draw. Reported for the reason <code>entity-table.empty-result</code> is, and it has to
@@ -807,8 +790,6 @@ built-in ones.</p>
 <h3 id="entity-sequence-unusable-scale">entity-sequence.unusable-scale</h3>
 <p>A <code>:scale:</code> with no <code>:width:</code> to apply to, for <code>uml.unusable-scale</code>'s
 reason.</p>
-<h3 id="entity-sequence-empty-option-value">entity-sequence.empty-option-value</h3>
-<p>An option whose value is required but was left empty.</p>
 <h3 id="entity-sequence-unknown-start">entity-sequence.unknown-start</h3>
 <p>A <code>:start:</code> entry naming no entity in the project. The other starts are still
 walked — sphinx-needs aborts the whole build here instead.</p>
@@ -855,8 +836,6 @@ built-in palette is used for that wedge instead.</p>
 <h3 id="entity-pie-unusable-scale">entity-pie.unusable-scale</h3>
 <p>A <code>:scale:</code> with no <code>:width:</code> to apply to. The chart is drawn at a size
 this build chooses, so a bare percentage has nothing to scale.</p>
-<h3 id="entity-pie-empty-option-value">entity-pie.empty-option-value</h3>
-<p>An option whose value is required but was left empty.</p>
 <h3 id="entity-pie-empty-result">entity-pie.empty-result</h3>
 <p>A chart every one of whose wedges counted zero, so there is no chart to draw at
 all. Reported for the reason <code>entity-table.empty-result</code> is, and only the
@@ -896,8 +875,6 @@ is drawn unrotated and the line reported.</p>
 <p>A <code>:width:</code> that is not a length or a percentage.</p>
 <h3 id="entity-bar-unusable-scale">entity-bar.unusable-scale</h3>
 <p>A <code>:scale:</code> with no <code>:width:</code> to apply to.</p>
-<h3 id="entity-bar-empty-option-value">entity-bar.empty-option-value</h3>
-<p>An option whose value is required but was left empty.</p>
 <h3 id="entity-bar-empty-result">entity-bar.empty-result</h3>
 <p>A chart every one of whose cells counted zero, so there are no bars to draw.
 Only the renderer can raise it, for <code>entity-pie.empty-result</code>'s reason.</p>
@@ -987,9 +964,6 @@ selection matching nothing is far likelier to be a mistake than an intention.</p
 building, which a sandboxed action cannot do. The message points at a
 <code>needs.json</code> snapshot read by <code>.. needimport::</code> instead.</p>
 <h2 id="uml">uml</h2>
-<h3 id="uml-empty-option-value">uml.empty-option-value</h3>
-<p>An option whose value is required but was written empty, so the option was
-ignored.</p>
 <h3 id="uml-invalid-align">uml.invalid-align</h3>
 <p>An <code>:align:</code> that is not one of the three horizontal placements. The diagram
 renders unaligned rather than not at all.</p>
