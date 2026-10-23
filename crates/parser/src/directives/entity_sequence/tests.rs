@@ -292,7 +292,7 @@ fn test_a_sphinx_needs_option_this_build_does_not_draw_is_refused_by_name() {
     let doc = parse(rst);
 
     // Then
-    assert_eq!(codes(rst), ["entity-sequence.unsupported-option"]);
+    assert_eq!(codes(rst), ["directive.unsupported-option"]);
     assert!(
         doc.diagnostics[0].message.contains("no legend is drawn"),
         "{}",
@@ -306,7 +306,7 @@ fn test_an_option_nobody_knows_is_reported_as_unknown() {
     let rst = ".. entity-sequence::\n   :start: COMP_UI\n   :relations: sends\n   :colour: red\n";
 
     // When / Then
-    assert_eq!(codes(rst), ["directive.entity-sequence-unknown-option"]);
+    assert_eq!(codes(rst), ["directive.unknown-option"]);
 }
 
 #[test]

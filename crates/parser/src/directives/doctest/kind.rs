@@ -1,7 +1,4 @@
-//! Which of the five `sphinx.ext.doctest` directives is being parsed, and
-//! which options each one accepts.
-
-use super::options::DocTestOptionName;
+//! Which of the five `sphinx.ext.doctest` directives is being parsed.
 
 /// Which of the five directives is being parsed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -34,21 +31,6 @@ impl DocTestDirectiveKind {
             Self::TestOutput => "testoutput",
             Self::TestSetup => "testsetup",
             Self::TestCleanup => "testcleanup",
-        }
-    }
-
-    /// Whether this directive accepts `option`, mirroring Sphinx's per-class
-    /// `option_spec`.
-    ///
-    /// `testsetup`/`testcleanup` take only `:skipif:` — they never render, so
-    /// `:hide:` would say nothing, and they are never compared against expected
-    /// output, so `:options:` would too. `testcode` has no `:options:` because
-    /// it states no output of its own; its companion `testoutput` carries them.
-    pub(crate) const fn accepts(self, option: DocTestOptionName) -> bool {
-        match self {
-            Self::Doctest | Self::TestOutput => true,
-            Self::TestCode => !matches!(option, DocTestOptionName::Options),
-            Self::TestSetup | Self::TestCleanup => matches!(option, DocTestOptionName::SkipIf),
         }
     }
 }
@@ -94,49 +76,6 @@ mod tests {
         for kind in kinds {
             // When / Then
             assert_eq!(DocTestDirectiveKind::from_name(kind.as_name()), Some(kind));
-        }
-    }
-
-    #[test]
-    fn test_setup_and_cleanup_accept_only_skipif() {
-        // Given
-        for kind in [
-            DocTestDirectiveKind::TestSetup,
-            DocTestDirectiveKind::TestCleanup,
-        ] {
-            for (_, option) in DocTestOptionName::ALL {
-                // When
-                let accepted = kind.accepts(option);
-
-                // Then
-                assert_eq!(accepted, option == DocTestOptionName::SkipIf, "{kind:?}");
-            }
-        }
-    }
-
-    #[test]
-    fn test_testcode_accepts_everything_except_options() {
-        // Given
-        for (_, option) in DocTestOptionName::ALL {
-            // When
-            let accepted = DocTestDirectiveKind::TestCode.accepts(option);
-
-            // Then
-            assert_eq!(accepted, option != DocTestOptionName::Options);
-        }
-    }
-
-    #[test]
-    fn test_doctest_and_testoutput_accept_every_option() {
-        // Given
-        for kind in [
-            DocTestDirectiveKind::Doctest,
-            DocTestDirectiveKind::TestOutput,
-        ] {
-            for (_, option) in DocTestOptionName::ALL {
-                // When / Then
-                assert!(kind.accepts(option), "{kind:?} should accept {option:?}");
-            }
         }
     }
 }

@@ -1,4 +1,5 @@
 use super::super::body::parse_object_body;
+use super::dispatch::CObjectOptions;
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
 use crate::headings::Adornment;
@@ -15,7 +16,8 @@ pub(crate) fn parse_c_member(
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
 ) -> DomainObjectBody {
-    let parsed = parse_object_body::<()>("c:member", invocation, adornment_order, diagnostics);
+    let parsed =
+        parse_object_body::<CObjectOptions>("c:member", invocation, adornment_order, diagnostics);
     DomainObjectBody::CMember {
         signatures,
         flags: parsed.flags,

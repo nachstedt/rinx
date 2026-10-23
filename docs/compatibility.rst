@@ -347,9 +347,14 @@ Directives
          docutils discards it.
        - Text directly below the options, before a blank line, starts the
          content; docutils refuses it as an invalid option block.
+       - An option the directive does not take warns as
+         ``directive.unknown-option``; one Sphinx or the extension takes and
+         rinx does not, as ``directive.unsupported-option``, saying what to
+         write instead. Both are ignored, where docutils discards the
+         directive.
    * - ``.. toctree::``
-     - ✅
-     -
+     - 🔶
+     - - ``:class:`` is not supported.
    * - ``.. code-block::``
      - ✅ ℹ️
      - - ``:caption:`` is plain text, not inline markup.
@@ -364,18 +369,18 @@ Directives
      - ✅ ℹ️
      - - Applies to the rest of the document, not just the enclosing block.
    * - ``.. index::``
-     - ✅
-     -
+     - 🔶
+     - - ``:name:`` is not supported.
    * - ``.. index::`` ``see``/``seealso`` entries
      - ✅
      -
    * - Admonitions (``.. note::``, ``.. warning::``, …,
        ``.. admonition::``)
-     - ✅
-     -
+     - 🔶
+     - - ``:class:`` and ``:name:`` are not supported.
    * - ``.. seealso::``
-     - ✅
-     -
+     - 🔶
+     - - ``:class:``, ``:name:`` and ``:collapsible:`` are not supported.
    * - ``.. versionadded::``, ``.. versionchanged::``,
        ``.. deprecated::``
      - ✅
@@ -532,8 +537,11 @@ always available, and its name cannot be used by an entity schema.
    * - ``.. needtable::`` (sphinx-needs), as ``.. entity-table::``
      - ✅ ℹ️
      - - ``:style: datatables`` is refused.
-       - ``:show_filters:``, ``:show_parts:``, ``:layout:`` and
-         ``:filter-func:`` are not supported.
+       - ``:show_filters:``, ``:show_parts:``, ``:filter-func:``,
+         ``:filter_warning:``, ``:cypher:``, ``:export_id:``,
+         ``:max_items:``, ``:page_size:``, ``:sort_by:``, ``:style_row:``,
+         ``:style_col:`` and ``:tags:``/``:status:``/``:types:`` are not
+         supported.
        - Rows are ordered by id unless ``:sort:`` is given.
    * - ``.. needflow::`` (sphinx-needs), as ``.. entity-flow::``
      - ✅ ℹ️
@@ -542,7 +550,9 @@ always available, and its name cannot be used by an entity schema.
        - Edges to entities outside the filter are not drawn.
        - ``:direction:`` is ``TB`` or ``LR`` only.
        - ``:show_filters:``, ``:show_legend:``, ``:highlight:``,
-         ``:border_color:``, ``:filter-func:``, ``:engine:``, the
+         ``:border_color:``, ``:filter-func:``, ``:cypher:``,
+         ``:filter_warning:``, ``:export_id:``, ``:max_items:``,
+         ``:sort_by:``, ``:engine:``, ``:alt:``, ``:height:``, the
          ``:root_id:`` family and ``:tags:``/``:status:``/``:types:`` are
          refused.
        - Needs ``diagrams = True`` on the library.
@@ -560,8 +570,9 @@ always available, and its name cannot be used by an entity schema.
    * - ``.. needpie::`` (sphinx-needs), as ``.. entity-pie::``
      - ✅ ℹ️
      - - ``:labels:`` of the wrong length warns; the wedges are still drawn.
-       - ``:explode:``, ``:shadow:``, ``:style:`` and ``:filter-func:`` are
-         refused.
+       - ``:explode:``, ``:shadow:``, ``:style:``, ``:filter-func:``,
+         ``:filter_warning:``, ``:cypher:`` and
+         ``:tags:``/``:status:``/``:types:`` are refused.
    * - ``.. needbar::`` (sphinx-needs), as ``.. entity-bar::``
      - ✅ ℹ️
      - - A ragged row is padded with zeros and warns.
@@ -577,8 +588,9 @@ always available, and its name cannot be used by an entity schema.
      - - The file must be declared in ``parse_data``; a URL is refused.
        - ``needs_import_keys`` is the ``[import_keys]`` table of the entity
          schema; an undeclared key is refused.
-       - ``:hide:``, ``:collapse:``, ``:layout:``, ``:style:``, ``:setup:``,
-         ``:pre_template:`` and ``:post_template:`` are refused.
+       - ``:hide:``, ``:collapse:``, ``:layout:``, ``:style:``,
+         ``:template:``, ``:pre_template:``, ``:post_template:``,
+         ``:allow_type_coercion:`` and ``:parse_by_doctype:`` are refused.
        - Named sections cannot be imported.
        - Warnings from imported prose carry no position.
    * - ``.. needextend::`` (sphinx-needs), as ``.. entity-update::``
@@ -601,7 +613,8 @@ always available, and its name cannot be used by an entity schema.
        - Laid out by the ELK engine bundled in PlantUML, never a Graphviz
          ``dot`` on the host, so layouts differ from a Sphinx build's.
        - ``:scale:`` without ``:width:`` warns.
-       - ``:save:`` is refused.
+       - ``:save:``, ``:alt:``, ``:height:``, ``:max-width:``,
+         ``:html_format:`` and ``:latex_format:`` are refused.
        - ``:config:`` names a preamble in ``rinx.toml``'s ``[uml_configs]``.
    * - ``.. needuml::`` / ``.. needarch::`` (sphinx-needs), as
        ``.. entity-diagram::`` / ``.. entity-arch::``
@@ -640,7 +653,8 @@ Every domain
          in a local table of contents.
    * - ``:no-typesetting:``
      - ❌
-     - - Warns as an unknown option.
+     - - Warns as ``directive.unsupported-option``; on a ``.. py:module::``,
+         where Sphinx accepts it and does nothing, it does nothing.
    * - Signatures wrapped with a trailing backslash
      - ✅
      -
@@ -665,8 +679,10 @@ Python (``py``)
      - Status
      - Notes
    * - ``.. py:function::`` and ``:func:``
-     - ✅
-     -
+     - 🔶
+     - - ``:canonical:``, ``:annotation:`` and the signature wrapping options
+         (``:single-line-parameter-list:``, …) are not supported, on this
+         and every Python object below.
    * - ``.. py:module::`` and ``:mod:``
      - ✅ ℹ️
      - - ``:synopsis:``, ``:platform:`` and ``:deprecated:`` are shown only
@@ -688,20 +704,19 @@ Python (``py``)
      -
    * - ``.. py:method::`` and ``:meth:``
      - 🔶
-     - - ``:property:`` and ``:final:`` are not supported.
+     - - ``:final:`` is not supported.
    * - ``.. classmethod::`` / ``.. staticmethod::``
      - ✅
      -
    * - ``.. py:class::`` and ``:class:``
      - 🔶
-     - - ``:canonical:`` and ``:annotation:`` are not supported.
+     - - ``:abstract:`` is not supported.
    * - ``.. py:attribute::`` and ``:attr:``
      - 🔶
      - - ``:canonical:`` is shown but creates no alias.
    * - ``.. py:exception::`` and ``:exc:``
      - 🔶
-     - - Signature wrapping options (``:single-line-parameter-list:``, …)
-         are not supported.
+     - - ``:abstract:`` is not supported.
    * - ``:exc:``/``:class:`` resolving to either kind
      - 🔶
      - - ``:obj:`` is not supported.
@@ -720,8 +735,10 @@ C (``c``)
      - Status
      - Notes
    * - ``.. c:function::`` and ``:func:``
-     - ✅
-     -
+     - 🔶
+     - - ``:single-line-parameter-list:`` is not supported, on this and
+         every C object below.
+       - ``:no-index:`` is accepted, which Sphinx's C domain refuses.
    * - ``.. c:macro::`` and ``:macro:``
      - ✅
      -

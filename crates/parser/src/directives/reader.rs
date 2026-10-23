@@ -571,13 +571,14 @@ mod tests {
         // When
         let document = crate::parse("index.rst", input);
 
-        // Then
+        // Then — the unsupported option on its line, the unknown directive
+        // on its
         let starts: Vec<Position> = document
             .diagnostics
             .iter()
             .filter_map(|d| d.span.map(|span| span.start))
             .collect();
-        assert_eq!(starts, [Position::new(4, 4)]);
+        assert_eq!(starts, [Position::new(2, 4), Position::new(4, 4)]);
     }
 
     #[test]

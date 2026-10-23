@@ -424,80 +424,16 @@ everything inside it is lost to every later phase — which is why this is
 reported rather than left to the visible error block the renderer draws in its
 place.
 
-directive.toctree-unknown-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A ``.. toctree::`` option this build does not recognize. The option is ignored.
-
-directive.contents-unknown-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A ``.. contents::`` option this build does not recognize. The option is
-ignored.
-
-directive.sectnum-unknown-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A ``.. sectnum::`` option this build does not recognize. The option is ignored.
-
-directive.dropdown-unknown-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A ``.. dropdown::`` option this build does not recognize. The option is
-ignored.
-
-directive.grid-unknown-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A ``.. grid::`` option this build does not recognize. The option is ignored.
-
-directive.grid-item-unknown-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A ``.. grid-item::`` option this build does not recognize. The option is
-ignored.
-
-directive.button-link-unknown-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A ``.. button-link::`` option this build does not recognize. The option is
-ignored.
-
-directive.entity-table-unknown-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An ``.. entity-table::`` / ``.. needtable::`` option this build does not
-recognize. The option is ignored.
-
-directive.entity-flow-unknown-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An ``.. entity-flow::`` / ``.. needflow::`` option this build does not
-recognize. The option is ignored.
-
-directive.entity-sequence-unknown-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An ``.. entity-sequence::`` / ``.. needsequence::`` option this build does not
-recognize. The option is ignored.
-
-directive.entity-pie-unknown-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An ``.. entity-pie::`` / ``.. needpie::`` option this build does not recognize.
-The option is ignored.
-
-directive.entity-bar-unknown-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An ``.. entity-bar::`` / ``.. needbar::`` option this build does not recognize.
-The option is ignored.
-
 directive.unknown-option
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-An option this build does not recognize on a directive with no option code of
-its own. The option is ignored.
+An option the directive does not take. The option is ignored.
+
+directive.unsupported-option
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An option Sphinx or the extension defining the directive takes, but this build
+does not implement. The option is ignored.
 
 directive.missing-argument
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -637,17 +573,6 @@ character.
 
 doctest
 -------
-
-doctest.option-not-supported
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A doctest-family option that exists, but not on this directive — e.g.
-``:options:`` on a ``.. testsetup::``.
-
-doctest.unknown-option
-~~~~~~~~~~~~~~~~~~~~~~
-
-An option no doctest-family directive recognizes.
 
 doctest.pyversion-invalid
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -936,11 +861,6 @@ include.invalid-tab-width
 
 A ``:tab-width:`` that is not an integer.
 
-include.unknown-option
-~~~~~~~~~~~~~~~~~~~~~~
-
-An option this directive does not have.
-
 literalinclude
 --------------
 
@@ -1180,12 +1100,6 @@ button-link.empty-option-value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An option that needs a value but was written without one.
-
-button-link.unsupported-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An option sphinx-design accepts here that this build refuses by name, rather
-than accepting and ignoring it.
 
 button-link.unusable-outline
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1435,6 +1349,12 @@ Both ``:widths:`` and its sphinx-needs spelling ``:colwidths:`` given at once.
 Neither is guessed at, since the two disagreeing is exactly the case where
 picking one silently renders the wrong table.
 
+entity-table.invalid-value
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A ``:columns:`` naming no column, or a ``:sort:`` naming several fields. The
+option is ignored.
+
 entity-table.unsupported-style
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1503,13 +1423,6 @@ entity-flow.empty-option-value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An option whose value is required but was left empty.
-
-entity-flow.unsupported-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An option sphinx-needs' ``needflow`` has that this build does not implement.
-Reported by name rather than ignored, so an author who asked for a legend
-learns they did not get one.
 
 entity-flow.empty-result
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1601,12 +1514,6 @@ entity-sequence.empty-option-value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An option whose value is required but was left empty.
-
-entity-sequence.unsupported-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An option sphinx-needs' ``needsequence`` has that this build does not
-implement, reported by name rather than ignored.
 
 entity-sequence.unknown-start
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1703,13 +1610,6 @@ entity-pie.empty-option-value
 
 An option whose value is required but was left empty.
 
-entity-pie.unsupported-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An option sphinx-needs' ``needpie`` has that this build does not implement.
-Reported by name rather than ignored, so an author who asked for exploded
-wedges learns they did not get them.
-
 entity-pie.empty-result
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1791,12 +1691,6 @@ entity-bar.empty-option-value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An option whose value is required but was left empty.
-
-entity-bar.unsupported-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An option sphinx-needs' ``needbar`` has that this build does not implement,
-reported by name with what to write instead.
 
 entity-bar.empty-result
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -1946,18 +1840,6 @@ needimport.unknown-filter-field
 A ``:filter:`` naming a field no entity type declares and that is none of the
 built-ins.
 
-needimport.unsupported-option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An option sphinx-needs accepts that this build must refuse — the presentation
-and templating family. Refused *by name*, with what to write instead, since the
-common failure here is an unsupported feature rather than a typo.
-
-needimport.unknown-option
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An option ``.. needimport::`` does not accept at all.
-
 needimport.no-tags-attribute
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1984,12 +1866,6 @@ building, which a sandboxed action cannot do. The message points at a
 
 uml
 ---
-
-uml.unknown-option
-~~~~~~~~~~~~~~~~~~
-
-An option no diagram directive accepts. The diagram still renders: refusing it
-over a misspelled option would silently drop the picture.
 
 uml.empty-option-value
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -2027,13 +1903,6 @@ uml.invalid-extra
 
 An ``:extra:`` that is not a comma-separated list of ``name: value`` pairs. The
 pairs that did parse are still bound.
-
-uml.option-needs-template
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An option that only means something for a templated diagram — ``:key:``,
-``:extra:`` — written on a plain ``.. plantuml::``, where nothing would ever
-read it.
 
 uml.template-error
 ~~~~~~~~~~~~~~~~~~
@@ -2086,14 +1955,6 @@ pays nothing for it — Bazel cannot know which documents hold a diagram before
 reading them, so the build must be told. This is what keeps the opt-in honest:
 a forgotten attribute fails on the directive's own line rather than shipping a
 page with a broken picture.
-
-uml.save-unsupported
-~~~~~~~~~~~~~~~~~~~~
-
-A ``:save:``, which cannot be honoured: a sandboxed build action may only write
-files declared before it runs, and this path is written inside the document.
-The site's ``diagram_sources`` output group carries every diagram's expanded
-source instead.
 
 uml.unknown-config
 ~~~~~~~~~~~~~~~~~~

@@ -14,24 +14,42 @@ use crate::directives::error_node::malformed_directive;
 use crate::indent::strip_common_indent;
 
 use super::kind::DocTestDirectiveKind;
-use super::options::{DocTestOptions, scan_options};
+use super::options::{
+    DocTestOption, DocTestOptions, TestCodeOption, TestSetupOption, scan_options,
+};
+use crate::directives::options::DirectiveOptions;
 
-/// This directive's entry in the table of directives this build implements.
+/// How every directive of the family splits: an optional group name, its
+/// options, and its code.
+const DOCTEST_SHAPE: DirectiveShape = DirectiveShape {
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_options: true,
+    takes_content: true,
+    content_hint: None,
+};
+
+/// The entry of the two directives stating output a run is compared against.
 pub(in crate::directives) const DOCTEST_SPEC: DirectiveSpec = DirectiveSpec {
-    names: &[
-        "doctest",
-        "testcode",
-        "testoutput",
-        "testsetup",
-        "testcleanup",
-    ],
-    doc: "Code a doctest run executes, the output it expects, or its setup and cleanup.",
-    shape: DirectiveShape {
-        arguments: Arguments::OPTIONAL_TEXT,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
+    names: &["doctest", "testoutput"],
+    doc: "Code a doctest run executes, or the output it expects.",
+    shape: DOCTEST_SHAPE,
+    options: <DocTestOption as DirectiveOptions>::GROUPS,
+};
+
+/// The entry of the directive holding code whose output a `testoutput` states.
+pub(in crate::directives) const TESTCODE_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["testcode"],
+    doc: "Code a doctest run executes, its output stated by a `testoutput`.",
+    shape: DOCTEST_SHAPE,
+    options: <TestCodeOption as DirectiveOptions>::GROUPS,
+};
+
+/// The entry of the two directives a doctest run executes unshown.
+pub(in crate::directives) const TEST_SETUP_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["testsetup", "testcleanup"],
+    doc: "Code a doctest run executes before or after its group, never shown.",
+    shape: DOCTEST_SHAPE,
+    options: <TestSetupOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets one of the five `sphinx.ext.doctest` directives.
@@ -194,7 +212,7 @@ pub(super) mod tests {
         let written = crate::directives::reader::written_after_blank(body);
         let invocation = crate::directives::reader::test_invocation(
             kind.as_name(),
-            DOCTEST_SPEC.shape,
+            DOCTEST_SHAPE,
             argument,
             &written,
             &mut diagnostics,
@@ -333,15 +351,18 @@ pub(super) mod tests {
     }
 
     #[test]
-    fn test_diagnostics_are_prefixed_with_the_directive_name() {
-        // Given — the benchmark buckets diagnostics by the text before the
-        // first colon, so this is what makes them attributable per directive.
+    fn test_diagnostics_name_the_directive() {
+        // Given
         let body = ["   :bogus:", "", "   import os"];
 
         // When
         let (_, diagnostics) = parse(DocTestDirectiveKind::TestCleanup, "", &body);
 
         // Then
-        assert!(diagnostics[0].message.starts_with("testcleanup:"));
+        assert!(
+            diagnostics[0].message.contains("testcleanup"),
+            "{}",
+            diagnostics[0].message
+        );
     }
 }

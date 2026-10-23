@@ -3,6 +3,7 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
+use crate::directives::options::{DirectiveOptions, classify_options, directive_options};
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use crate::headings::Adornment;
 use rinx_ast::{AdmonitionKind, Directive};
@@ -14,6 +15,27 @@ pub(super) fn generic_title(argument: &str) -> String {
         "Admonition".to_string()
     } else {
         argument.to_string()
+    }
+}
+
+/// The advice for the options this build does not draw on a callout.
+const NOT_DRAWN: &str = "a callout is drawn with its kind's class and no label";
+
+directive_options! {
+    /// The options every callout takes from docutils, neither drawn here.
+    pub(super) enum CalloutOption {
+        _ => (["class"], Classes, "Classes for the callout.", NOT_DRAWN),
+        _ => (["name"], Text, "A label to reference the callout by.", NOT_DRAWN),
+    }
+}
+
+directive_options! {
+    /// The options an admonition takes: docutils' two and Sphinx's
+    /// `:collapsible:`.
+    enum AdmonitionOption {
+        /// `:collapsible:`.
+        Collapsible => (["collapsible"], Choice(|| vec!["open", "closed"]), "Draws the callout folded; `open` starts it unfolded.");
+        Callout(CalloutOption),
     }
 }
 
@@ -37,6 +59,7 @@ pub(in crate::directives) const ADMONITION_SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: <AdmonitionOption as DirectiveOptions>::GROUPS,
 };
 
 /// This directive's entry in the table of directives this build implements.
@@ -49,6 +72,7 @@ pub(in crate::directives) const GENERIC_ADMONITION_SPEC: DirectiveSpec = Directi
         takes_content: true,
         content_hint: None,
     },
+    options: <AdmonitionOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. note::` and the other eight titled by their kind: the text
@@ -93,14 +117,19 @@ pub(super) fn parse_admonition(
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
 ) -> Directive {
-    // Only `:collapsible:` means anything here; every other option is
-    // skipped silently, as it always has been. `:collapsible:` alone or
-    // `:collapsible: close` starts closed.
-    let collapsible = invocation
-        .options
-        .iter()
-        .rfind(|option| option.name == "collapsible")
-        .map(|option| option.value == "open");
+    // `:collapsible:` alone or `:collapsible: closed` starts closed.
+    let mut collapsible = None;
+    for (option, line) in classify_options::<AdmonitionOption>(
+        &invocation.options,
+        invocation.name,
+        diagnostics,
+        &invocation.ctx,
+    ) {
+        match option {
+            AdmonitionOption::Collapsible => collapsible = Some(line.value == "open"),
+            AdmonitionOption::Callout(option) => match option {},
+        }
+    }
     Directive::Admonition {
         kind,
         title,

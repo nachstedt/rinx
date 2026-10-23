@@ -1,10 +1,10 @@
-use super::super::body::{ObjectOptions, parse_object_body};
-use super::dispatch::read_module_option;
+use super::super::body::{DescriptionOption, ObjectOptions, parse_object_body};
+use super::dispatch::PyObjectOption;
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::OptionLine;
+use crate::directives::options::{OptionLine, directive_options};
 use crate::headings::Adornment;
-use rinx_ast::{DomainObjectBody, NonEmptyVector};
+use rinx_ast::{DescriptionFlags, DomainObjectBody, NonEmptyVector};
 
 /// Parses a `.. py:class::` body: its option block, then its content. Any
 /// nested domain object directives (e.g. `.. py:method::`) in the body are
@@ -57,14 +57,27 @@ struct ClassOptions {
     module: Option<String>,
 }
 
+directive_options! {
+    /// The options `.. py:class::`/`.. py:exception::` take: Sphinx's
+    /// `PyClasslike`'s.
+    enum ClassOption {
+        /// `:final:`.
+        Final => (["final"], Flag, "Marks the class as final."),
+        _ => (["abstract"], Flag, "Marks the class as abstract."),
+        _ => (["canonical"], Text, "The object's name where it is defined, if documented elsewhere."),;
+        Py(PyObjectOption),
+        Description(DescriptionOption),
+    }
+}
+
 impl ObjectOptions for ClassOptions {
-    fn read(&mut self, line: &OptionLine) -> bool {
-        match line.name.as_str() {
-            "final" => {
-                self.is_final = true;
-                true
-            }
-            _ => read_module_option(line, &mut self.module),
+    type Option = ClassOption;
+
+    fn read(&mut self, option: ClassOption, line: &OptionLine, flags: &mut DescriptionFlags) {
+        match option {
+            ClassOption::Final => self.is_final = true,
+            ClassOption::Py(PyObjectOption::Module) => self.module = Some(line.value.clone()),
+            ClassOption::Description(option) => flags.set(option.flag()),
         }
     }
 }

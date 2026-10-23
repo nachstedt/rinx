@@ -7,9 +7,27 @@ use rinx_ast::{
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
-use super::options::{OptionLine, parse_positive_depth, report_unknown_options};
+use super::options::{
+    DirectiveOptions, OptionLine, classify_options, directive_options, parse_positive_depth,
+};
 
 const DIRECTIVE: &str = "contents";
+
+directive_options! {
+    /// The options `.. contents::` takes: docutils' four, and a `:name:`.
+    enum ContentsOption {
+        /// `:depth:`.
+        Depth => (["depth"], Integer, "How many section levels the table lists."),
+        /// `:local:`.
+        Local => (["local"], Flag, "Lists only the sections below the directive's own."),
+        /// `:backlinks:`.
+        Backlinks => (["backlinks"], Choice(|| vec!["entry", "top", "none"]), "Where each section title links back to."),
+        /// `:class:`.
+        Class => (["class"], Classes, "Classes for the table."),
+        /// `:name:`.
+        Name => (["name"], Text, "A label to reference the table by."),
+    }
+}
 
 /// Reads the five options `.. contents::` accepts, returning them with the
 /// lines it did not recognize, in source order.
@@ -17,17 +35,18 @@ const DIRECTIVE: &str = "contents";
 /// Modelled on `.. toctree::`'s own `parse_toctree_options` — see that
 /// function's doc comment for why `:depth: 0` (and a negative value) means
 /// *unset* rather than a real limit.
-fn parse_contents_options<'a>(
-    option_lines: &'a [OptionLine],
+fn parse_contents_options(
+    option_lines: &[OptionLine],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> (ContentsOptions, Vec<&'a OptionLine>) {
+) -> ContentsOptions {
     let mut options = ContentsOptions::default();
-    let mut unrecognized = Vec::new();
 
-    for line in option_lines {
-        match line.name.as_str() {
-            "depth" => {
+    for (option, line) in
+        classify_options::<ContentsOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    {
+        match option {
+            ContentsOption::Depth => {
                 options.depth = parse_positive_depth(
                     line,
                     DIRECTIVE,
@@ -37,14 +56,14 @@ fn parse_contents_options<'a>(
                     ctx,
                 );
             }
-            "local" => options.local = true,
-            "backlinks" => {
+            ContentsOption::Local => options.local = true,
+            ContentsOption::Backlinks => {
                 options.backlinks = parse_backlinks(line, diagnostics, ctx);
             }
-            "class" => {
+            ContentsOption::Class => {
                 options.classes = line.value.split_whitespace().map(str::to_string).collect();
             }
-            "name" => {
+            ContentsOption::Name => {
                 if line.value.is_empty() {
                     diagnostics.push(Diagnostic::at(
                         DiagnosticCode::ContentsEmptyName,
@@ -55,11 +74,10 @@ fn parse_contents_options<'a>(
                     options.name = Some(TargetName::new(&line.value));
                 }
             }
-            _ => unrecognized.push(line),
         }
     }
 
-    (options, unrecognized)
+    options
 }
 
 /// Reads a `:backlinks:` value: `entry`, `top` or `none`. Absent keeps the
@@ -96,6 +114,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: false,
         content_hint: None,
     },
+    options: <ContentsOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. contents::`.
@@ -116,14 +135,7 @@ pub(super) fn parse_contents(
     diagnostics: &mut Diagnostics,
 ) -> Directive {
     let ctx = &invocation.ctx;
-    let (options, unrecognized) = parse_contents_options(&invocation.options, diagnostics, ctx);
-    report_unknown_options(
-        &unrecognized,
-        DIRECTIVE,
-        DiagnosticCode::DirectiveContentsUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    let options = parse_contents_options(&invocation.options, diagnostics, ctx);
 
     let title = invocation.argument(0).trim();
     Directive::Contents(Contents {
@@ -367,10 +379,7 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert_eq!(
-            diagnostics[0].code,
-            DiagnosticCode::DirectiveContentsUnknownOption
-        );
+        assert_eq!(diagnostics[0].code, DiagnosticCode::DirectiveUnknownOption);
         assert!(diagnostics[0].message.contains(":invalid_opt:"));
     }
 

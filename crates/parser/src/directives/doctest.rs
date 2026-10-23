@@ -2,9 +2,9 @@
 //!
 //! All five directives share one option sub-syntax, so they share one scanner
 //! ([`options::scan_options`]); what differs is which options each accepts,
-//! which is stated once in [`kind::DocTestDirectiveKind::accepts`] and
-//! enforced there. [`block`] then assembles the [`rinx_ast::DocTestBlock`]
-//! variant for the directive's kind.
+//! which is stated once by its spec's option enum — three, over shared
+//! groups, mirroring Sphinx's per-class `option_spec`. [`block`] then
+//! assembles the [`rinx_ast::DocTestBlock`] variant for the directive's kind.
 //!
 //! # Unrecognized options do not degrade the directive
 //!
@@ -19,4 +19,4 @@ mod block;
 mod kind;
 mod options;
 
-pub(super) use block::{DOCTEST_SPEC, interpret_doctest};
+pub(super) use block::{DOCTEST_SPEC, TEST_SETUP_SPEC, TESTCODE_SPEC, interpret_doctest};

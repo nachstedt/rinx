@@ -19,7 +19,9 @@ use rinx_ast::{Diagnostic, DiagnosticCode, Directive, Span, TargetName};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::options::{OptionLine, report_unknown_options};
+use crate::directives::options::{
+    DirectiveOptions, OptionLine, classify_options, directive_options,
+};
 
 const DIRECTIVE: &str = "math";
 
@@ -40,6 +42,18 @@ impl MathOptions {
     }
 }
 
+directive_options! {
+    /// The options `.. math::` takes: Sphinx's five spellings.
+    enum MathOption {
+        /// `:label:`.
+        Label => (["label", "name"], Text, "A label to reference the equation by, which numbers it."),
+        /// `:nowrap:`.
+        NoWrap => (["nowrap", "no-wrap"], Flag, "Leaves the LaTeX unwrapped, its environment written by the author."),
+        /// `:class:`.
+        Class => (["class"], Classes, "Classes for the equation."),
+    }
+}
+
 /// Consumes the options `.. math::` knows, returning them with the lines it
 /// did not recognize, in source order.
 ///
@@ -51,17 +65,17 @@ impl MathOptions {
 /// `:nowrap:` is a flag, so any value at all counts as setting it; `:no-wrap:`
 /// is accepted alongside it because docutils normalizes option names that way
 /// and authors write both.
-fn parse_math_options<'a>(
-    option_lines: &'a [OptionLine],
+fn parse_math_options(
+    option_lines: &[OptionLine],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> (MathOptions, Vec<&'a OptionLine>) {
+) -> MathOptions {
     let mut options = MathOptions::empty();
-    let mut unrecognized = Vec::new();
 
-    for line in option_lines {
-        match line.name.as_str() {
-            "label" | "name" => {
+    for (option, line) in classify_options::<MathOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    {
+        match option {
+            MathOption::Label => {
                 if line.value.is_empty() {
                     diagnostics.push(Diagnostic::at(
                         DiagnosticCode::MathEmptyLabel,
@@ -75,15 +89,14 @@ fn parse_math_options<'a>(
                     options.label = Some(TargetName::new(&line.value));
                 }
             }
-            "nowrap" | "no-wrap" => options.nowrap = true,
-            "class" => {
+            MathOption::NoWrap => options.nowrap = true,
+            MathOption::Class => {
                 options.classes = line.value.split_whitespace().map(str::to_string).collect();
             }
-            _ => unrecognized.push(line),
         }
     }
 
-    (options, unrecognized)
+    options
 }
 
 /// Splits a math body into one string per equation.
@@ -109,6 +122,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: <MathOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. math::`.
@@ -132,14 +146,7 @@ pub(in crate::directives) fn parse_math_directive(
     diagnostics: &mut Diagnostics,
 ) -> Directive {
     let ctx = &invocation.ctx;
-    let (options, unrecognized) = parse_math_options(&invocation.options, diagnostics, ctx);
-    report_unknown_options(
-        &unrecognized,
-        DIRECTIVE,
-        DiagnosticCode::DirectiveUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    let options = parse_math_options(&invocation.options, diagnostics, ctx);
 
     let body = invocation.content();
     let argument = invocation.argument(0);

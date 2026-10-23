@@ -368,7 +368,7 @@ class AstTally:
             # usage is what keeps the number honest — a zero here would
             # otherwise look like success while only meaning the field had been
             # removed. An option the parser does not know is not counted here
-            # at all; it surfaces as a `directive.toctree-unknown-option` entry
+            # at all; it surfaces as a `directive.unknown-option` entry
             # under parser diagnostics.
             options = directive["Toctree"].get("options", {})
             for name in TOCTREE_VALUE_OPTIONS:

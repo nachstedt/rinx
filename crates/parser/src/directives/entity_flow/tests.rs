@@ -345,7 +345,7 @@ fn test_an_option_sphinx_needs_has_but_this_build_lacks_is_refused_by_name() {
         let rst = format!(".. entity-flow::\n   {option}\n");
 
         // Then
-        assert_eq!(codes(&rst), ["entity-flow.unsupported-option"], "{option}");
+        assert_eq!(codes(&rst), ["directive.unsupported-option"], "{option}");
         assert!(
             message(&rst).contains("not supported"),
             "{option}: {}",
@@ -376,7 +376,7 @@ fn test_an_option_nobody_has_is_reported_as_unknown_rather_than_unsupported() {
     let reported = codes(rst);
 
     // Then
-    assert_eq!(reported, ["directive.entity-flow-unknown-option"]);
+    assert_eq!(reported, ["directive.unknown-option"]);
 }
 
 #[test]

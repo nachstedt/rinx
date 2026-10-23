@@ -765,7 +765,7 @@ fail with a syntax error naming a generated file nobody wrote.
 sphinx-needs' ``:show_filters:``, ``:show_legend:``, ``:highlight:``,
 ``:border_color:``, ``:filter-func:``, ``:engine:``, the ``:root_id:`` family and the
 legacy ``:tags:``/``:status:``/``:types:`` filters are each reported by name as
-``entity-flow.unsupported-option``, with what to write instead, rather than
+``directive.unsupported-option``, with what to write instead, rather than
 silently doing nothing.
 
 A flowchart is a diagram, so its library needs ``diagrams = True`` exactly as the
@@ -857,7 +857,7 @@ sphinx-needs' ``:show_filters:``, ``:show_legend:``, ``:show_link_names:``,
 ``:highlight:``, ``:filter-func:``, ``:sort_by:``, ``:export_id:``,
 ``:filter_warning:``, ``:height:``, ``:engine:`` and the legacy
 ``:tags:``/``:status:``/``:types:`` filters are each reported by name as
-``entity-sequence.unsupported-option``, with what to write instead.
+``directive.unsupported-option``, with what to write instead.
 
 Like a flowchart, a sequence diagram is compiled, so its library needs
 ``diagrams = True``. See ``docs/decisions/020-entity-sequence.md``.
@@ -927,7 +927,7 @@ Three things are reported rather than passed over:
   wedges are drawn either way.
 
 sphinx-needs' ``:explode:``, ``:shadow:``, ``:style:`` and ``:filter-func:`` are each
-reported by name as ``entity-pie.unsupported-option``, with what to write
+reported by name as ``directive.unsupported-option``, with what to write
 instead. See ``docs/decisions/017-entity-pie.md``.
 
 Bar charts
@@ -990,7 +990,7 @@ rotation that is not whole degrees is ``entity-bar.invalid-rotation`` rather tha
 silently ignored. A body with no values is ``entity-bar.no-data``, a chart whose
 every cell counts zero ``entity-bar.empty-result``, and ``:style:`` and the legacy
 ``:status:``/``:tags:``/``:types:``/``:cypher:`` are each
-``entity-bar.unsupported-option``, with the ``:filter:`` to write instead. See
+``directive.unsupported-option``, with the ``:filter:`` to write instead. See
 ``docs/decisions/021-entity-bar.md``.
 
 Diagramming entities
@@ -1100,7 +1100,7 @@ a ``filter()`` matching no entity, say — is reported as ``uml.empty-result`` a
 the page simply shows no picture, the same way an empty ``.. entity-table::``
 renders its headings and warns.
 
-``:save:`` is reported as ``uml.save-unsupported``: a sandboxed build action may
+``:save:`` is reported as ``directive.unsupported-option``: a sandboxed build action may
 only write files declared before it runs. Build the site's ``diagram_sources``
 output group to get every diagram's expanded source instead.
 
@@ -1386,10 +1386,6 @@ a ``needs.json`` has no line of its own to name:
      - a ``:filter:`` the filter language cannot parse
    * - ``needimport.unknown-filter-field``
      - a ``:filter:`` naming an undeclared field
-   * - ``needimport.unsupported-option``
-     - one of sphinx-needs' options this build refuses
-   * - ``needimport.unknown-option``
-     - an option this directive does not accept
    * - ``needimport.no-tags-attribute``
      - ``:tags:`` on a type declaring no list attribute ``tags``
    * - ``needimport.empty-result``
@@ -1417,8 +1413,6 @@ directive's own line for a missing option:
      - a ``:filter:`` naming an undeclared field
    * - ``entity-sequence.invalid-max-items``
      - a ``:max-items:`` that is not a non-negative whole number
-   * - ``entity-sequence.unsupported-option``
-     - one of sphinx-needs' options this build refuses
 
 A ``.. needservice::`` is refused outright, reported against its own line:
 

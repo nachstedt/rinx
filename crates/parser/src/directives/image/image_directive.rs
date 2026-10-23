@@ -11,9 +11,9 @@ use rinx_ast::{AssetUri, Diagnostic, DiagnosticCode, Directive, ImageLoading, Im
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::error_node::malformed_node;
-use crate::directives::options::{OptionLine, report_unknown_options, uri_argument};
+use crate::directives::options::{DirectiveOptions, OptionLine, classify_options, uri_argument};
 
-use super::options::{ImageContext, parse_common_image_options};
+use super::options::{CommonImageOptions, ImageContext, ImageOption, ImageSite, read_image_option};
 
 pub(in crate::directives) const DIRECTIVE: &str = "image";
 
@@ -27,6 +27,7 @@ pub(in crate::directives) const IMAGE_SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: false,
         content_hint: Some("use figure for a caption or legend"),
     },
+    options: <ImageOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. image::`.
@@ -49,16 +50,15 @@ pub(in crate::directives) fn parse_image_directive(
 ) -> Directive {
     let ctx = &invocation.ctx;
     let option_lines = &invocation.options;
-    let refs: Vec<&OptionLine> = option_lines.iter().collect();
-    let (common, unrecognized) =
-        parse_common_image_options(&refs, DIRECTIVE, ImageContext::Standalone, diagnostics, ctx);
-    report_unknown_options(
-        &unrecognized,
-        DIRECTIVE,
-        DiagnosticCode::DirectiveUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    let image = ImageSite {
+        directive: DIRECTIVE,
+        context: ImageContext::Standalone,
+    };
+    let mut common = CommonImageOptions::empty();
+    for (option, line) in classify_options::<ImageOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    {
+        read_image_option(option, line, &mut common, image, diagnostics, ctx);
+    }
 
     let Some(uri) = image_uri(invocation) else {
         // The reader has reported the missing argument.

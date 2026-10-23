@@ -8,8 +8,8 @@
 //! renderer is the question itself, which needs the whole project to answer.
 //!
 //! sphinx-needs' `needflow` has a wider option set than this build draws. The
-//! ones it does not are refused **by name**, not ignored: an author who asked
-//! for a legend and silently got none has no way to find out why.
+//! ones it does not are refused **by name**, not ignored (see
+//! [`EntityFlowOption`]).
 //!
 //! An unreadable option is dropped and reported, leaving the flowchart itself
 //! intact — the error-resilience every directive here follows, and the same
@@ -27,50 +27,71 @@ use rinx_filter::Expr;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
-use super::filter_option::{FilterCodes, read_filter_option};
-use super::options::{OptionLine, parse_percentage, report_unknown_options};
+use super::filter_option::{FilterCodes, ShorthandFilterOption, read_filter_option};
+use super::options::{
+    DirectiveOptions, OptionLine, choice_names, classify_options, directive_options,
+    parse_percentage,
+};
 
-/// The options sphinx-needs' `needflow` accepts that this build does not,
-/// each with what an author should reach for instead.
-///
-/// A table rather than a match arm apiece because the *point* of each entry is
-/// the sentence beside it: the option is being refused, so the diagnostic is
-/// the entire feature. Both spellings of every multiword name are listed,
-/// since sphinx-needs writes them with underscores and this build with
-/// hyphens, and an author migrating a document will write either.
-const UNSUPPORTED_OPTIONS: [(&str, &str); 16] = [
-    (
-        "show_filters",
-        "the filter is visible in the document source",
-    ),
-    (
-        "show-filters",
-        "the filter is visible in the document source",
-    ),
-    ("show_legend", "no legend is drawn"),
-    ("show-legend", "no legend is drawn"),
-    ("filter-func", "write the selection as :filter:"),
-    ("filter_func", "write the selection as :filter:"),
-    ("highlight", "every entity is drawn the same way"),
-    ("border_color", "every entity is drawn the same way"),
-    ("border-color", "every entity is drawn the same way"),
-    ("engine", "every diagram here is compiled by PlantUML"),
-    ("root_id", "select the entities to draw with :filter:"),
-    ("root-id", "select the entities to draw with :filter:"),
-    (
-        "root_direction",
-        "select the entities to draw with :filter:",
-    ),
-    ("root_depth", "select the entities to draw with :filter:"),
-    (
-        "tags",
-        "write the selection as :filter:, e.g. \"api\" in tags",
-    ),
-    (
-        "status",
-        "write the selection as :filter:, e.g. status == \"open\"",
-    ),
-];
+/// The advice for the options choosing the entities from a root.
+const SELECT_WITH_FILTER: &str = "select the entities to draw with :filter:";
+
+/// The advice for the options styling single entities.
+const DRAWN_ALIKE: &str = "every entity is drawn the same way";
+
+directive_options! {
+    /// The options `.. entity-flow::` takes: sphinx-needs' `needflow`'s thirty,
+    /// of which this build reads eleven, and its own `:caption:`.
+    ///
+    /// The ones this build does not draw are refused **by name**, each with
+    /// what to reach for instead: an author who asked for a legend and
+    /// silently got none has no way to find out why. Both spellings of every
+    /// multiword name are listed, since sphinx-needs writes them with
+    /// underscores and this build with hyphens.
+    enum EntityFlowOption {
+        /// `:filter:`.
+        Filter => (["filter"], Filter, "The entities drawn, by a filter."),
+        /// `:relations:`.
+        Relations => (["relations", "link_types", "link-types"], Text, "The relations drawn as edges, comma-separated."),
+        /// `:show-link-names:`.
+        ShowLinkNames => (["show-link-names", "show_link_names"], Flag, "Labels each edge with its relation."),
+        /// `:direction:`.
+        Direction => (["direction"], Choice(FlowDirection::spellings), "Which way the chart is laid out."),
+        /// `:config:`.
+        Config => (["config"], Text, "A PlantUML configuration the chart is drawn with."),
+        /// `:debug:`.
+        Debug => (["debug"], Flag, "Shows the generated PlantUML source below the chart."),
+        /// `:caption:`.
+        Caption => (["caption"], Text, "A caption shown below the chart."),
+        /// `:align:`.
+        Align => (["align"], Choice(|| choice_names(ImageAlign::ALL, ImageAlign::as_str)), "Where the chart sits."),
+        /// `:scale:`.
+        Scale => (["scale"], Integer, "The chart's size, as a percentage of its `:width:`."),
+        /// `:width:`.
+        Width => (["width"], Length, "The chart's width."),
+        /// `:class:`.
+        Class => (["class"], Classes, "Classes for the chart."),
+        /// `:name:`.
+        Name => (["name"], Text, "A label to reference the chart by."),
+        _ => (["show_filters", "show-filters"], Flag, "Shows the filter below the chart.", "the filter is visible in the document source"),
+        _ => (["show_legend", "show-legend"], Flag, "Draws a legend of the entity types.", "no legend is drawn"),
+        _ => (["filter-func", "filter_func"], Text, "The entities drawn, by a Python function.", "write the selection as :filter:"),
+        _ => (["cypher"], Text, "The entities drawn, by a Cypher query.", "write the selection as :filter:"),
+        _ => (["filter_warning"], Text, "The text shown when nothing is drawn."),
+        _ => (["export_id"], Text, "The id the filter is exported under."),
+        _ => (["max_items"], Integer, "How many entities are drawn at most."),
+        _ => (["sort_by"], Text, "The field the entities are ordered by."),
+        _ => (["highlight"], Filter, "The entities drawn highlighted, by a filter.", DRAWN_ALIKE),
+        _ => (["border_color", "border-color"], Text, "The colour of each entity's border.", DRAWN_ALIKE),
+        _ => (["engine"], Text, "The program the chart is laid out by.", "every diagram here is compiled by PlantUML"),
+        _ => (["root_id", "root-id"], Text, "The entity the chart is drawn from.", SELECT_WITH_FILTER),
+        _ => (["root_direction"], Text, "Which relations are followed from the root.", SELECT_WITH_FILTER),
+        _ => (["root_depth"], Integer, "How far relations are followed from the root.", SELECT_WITH_FILTER),
+        _ => (["alt"], Text, "Text describing the chart."),
+        _ => (["height"], Length, "The chart's height.");
+        Shorthand(ShorthandFilterOption),
+    }
+}
 
 /// This directive's entry in the table of directives this build implements.
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
@@ -84,6 +105,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
             "its picture is generated from the entity graph: select the entities with :filter:, or write `.. entity-diagram::` to draw a diagram of your own",
         ),
     },
+    options: <EntityFlowOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. entity-flow::` or `.. needflow::`, recording which was
@@ -116,14 +138,7 @@ pub(super) fn parse_entity_flow(
         ..EntityFlow::new(source)
     };
 
-    let unrecognized = read_options(&mut flow, option_lines, unindented_lines, diagnostics, ctx);
-    report_unknown_options(
-        &unrecognized,
-        directive,
-        DiagnosticCode::DirectiveEntityFlowUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    read_options(&mut flow, option_lines, unindented_lines, diagnostics, ctx);
     if flow.has_unusable_scale() {
         report_unusable_scale(option_lines, directive, diagnostics, ctx);
     }
@@ -131,41 +146,42 @@ pub(super) fn parse_entity_flow(
     Directive::EntityFlow(Box::new(flow))
 }
 
-/// Reads every option onto `flow`, returning the lines nobody claimed.
-fn read_options<'a>(
+/// Reads every option onto `flow`, reporting the ones it does not take.
+fn read_options(
     flow: &mut EntityFlow,
-    option_lines: &'a [OptionLine],
+    option_lines: &[OptionLine],
     unindented_lines: &[String],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> Vec<&'a OptionLine> {
+) {
     let directive = flow.source.as_str();
-    let mut unrecognized = Vec::new();
-    for line in option_lines {
-        match line.name.as_str() {
-            "filter" => {
+    for (option, line) in
+        classify_options::<EntityFlowOption>(option_lines, directive, diagnostics, ctx)
+    {
+        match option {
+            EntityFlowOption::Filter => {
                 let source_line = unindented_lines.get(line.line_index).map(String::as_str);
                 flow.filter = read_filter(line, source_line, directive, diagnostics, ctx);
             }
-            "relations" | "link_types" | "link-types" => {
+            EntityFlowOption::Relations => {
                 flow.relations = read_relations(line, directive, diagnostics, ctx);
             }
-            "show-link-names" | "show_link_names" => flow.show_link_names = true,
-            "direction" => {
+            EntityFlowOption::ShowLinkNames => flow.show_link_names = true,
+            EntityFlowOption::Direction => {
                 if let Some(direction) = read_direction(line, directive, diagnostics, ctx) {
                     flow.direction = direction;
                 }
             }
-            "config" => {
+            EntityFlowOption::Config => {
                 if line.value.is_empty() {
                     report_empty_value(line, directive, diagnostics, ctx);
                 } else {
                     flow.config = Some(line.value.clone());
                 }
             }
-            "debug" => flow.debug = true,
-            "caption" => flow.caption = Some(line.value.clone()),
-            "align" => match ImageAlign::parse(&line.value) {
+            EntityFlowOption::Debug => flow.debug = true,
+            EntityFlowOption::Caption => flow.caption = Some(line.value.clone()),
+            EntityFlowOption::Align => match ImageAlign::parse(&line.value) {
                 Some(align) => flow.align = Some(align),
                 None => diagnostics.push(Diagnostic::at(
                     DiagnosticCode::EntityFlowInvalidAlign,
@@ -176,7 +192,7 @@ fn read_options<'a>(
                     ctx.line_span(line.line_index, &line.raw),
                 )),
             },
-            "scale" => match parse_percentage(&line.value) {
+            EntityFlowOption::Scale => match parse_percentage(&line.value) {
                 Some(scale) => flow.scale = Some(scale),
                 None => diagnostics.push(Diagnostic::at(
                     DiagnosticCode::EntityFlowInvalidScale,
@@ -187,7 +203,7 @@ fn read_options<'a>(
                     ctx.line_span(line.line_index, &line.raw),
                 )),
             },
-            "width" => match LengthOrPercentage::new(&line.value) {
+            EntityFlowOption::Width => match LengthOrPercentage::new(&line.value) {
                 Ok(width) => flow.width = Some(width),
                 Err(problem) => diagnostics.push(Diagnostic::at(
                     DiagnosticCode::EntityFlowInvalidWidth,
@@ -195,36 +211,19 @@ fn read_options<'a>(
                     ctx.line_span(line.line_index, &line.raw),
                 )),
             },
-            "class" => flow.classes = line.value.split_whitespace().map(str::to_string).collect(),
-            "name" => {
+            EntityFlowOption::Class => {
+                flow.classes = line.value.split_whitespace().map(str::to_string).collect();
+            }
+            EntityFlowOption::Name => {
                 if line.value.is_empty() {
                     report_empty_value(line, directive, diagnostics, ctx);
                 } else {
                     flow.name = Some(TargetName::new(&line.value));
                 }
             }
-            name => match unsupported_advice(name) {
-                Some(advice) => report_unsupported(line, advice, directive, diagnostics, ctx),
-                None => unrecognized.push(line),
-            },
+            EntityFlowOption::Shorthand(option) => match option {},
         }
     }
-    unrecognized
-}
-
-/// What to tell an author who wrote an option this build does not implement,
-/// or `None` when the name is not one of sphinx-needs' at all.
-///
-/// `types` is handled apart from the table because it is the one legacy filter
-/// whose replacement is worth spelling exactly: the field is `type`, singular.
-fn unsupported_advice(name: &str) -> Option<&'static str> {
-    if name == "types" {
-        return Some("write the selection as :filter:, e.g. type == \"req\"");
-    }
-    UNSUPPORTED_OPTIONS
-        .iter()
-        .find(|(option, _)| *option == name)
-        .map(|(_, advice)| *advice)
 }
 
 /// Reads `:filter:` under this directive's own diagnostic codes.
@@ -350,24 +349,6 @@ fn report_unusable_scale(
              diagram is never opened while rendering, so it has no size of its own to scale"
         ),
         span,
-    ));
-}
-
-/// Reports an option this build does not implement, and what to write instead.
-fn report_unsupported(
-    line: &OptionLine,
-    advice: &str,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::EntityFlowUnsupportedOption,
-        format!(
-            "{directive}: :{}: is not supported, so it was ignored — {advice}",
-            line.name
-        ),
-        ctx.line_span(line.line_index, &line.raw),
     ));
 }
 

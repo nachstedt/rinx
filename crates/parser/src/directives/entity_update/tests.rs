@@ -340,7 +340,7 @@ fn test_a_diagnostic_inside_the_body_points_at_the_real_line() {
     // Then
     let span = diagnostics
         .iter()
-        .find(|d| d.code == DiagnosticCode::DirectiveContentsUnknownOption)
+        .find(|d| d.code == DiagnosticCode::DirectiveUnknownOption)
         .and_then(|d| d.span)
         .expect("the nested option is reported with a span");
     assert_eq!(span.start.line, 5);

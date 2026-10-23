@@ -9,12 +9,22 @@
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
-use rinx_ast::{DiagnosticCode, Directive, ResolvedLanguage};
+use rinx_ast::{Directive, ResolvedLanguage};
 
 use crate::diagnostics::Diagnostics;
-use crate::directives::options::report_unknown_options;
+use crate::directives::options::{DirectiveOptions, classify_options, directive_options};
 
 use super::options::parse_positive_integer;
+
+directive_options! {
+    /// The options `.. highlight::` takes: Sphinx's two.
+    enum HighlightOption {
+        /// `:linenothreshold:`.
+        LineNoThreshold => (["linenothreshold"], Integer, "Numbers the lines of every block at least this long."),
+        /// `:force:`.
+        Force => (["force"], Flag, "Highlights even where the language does not fit."),
+    }
+}
 
 /// This directive's entry in the table of directives this build implements.
 pub(in crate::directives) const HIGHLIGHT_SPEC: DirectiveSpec = DirectiveSpec {
@@ -26,6 +36,7 @@ pub(in crate::directives) const HIGHLIGHT_SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: false,
         content_hint: None,
     },
+    options: <HighlightOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. highlight::`.
@@ -50,14 +61,14 @@ pub(in crate::directives) fn parse_highlight(
     // renderable, which is the parser's job; the diagnostic is what tells the
     // author.
     let language = ResolvedLanguage::parse(invocation.argument(0)).unwrap_or_default();
-    let option_lines = &invocation.options;
     let mut linenothreshold = None;
     let mut force = false;
-    let mut unrecognized = Vec::new();
 
-    for line in option_lines {
-        match line.name.as_str() {
-            "linenothreshold" => {
+    for (option, line) in
+        classify_options::<HighlightOption>(&invocation.options, DIRECTIVE, diagnostics, ctx)
+    {
+        match option {
+            HighlightOption::LineNoThreshold => {
                 linenothreshold = parse_positive_integer(
                     &line.value,
                     "linenothreshold",
@@ -67,17 +78,9 @@ pub(in crate::directives) fn parse_highlight(
                     ctx,
                 );
             }
-            "force" => force = true,
-            _ => unrecognized.push(line),
+            HighlightOption::Force => force = true,
         }
     }
-    report_unknown_options(
-        &unrecognized,
-        DIRECTIVE,
-        DiagnosticCode::DirectiveUnknownOption,
-        diagnostics,
-        ctx,
-    );
 
     Directive::Highlight {
         language,

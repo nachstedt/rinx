@@ -17,7 +17,9 @@ use rinx_ast::{
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::options::{OptionLine, parse_percentage};
+use crate::directives::options::{
+    DirectiveOptions, OptionLine, choice_names, directive_options, parse_percentage,
+};
 
 /// Which of the two places an image's options may be written in — the two
 /// differ in which `:align:` values are valid and whether `:name:` is
@@ -53,7 +55,7 @@ pub(in crate::directives) struct CommonImageOptions {
 }
 
 impl CommonImageOptions {
-    fn empty() -> Self {
+    pub(in crate::directives) fn empty() -> Self {
         Self {
             alt: None,
             height: None,
@@ -102,11 +104,128 @@ fn report_empty_value(
     ));
 }
 
-/// Consumes the nine shared options out of `option_lines`, returning them
-/// together with the lines it did not recognize, in source order.
+directive_options! {
+    /// The options every image directive takes: docutils' nine.
+    pub(in crate::directives) enum ImageOption {
+        /// `:alt:`.
+        Alt => (["alt"], Text, "Text describing the picture, for readers who cannot see it."),
+        /// `:height:`.
+        Height => (["height"], Length, "The picture's height."),
+        /// `:width:`.
+        Width => (["width"], Length, "The picture's width, or a percentage of the line."),
+        /// `:scale:`.
+        Scale => (["scale"], Text, "The picture's size, as a percentage."),
+        /// `:align:`.
+        Align => (["align"], Choice(|| choice_names(ImageAlign::ALL, ImageAlign::as_str)), "Where the picture sits."),
+        /// `:target:`.
+        Target => (["target"], Uri, "Where clicking the picture leads."),
+        /// `:class:`.
+        Class => (["class"], Classes, "Classes for the picture."),
+        /// `:name:`.
+        Name => (["name"], Text, "A label to reference the picture by."),
+        /// `:loading:`.
+        Loading => (["loading"], Choice(|| choice_names(ImageLoading::ALL, ImageLoading::as_str)), "How the page loads the picture."),
+    }
+}
+
+/// Records one of the options every image directive takes.
 ///
 /// `directive` only shapes the diagnostics' wording, so a `.. image::` author
 /// is never told about `:figwidth:`.
+pub(in crate::directives) fn read_image_option(
+    option: ImageOption,
+    line: &OptionLine,
+    options: &mut CommonImageOptions,
+    image: ImageSite<'_>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) {
+    let ImageSite { directive, context } = image;
+    match option {
+        // docutils' `unchanged`, so an empty `:alt:` is a deliberate
+        // empty alt attribute — the accessible spelling for a purely
+        // decorative image — rather than a mistake to report.
+        ImageOption::Alt => options.alt = Some(line.value.clone()),
+        ImageOption::Height => match Length::new(&line.value) {
+            Ok(height) => options.height = Some(height),
+            Err(problem) => report_invalid_length(line, directive, &problem, diagnostics, ctx),
+        },
+        ImageOption::Width => match LengthOrPercentage::new(&line.value) {
+            Ok(width) => options.width = Some(width),
+            Err(problem) => report_invalid_length(line, directive, &problem, diagnostics, ctx),
+        },
+        ImageOption::Scale => match parse_percentage(&line.value) {
+            Some(scale) => options.scale = Some(scale),
+            None => diagnostics.push(Diagnostic::at(
+                DiagnosticCode::ImageInvalidScale,
+                format!(
+                    "{directive}: :scale: expects a non-negative percentage, found '{}'",
+                    line.value
+                ),
+                ctx.line_span(line.line_index, &line.raw),
+            )),
+        },
+        ImageOption::Align => {
+            let parsed = match context {
+                ImageContext::Standalone => ImageAlign::parse(&line.value),
+                ImageContext::Substitution => ImageAlign::parse_any(&line.value),
+            };
+            match parsed {
+                Some(align) => options.align = Some(align),
+                None => report_invalid_align(line, directive, context, diagnostics, ctx),
+            }
+        }
+        ImageOption::Target => {
+            if line.value.is_empty() {
+                report_empty_value(line, directive, diagnostics, ctx);
+            } else {
+                options.target = Some(ImageTarget::new(&line.value));
+            }
+        }
+        ImageOption::Class => {
+            options.classes = line.value.split_whitespace().map(str::to_string).collect();
+        }
+        ImageOption::Name if context == ImageContext::Substitution => {
+            report_name_not_allowed(line, directive, diagnostics, ctx);
+        }
+        ImageOption::Name => {
+            if line.value.is_empty() {
+                report_empty_value(line, directive, diagnostics, ctx);
+            } else {
+                options.name = Some(TargetName::new(&line.value));
+            }
+        }
+        ImageOption::Loading => match ImageLoading::parse(&line.value) {
+            Some(loading) => options.loading = loading,
+            None => diagnostics.push(Diagnostic::at(
+                DiagnosticCode::ImageInvalidLoading,
+                format!(
+                    "{directive}: :loading: expects one of {}, found '{}'",
+                    ImageLoading::ALL
+                        .iter()
+                        .map(|loading| loading.as_str())
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                    line.value
+                ),
+                ctx.line_span(line.line_index, &line.raw),
+            )),
+        },
+    }
+}
+
+/// Which image directive an option is read for, and where it stands.
+#[derive(Clone, Copy)]
+pub(in crate::directives) struct ImageSite<'a> {
+    /// The directive's name, for the diagnostics' wording.
+    pub(in crate::directives) directive: &'a str,
+    /// Whether it stands alone or in a substitution definition.
+    pub(in crate::directives) context: ImageContext,
+}
+
+/// Consumes the nine shared options out of `option_lines`, returning them
+/// together with the lines it did not recognize, in source order — for a
+/// substitution definition's image, which reads its own block.
 pub(in crate::directives) fn parse_common_image_options<'a>(
     option_lines: &[&'a OptionLine],
     directive: &str,
@@ -116,82 +235,13 @@ pub(in crate::directives) fn parse_common_image_options<'a>(
 ) -> (CommonImageOptions, Vec<&'a OptionLine>) {
     let mut options = CommonImageOptions::empty();
     let mut unrecognized = Vec::new();
-
+    let image = ImageSite { directive, context };
     for line in option_lines {
-        match line.name.as_str() {
-            // docutils' `unchanged`, so an empty `:alt:` is a deliberate
-            // empty alt attribute — the accessible spelling for a purely
-            // decorative image — rather than a mistake to report.
-            "alt" => options.alt = Some(line.value.clone()),
-            "height" => match Length::new(&line.value) {
-                Ok(height) => options.height = Some(height),
-                Err(problem) => report_invalid_length(line, directive, &problem, diagnostics, ctx),
-            },
-            "width" => match LengthOrPercentage::new(&line.value) {
-                Ok(width) => options.width = Some(width),
-                Err(problem) => report_invalid_length(line, directive, &problem, diagnostics, ctx),
-            },
-            "scale" => match parse_percentage(&line.value) {
-                Some(scale) => options.scale = Some(scale),
-                None => diagnostics.push(Diagnostic::at(
-                    DiagnosticCode::ImageInvalidScale,
-                    format!(
-                        "{directive}: :scale: expects a non-negative percentage, found '{}'",
-                        line.value
-                    ),
-                    ctx.line_span(line.line_index, &line.raw),
-                )),
-            },
-            "align" => {
-                let parsed = match context {
-                    ImageContext::Standalone => ImageAlign::parse(&line.value),
-                    ImageContext::Substitution => ImageAlign::parse_any(&line.value),
-                };
-                match parsed {
-                    Some(align) => options.align = Some(align),
-                    None => report_invalid_align(line, directive, context, diagnostics, ctx),
-                }
-            }
-            "target" => {
-                if line.value.is_empty() {
-                    report_empty_value(line, directive, diagnostics, ctx);
-                } else {
-                    options.target = Some(ImageTarget::new(&line.value));
-                }
-            }
-            "class" => {
-                options.classes = line.value.split_whitespace().map(str::to_string).collect();
-            }
-            "name" if context == ImageContext::Substitution => {
-                report_name_not_allowed(line, directive, diagnostics, ctx);
-            }
-            "name" => {
-                if line.value.is_empty() {
-                    report_empty_value(line, directive, diagnostics, ctx);
-                } else {
-                    options.name = Some(TargetName::new(&line.value));
-                }
-            }
-            "loading" => match ImageLoading::parse(&line.value) {
-                Some(loading) => options.loading = loading,
-                None => diagnostics.push(Diagnostic::at(
-                    DiagnosticCode::ImageInvalidLoading,
-                    format!(
-                        "{directive}: :loading: expects one of {}, found '{}'",
-                        ImageLoading::ALL
-                            .iter()
-                            .map(|loading| loading.as_str())
-                            .collect::<Vec<_>>()
-                            .join(", "),
-                        line.value
-                    ),
-                    ctx.line_span(line.line_index, &line.raw),
-                )),
-            },
-            _ => unrecognized.push(*line),
+        match ImageOption::from_name(&line.name) {
+            Some(option) => read_image_option(option, line, &mut options, image, diagnostics, ctx),
+            None => unrecognized.push(*line),
         }
     }
-
     (options, unrecognized)
 }
 

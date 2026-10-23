@@ -11,6 +11,11 @@
 //! `option_spec`, `has_content`), transcribed from each directive's class in
 //! the project that defines it. It says nothing about how a directive is
 //! written down, so a reader of any syntax splits a block by the same shape.
+//!
+//! The [`OptionSpec`]s a spec lists are each directive's option enum's rows
+//! (see `directives/options.rs`'s `directive_options!`): the parser matches on
+//! that enum, so an option cannot be read without being listed here, nor
+//! listed without being read.
 
 /// One directive this build implements.
 #[derive(Debug)]
@@ -23,6 +28,67 @@ pub struct DirectiveSpec {
     pub doc: &'static str,
     /// How a block of it splits into arguments, options and content.
     pub shape: DirectiveShape,
+    /// The options it takes, in groups: its own first, then each group it
+    /// shares with other directives (the table presentation options, …).
+    pub options: &'static [&'static [OptionSpec]],
+}
+
+impl DirectiveSpec {
+    /// Every option it takes, its own first.
+    pub fn option_specs(&self) -> impl Iterator<Item = &'static OptionSpec> {
+        self.options.iter().flat_map(|group| group.iter())
+    }
+}
+
+/// One option a directive takes.
+#[derive(Debug, Clone, Copy)]
+pub struct OptionSpec {
+    /// Every spelling it is written as, the canonical one first
+    /// (`link_types`, then `link-types`).
+    pub names: &'static [&'static str],
+    /// What its value is.
+    pub value: OptionValue,
+    /// What it does, in one sentence.
+    pub doc: &'static str,
+    /// Whether this build implements it.
+    pub support: OptionSupport,
+}
+
+/// Whether this build implements an option the reference implementation
+/// takes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OptionSupport {
+    /// It is read.
+    Supported,
+    /// It is reported and ignored, with what to write instead, if anything.
+    Unsupported {
+        /// What to reach for instead.
+        advice: Option<&'static str>,
+    },
+}
+
+/// What an option's value is, as an author writes it.
+#[derive(Debug, Clone, Copy)]
+pub enum OptionValue {
+    /// No value: the option's presence is the setting.
+    Flag,
+    /// Free text.
+    Text,
+    /// A whole number.
+    Integer,
+    /// A length, with or without a unit: `200px`, `50%`.
+    Length,
+    /// One of a fixed set of words, computed from the enum the parser reads
+    /// the value into, so the list cannot drift from what it accepts.
+    Choice(fn() -> Vec<&'static str>),
+    /// Space-separated class names.
+    Classes,
+    /// A path to a file of the project.
+    Path,
+    /// An address.
+    Uri,
+    /// A filter expression over the entity graph.
+    Filter,
 }
 
 /// How a directive's block splits into arguments, options and content.

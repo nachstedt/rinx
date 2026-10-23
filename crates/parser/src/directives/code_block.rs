@@ -29,7 +29,7 @@ mod selection;
 #[cfg(test)]
 mod test_support;
 
-pub(in crate::directives) use block::{CODE_BLOCK_SPEC, interpret_code_block};
+pub(in crate::directives) use block::{CODE_BLOCK_SPEC, CODE_SPEC, interpret_code_block};
 pub(in crate::directives) use highlight::{HIGHLIGHT_SPEC, interpret_highlight};
 pub(in crate::directives) use literal_include::{LITERAL_INCLUDE_SPEC, interpret_literal_include};
 pub(in crate::directives) use selection::{Selection, check_encoding, expand_tabs};

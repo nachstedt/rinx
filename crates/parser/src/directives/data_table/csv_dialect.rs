@@ -11,7 +11,7 @@ use crate::diagnostics::Diagnostics;
 use rinx_ast::{Diagnostic, DiagnosticCode, Span, TableSource};
 
 use crate::context::ParseCtx;
-use crate::directives::options::OptionLine;
+use crate::directives::options::{OptionLine, directive_options};
 
 /// The `.. csv-table::` options that shape how the data is tokenized.
 ///
@@ -37,32 +37,46 @@ impl Default for CsvDialect {
     }
 }
 
+directive_options! {
+    /// The four `.. csv-table::` options that shape how the data is tokenized.
+    pub(super) enum CsvDialectOption {
+        /// `:delim:`.
+        Delim => (["delim"], Text, "The character separating fields; `tab` or `space` by name."),
+        /// `:quote:`.
+        Quote => (["quote"], Text, "The character quoting a field."),
+        /// `:escape:`.
+        Escape => (["escape"], Text, "The character escaping a quote inside a quoted field."),
+        /// `:keepspace:`.
+        Keepspace => (["keepspace"], Flag, "Keeps the whitespace following a delimiter."),
+    }
+}
+
 impl CsvDialect {
-    /// Applies one `:delim:`/`:quote:`/`:escape:`/`:keepspace:` option line,
-    /// reporting `true` if it recognized the option's name.
-    pub(super) fn apply_option(
+    /// Applies one `:delim:`/`:quote:`/`:escape:`/`:keepspace:` option line.
+    pub(super) fn read_option(
         &mut self,
+        option: CsvDialectOption,
         line: &OptionLine,
         diagnostics: &mut Diagnostics,
         ctx: &ParseCtx<'_>,
-    ) -> bool {
+    ) {
         let span = ctx.line_span(line.line_index, &line.raw);
-        match line.name.as_str() {
-            "delim" => {
+        match option {
+            CsvDialectOption::Delim => {
                 if let Some(byte) =
                     parse_single_char_option(&line.value, "delim", diagnostics, span)
                 {
                     self.delimiter = byte;
                 }
             }
-            "quote" => {
+            CsvDialectOption::Quote => {
                 if let Some(byte) =
                     parse_single_char_option(&line.value, "quote", diagnostics, span)
                 {
                     self.quote = byte;
                 }
             }
-            "escape" => {
+            CsvDialectOption::Escape => {
                 if let Some(byte) =
                     parse_single_char_option(&line.value, "escape", diagnostics, span)
                 {
@@ -71,10 +85,8 @@ impl CsvDialect {
             }
             // A flag option: docutils' `:keepspace:` takes no value, and its
             // mere presence turns `skipinitialspace` off.
-            "keepspace" => self.keepspace = true,
-            _ => return false,
+            CsvDialectOption::Keepspace => self.keepspace = true,
         }
-        true
     }
 }
 
@@ -266,55 +278,39 @@ mod tests {
     }
 
     #[test]
-    fn test_apply_option_reports_an_unrelated_option_as_unclaimed() {
+    fn test_read_option_sets_the_delimiter() {
         // Given
         let mut dialect = CsvDialect::default();
         let mut diagnostics = Diagnostics::default();
 
         // When
-        let claimed = dialect.apply_option(
-            &option("widths", "auto"),
-            &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
-        );
-
-        // Then
-        assert!(!claimed);
-        assert!(diagnostics.is_empty());
-    }
-
-    #[test]
-    fn test_apply_option_sets_the_delimiter() {
-        // Given
-        let mut dialect = CsvDialect::default();
-        let mut diagnostics = Diagnostics::default();
-
-        // When
-        let claimed = dialect.apply_option(
+        dialect.read_option(
+            CsvDialectOption::Delim,
             &option("delim", ";"),
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
-        assert!(claimed);
         assert!(diagnostics.is_empty());
         assert_eq!(dialect.delimiter, b';');
     }
 
     #[test]
-    fn test_apply_option_sets_the_quote_and_escape_characters() {
+    fn test_read_option_sets_the_quote_and_escape_characters() {
         // Given
         let mut dialect = CsvDialect::default();
         let mut diagnostics = Diagnostics::default();
 
         // When
-        dialect.apply_option(
+        dialect.read_option(
+            CsvDialectOption::Quote,
             &option("quote", "'"),
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),
         );
-        dialect.apply_option(
+        dialect.read_option(
+            CsvDialectOption::Escape,
             &option("escape", "\\"),
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),
@@ -327,20 +323,20 @@ mod tests {
     }
 
     #[test]
-    fn test_apply_option_treats_keepspace_as_a_flag() {
+    fn test_read_option_treats_keepspace_as_a_flag() {
         // Given
         let mut dialect = CsvDialect::default();
         let mut diagnostics = Diagnostics::default();
 
         // When
-        let claimed = dialect.apply_option(
+        dialect.read_option(
+            CsvDialectOption::Keepspace,
             &option("keepspace", ""),
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
-        assert!(claimed);
         assert!(dialect.keepspace);
     }
 

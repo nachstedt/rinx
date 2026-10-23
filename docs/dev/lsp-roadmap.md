@@ -882,7 +882,7 @@ Not done here:
 **You experience:** `.. ` lists the directives, and `:` inside one lists its
 options.
 
-- **Risk:** options are not declared centrally today, so the parser needs a declarative directive table (names, aliases, options)
+- ~~**Risk:** options are not declared centrally today, so the parser needs a declarative directive table (names, aliases, options)~~ — done in two preparatory pull requests (ADR-043): every directive has a spec beside its parser, read by one reStructuredText reader, and its options are an enum generated from one table, each with its value kind and doc
 - Entity schema directives and options
 - Context detection: line start, indented option block
 - Snippets with argument placeholders

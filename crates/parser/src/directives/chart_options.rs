@@ -8,9 +8,9 @@
 //! [`ChartCodes`] carries, exactly as `filter_option.rs`'s `FilterCodes` does
 //! for a filter.
 //!
-//! The *figure* options — `:caption:`, `:align:`, `:scale:`, `:width:`,
-//! `:class:` and `:name:` — are handed back as a [`FigureOption`] rather than
-//! written into a node, because the two nodes are different types; each
+//! The *figure* options — [`ChartFigureOption`], a group both charts' option
+//! enums include — are handed back as a [`FigureOption`] rather than written
+//! into a node, because the two nodes are different types; each
 //! caller stores the value where its own node keeps it.
 
 use rinx_ast::{
@@ -20,7 +20,7 @@ use rinx_ast::{
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
-use super::options::{OptionLine, parse_percentage};
+use super::options::{OptionLine, choice_names, directive_options, parse_percentage};
 
 /// Which codes a chart reports the shared options' failures under.
 #[derive(Debug, Clone, Copy)]
@@ -37,8 +37,6 @@ pub(in crate::directives) struct ChartCodes {
     pub unusable_scale: DiagnosticCode,
     /// A required value left empty.
     pub empty_option_value: DiagnosticCode,
-    /// A sphinx-needs option this build refuses by name.
-    pub unsupported_option: DiagnosticCode,
 }
 
 /// Which chart a diagnostic names, and under which codes.
@@ -61,25 +59,33 @@ pub(in crate::directives) enum FigureOption {
     Name(TargetName),
 }
 
-/// What [`read_figure_option`] made of an option line.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(in crate::directives) enum FigureRead {
-    /// Not a figure option: the caller should try its own.
-    Unclaimed,
-    /// A figure option whose value was refused and reported.
-    Reported,
-    /// A figure option, read.
-    Read(FigureOption),
+directive_options! {
+    /// The options placing a chart on the page, which both charts take.
+    pub(in crate::directives) enum ChartFigureOption {
+        /// `:caption:`.
+        Caption => (["caption"], Text, "A caption shown below the chart."),
+        /// `:align:`.
+        Align => (["align"], Choice(|| choice_names(ImageAlign::ALL, ImageAlign::as_str)), "Where the chart sits."),
+        /// `:scale:`.
+        Scale => (["scale"], Integer, "The chart's size, as a percentage of its `:width:`."),
+        /// `:width:`.
+        Width => (["width"], Length, "The chart's width."),
+        /// `:class:`.
+        Class => (["class"], Classes, "Classes for the chart."),
+        /// `:name:`.
+        Name => (["name"], Text, "A label to reference the chart by."),
+    }
 }
 
-/// Reads `line` if it is one of the figure options, reporting a bad value
-/// against the line it was written on.
+/// Reads one figure option, reporting a bad value against the line it was
+/// written on and answering `None` for it.
 pub(in crate::directives) fn read_figure_option(
+    option: ChartFigureOption,
     line: &OptionLine,
     owner: ChartOwner<'_>,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> FigureRead {
+) -> Option<FigureOption> {
     let directive = owner.directive;
     let refuse = |code, message: String, diagnostics: &mut Diagnostics| {
         diagnostics.push(Diagnostic::at(
@@ -87,12 +93,12 @@ pub(in crate::directives) fn read_figure_option(
             message,
             ctx.line_span(line.line_index, &line.raw),
         ));
-        FigureRead::Reported
+        None
     };
-    match line.name.as_str() {
-        "caption" => FigureRead::Read(FigureOption::Caption(line.value.clone())),
-        "align" => match ImageAlign::parse(&line.value) {
-            Some(align) => FigureRead::Read(FigureOption::Align(align)),
+    match option {
+        ChartFigureOption::Caption => Some(FigureOption::Caption(line.value.clone())),
+        ChartFigureOption::Align => match ImageAlign::parse(&line.value) {
+            Some(align) => Some(FigureOption::Align(align)),
             None => refuse(
                 owner.codes.invalid_align,
                 format!(
@@ -102,8 +108,8 @@ pub(in crate::directives) fn read_figure_option(
                 diagnostics,
             ),
         },
-        "scale" => match parse_percentage(&line.value) {
-            Some(scale) => FigureRead::Read(FigureOption::Scale(scale)),
+        ChartFigureOption::Scale => match parse_percentage(&line.value) {
+            Some(scale) => Some(FigureOption::Scale(scale)),
             None => refuse(
                 owner.codes.invalid_scale,
                 format!(
@@ -113,26 +119,25 @@ pub(in crate::directives) fn read_figure_option(
                 diagnostics,
             ),
         },
-        "width" => match LengthOrPercentage::new(&line.value) {
-            Ok(width) => FigureRead::Read(FigureOption::Width(width)),
+        ChartFigureOption::Width => match LengthOrPercentage::new(&line.value) {
+            Ok(width) => Some(FigureOption::Width(width)),
             Err(problem) => refuse(
                 owner.codes.invalid_width,
                 format!("{directive}: :width: {problem}"),
                 diagnostics,
             ),
         },
-        "class" => FigureRead::Read(FigureOption::Classes(
+        ChartFigureOption::Class => Some(FigureOption::Classes(
             line.value.split_whitespace().map(str::to_string).collect(),
         )),
-        "name" => {
+        ChartFigureOption::Name => {
             if line.value.is_empty() {
                 report_empty_value(line, owner, diagnostics, ctx);
-                FigureRead::Reported
+                None
             } else {
-                FigureRead::Read(FigureOption::Name(TargetName::new(&line.value)))
+                Some(FigureOption::Name(TargetName::new(&line.value)))
             }
         }
-        _ => FigureRead::Unclaimed,
     }
 }
 
@@ -177,39 +182,6 @@ pub(in crate::directives) fn read_color(
             None
         }
     }
-}
-
-/// What to tell an author who wrote an option `refused` lists, or `None` when
-/// the name is not in it.
-///
-/// A table rather than a match arm apiece: the option is being refused, so the
-/// sentence beside it is the entire feature.
-pub(in crate::directives) fn unsupported_advice(
-    refused: &[(&str, &'static str)],
-    name: &str,
-) -> Option<&'static str> {
-    refused
-        .iter()
-        .find(|(option, _)| *option == name)
-        .map(|(_, advice)| *advice)
-}
-
-/// Reports an option this build does not implement, and what to write instead.
-pub(in crate::directives) fn report_unsupported(
-    line: &OptionLine,
-    advice: &str,
-    owner: ChartOwner<'_>,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        owner.codes.unsupported_option,
-        format!(
-            "{}: :{}: is not supported, so it was ignored — {advice}",
-            owner.directive, line.name
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
 }
 
 /// Reports an option whose value is required but was left empty.

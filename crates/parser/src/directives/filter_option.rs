@@ -27,7 +27,17 @@ use rinx_filter::{Expr, FieldName, FilterError, parse_filter};
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
-use super::options::OptionLine;
+use super::options::{OptionLine, directive_options};
+
+directive_options! {
+    /// sphinx-needs' shorthand filters, which every view over the entity graph
+    /// takes and a `:filter:` says in full.
+    pub(in crate::directives) enum ShorthandFilterOption {
+        _ => (["status"], Text, "The entities selected, by status.", "write the selection as :filter:, e.g. status == \"open\""),
+        _ => (["tags"], Text, "The entities selected, by tag.", "write the selection as :filter:, e.g. \"api\" in tags"),
+        _ => (["types"], Text, "The entities selected, by type.", "write the selection as :filter:, e.g. type == \"req\""),
+    }
+}
 
 /// Which codes a caller reports a filter's two failures under.
 #[derive(Debug, Clone, Copy)]

@@ -28,6 +28,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: false,
         content_hint: None,
     },
+    options: &[],
 };
 
 /// Interprets `.. default-role::`, which records the default role and yields

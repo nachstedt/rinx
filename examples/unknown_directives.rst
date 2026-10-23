@@ -37,7 +37,7 @@ build log does — never "unknown directive", which would blame the name.
 
 ``.. figure::`` needs an image path as its argument:
 
-.. noqa: image.missing-uri
+.. noqa: directive.missing-argument
 
 .. figure::
 

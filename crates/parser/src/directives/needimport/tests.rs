@@ -998,7 +998,7 @@ fn refuses_sphinx_needs_presentation_options_by_name() {
         "collapse",
         "layout",
         "style",
-        "setup",
+        "template",
         "pre_template",
         "post_template",
     ] {
@@ -1007,7 +1007,7 @@ fn refuses_sphinx_needs_presentation_options_by_name() {
         // Then it is refused by name, with advice, and the import still
         // happens
         assert!(
-            codes(&document).contains(&DiagnosticCode::NeedImportUnsupportedOption),
+            codes(&document).contains(&DiagnosticCode::DirectiveUnsupportedOption),
             "{option} should be refused by name"
         );
         assert_eq!(ids(&document), ["REQ_1", "REQ_2"], "{option}");
@@ -1021,7 +1021,7 @@ fn reports_an_option_it_does_not_accept_at_all() {
     let document = import("   :wobbly: yes");
 
     // Then it is reported as unknown rather than as unsupported
-    assert_eq!(codes(&document), [DiagnosticCode::NeedImportUnknownOption]);
+    assert_eq!(codes(&document), [DiagnosticCode::DirectiveUnknownOption]);
 }
 
 // ── Imported prose ──────────────────────────────────────────────────
@@ -1116,21 +1116,6 @@ fn is_url_recognises_only_the_two_fetchable_schemes() {
     assert!(!super::is_url("/shared/needs.json"));
     assert!(!super::is_url("C:/data/needs.json"));
     assert!(!super::is_url("ftp://example.test/n.json"));
-}
-
-#[test]
-fn unsupported_advice_answers_for_every_listed_option_and_no_other() {
-    // Given the refusal table
-    // When each listed name is looked up, and one that is not
-    // Then every entry has advice and nothing else does
-    for (option, _) in super::UNSUPPORTED_OPTIONS {
-        assert!(
-            super::unsupported_advice(option).is_some(),
-            "{option} should carry advice"
-        );
-    }
-    assert!(super::unsupported_advice("version").is_none());
-    assert!(super::unsupported_advice("filter").is_none());
 }
 
 #[test]

@@ -53,6 +53,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: &[],
 };
 
 /// Interprets `.. entity-update::` or `.. needextend::`, recording which was

@@ -11,7 +11,9 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::explicit_title::split_explicit_title;
 
-use super::options::{OptionLine, parse_positive_depth, report_unknown_options};
+use super::options::{
+    DirectiveOptions, OptionLine, classify_options, directive_options, parse_positive_depth,
+};
 
 const DIRECTIVE: &str = "toctree";
 
@@ -26,8 +28,32 @@ const DIRECTIVE: &str = "toctree";
 /// the real problem either way.
 const URL_SCHEMES: [&str; 5] = ["http://", "https://", "ftp://", "ftps://", "mailto:"];
 
-/// Reads the nine options `.. toctree::` accepts, returning them with the
-/// lines it did not recognize, in source order.
+directive_options! {
+    /// The options `.. toctree::` takes: Sphinx's ten.
+    enum ToctreeOption {
+        /// `:maxdepth:`.
+        Maxdepth => (["maxdepth"], Integer, "How many heading levels the tree shows; zero or less shows all."),
+        /// `:numbered:`.
+        Numbered => (["numbered"], Integer, "Numbers the sections, to the depth given if any."),
+        /// `:caption:`.
+        Caption => (["caption"], Text, "A caption shown above the tree."),
+        /// `:name:`.
+        Name => (["name"], Text, "A label to reference the tree by."),
+        /// `:titlesonly:`.
+        TitlesOnly => (["titlesonly"], Flag, "Lists each document's title only, not its sections."),
+        /// `:reversed:`.
+        Reversed => (["reversed"], Flag, "Reverses the order of the entries."),
+        /// `:hidden:`.
+        Hidden => (["hidden"], Flag, "Builds the navigation from the tree without showing it."),
+        /// `:includehidden:`.
+        IncludeHidden => (["includehidden"], Flag, "Also expands the hidden trees of the documents listed."),
+        /// `:glob:`.
+        Glob => (["glob"], Flag, "Reads the entries as glob patterns."),
+        _ => (["class"], Classes, "Classes for the tree's container."),
+    }
+}
+
+/// Reads the options `.. toctree::` accepts, reporting every other one.
 ///
 /// Both depth options treat a zero as *unset* rather than as a real limit,
 /// which is what Sphinx does: `:maxdepth: 0` renders an unlimited tree and
@@ -39,17 +65,17 @@ const URL_SCHEMES: [&str; 5] = ["http://", "https://", "ftp://", "ftps://", "mai
 /// is accepted silently; any other non-integer value is a diagnostic, because
 /// silently switching to unlimited would render a far larger tree than the
 /// author asked for.
-fn parse_toctree_options<'a>(
-    option_lines: &'a [OptionLine],
+fn parse_toctree_options(
+    option_lines: &[OptionLine],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> (ToctreeOptions, Vec<&'a OptionLine>) {
+) -> ToctreeOptions {
     let mut options = ToctreeOptions::default();
-    let mut unrecognized = Vec::new();
-
-    for line in option_lines {
-        match line.name.as_str() {
-            "maxdepth" => {
+    for (option, line) in
+        classify_options::<ToctreeOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    {
+        match option {
+            ToctreeOption::Maxdepth => {
                 options.maxdepth = parse_positive_depth(
                     line,
                     DIRECTIVE,
@@ -59,9 +85,9 @@ fn parse_toctree_options<'a>(
                     ctx,
                 );
             }
-            "numbered" => options.numbered = parse_numbered(line, diagnostics, ctx),
-            "caption" => options.caption = Some(line.value.clone()),
-            "name" => {
+            ToctreeOption::Numbered => options.numbered = parse_numbered(line, diagnostics, ctx),
+            ToctreeOption::Caption => options.caption = Some(line.value.clone()),
+            ToctreeOption::Name => {
                 if line.value.is_empty() {
                     diagnostics.push(Diagnostic::at(
                         DiagnosticCode::ToctreeEmptyName,
@@ -72,14 +98,14 @@ fn parse_toctree_options<'a>(
                     options.name = Some(TargetName::new(&line.value));
                 }
             }
-            name => match ToctreeFlag::from_option_name(name) {
-                Some(flag) => options.set(flag),
-                None => unrecognized.push(line),
-            },
+            ToctreeOption::TitlesOnly => options.set(ToctreeFlag::TitlesOnly),
+            ToctreeOption::Reversed => options.set(ToctreeFlag::Reversed),
+            ToctreeOption::Hidden => options.set(ToctreeFlag::Hidden),
+            ToctreeOption::IncludeHidden => options.set(ToctreeFlag::IncludeHidden),
+            ToctreeOption::Glob => options.set(ToctreeFlag::Glob),
         }
     }
-
-    (options, unrecognized)
+    options
 }
 
 /// Reads a `:numbered:` value: absent means unlimited, a positive number
@@ -161,6 +187,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: <ToctreeOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. toctree::`.
@@ -182,14 +209,7 @@ pub(super) fn parse_toctree(
     diagnostics: &mut Diagnostics,
 ) -> Directive {
     let ctx = &invocation.ctx;
-    let (options, unrecognized) = parse_toctree_options(&invocation.options, diagnostics, ctx);
-    report_unknown_options(
-        &unrecognized,
-        DIRECTIVE,
-        DiagnosticCode::DirectiveToctreeUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    let options = parse_toctree_options(&invocation.options, diagnostics, ctx);
 
     let content = invocation.content();
     let entries = content
@@ -578,10 +598,7 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert_eq!(
-            diagnostics[0].code,
-            DiagnosticCode::DirectiveToctreeUnknownOption
-        );
+        assert_eq!(diagnostics[0].code, DiagnosticCode::DirectiveUnknownOption);
         assert!(diagnostics[0].message.contains(":invalid_opt:"));
         assert_eq!(toctree.entries.len(), 1);
     }

@@ -7,13 +7,16 @@ use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, Node, Span, TableCell, TableRow, TableSource,
 };
 
-use super::csv_dialect::{CsvDialect, parse_csv_rows};
-use super::options::{SharedTableOptions, parse_shared_table_options};
+use super::csv_dialect::{CsvDialect, CsvDialectOption, parse_csv_rows};
+use super::options::{DataTableOption, SharedTableOptions, SharedTableReader};
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::directives::body::join_body_lines;
 use crate::directives::error_node::malformed_node;
-use crate::directives::options::{OptionLine, report_unknown_options};
+use crate::directives::options::{
+    DirectiveOptions, OptionLine, classify_options, directive_options,
+};
+use crate::directives::table_options::TableOption;
 use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
 
@@ -34,16 +37,40 @@ struct CsvSource {
 }
 
 impl CsvSource {
-    /// Applies one option line, reporting `true` if it recognized the name.
-    fn apply_option(&mut self, line: &OptionLine) -> bool {
-        match line.name.as_str() {
-            "file" => self.file = Some(line.value.clone()),
-            "url" => self.url = Some(line.value.clone()),
-            "encoding" => self.encoding = Some(line.value.clone()),
-            "header" => self.header = Some(line.value.clone()),
-            _ => return false,
-        }
-        true
+    /// Applies one of the options saying where the data comes from.
+    fn read_option(&mut self, option: CsvSourceOption, line: &OptionLine) {
+        let field = match option {
+            CsvSourceOption::File => &mut self.file,
+            CsvSourceOption::Url => &mut self.url,
+            CsvSourceOption::Encoding => &mut self.encoding,
+            CsvSourceOption::Header => &mut self.header,
+        };
+        *field = Some(line.value.clone());
+    }
+}
+
+directive_options! {
+    /// The four `.. csv-table::` options saying where its data comes from.
+    enum CsvSourceOption {
+        /// `:file:`.
+        File => (["file"], Path, "The file holding the data, instead of the content."),
+        /// `:url:`.
+        Url => (["url"], Uri, "Refused: fetching would make the build non-hermetic."),
+        /// `:encoding:`.
+        Encoding => (["encoding"], Text, "The text encoding of the `:file:`."),
+        /// `:header:`.
+        Header => (["header"], Text, "Header rows, as CSV data, above the content's."),
+    }
+}
+
+directive_options! {
+    /// The options `.. csv-table::` takes: docutils' fifteen.
+    enum CsvTableOption {
+        ;
+        Source(CsvSourceOption),
+        Dialect(CsvDialectOption),
+        Data(DataTableOption),
+        Table(TableOption),
     }
 }
 
@@ -57,6 +84,7 @@ pub(in crate::directives) const CSV_TABLE_SPEC: DirectiveSpec = DirectiveSpec {
         takes_content: true,
         content_hint: None,
     },
+    options: <CsvTableOption as DirectiveOptions>::GROUPS,
 };
 
 /// Interprets `.. csv-table::`.
@@ -90,26 +118,25 @@ pub(in crate::directives) fn parse_csv_table(
         Some(argument.to_string())
     };
 
-    let (options, unrecognized) = parse_shared_table_options(
-        &invocation.options,
-        TableSource::Csv.as_str(),
-        diagnostics,
-        ctx,
-    );
-
+    let directive = TableSource::Csv.as_str();
+    let mut reader = SharedTableReader::new();
     let mut dialect = CsvDialect::default();
     let mut source = CsvSource::default();
-    let unclaimed: Vec<&OptionLine> = unrecognized
-        .into_iter()
-        .filter(|line| !dialect.apply_option(line, diagnostics, ctx) && !source.apply_option(line))
-        .collect();
-    report_unknown_options(
-        &unclaimed,
-        TableSource::Csv.as_str(),
-        DiagnosticCode::DirectiveUnknownOption,
-        diagnostics,
-        ctx,
-    );
+    for (option, line) in
+        classify_options::<CsvTableOption>(&invocation.options, directive, diagnostics, ctx)
+    {
+        match option {
+            CsvTableOption::Source(option) => source.read_option(option, line),
+            CsvTableOption::Dialect(option) => dialect.read_option(option, line, diagnostics, ctx),
+            CsvTableOption::Data(option) => {
+                reader.read_data(option, line, directive, diagnostics, ctx);
+            }
+            CsvTableOption::Table(option) => {
+                reader.read_table(option, line, directive, diagnostics, ctx);
+            }
+        }
+    }
+    let options = reader.finish();
 
     let content = invocation.content();
     let inline_data = join_body_lines(
@@ -1089,27 +1116,22 @@ mod tests {
     }
 
     #[test]
-    fn test_csv_source_apply_option_claims_only_its_own_options() {
+    fn test_csv_source_read_option_records_the_file() {
         // Given
         let mut source = CsvSource::default();
 
         // When
-        let claimed_file = source.apply_option(&OptionLine {
-            name: "file".to_string(),
-            value: "data/fruits.csv".to_string(),
-            raw: ":file: data/fruits.csv".to_string(),
-            line_index: 0,
-        });
-        let claimed_other = source.apply_option(&OptionLine {
-            name: "delim".to_string(),
-            value: ";".to_string(),
-            raw: ":delim: ;".to_string(),
-            line_index: 0,
-        });
+        source.read_option(
+            CsvSourceOption::File,
+            &OptionLine {
+                name: "file".to_string(),
+                value: "data/fruits.csv".to_string(),
+                raw: ":file: data/fruits.csv".to_string(),
+                line_index: 0,
+            },
+        );
 
         // Then
-        assert!(claimed_file);
-        assert!(!claimed_other);
         assert_eq!(source.file.as_deref(), Some("data/fruits.csv"));
     }
 

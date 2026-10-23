@@ -41,11 +41,7 @@ impl InvalidFlowDirection {
     /// The spellings that would have been accepted, comma-separated.
     #[must_use]
     pub fn accepted() -> String {
-        SPELLINGS
-            .iter()
-            .map(|(spelling, _)| *spelling)
-            .collect::<Vec<_>>()
-            .join(", ")
+        FlowDirection::spellings().join(", ")
     }
 }
 
@@ -61,6 +57,12 @@ impl fmt::Display for InvalidFlowDirection {
 }
 
 impl FlowDirection {
+    /// Every accepted spelling, the canonical one of each pair first.
+    #[must_use]
+    pub fn spellings() -> Vec<&'static str> {
+        SPELLINGS.iter().map(|(spelling, _)| *spelling).collect()
+    }
+
     /// The direction `value` names, or why it names none.
     ///
     /// Case-insensitive, because `TB`/`LR` are conventionally shouted and
@@ -108,6 +110,15 @@ impl FlowDirection {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_spellings_lists_both_spellings_of_each_direction() {
+        // Given / When / Then
+        assert_eq!(
+            FlowDirection::spellings(),
+            ["TB", "top-to-bottom", "LR", "left-to-right"]
+        );
+    }
 
     #[test]
     fn test_every_accepted_spelling_names_a_direction() {

@@ -1,11 +1,11 @@
-use super::super::body::{ObjectOptions, parse_object_body};
-use super::dispatch::read_module_option;
+use super::super::body::{DescriptionOption, ObjectOptions, parse_object_body};
+use super::dispatch::PyObjectOption;
 use crate::diagnostics::Diagnostics;
 use crate::directives::domains::object_type::DirectiveObjectType;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::OptionLine;
+use crate::directives::options::{OptionLine, directive_options};
 use crate::headings::Adornment;
-use rinx_ast::{DomainObjectBody, NonEmptyVector};
+use rinx_ast::{DescriptionFlags, DomainObjectBody, NonEmptyVector};
 use std::collections::BTreeSet;
 
 /// The `py:method`-alias directive-name flags that [`parse_py_method`]
@@ -113,17 +113,43 @@ enum MethodFlag {
     Async,
 }
 
+directive_options! {
+    /// The options `.. py:method::` takes: Sphinx's `PyMethod`'s.
+    enum MethodOption {
+        /// `:classmethod:`.
+        Classmethod => (["classmethod"], Flag, "Marks the method as a class method."),
+        /// `:staticmethod:`.
+        Staticmethod => (["staticmethod"], Flag, "Marks the method as a static method."),
+        /// `:abstractmethod:`, or Sphinx's `:abstract:` spelling of it.
+        Abstractmethod => (["abstractmethod", "abstract"], Flag, "Marks the method as abstract."),
+        /// `:async:`.
+        Async => (["async"], Flag, "Marks the method as a coroutine."),
+        _ => (["final"], Flag, "Marks the method as final."),
+        _ => (["canonical"], Text, "The object's name where it is defined, if documented elsewhere."),;
+        Py(PyObjectOption),
+        Description(DescriptionOption),
+    }
+}
+
 impl ObjectOptions for MethodOptions {
-    fn read(&mut self, line: &OptionLine) -> bool {
-        let flag = match line.name.as_str() {
-            "classmethod" => MethodFlag::Classmethod,
-            "staticmethod" => MethodFlag::Staticmethod,
-            "abstractmethod" => MethodFlag::Abstractmethod,
-            "async" => MethodFlag::Async,
-            _ => return read_module_option(line, &mut self.module),
+    type Option = MethodOption;
+
+    fn read(&mut self, option: MethodOption, line: &OptionLine, flags: &mut DescriptionFlags) {
+        let flag = match option {
+            MethodOption::Classmethod => MethodFlag::Classmethod,
+            MethodOption::Staticmethod => MethodFlag::Staticmethod,
+            MethodOption::Abstractmethod => MethodFlag::Abstractmethod,
+            MethodOption::Async => MethodFlag::Async,
+            MethodOption::Py(PyObjectOption::Module) => {
+                self.module = Some(line.value.clone());
+                return;
+            }
+            MethodOption::Description(option) => {
+                flags.set(option.flag());
+                return;
+            }
         };
         self.flags.insert(flag);
-        true
     }
 }
 

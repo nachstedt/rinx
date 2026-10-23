@@ -368,7 +368,7 @@ fn test_every_unsupported_needpie_option_is_refused_by_name() {
         let reported = codes(&rst);
 
         // Then
-        assert_eq!(reported, ["entity-pie.unsupported-option"], "{option}");
+        assert_eq!(reported, ["directive.unsupported-option"], "{option}");
         assert!(
             messages(&rst)[0].contains(&format!(":{option}:")),
             "{option}: {:?}",
@@ -386,7 +386,7 @@ fn test_an_option_nobody_claims_is_reported_as_unknown() {
     let reported = codes(rst);
 
     // Then
-    assert_eq!(reported, ["directive.entity-pie-unknown-option"]);
+    assert_eq!(reported, ["directive.unknown-option"]);
 }
 
 #[test]

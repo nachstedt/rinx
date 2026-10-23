@@ -107,7 +107,7 @@ A directive with no argument names no builder at all. It is reported as
 ``if-builder.missing-builder`` and drawn as an error block quoting its source,
 so the content is not lost without trace.
 
-.. noqa: if-builder.missing-builder
+.. noqa: directive.missing-argument
 
 .. if-builder::
 

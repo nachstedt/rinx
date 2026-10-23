@@ -51,7 +51,7 @@ Suppressing a parse-time diagnostic
 Suppression is not limited to links. Any code works, including the ones the
 parser reports while reading a directive:
 
-.. noqa: directive.toctree-unknown-option
+.. noqa: directive.unknown-option
 
 .. toctree::
    :hidden:
