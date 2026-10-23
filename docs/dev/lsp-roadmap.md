@@ -38,8 +38,9 @@ finished one 🔶. A heading with no marker means the step has not started.
   #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315), #18 (PR #317),
   #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333),
   #40 (PR #335), #24 (PR #340) and #25 (PR #355, prepared by #343, #345,
-  #348, #351 and #353).
-- **Next: #26, role and domain-object completion.**
+  #348, #351 and #353). #26 is partly done: role names (PR #358, prepared
+  by #357).
+- **Next: the rest of #26, completing every index-resolved role's target.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -916,14 +917,29 @@ Not done here:
 - Unknown and unsupported options are still reported by `classify_options`
   per directive, rather than by the dispatcher from the spec (issue #352).
 
-### 26. Role and domain-object completion
+### 26. Role and domain-object completion 🔶 (#358, prepared by #357)
 
 **You experience:** `:py:func:` completes the indexed functions.
 
-- Expose the role table behind `find_role_kind`
+- Expose the role table behind `find_role_kind` (done in #357, ADR-044)
 - List objects by object type from the index
 - Rank by the current scope (`py:module`/`py:class`)
 - Tests
+
+Every role with a fixed name now has a `RoleSpec`, and its pattern is built
+from it (#357), so `rinx_parser::role_specs()` lists exactly the names the
+parser matches. Role names complete from it (#358): a `:` where a role may
+start lists the built-in roles spelled for the default domain, the schema's
+entity roles, and the roles a `.. role::` defined above the cursor. Those
+come from a parse of the text up to the cursor's line
+(`parse_prefix_with_ctx`), which is also where target completion will read
+the cursor's scope. That probe takes 48 ms at the end of CPython's
+`library/stdtypes.rst`.
+
+Still to do: completing the targets of every role the index resolves, which
+covers the domain roles ranked by scope, `:option:`, `:term:`, `:numref:`,
+`:eq:`, `:any:`, the default role's bare `` `x` ``, and another site's
+inventory.
 
 ### 27. Entity hover + id completion
 
