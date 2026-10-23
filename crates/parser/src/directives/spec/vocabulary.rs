@@ -150,6 +150,9 @@ pub enum OptionValue<'a> {
     Flag,
     /// Free text.
     Text,
+    /// A comma-separated list of free-text items: an entity's
+    /// `list<string>` attribute.
+    TextList,
     /// A whole number.
     Integer,
     /// A length, with or without a unit: `200px`, `50%`.
@@ -172,6 +175,17 @@ pub enum OptionValue<'a> {
     Filter,
     /// A comma-separated list of entity ids: an entity's relation.
     EntityIds,
+}
+
+impl OptionValue<'_> {
+    /// Whether the value is a comma-separated list of items.
+    #[must_use]
+    pub const fn is_list(&self) -> bool {
+        matches!(
+            self,
+            Self::TextList | Self::DeclaredList(_) | Self::EntityIds
+        )
+    }
 }
 
 /// The arguments a directive takes, as docutils declares them.
@@ -229,6 +243,16 @@ impl Arguments {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_is_list_holds_for_the_three_list_values() {
+        // Given / When / Then
+        assert!(OptionValue::TextList.is_list());
+        assert!(OptionValue::DeclaredList(&[]).is_list());
+        assert!(OptionValue::EntityIds.is_list());
+        assert!(!OptionValue::Text.is_list());
+        assert!(!OptionValue::Declared(&[]).is_list());
+    }
 
     #[test]
     fn test_takes_any_is_false_only_for_none() {

@@ -99,6 +99,6 @@ mod uml;
 pub(super) use dispatch::try_parse_directive;
 pub use entity_spec::EntitySpec;
 pub use spec::{
-    Arguments, DirectiveSpec, OptionSet, OptionSpec, OptionSupport, OptionValue, directive_specs,
-    domain_directive_specs, is_builtin_directive_name,
+    Arguments, DirectiveSpec, OptionSet, OptionSpec, OptionSupport, OptionValue, directive_spec,
+    directive_specs, domain_directive_specs, is_builtin_directive_name,
 };

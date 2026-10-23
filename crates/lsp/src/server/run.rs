@@ -15,6 +15,7 @@ use super::conf_runs::ConfExecution;
 use super::handlers::{handle_notification, handle_request, initialize_result};
 use super::scan::{ScanEvent, spawn_scan};
 use super::state::ServerState;
+use crate::completion::TextFormat;
 use crate::uri::file_path;
 
 /// How long the client must have sent nothing before the server renders: a
@@ -51,6 +52,7 @@ pub fn run(connection: &Connection) -> Result<()> {
             supports_progress(&params.capabilities),
         )
         .with_definition_links(supports_definition_links(&params.capabilities))
+        .with_completion_format(completion_format(&params.capabilities))
         .with_watched_files(supports_watched_files(&params.capabilities))
         .with_inventory_fetching(fetches_inventories(&params))
         .with_conf_execution(conf_execution(&params))
@@ -211,6 +213,23 @@ fn supports_definition_links(capabilities: &ClientCapabilities) -> bool {
         .unwrap_or(false)
 }
 
+/// How the client takes a completion item's text: as a snippet when it
+/// announces support for one.
+fn completion_format(capabilities: &ClientCapabilities) -> TextFormat {
+    let snippets = capabilities
+        .text_document
+        .as_ref()
+        .and_then(|text_document| text_document.completion.as_ref())
+        .and_then(|completion| completion.completion_item.as_ref())
+        .and_then(|item| item.snippet_support)
+        .unwrap_or(false);
+    if snippets {
+        TextFormat::Snippet
+    } else {
+        TextFormat::Plain
+    }
+}
+
 /// Whether the client registers a file watcher when the server asks it to.
 fn supports_watched_files(capabilities: &ClientCapabilities) -> bool {
     capabilities
@@ -356,6 +375,31 @@ mod tests {
         // When / Then
         assert!(supports_progress(&capable));
         assert!(!supports_progress(&ClientCapabilities::default()));
+    }
+
+    #[test]
+    fn test_completion_format_reads_the_completion_item_capability() {
+        // Given
+        let capable = ClientCapabilities {
+            text_document: Some(lsp_types::TextDocumentClientCapabilities {
+                completion: Some(lsp_types::CompletionClientCapabilities {
+                    completion_item: Some(lsp_types::CompletionItemCapability {
+                        snippet_support: Some(true),
+                        ..lsp_types::CompletionItemCapability::default()
+                    }),
+                    ..lsp_types::CompletionClientCapabilities::default()
+                }),
+                ..lsp_types::TextDocumentClientCapabilities::default()
+            }),
+            ..ClientCapabilities::default()
+        };
+
+        // When / Then
+        assert_eq!(completion_format(&capable), TextFormat::Snippet);
+        assert_eq!(
+            completion_format(&ClientCapabilities::default()),
+            TextFormat::Plain
+        );
     }
 
     #[test]

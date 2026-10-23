@@ -23,7 +23,6 @@ in M4.
 
 **Known risks:**
 
-- The directive and option table #25 needs does not exist yet.
 - Whether rinx builds on Windows (#39) is unknown.
 
 ## Status
@@ -38,8 +37,9 @@ finished one 🔶. A heading with no marker means the step has not started.
   #11 (PR #286), #12 (PR #292, most of it early in PR #248), #13 (PR #297),
   #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315), #18 (PR #317),
   #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333),
-  #40 (PR #335) and #24 (PR #340).
-- **Next: #25, directive and option completion.**
+  #40 (PR #335), #24 (PR #340) and #25 (PR #355, prepared by #343, #345,
+  #348, #351 and #353).
+- **Next: #26, role and domain-object completion.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -877,16 +877,44 @@ Not done here:
 
 ## M5: Editing comfort and precise navigation
 
-### 25. Directive and option completion
+### 25. Directive and option completion ✅ (#355)
 
 **You experience:** `.. ` lists the directives, and `:` inside one lists its
 options.
 
-- ~~**Risk:** options are not declared centrally today, so the parser needs a declarative directive table (names, aliases, options)~~ — done in two preparatory pull requests (ADR-043): every directive has a spec beside its parser, read by one reStructuredText reader, and its options are an enum generated from one table, each with its value kind and doc
+- ~~**Risk:** options are not declared centrally today, so the parser needs a declarative directive table (names, aliases, options)~~ — done in four preparatory pull requests (ADR-043): every directive has a spec beside its parser, read by one reStructuredText reader, and its options are an enum generated from one table, each with its value kind and doc
 - Entity schema directives and options
 - Context detection: line start, indented option block
 - Snippets with argument placeholders
 - Tests
+
+The server keeps no list of its own. A directive's name, its options and an
+option's choice of values are read from the parser's specs:
+`rinx_parser::directive_specs` and `domain_directive_specs`, and an
+`EntitySpec` per type of the project's schema. So the editor offers exactly
+what the parser takes. `completion/directive_context.rs` reads the cursor's
+place from the lines around it, by the reader's rule: a name after a line's
+`..`, an option name after the `:` opening a line of the option block (the
+lines indented below the marker, up to the first blank one), a value after
+`:name: `. A bare domain-object name is resolved against the project's
+default domain through `rinx_parser::directive_spec`, the parser's own
+lookup. An option already written in the block is not offered again, under
+any of its spellings. An option this build does not implement is offered
+last, struck through, with its advice. A client taking snippets gets a tab
+stop for the argument and the content's first line.
+
+`.. entity-update::` takes, besides `:strict:`, the fields of the entities
+its argument matches. The server resolves the argument against the project
+index with `rinx_analyzer::matched_entities`, which the build's update phase
+calls too: an existing id wins, else the filter is evaluated. It then offers
+the fields every matched type declares first, every type's when nothing
+matches, and after `:+`/`:-` only the list fields.
+
+Not done here:
+- A figure's and a block image's `:align:` offer the three vertical values
+  only an image in a substitution takes (issue #354).
+- Unknown and unsupported options are still reported by `classify_options`
+  per directive, rather than by the dispatcher from the spec (issue #352).
 
 ### 26. Role and domain-object completion
 

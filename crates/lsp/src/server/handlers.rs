@@ -36,9 +36,11 @@ pub fn initialize_result(
             position_encoding: Some(encoding.kind()),
             text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
             // A role's target opens with a backtick, a titled one's with `<`,
-            // and a `:doc:` name turns absolute with `/`.
+            // and a `:doc:` name turns absolute with `/`; a directive's name
+            // follows the `..` of its marker, and an option's name the `:`
+            // opening its line.
             completion_provider: Some(CompletionOptions {
-                trigger_characters: Some(["`", "<", "/"].map(String::from).to_vec()),
+                trigger_characters: Some(["`", "<", "/", ".", ":"].map(String::from).to_vec()),
                 ..CompletionOptions::default()
             }),
             hover_provider: Some(HoverProviderCapability::Simple(true)),

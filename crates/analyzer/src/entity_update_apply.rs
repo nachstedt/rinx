@@ -123,15 +123,12 @@ fn resolve_targets(
     schema: &EntitySchema,
     by_document: &mut BTreeMap<String, Vec<Diagnostic>>,
 ) -> Vec<EntityId> {
-    if let Some(candidate) = &target.candidate_id
-        && index.entities.contains_key(candidate)
-    {
-        return vec![candidate.clone()];
-    }
-    let Some(filter) = &target.filter else {
-        return Vec::new();
-    };
-    for name in filter.field_names() {
+    let names_an_entity = target
+        .candidate_id
+        .as_ref()
+        .is_some_and(|candidate| index.entities.contains_key(candidate));
+    let filter = target.filter.as_ref().filter(|_| !names_an_entity);
+    for name in filter.iter().flat_map(|filter| filter.field_names()) {
         if !schema.declares_field(name.as_str()) {
             report(
                 by_document,
@@ -146,6 +143,27 @@ fn resolve_targets(
             );
         }
     }
+    matched_entities(target, index, schema)
+}
+
+/// Every entity id `target` names in `index`: the id it spells when an entity
+/// has it, else every entity its filter reading matches — what an
+/// `.. entity-update::` with that argument changes. The language server
+/// offers the fields of the types it matches as the directive's options.
+#[must_use]
+pub fn matched_entities(
+    target: &UpdateTarget,
+    index: &ProjectIndex,
+    schema: &EntitySchema,
+) -> Vec<EntityId> {
+    if let Some(candidate) = &target.candidate_id
+        && index.entities.contains_key(candidate)
+    {
+        return vec![candidate.clone()];
+    }
+    let Some(filter) = &target.filter else {
+        return Vec::new();
+    };
     index
         .entities
         .iter()

@@ -331,12 +331,75 @@ fn test_lsp_completes_a_label_defined_in_another_document() {
     let capabilities = &initialized.response_result.expect("initialized")["capabilities"];
     assert_eq!(
         capabilities["completionProvider"]["triggerCharacters"],
-        json!(["`", "<", "/"])
+        json!(["`", "<", "/", ".", ":"])
     );
     let list = completed.response_result.expect("a completion");
     assert_eq!(list["isIncomplete"], false);
     assert_eq!(list["items"][0]["label"], "install");
     assert_eq!(list["items"][0]["detail"], "Installing");
+}
+
+#[test]
+fn test_lsp_completes_a_directive_s_name_as_a_snippet_and_its_options() {
+    // Given — a client taking snippets, typing an option of a toctree
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_directive_completion");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    let index = format!("file://{}", root.join("index.rst").display());
+    let mut server = Server::spawn();
+    server.initialize_with(json!({
+        "capabilities": { "textDocument": { "completion": {
+            "completionItem": { "snippetSupport": true },
+        }}},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+    while !matches!(
+        server.receive(),
+        Message::Notification(notification)
+            if notification.method == "rinx/status" && notification.params["state"] == "ready"
+    ) {}
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": index, "languageId": "restructuredtext", "version": 1,
+            "text": ".. toctree::\n   :max\n\n.. no\n",
+        }}),
+    );
+    server.published_until(&index);
+
+    // When — after `:max`, then after `.. no`
+    let mut complete = |id: i32, line: u32, character: u32| {
+        server.request(
+            id,
+            "textDocument/completion",
+            json!({
+                "textDocument": { "uri": index },
+                "position": { "line": line, "character": character },
+            }),
+        );
+        let Message::Response(completed) = server.receive() else {
+            panic!("expected the completion");
+        };
+        completed.response_result.expect("a completion")["items"]
+            .as_array()
+            .expect("items")
+            .clone()
+    };
+    let options = complete(2, 1, 7);
+    let names = complete(3, 3, 5);
+
+    // Then
+    let maxdepth = options
+        .iter()
+        .find(|item| item["label"] == "maxdepth")
+        .expect("`:maxdepth:` is offered");
+    assert_eq!(maxdepth["textEdit"]["newText"], "maxdepth: ");
+    let note = names
+        .iter()
+        .find(|item| item["label"] == "note")
+        .expect("`note` is offered");
+    assert_eq!(note["textEdit"]["newText"], "note::\n\n   $0");
+    assert_eq!(note["insertTextFormat"], 2);
 }
 
 #[test]

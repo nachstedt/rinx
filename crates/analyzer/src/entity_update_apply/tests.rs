@@ -768,3 +768,52 @@ fn test_apply_entity_updates_never_mutates_entities_itself() {
     // Then — the as-authored record is byte-for-byte unchanged
     assert_eq!(index.entities, before);
 }
+
+#[test]
+fn test_matched_entities_takes_an_existing_id_over_its_filter_reading() {
+    // Given
+    let mut index = ProjectIndex::default();
+    index
+        .entities
+        .insert(id("REQ_001"), requirement("open", &[], &[]));
+    index
+        .entities
+        .insert(id("REQ_002"), requirement("open", &[], &[]));
+    let target = UpdateTarget::read("REQ_001").expect("a target");
+
+    // When
+    let matched = matched_entities(&target, &index, &schema());
+
+    // Then
+    assert_eq!(matched, [id("REQ_001")]);
+}
+
+#[test]
+fn test_matched_entities_evaluates_the_filter_when_no_entity_has_the_id() {
+    // Given
+    let mut index = ProjectIndex::default();
+    index
+        .entities
+        .insert(id("REQ_001"), requirement("open", &[], &[]));
+    index
+        .entities
+        .insert(id("REQ_002"), requirement("closed", &[], &[]));
+    let target = UpdateTarget::read("status == 'closed'").expect("a target");
+
+    // When
+    let matched = matched_entities(&target, &index, &schema());
+
+    // Then
+    assert_eq!(matched, [id("REQ_002")]);
+}
+
+#[test]
+fn test_matched_entities_is_empty_for_an_unknown_id_with_no_filter_reading() {
+    // Given — `REQ-9.x` is an id spelling but no filter
+    let index = ProjectIndex::default();
+    let target = UpdateTarget::read("REQ-9.x").expect("a target");
+
+    // When / Then
+    assert!(target.filter.is_none());
+    assert!(matched_entities(&target, &index, &schema()).is_empty());
+}
