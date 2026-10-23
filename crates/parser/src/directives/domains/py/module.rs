@@ -1,6 +1,7 @@
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::{classify_options, directive_options};
+use crate::directives::options::{DirectiveOptions, classify_options, directive_options};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use crate::headings::Adornment;
 use rinx_ast::{DomainObjectBody, ModuleFlag, ModuleOptions};
 
@@ -71,6 +72,17 @@ fn read_module_option(option: ModuleOption, options: &mut ModuleOptions) {
         ModuleOption::NoContentsEntry | ModuleOption::NoTypesetting => {}
     }
 }
+
+/// `.. py:module::`'s entry among the domain objects.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["module"],
+    doc: "Describes a Python module and makes it the current one.",
+    arguments: Arguments::ONE_WORD,
+    takes_content: true,
+    content_hint: None,
+    options: <ModuleOption as DirectiveOptions>::OPTIONS,
+    accepts_further: false,
+};
 
 #[cfg(test)]
 mod tests {

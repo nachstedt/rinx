@@ -47,7 +47,7 @@
 //! are.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use std::collections::{BTreeMap, BTreeSet};
 
 use rinx_ast::{
@@ -116,13 +116,10 @@ struct Import<'a> {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["needimport"],
     doc: "Imports the needs of a sphinx-needs `needs.json` as entities.",
-    shape: DirectiveShape {
-        arguments: Arguments::ONE_TEXT,
-        takes_options: true,
-        takes_content: false,
-        content_hint: None,
-    },
-    options: <NeedImportOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::ONE_TEXT,
+    takes_content: false,
+    content_hint: None,
+    options: <NeedImportOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 

@@ -2,7 +2,8 @@ use super::super::body::{DescriptionOption, ObjectOptions, parse_object_body};
 use super::dispatch::PyObjectOption;
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::directive_options;
+use crate::directives::options::{DirectiveOptions, directive_options};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use crate::headings::Adornment;
 use rinx_ast::{DescriptionFlags, DomainObjectBody, NonEmptyVector};
 
@@ -59,6 +60,17 @@ impl ObjectOptions for DataOptions {
         }
     }
 }
+
+/// `.. py:data::`'s entry among the domain objects.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["data"],
+    doc: "Describes a module-level Python variable or constant.",
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <DataOption as DirectiveOptions>::OPTIONS,
+    accepts_further: false,
+};
 
 #[cfg(test)]
 mod tests {

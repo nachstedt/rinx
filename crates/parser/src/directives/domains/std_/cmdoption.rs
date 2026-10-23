@@ -1,6 +1,8 @@
-use super::super::body::parse_object_body;
+use super::super::body::{PlainObjectOption, parse_object_body};
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
+use crate::directives::options::DirectiveOptions;
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use crate::headings::Adornment;
 use rinx_ast::{Diagnostic, DiagnosticCode, DomainObjectBody, NonEmptyVector, Span};
 
@@ -70,6 +72,17 @@ fn looks_like_option_spec(spec: &str) -> bool {
         .next()
         .is_some_and(|c| !c.is_whitespace() && c != '=')
 }
+
+/// `.. option::`'s entry among the domain objects.
+pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["option", "cmdoption"],
+    doc: "Describes a command-line option of the current program.",
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <PlainObjectOption as DirectiveOptions>::OPTIONS,
+    accepts_further: false,
+};
 
 #[cfg(test)]
 mod tests {

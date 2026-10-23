@@ -8,7 +8,7 @@
 //! last in force.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{Directive, ResolvedLanguage};
 
 use crate::diagnostics::Diagnostics;
@@ -30,13 +30,10 @@ directive_options! {
 pub(in crate::directives) const HIGHLIGHT_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["highlight"],
     doc: "Sets the language the code blocks below it are highlighted in.",
-    shape: DirectiveShape {
-        arguments: Arguments::ONE_WORD,
-        takes_options: true,
-        takes_content: false,
-        content_hint: None,
-    },
-    options: <HighlightOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::ONE_WORD,
+    takes_content: false,
+    content_hint: None,
+    options: <HighlightOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 

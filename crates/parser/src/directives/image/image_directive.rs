@@ -5,7 +5,7 @@
 //! is no body.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{AssetUri, Diagnostic, DiagnosticCode, Directive, ImageLoading, ImageOptions, Span};
 
 use crate::context::ParseCtx;
@@ -21,13 +21,10 @@ pub(in crate::directives) const DIRECTIVE: &str = "image";
 pub(in crate::directives) const IMAGE_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["image"],
     doc: "A picture.",
-    shape: DirectiveShape {
-        arguments: Arguments::ONE_TEXT,
-        takes_options: true,
-        takes_content: false,
-        content_hint: Some("use figure for a caption or legend"),
-    },
-    options: <ImageOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::ONE_TEXT,
+    takes_content: false,
+    content_hint: Some("use figure for a caption or legend"),
+    options: <ImageOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -162,7 +159,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "image",
-            IMAGE_SPEC.shape,
+            &IMAGE_SPEC,
             argument,
             body,
             &mut diagnostics,

@@ -9,7 +9,7 @@
 //! unregisters the document's default role, leaving docutils' own.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec, OptionSet};
 use rinx_ast::{Diagnostic, DiagnosticCode, Node, Span};
 
 use crate::context::ParseCtx;
@@ -22,13 +22,10 @@ const DIRECTIVE: &str = "default-role";
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["default-role"],
     doc: "Sets the role interpreted text without one is read as.",
-    shape: DirectiveShape {
-        arguments: Arguments::OPTIONAL_WORD,
-        takes_options: false,
-        takes_content: false,
-        content_hint: None,
-    },
-    options: &[],
+    arguments: Arguments::OPTIONAL_WORD,
+    takes_content: false,
+    content_hint: None,
+    options: OptionSet::NONE,
     accepts_further: false,
 };
 
@@ -110,7 +107,7 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
         let invocation = crate::directives::reader::test_invocation(
             "default-role",
-            SPEC.shape,
+            &SPEC,
             argument,
             body,
             &mut diagnostics,

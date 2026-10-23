@@ -12,4 +12,4 @@ pub(super) mod struct_;
 pub(super) mod type_;
 pub(super) mod union;
 
-pub(super) use dispatch::parse_c_domain_object;
+pub(super) use dispatch::{FUNCTION_SPEC, MACRO_SPEC, parse_c_domain_object};

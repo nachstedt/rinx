@@ -18,7 +18,7 @@
 //! exactly as `.. dropdown::`'s is.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, EntityUpdate, EntityUpdateSource, FieldMutation,
     FieldMutationMode,
@@ -58,13 +58,10 @@ directive_options! {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["entity-update", "needextend"],
     doc: "Changes fields of the entities a filter selects, project-wide.",
-    shape: DirectiveShape {
-        arguments: Arguments::ONE_TEXT,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <UpdateOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <UpdateOption as DirectiveOptions>::OPTIONS,
     accepts_further: true,
 };
 

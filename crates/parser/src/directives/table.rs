@@ -12,7 +12,7 @@ use crate::diagnostics::Diagnostics;
 use crate::directives::error_node::malformed_directive;
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::options::{DirectiveOptions, classify_options};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use crate::directives::table_options::{CommonTableOptions, TableOption, read_table_option};
 use crate::directives::table_widths::widths_for_columns;
 use crate::headings::Adornment;
@@ -25,13 +25,10 @@ const DIRECTIVE: &str = "table";
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["table"],
     doc: "A title and options for the table in its body.",
-    shape: DirectiveShape {
-        arguments: Arguments::OPTIONAL_TEXT,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <TableOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <TableOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -164,7 +161,7 @@ mod tests {
         let written = crate::directives::reader::written_after_blank(body_lines);
         let invocation = crate::directives::reader::test_invocation(
             "table",
-            SPEC.shape,
+            &SPEC,
             argument,
             &written,
             &mut diagnostics,

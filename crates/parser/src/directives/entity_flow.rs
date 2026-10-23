@@ -19,7 +19,7 @@
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
 use crate::directives::option_value::{Classes, NonEmptyText, OptionValueType, Percentage};
 use crate::directives::spec::OptionValue;
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, EntityFlow, EntityFlowSource, FlowDirection, ImageAlign,
     LengthOrPercentage, TargetName,
@@ -96,15 +96,12 @@ directive_options! {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["entity-flow", "needflow"],
     doc: "A flowchart of the entities a filter selects and their relations.",
-    shape: DirectiveShape {
-        arguments: Arguments::NONE,
-        takes_options: true,
-        takes_content: false,
-        content_hint: Some(
-            "its picture is generated from the entity graph: select the entities with :filter:, or write `.. entity-diagram::` to draw a diagram of your own",
-        ),
-    },
-    options: <EntityFlowOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::NONE,
+    takes_content: false,
+    content_hint: Some(
+        "its picture is generated from the entity graph: select the entities with :filter:, or write `.. entity-diagram::` to draw a diagram of your own",
+    ),
+    options: <EntityFlowOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -256,7 +253,7 @@ fn declared_relations(ctx: &ParseCtx<'_>) -> String {
 /// A `:direction:`: one of the two layouts `PlantUML` has, in either spelling;
 /// any other keeps the default.
 impl OptionValueType for FlowDirection {
-    const VALUE: OptionValue = OptionValue::Choice(FlowDirection::spellings);
+    const VALUE: OptionValue<'static> = OptionValue::Choice(FlowDirection::spellings);
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         FlowDirection::new(&line.value).map_err(|problem| format!("{problem}; {DIRECTION_NOTE}"))

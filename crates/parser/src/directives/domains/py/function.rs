@@ -2,7 +2,8 @@ use super::super::body::{DescriptionOption, ObjectOptions, parse_object_body};
 use super::dispatch::PyObjectOption;
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::directive_options;
+use crate::directives::options::{DirectiveOptions, directive_options};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use crate::headings::Adornment;
 use rinx_ast::{DescriptionFlags, DomainObjectBody, NonEmptyVector};
 
@@ -67,6 +68,28 @@ impl ObjectOptions for FunctionOptions {
         }
     }
 }
+
+/// `.. py:function::`'s entry among the domain objects.
+pub(in crate::directives) const FUNCTION_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["function"],
+    doc: "Describes a Python function.",
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <FunctionOption as DirectiveOptions>::OPTIONS,
+    accepts_further: false,
+};
+
+/// `.. py:decorator::`'s entry among the domain objects.
+pub(in crate::directives) const DECORATOR_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["decorator"],
+    doc: "Describes a Python function used as a decorator.",
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <FunctionOption as DirectiveOptions>::OPTIONS,
+    accepts_further: false,
+};
 
 #[cfg(test)]
 mod tests {

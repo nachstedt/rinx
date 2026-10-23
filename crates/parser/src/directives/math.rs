@@ -15,7 +15,7 @@
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::option_value::Classes;
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{Directive, Span, TargetName};
 
 use crate::context::ParseCtx;
@@ -101,13 +101,10 @@ fn split_equations(body: &[String]) -> Vec<String> {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["math"],
     doc: "A displayed equation, written in LaTeX.",
-    shape: DirectiveShape {
-        arguments: Arguments::OPTIONAL_TEXT,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <MathOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <MathOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -198,7 +195,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "math",
-            SPEC.shape,
+            &SPEC,
             argument,
             body,
             &mut diagnostics,

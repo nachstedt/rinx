@@ -3,7 +3,7 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{Diagnostic, DiagnosticCode, IndexEntry, IndexEntryType, InvalidIndexEntry};
 
 use super::super::options::{DirectiveOptions, classify_options, directive_options};
@@ -116,13 +116,10 @@ directive_options! {
 pub(in crate::directives) const INDEX_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["index"],
     doc: "Entries for the general index.",
-    shape: DirectiveShape {
-        arguments: Arguments::ONE_TEXT,
-        takes_options: true,
-        takes_content: false,
-        content_hint: None,
-    },
-    options: <IndexOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::ONE_TEXT,
+    takes_content: false,
+    content_hint: None,
+    options: <IndexOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -447,7 +444,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "index",
-            INDEX_SPEC.shape,
+            &INDEX_SPEC,
             argument,
             &body_lines,
             &mut diagnostics,
@@ -477,7 +474,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "index",
-            INDEX_SPEC.shape,
+            &INDEX_SPEC,
             argument,
             &body_lines,
             &mut diagnostics,
@@ -506,7 +503,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "index",
-            INDEX_SPEC.shape,
+            &INDEX_SPEC,
             argument,
             &body_lines,
             &mut diagnostics,
@@ -538,7 +535,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "index",
-            INDEX_SPEC.shape,
+            &INDEX_SPEC,
             argument,
             &body_lines,
             &mut diagnostics,
@@ -578,7 +575,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "index",
-            INDEX_SPEC.shape,
+            &INDEX_SPEC,
             argument,
             &body_lines,
             &mut diagnostics,
@@ -611,7 +608,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "index",
-            INDEX_SPEC.shape,
+            &INDEX_SPEC,
             argument,
             &body_lines,
             &mut diagnostics,
@@ -639,7 +636,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "index",
-            INDEX_SPEC.shape,
+            &INDEX_SPEC,
             argument,
             &body_lines,
             &mut diagnostics,
@@ -715,7 +712,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "index",
-            INDEX_SPEC.shape,
+            &INDEX_SPEC,
             "",
             &body_lines,
             &mut diagnostics,

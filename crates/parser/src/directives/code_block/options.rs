@@ -369,7 +369,7 @@ mod tests {
 pub(super) struct LineNumbering(Option<NonZeroU32>);
 
 impl OptionValueType for LineNumbering {
-    const VALUE: OptionValue = OptionValue::Integer;
+    const VALUE: OptionValue<'static> = OptionValue::Integer;
 
     fn read(line: &OptionLine, ctx: &ParseCtx<'_>) -> Result<Self, String> {
         if line.value.trim().is_empty() {

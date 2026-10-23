@@ -19,7 +19,7 @@
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
 use crate::directives::option_value::{Classes, NonEmptyText, Percentage};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, ImageAlign, LengthOrPercentage, TargetName, Uml,
     UmlSource,
@@ -35,8 +35,10 @@ use super::options::{DirectiveOptions, OptionLine, classify_options, directive_o
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["plantuml", "uml"],
     doc: "A PlantUML diagram.",
-    shape: UML_SHAPE,
-    options: <PlantUmlOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <PlantUmlOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -45,18 +47,11 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
 pub(in crate::directives) const TEMPLATED_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["entity-diagram", "needuml", "entity-arch", "needarch"],
     doc: "A PlantUML diagram written as a template over the entity graph.",
-    shape: UML_SHAPE,
-    options: <TemplatedUmlOption as DirectiveOptions>::GROUPS,
-    accepts_further: false,
-};
-
-/// How every diagram's block splits: an optional argument — a file to read in
-/// sphinxcontrib-plantuml, ignored here — options and the diagram.
-const UML_SHAPE: DirectiveShape = DirectiveShape {
     arguments: Arguments::OPTIONAL_TEXT,
-    takes_options: true,
     takes_content: true,
     content_hint: None,
+    options: <TemplatedUmlOption as DirectiveOptions>::OPTIONS,
+    accepts_further: false,
 };
 
 directive_options! {

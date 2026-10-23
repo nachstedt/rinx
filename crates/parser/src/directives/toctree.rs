@@ -1,5 +1,5 @@
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use std::num::NonZeroUsize;
 
 use rinx_ast::{
@@ -83,7 +83,7 @@ fn parse_toctree_options(
 struct Numbering(Option<NumberedDepth>);
 
 impl OptionValueType for Numbering {
-    const VALUE: OptionValue = OptionValue::Integer;
+    const VALUE: OptionValue<'static> = OptionValue::Integer;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         let value = line.value.trim();
@@ -147,13 +147,10 @@ fn parse_entry(line: &str, glob: bool, span: Option<rinx_ast::Span>) -> TocEntry
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["toctree"],
     doc: "A table of contents linking other documents into the navigation.",
-    shape: DirectiveShape {
-        arguments: Arguments::NONE,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <ToctreeOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::NONE,
+    takes_content: true,
+    content_hint: None,
+    options: <ToctreeOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -211,7 +208,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "toctree",
-            SPEC.shape,
+            &SPEC,
             "",
             body_lines,
             &mut diagnostics,

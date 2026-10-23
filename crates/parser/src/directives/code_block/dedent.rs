@@ -27,7 +27,7 @@ pub(super) enum Dedent {
 /// A `:dedent:`: with no value, all shared indentation; with a number,
 /// exactly that many columns.
 impl OptionValueType for Dedent {
-    const VALUE: OptionValue = OptionValue::Integer;
+    const VALUE: OptionValue<'static> = OptionValue::Integer;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         let trimmed = line.value.trim();

@@ -4,7 +4,7 @@ use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use crate::headings::Adornment;
 use crate::indent::{indent_width, unindent_body_lines};
 use rinx_ast::{Directive, Node};
@@ -53,13 +53,10 @@ directive_options! {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["glossary"],
     doc: "Terms and their definitions, for `:term:` to link to.",
-    shape: DirectiveShape {
-        arguments: Arguments::NONE,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <GlossaryOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::NONE,
+    takes_content: true,
+    content_hint: None,
+    options: <GlossaryOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -209,7 +206,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "glossary",
-            SPEC.shape,
+            &SPEC,
             "",
             &body_lines,
             &mut diagnostics,
@@ -238,7 +235,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "glossary",
-            SPEC.shape,
+            &SPEC,
             "",
             &body_lines,
             &mut diagnostics,
@@ -265,7 +262,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "glossary",
-            SPEC.shape,
+            &SPEC,
             "",
             &body_lines,
             &mut diagnostics,
@@ -295,7 +292,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "glossary",
-            SPEC.shape,
+            &SPEC,
             "",
             &body_lines,
             &mut diagnostics,

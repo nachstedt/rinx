@@ -3,7 +3,8 @@ use super::dispatch::PyObjectOption;
 use crate::diagnostics::Diagnostics;
 use crate::directives::domains::object_type::DirectiveObjectType;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::directive_options;
+use crate::directives::options::{DirectiveOptions, directive_options};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use crate::headings::Adornment;
 use rinx_ast::{DescriptionFlags, DomainObjectBody, NonEmptyVector};
 use std::collections::BTreeSet;
@@ -152,6 +153,50 @@ impl ObjectOptions for MethodOptions {
         self.flags.insert(flag);
     }
 }
+
+/// `.. py:method::`'s entry among the domain objects.
+pub(in crate::directives) const METHOD_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["method"],
+    doc: "Describes a method of a Python class.",
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <MethodOption as DirectiveOptions>::OPTIONS,
+    accepts_further: false,
+};
+
+/// `.. py:classmethod::`'s entry among the domain objects.
+pub(in crate::directives) const CLASSMETHOD_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["classmethod"],
+    doc: "Describes a class method of a Python class.",
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <MethodOption as DirectiveOptions>::OPTIONS,
+    accepts_further: false,
+};
+
+/// `.. py:staticmethod::`'s entry among the domain objects.
+pub(in crate::directives) const STATICMETHOD_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["staticmethod"],
+    doc: "Describes a static method of a Python class.",
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <MethodOption as DirectiveOptions>::OPTIONS,
+    accepts_further: false,
+};
+
+/// `.. py:decoratormethod::`'s entry among the domain objects.
+pub(in crate::directives) const DECORATOR_METHOD_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["decoratormethod"],
+    doc: "Describes a method of a Python class used as a decorator.",
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <MethodOption as DirectiveOptions>::OPTIONS,
+    accepts_further: false,
+};
 
 #[cfg(test)]
 mod tests {

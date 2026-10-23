@@ -29,7 +29,6 @@ use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::spec::{Arguments, DirectiveShape};
 use crate::headings::Adornment;
 
 /// Parses `.. <type>:: <argument>` into an [`EntityBody`].
@@ -40,23 +39,15 @@ use crate::headings::Adornment;
 pub(in crate::directives) struct EntityDirective<'a> {
     /// The type the directive's name resolved to.
     pub entity_type: &'a EntityType,
-    /// The directive as written, split by [`ENTITY_SHAPE`].
+    /// The directive as written, split by the type's [`EntitySpec`].
+    ///
+    /// [`EntitySpec`]: super::entity_spec::EntitySpec
     pub invocation: &'a DirectiveInvocation<'a, 'a>,
     /// What distinguishes this entity from others of its type in the document.
     pub discriminator: u32,
     /// The document being parsed, for a generated id.
     pub doc_path: &'a str,
 }
-
-/// How a block of an entity splits, transcribed from sphinx-needs'
-/// `NeedDirective`: one optional argument keeping the rest of its lines, any
-/// options — the schema decides which — and content.
-pub(in crate::directives) const ENTITY_SHAPE: DirectiveShape = DirectiveShape {
-    arguments: Arguments::OPTIONAL_TEXT,
-    takes_options: true,
-    takes_content: true,
-    content_hint: None,
-};
 
 pub(in crate::directives) fn parse_entity(
     directive: &EntityDirective<'_>,

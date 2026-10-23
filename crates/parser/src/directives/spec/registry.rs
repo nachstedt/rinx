@@ -7,16 +7,16 @@
 //! of a directive's syntax can share it; the pairing with behaviour lives
 //! here, in the entry.
 
-use crate::directives::domains::object_type::object_directive_names;
+use crate::directives::domains::object_type::{object_directive_names, object_directive_specs};
 use crate::directives::invocation::{DirectiveInvocation, ParseState};
-use crate::directives::scope::scope_directive_names;
+use crate::directives::scope::{scope_directive_names, scope_directive_specs};
 use crate::directives::{
     admonitions, button_link, code_block, contents, data_table, default_role, doctest, dropdown,
     entity_bar, entity_flow, entity_pie, entity_sequence, entity_table, entity_update, glossary,
     grid, if_builder, image, include, index_directive, math, needimport, needservice, role,
     sectnum, table, toctree, uml,
 };
-use rinx_ast::Node;
+use rinx_ast::{Domain, Node};
 
 use super::vocabulary::DirectiveSpec;
 
@@ -24,7 +24,7 @@ use super::vocabulary::DirectiveSpec;
 /// is interpreted.
 pub(crate) struct RegisteredDirective {
     /// Its names and purpose.
-    pub(crate) spec: &'static DirectiveSpec,
+    pub(crate) spec: &'static DirectiveSpec<'static>,
     /// Turns its invocation into nodes.
     pub(crate) interpret: Interpret,
 }
@@ -33,7 +33,7 @@ pub(crate) struct RegisteredDirective {
 pub(crate) type Interpret = fn(&DirectiveInvocation<'_, '_>, &mut ParseState<'_>) -> Vec<Node>;
 
 /// The [`RegisteredDirective`] pairing `spec` with `interpret`.
-const fn entry(spec: &'static DirectiveSpec, interpret: Interpret) -> RegisteredDirective {
+const fn entry(spec: &'static DirectiveSpec<'static>, interpret: Interpret) -> RegisteredDirective {
     RegisteredDirective { spec, interpret }
 }
 
@@ -146,9 +146,20 @@ const DIRECTIVES: &[RegisteredDirective] = &[
     entry(&uml::TEMPLATED_SPEC, uml::interpret_uml),
 ];
 
-/// Every directive this build implements, in the registry's order.
-pub fn directive_specs() -> impl Iterator<Item = &'static DirectiveSpec> {
+/// Every directive this build implements whose names are fixed, in the
+/// registry's order.
+pub fn directive_specs() -> impl Iterator<Item = &'static DirectiveSpec<'static>> {
     DIRECTIVES.iter().map(|directive| directive.spec)
+}
+
+/// Every directive whose name is resolved against the default domain — the
+/// domain objects, then the scope directives — with the domain its names are
+/// qualified in: `None` for a `std` one, written bare whatever the default
+/// domain (`.. option::`), else written bare in that domain and qualified in
+/// any other (`.. function::`, `.. py:function::`).
+pub fn domain_directive_specs()
+-> impl Iterator<Item = (Option<Domain>, &'static DirectiveSpec<'static>)> {
+    object_directive_specs().chain(scope_directive_specs())
 }
 
 /// The directive written as `name`, or `None` when no entry of the table
@@ -179,6 +190,7 @@ pub fn is_builtin_directive_name(name: &str) -> bool {
 mod tests {
     use std::str::FromStr;
 
+    use super::super::vocabulary::OptionSpec;
     use super::*;
     use rinx_ast::{
         AdmonitionKind, CodeBlockSource, EntityBarSource, EntityFlowSource, EntityPieSource,
@@ -195,6 +207,12 @@ mod tests {
                 "`{name}` does not parse as the spelling its parser reads"
             );
         }
+    }
+
+    /// Every spec of a directive this build implements, fixed names and
+    /// domain-resolved alike.
+    fn every_spec() -> impl Iterator<Item = &'static DirectiveSpec<'static>> {
+        directive_specs().chain(domain_directive_specs().map(|(_, spec)| spec))
     }
 
     #[test]
@@ -214,30 +232,16 @@ mod tests {
     #[test]
     fn test_every_spec_names_itself_and_says_what_it_is_for() {
         // Given / When / Then
-        for spec in directive_specs() {
+        for spec in every_spec() {
             assert!(!spec.names.is_empty(), "{spec:?} has no name");
             assert!(!spec.doc.is_empty(), "{spec:?} has no doc");
         }
     }
 
     #[test]
-    fn test_a_spec_declares_options_exactly_when_its_shape_takes_them() {
-        // Given / When / Then
-        for spec in directive_specs() {
-            let declares = spec.option_specs().next().is_some();
-            assert_eq!(
-                spec.shape.takes_options,
-                declares || spec.accepts_further,
-                "`{}` takes options but declares none, or the reverse",
-                spec.names[0]
-            );
-        }
-    }
-
-    #[test]
     fn test_only_the_schema_and_service_directives_accept_options_they_do_not_list() {
         // Given / When
-        let open: Vec<&str> = directive_specs()
+        let open: Vec<&str> = every_spec()
             .filter(|spec| spec.accepts_further)
             .map(|spec| spec.names[0])
             .collect();
@@ -249,9 +253,9 @@ mod tests {
     #[test]
     fn test_every_option_spelling_names_itself_and_says_what_it_does() {
         // Given / When / Then
-        for spec in directive_specs() {
+        for spec in every_spec() {
             for option in spec.option_specs() {
-                assert!(!option.names.is_empty(), "{option:?} has no name");
+                assert!(!option.name.is_empty(), "{option:?} has no name");
                 assert!(!option.doc.is_empty(), "{option:?} has no doc");
             }
         }
@@ -260,11 +264,11 @@ mod tests {
     #[test]
     fn test_no_directive_declares_an_option_name_twice() {
         // Given / When / Then
-        for spec in directive_specs() {
+        for spec in every_spec() {
             let mut seen: Vec<&str> = Vec::new();
-            for name in spec.option_specs().flat_map(|option| option.names) {
+            for name in spec.option_specs().flat_map(OptionSpec::names) {
                 assert!(
-                    !seen.contains(name),
+                    !seen.contains(&name),
                     "`{}` declares `:{name}:` twice",
                     spec.names[0]
                 );
@@ -481,6 +485,40 @@ mod tests {
         ] {
             assert!(is_builtin_directive_name(name), "`{name}` is not reserved");
         }
+    }
+
+    #[test]
+    fn test_domain_directive_specs_list_the_objects_then_the_scope_directives() {
+        // Given / When
+        let specs: Vec<(Option<Domain>, &str)> = domain_directive_specs()
+            .map(|(domain, spec)| (domain, spec.names[0]))
+            .collect();
+
+        // Then
+        assert_eq!(specs.first(), Some(&(None, "option")));
+        assert!(specs.contains(&(Some(Domain::Py), "function")));
+        assert!(specs.contains(&(Some(Domain::C), "function")));
+        assert_eq!(specs.last(), Some(&(Some(Domain::C), "namespace-pop")));
+    }
+
+    #[test]
+    fn test_a_domain_object_takes_options_and_a_scope_directive_none() {
+        // Given
+        let spec_of = |wanted: &str| {
+            domain_directive_specs()
+                .find(|(_, spec)| spec.names[0] == wanted)
+                .map(|(_, spec)| spec)
+                .expect("a domain directive")
+        };
+
+        // When / Then
+        assert!(
+            spec_of("method")
+                .option_specs()
+                .any(|option| option.name == "async")
+        );
+        assert!(spec_of("currentmodule").option_specs().next().is_none());
+        assert!(!spec_of("currentmodule").takes_options());
     }
 
     #[test]

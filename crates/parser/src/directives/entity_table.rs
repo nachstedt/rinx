@@ -14,7 +14,7 @@
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
 use crate::directives::option_value::OptionValueType;
 use crate::directives::spec::OptionValue;
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, EntityTable, EntityTableSource, TableWidths,
 };
@@ -78,13 +78,10 @@ directive_options! {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["entity-table", "needtable"],
     doc: "A table of the entities a filter selects.",
-    shape: DirectiveShape {
-        arguments: Arguments::NONE,
-        takes_options: true,
-        takes_content: false,
-        content_hint: Some("write the selection as :filter:"),
-    },
-    options: <EntityTableOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::NONE,
+    takes_content: false,
+    content_hint: Some("write the selection as :filter:"),
+    options: <EntityTableOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -300,7 +297,7 @@ fn read_widths(
 struct StaticStyle;
 
 impl OptionValueType for StaticStyle {
-    const VALUE: OptionValue = OptionValue::Choice(|| vec![SUPPORTED_STYLE]);
+    const VALUE: OptionValue<'static> = OptionValue::Choice(|| vec![SUPPORTED_STYLE]);
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         let written = line.value.trim();

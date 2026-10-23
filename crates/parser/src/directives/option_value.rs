@@ -32,7 +32,7 @@ use super::spec::OptionValue;
 /// What an option's value is read into.
 pub(in crate::directives) trait OptionValueType: Sized {
     /// What completion offers for it.
-    const VALUE: OptionValue;
+    const VALUE: OptionValue<'static>;
     /// The value written on `line`, or why it is none.
     fn read(line: &OptionLine, ctx: &ParseCtx<'_>) -> Result<Self, String>;
 }
@@ -92,7 +92,7 @@ pub(in crate::directives) fn report_invalid_option(
 
 /// Free text, kept as written.
 impl OptionValueType for String {
-    const VALUE: OptionValue = OptionValue::Text;
+    const VALUE: OptionValue<'static> = OptionValue::Text;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         Ok(line.value.clone())
@@ -101,7 +101,7 @@ impl OptionValueType for String {
 
 /// A non-negative whole number.
 impl OptionValueType for usize {
-    const VALUE: OptionValue = OptionValue::Integer;
+    const VALUE: OptionValue<'static> = OptionValue::Integer;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         line.value
@@ -113,7 +113,7 @@ impl OptionValueType for usize {
 /// A whole number, which may be negative: `:tab-width:`, where docutils
 /// spells "leave tabs alone" as a negative width.
 impl OptionValueType for i32 {
-    const VALUE: OptionValue = OptionValue::Integer;
+    const VALUE: OptionValue<'static> = OptionValue::Integer;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         line.value
@@ -125,7 +125,7 @@ impl OptionValueType for i32 {
 
 /// A positive whole number.
 impl OptionValueType for NonZeroU32 {
-    const VALUE: OptionValue = OptionValue::Integer;
+    const VALUE: OptionValue<'static> = OptionValue::Integer;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         line.value
@@ -147,7 +147,7 @@ impl OptionValueType for NonZeroU32 {
 pub(in crate::directives) struct DepthLimit(pub(in crate::directives) Option<NonZeroUsize>);
 
 impl OptionValueType for DepthLimit {
-    const VALUE: OptionValue = OptionValue::Integer;
+    const VALUE: OptionValue<'static> = OptionValue::Integer;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         line.value
@@ -160,7 +160,7 @@ impl OptionValueType for DepthLimit {
 
 /// A label to reference the directive by, which must not be empty.
 impl OptionValueType for TargetName {
-    const VALUE: OptionValue = OptionValue::Text;
+    const VALUE: OptionValue<'static> = OptionValue::Text;
 
     fn read(line: &OptionLine, ctx: &ParseCtx<'_>) -> Result<Self, String> {
         NonEmptyText::read(line, ctx).map(|text| TargetName::new(&text.0))
@@ -169,7 +169,7 @@ impl OptionValueType for TargetName {
 
 /// A length, or a percentage of the line's.
 impl OptionValueType for LengthOrPercentage {
-    const VALUE: OptionValue = OptionValue::Length;
+    const VALUE: OptionValue<'static> = OptionValue::Length;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         LengthOrPercentage::new(&line.value).map_err(|problem| problem.to_string())
@@ -181,7 +181,7 @@ impl OptionValueType for LengthOrPercentage {
 pub(in crate::directives) struct NonEmptyText(pub(in crate::directives) String);
 
 impl OptionValueType for NonEmptyText {
-    const VALUE: OptionValue = OptionValue::Text;
+    const VALUE: OptionValue<'static> = OptionValue::Text;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         if line.value.is_empty() {
@@ -197,7 +197,7 @@ impl OptionValueType for NonEmptyText {
 pub(in crate::directives) struct Classes(pub(in crate::directives) Vec<String>);
 
 impl OptionValueType for Classes {
-    const VALUE: OptionValue = OptionValue::Classes;
+    const VALUE: OptionValue<'static> = OptionValue::Classes;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         Ok(Self(split_classes(&line.value)))
@@ -209,7 +209,7 @@ impl OptionValueType for Classes {
 pub(in crate::directives) struct Percentage(pub(in crate::directives) u32);
 
 impl OptionValueType for Percentage {
-    const VALUE: OptionValue = OptionValue::Integer;
+    const VALUE: OptionValue<'static> = OptionValue::Integer;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         parse_percentage(&line.value)
@@ -223,7 +223,7 @@ impl OptionValueType for Percentage {
 pub(in crate::directives) struct Boolean(pub(in crate::directives) bool);
 
 impl OptionValueType for Boolean {
-    const VALUE: OptionValue = OptionValue::Choice(|| vec!["true", "false"]);
+    const VALUE: OptionValue<'static> = OptionValue::Choice(|| vec!["true", "false"]);
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         match parse_attribute_value(&AttributeType::Bool, &line.value) {
@@ -251,7 +251,7 @@ impl<T> Located<T> {
 }
 
 impl<T: OptionValueType> OptionValueType for Located<T> {
-    const VALUE: OptionValue = T::VALUE;
+    const VALUE: OptionValue<'static> = T::VALUE;
 
     fn read(line: &OptionLine, ctx: &ParseCtx<'_>) -> Result<Self, String> {
         Ok(Self {
@@ -271,7 +271,7 @@ pub(in crate::directives) trait ChoiceValue: Sized {
 }
 
 impl<T: ChoiceValue> OptionValueType for T {
-    const VALUE: OptionValue = OptionValue::Choice(T::choices);
+    const VALUE: OptionValue<'static> = OptionValue::Choice(T::choices);
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         T::from_choice(line.value.trim()).ok_or_else(|| {
@@ -340,7 +340,7 @@ macro_rules! parsed_values {
     ($($ty:ty => $value:ident),* $(,)?) => {
         $(
             impl OptionValueType for $ty {
-                const VALUE: OptionValue = OptionValue::$value;
+                const VALUE: OptionValue<'static> = OptionValue::$value;
 
                 fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
                     <$ty>::parse(&line.value).map_err(|problem| problem.to_string())
@@ -360,7 +360,7 @@ parsed_values!(
 
 /// A length, as a picture's `:height:` is written.
 impl OptionValueType for rinx_ast::Length {
-    const VALUE: OptionValue = OptionValue::Length;
+    const VALUE: OptionValue<'static> = OptionValue::Length;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         Self::new(&line.value).map_err(|problem| problem.to_string())
@@ -369,7 +369,7 @@ impl OptionValueType for rinx_ast::Length {
 
 /// A figure's `:figwidth:`: a length, or `image` for the picture's own.
 impl OptionValueType for rinx_ast::FigureWidth {
-    const VALUE: OptionValue = OptionValue::Length;
+    const VALUE: OptionValue<'static> = OptionValue::Length;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         Self::new(&line.value).map_err(|problem| problem.to_string())
@@ -381,7 +381,7 @@ impl OptionValueType for rinx_ast::FigureWidth {
 pub(in crate::directives) struct Padding(pub(in crate::directives) Spacing);
 
 impl OptionValueType for Padding {
-    const VALUE: OptionValue = OptionValue::Text;
+    const VALUE: OptionValue<'static> = OptionValue::Text;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         Spacing::parse(&line.value, SpacingKind::Padding)
@@ -395,7 +395,7 @@ impl OptionValueType for Padding {
 pub(in crate::directives) struct Margin(pub(in crate::directives) Spacing);
 
 impl OptionValueType for Margin {
-    const VALUE: OptionValue = OptionValue::Text;
+    const VALUE: OptionValue<'static> = OptionValue::Text;
 
     fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
         Spacing::parse(&line.value, SpacingKind::Margin)

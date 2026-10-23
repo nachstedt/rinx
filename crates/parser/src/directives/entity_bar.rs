@@ -23,7 +23,7 @@
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
 use crate::directives::option_value::{NonEmptyText, report_missing_value};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     BarArrangement, BarGrid, BarOrientation, ChartColor, ChartValue, Diagnostic, DiagnosticCode,
     Directive, EntityBar, EntityBarSource, LabelRotation, Span,
@@ -100,13 +100,10 @@ const FROM_DATA: &str = "FROM_DATA";
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["entity-bar", "needbar"],
     doc: "A bar chart of how many entities each filter selects.",
-    shape: DirectiveShape {
-        arguments: Arguments::OPTIONAL_TEXT,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <EntityBarOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <EntityBarOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 

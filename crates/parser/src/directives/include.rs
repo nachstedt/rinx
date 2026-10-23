@@ -20,7 +20,7 @@
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState};
 use crate::directives::option_value::Classes;
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     CodeBlock, CodeBlockSource, CodeLanguage, DiagnosticCode, Directive, IncludeSite, Node, Span,
 };
@@ -65,13 +65,10 @@ struct IncludeOptions {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["include"],
     doc: "Splices another file's reStructuredText in where it stands.",
-    shape: DirectiveShape {
-        arguments: Arguments::ONE_TEXT,
-        takes_options: true,
-        takes_content: false,
-        content_hint: None,
-    },
-    options: <IncludeOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::ONE_TEXT,
+    takes_content: false,
+    content_hint: None,
+    options: <IncludeOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 

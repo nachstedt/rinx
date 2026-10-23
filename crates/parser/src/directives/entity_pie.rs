@@ -22,7 +22,7 @@
 //! for exploded wedges and silently got none has no way to find out why.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     ChartColor, Diagnostic, DiagnosticCode, Directive, EntityPie, EntityPieSource, PieSlice, Span,
 };
@@ -71,13 +71,10 @@ directive_options! {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["entity-pie", "needpie"],
     doc: "A pie chart of how many entities each filter selects.",
-    shape: DirectiveShape {
-        arguments: Arguments::OPTIONAL_TEXT,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <EntityPieOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <EntityPieOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 

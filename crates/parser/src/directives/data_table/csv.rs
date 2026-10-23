@@ -2,7 +2,7 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, Node, Span, TableCell, TableRow, TableSource,
 };
@@ -76,13 +76,10 @@ directive_options! {
 pub(in crate::directives) const CSV_TABLE_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["csv-table"],
     doc: "A table written as comma-separated values, inline or in a file.",
-    shape: DirectiveShape {
-        arguments: Arguments::OPTIONAL_TEXT,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <CsvTableOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <CsvTableOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -489,7 +486,7 @@ mod tests {
         let written = crate::directives::reader::written_after_blank(body_lines);
         let invocation = crate::directives::reader::test_invocation(
             "csv-table",
-            CSV_TABLE_SPEC.shape,
+            &CSV_TABLE_SPEC,
             "",
             &written,
             &mut diagnostics,
@@ -567,7 +564,7 @@ mod tests {
         let written = crate::directives::reader::written_after_blank(&body_lines);
         let invocation = crate::directives::reader::test_invocation(
             "csv-table",
-            CSV_TABLE_SPEC.shape,
+            &CSV_TABLE_SPEC,
             "Popular Fruits",
             &written,
             &mut diagnostics,

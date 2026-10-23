@@ -13,7 +13,7 @@
 //! naming a file, `:diff:`, `:prepend:`/`:append:`, and `:lineno-match:`.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use std::num::NonZeroU32;
 
 use rinx_ast::{
@@ -59,13 +59,10 @@ struct LiteralIncludeOptions {
 pub(in crate::directives) const LITERAL_INCLUDE_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["literalinclude"],
     doc: "A code block read from a file.",
-    shape: DirectiveShape {
-        arguments: Arguments::ONE_TEXT,
-        takes_options: true,
-        takes_content: false,
-        content_hint: None,
-    },
-    options: <LiteralIncludeOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::ONE_TEXT,
+    takes_content: false,
+    content_hint: None,
+    options: <LiteralIncludeOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -423,7 +420,7 @@ mod tests {
         let mut diagnostics = Diagnostics::default();
         let invocation = crate::directives::reader::test_invocation(
             "literalinclude",
-            LITERAL_INCLUDE_SPEC.shape,
+            &LITERAL_INCLUDE_SPEC,
             argument,
             body_lines,
             &mut diagnostics,

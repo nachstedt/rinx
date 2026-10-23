@@ -18,8 +18,8 @@ pub use blocks::{parse, parse_with_ctx, parse_with_domain};
 pub use context::{LoadedFile, ParseCtx, ParseFileLoader, RejectParseFiles, SplicedText};
 pub use default_role::{DefaultRole, UnknownRole};
 pub use directives::{
-    Arguments, DirectiveShape, DirectiveSpec, OptionSpec, OptionSupport, OptionValue,
-    directive_specs, is_builtin_directive_name,
+    Arguments, DirectiveSpec, EntitySpec, OptionSet, OptionSpec, OptionSupport, OptionValue,
+    directive_specs, domain_directive_specs, is_builtin_directive_name,
 };
 pub use entity_schema::load_entity_schema;
 pub use templating::rendered_source;

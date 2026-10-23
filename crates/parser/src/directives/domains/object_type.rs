@@ -1,7 +1,8 @@
 use super::super::scope::split_domain_qualified_name;
 use rinx_ast::Domain;
 
-use crate::directives::spec::{Arguments, DirectiveShape};
+use super::{c, py, std_};
+use crate::directives::spec::DirectiveSpec;
 
 /// The domain-object directive names the parser recognizes, resolved from a
 /// directive's `domain:objtype` (or bare, default-domain-resolved) name.
@@ -65,94 +66,88 @@ pub(crate) fn resolve_domain_object_type(
     find_object_directive(Some(domain), objtype_str)
 }
 
-/// How a block of a domain object of `object_type` splits, transcribed from
-/// Sphinx's classes: `ObjectDescription`'s one argument keeping the rest of
-/// its lines — one signature per line — options and content, but a single
-/// word for `PyModule`, which declares no `final_argument_whitespace`.
-pub(crate) const fn object_shape(object_type: DirectiveObjectType) -> DirectiveShape {
-    let arguments = match object_type {
-        DirectiveObjectType::PyModule => Arguments::ONE_WORD,
-        _ => Arguments::ONE_TEXT,
-    };
-    DirectiveShape {
-        arguments,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
+/// The spec of a domain object of `object_type`, beside its parser: Sphinx's
+/// `ObjectDescription`'s one argument keeping the rest of its lines — one
+/// signature per line — options and content, but a single word for
+/// `PyModule`, which declares no `final_argument_whitespace`.
+pub(crate) const fn object_spec(
+    object_type: DirectiveObjectType,
+) -> &'static DirectiveSpec<'static> {
+    match object_type {
+        DirectiveObjectType::PyFunction => &py::function::FUNCTION_SPEC,
+        DirectiveObjectType::PyDecorator => &py::function::DECORATOR_SPEC,
+        DirectiveObjectType::PyModule => &py::module::SPEC,
+        DirectiveObjectType::PyData => &py::data::SPEC,
+        DirectiveObjectType::PyMethod => &py::method::METHOD_SPEC,
+        DirectiveObjectType::PyClassmethod => &py::method::CLASSMETHOD_SPEC,
+        DirectiveObjectType::PyStaticmethod => &py::method::STATICMETHOD_SPEC,
+        DirectiveObjectType::PyDecoratorMethod => &py::method::DECORATOR_METHOD_SPEC,
+        DirectiveObjectType::PyClass => &py::class::CLASS_SPEC,
+        DirectiveObjectType::PyAttribute => &py::attribute::SPEC,
+        DirectiveObjectType::PyException => &py::class::EXCEPTION_SPEC,
+        DirectiveObjectType::CFunction => &c::FUNCTION_SPEC,
+        DirectiveObjectType::CMacro => &c::MACRO_SPEC,
+        DirectiveObjectType::CStruct => &c::struct_::SPEC,
+        DirectiveObjectType::CUnion => &c::union::SPEC,
+        DirectiveObjectType::CMember => &c::member::SPEC,
+        DirectiveObjectType::CType => &c::type_::SPEC,
+        DirectiveObjectType::StdCmdoption => &std_::cmdoption::SPEC,
     }
+}
+
+/// Every domain-object directive: the domain its names are qualified in, and
+/// its spec.
+pub(crate) fn object_directive_specs()
+-> impl Iterator<Item = (Option<Domain>, &'static DirectiveSpec<'static>)> {
+    OBJECT_DIRECTIVES
+        .iter()
+        .map(|&(domain, object_type)| (domain, object_spec(object_type)))
 }
 
 /// Every name a domain-object directive is written as, unqualified — what an
 /// entity schema's section may not be called.
 pub(crate) fn object_directive_names() -> impl Iterator<Item = &'static str> {
-    OBJECT_DIRECTIVES.iter().map(|&(_, name, _)| name)
+    object_directive_specs().flat_map(|(_, spec)| spec.names.iter().copied())
 }
 
-/// The object type the row for `name` in `domain` names, if any.
+/// The object type `name` spells in `domain`, if any.
 fn find_object_directive(domain: Option<Domain>, name: &str) -> Option<DirectiveObjectType> {
     OBJECT_DIRECTIVES
         .iter()
-        .find(|&&(row_domain, row_name, _)| row_domain == domain && row_name == name)
-        .map(|&(_, _, object_type)| object_type)
+        .find(|&&(row_domain, object_type)| {
+            row_domain == domain && object_spec(object_type).names.contains(&name)
+        })
+        .map(|&(_, object_type)| object_type)
 }
 
-/// Every domain-object directive: the domain its name is qualified in — `None`
-/// for a `std` one, recognized bare whatever the default domain — the name,
-/// and the object type it resolves to.
+/// Every domain-object directive: the domain its names are qualified in —
+/// `None` for a `std` one, recognized bare whatever the default domain — and
+/// the object type its names resolve to, spelled by its spec.
 ///
-/// One row per spelling, so an alias is a row of its own: `cmdoption` is real
-/// Sphinx's legacy directive-name alias for `option`, and `.. c:var::` a pure
-/// directive-name alias for `.. c:member::` (both register the same handler) —
-/// no forced-flag distinction to carry, unlike `classmethod`/`staticmethod`.
-const OBJECT_DIRECTIVES: &[(Option<Domain>, &str, DirectiveObjectType)] = &[
-    (None, "option", DirectiveObjectType::StdCmdoption),
-    (None, "cmdoption", DirectiveObjectType::StdCmdoption),
-    (
-        Some(Domain::Py),
-        "function",
-        DirectiveObjectType::PyFunction,
-    ),
-    (
-        Some(Domain::Py),
-        "decorator",
-        DirectiveObjectType::PyDecorator,
-    ),
-    (Some(Domain::Py), "module", DirectiveObjectType::PyModule),
-    (Some(Domain::Py), "data", DirectiveObjectType::PyData),
-    (Some(Domain::Py), "method", DirectiveObjectType::PyMethod),
-    (
-        Some(Domain::Py),
-        "classmethod",
-        DirectiveObjectType::PyClassmethod,
-    ),
-    (
-        Some(Domain::Py),
-        "staticmethod",
-        DirectiveObjectType::PyStaticmethod,
-    ),
-    (
-        Some(Domain::Py),
-        "decoratormethod",
-        DirectiveObjectType::PyDecoratorMethod,
-    ),
-    (Some(Domain::Py), "class", DirectiveObjectType::PyClass),
-    (
-        Some(Domain::Py),
-        "attribute",
-        DirectiveObjectType::PyAttribute,
-    ),
-    (
-        Some(Domain::Py),
-        "exception",
-        DirectiveObjectType::PyException,
-    ),
-    (Some(Domain::C), "function", DirectiveObjectType::CFunction),
-    (Some(Domain::C), "macro", DirectiveObjectType::CMacro),
-    (Some(Domain::C), "struct", DirectiveObjectType::CStruct),
-    (Some(Domain::C), "union", DirectiveObjectType::CUnion),
-    (Some(Domain::C), "member", DirectiveObjectType::CMember),
-    (Some(Domain::C), "var", DirectiveObjectType::CMember),
-    (Some(Domain::C), "type", DirectiveObjectType::CType),
+/// An alias is a further name of a spec: `cmdoption` is real Sphinx's legacy
+/// directive-name alias for `option`, and `.. c:var::` a pure directive-name
+/// alias for `.. c:member::` (both register the same handler) — no
+/// forced-flag distinction to carry, unlike `classmethod`/`staticmethod`,
+/// which are object types of their own.
+const OBJECT_DIRECTIVES: &[(Option<Domain>, DirectiveObjectType)] = &[
+    (None, DirectiveObjectType::StdCmdoption),
+    (Some(Domain::Py), DirectiveObjectType::PyFunction),
+    (Some(Domain::Py), DirectiveObjectType::PyDecorator),
+    (Some(Domain::Py), DirectiveObjectType::PyModule),
+    (Some(Domain::Py), DirectiveObjectType::PyData),
+    (Some(Domain::Py), DirectiveObjectType::PyMethod),
+    (Some(Domain::Py), DirectiveObjectType::PyClassmethod),
+    (Some(Domain::Py), DirectiveObjectType::PyStaticmethod),
+    (Some(Domain::Py), DirectiveObjectType::PyDecoratorMethod),
+    (Some(Domain::Py), DirectiveObjectType::PyClass),
+    (Some(Domain::Py), DirectiveObjectType::PyAttribute),
+    (Some(Domain::Py), DirectiveObjectType::PyException),
+    (Some(Domain::C), DirectiveObjectType::CFunction),
+    (Some(Domain::C), DirectiveObjectType::CMacro),
+    (Some(Domain::C), DirectiveObjectType::CStruct),
+    (Some(Domain::C), DirectiveObjectType::CUnion),
+    (Some(Domain::C), DirectiveObjectType::CMember),
+    (Some(Domain::C), DirectiveObjectType::CType),
 ];
 
 #[cfg(test)]
@@ -432,12 +427,12 @@ mod tests {
     }
 
     #[test]
-    fn test_object_directive_names_lists_every_spelling_once_per_row() {
+    fn test_object_directive_names_lists_every_spelling_once_per_domain() {
         // Given / When
         let names: Vec<&str> = object_directive_names().collect();
 
-        // Then — aliases are rows of their own, and a name two domains share
-        // is listed for each
+        // Then — aliases are listed, and a name two domains share is listed
+        // for each
         assert!(names.contains(&"cmdoption"));
         assert!(names.contains(&"var"));
         assert_eq!(names.iter().filter(|name| **name == "function").count(), 2);
@@ -446,13 +441,54 @@ mod tests {
     #[test]
     fn test_every_listed_name_resolves_in_its_own_domain() {
         // Given / When / Then
-        for &(domain, name, object_type) in OBJECT_DIRECTIVES {
-            let default_domain = domain.unwrap_or(Domain::Py);
-            assert_eq!(
-                resolve_domain_object_type(name, default_domain),
-                Some(object_type),
-                "`{name}` does not resolve under {default_domain:?}"
-            );
+        for &(domain, object_type) in OBJECT_DIRECTIVES {
+            for name in object_spec(object_type).names {
+                let default_domain = domain.unwrap_or(Domain::Py);
+                assert_eq!(
+                    resolve_domain_object_type(name, default_domain),
+                    Some(object_type),
+                    "`{name}` does not resolve under {default_domain:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_object_spec_reads_a_module_as_one_word_and_any_other_object_as_text() {
+        // Given / When / Then
+        assert!(
+            !object_spec(DirectiveObjectType::PyModule)
+                .arguments
+                .final_whitespace
+        );
+        assert!(
+            object_spec(DirectiveObjectType::PyFunction)
+                .arguments
+                .final_whitespace
+        );
+        assert!(
+            object_spec(DirectiveObjectType::CMember)
+                .arguments
+                .final_whitespace
+        );
+    }
+
+    #[test]
+    fn test_object_directive_specs_list_every_object_type_once() {
+        // Given / When
+        let specs: Vec<(Option<Domain>, &DirectiveSpec)> = object_directive_specs().collect();
+
+        // Then — no domain spells one name twice
+        for (index, (domain, spec)) in specs.iter().enumerate() {
+            for name in spec.names {
+                assert!(
+                    specs[..index]
+                        .iter()
+                        .all(|(other_domain, other)| other_domain != domain
+                            || !other.names.contains(name)),
+                    "`{name}` is listed twice in {domain:?}"
+                );
+            }
         }
     }
 }

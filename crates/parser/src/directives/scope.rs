@@ -1,10 +1,10 @@
 use super::error_node::malformed_node;
 use super::invocation::DirectiveInvocation;
-use super::spec::{Arguments, DirectiveShape};
+use super::spec::{Arguments, DirectiveSpec, OptionSet};
 use rinx_ast::{Directive, Domain};
 
 /// Interprets one of the *scope* directives, read by its
-/// [`ScopeDirective::shape`]: the content-less, domain-qualified directives
+/// [`ScopeDirective::spec`]: the content-less, domain-qualified directives
 /// that document nothing and only move the current scope the analyzer and
 /// renderer qualify against — `.. currentmodule::` in the `py` domain, and the
 /// `.. c:namespace::` family in the `c` domain.
@@ -55,47 +55,82 @@ pub(super) enum ScopeDirective {
 }
 
 impl ScopeDirective {
-    /// How a block of it splits, transcribed from Sphinx's classes: one
-    /// argument each — the whole line for a program or a C scope, a single
-    /// word for a Python module — but none for a pop, and no options or
-    /// content for any.
-    pub(super) const fn shape(self) -> DirectiveShape {
-        let arguments = match self {
-            Self::Program | Self::Namespace | Self::NamespacePush => Arguments::ONE_TEXT,
-            Self::CurrentModule => Arguments::ONE_WORD,
-            Self::NamespacePop => Arguments::NONE,
-        };
-        DirectiveShape {
-            arguments,
-            takes_options: false,
-            takes_content: false,
-            content_hint: None,
+    /// Its spec, transcribed from Sphinx's classes: one argument each — the
+    /// whole line for a program or a C scope, a single word for a Python
+    /// module — but none for a pop, and no options or content for any.
+    pub(super) const fn spec(self) -> &'static DirectiveSpec<'static> {
+        match self {
+            Self::Program => &PROGRAM_SPEC,
+            Self::CurrentModule => &CURRENT_MODULE_SPEC,
+            Self::Namespace => &NAMESPACE_SPEC,
+            Self::NamespacePush => &NAMESPACE_PUSH_SPEC,
+            Self::NamespacePop => &NAMESPACE_POP_SPEC,
         }
     }
 }
 
+/// A scope directive's spec: `arguments`, and no options or content.
+const fn scope_spec(
+    names: &'static [&'static str],
+    doc: &'static str,
+    arguments: Arguments,
+) -> DirectiveSpec<'static> {
+    DirectiveSpec {
+        names,
+        doc,
+        arguments,
+        takes_content: false,
+        content_hint: None,
+        options: OptionSet::NONE,
+        accepts_further: false,
+    }
+}
+
+/// `.. program::`'s entry among the scope directives.
+const PROGRAM_SPEC: DirectiveSpec = scope_spec(
+    &["program"],
+    "Makes a program the one the options described below belong to.",
+    Arguments::ONE_TEXT,
+);
+
+/// `.. py:currentmodule::`'s entry among the scope directives.
+const CURRENT_MODULE_SPEC: DirectiveSpec = scope_spec(
+    &["currentmodule"],
+    "Makes a Python module the current one without describing it.",
+    Arguments::ONE_WORD,
+);
+
+/// `.. c:namespace::`'s entry among the scope directives.
+const NAMESPACE_SPEC: DirectiveSpec = scope_spec(
+    &["namespace"],
+    "Makes a C scope the current one, replacing every scope entered.",
+    Arguments::ONE_TEXT,
+);
+
+/// `.. c:namespace-push::`'s entry among the scope directives.
+const NAMESPACE_PUSH_SPEC: DirectiveSpec = scope_spec(
+    &["namespace-push"],
+    "Enters a nested C scope, which a `namespace-pop` leaves.",
+    Arguments::ONE_TEXT,
+);
+
+/// `.. c:namespace-pop::`'s entry among the scope directives.
+const NAMESPACE_POP_SPEC: DirectiveSpec = scope_spec(
+    &["namespace-pop"],
+    "Leaves the C scope the last `namespace-push` entered.",
+    Arguments::NONE,
+);
+
 /// Every scope directive: the domain its name is qualified in — `None` for
 /// `.. program::`, which is `std`-domain and bypasses `default_domain`
 /// entirely, exactly like `.. option::`/`.. cmdoption::` (see
-/// `resolve_domain_object_type`) — the name, and what it moves.
-const SCOPE_DIRECTIVES: &[(Option<Domain>, &str, ScopeDirective)] = &[
-    (None, "program", ScopeDirective::Program),
-    (
-        Some(Domain::Py),
-        "currentmodule",
-        ScopeDirective::CurrentModule,
-    ),
-    (Some(Domain::C), "namespace", ScopeDirective::Namespace),
-    (
-        Some(Domain::C),
-        "namespace-push",
-        ScopeDirective::NamespacePush,
-    ),
-    (
-        Some(Domain::C),
-        "namespace-pop",
-        ScopeDirective::NamespacePop,
-    ),
+/// `resolve_domain_object_type`) — and what it moves, spelled by its spec.
+const SCOPE_DIRECTIVES: &[(Option<Domain>, ScopeDirective)] = &[
+    (None, ScopeDirective::Program),
+    (Some(Domain::Py), ScopeDirective::CurrentModule),
+    (Some(Domain::C), ScopeDirective::Namespace),
+    (Some(Domain::C), ScopeDirective::NamespacePush),
+    (Some(Domain::C), ScopeDirective::NamespacePop),
 ];
 
 /// Which scope directive `name` spells under `default_domain`: an unqualified
@@ -107,8 +142,10 @@ pub(super) fn resolve_scope_directive(
     let find = |domain: Option<Domain>, name: &str| {
         SCOPE_DIRECTIVES
             .iter()
-            .find(|&&(row_domain, row_name, _)| row_domain == domain && row_name == name)
-            .map(|&(_, _, scope)| scope)
+            .find(|&&(row_domain, scope)| {
+                row_domain == domain && scope.spec().names.contains(&name)
+            })
+            .map(|&(_, scope)| scope)
     };
     if let Some(scope) = find(None, name) {
         return Some(scope);
@@ -117,10 +154,18 @@ pub(super) fn resolve_scope_directive(
     find(Some(domain), bare_name)
 }
 
+/// Every scope directive: the domain its name is qualified in, and its spec.
+pub(super) fn scope_directive_specs()
+-> impl Iterator<Item = (Option<Domain>, &'static DirectiveSpec<'static>)> {
+    SCOPE_DIRECTIVES
+        .iter()
+        .map(|&(domain, scope)| (domain, scope.spec()))
+}
+
 /// Every name a scope directive is written as, unqualified — what an entity
 /// schema's section may not be called.
 pub(super) fn scope_directive_names() -> impl Iterator<Item = &'static str> {
-    SCOPE_DIRECTIVES.iter().map(|&(_, name, _)| name)
+    scope_directive_specs().flat_map(|(_, spec)| spec.names.iter().copied())
 }
 
 /// Parses a `.. c:namespace::` argument. `NULL` and `0` (real Sphinx's two

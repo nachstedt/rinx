@@ -9,7 +9,7 @@
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::option_value::Classes;
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{Directive, Figure, FigureWidth, InlineNode, Node};
 
 use crate::blocks::parse_blocks;
@@ -148,13 +148,10 @@ fn split_caption_and_legend(
 pub(in crate::directives) const FIGURE_SPEC: DirectiveSpec = DirectiveSpec {
     names: &["figure"],
     doc: "A picture with a caption and a legend.",
-    shape: DirectiveShape {
-        arguments: Arguments::ONE_TEXT,
-        takes_options: true,
-        takes_content: true,
-        content_hint: None,
-    },
-    options: <FigureOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <FigureOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -224,7 +221,7 @@ mod tests {
         let written = crate::directives::reader::written_after_blank(body);
         let invocation = crate::directives::reader::test_invocation(
             "figure",
-            FIGURE_SPEC.shape,
+            &FIGURE_SPEC,
             argument,
             &written,
             &mut diagnostics,

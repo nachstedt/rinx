@@ -2,6 +2,7 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     CSignature, DescriptionFlags, Diagnostic, DiagnosticCode, DomainObjectBody, NameSource,
     NonEmptyVector, Span,
@@ -15,7 +16,7 @@ use super::member::parse_c_member;
 use super::struct_::parse_c_struct;
 use super::type_::parse_c_type;
 use super::union::parse_c_union;
-use crate::directives::options::directive_options;
+use crate::directives::options::{DirectiveOptions, directive_options};
 
 directive_options! {
     /// The options every `c` object type takes: Sphinx's `CObject`'s.
@@ -136,6 +137,28 @@ fn parse_c_signatures(
     }
     parsed
 }
+
+/// `.. c:function::`'s entry among the domain objects.
+pub(in crate::directives) const FUNCTION_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["function"],
+    doc: "Describes a C function.",
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <CObjectOption as DirectiveOptions>::OPTIONS,
+    accepts_further: false,
+};
+
+/// `.. c:macro::`'s entry among the domain objects.
+pub(in crate::directives) const MACRO_SPEC: DirectiveSpec = DirectiveSpec {
+    names: &["macro"],
+    doc: "Describes a C preprocessor macro.",
+    arguments: Arguments::ONE_TEXT,
+    takes_content: true,
+    content_hint: None,
+    options: <CObjectOption as DirectiveOptions>::OPTIONS,
+    accepts_further: false,
+};
 
 #[cfg(test)]
 mod tests {

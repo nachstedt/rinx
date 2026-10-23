@@ -1,5 +1,5 @@
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{Contents, ContentsBacklinks, ContentsOptions, Directive, TargetName};
 
 use crate::context::ParseCtx;
@@ -69,13 +69,10 @@ impl ChoiceValue for ContentsBacklinks {
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["contents"],
     doc: "A table of contents of this document's sections.",
-    shape: DirectiveShape {
-        arguments: Arguments::OPTIONAL_TEXT,
-        takes_options: true,
-        takes_content: false,
-        content_hint: None,
-    },
-    options: <ContentsOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::OPTIONAL_TEXT,
+    takes_content: false,
+    content_hint: None,
+    options: <ContentsOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -120,7 +117,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "contents",
-            SPEC.shape,
+            &SPEC,
             argument,
             body_lines,
             &mut diagnostics,

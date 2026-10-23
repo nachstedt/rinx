@@ -1,5 +1,5 @@
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
-use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
+use crate::directives::spec::{Arguments, DirectiveSpec};
 use std::num::NonZeroU32;
 
 use rinx_ast::{Directive, SectnumOptions};
@@ -57,13 +57,10 @@ fn parse_sectnum_options(
 pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
     names: &["sectnum", "section-numbering"],
     doc: "Numbers this document's sections.",
-    shape: DirectiveShape {
-        arguments: Arguments::NONE,
-        takes_options: true,
-        takes_content: false,
-        content_hint: None,
-    },
-    options: <SectnumOption as DirectiveOptions>::GROUPS,
+    arguments: Arguments::NONE,
+    takes_content: false,
+    content_hint: None,
+    options: <SectnumOption as DirectiveOptions>::OPTIONS,
     accepts_further: false,
 };
 
@@ -112,7 +109,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
         let invocation = crate::directives::reader::test_invocation(
             "sectnum",
-            SPEC.shape,
+            &SPEC,
             argument,
             body_lines,
             &mut diagnostics,

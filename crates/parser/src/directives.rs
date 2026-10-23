@@ -67,6 +67,7 @@ mod entity_flow;
 mod entity_pie;
 mod entity_section;
 mod entity_sequence;
+mod entity_spec;
 mod entity_table;
 mod entity_update;
 mod error_node;
@@ -96,7 +97,8 @@ mod toctree;
 mod uml;
 
 pub(super) use dispatch::try_parse_directive;
+pub use entity_spec::EntitySpec;
 pub use spec::{
-    Arguments, DirectiveShape, DirectiveSpec, OptionSpec, OptionSupport, OptionValue,
-    directive_specs, is_builtin_directive_name,
+    Arguments, DirectiveSpec, OptionSet, OptionSpec, OptionSupport, OptionValue, directive_specs,
+    domain_directive_specs, is_builtin_directive_name,
 };
