@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>html — HyperText Markup Language support — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Structured Markup Processing Tools"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 current">
+            <a href="html.html">html — HyperText Markup Language support</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="html.parser.html">html.parser — Simple HTML and XHTML parser</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="html.entities.html">html.entities — Definitions of HTML general entities</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.html">XML Processing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.etree.elementtree.html">xml.etree.ElementTree — The ElementTree XML API</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.dom.html">xml.dom — The Document Object Model API</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.dom.minidom.html">xml.dom.minidom — Minimal DOM implementation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.dom.pulldom.html">xml.dom.pulldom — Support for building partial DOM trees</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.sax.html">xml.sax — Support for SAX2 parsers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.sax.handler.html">xml.sax.handler — Base classes for SAX handlers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.sax.utils.html">xml.sax.saxutils — SAX Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.sax.reader.html">xml.sax.xmlreader — Interface for XML parsers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pyexpat.html">xml.parsers.expat — Fast XML parsing using Expat</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="markup.html">&larr; Structured Markup Processing Tools</a>
+        <a class="next" href="html.parser.html">html.parser — Simple HTML and XHTML parser &rarr;</a>
+      </nav>
+      
+      <h1 id="html-hypertext-markup-language-support"><code class="xref py module docutils literal">html</code> — HyperText Markup Language support</h1>
+<dl class="py module">
+  <dt id="py:module:html"><code class="sig-name">html</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/html/__init__.py`</p>
+<hr />
+<p>This module defines utilities to manipulate HTML.</p>
+<dl class="py function">
+  <dt id="py:function:html.escape"><code class="sig-name">escape(s, quote=True)</code></dt>
+  <dd><p>Convert the characters <code>&amp;</code>, <code>&lt;</code> and <code>&gt;</code> in string <em>s</em> to HTML-safe
+sequences.  Use this if you need to display text that might contain such
+characters in HTML.  If the optional flag <em>quote</em> is true (the default), the
+characters (<code>"</code>) and (<code>'</code>) are also translated; this helps for inclusion
+in an HTML attribute value delimited by quotes, as in <code>&lt;a href="..."&gt;</code>.
+If <em>quote</em> is set to false, the characters (<code>"</code>) and (<code>'</code>) are not
+translated.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:html.unescape"><code class="sig-name">unescape(s)</code></dt>
+  <dd><p>Convert all named and numeric character references (e.g. <code>&amp;gt;</code>,
+<code>&amp;#62;</code>, <code>&amp;#x3e;</code>) in the string <em>s</em> to the corresponding Unicode
+characters.  This function uses the rules defined by the HTML 5 standard
+for both valid and invalid character references, and the <a class="reference internal" href="html.entities.html#py:data:html.entities.html5"><code class="xref py data docutils literal">list of
+HTML 5 named character references</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<hr />
+<p>Submodules in the <code>html</code> package are:</p>
+<ul>
+<li><p><a class="reference internal" href="html.parser.html#py:module:html.parser" title="html.parser: A simple parser that can handle HTML and XHTML."><code class="xref py module docutils literal">html.parser</code></a> – HTML/XHTML parser with lenient parsing mode</p>
+</li>
+<li><p><a class="reference internal" href="html.entities.html#py:module:html.entities" title="html.entities: Definitions of HTML general entities."><code class="xref py module docutils literal">html.entities</code></a> – HTML entity definitions</p>
+</li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="markup.html">&larr; Structured Markup Processing Tools</a>
+        <a class="next" href="html.parser.html">html.parser — Simple HTML and XHTML parser &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
