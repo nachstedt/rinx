@@ -273,6 +273,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Keep manual checklists (e.g. the PR template) to what a human must judge; never list a check CI already enforces.
 - Remove a code path once its last caller is gone, together with the helpers and tests only it used, rather than keeping it for hypothetical callers.
 - Defer a known gap only to a roadmap step whose stated scope covers it; when none does, add a step of its own rather than stretching an unrelated one.
+- Leave a sibling case out of a feature only for a concrete technical reason; "not in the step's wording" or "a small extra" is no reason, so cover every case the existing machinery already answers.
 
 ## Python
 

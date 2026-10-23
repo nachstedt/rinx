@@ -9,6 +9,16 @@ use rinx_ast::{DocutilsPepNumber, InlineNode, RoleRefusal};
 
 use crate::inline::escapes::unescape;
 use crate::inline::regexes::PEP_REFERENCE_ROLE_REGEX;
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
+
+/// docutils' `:pep-reference:`, `:pep:`'s plain sibling. No `:external:`
+/// prefix and no domain, for the reason `:pep:` has none.
+pub(crate) const SPEC: RoleSpec = RoleSpec {
+    names: &["pep-reference"],
+    domains: &[],
+    external: ExternalPrefix::Unread,
+    doc: "Link a PEP by its number, without indexing it.",
+};
 
 /// Builds the `InlineNode` for a matched `:pep-reference:` role.
 ///

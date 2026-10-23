@@ -22,4 +22,5 @@ pub use directives::{
     directive_spec, directive_specs, domain_directive_specs, is_builtin_directive_name,
 };
 pub use entity_schema::load_entity_schema;
+pub use inline::{ExternalPrefix, RoleSpec, role_specs};
 pub use templating::rendered_source;

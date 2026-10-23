@@ -11,7 +11,18 @@
 use rinx_ast::{InlineNode, ScriptPosition};
 
 use crate::inline::regexes::SCRIPT_ROLE_REGEX;
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
 use crate::inline::typography::apply_smart_typography;
+
+/// `:sub:`/`:subscript:` and `:sup:`/`:superscript:`: one spec, since they
+/// are one construct whose name says which side of the line. No
+/// `:external:` prefix and no domain: they are markup, not a reference.
+pub(crate) const SPEC: RoleSpec = RoleSpec {
+    names: &["sub", "subscript", "sup", "superscript"],
+    domains: &[],
+    external: ExternalPrefix::Unread,
+    doc: "Show text as a subscript or superscript.",
+};
 
 /// Builds the `InlineNode` for a matched `:sub:`, `:subscript:`, `:sup:` or
 /// `:superscript:` role, carrying no classes of its own.

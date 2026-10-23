@@ -1,22 +1,60 @@
+use regex::Captures;
 use rinx_ast::{Domain, InlineNode, ObjectType};
 
-use crate::inline::regexes::DATA_ROLE_REGEX;
+use crate::inline::regexes::{C_MEMBER_ROLE_REGEX, PY_DATA_ROLE_REGEX};
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
 
 use super::super::target::parse_domain_object_target;
 
+/// `py`'s `:data:`, also spelled `:const:`.
+pub(crate) const PY_SPEC: RoleSpec = RoleSpec {
+    names: &["data", "const"],
+    domains: &[Domain::Py],
+    external: ExternalPrefix::Accepted,
+    doc: "Reference a module-level variable or constant.",
+};
+
+/// `c`'s `:member:`, also spelled `:data:` and `:var:`.
+pub(crate) const C_SPEC: RoleSpec = RoleSpec {
+    names: &["member", "data", "var"],
+    domains: &[Domain::C],
+    external: ExternalPrefix::Accepted,
+    doc: "Reference a C struct member or variable.",
+};
+
 /// Builds the `InlineNode` for a matched `:data:`/`:py:data:`/`:const:`/
-/// `:py:const:`/`:c:data:`/`:var:`/`:c:var:`/`:member:`/`:c:member:` role,
-/// falling back to plain text if the role doesn't resolve for the given
-/// domain (`const` is Python-only; `var`/`member` are C-only). `data`/`const`
-/// resolve to the same [`rinx_ast::PyObjectType::Data`] in the `py`
-/// domain, and `data`/`var`/`member` all resolve to the same
-/// [`rinx_ast::CObjectType::Member`] in the `c` domain — matching
-/// real Sphinx's C domain docs, which describe `:c:member:`/`:c:data:`/
-/// `:c:var:` as equivalent role spellings — so e.g. `:c:data:` and `:c:var:`
-/// targeting the same name link to the same `.. c:member::`/`.. c:var::`
-/// definition.
+/// `:py:const:` role — or a bare `:data:` in a `c` document, which
+/// [`C_SPEC`] names too and the default domain decides — falling back to
+/// plain text if the role doesn't resolve for the given domain (`const` is
+/// Python-only). `data`/`const` resolve to the same
+/// [`rinx_ast::PyObjectType::Data`] in the `py` domain.
 pub(crate) fn handle_data_match(m_str: &str, default_domain: Domain) -> InlineNode {
-    let caps = DATA_ROLE_REGEX.captures(m_str).unwrap();
+    data_reference(
+        &PY_DATA_ROLE_REGEX.captures(m_str).unwrap(),
+        m_str,
+        default_domain,
+    )
+}
+
+/// Builds the `InlineNode` for a matched `:member:`/`:c:member:`/
+/// `:c:data:`/`:var:`/`:c:var:` role, falling back to plain text if the
+/// role doesn't resolve for the given domain (`var`/`member` are C-only).
+/// `data`/`var`/`member` all resolve to the same
+/// [`rinx_ast::CObjectType::Member`] in the `c` domain — matching real
+/// Sphinx's C domain docs, which describe `:c:member:`/`:c:data:`/`:c:var:`
+/// as equivalent role spellings — so e.g. `:c:data:` and `:c:var:` targeting
+/// the same name link to the same `.. c:member::`/`.. c:var::` definition.
+pub(crate) fn handle_member_match(m_str: &str, default_domain: Domain) -> InlineNode {
+    data_reference(
+        &C_MEMBER_ROLE_REGEX.captures(m_str).unwrap(),
+        m_str,
+        default_domain,
+    )
+}
+
+/// The reference the role `caps` matched in `m_str` makes: of the object type
+/// its name means in its domain, or text when that domain has no such role.
+fn data_reference(caps: &Captures<'_>, m_str: &str, default_domain: Domain) -> InlineNode {
     let domain = caps
         .name("domain")
         .and_then(|m| m.as_str().parse::<Domain>().ok())
@@ -83,7 +121,7 @@ mod tests {
         // Given — real Sphinx documents `:c:member:`/`:c:data:`/`:c:var:` as
         // equivalent role spellings for the same object.
         let data_result = handle_data_match(":data:`errno`", Domain::C);
-        let var_result = handle_data_match(":var:`errno`", Domain::C);
+        let var_result = handle_member_match(":var:`errno`", Domain::C);
 
         // Then
         assert_eq!(data_result, var_result);
@@ -93,7 +131,7 @@ mod tests {
         // Given — `:c:member:` is the canonical spelling; `:c:data:`/`:c:var:`
         // are equivalent alternates.
         let data_result = handle_data_match(":data:`count`", Domain::C);
-        let member_result = handle_data_match(":member:`count`", Domain::C);
+        let member_result = handle_member_match(":member:`count`", Domain::C);
 
         // Then
         assert_eq!(data_result, member_result);
@@ -101,7 +139,7 @@ mod tests {
     #[test]
     fn test_handle_data_match_falls_back_to_text_when_domain_lacks_member_role() {
         // Given — `member` is C-only, so it doesn't resolve for `py`.
-        let result = handle_data_match(":member:`count`", Domain::Py);
+        let result = handle_member_match(":member:`count`", Domain::Py);
         assert_eq!(result, InlineNode::Text(":member:`count`".to_string()));
     }
     #[test]
@@ -116,7 +154,7 @@ mod tests {
     #[test]
     fn test_handle_data_match_falls_back_to_text_when_domain_lacks_var_role() {
         // Given — `var` is C-only, so it doesn't resolve for `py`.
-        let result = handle_data_match(":var:`errno`", Domain::Py);
+        let result = handle_member_match(":var:`errno`", Domain::Py);
         assert_eq!(result, InlineNode::Text(":var:`errno`".to_string()));
     }
     #[test]
@@ -229,7 +267,7 @@ mod tests {
         // resolve with `domain = Some("c")`, not fall through to a truncated
         // bare `:data:` match with `domain = None`.
         let result = handle_inline_match(
-            "data",
+            "member",
             ":c:data:`Py_mod_exec`",
             None,
             Domain::Py,
@@ -251,7 +289,7 @@ mod tests {
     #[test]
     fn test_handle_inline_match_data_variant_var_spelling_explicit_c_domain() {
         let result = handle_inline_match(
-            "data",
+            "member",
             ":c:var:`errno`",
             None,
             Domain::Py,
@@ -297,7 +335,7 @@ mod tests {
         // Given — `var` is C-only, so a bare `:var:` role in a library whose
         // default domain is `py` doesn't resolve.
         let result = handle_inline_match(
-            "data",
+            "member",
             ":var:`errno`",
             None,
             Domain::Py,

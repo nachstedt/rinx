@@ -10,7 +10,17 @@
 use rinx_ast::InlineNode;
 
 use crate::inline::regexes::TITLE_REFERENCE_ROLE_REGEX;
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
 use crate::inline::typography::apply_smart_typography;
+
+/// `:title-reference:`, also spelled `:title:` and `:t:`. No `:external:`
+/// prefix and no domain: it is markup, not a reference.
+pub(crate) const SPEC: RoleSpec = RoleSpec {
+    names: &["title-reference", "title", "t"],
+    domains: &[],
+    external: ExternalPrefix::Unread,
+    doc: "Show the title of a work, in italics.",
+};
 
 /// Builds the `InlineNode` for a matched `:title-reference:`, `:title:` or
 /// `:t:` role.

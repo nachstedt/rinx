@@ -10,6 +10,15 @@ use rinx_ast::{InlineNode, InventorySelector};
 
 use crate::explicit_title::split_optional_title;
 use crate::inline::regexes::ANY_ROLE_REGEX;
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
+
+/// The role this module reads, as the role table lists it.
+pub(crate) const SPEC: RoleSpec = RoleSpec {
+    names: &["any"],
+    domains: &[],
+    external: ExternalPrefix::Accepted,
+    doc: "Reference whatever one target names: a label, a document, a term, an option or a domain object.",
+};
 
 /// Builds the `InlineNode` for a matched `:any:` role.
 ///

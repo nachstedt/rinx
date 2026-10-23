@@ -1,9 +1,11 @@
 //! Per-domain-family role handlers dispatched to from
 //! [`super::handle_inline_match`]: the Python-only roles (`:func:`/`:mod:`/
 //! `:data:`/`:meth:`/`:class:`/`:attr:`/`:exc:`), the C-only roles
-//! (`:macro:`/`:struct:`/`:union:`/`:type:`), and the one `std`-domain role
-//! (`:option:`), plus the domain-agnostic target-parsing logic shared by all
-//! of them.
+//! (`:macro:`/`:struct:`/`:union:`/`:type:`), and the `std`-domain roles
+//! naming a target of their own kind (`:ref:`/`:term:`/`:option:`/
+//! `:program:`), plus the domain-agnostic target-parsing logic shared by all
+//! of them. Each handler's module also holds its role's [`spec::RoleSpec`],
+//! the data `super::regexes` builds its pattern from and completion lists.
 //!
 //! [`math`], [`code`], [`script`], [`title_reference`], [`custom`], [`any`],
 //! [`doc`], [`download`], [`registry`], [`pep_reference`], [`rfc_reference`]
@@ -30,6 +32,7 @@ pub(super) mod py;
 pub(super) mod registry;
 pub(super) mod rfc_reference;
 pub(super) mod script;
+pub(super) mod spec;
 pub(super) mod std_;
 pub(super) mod target;
 pub(super) mod title_reference;

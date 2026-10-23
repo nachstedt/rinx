@@ -17,7 +17,7 @@ use super::dispatch::handle_inline_match;
 use super::escapes::{is_escaped_at, unescape};
 use super::markup::{InlineMarkup, opening_search_start};
 use super::punctuation::{can_follow_end_string, can_precede_start_string};
-use super::regexes::SIMPLE_ROLE_REGEXES;
+use super::regexes::scan_patterns;
 use super::roles::custom::handle_custom_role_match;
 use super::roles::entity::handle_entity_role_match;
 use super::roles::title_reference::title_reference_node;
@@ -244,11 +244,11 @@ fn spell_role(role: &str, body: &str) -> String {
 /// counts only if the schema declares it or the document has defined it by
 /// now: otherwise it would stay text, which is not a role.
 fn matching_role_kind(spelled: &str, ctx: &ParseCtx<'_>) -> Option<&'static str> {
-    let kind = SIMPLE_ROLE_REGEXES.iter().find_map(|(regex, kind)| {
+    let kind = scan_patterns().find_map(|(regex, kind)| {
         regex
             .find(spelled)
             .is_some_and(|m| m.start() == 0 && m.end() == spelled.len())
-            .then_some(*kind)
+            .then_some(kind)
     })?;
     let known = kind != "named_role"
         || handle_entity_role_match(spelled, ctx.schema).is_some()

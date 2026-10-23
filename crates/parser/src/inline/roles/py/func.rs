@@ -1,8 +1,17 @@
 use rinx_ast::{Domain, InlineNode, ObjectType};
 
 use crate::inline::regexes::FUNC_ROLE_REGEX;
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
 
 use super::super::target::parse_domain_object_target;
+
+/// The role this module reads, as the role table lists it.
+pub(crate) const SPEC: RoleSpec = RoleSpec {
+    names: &["func"],
+    domains: &[Domain::Py, Domain::C],
+    external: ExternalPrefix::Accepted,
+    doc: "Reference a function.",
+};
 
 /// Builds the `InlineNode` for a matched `:func:`/`:py:func:`/`:c:func:` role.
 pub(crate) fn handle_func_match(m_str: &str, default_domain: Domain) -> InlineNode {

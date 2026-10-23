@@ -14,6 +14,16 @@ use crate::directives::index_directive::{parse_index_line, parse_typed_entry, st
 use crate::explicit_title::split_optional_title;
 use crate::inline::escapes::unescape;
 use crate::inline::regexes::INDEX_ROLE_REGEX;
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
+
+/// `:index:`, which indexes the place it is written and shows its text. No
+/// `:external:` prefix and no domain: it names no target to look up.
+pub(crate) const SPEC: RoleSpec = RoleSpec {
+    names: &["index"],
+    domains: &[],
+    external: ExternalPrefix::Unread,
+    doc: "Add an entry to the general index, showing its text.",
+};
 
 /// Builds the `InlineNode` for a matched `:index:` role.
 ///

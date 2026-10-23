@@ -8,7 +8,7 @@ use super::dispatch::handle_inline_match;
 use super::escapes::{EscapedText, unescape, unescape_keeping_backslashes};
 use super::interpreted::{handle_interpreted_text, prefix_role_trailer, refused};
 use super::markup::{InlineMarkup, find_inline_markup};
-use super::regexes::SIMPLE_ROLE_REGEXES;
+use super::regexes::scan_patterns;
 use super::source_map::SourceMap;
 use super::typography::apply_smart_typography;
 use crate::context::ParseCtx;
@@ -44,7 +44,7 @@ pub(crate) fn parse_inline_text_mapped(
         let remaining = &paragraph_text[last_match_end..];
 
         let mut all_matches = Vec::new();
-        for (regex, kind) in SIMPLE_ROLE_REGEXES {
+        for (regex, kind) in scan_patterns() {
             if let Some(m) = regex.find(remaining) {
                 all_matches.push((m.start(), m.end(), Candidate::Role(kind)));
             }

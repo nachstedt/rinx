@@ -1,8 +1,17 @@
 use rinx_ast::{Domain, InlineNode, ObjectType};
 
 use crate::inline::regexes::UNION_ROLE_REGEX;
+use crate::inline::roles::spec::{ExternalPrefix, RoleSpec};
 
 use super::super::target::parse_domain_object_target;
+
+/// The role this module reads, as the role table lists it.
+pub(crate) const SPEC: RoleSpec = RoleSpec {
+    names: &["union"],
+    domains: &[Domain::C],
+    external: ExternalPrefix::Accepted,
+    doc: "Reference a C union.",
+};
 
 /// Builds the `InlineNode` for a matched `:union:`/`:c:union:` role, falling
 /// back to plain text if the role doesn't resolve for the given domain
