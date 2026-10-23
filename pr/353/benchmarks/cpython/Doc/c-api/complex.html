@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Complex Number Objects — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python&#x2f;C API Reference Manual</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python&#x2f;C API Reference Manual"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stable.html">C API Stability</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="veryhigh.html">The Very High Level Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="refcounting.html">Reference Counting</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Exception Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="extension-modules.html">Defining extension modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="utilities.html">Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="abstract.html">Abstract Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="concrete.html">Concrete Objects Layer</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Concrete Objects Layer"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="concrete.html#fundamental-objects">Fundamental Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3 ancestor has-children">
+            <a href="concrete.html#numeric-objects">Numeric Objects</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Numeric Objects"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="long.html">Integer Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="bool.html">Boolean Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="float.html">Floating-Point Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4 current has-children">
+            <a href="complex.html">Complex Number Objects</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Complex Number Objects"></span></summary>
+              <ul>
+                
+          <li class="toctree-l5">
+            <a href="complex.html#complex-numbers-as-c-structures">Complex Numbers as C Structures</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="complex.html#complex-numbers-as-python-objects">Complex Numbers as Python Objects</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#sequence-objects">Sequence Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#container-objects">Container Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#function-objects">Function Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#other-objects">Other Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#c-api-for-extension-modules">C API for extension modules</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init.html">Initialization, Finalization, and Threads</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init_config.html">Python Initialization Configuration</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="memory.html">Memory Management</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="objimpl.html">Object Implementation Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="apiabiversion.html">API and ABI Versioning</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="monitoring.html">Monitoring C API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="float.html">&larr; Floating-Point Objects</a>
+        <a class="next" href="bytes.html">Bytes Objects &rarr;</a>
+      </nav>
+      
+      <a id="complexobjects"></a>
+<h1 id="complex-number-objects">Complex Number Objects</h1>
+<span id="index-0"></span>
+<p>Python's complex number objects are implemented as two distinct types when
+viewed from the C API:  one is the Python object exposed to Python programs, and
+the other is a C structure which represents the actual complex number value.
+The API provides functions for working with both.</p>
+<h2 id="complex-numbers-as-c-structures">Complex Numbers as C Structures</h2>
+<p>Note that the functions which accept these structures as parameters and return
+them as results do so <em>by value</em> rather than dereferencing them through
+pointers.  This is consistent throughout the API.</p>
+<dl class="c type">
+  <dt id="c:type:py_complex"><code class="sig-name">Py_complex</code></dt>
+  <dd><p>The C structure which corresponds to the value portion of a Python complex
+number object.  Most of the functions for dealing with complex number objects
+use structures of this type as input or output values, as appropriate.</p>
+<dl class="c member">
+  <dt id="c:member:py_complex.real"><code class="sig-name">double real</code></dt>
+  <dt id="c:member:py_complex.imag"><code class="sig-name">double imag</code></dt>
+  <dd></dd>
+</dl>
+<p>The structure is defined as:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-storage hl-type hl-c">typedef</span> <span class="hl-storage hl-type hl-c">struct</span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-storage hl-type hl-c">double</span> real<span class="hl-punctuation hl-terminator hl-c">;</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-storage hl-type hl-c">double</span> imag<span class="hl-punctuation hl-terminator hl-c">;</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span> <span class="hl-entity hl-name hl-type hl-typedef hl-c">Py_complex</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></pre></div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:_py_c_sum"><code class="sig-name">Py_complex _Py_c_sum(Py_complex left, Py_complex right)</code></dt>
+  <dd><p>Return the sum of two complex numbers, using the C <a class="reference internal" href="complex.html#c:type:py_complex"><code class="xref c type docutils literal">Py_complex</code></a>
+representation.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:_py_c_diff"><code class="sig-name">Py_complex _Py_c_diff(Py_complex left, Py_complex right)</code></dt>
+  <dd><p>Return the difference between two complex numbers, using the C
+<a class="reference internal" href="complex.html#c:type:py_complex"><code class="xref c type docutils literal">Py_complex</code></a> representation.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:_py_c_neg"><code class="sig-name">Py_complex _Py_c_neg(Py_complex num)</code></dt>
+  <dd><p>Return the negation of the complex number <em>num</em>, using the C
+<a class="reference internal" href="complex.html#c:type:py_complex"><code class="xref c type docutils literal">Py_complex</code></a> representation.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:_py_c_prod"><code class="sig-name">Py_complex _Py_c_prod(Py_complex left, Py_complex right)</code></dt>
+  <dd><p>Return the product of two complex numbers, using the C <a class="reference internal" href="complex.html#c:type:py_complex"><code class="xref c type docutils literal">Py_complex</code></a>
+representation.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:_py_c_quot"><code class="sig-name">Py_complex _Py_c_quot(Py_complex dividend, Py_complex divisor)</code></dt>
+  <dd><p>Return the quotient of two complex numbers, using the C <a class="reference internal" href="complex.html#c:type:py_complex"><code class="xref c type docutils literal">Py_complex</code></a>
+representation.</p>
+<p>If <em>divisor</em> is null, this method returns zero and sets
+<a href="#" class="broken-link"><code class="xref c member docutils literal">errno</code></a> to <code class="xref c macro docutils literal">EDOM</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:_py_c_pow"><code class="sig-name">Py_complex _Py_c_pow(Py_complex num, Py_complex exp)</code></dt>
+  <dd><p>Return the exponentiation of <em>num</em> by <em>exp</em>, using the C <a class="reference internal" href="complex.html#c:type:py_complex"><code class="xref c type docutils literal">Py_complex</code></a>
+representation.</p>
+<p>If <em>num</em> is null and <em>exp</em> is not a positive real number,
+this method returns zero and sets <a href="#" class="broken-link"><code class="xref c member docutils literal">errno</code></a> to <code class="xref c macro docutils literal">EDOM</code>.</p>
+<p>Set <a href="#" class="broken-link"><code class="xref c member docutils literal">errno</code></a> to <code class="xref c macro docutils literal">ERANGE</code> on overflows.</p>
+</dd>
+</dl>
+<h2 id="complex-numbers-as-python-objects">Complex Numbers as Python Objects</h2>
+<dl class="c type">
+  <dt id="c:type:pycomplexobject"><code class="sig-name">PyComplexObject</code></dt>
+  <dd><p>This subtype of <a class="reference internal" href="structures.html#c:type:pyobject"><code class="xref c type docutils literal">PyObject</code></a> represents a Python complex number object.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pycomplex_type"><code class="sig-name">PyTypeObject PyComplex_Type</code></dt>
+  <dd><p>This instance of <a class="reference internal" href="type.html#c:type:pytypeobject"><code class="xref c type docutils literal">PyTypeObject</code></a> represents the Python complex number
+type. It is the same object as <a class="reference internal" href="../library/functions.html#py:class:complex"><code class="xref py class docutils literal">complex</code></a> in the Python layer.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycomplex_check"><code class="sig-name">int PyComplex_Check(PyObject *p)</code></dt>
+  <dd><p>Return true if its argument is a <a class="reference internal" href="complex.html#c:type:pycomplexobject"><code class="xref c type docutils literal">PyComplexObject</code></a> or a subtype of
+<a class="reference internal" href="complex.html#c:type:pycomplexobject"><code class="xref c type docutils literal">PyComplexObject</code></a>.  This function always succeeds.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycomplex_checkexact"><code class="sig-name">int PyComplex_CheckExact(PyObject *p)</code></dt>
+  <dd><p>Return true if its argument is a <a class="reference internal" href="complex.html#c:type:pycomplexobject"><code class="xref c type docutils literal">PyComplexObject</code></a>, but not a subtype of
+<a class="reference internal" href="complex.html#c:type:pycomplexobject"><code class="xref c type docutils literal">PyComplexObject</code></a>.  This function always succeeds.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycomplex_fromccomplex"><code class="sig-name">PyObject* PyComplex_FromCComplex(Py_complex v)</code></dt>
+  <dd><p>Create a new Python complex number object from a C <a class="reference internal" href="complex.html#c:type:py_complex"><code class="xref c type docutils literal">Py_complex</code></a> value.
+Return <code>NULL</code> with an exception set on error.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycomplex_fromdoubles"><code class="sig-name">PyObject* PyComplex_FromDoubles(double real, double imag)</code></dt>
+  <dd><p>Return a new <a class="reference internal" href="complex.html#c:type:pycomplexobject"><code class="xref c type docutils literal">PyComplexObject</code></a> object from <em>real</em> and <em>imag</em>.
+Return <code>NULL</code> with an exception set on error.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycomplex_realasdouble"><code class="sig-name">double PyComplex_RealAsDouble(PyObject *op)</code></dt>
+  <dd><p>Return the real part of <em>op</em> as a C :c:expr:`double`.</p>
+<p>If <em>op</em> is not a Python complex number object but has a
+<a class="reference internal" href="../reference/datamodel.html#py:method:object.__complex__"><code class="xref py method docutils literal">__complex__</code></a> method, this method will first be called to
+convert <em>op</em> to a Python complex number object.  If <code class="xref py method docutils literal">__complex__</code> is
+not defined then it falls back to call <a class="reference internal" href="float.html#c:function:pyfloat_asdouble"><code class="xref c function docutils literal">PyFloat_AsDouble</code></a> and
+returns its result.</p>
+<p>Upon failure, this method returns <code>-1.0</code> with an exception set, so one
+should call <a class="reference internal" href="exceptions.html#c:function:pyerr_occurred"><code class="xref c function docutils literal">PyErr_Occurred</code></a> to check for errors.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Use <a class="reference internal" href="../reference/datamodel.html#py:method:object.__complex__"><code class="xref py method docutils literal">__complex__</code></a> if available.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycomplex_imagasdouble"><code class="sig-name">double PyComplex_ImagAsDouble(PyObject *op)</code></dt>
+  <dd><p>Return the imaginary part of <em>op</em> as a C :c:expr:`double`.</p>
+<p>If <em>op</em> is not a Python complex number object but has a
+<a class="reference internal" href="../reference/datamodel.html#py:method:object.__complex__"><code class="xref py method docutils literal">__complex__</code></a> method, this method will first be called to
+convert <em>op</em> to a Python complex number object.  If <code class="xref py method docutils literal">__complex__</code> is
+not defined then it falls back to call <a class="reference internal" href="float.html#c:function:pyfloat_asdouble"><code class="xref c function docutils literal">PyFloat_AsDouble</code></a> and
+returns <code>0.0</code> on success.</p>
+<p>Upon failure, this method returns <code>-1.0</code> with an exception set, so one
+should call <a class="reference internal" href="exceptions.html#c:function:pyerr_occurred"><code class="xref c function docutils literal">PyErr_Occurred</code></a> to check for errors.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Use <a class="reference internal" href="../reference/datamodel.html#py:method:object.__complex__"><code class="xref py method docutils literal">__complex__</code></a> if available.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pycomplex_asccomplex"><code class="sig-name">Py_complex PyComplex_AsCComplex(PyObject *op)</code></dt>
+  <dd><p>Return the <a class="reference internal" href="complex.html#c:type:py_complex"><code class="xref c type docutils literal">Py_complex</code></a> value of the complex number <em>op</em>.</p>
+<p>If <em>op</em> is not a Python complex number object but has a <a class="reference internal" href="../reference/datamodel.html#py:method:object.__complex__"><code class="xref py method docutils literal">__complex__</code></a>
+method, this method will first be called to convert <em>op</em> to a Python complex
+number object.  If <code class="xref py method docutils literal">__complex__</code> is not defined then it falls back to
+<a class="reference internal" href="../reference/datamodel.html#py:method:object.__float__"><code class="xref py method docutils literal">__float__</code></a>.  If <code class="xref py method docutils literal">__float__</code> is not defined then it falls back
+to <a class="reference internal" href="../reference/datamodel.html#py:method:object.__index__"><code class="xref py method docutils literal">__index__</code></a>.</p>
+<p>Upon failure, this method returns <a class="reference internal" href="complex.html#c:type:py_complex"><code class="xref c type docutils literal">Py_complex</code></a>
+with <a class="reference internal" href="complex.html#c:member:py_complex.real"><code class="xref c member docutils literal">real</code></a> set to <code>-1.0</code> and with an exception set, so one
+should call <a class="reference internal" href="exceptions.html#c:function:pyerr_occurred"><code class="xref c function docutils literal">PyErr_Occurred</code></a> to check for errors.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
+<p>Use <a class="reference internal" href="../reference/datamodel.html#py:method:object.__index__"><code class="xref py method docutils literal">__index__</code></a> if available.</p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="float.html">&larr; Floating-Point Objects</a>
+        <a class="next" href="bytes.html">Bytes Objects &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
