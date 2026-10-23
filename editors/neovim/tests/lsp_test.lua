@@ -87,6 +87,14 @@ local labels = vim.tbl_map(function(item)
 end, items)
 check('completion lists the label', vim.tbl_contains(labels, 'install'), labels)
 
+-- Completion of the unknown directive's name lists the directives rinx takes.
+local directives = request_until_answered('textDocument/completion', at(9, 4))
+local directive_items = directives and (directives.items or directives) or {}
+local directive_labels = vim.tbl_map(function(item)
+  return item.label
+end, directive_items)
+check('completion lists the directives', vim.tbl_contains(directive_labels, 'figure'), directive_labels)
+
 if failures > 0 then
   -- `vim.lsp.log.get_filename` since 0.11; `vim.lsp.get_log_path` before.
   local path = (vim.lsp.log.get_filename or vim.lsp.get_log_path)()

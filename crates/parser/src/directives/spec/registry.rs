@@ -7,9 +7,13 @@
 //! of a directive's syntax can share it; the pairing with behaviour lives
 //! here, in the entry.
 
-use crate::directives::domains::object_type::{object_directive_names, object_directive_specs};
+use crate::directives::domains::object_type::{
+    object_directive_names, object_directive_specs, object_spec, resolve_domain_object_type,
+};
 use crate::directives::invocation::{DirectiveInvocation, ParseState};
-use crate::directives::scope::{scope_directive_names, scope_directive_specs};
+use crate::directives::scope::{
+    resolve_scope_directive, scope_directive_names, scope_directive_specs,
+};
 use crate::directives::{
     admonitions, button_link, code_block, contents, data_table, default_role, doctest, dropdown,
     entity_bar, entity_flow, entity_pie, entity_sequence, entity_table, entity_update, glossary,
@@ -169,6 +173,27 @@ pub(crate) fn registered_directive(name: &str) -> Option<&'static RegisteredDire
     DIRECTIVES
         .iter()
         .find(|directive| directive.spec.names.contains(&name))
+}
+
+/// The spec of the directive written as `name` where `default_domain` is the
+/// default domain, resolved as the dispatcher resolves it: a domain object or
+/// scope directive first, then a directive of the table — `None` for an
+/// entity type's name, which the schema's [`EntitySpec`] answers, and for an
+/// unknown one.
+///
+/// [`EntitySpec`]: crate::directives::entity_spec::EntitySpec
+#[must_use]
+pub fn directive_spec(
+    name: &str,
+    default_domain: Domain,
+) -> Option<&'static DirectiveSpec<'static>> {
+    if let Some(object_type) = resolve_domain_object_type(name, default_domain) {
+        return Some(object_spec(object_type));
+    }
+    if let Some(scope) = resolve_scope_directive(name, default_domain) {
+        return Some(scope.spec());
+    }
+    registered_directive(name).map(|directive| directive.spec)
 }
 
 /// Reports whether `name` is a directive this build already understands.
@@ -519,6 +544,42 @@ mod tests {
         );
         assert!(spec_of("currentmodule").option_specs().next().is_none());
         assert!(!spec_of("currentmodule").takes_options());
+    }
+
+    #[test]
+    fn test_directive_spec_resolves_a_bare_object_name_against_the_default_domain() {
+        // Given / When
+        let in_py = directive_spec("function", Domain::Py).map(|spec| spec.doc);
+        let in_c = directive_spec("function", Domain::C).map(|spec| spec.doc);
+
+        // Then
+        assert_eq!(in_py, Some("Describes a Python function."));
+        assert_eq!(in_c, Some("Describes a C function."));
+    }
+
+    #[test]
+    fn test_directive_spec_resolves_qualified_scope_and_table_names() {
+        // Given / When / Then
+        assert_eq!(
+            directive_spec("c:member", Domain::Py).map(|spec| spec.names),
+            Some(&["member", "var"][..])
+        );
+        assert_eq!(
+            directive_spec("currentmodule", Domain::Py).map(|spec| spec.names),
+            Some(&["currentmodule"][..])
+        );
+        assert_eq!(
+            directive_spec("needtable", Domain::C).map(|spec| spec.names),
+            Some(entity_table::SPEC.names)
+        );
+    }
+
+    #[test]
+    fn test_directive_spec_answers_nothing_for_an_unknown_or_entity_name() {
+        // Given / When / Then
+        assert!(directive_spec("req", Domain::Py).is_none());
+        assert!(directive_spec("classmethod", Domain::C).is_none());
+        assert!(directive_spec("cpp:function", Domain::Py).is_none());
     }
 
     #[test]

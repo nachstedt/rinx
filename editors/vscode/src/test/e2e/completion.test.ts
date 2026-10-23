@@ -70,3 +70,41 @@ suite('Reference completion (e2e)', () => {
         assert.strictEqual(document.detail, 'Installing');
     });
 });
+
+suite('Directive completion (e2e)', () => {
+    teardown(async () => {
+        await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    });
+
+    test('a marker lists the directives with what each is for', async () => {
+        // Given — the cursor stands after ".. no".
+        const directives = workspaceFile('directives.rst');
+        await vscode.window.showTextDocument(directives);
+        const api = await rinx();
+        await waitFor('the index to be ready', () => api.indexStatus()?.state === 'ready');
+
+        // When
+        const items = await completionsAt(directives, new vscode.Position(3, 5));
+
+        // Then
+        const note = items.find((item) => labelOf(item) === 'note');
+        assert.ok(note, `note among ${JSON.stringify(items.map(labelOf))}`);
+        assert.ok(note.insertText instanceof vscode.SnippetString, 'the name is written as a snippet');
+    });
+
+    test('an option line lists the options the directive takes', async () => {
+        // Given — the cursor stands after ":max" below ".. toctree::".
+        const directives = workspaceFile('directives.rst');
+        await vscode.window.showTextDocument(directives);
+        const api = await rinx();
+        await waitFor('the index to be ready', () => api.indexStatus()?.state === 'ready');
+
+        // When
+        const items = await completionsAt(directives, new vscode.Position(1, 7));
+
+        // Then
+        const maxdepth = items.find((item) => labelOf(item) === 'maxdepth');
+        assert.ok(maxdepth, `maxdepth among ${JSON.stringify(items.map(labelOf))}`);
+        assert.strictEqual(maxdepth.detail, 'How many heading levels the tree shows; zero or less shows all.');
+    });
+});

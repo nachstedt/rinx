@@ -13,6 +13,7 @@
 
 use rinx_entity::{AttributeType, EntityType, ID_OPTION};
 
+use super::entity_update::PROTECTED_FIELDS;
 use super::spec::{Arguments, DirectiveSpec, OptionSet, OptionSpec, OptionSupport, OptionValue};
 
 /// The spec of one entity type the schema declares.
@@ -65,6 +66,14 @@ impl<'s> EntitySpec<'s> {
         }
     }
 
+    /// The fields of the type an `.. entity-update::` may change: its
+    /// attributes and relations, but no identity field.
+    pub fn updatable_fields(&self) -> impl Iterator<Item = &OptionSpec<'s>> {
+        self.options
+            .iter()
+            .filter(|option| !PROTECTED_FIELDS.contains(&option.name))
+    }
+
     /// The type's spec, over the options built from it.
     #[must_use]
     pub fn spec(&self) -> DirectiveSpec<'_> {
@@ -86,9 +95,8 @@ impl<'s> EntitySpec<'s> {
 /// What an attribute of `value_type` is written as.
 fn attribute_value(value_type: &AttributeType) -> OptionValue<'_> {
     match value_type {
-        AttributeType::String { .. }
-        | AttributeType::Text { .. }
-        | AttributeType::StringList { .. } => OptionValue::Text,
+        AttributeType::String { .. } | AttributeType::Text { .. } => OptionValue::Text,
+        AttributeType::StringList { .. } => OptionValue::TextList,
         AttributeType::Int => OptionValue::Integer,
         AttributeType::Bool => OptionValue::Flag,
         AttributeType::Enum { values } => OptionValue::Declared(values),
@@ -213,6 +221,29 @@ mod tests {
     }
 
     #[test]
+    fn test_updatable_fields_leave_out_the_identity_fields() {
+        // Given — a `title` attribute is an identity field too
+        let mut entity_type = requirement();
+        entity_type.attributes.push(AttributeSchema {
+            name: "title".to_string(),
+            label: None,
+            value_type: AttributeType::string(),
+            required: false,
+            default: None,
+        });
+
+        // When
+        let entity_spec = EntitySpec::new(&entity_type);
+        let names: Vec<&str> = entity_spec
+            .updatable_fields()
+            .map(|option| option.name)
+            .collect();
+
+        // Then
+        assert_eq!(names, ["status", "tags", "links"]);
+    }
+
+    #[test]
     fn test_attribute_value_names_what_each_attribute_type_is_written_as() {
         // Given / When / Then
         assert!(matches!(
@@ -221,7 +252,7 @@ mod tests {
         ));
         assert!(matches!(
             attribute_value(&AttributeType::string_list()),
-            OptionValue::Text
+            OptionValue::TextList
         ));
         assert!(matches!(
             attribute_value(&AttributeType::Int),

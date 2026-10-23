@@ -34,6 +34,7 @@ pub use document_index::analyze;
 // allowed to share; re-exported here so the worker's existing import keeps
 // working.
 pub use element_numbering::assign_element_numbers;
+pub use entity_update_apply::matched_entities;
 pub use nav_diagnostics::DocumentDiagnostics;
 pub use project_index::{
     IndexSettings, ProjectIndexBuild, build_project_index, build_project_index_from_analyses,

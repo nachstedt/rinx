@@ -41,7 +41,8 @@ use super::options::{DirectiveOptions, OptionLine, OptionRead, directive_options
 /// because `EntityRecord` keeps a denormalized `title` field separate from
 /// `attributes["title"]`; allowing `Set` on the attribute alone would desync
 /// the two. See `docs/decisions/019-entity-update.md`.
-const PROTECTED_FIELDS: [&str; 5] = ["id", "type", "type_name", "docname", "title"];
+pub(in crate::directives) const PROTECTED_FIELDS: [&str; 5] =
+    ["id", "type", "type_name", "docname", "title"];
 
 directive_options! {
     /// The option `.. entity-update::` lists: `:strict:`. Every other line is

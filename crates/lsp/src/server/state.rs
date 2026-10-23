@@ -61,7 +61,9 @@ use super::inventories::InventoryFetches;
 use super::projects::ProjectId;
 use super::scan::ScanEvent;
 use crate::code_action::quick_fixes;
-use crate::completion::{completion_items, role_at};
+use crate::completion::{
+    DirectiveVocabulary, TextFormat, completion_items, directive_at, directive_items, role_at,
+};
 use crate::definition::reference_definition;
 use crate::diagnostics::{ParsedSource, diagnose_source, parse_source};
 use crate::documents::DocumentStore;
@@ -118,6 +120,8 @@ pub struct ServerState {
     progress_supported: bool,
     /// Whether the client takes a definition as a link from the reference.
     definition_links: bool,
+    /// How the client takes a completion's text.
+    completion_format: TextFormat,
     /// Whether the client watches files for the server when asked to.
     watched_files: bool,
     /// The scan's progress while one runs.
@@ -205,6 +209,7 @@ impl ServerState {
             scan_elapsed: None,
             progress_supported: false,
             definition_links: false,
+            completion_format: TextFormat::Plain,
             watched_files: false,
             scan: None,
             next_request_id: 1,
@@ -234,6 +239,14 @@ impl ServerState {
     #[must_use]
     pub fn with_definition_links(mut self, definition_links: bool) -> Self {
         self.definition_links = definition_links;
+        self
+    }
+
+    /// This server, writing a completion's text in `completion_format`: a
+    /// directive's name as a snippet for a client taking one.
+    #[must_use]
+    pub fn with_completion_format(mut self, completion_format: TextFormat) -> Self {
+        self.completion_format = completion_format;
         self
     }
 
@@ -454,10 +467,11 @@ impl ServerState {
         messages
     }
 
-    /// The completion of the reference role at `position` in the open
-    /// document `uri`, from its project's index — or `None` when the cursor
-    /// is in no role completion answers for, or the document is not open or
-    /// is in no project.
+    /// The completion at `position` in the open document `uri`: of the
+    /// reference role the cursor is in, from its project's index, or else of
+    /// the directive name, option or option value it is typing, from the
+    /// parser's specs — or `None` when it is in neither, or the document is
+    /// not open or is in no project.
     ///
     /// The list is incomplete while the workspace scan runs, so the client
     /// asks again rather than filtering a list missing most documents.
@@ -467,28 +481,50 @@ impl ServerState {
         position: lsp_types::Position,
     ) -> Option<CompletionResponse> {
         let text = &self.documents.get(uri)?.text;
-        let line = text.lines().nth(position.line as usize).unwrap_or_default();
+        let lines: Vec<&str> = text.lines().collect();
+        let line_index = position.line as usize;
+        let line = lines.get(line_index).copied().unwrap_or_default();
         let (project, doc_path) = self.locate(&file_path(uri)?)?;
-        let schema = Arc::clone(&self.projects.get(&project)?.model().settings.parse.schema);
-        let context = role_at(
-            line,
-            char_index_of(line, position.character, self.encoding),
-            &|name| schema.role(name).is_some(),
-        )?;
+        // The document's own library's settings, as the parser reads it: a
+        // Bazel site's libraries may declare different schemas and domains.
+        let settings = self
+            .projects
+            .get(&project)?
+            .model()
+            .parse_settings(Some(&doc_path));
+        let schema = Arc::clone(&settings.schema);
+        let domain = settings.domain;
+        let cursor = char_index_of(line, position.character, self.encoding);
+        let encoding = self.encoding;
         let at = |index: usize| {
             let column = u32::try_from(index + 1).unwrap_or(u32::MAX);
             to_lsp_position(
                 rinx_ast::Position::new(position.line + 1, column),
                 line,
-                self.encoding,
+                encoding,
             )
         };
-        let range = lsp_types::Range::new(at(context.replace.start), at(context.replace.end));
         let is_incomplete = self.scan.is_some();
-        let index = self.projects.get_mut(&project)?.project_index();
+        let items = if let Some(context) =
+            role_at(line, cursor, &|name| schema.role(name).is_some())
+        {
+            let range = lsp_types::Range::new(at(context.replace.start), at(context.replace.end));
+            let index = self.projects.get_mut(&project)?.project_index();
+            completion_items(index, &schema, &doc_path, &context, range)
+        } else {
+            let context = directive_at(&lines, line_index, cursor)?;
+            let format = self.completion_format;
+            let index = self.projects.get_mut(&project)?.project_index();
+            let vocabulary = DirectiveVocabulary {
+                domain,
+                schema: &schema,
+                index,
+            };
+            directive_items(&context, &vocabulary, &at, format)
+        };
         Some(CompletionResponse::List(CompletionList {
             is_incomplete,
-            items: completion_items(index, &schema, &doc_path, &context, range),
+            items,
         }))
     }
 

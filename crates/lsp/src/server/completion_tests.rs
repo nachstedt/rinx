@@ -1,6 +1,7 @@
-//! Completing a `:ref:` or `:doc:` target: the capability the server
-//! announces, and the items a request is answered with from the workspace
-//! index.
+//! Completing a `:ref:` or `:doc:` target, and a directive's name, option or
+//! option value: the capability the server announces, and the items a
+//! request is answered with from the workspace index and the directive
+//! specs.
 
 use super::test_support::*;
 use lsp_types::request::Completion;
@@ -74,7 +75,7 @@ fn test_initialize_result_announces_completion_on_its_trigger_characters() {
     else {
         panic!("completion announced with trigger characters");
     };
-    assert_eq!(triggers, ["`", "<", "/"]);
+    assert_eq!(triggers, ["`", "<", "/", ".", ":"]);
 }
 
 #[test]
@@ -221,4 +222,154 @@ fn test_completion_refuses_malformed_parameters() {
         response.response_result.err().map(|error| error.code),
         Some(ErrorCode::InvalidParams as i32)
     );
+}
+
+/// The labels of the items completing the open document `file`, opened in a
+/// scanned workspace of `files`, at `line` and `character`.
+fn labels_at(
+    name: &str,
+    files: &[(&str, &str)],
+    (file, text): (&str, &str),
+    (line, character): (u32, u32),
+) -> Vec<String> {
+    let (workspace, mut state) = scanned(name, files);
+    handle_notification(&mut state, workspace.open(file, text));
+    let response = handle_request(&mut state, completion(workspace.uri(file), line, character));
+    list(&response)
+        .map(|list| list.items.into_iter().map(|item| item.label).collect())
+        .unwrap_or_default()
+}
+
+#[test]
+fn test_completion_lists_directive_names_after_a_marker() {
+    // Given / When
+    let labels = labels_at(
+        "complete_directive",
+        &[("index.rst", "")],
+        ("index.rst", ".. no\n"),
+        (0, 5),
+    );
+
+    // Then
+    assert!(labels.iter().any(|label| label == "note"));
+    assert!(labels.iter().any(|label| label == "py:function"));
+}
+
+#[test]
+fn test_completion_resolves_bare_object_names_against_the_primary_domain() {
+    // Given
+    let (workspace, mut state) = scanned(
+        "complete_primary_domain",
+        &[("conf.py", "primary_domain = 'c'\n"), ("index.rst", "")],
+    );
+    handle_notification(&mut state, workspace.open("index.rst", ".. \n"));
+
+    // When
+    let response = handle_request(&mut state, completion(workspace.uri("index.rst"), 0, 3));
+
+    // Then — a bare `function` is C's, and `namespace` is offered bare
+    let list = list(&response).expect("items");
+    let function = list
+        .items
+        .iter()
+        .find(|item| item.label == "function")
+        .expect("a `function` item");
+    assert_eq!(function.detail.as_deref(), Some("Describes a C function."));
+    assert!(list.items.iter().any(|item| item.label == "namespace"));
+}
+
+#[test]
+fn test_completion_writes_a_directive_as_a_snippet_for_a_client_taking_one() {
+    // Given
+    let workspace = Workspace::new("complete_snippet", &[("index.rst", "")]);
+    let (state, _) = workspace.server(false);
+    let mut state = state.with_completion_format(crate::completion::TextFormat::Snippet);
+    state.on_scan_event(workspace.scanned());
+    handle_notification(&mut state, workspace.open("index.rst", ".. \n"));
+
+    // When
+    let response = handle_request(&mut state, completion(workspace.uri("index.rst"), 0, 3));
+
+    // Then
+    let list = list(&response).expect("items");
+    let note = list
+        .items
+        .iter()
+        .find(|item| item.label == "note")
+        .expect("a `note` item");
+    assert_eq!(
+        note.insert_text_format,
+        Some(lsp_types::InsertTextFormat::SNIPPET)
+    );
+    let Some(lsp_types::CompletionTextEdit::Edit(edit)) = &note.text_edit else {
+        panic!("a text edit");
+    };
+    assert_eq!(edit.new_text, "note::\n\n   $0");
+}
+
+#[test]
+fn test_completion_lists_the_options_a_directive_takes_and_has_not_written() {
+    // Given / When
+    let labels = labels_at(
+        "complete_option",
+        &[("index.rst", "")],
+        ("index.rst", ".. toctree::\n   :hidden:\n   :\n"),
+        (2, 4),
+    );
+
+    // Then
+    assert!(labels.iter().any(|label| label == "maxdepth"));
+    assert!(!labels.iter().any(|label| label == "hidden"));
+}
+
+#[test]
+fn test_completion_lists_a_choice_option_s_values() {
+    // Given / When
+    let labels = labels_at(
+        "complete_value",
+        &[("index.rst", "")],
+        ("index.rst", ".. |logo| image:: a.png\n   :align: \n"),
+        (1, 11),
+    );
+
+    // Then — a substitution's image may align to the text baseline too
+    assert_eq!(
+        labels,
+        ["left", "center", "right", "top", "middle", "bottom"]
+    );
+}
+
+#[test]
+fn test_completion_lists_the_fields_of_the_types_an_update_matches() {
+    // Given — a requirement type with a status, and a spec type without one
+    let conf = "extensions = ['sphinx_needs']\n\
+        needs_types = [{'directive': 'req'}, {'directive': 'spec'}]\n\
+        needs_extra_options = ['status']\n";
+    let reqs = ".. req:: Brakes\n   :id: R_1\n";
+    let update = ".. entity-update:: R_1\n   :\n";
+
+    // When
+    let labels = labels_at(
+        "complete_update",
+        &[("conf.py", conf), ("reqs.rst", reqs), ("index.rst", "")],
+        ("index.rst", update),
+        (1, 4),
+    );
+
+    // Then — `:strict:`, then the fields of `req`
+    assert_eq!(labels.first().map(String::as_str), Some("strict"));
+    assert!(labels.iter().any(|label| label == "status"));
+    assert!(!labels.iter().any(|label| label == "id"));
+}
+
+#[test]
+fn test_completion_answers_null_in_a_directive_s_content() {
+    // Given / When
+    let (workspace, mut state) = scanned("complete_content", &[("index.rst", "")]);
+    let text = ".. note::\n\n   Some text\n";
+    handle_notification(&mut state, workspace.open("index.rst", text));
+    let response = handle_request(&mut state, completion(workspace.uri("index.rst"), 2, 7));
+
+    // Then
+    assert_eq!(list(&response), None);
 }

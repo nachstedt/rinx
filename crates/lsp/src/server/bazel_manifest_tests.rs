@@ -957,3 +957,83 @@ fn test_a_reference_below_a_template_hovers_on_its_written_line() {
     assert!(below);
     assert!(!on_include);
 }
+
+/// The labels the open document `file` completes at `line` and `character`.
+fn completed_labels(
+    state: &mut ServerState,
+    workspace: &Workspace,
+    file: &str,
+    (line, character): (u32, u32),
+) -> Vec<String> {
+    use lsp_types::request::Completion;
+    let request = Request::new(
+        RequestId::from(9),
+        Completion::METHOD.to_string(),
+        lsp_types::CompletionParams {
+            text_document_position: lsp_types::TextDocumentPositionParams::new(
+                TextDocumentIdentifier::new(workspace.uri(file)),
+                lsp_types::Position::new(line, character),
+            ),
+            work_done_progress_params: lsp_types::WorkDoneProgressParams::default(),
+            partial_result_params: lsp_types::PartialResultParams::default(),
+            context: None,
+        },
+    );
+    let result = handle_request(state, request)
+        .response_result
+        .expect("a result");
+    match serde_json::from_value::<Option<lsp_types::CompletionResponse>>(result)
+        .expect("a completion")
+    {
+        Some(lsp_types::CompletionResponse::List(list)) => {
+            list.items.into_iter().map(|item| item.label).collect()
+        }
+        Some(lsp_types::CompletionResponse::Array(items)) => {
+            items.into_iter().map(|item| item.label).collect()
+        }
+        None => Vec::new(),
+    }
+}
+
+#[test]
+fn test_a_document_completes_the_entity_types_of_its_own_library_only() {
+    // Given — the site and one library name the schema, the other library
+    // does not, as `examples/` has it
+    let schema = serde_json::json!({"source": "reqs/entities.toml"});
+    let mut site = serde_json::from_str::<serde_json::Value>(&manifest(
+        "//:site",
+        vec![
+            library(
+                "//reqs:docs",
+                &["reqs/index.rst"],
+                &serde_json::json!({"entity_schema": schema}),
+            ),
+            library("//other:docs", &["other/index.rst"], &serde_json::json!({})),
+        ],
+    ))
+    .expect("a manifest");
+    site["site"]["entity_schema"] = schema;
+    let workspace = bazel_workspace(
+        "bazel_completion_schema",
+        &[
+            ("reqs/index.rst", ""),
+            ("reqs/entities.toml", SCHEMA),
+            ("other/index.rst", ""),
+            ("site.lsp_manifest.json", &site.to_string()),
+        ],
+    );
+    let (mut state, messages) = scanned_with(&workspace, ManifestSource::AskClient);
+    let request = &manifest_requests(&messages)[0];
+    state.on_response(&answer(&workspace, request, &["site.lsp_manifest.json"]));
+    handle_notification(&mut state, workspace.open("reqs/index.rst", ".. \n"));
+    handle_notification(&mut state, workspace.open("other/index.rst", ".. \n"));
+
+    // When
+    let in_reqs = completed_labels(&mut state, &workspace, "reqs/index.rst", (0, 3));
+    let in_other = completed_labels(&mut state, &workspace, "other/index.rst", (0, 3));
+
+    // Then
+    assert!(in_reqs.iter().any(|label| label == "req"), "{in_reqs:?}");
+    assert!(!in_other.iter().any(|label| label == "req"), "{in_other:?}");
+    assert!(in_other.iter().any(|label| label == "note"));
+}

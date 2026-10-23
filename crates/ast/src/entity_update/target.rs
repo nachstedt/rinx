@@ -28,9 +28,59 @@ pub struct UpdateTarget {
     pub raw: String,
 }
 
+impl UpdateTarget {
+    /// What `argument` reads as: an id spelling, a filter, or both — `None`
+    /// when it is empty or reads as neither.
+    #[must_use]
+    pub fn read(argument: &str) -> Option<Self> {
+        let raw = argument.trim();
+        if raw.is_empty() {
+            return None;
+        }
+        let candidate_id = EntityId::new(raw).ok();
+        let filter = rinx_filter::parse_filter(raw).ok();
+        if candidate_id.is_none() && filter.is_none() {
+            return None;
+        }
+        Some(Self {
+            candidate_id,
+            filter,
+            raw: raw.to_string(),
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_read_takes_both_readings_of_an_id_spelling() {
+        // Given / When
+        let target = UpdateTarget::read(" REQ_001 ").expect("a target");
+
+        // Then
+        assert_eq!(target.candidate_id, EntityId::new("REQ_001").ok());
+        assert!(target.filter.is_some());
+        assert_eq!(target.raw, "REQ_001");
+    }
+
+    #[test]
+    fn test_read_takes_a_filter_that_is_no_id() {
+        // Given / When
+        let target = UpdateTarget::read("status == 'open'").expect("a target");
+
+        // Then
+        assert_eq!(target.candidate_id, None);
+        assert!(target.filter.is_some());
+    }
+
+    #[test]
+    fn test_read_refuses_an_empty_argument_and_one_of_neither_reading() {
+        // Given / When / Then
+        assert_eq!(UpdateTarget::read("  "), None);
+        assert_eq!(UpdateTarget::read("status =="), None);
+    }
 
     #[test]
     fn test_a_target_survives_a_serialization_round_trip() {

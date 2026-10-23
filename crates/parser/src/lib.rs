@@ -19,7 +19,7 @@ pub use context::{LoadedFile, ParseCtx, ParseFileLoader, RejectParseFiles, Splic
 pub use default_role::{DefaultRole, UnknownRole};
 pub use directives::{
     Arguments, DirectiveSpec, EntitySpec, OptionSet, OptionSpec, OptionSupport, OptionValue,
-    directive_specs, domain_directive_specs, is_builtin_directive_name,
+    directive_spec, directive_specs, domain_directive_specs, is_builtin_directive_name,
 };
 pub use entity_schema::load_entity_schema;
 pub use templating::rendered_source;

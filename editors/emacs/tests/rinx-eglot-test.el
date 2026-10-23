@@ -95,4 +95,11 @@ The workspace scan may still be running when it is first asked."
       (should (seq-some (lambda (item) (equal (plist-get item :label) "install"))
                         items)))))
 
+(ert-deftest rinx-eglot-completes-the-directive-name ()
+  (rinx-test--with-index
+    (let* ((completion (rinx-test--request :textDocument/completion (rinx-test--at 9 4)))
+           (items (if (vectorp completion) completion (plist-get completion :items))))
+      (should (seq-some (lambda (item) (equal (plist-get item :label) "figure"))
+                        items)))))
+
 ;;; rinx-eglot-test.el ends here

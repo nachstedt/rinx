@@ -21,7 +21,7 @@
 //! position, so it is the only one that can point at the character a broken
 //! expression breaks at.
 
-use rinx_ast::{Diagnostic, DiagnosticCode, EntityId, Span, UpdateTarget};
+use rinx_ast::{Diagnostic, DiagnosticCode, Span, UpdateTarget};
 use rinx_filter::{Expr, FieldName, FilterError, parse_filter};
 
 use crate::context::ParseCtx;
@@ -145,31 +145,22 @@ pub(in crate::directives) fn read_update_argument(
     diagnostics: &mut Diagnostics,
 ) -> Option<UpdateTarget> {
     let raw = argument.trim();
-    if raw.is_empty() {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::EntityUpdateInvalidArgument,
-            format!("{directive}: needs a target — an entity id or a filter"),
-            directive_span,
-        ));
-        return None;
-    }
-    let candidate_id = EntityId::new(raw).ok();
-    let filter = parse_filter(raw).ok();
-    if candidate_id.is_none() && filter.is_none() {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::EntityUpdateInvalidArgument,
+    let target = UpdateTarget::read(raw);
+    if target.is_none() {
+        let message = if raw.is_empty() {
+            format!("{directive}: needs a target — an entity id or a filter")
+        } else {
             format!(
                 "{directive}: '{raw}' is neither a legal entity id nor a filter this build can evaluate"
-            ),
+            )
+        };
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::EntityUpdateInvalidArgument,
+            message,
             directive_span,
         ));
-        return None;
     }
-    Some(UpdateTarget {
-        candidate_id,
-        filter,
-        raw: raw.to_string(),
-    })
+    target
 }
 
 /// Reads a `:filter:` option, deriving its site from the option line.
@@ -285,6 +276,7 @@ fn filter_error_span(
 #[cfg(test)]
 mod update_argument_tests {
     use super::*;
+    use rinx_ast::EntityId;
 
     #[test]
     fn test_a_bare_id_is_read_as_both_a_candidate_id_and_a_filter() {
