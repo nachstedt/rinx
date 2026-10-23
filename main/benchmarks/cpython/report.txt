@@ -16,8 +16,8 @@ impl-detail: 67
 describe: 53
 tabularcolumns: 39
 pdbcommand: 36
-line-block: 20
 grammar-snippet: 20
+line-block: 20
 monitoring-event: 19
 only: 13
 parsed-literal: 12
@@ -25,18 +25,18 @@ object: 10
 sidebar: 8
 topic: 6
 c:enumerator: 5
-raw: 4
 awaitablefunction: 4
 .. index: 4
-versionremoved: 1
+raw: 4
 Tip: 1
-container: 1
-limited-api-list: 1
+versionremoved: 1
 sourcecode: 1
-Contents: 1
+awaitablemethod: 1
 Note: 1
 audit-event-table: 1
-awaitablemethod: 1
+limited-api-list: 1
+container: 1
+Contents: 1
 epigraph: 1
 miscnews: 1
 
@@ -57,7 +57,7 @@ directive.unknown: 1889
 c-decl.unparsed: 108
 option.malformed-spec: 63
 substitution.undefined: 23
-directive.unknown-option: 17
+directive.unsupported-option: 17
 block-quote.unindent-no-blank-line: 4
 list.enumerated-start-not-one: 4
 table.grid.inconsistent-column-boundary: 1
@@ -73,7 +73,7 @@ option.malformed-spec: 63
 link.broken-hyperlink: 36
 link.broken-ref: 33
 substitution.undefined: 23
-directive.unknown-option: 17
+directive.unsupported-option: 17
 link.broken-term: 8
 code-block.unknown-language: 7
 list.enumerated-start-not-one: 4

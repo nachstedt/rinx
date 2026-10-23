@@ -1105,7 +1105,7 @@ fail with a syntax error naming a generated file nobody wrote.</p>
 <p>sphinx-needs' <code>:show_filters:</code>, <code>:show_legend:</code>, <code>:highlight:</code>,
 <code>:border_color:</code>, <code>:filter-func:</code>, <code>:engine:</code>, the <code>:root_id:</code> family and the
 legacy <code>:tags:</code>/<code>:status:</code>/<code>:types:</code> filters are each reported by name as
-<code>entity-flow.unsupported-option</code>, with what to write instead, rather than
+<code>directive.unsupported-option</code>, with what to write instead, rather than
 silently doing nothing.</p>
 <p>A flowchart is a diagram, so its library needs <code>diagrams = True</code> exactly as the
 written ones do — see the build wiring under "Diagramming entities" below. See
@@ -1231,7 +1231,7 @@ picture how many of how many messages it shows, and reports
 <code>:highlight:</code>, <code>:filter-func:</code>, <code>:sort_by:</code>, <code>:export_id:</code>,
 <code>:filter_warning:</code>, <code>:height:</code>, <code>:engine:</code> and the legacy
 <code>:tags:</code>/<code>:status:</code>/<code>:types:</code> filters are each reported by name as
-<code>entity-sequence.unsupported-option</code>, with what to write instead.</p>
+<code>directive.unsupported-option</code>, with what to write instead.</p>
 <p>Like a flowchart, a sequence diagram is compiled, so its library needs
 <code>diagrams = True</code>. See <code>docs/decisions/020-entity-sequence.md</code>.</p>
 <h2 id="charting-the-graph">Charting the graph</h2>
@@ -1326,7 +1326,7 @@ wedges are drawn either way.</p>
 </li>
 </ul>
 <p>sphinx-needs' <code>:explode:</code>, <code>:shadow:</code>, <code>:style:</code> and <code>:filter-func:</code> are each
-reported by name as <code>entity-pie.unsupported-option</code>, with what to write
+reported by name as <code>directive.unsupported-option</code>, with what to write
 instead. See <code>docs/decisions/017-entity-pie.md</code>.</p>
 <h3 id="bar-charts">Bar charts</h3>
 <p><code>.. entity-bar::</code> — sphinx-needs spells it <code>.. needbar::</code> — asks the same
@@ -1439,7 +1439,7 @@ rotation that is not whole degrees is <code>entity-bar.invalid-rotation</code> r
 silently ignored. A body with no values is <code>entity-bar.no-data</code>, a chart whose
 every cell counts zero <code>entity-bar.empty-result</code>, and <code>:style:</code> and the legacy
 <code>:status:</code>/<code>:tags:</code>/<code>:types:</code>/<code>:cypher:</code> are each
-<code>entity-bar.unsupported-option</code>, with the <code>:filter:</code> to write instead. See
+<code>directive.unsupported-option</code>, with the <code>:filter:</code> to write instead. See
 <code>docs/decisions/021-entity-bar.md</code>.</p>
 <h2 id="diagramming-entities">Diagramming entities</h2>
 <p><code>.. entity-diagram::</code> — sphinx-needs spells it <code>.. needuml::</code> — is a PlantUML
@@ -1571,7 +1571,7 @@ both importable and a diagram in its own right. A diagram that draws nothing —
 a <code>filter()</code> matching no entity, say — is reported as <code>uml.empty-result</code> and
 the page simply shows no picture, the same way an empty <code>.. entity-table::</code>
 renders its headings and warns.</p>
-<p><code>:save:</code> is reported as <code>uml.save-unsupported</code>: a sandboxed build action may
+<p><code>:save:</code> is reported as <code>directive.unsupported-option</code>: a sandboxed build action may
 only write files declared before it runs. Build the site's <code>diagram_sources</code>
 output group to get every diagram's expanded source instead.</p>
 <h3 id="build-wiring-1">Build wiring</h3>
@@ -1981,18 +1981,6 @@ a <code>needs.json</code> has no line of its own to name:</p>
 </td>
 </tr>
 <tr>
-<td><p><code>needimport.unsupported-option</code></p>
-</td>
-<td><p>one of sphinx-needs' options this build refuses</p>
-</td>
-</tr>
-<tr>
-<td><p><code>needimport.unknown-option</code></p>
-</td>
-<td><p>an option this directive does not accept</p>
-</td>
-</tr>
-<tr>
 <td><p><code>needimport.no-tags-attribute</code></p>
 </td>
 <td><p><code>:tags:</code> on a type declaring no list attribute <code>tags</code></p>
@@ -2058,12 +2046,6 @@ directive's own line for a missing option:</p>
 <td><p><code>entity-sequence.invalid-max-items</code></p>
 </td>
 <td><p>a <code>:max-items:</code> that is not a non-negative whole number</p>
-</td>
-</tr>
-<tr>
-<td><p><code>entity-sequence.unsupported-option</code></p>
-</td>
-<td><p>one of sphinx-needs' options this build refuses</p>
 </td>
 </tr>
 </tbody>

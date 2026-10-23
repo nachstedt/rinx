@@ -897,15 +897,25 @@ docutils discards it.</p>
 <li><p>Text directly below the options, before a blank line, starts the
 content; docutils refuses it as an invalid option block.</p>
 </li>
+<li><p>An option the directive does not take warns as
+<code>directive.unknown-option</code>; one Sphinx or the extension takes and
+rinx does not, as <code>directive.unsupported-option</code>, saying what to
+write instead. Both are ignored, where docutils discards the
+directive.</p>
+</li>
 </ul>
 </td>
 </tr>
 <tr>
 <td><p><code>.. toctree::</code></p>
 </td>
-<td><p>✅</p>
+<td><p>🔶</p>
 </td>
-<td></td>
+<td><ul>
+<li><p><code>:class:</code> is not supported.</p>
+</li>
+</ul>
+</td>
 </tr>
 <tr>
 <td><p><code>.. code-block::</code></p>
@@ -945,9 +955,13 @@ content; docutils refuses it as an invalid option block.</p>
 <tr>
 <td><p><code>.. index::</code></p>
 </td>
-<td><p>✅</p>
+<td><p>🔶</p>
 </td>
-<td></td>
+<td><ul>
+<li><p><code>:name:</code> is not supported.</p>
+</li>
+</ul>
+</td>
 </tr>
 <tr>
 <td><p><code>.. index::</code> <code>see</code>/<code>seealso</code> entries</p>
@@ -960,16 +974,24 @@ content; docutils refuses it as an invalid option block.</p>
 <td><p>Admonitions (<code>.. note::</code>, <code>.. warning::</code>, …,
 <code>.. admonition::</code>)</p>
 </td>
-<td><p>✅</p>
+<td><p>🔶</p>
 </td>
-<td></td>
+<td><ul>
+<li><p><code>:class:</code> and <code>:name:</code> are not supported.</p>
+</li>
+</ul>
+</td>
 </tr>
 <tr>
 <td><p><code>.. seealso::</code></p>
 </td>
-<td><p>✅</p>
+<td><p>🔶</p>
 </td>
-<td></td>
+<td><ul>
+<li><p><code>:class:</code>, <code>:name:</code> and <code>:collapsible:</code> are not supported.</p>
+</li>
+</ul>
+</td>
 </tr>
 <tr>
 <td><p><code>.. versionadded::</code>, <code>.. versionchanged::</code>,
@@ -1346,8 +1368,11 @@ not bundled.</p>
 <td><ul>
 <li><p><code>:style: datatables</code> is refused.</p>
 </li>
-<li><p><code>:show_filters:</code>, <code>:show_parts:</code>, <code>:layout:</code> and
-<code>:filter-func:</code> are not supported.</p>
+<li><p><code>:show_filters:</code>, <code>:show_parts:</code>, <code>:filter-func:</code>,
+<code>:filter_warning:</code>, <code>:cypher:</code>, <code>:export_id:</code>,
+<code>:max_items:</code>, <code>:page_size:</code>, <code>:sort_by:</code>, <code>:style_row:</code>,
+<code>:style_col:</code> and <code>:tags:</code>/<code>:status:</code>/<code>:types:</code> are not
+supported.</p>
 </li>
 <li><p>Rows are ordered by id unless <code>:sort:</code> is given.</p>
 </li>
@@ -1368,7 +1393,9 @@ not bundled.</p>
 <li><p><code>:direction:</code> is <code>TB</code> or <code>LR</code> only.</p>
 </li>
 <li><p><code>:show_filters:</code>, <code>:show_legend:</code>, <code>:highlight:</code>,
-<code>:border_color:</code>, <code>:filter-func:</code>, <code>:engine:</code>, the
+<code>:border_color:</code>, <code>:filter-func:</code>, <code>:cypher:</code>,
+<code>:filter_warning:</code>, <code>:export_id:</code>, <code>:max_items:</code>,
+<code>:sort_by:</code>, <code>:engine:</code>, <code>:alt:</code>, <code>:height:</code>, the
 <code>:root_id:</code> family and <code>:tags:</code>/<code>:status:</code>/<code>:types:</code> are
 refused.</p>
 </li>
@@ -1409,8 +1436,9 @@ refused.</p>
 <td><ul>
 <li><p><code>:labels:</code> of the wrong length warns; the wedges are still drawn.</p>
 </li>
-<li><p><code>:explode:</code>, <code>:shadow:</code>, <code>:style:</code> and <code>:filter-func:</code> are
-refused.</p>
+<li><p><code>:explode:</code>, <code>:shadow:</code>, <code>:style:</code>, <code>:filter-func:</code>,
+<code>:filter_warning:</code>, <code>:cypher:</code> and
+<code>:tags:</code>/<code>:status:</code>/<code>:types:</code> are refused.</p>
 </li>
 </ul>
 </td>
@@ -1451,8 +1479,9 @@ are refused.</p>
 <li><p><code>needs_import_keys</code> is the <code>[import_keys]</code> table of the entity
 schema; an undeclared key is refused.</p>
 </li>
-<li><p><code>:hide:</code>, <code>:collapse:</code>, <code>:layout:</code>, <code>:style:</code>, <code>:setup:</code>,
-<code>:pre_template:</code> and <code>:post_template:</code> are refused.</p>
+<li><p><code>:hide:</code>, <code>:collapse:</code>, <code>:layout:</code>, <code>:style:</code>,
+<code>:template:</code>, <code>:pre_template:</code>, <code>:post_template:</code>,
+<code>:allow_type_coercion:</code> and <code>:parse_by_doctype:</code> are refused.</p>
 </li>
 <li><p>Named sections cannot be imported.</p>
 </li>
@@ -1511,7 +1540,8 @@ sections cannot be changed.</p>
 </li>
 <li><p><code>:scale:</code> without <code>:width:</code> warns.</p>
 </li>
-<li><p><code>:save:</code> is refused.</p>
+<li><p><code>:save:</code>, <code>:alt:</code>, <code>:height:</code>, <code>:max-width:</code>,
+<code>:html_format:</code> and <code>:latex_format:</code> are refused.</p>
 </li>
 <li><p><code>:config:</code> names a preamble in <code>rinx.toml</code>'s <code>[uml_configs]</code>.</p>
 </li>
@@ -1596,7 +1626,8 @@ in a local table of contents.</p>
 <td><p>❌</p>
 </td>
 <td><ul>
-<li><p>Warns as an unknown option.</p>
+<li><p>Warns as <code>directive.unsupported-option</code>; on a <code>.. py:module::</code>,
+where Sphinx accepts it and does nothing, it does nothing.</p>
 </li>
 </ul>
 </td>
@@ -1657,9 +1688,15 @@ the order documents are read in.</p>
 <tr>
 <td><p><code>.. py:function::</code> and <code>:func:</code></p>
 </td>
-<td><p>✅</p>
+<td><p>🔶</p>
 </td>
-<td></td>
+<td><ul>
+<li><p><code>:canonical:</code>, <code>:annotation:</code> and the signature wrapping options
+(<code>:single-line-parameter-list:</code>, …) are not supported, on this
+and every Python object below.</p>
+</li>
+</ul>
+</td>
 </tr>
 <tr>
 <td><p><code>.. py:module::</code> and <code>:mod:</code></p>
@@ -1712,7 +1749,7 @@ a site without the index, where Sphinx links a page it never wrote.</p>
 <td><p>🔶</p>
 </td>
 <td><ul>
-<li><p><code>:property:</code> and <code>:final:</code> are not supported.</p>
+<li><p><code>:final:</code> is not supported.</p>
 </li>
 </ul>
 </td>
@@ -1730,7 +1767,7 @@ a site without the index, where Sphinx links a page it never wrote.</p>
 <td><p>🔶</p>
 </td>
 <td><ul>
-<li><p><code>:canonical:</code> and <code>:annotation:</code> are not supported.</p>
+<li><p><code>:abstract:</code> is not supported.</p>
 </li>
 </ul>
 </td>
@@ -1752,8 +1789,7 @@ a site without the index, where Sphinx links a page it never wrote.</p>
 <td><p>🔶</p>
 </td>
 <td><ul>
-<li><p>Signature wrapping options (<code>:single-line-parameter-list:</code>, …)
-are not supported.</p>
+<li><p><code>:abstract:</code> is not supported.</p>
 </li>
 </ul>
 </td>
@@ -1799,9 +1835,16 @@ are not supported.</p>
 <tr>
 <td><p><code>.. c:function::</code> and <code>:func:</code></p>
 </td>
-<td><p>✅</p>
+<td><p>🔶</p>
 </td>
-<td></td>
+<td><ul>
+<li><p><code>:single-line-parameter-list:</code> is not supported, on this and
+every C object below.</p>
+</li>
+<li><p><code>:no-index:</code> is accepted, which Sphinx's C domain refuses.</p>
+</li>
+</ul>
+</td>
 </tr>
 <tr>
 <td><p><code>.. c:macro::</code> and <code>:macro:</code></p>

@@ -281,42 +281,11 @@ line in between.</p>
 everything inside it is lost to every later phase — which is why this is
 reported rather than left to the visible error block the renderer draws in its
 place.</p>
-<h3 id="directive-toctree-unknown-option">directive.toctree-unknown-option</h3>
-<p>A <code>.. toctree::</code> option this build does not recognize. The option is ignored.</p>
-<h3 id="directive-contents-unknown-option">directive.contents-unknown-option</h3>
-<p>A <code>.. contents::</code> option this build does not recognize. The option is
-ignored.</p>
-<h3 id="directive-sectnum-unknown-option">directive.sectnum-unknown-option</h3>
-<p>A <code>.. sectnum::</code> option this build does not recognize. The option is ignored.</p>
-<h3 id="directive-dropdown-unknown-option">directive.dropdown-unknown-option</h3>
-<p>A <code>.. dropdown::</code> option this build does not recognize. The option is
-ignored.</p>
-<h3 id="directive-grid-unknown-option">directive.grid-unknown-option</h3>
-<p>A <code>.. grid::</code> option this build does not recognize. The option is ignored.</p>
-<h3 id="directive-grid-item-unknown-option">directive.grid-item-unknown-option</h3>
-<p>A <code>.. grid-item::</code> option this build does not recognize. The option is
-ignored.</p>
-<h3 id="directive-button-link-unknown-option">directive.button-link-unknown-option</h3>
-<p>A <code>.. button-link::</code> option this build does not recognize. The option is
-ignored.</p>
-<h3 id="directive-entity-table-unknown-option">directive.entity-table-unknown-option</h3>
-<p>An <code>.. entity-table::</code> / <code>.. needtable::</code> option this build does not
-recognize. The option is ignored.</p>
-<h3 id="directive-entity-flow-unknown-option">directive.entity-flow-unknown-option</h3>
-<p>An <code>.. entity-flow::</code> / <code>.. needflow::</code> option this build does not
-recognize. The option is ignored.</p>
-<h3 id="directive-entity-sequence-unknown-option">directive.entity-sequence-unknown-option</h3>
-<p>An <code>.. entity-sequence::</code> / <code>.. needsequence::</code> option this build does not
-recognize. The option is ignored.</p>
-<h3 id="directive-entity-pie-unknown-option">directive.entity-pie-unknown-option</h3>
-<p>An <code>.. entity-pie::</code> / <code>.. needpie::</code> option this build does not recognize.
-The option is ignored.</p>
-<h3 id="directive-entity-bar-unknown-option">directive.entity-bar-unknown-option</h3>
-<p>An <code>.. entity-bar::</code> / <code>.. needbar::</code> option this build does not recognize.
-The option is ignored.</p>
 <h3 id="directive-unknown-option">directive.unknown-option</h3>
-<p>An option this build does not recognize on a directive with no option code of
-its own. The option is ignored.</p>
+<p>An option the directive does not take. The option is ignored.</p>
+<h3 id="directive-unsupported-option">directive.unsupported-option</h3>
+<p>An option Sphinx or the extension defining the directive takes, but this build
+does not implement. The option is ignored.</p>
 <h3 id="directive-missing-argument">directive.missing-argument</h3>
 <p>A directive written with fewer arguments than it requires — an <code>.. image::</code>
 with no address, a <code>.. versionadded::</code> with no version. The directive is
@@ -381,11 +350,6 @@ character, <code>space</code>, <code>tab</code>, or a character code such as <co
 <p>A <code>csv-table</code> <code>:delim:</code>, <code>:quote:</code> or <code>:escape:</code> that is not an ASCII
 character.</p>
 <h2 id="doctest">doctest</h2>
-<h3 id="doctest-option-not-supported">doctest.option-not-supported</h3>
-<p>A doctest-family option that exists, but not on this directive — e.g.
-<code>:options:</code> on a <code>.. testsetup::</code>.</p>
-<h3 id="doctest-unknown-option">doctest.unknown-option</h3>
-<p>An option no doctest-family directive recognizes.</p>
 <h3 id="doctest-pyversion-invalid">doctest.pyversion-invalid</h3>
 <p>A <code>:pyversion:</code> value that is not a comparison operator followed by a
 version, such as <code>&gt;= 3.10</code>.</p>
@@ -527,8 +491,6 @@ silently contribute an empty block.</p>
 <p>An <code>:encoding:</code> other than UTF-8 or a subset of it.</p>
 <h3 id="include-invalid-tab-width">include.invalid-tab-width</h3>
 <p>A <code>:tab-width:</code> that is not an integer.</p>
-<h3 id="include-unknown-option">include.unknown-option</h3>
-<p>An option this directive does not have.</p>
 <h2 id="literalinclude">literalinclude</h2>
 <h3 id="literalinclude-diff-unreadable">literalinclude.diff-unreadable</h3>
 <p>The <code>:diff:</code> file could not be read. Separate from
@@ -646,9 +608,6 @@ unpainted rather than given a class no stylesheet defines.</p>
 <p>An <code>:align:</code> other than <code>left</code>, <code>right</code>, <code>center</code> or <code>justify</code>.</p>
 <h3 id="button-link-empty-option-value">button-link.empty-option-value</h3>
 <p>An option that needs a value but was written without one.</p>
-<h3 id="button-link-unsupported-option">button-link.unsupported-option</h3>
-<p>An option sphinx-design accepts here that this build refuses by name, rather
-than accepting and ignoring it.</p>
 <h3 id="button-link-unusable-outline">button-link.unusable-outline</h3>
 <p>An <code>:outline:</code> with no <code>:color:</code> to outline. sphinx-design produces no
 class at all for that pair, so the option silently does nothing — reported for
@@ -769,6 +728,9 @@ nothing.</p>
 <p>Both <code>:widths:</code> and its sphinx-needs spelling <code>:colwidths:</code> given at once.
 Neither is guessed at, since the two disagreeing is exactly the case where
 picking one silently renders the wrong table.</p>
+<h3 id="entity-table-invalid-value">entity-table.invalid-value</h3>
+<p>A <code>:columns:</code> naming no column, or a <code>:sort:</code> naming several fields. The
+option is ignored.</p>
 <h3 id="entity-table-unsupported-style">entity-table.unsupported-style</h3>
 <p>A <code>:style:</code> this build has no rendering for — <code>datatables</code>, which is a
 JavaScript feature. A static table is rendered instead.</p>
@@ -803,10 +765,6 @@ instead.</p>
 it has no size of its own to scale.</p>
 <h3 id="entity-flow-empty-option-value">entity-flow.empty-option-value</h3>
 <p>An option whose value is required but was left empty.</p>
-<h3 id="entity-flow-unsupported-option">entity-flow.unsupported-option</h3>
-<p>An option sphinx-needs' <code>needflow</code> has that this build does not implement.
-Reported by name rather than ignored, so an author who asked for a legend
-learns they did not get one.</p>
 <h3 id="entity-flow-empty-result">entity-flow.empty-result</h3>
 <p>A flowchart whose filter matched no entity at all, so there was nothing to
 draw. Reported for the reason <code>entity-table.empty-result</code> is, and it has to
@@ -851,9 +809,6 @@ built-in ones.</p>
 reason.</p>
 <h3 id="entity-sequence-empty-option-value">entity-sequence.empty-option-value</h3>
 <p>An option whose value is required but was left empty.</p>
-<h3 id="entity-sequence-unsupported-option">entity-sequence.unsupported-option</h3>
-<p>An option sphinx-needs' <code>needsequence</code> has that this build does not
-implement, reported by name rather than ignored.</p>
 <h3 id="entity-sequence-unknown-start">entity-sequence.unknown-start</h3>
 <p>A <code>:start:</code> entry naming no entity in the project. The other starts are still
 walked — sphinx-needs aborts the whole build here instead.</p>
@@ -902,10 +857,6 @@ built-in palette is used for that wedge instead.</p>
 this build chooses, so a bare percentage has nothing to scale.</p>
 <h3 id="entity-pie-empty-option-value">entity-pie.empty-option-value</h3>
 <p>An option whose value is required but was left empty.</p>
-<h3 id="entity-pie-unsupported-option">entity-pie.unsupported-option</h3>
-<p>An option sphinx-needs' <code>needpie</code> has that this build does not implement.
-Reported by name rather than ignored, so an author who asked for exploded
-wedges learns they did not get them.</p>
 <h3 id="entity-pie-empty-result">entity-pie.empty-result</h3>
 <p>A chart every one of whose wedges counted zero, so there is no chart to draw at
 all. Reported for the reason <code>entity-table.empty-result</code> is, and only the
@@ -947,9 +898,6 @@ is drawn unrotated and the line reported.</p>
 <p>A <code>:scale:</code> with no <code>:width:</code> to apply to.</p>
 <h3 id="entity-bar-empty-option-value">entity-bar.empty-option-value</h3>
 <p>An option whose value is required but was left empty.</p>
-<h3 id="entity-bar-unsupported-option">entity-bar.unsupported-option</h3>
-<p>An option sphinx-needs' <code>needbar</code> has that this build does not implement,
-reported by name with what to write instead.</p>
 <h3 id="entity-bar-empty-result">entity-bar.empty-result</h3>
 <p>A chart every one of whose cells counted zero, so there are no bars to draw.
 Only the renderer can raise it, for <code>entity-pie.empty-result</code>'s reason.</p>
@@ -1025,12 +973,6 @@ from the field check for the reason <code>entity-table.invalid-filter</code> is.
 <h3 id="needimport-unknown-filter-field">needimport.unknown-filter-field</h3>
 <p>A <code>:filter:</code> naming a field no entity type declares and that is none of the
 built-ins.</p>
-<h3 id="needimport-unsupported-option">needimport.unsupported-option</h3>
-<p>An option sphinx-needs accepts that this build must refuse — the presentation
-and templating family. Refused <em>by name</em>, with what to write instead, since the
-common failure here is an unsupported feature rather than a typo.</p>
-<h3 id="needimport-unknown-option">needimport.unknown-option</h3>
-<p>An option <code>.. needimport::</code> does not accept at all.</p>
 <h3 id="needimport-no-tags-attribute">needimport.no-tags-attribute</h3>
 <p>A <code>:tags:</code> written for a type declaring no list attribute called <code>tags</code>.
 Nothing in this model privileges that name, so there is nowhere to put the
@@ -1045,9 +987,6 @@ selection matching nothing is far likelier to be a mistake than an intention.</p
 building, which a sandboxed action cannot do. The message points at a
 <code>needs.json</code> snapshot read by <code>.. needimport::</code> instead.</p>
 <h2 id="uml">uml</h2>
-<h3 id="uml-unknown-option">uml.unknown-option</h3>
-<p>An option no diagram directive accepts. The diagram still renders: refusing it
-over a misspelled option would silently drop the picture.</p>
 <h3 id="uml-empty-option-value">uml.empty-option-value</h3>
 <p>An option whose value is required but was written empty, so the option was
 ignored.</p>
@@ -1067,10 +1006,6 @@ explicit instruction in silence is what diagnostics exist to prevent.</p>
 <h3 id="uml-invalid-extra">uml.invalid-extra</h3>
 <p>An <code>:extra:</code> that is not a comma-separated list of <code>name: value</code> pairs. The
 pairs that did parse are still bound.</p>
-<h3 id="uml-option-needs-template">uml.option-needs-template</h3>
-<p>An option that only means something for a templated diagram — <code>:key:</code>,
-<code>:extra:</code> — written on a plain <code>.. plantuml::</code>, where nothing would ever
-read it.</p>
 <h3 id="uml-template-error">uml.template-error</h3>
 <p>A template that is not valid Jinja, or whose evaluation failed. The diagram is
 left out rather than compiled from half-expanded text, which would fail in
@@ -1100,11 +1035,6 @@ pays nothing for it — Bazel cannot know which documents hold a diagram before
 reading them, so the build must be told. This is what keeps the opt-in honest:
 a forgotten attribute fails on the directive's own line rather than shipping a
 page with a broken picture.</p>
-<h3 id="uml-save-unsupported">uml.save-unsupported</h3>
-<p>A <code>:save:</code>, which cannot be honoured: a sandboxed build action may only write
-files declared before it runs, and this path is written inside the document.
-The site's <code>diagram_sources</code> output group carries every diagram's expanded
-source instead.</p>
 <h3 id="uml-unknown-config">uml.unknown-config</h3>
 <p>A <code>:config:</code> naming a <code>PlantUML</code> preamble the site config does not declare.
 Refused rather than ignored: a diagram silently missing the styling its author
