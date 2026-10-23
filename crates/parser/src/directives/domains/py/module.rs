@@ -1,6 +1,6 @@
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::{OptionLine, classify_options, directive_options};
+use crate::directives::options::{classify_options, directive_options};
 use crate::headings::Adornment;
 use rinx_ast::{DomainObjectBody, ModuleFlag, ModuleOptions};
 
@@ -14,13 +14,13 @@ pub(crate) fn parse_py_module(
     diagnostics: &mut Diagnostics,
 ) -> DomainObjectBody {
     let mut options = ModuleOptions::default();
-    for (option, line) in classify_options::<ModuleOption>(
+    for (option, _line) in classify_options::<ModuleOption>(
         &invocation.options,
         "py:module",
         diagnostics,
         &invocation.ctx,
     ) {
-        read_module_option(option, line, &mut options);
+        read_module_option(option, &mut options);
     }
 
     let body = invocation
@@ -39,9 +39,9 @@ directive_options! {
     /// `PyModule.option_spec`.
     enum ModuleOption {
         /// `:platform:`.
-        Platform => (["platform"], Text, "The platforms the module is available on."),
+        Platform(String) => (["platform"], "The platforms the module is available on."),
         /// `:synopsis:`.
-        Synopsis => (["synopsis"], Text, "A one-sentence description of the module."),
+        Synopsis(String) => (["synopsis"], "A one-sentence description of the module."),
         /// `:deprecated:`.
         Deprecated => (["deprecated"], Flag, "Marks the module as deprecated."),
         /// `:no-index:`.
@@ -61,10 +61,10 @@ directive_options! {
 /// `:no-contents-entry:` and `:no-typesetting:` are consumed and dropped:
 /// Sphinx accepts them on a module but its `run` never reads them, so they
 /// have no effect there either.
-fn read_module_option(option: ModuleOption, line: &OptionLine, options: &mut ModuleOptions) {
+fn read_module_option(option: ModuleOption, options: &mut ModuleOptions) {
     match option {
-        ModuleOption::Platform => options.platform = Some(line.value.clone()),
-        ModuleOption::Synopsis => options.synopsis = Some(line.value.clone()),
+        ModuleOption::Platform(value) => options.platform = Some(value),
+        ModuleOption::Synopsis(value) => options.synopsis = Some(value),
         ModuleOption::Deprecated => options.set(ModuleFlag::Deprecated),
         ModuleOption::NoIndex => options.set(ModuleFlag::NoIndex),
         ModuleOption::NoIndexEntry => options.set(ModuleFlag::NoIndexEntry),
@@ -75,7 +75,8 @@ fn read_module_option(option: ModuleOption, line: &OptionLine, options: &mut Mod
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::directives::options::{DirectiveOptions, scan_option_lines};
+    use crate::directives::options::OptionLine;
+    use crate::directives::options::scan_option_lines;
     use crate::parse;
     use rinx_ast::{DiagnosticCode, Directive, Node};
 
@@ -85,8 +86,8 @@ mod tests {
         let mut options = ModuleOptions::default();
         let mut unrecognized = Vec::new();
         for line in option_lines {
-            match ModuleOption::from_name(&line.name) {
-                Some(option) => read_module_option(option, line, &mut options),
+            match crate::directives::options::read_quietly::<ModuleOption>(line) {
+                Some(option) => read_module_option(option, &mut options),
                 None => unrecognized.push(line),
             }
         }

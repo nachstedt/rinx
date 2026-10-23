@@ -34,6 +34,7 @@ pub(in crate::directives) const DOCTEST_SPEC: DirectiveSpec = DirectiveSpec {
     doc: "Code a doctest run executes, or the output it expects.",
     shape: DOCTEST_SHAPE,
     options: <DocTestOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// The entry of the directive holding code whose output a `testoutput` states.
@@ -42,6 +43,7 @@ pub(in crate::directives) const TESTCODE_SPEC: DirectiveSpec = DirectiveSpec {
     doc: "Code a doctest run executes, its output stated by a `testoutput`.",
     shape: DOCTEST_SHAPE,
     options: <TestCodeOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// The entry of the two directives a doctest run executes unshown.
@@ -50,6 +52,7 @@ pub(in crate::directives) const TEST_SETUP_SPEC: DirectiveSpec = DirectiveSpec {
     doc: "Code a doctest run executes before or after its group, never shown.",
     shape: DOCTEST_SHAPE,
     options: <TestSetupOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets one of the five `sphinx.ext.doctest` directives.

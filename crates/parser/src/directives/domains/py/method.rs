@@ -3,7 +3,7 @@ use super::dispatch::PyObjectOption;
 use crate::diagnostics::Diagnostics;
 use crate::directives::domains::object_type::DirectiveObjectType;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::{OptionLine, directive_options};
+use crate::directives::options::directive_options;
 use crate::headings::Adornment;
 use rinx_ast::{DescriptionFlags, DomainObjectBody, NonEmptyVector};
 use std::collections::BTreeSet;
@@ -134,14 +134,14 @@ directive_options! {
 impl ObjectOptions for MethodOptions {
     type Option = MethodOption;
 
-    fn read(&mut self, option: MethodOption, line: &OptionLine, flags: &mut DescriptionFlags) {
+    fn read(&mut self, option: MethodOption, flags: &mut DescriptionFlags) {
         let flag = match option {
             MethodOption::Classmethod => MethodFlag::Classmethod,
             MethodOption::Staticmethod => MethodFlag::Staticmethod,
             MethodOption::Abstractmethod => MethodFlag::Abstractmethod,
             MethodOption::Async => MethodFlag::Async,
-            MethodOption::Py(PyObjectOption::Module) => {
-                self.module = Some(line.value.clone());
+            MethodOption::Py(PyObjectOption::Module(module)) => {
+                self.module = Some(module);
                 return;
             }
             MethodOption::Description(option) => {

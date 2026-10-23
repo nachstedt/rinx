@@ -17,7 +17,7 @@ directive_options! {
     /// `:skipif:`, which every directive of the family takes.
     pub(super) enum SkipOption {
         /// `:skipif:`.
-        SkipIf => (["skipif"], Text, "A Python expression; the block is skipped when it is true."),
+        SkipIf(String) => (["skipif"], "A Python expression; the block is skipped when it is true."),
     }
 }
 
@@ -27,7 +27,7 @@ directive_options! {
         /// `:hide:`.
         Hide => (["hide"], Flag, "Runs the block without showing it."),
         /// `:pyversion:`.
-        PyVersion => (["pyversion"], Text, "The Python versions the block runs on, as `> 3.9`."),
+        PyVersion(PyVersionSpec) => (["pyversion"], DoctestPyVersionInvalid, "The Python versions the block runs on, as `> 3.9`."),
         /// `:trim-doctest-flags:`.
         TrimDoctestFlags => (["trim-doctest-flags"], Flag, "Hides the block's doctest flags."),
         /// `:no-trim-doctest-flags:`.
@@ -102,36 +102,32 @@ pub(super) fn scan_options(
                     DocTestOption::Options => {
                         options.flags = parse_flag_list(kind, &line.value, diagnostics, span(line));
                     }
-                    DocTestOption::Shown(option) => {
-                        read_shown(kind, option, line, &mut options, diagnostics, span(line));
-                    }
-                    DocTestOption::Skip(SkipOption::SkipIf) => {
-                        options.skipif = Some(line.value.clone());
+                    DocTestOption::Shown(option) => read_shown(option, &mut options),
+                    DocTestOption::Skip(SkipOption::SkipIf(condition)) => {
+                        options.skipif = Some(condition);
                     }
                 }
             }
         }
         DocTestDirectiveKind::TestCode => {
-            for (option, line) in
+            for (option, _) in
                 classify_options::<TestCodeOption>(option_lines, directive, diagnostics, ctx)
             {
                 match option {
-                    TestCodeOption::Shown(option) => {
-                        read_shown(kind, option, line, &mut options, diagnostics, span(line));
-                    }
-                    TestCodeOption::Skip(SkipOption::SkipIf) => {
-                        options.skipif = Some(line.value.clone());
+                    TestCodeOption::Shown(option) => read_shown(option, &mut options),
+                    TestCodeOption::Skip(SkipOption::SkipIf(condition)) => {
+                        options.skipif = Some(condition);
                     }
                 }
             }
         }
         DocTestDirectiveKind::TestSetup | DocTestDirectiveKind::TestCleanup => {
-            for (option, line) in
+            for (option, _) in
                 classify_options::<TestSetupOption>(option_lines, directive, diagnostics, ctx)
             {
                 match option {
-                    TestSetupOption::Skip(SkipOption::SkipIf) => {
-                        options.skipif = Some(line.value.clone());
+                    TestSetupOption::Skip(SkipOption::SkipIf(condition)) => {
+                        options.skipif = Some(condition);
                     }
                 }
             }
@@ -141,26 +137,12 @@ pub(super) fn scan_options(
 }
 
 /// Records one of the options of a directive whose code is shown.
-fn read_shown(
-    kind: DocTestDirectiveKind,
-    option: ShownOption,
-    line: &OptionLine,
-    options: &mut DocTestOptions,
-    diagnostics: &mut Diagnostics,
-    span: Option<Span>,
-) {
+fn read_shown(option: ShownOption, options: &mut DocTestOptions) {
     match option {
         ShownOption::Hide => options.hide = true,
-        ShownOption::PyVersion => match PyVersionSpec::parse(&line.value) {
-            Ok(spec) => options.pyversion = Some(spec),
-            // Reported, not silently dropped: ignoring a `:pyversion:` would
-            // run a block that Sphinx would have skipped.
-            Err(message) => diagnostics.push(Diagnostic::at(
-                DiagnosticCode::DoctestPyVersionInvalid,
-                format!("{}: invalid :pyversion: value — {message}", kind.as_name()),
-                span,
-            )),
-        },
+        // A bad one was reported, not silently dropped: ignoring a
+        // `:pyversion:` would run a block that Sphinx would have skipped.
+        ShownOption::PyVersion(spec) => options.pyversion = Some(spec),
         ShownOption::TrimDoctestFlags => options.trim = DocTestTrim::Trim,
         ShownOption::NoTrimDoctestFlags => options.trim = DocTestTrim::NoTrim,
     }
@@ -348,7 +330,7 @@ mod tests {
         // Then
         assert!(matches!(directive, Directive::DocTest(_)));
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].message.contains("invalid :pyversion:"));
+        assert!(diagnostics[0].message.contains(":pyversion:"));
     }
 
     #[test]

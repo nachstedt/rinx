@@ -123,6 +123,7 @@ pub(in crate::directives) const INDEX_SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <IndexOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. index::`.

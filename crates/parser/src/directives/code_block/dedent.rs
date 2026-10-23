@@ -5,11 +5,10 @@
 //! see. Shared with `.. literalinclude::`, whose `:dedent:` means the same
 //! thing over text read from a file.
 
-use rinx_ast::{Diagnostic, DiagnosticCode};
-
 use crate::context::ParseCtx;
-use crate::diagnostics::Diagnostics;
+use crate::directives::option_value::OptionValueType;
 use crate::directives::options::OptionLine;
+use crate::directives::spec::OptionValue;
 use crate::indent::strip_common_indent;
 
 /// What a `:dedent:` asked for.
@@ -25,28 +24,21 @@ pub(super) enum Dedent {
     Columns(usize),
 }
 
-/// Reads a `:dedent:` value: absent means "all shared indent", a number means
+/// A `:dedent:`: with no value, all shared indentation; with a number,
 /// exactly that many columns.
-pub(super) fn parse_dedent(
-    value: &str,
-    directive: &str,
-    line: &OptionLine,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<Dedent> {
-    let trimmed = value.trim();
-    if trimmed.is_empty() {
-        return Some(Dedent::Full);
+impl OptionValueType for Dedent {
+    const VALUE: OptionValue = OptionValue::Integer;
+
+    fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
+        let trimmed = line.value.trim();
+        if trimmed.is_empty() {
+            return Ok(Dedent::Full);
+        }
+        trimmed
+            .parse::<usize>()
+            .map(Dedent::Columns)
+            .map_err(|_| format!("needs a non-negative integer, found '{}'", line.value))
     }
-    let Ok(columns) = trimmed.parse::<usize>() else {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::CodeBlockInvalidInteger,
-            format!("{directive}: :dedent: needs a non-negative integer, got '{value}'"),
-            ctx.line_span(line.line_index, &line.raw),
-        ));
-        return None;
-    };
-    Some(Dedent::Columns(columns))
 }
 
 /// Applies `:dedent:` to the already-unindented body.

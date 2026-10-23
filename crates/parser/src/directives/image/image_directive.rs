@@ -28,6 +28,7 @@ pub(in crate::directives) const IMAGE_SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: Some("use figure for a caption or legend"),
     },
     options: <ImageOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. image::`.

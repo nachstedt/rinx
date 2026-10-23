@@ -2,73 +2,27 @@ use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use std::num::NonZeroU32;
 
-use rinx_ast::{Diagnostic, DiagnosticCode, Directive, SectnumOptions};
+use rinx_ast::{Directive, SectnumOptions};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
-use super::options::{
-    DirectiveOptions, OptionLine, classify_options, directive_options, parse_positive_depth,
-};
+use super::option_value::{DepthLimit, NonEmptyText};
+use super::options::{DirectiveOptions, OptionLine, classify_options, directive_options};
 
 const DIRECTIVE: &str = "sectnum";
-
-/// Reads a `:start:` value: a positive integer, or the diagnosed default of
-/// `None` (docutils' own default of `1`) for anything else, `0` included —
-/// unlike `:depth:`, there is no sensible number to display at `0`.
-fn parse_start(
-    line: &OptionLine,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<NonZeroU32> {
-    if let Ok(value) = line.value.trim().parse::<NonZeroU32>() {
-        return Some(value);
-    }
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::SectnumStartInvalid,
-        format!(
-            "A {DIRECTIVE} :start: option needs a positive integer: {}",
-            line.raw
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
-    None
-}
-
-/// Reads a `:prefix:`/`:suffix:` value, diagnosing an empty one — docutils
-/// requires both options to carry a value.
-fn parse_required_text(
-    line: &OptionLine,
-    option: &str,
-    code: DiagnosticCode,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> String {
-    if line.value.is_empty() {
-        diagnostics.push(Diagnostic::at(
-            code,
-            format!(
-                "A {DIRECTIVE} :{option}: option needs a value: {}",
-                line.raw
-            ),
-            ctx.line_span(line.line_index, &line.raw),
-        ));
-        return String::new();
-    }
-    line.value.clone()
-}
 
 directive_options! {
     /// The options `.. sectnum::` takes: docutils' four.
     enum SectnumOption {
         /// `:depth:`.
-        Depth => (["depth"], Integer, "How many section levels are numbered."),
+        Depth(DepthLimit) => (["depth"], SectnumDepthInvalid, "How many section levels are numbered."),
         /// `:start:`.
-        Start => (["start"], Integer, "The number the first section gets."),
+        Start(NonZeroU32) => (["start"], SectnumStartInvalid, "The number the first section gets."),
         /// `:prefix:`.
-        Prefix => (["prefix"], Text, "Text written before each number."),
+        Prefix(NonEmptyText) => (["prefix"], "Text written before each number."),
         /// `:suffix:`.
-        Suffix => (["suffix"], Text, "Text written after each number."),
+        Suffix(NonEmptyText) => (["suffix"], "Text written after each number."),
     }
 }
 
@@ -81,41 +35,13 @@ fn parse_sectnum_options(
 ) -> SectnumOptions {
     let mut options = SectnumOptions::default();
 
-    for (option, line) in
-        classify_options::<SectnumOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    for (option, _) in classify_options::<SectnumOption>(option_lines, DIRECTIVE, diagnostics, ctx)
     {
         match option {
-            SectnumOption::Depth => {
-                options.depth = parse_positive_depth(
-                    line,
-                    DIRECTIVE,
-                    "depth",
-                    DiagnosticCode::SectnumDepthInvalid,
-                    diagnostics,
-                    ctx,
-                );
-            }
-            SectnumOption::Start => {
-                options.start = parse_start(line, diagnostics, ctx);
-            }
-            SectnumOption::Prefix => {
-                options.prefix = parse_required_text(
-                    line,
-                    "prefix",
-                    DiagnosticCode::SectnumEmptyPrefix,
-                    diagnostics,
-                    ctx,
-                );
-            }
-            SectnumOption::Suffix => {
-                options.suffix = parse_required_text(
-                    line,
-                    "suffix",
-                    DiagnosticCode::SectnumEmptySuffix,
-                    diagnostics,
-                    ctx,
-                );
-            }
+            SectnumOption::Depth(depth) => options.depth = depth.0,
+            SectnumOption::Start(start) => options.start = Some(start),
+            SectnumOption::Prefix(prefix) => options.prefix = prefix.0,
+            SectnumOption::Suffix(suffix) => options.suffix = suffix.0,
         }
     }
 
@@ -138,6 +64,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <SectnumOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. sectnum::` and `.. section-numbering::`.
@@ -166,6 +93,7 @@ pub(super) fn parse_sectnum(
 mod tests {
     use super::*;
     use crate::parse;
+    use rinx_ast::{Diagnostic, DiagnosticCode};
     use rinx_ast::{Domain, Node};
     use std::num::NonZeroUsize;
 
@@ -368,7 +296,7 @@ mod tests {
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(
             diagnostics.entries()[0].code,
-            DiagnosticCode::SectnumEmptyPrefix
+            DiagnosticCode::DirectiveEmptyOptionValue
         );
     }
 
@@ -385,7 +313,7 @@ mod tests {
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(
             diagnostics.entries()[0].code,
-            DiagnosticCode::SectnumEmptySuffix
+            DiagnosticCode::DirectiveEmptyOptionValue
         );
     }
 

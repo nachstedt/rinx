@@ -222,20 +222,28 @@ mod tests {
 
     #[test]
     fn test_a_spec_declares_options_exactly_when_its_shape_takes_them() {
-        // Given — the two whose options are the fields the schema declares
-        let schema_options = ["entity-update", "needservice"];
-
-        // When / Then
+        // Given / When / Then
         for spec in directive_specs() {
             let declares = spec.option_specs().next().is_some();
-            let dynamic = schema_options.contains(&spec.names[0]);
             assert_eq!(
                 spec.shape.takes_options,
-                declares || dynamic,
+                declares || spec.accepts_further,
                 "`{}` takes options but declares none, or the reverse",
                 spec.names[0]
             );
         }
+    }
+
+    #[test]
+    fn test_only_the_schema_and_service_directives_accept_options_they_do_not_list() {
+        // Given / When
+        let open: Vec<&str> = directive_specs()
+            .filter(|spec| spec.accepts_further)
+            .map(|spec| spec.names[0])
+            .collect();
+
+        // Then
+        assert_eq!(open, ["entity-update", "needservice"]);
     }
 
     #[test]

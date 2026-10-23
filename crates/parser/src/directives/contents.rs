@@ -1,15 +1,12 @@
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
-use rinx_ast::{
-    Contents, ContentsBacklinks, ContentsOptions, Diagnostic, DiagnosticCode, Directive, TargetName,
-};
+use rinx_ast::{Contents, ContentsBacklinks, ContentsOptions, Directive, TargetName};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
-use super::options::{
-    DirectiveOptions, OptionLine, classify_options, directive_options, parse_positive_depth,
-};
+use super::option_value::{ChoiceValue, Classes, DepthLimit};
+use super::options::{DirectiveOptions, OptionLine, classify_options, directive_options};
 
 const DIRECTIVE: &str = "contents";
 
@@ -17,24 +14,20 @@ directive_options! {
     /// The options `.. contents::` takes: docutils' four, and a `:name:`.
     enum ContentsOption {
         /// `:depth:`.
-        Depth => (["depth"], Integer, "How many section levels the table lists."),
+        Depth(DepthLimit) => (["depth"], ContentsDepthInvalid, "How many section levels the table lists."),
         /// `:local:`.
         Local => (["local"], Flag, "Lists only the sections below the directive's own."),
         /// `:backlinks:`.
-        Backlinks => (["backlinks"], Choice(|| vec!["entry", "top", "none"]), "Where each section title links back to."),
+        Backlinks(ContentsBacklinks) => (["backlinks"], ContentsBacklinksInvalid, "Where each section title links back to."),
         /// `:class:`.
-        Class => (["class"], Classes, "Classes for the table."),
+        Class(Classes) => (["class"], "Classes for the table."),
         /// `:name:`.
-        Name => (["name"], Text, "A label to reference the table by."),
+        Name(TargetName) => (["name"], "A label to reference the table by."),
     }
 }
 
-/// Reads the five options `.. contents::` accepts, returning them with the
-/// lines it did not recognize, in source order.
-///
-/// Modelled on `.. toctree::`'s own `parse_toctree_options` — see that
-/// function's doc comment for why `:depth: 0` (and a negative value) means
-/// *unset* rather than a real limit.
+/// Reads the five options `.. contents::` accepts, reporting every other one.
+/// A `:depth:` of zero or less means unlimited, as [`DepthLimit`] says.
 fn parse_contents_options(
     option_lines: &[OptionLine],
     diagnostics: &mut Diagnostics,
@@ -42,66 +35,34 @@ fn parse_contents_options(
 ) -> ContentsOptions {
     let mut options = ContentsOptions::default();
 
-    for (option, line) in
-        classify_options::<ContentsOption>(option_lines, DIRECTIVE, diagnostics, ctx)
+    for (option, _) in classify_options::<ContentsOption>(option_lines, DIRECTIVE, diagnostics, ctx)
     {
         match option {
-            ContentsOption::Depth => {
-                options.depth = parse_positive_depth(
-                    line,
-                    DIRECTIVE,
-                    "depth",
-                    DiagnosticCode::ContentsDepthInvalid,
-                    diagnostics,
-                    ctx,
-                );
-            }
+            ContentsOption::Depth(depth) => options.depth = depth.0,
             ContentsOption::Local => options.local = true,
-            ContentsOption::Backlinks => {
-                options.backlinks = parse_backlinks(line, diagnostics, ctx);
-            }
-            ContentsOption::Class => {
-                options.classes = line.value.split_whitespace().map(str::to_string).collect();
-            }
-            ContentsOption::Name => {
-                if line.value.is_empty() {
-                    diagnostics.push(Diagnostic::at(
-                        DiagnosticCode::ContentsEmptyName,
-                        format!("A {DIRECTIVE} :name: option needs a value: {}", line.raw),
-                        ctx.line_span(line.line_index, &line.raw),
-                    ));
-                } else {
-                    options.name = Some(TargetName::new(&line.value));
-                }
-            }
+            ContentsOption::Backlinks(backlinks) => options.backlinks = backlinks,
+            ContentsOption::Class(classes) => options.classes = classes.0,
+            ContentsOption::Name(name) => options.name = Some(name),
         }
     }
 
     options
 }
 
-/// Reads a `:backlinks:` value: `entry`, `top` or `none`. Absent keeps the
-/// default `:backlinks:` already carries (`entry`, matching docutils);
-/// anything else non-empty is diagnosed and the default is kept too, rather
-/// than silently disabling backlinks the author never asked to turn off.
-fn parse_backlinks(
-    line: &OptionLine,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> ContentsBacklinks {
-    let value = line.value.trim();
-    if let Some(backlinks) = ContentsBacklinks::from_option_value(value) {
-        return backlinks;
+/// A `:backlinks:`: `entry`, `top` or `none`. Any other value is reported and
+/// the default kept (`entry`, docutils'), rather than silently disabling
+/// backlinks the author never asked to turn off.
+impl ChoiceValue for ContentsBacklinks {
+    fn choices() -> Vec<&'static str> {
+        [Self::Entry, Self::Top, Self::Off]
+            .into_iter()
+            .map(Self::option_value)
+            .collect()
     }
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::ContentsBacklinksInvalid,
-        format!(
-            "A {DIRECTIVE} :backlinks: option needs \"entry\", \"top\" or \"none\": {}",
-            line.raw
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
-    ContentsBacklinks::default()
+
+    fn from_choice(written: &str) -> Option<Self> {
+        Self::from_option_value(written)
+    }
 }
 
 /// This directive's entry in the table of directives this build implements.
@@ -115,6 +76,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <ContentsOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. contents::`.
@@ -148,6 +110,7 @@ pub(super) fn parse_contents(
 mod tests {
     use super::*;
     use crate::parse;
+    use rinx_ast::{Diagnostic, DiagnosticCode};
     use rinx_ast::{Domain, Node};
 
     /// Parses a directive body directly, bypassing the block dispatcher, for
@@ -365,7 +328,7 @@ mod tests {
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(
             diagnostics.entries()[0].code,
-            DiagnosticCode::ContentsEmptyName
+            DiagnosticCode::DirectiveEmptyOptionValue
         );
     }
 

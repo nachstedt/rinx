@@ -2,7 +2,7 @@ use super::super::body::{DescriptionOption, ObjectOptions, parse_object_body};
 use super::dispatch::PyObjectOption;
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::{OptionLine, directive_options};
+use crate::directives::options::directive_options;
 use crate::headings::Adornment;
 use rinx_ast::{DescriptionFlags, DomainObjectBody, NonEmptyVector};
 
@@ -46,11 +46,11 @@ directive_options! {
     /// The options `.. py:attribute::` takes: Sphinx's `PyAttribute`'s.
     enum AttributeOption {
         /// `:type:`.
-        Type => (["type"], Text, "The attribute's type."),
+        Type(String) => (["type"], "The attribute's type."),
         /// `:value:`.
-        Value => (["value"], Text, "The attribute's value, as it is shown."),
+        Value(String) => (["value"], "The attribute's value, as it is shown."),
         /// `:canonical:`.
-        Canonical => (["canonical"], Text, "The attribute's name where it is defined, if documented elsewhere.");
+        Canonical(String) => (["canonical"], "The attribute's name where it is defined, if documented elsewhere.");
         Py(PyObjectOption),
         Description(DescriptionOption),
     }
@@ -59,12 +59,12 @@ directive_options! {
 impl ObjectOptions for AttributeOptions {
     type Option = AttributeOption;
 
-    fn read(&mut self, option: AttributeOption, line: &OptionLine, flags: &mut DescriptionFlags) {
+    fn read(&mut self, option: AttributeOption, flags: &mut DescriptionFlags) {
         match option {
-            AttributeOption::Type => self.type_ = Some(line.value.clone()),
-            AttributeOption::Value => self.value = Some(line.value.clone()),
-            AttributeOption::Canonical => self.canonical = Some(line.value.clone()),
-            AttributeOption::Py(PyObjectOption::Module) => self.module = Some(line.value.clone()),
+            AttributeOption::Type(value) => self.type_ = Some(value),
+            AttributeOption::Value(value) => self.value = Some(value),
+            AttributeOption::Canonical(value) => self.canonical = Some(value),
+            AttributeOption::Py(PyObjectOption::Module(module)) => self.module = Some(module),
             AttributeOption::Description(option) => flags.set(option.flag()),
         }
     }

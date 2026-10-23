@@ -11,25 +11,28 @@ use rinx_ast::{Diagnostic, DiagnosticCode};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::option_value::Located;
 
 /// Expands an `:emphasize-lines:` value into sorted, deduplicated line
 /// numbers, dropping and reporting any that the block does not have.
 pub(super) fn resolve_emphasize_lines(
-    raw: Option<&(String, usize, String)>,
+    raw: Option<&Located<String>>,
     line_count: usize,
     directive: &str,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Vec<NonZeroU32> {
-    let Some((value, line_index, raw_line)) = raw else {
+    let Some(written) = raw else {
         return Vec::new();
     };
+    let value = &written.value;
+    let span = written.span(ctx);
 
     let mut report = |message: String| {
         diagnostics.push(Diagnostic::at(
             DiagnosticCode::CodeBlockEmphasizeLinesInvalid,
             format!("{directive}: :emphasize-lines: {message}"),
-            ctx.line_span(*line_index, raw_line),
+            span,
         ));
     };
 

@@ -36,6 +36,9 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: &[],
+    // Its options are whatever the external service defines; the directive
+    // is refused whole, so none is read.
+    accepts_further: true,
 };
 
 /// Interprets `.. needservice::`, which is refused by name so its warning can

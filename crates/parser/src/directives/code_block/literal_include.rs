@@ -66,6 +66,7 @@ pub(in crate::directives) const LITERAL_INCLUDE_SPEC: DirectiveSpec = DirectiveS
         content_hint: None,
     },
     options: <LiteralIncludeOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. literalinclude::`.
@@ -174,31 +175,31 @@ directive_options! {
     /// The options `.. literalinclude::` takes: Sphinx's twenty-one.
     enum LiteralIncludeOption {
         /// `:language:`.
-        Language => (["language"], Text, "The language to highlight the file as."),
+        Language(String) => (["language"], "The language to highlight the file as."),
         /// `:encoding:`.
-        Encoding => (["encoding"], Text, "The file's text encoding."),
+        Encoding(String) => (["encoding"], "The file's text encoding."),
         /// `:prepend:`.
-        Prepend => (["prepend"], Text, "A line shown before the file's."),
+        Prepend(String) => (["prepend"], "A line shown before the file's."),
         /// `:append:`.
-        Append => (["append"], Text, "A line shown after the file's."),
+        Append(String) => (["append"], "A line shown after the file's."),
         /// `:diff:`.
         Diff => (["diff"], Path, "A file to show the difference to, as a patch."),
         /// `:pyobject:`.
-        PyObject => (["pyobject"], Text, "A Python object whose source is shown."),
+        PyObject(String) => (["pyobject"], "A Python object whose source is shown."),
         /// `:lineno-match:`.
         LinenoMatch => (["lineno-match"], Flag, "Numbers the lines as they are numbered in the file."),
         /// `:lines:`.
-        Lines => (["lines"], Text, "The lines to show, as numbers and ranges."),
+        Lines(String) => (["lines"], "The lines to show, as numbers and ranges."),
         /// `:start-after:`.
-        StartAfter => (["start-after"], Text, "Shows the file from below the first line holding this text."),
+        StartAfter(String) => (["start-after"], "Shows the file from below the first line holding this text."),
         /// `:end-before:`.
-        EndBefore => (["end-before"], Text, "Shows the file up to above the first line holding this text."),
+        EndBefore(String) => (["end-before"], "Shows the file up to above the first line holding this text."),
         /// `:start-at:`.
-        StartAt => (["start-at"], Text, "Shows the file from the first line holding this text."),
+        StartAt(String) => (["start-at"], "Shows the file from the first line holding this text."),
         /// `:end-at:`.
-        EndAt => (["end-at"], Text, "Shows the file up to the first line holding this text."),
+        EndAt(String) => (["end-at"], "Shows the file up to the first line holding this text."),
         /// `:tab-width:`.
-        TabWidth => (["tab-width"], Integer, "How many spaces a tab expands to.");
+        TabWidth(i32) => (["tab-width"], IncludeInvalidTabWidth, "How many spaces a tab expands to.");
         Common(CommonCodeOption),
         Sphinx(SphinxCodeOption),
     }
@@ -217,25 +218,19 @@ fn parse_options(
         classify_options::<LiteralIncludeOption>(option_lines, DIRECTIVE, diagnostics, ctx)
     {
         match option {
-            LiteralIncludeOption::Language => options.language = Some(line.value.clone()),
-            LiteralIncludeOption::Encoding => options.encoding = Some(line.value.clone()),
-            LiteralIncludeOption::Prepend => options.prepend = Some(line.value.clone()),
-            LiteralIncludeOption::Append => options.append = Some(line.value.clone()),
+            LiteralIncludeOption::Language(value) => options.language = Some(value),
+            LiteralIncludeOption::Encoding(value) => options.encoding = Some(value),
+            LiteralIncludeOption::Prepend(value) => options.prepend = Some(value),
+            LiteralIncludeOption::Append(value) => options.append = Some(value),
             LiteralIncludeOption::Diff => options.diff = Some(line.value.clone()),
-            LiteralIncludeOption::PyObject => options.pyobject = Some(line.value.clone()),
+            LiteralIncludeOption::PyObject(value) => options.pyobject = Some(value),
             LiteralIncludeOption::LinenoMatch => options.lineno_match = true,
-            LiteralIncludeOption::Lines => options.selection.lines = Some(line.value.clone()),
-            LiteralIncludeOption::StartAfter => {
-                options.selection.start_after = Some(line.value.clone());
-            }
-            LiteralIncludeOption::EndBefore => {
-                options.selection.end_before = Some(line.value.clone());
-            }
-            LiteralIncludeOption::StartAt => options.selection.start_at = Some(line.value.clone()),
-            LiteralIncludeOption::EndAt => options.selection.end_at = Some(line.value.clone()),
-            LiteralIncludeOption::TabWidth => {
-                options.tab_width = parse_tab_width(line, diagnostics, ctx);
-            }
+            LiteralIncludeOption::Lines(value) => options.selection.lines = Some(value),
+            LiteralIncludeOption::StartAfter(text) => options.selection.start_after = Some(text),
+            LiteralIncludeOption::EndBefore(text) => options.selection.end_before = Some(text),
+            LiteralIncludeOption::StartAt(value) => options.selection.start_at = Some(value),
+            LiteralIncludeOption::EndAt(value) => options.selection.end_at = Some(value),
+            LiteralIncludeOption::TabWidth(width) => options.tab_width = Some(width),
             // A `:caption:` with no value means "the file's path".
             LiteralIncludeOption::Common(CommonCodeOption::Caption) if line.value.is_empty() => {
                 options.bare_caption = true;
@@ -249,27 +244,6 @@ fn parse_options(
         }
     }
     (shared, options)
-}
-
-/// Reads a `:tab-width:`, which docutils allows to be negative — that is how
-/// it spells "leave tabs alone" — so this is an `i32` rather than a count.
-fn parse_tab_width(
-    line: &OptionLine,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<i32> {
-    let Ok(width) = line.value.trim().parse::<i32>() else {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::IncludeInvalidTabWidth,
-            format!(
-                "{DIRECTIVE}: :tab-width: needs an integer, got '{}'",
-                line.value
-            ),
-            ctx.line_span(line.line_index, &line.raw),
-        ));
-        return None;
-    };
-    Some(width)
 }
 
 /// What this directive read out of the file it named.

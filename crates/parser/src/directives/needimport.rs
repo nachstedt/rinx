@@ -123,6 +123,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <NeedImportOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. needimport::`, splicing the imported entities in where it
@@ -384,11 +385,11 @@ directive_options! {
     /// The options `.. needimport::` takes: sphinx-needs' fourteen.
     enum NeedImportOption {
         /// `:version:`.
-        Version => (["version"], Text, "Which version of the file to import."),
+        Version(String) => (["version"], "Which version of the file to import."),
         /// `:ids:`.
         Ids => (["ids"], Text, "The only needs to import, by id."),
         /// `:id_prefix:`.
-        IdPrefix => (["id_prefix", "id-prefix"], Text, "Text prepended to every imported id."),
+        IdPrefix(String) => (["id_prefix", "id-prefix"], "Text prepended to every imported id."),
         /// `:tags:`.
         Tags => (["tags"], Text, "Tags added to every imported need."),
         /// `:filter:`.
@@ -418,9 +419,9 @@ fn parse_options(
         classify_options::<NeedImportOption>(option_lines, DIRECTIVE, diagnostics, ctx)
     {
         match option {
-            NeedImportOption::Version => options.version = Some(line.value.trim().to_string()),
+            NeedImportOption::Version(version) => options.version = Some(version),
             NeedImportOption::Ids => options.ids = Some(split_list(&line.value)),
-            NeedImportOption::IdPrefix => options.id_prefix = line.value.trim().to_string(),
+            NeedImportOption::IdPrefix(prefix) => options.id_prefix = prefix,
             NeedImportOption::Tags => options.tags = split_list(&line.value),
             NeedImportOption::Filter => {
                 options.filter = read_filter_option(

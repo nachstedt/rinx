@@ -22,18 +22,19 @@
 //! honour are refused **by name**, as the pie's are.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
+use crate::directives::option_value::{NonEmptyText, report_missing_value};
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{
-    BarArrangement, BarGrid, BarOrientation, ChartValue, Diagnostic, DiagnosticCode, Directive,
-    EntityBar, EntityBarSource, LabelRotation, Span,
+    BarArrangement, BarGrid, BarOrientation, ChartColor, ChartValue, Diagnostic, DiagnosticCode,
+    Directive, EntityBar, EntityBarSource, LabelRotation, Span,
 };
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 
 use super::chart_options::{
-    ChartCodes, ChartFigureOption, ChartOwner, FigureOption, read_color, read_colors,
-    read_figure_option, report_empty_value, report_unusable_scale,
+    ChartCodes, ChartFigureOption, ChartOwner, FigureOption, read_colors, read_figure_option,
+    report_unusable_scale,
 };
 use super::filter_option::{
     FilterCodes, FilterOwner, FilterSite, ShorthandFilterOption, read_filter_option,
@@ -63,7 +64,7 @@ directive_options! {
         /// `:transpose:`.
         Transpose => (["transpose"], Flag, "Swaps the content's rows and columns."),
         /// `:separator:`.
-        Separator => (["separator"], Text, "The text a content line's cells are split on."),
+        Separator(NonEmptyText) => (["separator"], "The text a content line's cells are split on."),
         /// `:xlabels:`.
         Xlabels => (["xlabels"], Text, "The categories' names, comma-separated, or `FROM_DATA`."),
         /// `:ylabels:`.
@@ -71,17 +72,17 @@ directive_options! {
         /// `:colors:`.
         Colors => (["colors"], Text, "The series' colours, comma-separated."),
         /// `:text_color:`.
-        TextColor => (["text_color", "text-color"], Text, "The colour of the chart's text."),
+        TextColor(ChartColor) => (["text_color", "text-color"], EntityBarInvalidColor, "The colour of the chart's text."),
         /// `:x_axis_title:`.
-        XAxisTitle => (["x_axis_title", "x-axis-title"], Text, "The title of the horizontal axis."),
+        XAxisTitle(NonEmptyText) => (["x_axis_title", "x-axis-title"], "The title of the horizontal axis."),
         /// `:y_axis_title:`.
-        YAxisTitle => (["y_axis_title", "y-axis-title"], Text, "The title of the vertical axis."),
+        YAxisTitle(NonEmptyText) => (["y_axis_title", "y-axis-title"], "The title of the vertical axis."),
         /// `:xlabels_rotation:`.
-        XlabelsRotation => (["xlabels_rotation", "xlabels-rotation"], Integer, "The categories' names' angle, in degrees."),
+        XlabelsRotation(LabelRotation) => (["xlabels_rotation", "xlabels-rotation"], EntityBarInvalidRotation, "The categories' names' angle, in degrees."),
         /// `:ylabels_rotation:`.
-        YlabelsRotation => (["ylabels_rotation", "ylabels-rotation"], Integer, "The series' names' angle, in degrees."),
+        YlabelsRotation(LabelRotation) => (["ylabels_rotation", "ylabels-rotation"], EntityBarInvalidRotation, "The series' names' angle, in degrees."),
         /// `:sum_rotation:`.
-        SumRotation => (["sum_rotation", "sum-rotation"], Integer, "The counts' angle, in degrees."),
+        SumRotation(LabelRotation) => (["sum_rotation", "sum-rotation"], EntityBarInvalidRotation, "The counts' angle, in degrees."),
         _ => (["style"], Text, "A matplotlib stylesheet.", "that names a matplotlib stylesheet, which this build does not use; use :colors: and :text_color:"),
         _ => (["cypher"], Text, "The entities counted, by a Cypher query.", "that is a ubCode graph query, which this build does not evaluate; write the selection as :filter:");
         Figure(ChartFigureOption),
@@ -106,6 +107,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <EntityBarOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. entity-bar::` or `.. needbar::`, recording which was
@@ -240,13 +242,7 @@ fn read_options<'a>(
             EntityBarOption::ShowTopSum => bar.value_labels.at_end = true,
             EntityBarOption::Horizontal => bar.orientation = BarOrientation::Horizontal,
             EntityBarOption::Transpose => layout.transpose = true,
-            EntityBarOption::Separator => {
-                if line.value.is_empty() {
-                    report_empty_value(line, owner, diagnostics, ctx);
-                } else {
-                    layout.separator.clone_from(&line.value);
-                }
-            }
+            EntityBarOption::Separator(separator) => layout.separator = separator.0,
             EntityBarOption::Xlabels => {
                 layout.categories = read_label_spec(line, owner, diagnostics, ctx);
             }
@@ -254,26 +250,14 @@ fn read_options<'a>(
                 layout.series = read_label_spec(line, owner, diagnostics, ctx);
             }
             EntityBarOption::Colors => bar.colors = read_colors(line, owner, diagnostics, ctx),
-            EntityBarOption::TextColor => {
-                bar.text_color = read_color(&line.value, line, owner, diagnostics, ctx);
-            }
-            EntityBarOption::XAxisTitle => {
-                bar.x_axis_title = read_text(line, owner, diagnostics, ctx);
-            }
-            EntityBarOption::YAxisTitle => {
-                bar.y_axis_title = read_text(line, owner, diagnostics, ctx);
-            }
-            EntityBarOption::XlabelsRotation => {
-                bar.xlabels_rotation = read_rotation(line, directive, diagnostics, ctx);
-            }
-            EntityBarOption::YlabelsRotation => {
-                bar.ylabels_rotation = read_rotation(line, directive, diagnostics, ctx);
-            }
-            EntityBarOption::SumRotation => {
-                bar.sum_rotation = read_rotation(line, directive, diagnostics, ctx);
-            }
+            EntityBarOption::TextColor(color) => bar.text_color = Some(color),
+            EntityBarOption::XAxisTitle(title) => bar.x_axis_title = Some(title.0),
+            EntityBarOption::YAxisTitle(title) => bar.y_axis_title = Some(title.0),
+            EntityBarOption::XlabelsRotation(rotation) => bar.xlabels_rotation = Some(rotation),
+            EntityBarOption::YlabelsRotation(rotation) => bar.ylabels_rotation = Some(rotation),
+            EntityBarOption::SumRotation(rotation) => bar.sum_rotation = Some(rotation),
             EntityBarOption::Figure(option) => {
-                if let Some(option) = read_figure_option(option, line, owner, diagnostics, ctx) {
+                if let Some(option) = read_figure_option(&option, line, owner, diagnostics, ctx) {
                     store_figure_option(bar, option);
                 }
             }
@@ -293,7 +277,7 @@ fn read_label_spec<'a>(
     ctx: &ParseCtx<'_>,
 ) -> LabelSpec<'a> {
     if line.value.is_empty() {
-        report_empty_value(line, owner, diagnostics, ctx);
+        report_missing_value(line, owner.directive, diagnostics, ctx);
         return LabelSpec::Numbered;
     }
     let labels: Vec<&str> = line.value.split(',').map(str::trim).collect();
@@ -310,44 +294,6 @@ fn read_label_spec<'a>(
 fn written_label(text: &str) -> Option<String> {
     let text = text.trim();
     (!text.is_empty()).then(|| text.to_string())
-}
-
-/// Reads an option whose value is free text that must not be empty.
-fn read_text(
-    line: &OptionLine,
-    owner: ChartOwner<'_>,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<String> {
-    if line.value.is_empty() {
-        report_empty_value(line, owner, diagnostics, ctx);
-        return None;
-    }
-    Some(line.value.clone())
-}
-
-/// Reads one of the three rotation options.
-///
-/// A value that is not whole degrees is reported and the text drawn
-/// unrotated. sphinx-needs draws it unrotated too, but silently — which leaves
-/// the author no way to find out why their `-45` did nothing.
-fn read_rotation(
-    line: &OptionLine,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<LabelRotation> {
-    match LabelRotation::parse(&line.value) {
-        Ok(rotation) => Some(rotation),
-        Err(problem) => {
-            diagnostics.push(Diagnostic::at(
-                DiagnosticCode::EntityBarInvalidRotation,
-                format!("{directive}: :{}: {problem}", line.name),
-                ctx.line_span(line.line_index, &line.raw),
-            ));
-            None
-        }
-    }
 }
 
 /// The directive body below its options.
@@ -642,7 +588,6 @@ const CHART_CODES: ChartCodes = ChartCodes {
     invalid_scale: DiagnosticCode::EntityBarInvalidScale,
     invalid_width: DiagnosticCode::EntityBarInvalidWidth,
     unusable_scale: DiagnosticCode::EntityBarUnusableScale,
-    empty_option_value: DiagnosticCode::EntityBarEmptyOptionValue,
 };
 
 #[cfg(test)]

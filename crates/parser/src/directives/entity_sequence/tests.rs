@@ -353,7 +353,7 @@ fn test_an_empty_name_is_reported() {
     let rst = ".. entity-sequence::\n   :start: COMP_UI\n   :relations: sends\n   :name:\n";
 
     // When / Then
-    assert_eq!(codes(rst), ["entity-sequence.empty-option-value"]);
+    assert_eq!(codes(rst), ["directive.empty-option-value"]);
 }
 
 #[test]

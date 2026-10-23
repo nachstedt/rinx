@@ -31,6 +31,7 @@ pub(in crate::directives) const CODE_BLOCK_SPEC: DirectiveSpec = DirectiveSpec {
     doc: "A block of source code, highlighted.",
     shape: CODE_SHAPE,
     options: <CodeBlockOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// docutils' spelling of a code block, whose options number its lines
@@ -40,6 +41,7 @@ pub(in crate::directives) const CODE_SPEC: DirectiveSpec = DirectiveSpec {
     doc: "A block of source code, highlighted, in docutils' spelling.",
     shape: CODE_SHAPE,
     options: <CodeOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// How both spellings' blocks split: an optional language and content.

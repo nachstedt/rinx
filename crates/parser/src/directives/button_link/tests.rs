@@ -254,7 +254,7 @@ fn test_a_tooltip_without_a_value_is_reported() {
     assert_eq!(button.tooltip, None);
     assert_eq!(
         codes(&diagnostics),
-        vec![DiagnosticCode::ButtonLinkEmptyOptionValue]
+        vec![DiagnosticCode::DirectiveEmptyOptionValue]
     );
 }
 

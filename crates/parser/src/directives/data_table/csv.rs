@@ -13,11 +13,9 @@ use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::directives::body::join_body_lines;
 use crate::directives::error_node::malformed_node;
-use crate::directives::options::{
-    DirectiveOptions, OptionLine, classify_options, directive_options,
-};
+use crate::directives::options::{DirectiveOptions, classify_options, directive_options};
 use crate::directives::table_options::TableOption;
-use crate::directives::table_widths::parse_widths_option;
+use crate::directives::table_widths::widths_for_columns;
 use crate::headings::Adornment;
 
 /// The directive name, used throughout this module's diagnostics.
@@ -38,14 +36,14 @@ struct CsvSource {
 
 impl CsvSource {
     /// Applies one of the options saying where the data comes from.
-    fn read_option(&mut self, option: CsvSourceOption, line: &OptionLine) {
-        let field = match option {
-            CsvSourceOption::File => &mut self.file,
-            CsvSourceOption::Url => &mut self.url,
-            CsvSourceOption::Encoding => &mut self.encoding,
-            CsvSourceOption::Header => &mut self.header,
+    fn read_option(&mut self, option: CsvSourceOption) {
+        let (field, value) = match option {
+            CsvSourceOption::File(value) => (&mut self.file, value),
+            CsvSourceOption::Url(value) => (&mut self.url, value),
+            CsvSourceOption::Encoding(value) => (&mut self.encoding, value),
+            CsvSourceOption::Header(value) => (&mut self.header, value),
         };
-        *field = Some(line.value.clone());
+        *field = Some(value);
     }
 }
 
@@ -53,13 +51,13 @@ directive_options! {
     /// The four `.. csv-table::` options saying where its data comes from.
     enum CsvSourceOption {
         /// `:file:`.
-        File => (["file"], Path, "The file holding the data, instead of the content."),
+        File(String) => (["file"], "The file holding the data, instead of the content."),
         /// `:url:`.
-        Url => (["url"], Uri, "Refused: fetching would make the build non-hermetic."),
+        Url(String) => (["url"], "Refused: fetching would make the build non-hermetic."),
         /// `:encoding:`.
-        Encoding => (["encoding"], Text, "The text encoding of the `:file:`."),
+        Encoding(String) => (["encoding"], "The text encoding of the `:file:`."),
         /// `:header:`.
-        Header => (["header"], Text, "Header rows, as CSV data, above the content's."),
+        Header(String) => (["header"], "Header rows, as CSV data, above the content's."),
     }
 }
 
@@ -85,6 +83,7 @@ pub(in crate::directives) const CSV_TABLE_SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <CsvTableOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. csv-table::`.
@@ -126,10 +125,10 @@ pub(in crate::directives) fn parse_csv_table(
         classify_options::<CsvTableOption>(&invocation.options, directive, diagnostics, ctx)
     {
         match option {
-            CsvTableOption::Source(option) => source.read_option(option, line),
-            CsvTableOption::Dialect(option) => dialect.read_option(option, line, diagnostics, ctx),
+            CsvTableOption::Source(option) => source.read_option(option),
+            CsvTableOption::Dialect(option) => dialect.read_option(&option, line, diagnostics, ctx),
             CsvTableOption::Data(option) => {
-                reader.read_data(option, line, directive, diagnostics, ctx);
+                reader.read_data(&option);
             }
             CsvTableOption::Table(option) => {
                 reader.read_table(option, line, directive, diagnostics, ctx);
@@ -387,8 +386,8 @@ fn build_csv_table(
     }
 
     let widths = options
-        .widths_raw
-        .and_then(|raw| parse_widths_option(&raw, ncols, DIRECTIVE, diagnostics, span));
+        .widths
+        .and_then(|widths| widths_for_columns(widths, ncols, DIRECTIVE, diagnostics, ctx));
 
     let rows = field_rows
         .into_iter()
@@ -1121,15 +1120,7 @@ mod tests {
         let mut source = CsvSource::default();
 
         // When
-        source.read_option(
-            CsvSourceOption::File,
-            &OptionLine {
-                name: "file".to_string(),
-                value: "data/fruits.csv".to_string(),
-                raw: ":file: data/fruits.csv".to_string(),
-                line_index: 0,
-            },
-        );
+        source.read_option(CsvSourceOption::File("data/fruits.csv".to_string()));
 
         // Then
         assert_eq!(source.file.as_deref(), Some("data/fruits.csv"));

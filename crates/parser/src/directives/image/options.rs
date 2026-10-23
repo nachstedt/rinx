@@ -17,8 +17,9 @@ use rinx_ast::{
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::option_value::{Classes, NonEmptyText, Percentage};
 use crate::directives::options::{
-    DirectiveOptions, OptionLine, choice_names, directive_options, parse_percentage,
+    DirectiveOptions, OptionLine, OptionRead, choice_names, directive_options,
 };
 
 /// Which of the two places an image's options may be written in — the two
@@ -87,44 +88,27 @@ impl CommonImageOptions {
     }
 }
 
-/// Reports an option whose value is required but was left empty.
-fn report_empty_value(
-    line: &OptionLine,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::ImageEmptyOptionValue,
-        format!(
-            "{directive}: :{}: needs a value, so the option was ignored",
-            line.name
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
-}
-
 directive_options! {
     /// The options every image directive takes: docutils' nine.
     pub(in crate::directives) enum ImageOption {
         /// `:alt:`.
-        Alt => (["alt"], Text, "Text describing the picture, for readers who cannot see it."),
+        Alt(String) => (["alt"], "Text describing the picture, for readers who cannot see it."),
         /// `:height:`.
-        Height => (["height"], Length, "The picture's height."),
+        Height(Length) => (["height"], ImageInvalidLength, "The picture's height."),
         /// `:width:`.
-        Width => (["width"], Length, "The picture's width, or a percentage of the line."),
+        Width(LengthOrPercentage) => (["width"], ImageInvalidLength, "The picture's width, or a percentage of the line."),
         /// `:scale:`.
-        Scale => (["scale"], Text, "The picture's size, as a percentage."),
+        Scale(Percentage) => (["scale"], ImageInvalidScale, "The picture's size, as a percentage."),
         /// `:align:`.
         Align => (["align"], Choice(|| choice_names(ImageAlign::ALL, ImageAlign::as_str)), "Where the picture sits."),
         /// `:target:`.
-        Target => (["target"], Uri, "Where clicking the picture leads."),
+        Target(NonEmptyText) => (["target"], "Where clicking the picture leads."),
         /// `:class:`.
-        Class => (["class"], Classes, "Classes for the picture."),
+        Class(Classes) => (["class"], "Classes for the picture."),
         /// `:name:`.
-        Name => (["name"], Text, "A label to reference the picture by."),
+        Name(TargetName) => (["name"], "A label to reference the picture by."),
         /// `:loading:`.
-        Loading => (["loading"], Choice(|| choice_names(ImageLoading::ALL, ImageLoading::as_str)), "How the page loads the picture."),
+        Loading(ImageLoading) => (["loading"], ImageInvalidLoading, "How the page loads the picture."),
     }
 }
 
@@ -145,26 +129,12 @@ pub(in crate::directives) fn read_image_option(
         // docutils' `unchanged`, so an empty `:alt:` is a deliberate
         // empty alt attribute — the accessible spelling for a purely
         // decorative image — rather than a mistake to report.
-        ImageOption::Alt => options.alt = Some(line.value.clone()),
-        ImageOption::Height => match Length::new(&line.value) {
-            Ok(height) => options.height = Some(height),
-            Err(problem) => report_invalid_length(line, directive, &problem, diagnostics, ctx),
-        },
-        ImageOption::Width => match LengthOrPercentage::new(&line.value) {
-            Ok(width) => options.width = Some(width),
-            Err(problem) => report_invalid_length(line, directive, &problem, diagnostics, ctx),
-        },
-        ImageOption::Scale => match parse_percentage(&line.value) {
-            Some(scale) => options.scale = Some(scale),
-            None => diagnostics.push(Diagnostic::at(
-                DiagnosticCode::ImageInvalidScale,
-                format!(
-                    "{directive}: :scale: expects a non-negative percentage, found '{}'",
-                    line.value
-                ),
-                ctx.line_span(line.line_index, &line.raw),
-            )),
-        },
+        ImageOption::Alt(alt) => options.alt = Some(alt),
+        ImageOption::Height(height) => options.height = Some(height),
+        ImageOption::Width(width) => options.width = Some(width),
+        ImageOption::Scale(scale) => options.scale = Some(scale.0),
+        // Which values are valid depends on where the picture stands, so the
+        // value is read here.
         ImageOption::Align => {
             let parsed = match context {
                 ImageContext::Standalone => ImageAlign::parse(&line.value),
@@ -175,42 +145,13 @@ pub(in crate::directives) fn read_image_option(
                 None => report_invalid_align(line, directive, context, diagnostics, ctx),
             }
         }
-        ImageOption::Target => {
-            if line.value.is_empty() {
-                report_empty_value(line, directive, diagnostics, ctx);
-            } else {
-                options.target = Some(ImageTarget::new(&line.value));
-            }
-        }
-        ImageOption::Class => {
-            options.classes = line.value.split_whitespace().map(str::to_string).collect();
-        }
-        ImageOption::Name if context == ImageContext::Substitution => {
+        ImageOption::Target(target) => options.target = Some(ImageTarget::new(&target.0)),
+        ImageOption::Class(classes) => options.classes = classes.0,
+        ImageOption::Name(_) if context == ImageContext::Substitution => {
             report_name_not_allowed(line, directive, diagnostics, ctx);
         }
-        ImageOption::Name => {
-            if line.value.is_empty() {
-                report_empty_value(line, directive, diagnostics, ctx);
-            } else {
-                options.name = Some(TargetName::new(&line.value));
-            }
-        }
-        ImageOption::Loading => match ImageLoading::parse(&line.value) {
-            Some(loading) => options.loading = loading,
-            None => diagnostics.push(Diagnostic::at(
-                DiagnosticCode::ImageInvalidLoading,
-                format!(
-                    "{directive}: :loading: expects one of {}, found '{}'",
-                    ImageLoading::ALL
-                        .iter()
-                        .map(|loading| loading.as_str())
-                        .collect::<Vec<_>>()
-                        .join(", "),
-                    line.value
-                ),
-                ctx.line_span(line.line_index, &line.raw),
-            )),
-        },
+        ImageOption::Name(name) => options.name = Some(name),
+        ImageOption::Loading(loading) => options.loading = loading,
     }
 }
 
@@ -237,28 +178,15 @@ pub(in crate::directives) fn parse_common_image_options<'a>(
     let mut unrecognized = Vec::new();
     let image = ImageSite { directive, context };
     for line in option_lines {
-        match ImageOption::from_name(&line.name) {
-            Some(option) => read_image_option(option, line, &mut options, image, diagnostics, ctx),
-            None => unrecognized.push(*line),
+        match ImageOption::read(line, directive, diagnostics, ctx) {
+            OptionRead::Read(option) => {
+                read_image_option(option, line, &mut options, image, diagnostics, ctx);
+            }
+            OptionRead::Refused => {}
+            OptionRead::NotTaken => unrecognized.push(*line),
         }
     }
     (options, unrecognized)
-}
-
-/// Reports a measurement option that did not parse, quoting the reason the
-/// measurement type gave rather than restating it here.
-pub(in crate::directives) fn report_invalid_length(
-    line: &OptionLine,
-    directive: &str,
-    problem: &rinx_ast::InvalidLength,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::ImageInvalidLength,
-        format!("{directive}: :{}: {problem}", line.name),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
 }
 
 /// Reports an `:align:` value that is not valid in `context`.
@@ -570,7 +498,7 @@ mod tests {
         assert_eq!(options.target, None);
         assert_eq!(
             codes(&diagnostics),
-            vec![DiagnosticCode::ImageEmptyOptionValue]
+            vec![DiagnosticCode::DirectiveEmptyOptionValue]
         );
     }
 
@@ -610,7 +538,7 @@ mod tests {
         assert_eq!(options.name, None);
         assert_eq!(
             codes(&diagnostics),
-            vec![DiagnosticCode::ImageEmptyOptionValue]
+            vec![DiagnosticCode::DirectiveEmptyOptionValue]
         );
     }
 

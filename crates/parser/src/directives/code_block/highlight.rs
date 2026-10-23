@@ -14,13 +14,13 @@ use rinx_ast::{Directive, ResolvedLanguage};
 use crate::diagnostics::Diagnostics;
 use crate::directives::options::{DirectiveOptions, classify_options, directive_options};
 
-use super::options::parse_positive_integer;
+use std::num::NonZeroU32;
 
 directive_options! {
     /// The options `.. highlight::` takes: Sphinx's two.
     enum HighlightOption {
         /// `:linenothreshold:`.
-        LineNoThreshold => (["linenothreshold"], Integer, "Numbers the lines of every block at least this long."),
+        LineNoThreshold(NonZeroU32) => (["linenothreshold"], CodeBlockInvalidInteger, "Numbers the lines of every block at least this long."),
         /// `:force:`.
         Force => (["force"], Flag, "Highlights even where the language does not fit."),
     }
@@ -37,6 +37,7 @@ pub(in crate::directives) const HIGHLIGHT_SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <HighlightOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. highlight::`.
@@ -64,20 +65,11 @@ pub(in crate::directives) fn parse_highlight(
     let mut linenothreshold = None;
     let mut force = false;
 
-    for (option, line) in
+    for (option, _) in
         classify_options::<HighlightOption>(&invocation.options, DIRECTIVE, diagnostics, ctx)
     {
         match option {
-            HighlightOption::LineNoThreshold => {
-                linenothreshold = parse_positive_integer(
-                    &line.value,
-                    "linenothreshold",
-                    DIRECTIVE,
-                    line,
-                    diagnostics,
-                    ctx,
-                );
-            }
+            HighlightOption::LineNoThreshold(threshold) => linenothreshold = Some(threshold),
             HighlightOption::Force => force = true,
         }
     }

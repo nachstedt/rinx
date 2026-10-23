@@ -132,10 +132,69 @@ The option sets are transcribed from the same classes as the shapes. Where one
 spelling serves several directives with different options, the spec is split:
 `.. code-block::` and `.. code::`, the plain and the templated diagrams, and
 the doctest directives (`doctest`/`testoutput`, `testcode`,
-`testsetup`/`testcleanup`) each have one per option set. Two directives'
-options are the fields the entity schema declares (`.. entity-update::`,
-`.. needservice::`), so their specs declare none; a registry test checks every
-other spec declares options exactly when its shape takes them.
+`testsetup`/`testcleanup`) each have one per option set.
+
+### A row names the type its value is read into
+
+A row may name a type, and its variant then carries the value, parsed:
+`Align(ImageAlign) => (["align"], EntityFlowInvalidAlign, "Where the chart
+sits.")`. The type implements `OptionValueType` (`directives/option_value.rs`):
+it reads a written value or says why it is none, and it says what completion
+offers, so what is offered and what is accepted cannot drift apart — before,
+a row's `Choice` list and the arm's `ImageAlign::parse` were two statements of
+it, and disagreed (six values offered, three accepted). `classify_options`
+reads each value and reports one that does not read on its line, under the
+row's code or, when the row names none, the shared
+`directive.invalid-option-value`, in one shape: `{directive}: :{name}:
+{problem}`. The interpreter still receives one `(option, line)` pair per line
+written and keeps its exhaustive `match`; a bad value never reaches it.
+
+A value that does not read and was not written at all is a missing value,
+reported as `directive.empty-option-value` whichever option it is: one
+mistake, one code. That replaces sixteen codes of their own
+(`toctree.empty-name`, `math.empty-label`, `sectnum.empty-prefix`, the eight
+`*.empty-option-value`, …), and lets an option whose emptiness used to have a
+code apart from its other failures — grid's `:margin:`, dropdown's `:icon:` —
+be typed like any other.
+
+Two mistakes of the option block are reported centrally too, and the line is
+still handed over, so what it means stays the directive's to decide:
+
+- an option written again under the same spelling is
+  `directive.duplicate-option`, which docutils refuses outright. Two spellings
+  of one option are no repeat: docutils keys options by spelling, and CPython
+  writes `:noindex:` and `:no-index:` together on purpose, for two Sphinx
+  versions;
+- a flag written with a value is `directive.flag-with-value`, which docutils'
+  `directives.flag` refuses; the flag still applies.
+
+The value types are written once and shared: text, counts, a `DepthLimit`
+whose zero means unlimited (`:maxdepth:`, both `:depth:`s), a non-empty text
+or label, classes, a percentage, a length, a boolean, every choice enum the
+AST already has, and `Located<T>` for a value checked later against what only
+the content says — `:widths:` against the column count, now reported on the
+`:widths:` line, and `:emphasize-lines:` against the block's lines.
+
+A value is still read by its directive, from the line handed over with a
+variant that carries none, where one type cannot say what is valid:
+
+- the valid values depend on where the directive stands (an image's `:align:`
+  inside a substitution, a role's `:language:` on its base);
+- one option has two failure codes for two written values (the CSV dialect
+  characters: not a character, and not ASCII);
+- the reading needs the schema, reports several things, or keeps the text for
+  a later step (filters, relations, columns, `:labels:`, `:extra:`, doctest's
+  `:options:`, a `:caption:` whose bare form `.. literalinclude::` reads);
+- a shared group answers to its owner's codes (the chart figure options).
+
+### A spec says when it takes options beyond the listed ones
+
+`DirectiveSpec::accepts_further` marks a directive whose interpreter reads
+option lines beyond the ones it lists: `.. entity-update::` lists `:strict:`
+and reads every other line as a field mutation checked against the schema,
+and `.. needservice::` takes whatever options the external service defines.
+A registry test checks every spec takes options exactly when it declares some
+or accepts further ones, and that only those two accept further ones.
 
 ## Consequences
 
@@ -163,6 +222,13 @@ other spec declares options exactly when its shape takes them.
 - `.. py:method::` reads `:abstract:` as Sphinx does, a spelling of
   `:abstractmethod:`; `:setup:` on a `.. needimport::`, which sphinx-needs 9.1
   does not take, is unknown rather than unsupported.
+- Typed values: the value messages take the shared shape, a `:widths:` list
+  of the wrong length is reported on its own line, and about thirty
+  hand-written value checks and their helpers are gone
+  (`parse_positive_depth`, `parse_widths_option`, `parse_positive_integer`,
+  per-directive `report_invalid_choice`s). CPython's `lsp --check` is
+  unchanged, diagnostic for diagnostic, and `//examples:site` builds
+  byte-identical.
 - The options measured the same way as the reader below: CPython's warnings
   are unchanged, 2628, and identical diagnostic for diagnostic but for 159
   `:no-typesetting:` on an object, now `directive.unsupported-option` where it

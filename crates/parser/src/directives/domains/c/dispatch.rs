@@ -15,7 +15,7 @@ use super::member::parse_c_member;
 use super::struct_::parse_c_struct;
 use super::type_::parse_c_type;
 use super::union::parse_c_union;
-use crate::directives::options::{OptionLine, directive_options};
+use crate::directives::options::directive_options;
 
 directive_options! {
     /// The options every `c` object type takes: Sphinx's `CObject`'s.
@@ -32,7 +32,7 @@ pub(super) struct CObjectOptions;
 impl ObjectOptions for CObjectOptions {
     type Option = CObjectOption;
 
-    fn read(&mut self, option: CObjectOption, _line: &OptionLine, flags: &mut DescriptionFlags) {
+    fn read(&mut self, option: CObjectOption, flags: &mut DescriptionFlags) {
         match option {
             CObjectOption::Description(option) => flags.set(option.flag()),
         }

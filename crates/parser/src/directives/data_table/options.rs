@@ -8,16 +8,17 @@
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::option_value::Located;
 use crate::directives::options::{OptionLine, classify_options, directive_options};
 use crate::directives::table_options::{CommonTableOptions, TableOption, read_table_option};
-use rinx_ast::{Diagnostic, DiagnosticCode, Span, TableAlign, TableSource, TargetName};
+use rinx_ast::{TableAlign, TableSource, TableWidths, TargetName};
 
 /// The seven options `.. list-table::` and `.. csv-table::` share — the five
 /// common options plus `header-rows`/`stub-columns`.
 pub(super) struct SharedTableOptions {
     pub header_rows: usize,
     pub stub_columns: usize,
-    pub widths_raw: Option<String>,
+    pub widths: Option<Located<TableWidths>>,
     pub width: Option<String>,
     pub align: Option<TableAlign>,
     pub classes: Vec<String>,
@@ -29,9 +30,9 @@ directive_options! {
     /// five presentation ones.
     pub(super) enum DataTableOption {
         /// `:header-rows:`.
-        HeaderRows => (["header-rows"], Integer, "How many rows are the table's header."),
+        HeaderRows(usize) => (["header-rows"], TableDataIntegerInvalid, "How many rows are the table's header."),
         /// `:stub-columns:`.
-        StubColumns => (["stub-columns"], Integer, "How many columns are row headers."),
+        StubColumns(usize) => (["stub-columns"], TableDataIntegerInvalid, "How many columns are row headers."),
     }
 }
 
@@ -63,25 +64,11 @@ impl SharedTableReader {
     }
 
     /// Records one of the two data-table options.
-    pub(super) fn read_data(
-        &mut self,
-        option: DataTableOption,
-        line: &OptionLine,
-        directive: &str,
-        diagnostics: &mut Diagnostics,
-        ctx: &ParseCtx<'_>,
-    ) {
-        let (field, name) = match option {
-            DataTableOption::HeaderRows => (&mut self.header_rows, "header-rows"),
-            DataTableOption::StubColumns => (&mut self.stub_columns, "stub-columns"),
-        };
-        *field = parse_nonneg_int_option(
-            &line.value,
-            name,
-            directive,
-            diagnostics,
-            ctx.line_span(line.line_index, &line.raw),
-        );
+    pub(super) fn read_data(&mut self, option: &DataTableOption) {
+        match *option {
+            DataTableOption::HeaderRows(rows) => self.header_rows = rows,
+            DataTableOption::StubColumns(columns) => self.stub_columns = columns,
+        }
     }
 
     /// Records one of the five presentation options.
@@ -101,7 +88,7 @@ impl SharedTableReader {
         SharedTableOptions {
             header_rows: self.header_rows,
             stub_columns: self.stub_columns,
-            widths_raw: self.common.widths_raw,
+            widths: self.common.widths,
             width: self.common.width,
             align: self.common.align,
             classes: self.common.classes,
@@ -123,7 +110,7 @@ pub(super) fn parse_list_table_options(
     {
         match option {
             ListTableOption::Data(option) => {
-                reader.read_data(option, line, directive, diagnostics, ctx);
+                reader.read_data(&option);
             }
             ListTableOption::Table(option) => {
                 reader.read_table(option, line, directive, diagnostics, ctx);
@@ -133,32 +120,11 @@ pub(super) fn parse_list_table_options(
     reader.finish()
 }
 
-/// Parses a nonnegative-integer option value (`:header-rows:`/
-/// `:stub-columns:`), pushing a diagnostic and defaulting to 0 on a malformed
-/// value rather than failing the whole directive.
-pub(super) fn parse_nonneg_int_option(
-    raw: &str,
-    option_name: &str,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    span: Option<Span>,
-) -> usize {
-    if let Ok(value) = raw.parse::<usize>() {
-        value
-    } else {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::TableDataIntegerInvalid,
-            format!("{directive}: :{option_name}: value '{raw}' is not a nonnegative integer"),
-            span,
-        ));
-        0
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::directives::options::DirectiveOptions;
+    use crate::directives::options::{DirectiveOptions, OptionRead};
+
     use crate::directives::options::scan_option_lines;
     use rinx_ast::Domain;
 
@@ -173,14 +139,15 @@ mod tests {
         let mut reader = SharedTableReader::new();
         let mut unrecognized = Vec::new();
         for line in option_lines {
-            match ListTableOption::from_name(&line.name) {
-                Some(ListTableOption::Data(option)) => {
-                    reader.read_data(option, line, directive, diagnostics, ctx);
+            match ListTableOption::read(line, directive, diagnostics, ctx) {
+                OptionRead::Read(ListTableOption::Data(option)) => {
+                    reader.read_data(&option);
                 }
-                Some(ListTableOption::Table(option)) => {
+                OptionRead::Read(ListTableOption::Table(option)) => {
                     reader.read_table(option, line, directive, diagnostics, ctx);
                 }
-                None => unrecognized.push(line),
+                OptionRead::Refused => {}
+                OptionRead::NotTaken => unrecognized.push(line),
             }
         }
         (reader.finish(), unrecognized)
@@ -218,7 +185,10 @@ mod tests {
         assert!(unrecognized.is_empty());
         assert_eq!(options.header_rows, 1);
         assert_eq!(options.stub_columns, 2);
-        assert_eq!(options.widths_raw.as_deref(), Some("30 70"));
+        assert_eq!(
+            options.widths.map(|widths| widths.value),
+            Some(rinx_ast::TableWidths::Explicit(vec![30, 70]))
+        );
         assert_eq!(options.width.as_deref(), Some("50%"));
         assert_eq!(options.align, Some(TableAlign::Right));
         assert_eq!(options.classes, vec!["foo".to_string(), "bar".to_string()]);
@@ -267,7 +237,7 @@ mod tests {
         assert!(
             diagnostics[0]
                 .message
-                .starts_with("csv-table: invalid :align:"),
+                .starts_with("csv-table: :align: expects one of"),
             "{}",
             diagnostics[0].message
         );
@@ -295,34 +265,5 @@ mod tests {
             "{}",
             diagnostics[0].message
         );
-    }
-
-    #[test]
-    fn test_parse_nonneg_int_option_accepts_a_number() {
-        // Given
-        let mut diagnostics = Diagnostics::default();
-
-        // When
-        let value =
-            parse_nonneg_int_option("3", "header-rows", "list-table", &mut diagnostics, None);
-
-        // Then
-        assert_eq!(value, 3);
-        assert!(diagnostics.is_empty());
-    }
-
-    #[test]
-    fn test_parse_nonneg_int_option_rejects_non_numeric_value() {
-        // Given
-        let mut diagnostics = Diagnostics::default();
-
-        // When
-        let value =
-            parse_nonneg_int_option("abc", "header-rows", "list-table", &mut diagnostics, None);
-
-        // Then
-        assert_eq!(value, 0);
-        assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].message.contains("header-rows"));
     }
 }

@@ -94,7 +94,7 @@ An option with no value
 ``:tooltip:`` is the one option here that requires a value, so writing it bare
 is reported and no tooltip is set:
 
-.. noqa: button-link.empty-option-value
+.. noqa: directive.empty-option-value
 
 .. button-link:: https://example.com/empty-tooltip
    :tooltip:

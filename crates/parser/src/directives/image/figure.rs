@@ -8,6 +8,7 @@
 //! markup this parser consumes rather than parses.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
+use crate::directives::option_value::Classes;
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
 use rinx_ast::{Directive, Figure, FigureWidth, InlineNode, Node};
 
@@ -21,10 +22,7 @@ use crate::directives::options::{
 use crate::headings::Adornment;
 
 use super::image_directive::{image_uri, report_option_conflicts};
-use super::options::{
-    CommonImageOptions, ImageContext, ImageOption, ImageSite, read_image_option,
-    report_invalid_length,
-};
+use super::options::{CommonImageOptions, ImageContext, ImageOption, ImageSite, read_image_option};
 
 const DIRECTIVE: &str = "figure";
 
@@ -39,9 +37,9 @@ directive_options! {
     /// `:figwidth:` and `:figclass:`.
     enum FigureOption {
         /// `:figwidth:`.
-        Figwidth => (["figwidth"], Length, "The figure's width, or `image` for the picture's."),
+        Figwidth(FigureWidth) => (["figwidth"], ImageInvalidLength, "The figure's width, or `image` for the picture's."),
         /// `:figclass:`.
-        Figclass => (["figclass"], Classes, "Classes for the figure.");
+        Figclass(Classes) => (["figclass"], "Classes for the figure.");
         Image(ImageOption),
     }
 }
@@ -65,15 +63,8 @@ fn parse_figure_options(
         classify_options::<FigureOption>(option_lines, DIRECTIVE, diagnostics, ctx)
     {
         match option {
-            FigureOption::Figwidth => match FigureWidth::new(&line.value) {
-                Ok(figwidth) => options.figwidth = Some(figwidth),
-                Err(problem) => {
-                    report_invalid_length(line, DIRECTIVE, &problem, diagnostics, ctx);
-                }
-            },
-            FigureOption::Figclass => {
-                options.figclasses = line.value.split_whitespace().map(str::to_string).collect();
-            }
+            FigureOption::Figwidth(figwidth) => options.figwidth = Some(figwidth),
+            FigureOption::Figclass(classes) => options.figclasses = classes.0,
             FigureOption::Image(option) => {
                 read_image_option(option, line, &mut common, image, diagnostics, ctx);
             }
@@ -164,6 +155,7 @@ pub(in crate::directives) const FIGURE_SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: None,
     },
     options: <FigureOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. figure::`.

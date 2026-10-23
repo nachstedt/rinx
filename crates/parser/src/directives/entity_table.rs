@@ -12,8 +12,12 @@
 //! intact, which is the error-resilience every directive here follows.
 
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unknown};
+use crate::directives::option_value::OptionValueType;
+use crate::directives::spec::OptionValue;
 use crate::directives::spec::{Arguments, DirectiveShape, DirectiveSpec};
-use rinx_ast::{Diagnostic, DiagnosticCode, Directive, EntityTable, EntityTableSource};
+use rinx_ast::{
+    Diagnostic, DiagnosticCode, Directive, EntityTable, EntityTableSource, TableWidths,
+};
 use rinx_filter::FieldName;
 
 use crate::context::ParseCtx;
@@ -22,9 +26,10 @@ use crate::diagnostics::Diagnostics;
 use super::filter_option::{
     FilterCodes, ShorthandFilterOption, read_filter_option, report_unknown_field,
 };
+use super::option_value::Located;
 use super::options::{DirectiveOptions, OptionLine, classify_options, directive_options};
 use super::table_options::{CommonTableOptions, TableOption, read_table_option};
-use super::table_widths::parse_widths_option;
+use super::table_widths::widths_for_columns;
 
 /// The only `:style:` this build renders.
 ///
@@ -50,9 +55,9 @@ directive_options! {
         /// `:sort:`.
         Sort => (["sort"], Text, "The field the rows are sorted by."),
         /// `:colwidths:`.
-        Colwidths => (["colwidths"], Text, "sphinx-needs' spelling of `:widths:`."),
+        Colwidths(Located<TableWidths>) => (["colwidths"], TableDataWidthsInvalid, "sphinx-needs' spelling of `:widths:`."),
         /// `:style:`.
-        Style => (["style"], Text, "How the table is drawn: only `table` is supported."),
+        Style(StaticStyle) => (["style"], EntityTableUnsupportedStyle, "How the table is drawn: only `table` is supported."),
         _ => (["filter-func"], Text, "The entities listed, by a Python function.", WRITE_AS_FILTER),
         _ => (["filter_warning"], Text, "The text shown when nothing is listed."),
         _ => (["cypher"], Text, "The entities listed, by a Cypher query.", WRITE_AS_FILTER),
@@ -80,6 +85,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         content_hint: Some("write the selection as :filter:"),
     },
     options: <EntityTableOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. entity-table::` or `.. needtable::`, recording which was
@@ -127,8 +133,9 @@ pub(super) fn parse_entity_table(
                 }
             }
             EntityTableOption::Sort => table.sort = read_sort(line, directive, diagnostics, ctx),
-            EntityTableOption::Colwidths => colwidths = Some(line),
-            EntityTableOption::Style => check_style(line, directive, diagnostics, ctx),
+            EntityTableOption::Colwidths(widths) => colwidths = Some(widths),
+            // Only `table` reads, and it is what is drawn anyway.
+            EntityTableOption::Style(StaticStyle) => {}
             EntityTableOption::Shorthand(option) => match option {},
             EntityTableOption::Table(option) => {
                 read_table_option(option, line, &mut common, directive, diagnostics, ctx);
@@ -141,7 +148,7 @@ pub(super) fn parse_entity_table(
     table.name = common.name;
 
     table.widths = read_widths(
-        common.widths_raw.as_deref(),
+        common.widths,
         colwidths,
         table.columns.len(),
         directive,
@@ -263,51 +270,48 @@ fn read_field(
 /// The column count is already known here, unlike in the data tables, because
 /// `:columns:` fixes it before any row exists.
 fn read_widths(
-    widths_raw: Option<&str>,
-    colwidths: Option<&OptionLine>,
+    widths: Option<Located<TableWidths>>,
+    colwidths: Option<Located<TableWidths>>,
     columns: usize,
     directive: &str,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> Option<rinx_ast::TableWidths> {
-    let raw = match (widths_raw, colwidths) {
-        (Some(_), Some(line)) => {
+) -> Option<TableWidths> {
+    let widths = match (widths, colwidths) {
+        (Some(_), Some(colwidths)) => {
             diagnostics.push(Diagnostic::at(
                 DiagnosticCode::EntityTableDuplicateWidths,
                 format!(
                     "{directive}: :widths: and :colwidths: are two spellings of one option; give only one"
                 ),
-                ctx.line_span(line.line_index, &line.raw),
+                colwidths.span(ctx),
             ));
             return None;
         }
-        (Some(raw), None) => raw.to_string(),
-        (None, Some(line)) => line.value.clone(),
+        (Some(widths), None) | (None, Some(widths)) => widths,
         (None, None) => return None,
     };
-
-    let span = colwidths.and_then(|line| ctx.line_span(line.line_index, &line.raw));
-    parse_widths_option(&raw, columns, directive, diagnostics, span)
+    widths_for_columns(widths, columns, directive, diagnostics, ctx)
 }
 
-/// Reports a `:style:` this build cannot render.
-fn check_style(
-    line: &OptionLine,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    let written = line.value.trim();
-    if written == SUPPORTED_STYLE {
-        return;
+/// A `:style:`: only [`SUPPORTED_STYLE`] reads, the static table this build
+/// draws.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct StaticStyle;
+
+impl OptionValueType for StaticStyle {
+    const VALUE: OptionValue = OptionValue::Choice(|| vec![SUPPORTED_STYLE]);
+
+    fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
+        let written = line.value.trim();
+        if written == SUPPORTED_STYLE {
+            Ok(Self)
+        } else {
+            Err(format!(
+                "'{written}' is not supported; a static '{SUPPORTED_STYLE}' is rendered instead"
+            ))
+        }
     }
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::EntityTableUnsupportedStyle,
-        format!(
-            "{directive}: :style: '{written}' is not supported; a static '{SUPPORTED_STYLE}' is rendered instead"
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
 }
 
 /// Splits a comma-separated option value, dropping empty entries.

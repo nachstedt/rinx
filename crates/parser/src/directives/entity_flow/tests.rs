@@ -309,8 +309,8 @@ fn test_a_malformed_presentation_value_is_reported_and_the_flowchart_survives() 
         (":align: sideways", "entity-flow.invalid-align"),
         (":scale: half", "entity-flow.invalid-scale"),
         (":width: wide", "entity-flow.invalid-width"),
-        (":config:", "entity-flow.empty-option-value"),
-        (":name:", "entity-flow.empty-option-value"),
+        (":config:", "directive.empty-option-value"),
+        (":name:", "directive.empty-option-value"),
     ];
 
     for (option, expected) in cases {

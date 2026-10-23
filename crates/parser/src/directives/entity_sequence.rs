@@ -32,20 +32,19 @@ use crate::diagnostics::Diagnostics;
 
 use super::error_node::malformed_node;
 use super::filter_option::{FilterCodes, ShorthandFilterOption, read_filter_option};
-use super::options::{
-    DirectiveOptions, OptionLine, choice_names, classify_options, directive_options,
-    parse_percentage,
-};
+use super::option_value::{Classes, NonEmptyText, OptionValueType, Percentage};
+use super::options::{DirectiveOptions, OptionLine, classify_options, directive_options};
+use super::spec::OptionValue;
 
 directive_options! {
     /// Where the picture sits, in the image directives' vocabulary.
     enum PlacementOption {
         /// `:align:`.
-        Align => (["align"], Choice(|| choice_names(ImageAlign::ALL, ImageAlign::as_str)), "Where the diagram sits."),
+        Align(ImageAlign) => (["align"], EntitySequenceInvalidAlign, "Where the diagram sits."),
         /// `:scale:`.
-        Scale => (["scale"], Integer, "The diagram's size, as a percentage of its `:width:`."),
+        Scale(Percentage) => (["scale"], EntitySequenceInvalidScale, "The diagram's size, as a percentage of its `:width:`."),
         /// `:width:`.
-        Width => (["width"], Length, "The diagram's width."),
+        Width(LengthOrPercentage) => (["width"], EntitySequenceInvalidWidth, "The diagram's width."),
     }
 }
 
@@ -62,17 +61,17 @@ directive_options! {
         /// `:filter:`.
         Filter => (["filter"], Filter, "The receivers drawn, by a filter."),
         /// `:max-items:`.
-        MaxItems => (["max-items", "max_items"], Integer, "How many messages are drawn at most."),
+        MaxItems(ItemLimit) => (["max-items", "max_items"], EntitySequenceInvalidMaxItems, "How many messages are drawn at most."),
         /// `:config:`.
-        Config => (["config"], Text, "A PlantUML configuration the diagram is drawn with."),
+        Config(NonEmptyText) => (["config"], "A PlantUML configuration the diagram is drawn with."),
         /// `:debug:`.
         Debug => (["debug"], Flag, "Shows the generated PlantUML source below the diagram."),
         /// `:caption:`.
-        Caption => (["caption"], Text, "A caption shown below the diagram."),
+        Caption(String) => (["caption"], "A caption shown below the diagram."),
         /// `:class:`.
-        Class => (["class"], Classes, "Classes for the diagram."),
+        Class(Classes) => (["class"], "Classes for the diagram."),
         /// `:name:`.
-        Name => (["name"], Text, "A label to reference the diagram by."),
+        Name(TargetName) => (["name"], "A label to reference the diagram by."),
         _ => (["show_filters", "show-filters"], Flag, "Shows the filter below the diagram.", "the filter is visible in the document source"),
         _ => (["show_legend", "show-legend"], Flag, "Draws a legend of the entity types.", "no legend is drawn"),
         _ => (["show_link_names", "show-link-names"], Flag, "Labels each message with its relation.", "every message is labelled with its own title"),
@@ -127,6 +126,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
         ),
     },
     options: <EntitySequenceOption as DirectiveOptions>::GROUPS,
+    accepts_further: false,
 };
 
 /// Interprets `.. entity-sequence::` or `.. needsequence::`, recording which
@@ -272,83 +272,24 @@ fn read_options(
                     ctx,
                 );
             }
-            EntitySequenceOption::MaxItems => {
-                read.max_items = read_max_items(line, directive, diagnostics, ctx);
-            }
-            EntitySequenceOption::Config => {
-                read.config = non_empty_value(line, directive, diagnostics, ctx);
-            }
+            EntitySequenceOption::MaxItems(limit) => read.max_items = limit.0,
+            EntitySequenceOption::Config(config) => read.config = Some(config.0),
             EntitySequenceOption::Debug => read.debug = true,
-            EntitySequenceOption::Caption => read.caption = Some(line.value.clone()),
-            EntitySequenceOption::Class => {
-                read.classes = line.value.split_whitespace().map(str::to_string).collect();
+            EntitySequenceOption::Caption(caption) => read.caption = Some(caption),
+            EntitySequenceOption::Class(classes) => read.classes = classes.0,
+            EntitySequenceOption::Name(name) => read.name = Some(name),
+            EntitySequenceOption::Placement(PlacementOption::Align(align)) => {
+                read.align = Some(align);
             }
-            EntitySequenceOption::Name => {
-                read.name = non_empty_value(line, directive, diagnostics, ctx)
-                    .map(|name| TargetName::new(&name));
+            EntitySequenceOption::Placement(PlacementOption::Scale(scale)) => {
+                read.scale = Some(scale.0);
             }
-            EntitySequenceOption::Placement(option) => {
-                read_placement(read, option, line, directive, diagnostics, ctx);
+            EntitySequenceOption::Placement(PlacementOption::Width(width)) => {
+                read.width = Some(width);
             }
             EntitySequenceOption::Shorthand(option) => match option {},
         }
     }
-}
-
-/// Reads `:align:`, `:scale:` or `:width:`, in the image directives'
-/// vocabulary, reporting a value none of them accepts.
-fn read_placement(
-    read: &mut ReadOptions,
-    option: PlacementOption,
-    line: &OptionLine,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    let problem = match option {
-        PlacementOption::Align => match ImageAlign::parse(&line.value) {
-            Some(align) => {
-                read.align = Some(align);
-                return;
-            }
-            None => (
-                DiagnosticCode::EntitySequenceInvalidAlign,
-                format!(
-                    ":align: expects one of center, left, right, found '{}'",
-                    line.value
-                ),
-            ),
-        },
-        PlacementOption::Scale => match parse_percentage(&line.value) {
-            Some(scale) => {
-                read.scale = Some(scale);
-                return;
-            }
-            None => (
-                DiagnosticCode::EntitySequenceInvalidScale,
-                format!(
-                    ":scale: expects a non-negative percentage, found '{}'",
-                    line.value
-                ),
-            ),
-        },
-        PlacementOption::Width => match LengthOrPercentage::new(&line.value) {
-            Ok(width) => {
-                read.width = Some(width);
-                return;
-            }
-            Err(problem) => (
-                DiagnosticCode::EntitySequenceInvalidWidth,
-                format!(":width: {problem}"),
-            ),
-        },
-    };
-    let (code, message) = problem;
-    diagnostics.push(Diagnostic::at(
-        code,
-        format!("{directive}: {message}"),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
 }
 
 /// Reads `:start:` — ids separated by `,` or `;`, as sphinx-needs splits them.
@@ -434,47 +375,25 @@ fn declared_relations(ctx: &ParseCtx<'_>) -> String {
     names.join(", ")
 }
 
-/// Reads `:max-items:` — a non-negative whole number, where `0` means no
-/// limit, as sphinx-needs documents it.
-fn read_max_items(
-    line: &OptionLine,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<NonZeroU32> {
-    if let Ok(limit) = line.value.trim().parse::<u32>() {
-        return NonZeroU32::new(limit);
-    }
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::EntitySequenceInvalidMaxItems,
-        format!(
-            "{directive}: :{}: expects a non-negative whole number (0 for no limit), found '{}'",
-            line.name, line.value
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
-    None
-}
+/// A `:max-items:`: how many messages are drawn at most, zero for no limit.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct ItemLimit(Option<NonZeroU32>);
 
-/// An option's value, or `None` after reporting that it was left empty.
-fn non_empty_value(
-    line: &OptionLine,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<String> {
-    if !line.value.is_empty() {
-        return Some(line.value.clone());
+impl OptionValueType for ItemLimit {
+    const VALUE: OptionValue = OptionValue::Integer;
+
+    fn read(line: &OptionLine, _ctx: &ParseCtx<'_>) -> Result<Self, String> {
+        line.value
+            .trim()
+            .parse::<u32>()
+            .map(|limit| Self(NonZeroU32::new(limit)))
+            .map_err(|_| {
+                format!(
+                    "expects a non-negative whole number (0 for no limit), found '{}'",
+                    line.value
+                )
+            })
     }
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::EntitySequenceEmptyOptionValue,
-        format!(
-            "{directive}: :{}: needs a value, so the option was ignored",
-            line.name
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
-    None
 }
 
 /// Reports a `:scale:` that has no `:width:` to apply to, against the

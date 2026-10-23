@@ -2,7 +2,7 @@ use super::super::body::{DescriptionOption, ObjectOptions, parse_object_body};
 use super::dispatch::PyObjectOption;
 use crate::diagnostics::Diagnostics;
 use crate::directives::invocation::DirectiveInvocation;
-use crate::directives::options::{OptionLine, directive_options};
+use crate::directives::options::directive_options;
 use crate::headings::Adornment;
 use rinx_ast::{DescriptionFlags, DomainObjectBody, NonEmptyVector};
 
@@ -73,10 +73,10 @@ directive_options! {
 impl ObjectOptions for ClassOptions {
     type Option = ClassOption;
 
-    fn read(&mut self, option: ClassOption, line: &OptionLine, flags: &mut DescriptionFlags) {
+    fn read(&mut self, option: ClassOption, flags: &mut DescriptionFlags) {
         match option {
             ClassOption::Final => self.is_final = true,
-            ClassOption::Py(PyObjectOption::Module) => self.module = Some(line.value.clone()),
+            ClassOption::Py(PyObjectOption::Module(module)) => self.module = Some(module),
             ClassOption::Description(option) => flags.set(option.flag()),
         }
     }

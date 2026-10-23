@@ -460,7 +460,7 @@ fn test_an_empty_separator_is_reported_and_the_comma_kept() {
     let bar = parse_bar(rst);
 
     // Then
-    assert_eq!(codes(rst), ["entity-bar.empty-option-value"]);
+    assert_eq!(codes(rst), ["directive.empty-option-value"]);
     assert_eq!(bar.grid.category_count(), 2);
 }
 
