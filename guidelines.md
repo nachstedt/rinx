@@ -58,6 +58,7 @@ entry under the heading it belongs to, as a single short sentence.
 - A file that owns a test-only directory keeps no inline `#[cfg(test)]` module; all of its tests live in the topic-named siblings.
 - Drop a module-name component the enclosing crate or directory already states (`scope/python.rs`, not `scope/python_scope.rs`).
 - Give fixtures shared by two sibling test modules their own `#[cfg(test)]` support module rather than copying them into both.
+- Fix a bug test-first: write the regression test, see it fail against the current code, and only then change the code.
 
 ## Refactoring safely
 
