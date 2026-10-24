@@ -451,6 +451,25 @@ mod tests {
     }
 
     #[test]
+    fn test_a_directive_whose_content_is_refused_is_reported_on_its_marker_line() {
+        // Given — a `.. table::` on line 3 whose content, after the blank
+        // line, is no table
+        let doc = parser::parse("docs/doc.rst", "Intro.\n\n.. table::\n\n   asdgad\n");
+
+        // When
+        let warning = crate::commands::diagnostics::format_diagnostic(
+            &WarningOrigin::new(&doc.path, &doc.source_files),
+            &doc.diagnostics[0],
+        );
+
+        // Then — the directive's line, not the blank line below it
+        assert!(
+            warning.starts_with("warning: docs/doc.rst:3:1: table.directive.not-a-table:"),
+            "{warning}"
+        );
+    }
+
+    #[test]
     fn test_cmd_parse_fails_on_an_unknown_default_role() {
         // Given
         let args = parse_args_for("rinx_cmd_parse_default_role_unknown", "See `intro`.\n");

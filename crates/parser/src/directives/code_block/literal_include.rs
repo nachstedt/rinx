@@ -88,7 +88,7 @@ pub(in crate::directives) fn parse_literal_include(
     let argument = invocation.argument(0);
     let body_lines = invocation.source_body;
     let ctx = &invocation.ctx;
-    let span = invocation.body_span();
+    let span = invocation.span;
 
     let path = argument.trim();
     if path.is_empty() {
@@ -773,5 +773,20 @@ mod tests {
 
         // Then — an unknown language is reported at render time against this
         assert!(block(directive).span.is_some());
+    }
+
+    #[test]
+    fn test_a_refused_option_is_reported_on_the_marker_line() {
+        // Given — no content, so nothing below the directive is its own
+        let input = "Intro.\n\n.. literalinclude:: x.py\n   :pyobject: f\n";
+
+        // When / Then — not on the option line
+        assert_eq!(
+            crate::diagnostics::lines_reported(
+                input,
+                DiagnosticCode::LiteralIncludePyObjectUnsupported
+            ),
+            [3]
+        );
     }
 }

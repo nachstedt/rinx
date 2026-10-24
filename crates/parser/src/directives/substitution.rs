@@ -25,7 +25,6 @@ use crate::diagnostics::Diagnostics;
 use crate::indent::unindent_body_lines;
 use crate::inline::{SourceMap, parse_inline_text_mapped};
 
-use super::body::body_span;
 use super::image::{ImageContext, parse_common_image_options, report_option_conflicts};
 use super::options::{OptionLine, report_unknown_options, scan_option_lines};
 
@@ -138,8 +137,7 @@ fn parse_unicode_kind(
     }
     report_unknown_options(&unrecognized, UNICODE_DIRECTIVE, diagnostics, ctx);
 
-    let span = directive_span.or_else(|| body_span(body_lines, ctx));
-    let text = decode_unicode_codes(argument, span, diagnostics);
+    let text = decode_unicode_codes(argument, directive_span, diagnostics);
     SubstitutionKind::Unicode { text, trim }
 }
 
@@ -219,7 +217,7 @@ fn parse_image_kind(
         diagnostics.push(Diagnostic::at(
             DiagnosticCode::DirectiveMissingArgument,
             format!("{IMAGE_DIRECTIVE}: the directive needs an image path or URL as its argument"),
-            body_span(body_lines, ctx),
+            directive_span,
         ));
         return None;
     }
@@ -506,5 +504,17 @@ mod tests {
     fn test_parse_image_returns_none_for_a_missing_uri() {
         // Given / When / Then — falls back to `Directive::Unknown` upstream
         assert!(dispatch("|logo| image", "", &[]).is_none());
+    }
+
+    #[test]
+    fn test_an_image_without_a_path_is_reported_on_the_definition_line() {
+        // Given — options, then a blank line and the next paragraph
+        let input = "Intro.\n\n.. |logo| image::\n   :alt: Logo\n\nAfter.\n";
+
+        // When / Then — not on the option line
+        assert_eq!(
+            crate::diagnostics::lines_reported(input, DiagnosticCode::DirectiveMissingArgument),
+            [3]
+        );
     }
 }

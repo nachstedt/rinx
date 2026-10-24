@@ -67,12 +67,12 @@ pub(in crate::directives) fn parse_list_table(
         },
     ] = body_nodes.as_slice()
     else {
-        return malformed_list_table(argument, body_lines, diagnostics, invocation.body_span());
+        return malformed_list_table(argument, body_lines, diagnostics, invocation.span);
     };
 
     // Rows are lowered from already-parsed nodes, which carry no position of
-    // their own, so every row-level diagnostic points at the directive body.
-    let table_span = invocation.body_span();
+    // their own, so every row-level diagnostic points at the table's first line.
+    let table_span = invocation.content_span();
     let (rows, ncols) = lower_list_table_rows(row_items, diagnostics, table_span);
     build_list_table(title, options, rows, ncols, diagnostics, ctx)
 }
@@ -652,5 +652,43 @@ mod tests {
         } else {
             panic!("Expected DataTable directive");
         }
+    }
+
+    #[test]
+    fn test_a_body_that_is_no_bullet_list_is_reported_on_the_marker_line() {
+        // Given
+        let input = "Intro.\n\n.. list-table::\n\n   Just text.\n";
+
+        // When / Then
+        assert_eq!(
+            crate::diagnostics::lines_reported(input, DiagnosticCode::TableDataNotABulletList),
+            [3]
+        );
+    }
+
+    #[test]
+    fn test_a_row_finding_is_reported_on_the_first_content_line() {
+        // Given — options, a blank line, then a short second row
+        let input =
+            "Intro.\n\n.. list-table::\n   :header-rows: 1\n\n   * - a\n     - b\n   * - c\n";
+
+        // When / Then — the rows carry no position of their own, so the
+        // table's first line, never the option line
+        assert_eq!(
+            crate::diagnostics::lines_reported(input, DiagnosticCode::TableDataRowCellCount),
+            [6]
+        );
+    }
+
+    #[test]
+    fn test_a_row_that_is_no_bullet_list_is_reported_on_the_first_content_line() {
+        // Given
+        let input = "Intro.\n\n.. list-table::\n\n   * not nested\n";
+
+        // When / Then — not the blank line above it
+        assert_eq!(
+            crate::diagnostics::lines_reported(input, DiagnosticCode::TableDataNotABulletList),
+            [5]
+        );
     }
 }

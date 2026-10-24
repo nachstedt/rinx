@@ -72,7 +72,7 @@ pub(in crate::directives) fn parse_table_directive(
     // content's own context does.
     let body_nodes = invocation.content().parse(adornment_order, diagnostics);
 
-    let span = invocation.body_span();
+    let span = invocation.span;
     let node_count = body_nodes.len();
     let [
         Node::Table {
@@ -478,5 +478,41 @@ mod tests {
         let (found, _, _) = diagnostics.into_parts();
         assert_eq!(found.len(), 1);
         assert_eq!(found[0].code, DiagnosticCode::TableDirectiveNotATable);
+    }
+
+    #[test]
+    fn test_content_that_is_not_a_table_is_reported_on_the_marker_line() {
+        // Given — the shape written in practice: a blank line, then content
+        let input = "Intro.\n\n.. table::\n\n   Just a paragraph.\n";
+
+        // When / Then — on the directive, not the blank line below it
+        assert_eq!(
+            crate::diagnostics::lines_reported(input, DiagnosticCode::TableDirectiveNotATable),
+            [3]
+        );
+    }
+
+    #[test]
+    fn test_missing_content_is_reported_on_the_marker_line() {
+        // Given — a titled table with nothing below it but the next paragraph
+        let input = "Intro.\n\n.. table:: Title\n\nAfter.\n";
+
+        // When / Then — not on the line after the directive
+        assert_eq!(
+            crate::diagnostics::lines_reported(input, DiagnosticCode::TableDirectiveNoContent),
+            [3]
+        );
+    }
+
+    #[test]
+    fn test_several_blocks_are_reported_on_the_marker_line() {
+        // Given — options, then two paragraphs
+        let input = "Intro.\n\n.. table::\n   :align: left\n\n   One.\n\n   Two.\n";
+
+        // When / Then — not on the option line
+        assert_eq!(
+            crate::diagnostics::lines_reported(input, DiagnosticCode::TableDirectiveMultipleBlocks),
+            [3]
+        );
     }
 }

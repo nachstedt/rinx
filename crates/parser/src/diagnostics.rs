@@ -117,10 +117,32 @@ impl std::ops::Index<usize> for Diagnostics {
     }
 }
 
+/// The lines `code` is reported on when `input` is parsed as a document, for
+/// a test about where a diagnostic points rather than whether it is raised.
+#[cfg(test)]
+pub(crate) fn lines_reported(input: &str, code: rinx_ast::DiagnosticCode) -> Vec<u32> {
+    crate::parse("index.rst", input)
+        .diagnostics
+        .iter()
+        .filter(|diagnostic| diagnostic.code == code)
+        .filter_map(|diagnostic| diagnostic.span.map(|span| span.start.line))
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use rinx_ast::{DiagnosticCode, SuppressionCodes};
+
+    #[test]
+    fn test_lines_reported_names_the_lines_of_one_code_only() {
+        // Given — an unknown directive on line 3, after a paragraph
+        let input = "Intro.\n\n.. bogus::\n";
+
+        // When / Then
+        assert_eq!(lines_reported(input, DiagnosticCode::DirectiveUnknown), [3]);
+        assert!(lines_reported(input, DiagnosticCode::TableDirectiveNotATable).is_empty());
+    }
 
     #[test]
     fn test_a_new_collector_is_empty() {
