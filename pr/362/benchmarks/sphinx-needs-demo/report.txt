@@ -62,10 +62,10 @@ entity.unknown-target (6):
 
 entity.role-type-mismatch (5):
 ------------------------------
+    1  coffee-machine/index.rst: broken entity type mismatch 'SEQSTART_01'
     1  automotive-adas/external_data.rst: broken entity type mismatch 'SWREQ_001'
     1  automotive-adas/external_data.rst: broken entity type mismatch 'SWREQ_002'
     1  automotive-adas/external_data.rst: broken entity type mismatch 'REQ_001'
-    1  coffee-machine/index.rst: broken entity type mismatch 'SEQSTART_01'
     1  basic_example/index.rst: broken entity type mismatch 'EX_TEST_001'
 
 directive.unknown (4):
