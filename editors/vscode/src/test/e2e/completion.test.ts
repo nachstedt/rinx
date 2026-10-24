@@ -125,7 +125,10 @@ suite('Directive completion (e2e)', () => {
         const options = await completionsAt(values, new vscode.Position(4, 4));
 
         // Then
-        assert.ok(typed.items.some((item) => labelOf(item) === 'center'), JSON.stringify(typed.items.map(labelOf)));
+        assert.ok(
+            typed.items.some((item) => labelOf(item) === 'center'),
+            JSON.stringify(typed.items.map(labelOf)),
+        );
         const align = options.find((item) => labelOf(item) === 'align');
         assert.strictEqual(align?.command?.command, 'editor.action.triggerSuggest');
         const alt = options.find((item) => labelOf(item) === 'alt');
