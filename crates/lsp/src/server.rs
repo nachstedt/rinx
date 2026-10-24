@@ -40,6 +40,8 @@ mod conf_run_tests;
 #[cfg(test)]
 mod definition_tests;
 #[cfg(test)]
+mod entity_tests;
+#[cfg(test)]
 mod hover_tests;
 #[cfg(test)]
 mod inventory_tests;

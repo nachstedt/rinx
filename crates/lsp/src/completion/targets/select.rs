@@ -9,8 +9,8 @@
 //! and the list ranks it first, being the nearest.
 
 use lsp_types::{
-    CompletionItem, CompletionItemKind, CompletionItemLabelDetails, CompletionTextEdit, Range,
-    TextEdit,
+    CompletionItem, CompletionItemKind, CompletionItemLabelDetails, CompletionTextEdit,
+    Documentation, Range, TextEdit,
 };
 use rinx_ast::InlineNode;
 use rinx_renderer::{Destination, ReferenceResolver, ReferenceTarget};
@@ -24,7 +24,8 @@ use super::is_scoped;
 pub(super) const MAX_ITEMS: usize = 200;
 
 /// The items completing a target with one of `candidates`, each written over
-/// `range`, and whether the answer is incomplete.
+/// `range` and documented by `document`, and whether the answer is
+/// incomplete.
 ///
 /// `reference` stands for the role being typed, `resolver` answers for the
 /// document it is written in, and `typed` is what the author has written of
@@ -38,6 +39,7 @@ pub(super) fn select(
     resolver: &ReferenceResolver<'_>,
     typed: &str,
     range: Range,
+    document: &dyn Fn(&ReferenceTarget) -> Option<Documentation>,
 ) -> (Vec<CompletionItem>, bool) {
     let scoped = is_scoped(reference);
     let filtered = scoped || candidates.len() > MAX_ITEMS;
@@ -68,7 +70,7 @@ pub(super) fn select(
     chosen.truncate(MAX_ITEMS);
     let items = chosen
         .into_iter()
-        .map(|chosen| item(chosen, range))
+        .map(|chosen| item(chosen, range, document))
         .collect();
     (items, scoped || cut)
 }
@@ -137,15 +139,20 @@ fn choose(
 }
 
 /// The completion item offering `chosen`, written over `range`: titled as a
-/// reference to it with no title of its own would show, and saying where it
-/// is.
-fn item(chosen: Chosen, range: Range) -> CompletionItem {
+/// reference to it with no title of its own would show, saying where it is,
+/// and documented by `document`.
+fn item(
+    chosen: Chosen,
+    range: Range,
+    document: &dyn Fn(&ReferenceTarget) -> Option<Documentation>,
+) -> CompletionItem {
     let description = match &chosen.target.destination {
         Destination::Document { doc_path, .. } => doc_path.clone(),
         Destination::GeneratedPage { path } => path.clone(),
         Destination::External { site, .. } => site.clone(),
     };
     CompletionItem {
+        documentation: document(&chosen.target),
         detail: Some(chosen.target.title),
         label_details: Some(CompletionItemLabelDetails {
             detail: None,
@@ -258,7 +265,10 @@ mod tests {
         let resolver = ReferenceResolver::new(&doc, &index, &config, EntitySchema::empty_ref());
 
         // When
-        let (items, incomplete) = select(candidates(), written(&doc), &resolver, "", range());
+        let (items, incomplete) =
+            select(candidates(), written(&doc), &resolver, "", range(), &|_| {
+                None
+            });
 
         // Then — the nearer one first; both marked incomplete, being scoped
         assert_eq!(labels(&items), ["Box.open", "other.Box.close"]);
@@ -282,7 +292,14 @@ mod tests {
         let resolver = ReferenceResolver::new(&doc, &index, &config, EntitySchema::empty_ref());
 
         // When
-        let (items, _) = select(candidates(), written(&doc), &resolver, "oth", range());
+        let (items, _) = select(
+            candidates(),
+            written(&doc),
+            &resolver,
+            "oth",
+            range(),
+            &|_| None,
+        );
 
         // Then
         assert_eq!(labels(&items), ["other.Box.close"]);
@@ -297,7 +314,14 @@ mod tests {
         let resolver = ReferenceResolver::new(&doc, &index, &config, EntitySchema::empty_ref());
 
         // When
-        let (items, _) = select(candidates(), written(&doc), &resolver, "pkg.", range());
+        let (items, _) = select(
+            candidates(),
+            written(&doc),
+            &resolver,
+            "pkg.",
+            range(),
+            &|_| None,
+        );
 
         // Then
         assert_eq!(labels(&items), ["pkg.Box.open"]);
@@ -318,6 +342,7 @@ mod tests {
             &resolver,
             "",
             range(),
+            &|_| None,
         );
 
         // Then
@@ -347,7 +372,14 @@ mod tests {
         };
 
         // When
-        let (items, incomplete) = select(vec![candidate], &reference, &resolver, "zz", range());
+        let (items, incomplete) = select(
+            vec![candidate],
+            &reference,
+            &resolver,
+            "zz",
+            range(),
+            &|_| None,
+        );
 
         // Then — the editor filters a complete list itself
         assert_eq!(labels(&items), ["install"]);
@@ -384,7 +416,7 @@ mod tests {
             .collect();
 
         // When
-        let (items, incomplete) = select(candidates, &reference, &resolver, "", range());
+        let (items, incomplete) = select(candidates, &reference, &resolver, "", range(), &|_| None);
 
         // Then — the first of them by rank, and the editor told to ask again
         assert_eq!(items.len(), MAX_ITEMS);

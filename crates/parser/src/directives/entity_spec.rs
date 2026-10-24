@@ -52,7 +52,7 @@ impl<'s> EntitySpec<'s> {
         let relations = entity_type.relations.iter().map(|relation| OptionSpec {
             name: &relation.name,
             aliases: &[],
-            value: OptionValue::EntityIds,
+            value: OptionValue::EntityIds(relation.to.as_deref()),
             doc: relation.display_label(),
             support: OptionSupport::Supported,
         });
@@ -110,7 +110,7 @@ mod tests {
     use rinx_entity::{AttributeSchema, IdSpec, RelationSpec};
 
     /// A `req` type labelled `Requirement`, with a `status` choice, a
-    /// `tags` choice list and a `links` relation.
+    /// `tags` choice list and a `links` relation to specs.
     fn requirement() -> EntityType {
         let attribute = |name: &str, value_type| AttributeSchema {
             name: name.to_string(),
@@ -143,7 +143,7 @@ mod tests {
             relations: vec![RelationSpec {
                 name: "links".to_string(),
                 label: None,
-                to: None,
+                to: Some(vec!["spec".to_string()]),
                 required: false,
                 multiple: true,
                 incoming: None,
@@ -187,7 +187,7 @@ mod tests {
     }
 
     #[test]
-    fn test_an_entity_spec_offers_the_declared_values_of_a_choice() {
+    fn test_an_entity_spec_offers_the_declared_values_of_a_choice_and_a_relation_s_types() {
         // Given
         let entity_type = requirement();
 
@@ -202,7 +202,7 @@ mod tests {
         // Then
         assert!(matches!(options[1], OptionValue::Declared(values) if values == ["open", "done"]));
         assert!(matches!(options[2], OptionValue::DeclaredList(values) if values == ["ui"]));
-        assert!(matches!(options[3], OptionValue::EntityIds));
+        assert!(matches!(options[3], OptionValue::EntityIds(Some(types)) if types == ["spec"]));
     }
 
     #[test]

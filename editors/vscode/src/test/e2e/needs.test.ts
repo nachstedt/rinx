@@ -22,6 +22,15 @@ function codesFor(uri: vscode.Uri): string[] {
     return vscode.languages.getDiagnostics(uri).map(codeOf);
 }
 
+/** The text of every hover the editor shows at `position` of `uri`. */
+async function hoverText(uri: vscode.Uri, position: vscode.Position): Promise<string> {
+    const hovers = await vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', uri, position);
+    return hovers
+        .flatMap((hover) => hover.contents)
+        .map((content) => (typeof content === 'string' ? content : content.value))
+        .join('\n');
+}
+
 /** An item's label as the editor shows it, whichever form the server sent. */
 function labelOf(item: vscode.CompletionItem): string {
     return typeof item.label === 'string' ? item.label : item.label.label;
@@ -41,7 +50,7 @@ suite('sphinx-needs project (e2e)', () => {
         );
     });
 
-    test('a need type is a directive once conf.py declares sphinx-needs, its links are checked, and its ids complete', async () => {
+    test('a need type is a directive once conf.py declares sphinx-needs, its links are checked, its ids complete and hover', async () => {
         // Given — with no `conf.py`, `.. req::` is an unknown directive
         await vscode.window.showTextDocument(project('index.rst'));
         await waitFor('the need to be unknown', () => codesFor(project('index.rst')).includes('directive.unknown'));
@@ -69,5 +78,22 @@ suite('sphinx-needs project (e2e)', () => {
         const need = list.items.find((item) => labelOf(item) === 'R_1');
         assert.ok(need, `R_1 among ${JSON.stringify(list.items.map(labelOf))}`);
         assert.strictEqual(need.detail, 'Brakes');
+
+        // A relation's ids complete too: at the start of `R_1, R_GHOST`,
+        // `R_GHOST` is listed already and `S_1` is the spec itself.
+        const relation = await vscode.commands.executeCommand<vscode.CompletionList>(
+            'vscode.executeCompletionItemProvider',
+            project('index.rst'),
+            new vscode.Position(10, 17),
+        );
+        assert.deepStrictEqual(relation.items.map(labelOf), ['R_1']);
+
+        // Hovering the need, by its role or in the relation, shows the spec
+        // tracing to it — a back-link no line of `R_1` itself writes.
+        for (const at of [new vscode.Position(6, 12), new vscode.Position(10, 18)]) {
+            const shown = await hoverText(project('index.rst'), at);
+            assert.ok(shown.includes('R\\_1 — Brakes'), shown);
+            assert.ok(shown.includes('S\\_1'), shown);
+        }
     });
 });

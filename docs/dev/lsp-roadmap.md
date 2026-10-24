@@ -38,8 +38,9 @@ finished one 🔶. A heading with no marker means the step has not started.
   #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315), #18 (PR #317),
   #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333),
   #40 (PR #335), #24 (PR #340) and #25 (PR #355, prepared by #343, #345,
-  #348, #351 and #353) and #26 (PRs #358 and #362, prepared by #357).
-- **Next: #27, entity hover and id completion.**
+  #348, #351 and #353), #26 (PRs #358 and #362, prepared by #357) and
+  #27 (PR #365, prepared by #363).
+- **Next: #28, definition spans and outline.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -954,7 +955,7 @@ Measured at the end of CPython's `library/stdtypes.rst`, probe included:
 Not done here: `:download:` targets, which are files (issue #360), and a
 role wrapping onto the next line (issue #361).
 
-### 27. Entity hover + id completion
+### 27. Entity hover + id completion ✅ (#365, prepared by #363)
 
 **You experience:** hovering an entity reference shows its attributes and
 relations.
@@ -962,6 +963,36 @@ relations.
 - Entity record → markdown (attributes, relations, back-links)
 - Completion in relation options and entity roles
 - Tests
+
+What an entity shows besides its prose became one list first (#363):
+`rinx_index::EntityFields`, its attributes under their labels in declared
+order, its relations and the back-links derived onto it, each with every
+`.. entity-update::` applied and marked when conflicting updates dispute it.
+The renderer's built-in box draws from it, byte for byte as before, and the
+hover shows it as Markdown lines, so the two list the same fields. An entity
+whose id two documents declare is in no index, and both are drawn from
+what they wrote; a comment claiming that fallback never ran was wrong.
+
+A `ReferenceTarget` now names the entity it is (`entity`): an entity role's,
+and a `:ref:` or `:any:` whose label is an entity's, found by its anchor since
+a label's name is lowercased. Hovering one shows the entity's fields under its
+title and file. The same shows on an id written in a relation option,
+`.. entity-update::` fields included, and on an entity's own marker or `:id:`
+line, read from the parse, so a generated id and an unsaved entity have a
+hover too, without the file, where the reader already is. Lists of ids are
+cut after 20.
+
+A relation's value completes the indexed entities its `to` accepts:
+`OptionValue::EntityIds` carries it, as `Declared` carries its words. An
+`.. entity-update::` changing a relation offers only what every matched
+type's relation accepts, since the build checks each updated entity by its
+own type. The ids already listed and the entity's own are left out, prefix
+matches come first, and the list is cut at 200 and marked incomplete. Each
+item, and each entity-role target, is documented with the hover's text:
+5000 entities take under 1 ms per completion.
+
+Not done here: a sphinx-needs link has no `to`, so every need is offered,
+and a relation with `multiple = false` still completes as a list.
 
 ### 28. Definition spans + outline
 

@@ -173,8 +173,9 @@ pub enum OptionValue<'a> {
     Uri,
     /// A filter expression over the entity graph.
     Filter,
-    /// A comma-separated list of entity ids: an entity's relation.
-    EntityIds,
+    /// A comma-separated list of entity ids: an entity's relation, naming
+    /// the types its targets may have — `None` for every type.
+    EntityIds(Option<&'a [String]>),
 }
 
 impl OptionValue<'_> {
@@ -183,7 +184,7 @@ impl OptionValue<'_> {
     pub const fn is_list(&self) -> bool {
         matches!(
             self,
-            Self::TextList | Self::DeclaredList(_) | Self::EntityIds
+            Self::TextList | Self::DeclaredList(_) | Self::EntityIds(_)
         )
     }
 }
@@ -249,7 +250,7 @@ mod tests {
         // Given / When / Then
         assert!(OptionValue::TextList.is_list());
         assert!(OptionValue::DeclaredList(&[]).is_list());
-        assert!(OptionValue::EntityIds.is_list());
+        assert!(OptionValue::EntityIds(None).is_list());
         assert!(!OptionValue::Text.is_list());
         assert!(!OptionValue::Declared(&[]).is_list());
     }

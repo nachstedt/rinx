@@ -95,11 +95,14 @@ pub(super) fn entity_target(
         EntityResolution::NotFound | EntityResolution::Contested(_) => return None,
     };
     let id = entity_id_of(target);
-    Some(ReferenceTarget::in_document(
-        record.display_text(&id),
-        &record.doc_path,
-        Some(crate::blocks::entity_anchor(target)),
-    ))
+    Some(
+        ReferenceTarget::in_document(
+            record.display_text(&id),
+            &record.doc_path,
+            Some(crate::blocks::entity_anchor(target)),
+        )
+        .naming_entity(id),
+    )
 }
 
 /// The id this reference names, for the display-text fallback.

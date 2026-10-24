@@ -203,6 +203,7 @@ mod tests {
                 doc_path: doc_path.to_string(),
                 anchor: anchor.map(str::to_string),
             },
+            entity: None,
         }
     }
 
@@ -261,6 +262,7 @@ mod tests {
                 destination: Destination::GeneratedPage {
                     path: "genindex.html".to_string(),
                 },
+                entity: None,
             })
         );
     }
@@ -283,6 +285,7 @@ mod tests {
                         .to_string(),
                     site: "(in Python v3.12)".to_string(),
                 },
+                entity: None,
             })
         );
     }
@@ -512,9 +515,9 @@ mod tests {
         assert_eq!(target_of(&index, Vec::new(), reference), None);
     }
 
-    #[test]
-    fn test_reference_target_titles_an_entity_with_its_own_title() {
-        // Given
+    /// An index holding the entity `REQ_001`, declared in `reqs.rst` and
+    /// labelled by its id, as the analyzer labels every entity.
+    fn requirement_index() -> ProjectIndex {
         let mut index = ProjectIndex::default();
         index.entities.insert(
             EntityId::new("REQ_001").unwrap(),
@@ -528,6 +531,28 @@ mod tests {
                 uml: BTreeMap::default(),
             },
         );
+        let name = TargetName::new("REQ_001");
+        index.targets.insert(name.clone(), "reqs.rst".to_string());
+        index
+            .target_anchors
+            .insert(name.clone(), rinx_index::entity_anchor("REQ_001"));
+        index.target_titles.insert(name, "Fast builds".to_string());
+        index
+    }
+
+    fn requirement_target() -> ReferenceTarget {
+        in_document(
+            "Fast builds",
+            "reqs.rst",
+            Some(&rinx_index::entity_anchor("REQ_001")),
+        )
+        .naming_entity(EntityId::new("REQ_001").unwrap())
+    }
+
+    #[test]
+    fn test_reference_target_titles_an_entity_with_its_own_title() {
+        // Given
+        let index = requirement_index();
         let reference = rinx_ast::InlineNode::EntityReference {
             role: "entity".to_string(),
             target: "REQ_001".to_string(),
@@ -539,14 +564,34 @@ mod tests {
         let found = target_of(&index, Vec::new(), reference);
 
         // Then
-        assert_eq!(
-            found,
-            Some(in_document(
-                "Fast builds",
-                "reqs.rst",
-                Some(&rinx_index::entity_anchor("REQ_001"))
-            ))
-        );
+        assert_eq!(found, Some(requirement_target()));
+    }
+
+    #[test]
+    fn test_reference_target_names_the_entity_a_label_leads_to() {
+        // Given
+        let index = requirement_index();
+
+        // When — the label is lowercased, the anchor keeps the id's case
+        let found = target_of(&index, Vec::new(), label("REQ_001"));
+
+        // Then
+        assert_eq!(found, Some(requirement_target()));
+    }
+
+    #[test]
+    fn test_reference_target_names_no_entity_for_a_label_on_a_section() {
+        // Given — a section label shaped like an entity's anchor, but no
+        // entity of that id
+        let mut index = ProjectIndex::default();
+        let name = TargetName::new("entity-x");
+        index.targets.insert(name.clone(), "setup.rst".to_string());
+
+        // When
+        let found = target_of(&index, Vec::new(), label("entity-x"));
+
+        // Then
+        assert_eq!(found.and_then(|target| target.entity), None);
     }
 
     #[test]

@@ -46,7 +46,7 @@ use lsp_types::{
     FileChangeType, FileEvent, FileSystemWatcher, GlobPattern, GotoDefinitionResponse, Hover,
     Range, Registration, RegistrationParams, Uri,
 };
-use rinx_renderer::{ReferenceResolver, ReferenceTarget};
+use rinx_renderer::{Destination, ReferenceResolver, ReferenceTarget};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -62,16 +62,19 @@ use super::projects::ProjectId;
 use super::scan::ScanEvent;
 use crate::code_action::quick_fixes;
 use crate::completion::{
-    DirectiveVocabulary, PLACEHOLDER, RoleContext, RoleVocabulary, TargetQuestion, TextFormat,
-    WrittenRole, directive_at, directive_items, is_scoped, probe_text, role_at, role_name_at,
-    role_name_items, target_items,
+    DirectiveContext, DirectiveVocabulary, PLACEHOLDER, RoleContext, RoleVocabulary,
+    TargetQuestion, TextFormat, WrittenRole, directive_at, directive_items, identity_marker_line,
+    is_scoped, probe_text, relation_target_at, role_at, role_name_at, role_name_items,
+    target_items,
 };
 use crate::definition::reference_definition;
 use crate::diagnostics::{
     ParsedSource, diagnose_source, parse_prefix, parse_source, text_through_line,
 };
 use crate::documents::DocumentStore;
-use crate::hover::reference_hover;
+use crate::entity_at::entity_marked_at;
+use crate::entity_hover::{declared_entity_markdown, indexed_entity_markdown};
+use crate::hover::{location_markdown, markdown_hover, reference_hover};
 use crate::includes::IncludeGraph;
 use crate::position::{PositionEncoding, char_index_of, to_lsp_position, to_lsp_range};
 use crate::preview::{
@@ -520,7 +523,7 @@ impl ServerState {
                 schema: &schema,
                 index,
             };
-            (directive_items(&context, &vocabulary, &at, format), false)
+            directive_items(&context, &vocabulary, &at, format)
         } else {
             let context = role_name_at(line, cursor)?;
             let range = lsp_types::Range::new(at(context.replace.start), at(context.replace.end));
@@ -652,11 +655,79 @@ impl ServerState {
     /// `None` when the cursor is on no reference, the reference would be
     /// drawn broken, or the document is not open or is in no project.
     pub(super) fn hover(&mut self, uri: &Uri, position: lsp_types::Position) -> Option<Hover> {
-        let (range, target, project) = self.reference_target_at(uri, position)?;
-        let project = self.projects.get(&project)?;
-        Some(reference_hover(&target, range, |doc_path| {
+        let Some((range, target, project)) = self.reference_target_at(uri, position) else {
+            return self.entity_hover_in_directive(uri, position);
+        };
+        let project = self.projects.get_mut(&project)?;
+        let location = location_markdown(&target.destination, |doc_path| {
             file_uri(&project.path_of(doc_path))
-        }))
+        });
+        let schema = Arc::clone(&project.model().settings.parse.schema);
+        let index = project.project_index();
+        let entity_text = target
+            .entity
+            .as_ref()
+            .and_then(|id| indexed_entity_markdown(id, index, &schema, &location));
+        Some(reference_hover(&target, range, &location, entity_text))
+    }
+
+    /// The hover on an entity written in a directive at `position` of the
+    /// open document `uri`: an id in a relation option, or the entity a
+    /// marker or its `:id:` line declares — with its derived back-links,
+    /// which its own text cannot show.
+    fn entity_hover_in_directive(
+        &mut self,
+        uri: &Uri,
+        position: lsp_types::Position,
+    ) -> Option<Hover> {
+        let text = &self.documents.get(uri)?.text;
+        let lines: Vec<&str> = text.lines().collect();
+        let line_index = position.line as usize;
+        let line = *lines.get(line_index)?;
+        let encoding = self.encoding;
+        let range = |characters: std::ops::Range<usize>| {
+            let at = |index: usize| {
+                let column = u32::try_from(index + 1).unwrap_or(u32::MAX);
+                to_lsp_position(
+                    rinx_ast::Position::new(position.line + 1, column),
+                    line,
+                    encoding,
+                )
+            };
+            lsp_types::Range::new(at(characters.start), at(characters.end))
+        };
+        let tracked = self.tracked.get(uri)?;
+        let project = self.projects.get_mut(&tracked.project?)?;
+        let settings = project
+            .model()
+            .parse_settings(Some(&tracked.parsed.document.path));
+        let (schema, domain) = (Arc::clone(&settings.schema), settings.domain);
+        let cursor = char_index_of(line, position.character, encoding);
+        if let Some(DirectiveContext::Value(value)) = directive_at(&lines, line_index, cursor) {
+            let index = project.project_index();
+            let vocabulary = DirectiveVocabulary {
+                domain,
+                schema: &schema,
+                index,
+            };
+            if let Some((characters, id)) = relation_target_at(&value, &vocabulary) {
+                let destination = Destination::Document {
+                    doc_path: index.entities.get(&id)?.doc_path.clone(),
+                    anchor: None,
+                };
+                let location = location_markdown(&destination, |doc_path| {
+                    file_uri(&project.path_of(doc_path))
+                });
+                let text =
+                    indexed_entity_markdown(&id, project.project_index(), &schema, &location)?;
+                return Some(markdown_hover(text, range(characters)));
+            }
+        }
+        let marker = identity_marker_line(&lines, line_index)?;
+        let entity = entity_marked_at(&tracked.parsed.document, u32::try_from(marker + 1).ok()?)?;
+        let text = declared_entity_markdown(entity, project.project_index(), &schema);
+        let indent = line.chars().take_while(|c| c.is_whitespace()).count();
+        Some(markdown_hover(text, range(indent..line.chars().count())))
     }
 
     /// The page of the open document `uri`, as its project would build it,

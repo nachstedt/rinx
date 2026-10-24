@@ -5,17 +5,19 @@
 //! project index and the other sites' inventories, each with the spellings it
 //! might be written in; [`select`] keeps those the resolver leads somewhere,
 //! writes each as short as it still leads there, ranks the nearest first and
-//! cuts a long list.
+//! cuts a long list. An entity's item is documented with its fields.
 
 mod candidates;
 mod select;
 
-use lsp_types::{CompletionItem, Range};
+use lsp_types::{CompletionItem, Documentation, MarkupContent, MarkupKind, Range};
 use rinx_ast::InlineNode;
 use rinx_entity::EntitySchema;
 use rinx_index::ProjectIndex;
-use rinx_renderer::ReferenceResolver;
+use rinx_renderer::{Destination, ReferenceResolver, ReferenceTarget};
 
+use crate::entity_hover::indexed_entity_markdown;
+use crate::hover::escape_markdown;
 use candidates::{Asking, candidates};
 
 /// What a probe writes where the target being typed is, so the role reads as
@@ -86,7 +88,30 @@ pub fn target_items(question: &TargetQuestion<'_>) -> (Vec<CompletionItem>, bool
         question.resolver,
         question.typed,
         question.range,
+        &|target| entity_documentation(target, question.index, question.schema),
     )
+}
+
+/// What an item offering `target` documents: its fields, when it is an
+/// entity, as hovering a reference to it shows them.
+fn entity_documentation(
+    target: &ReferenceTarget,
+    index: &ProjectIndex,
+    schema: &EntitySchema,
+) -> Option<Documentation> {
+    let Destination::Document { doc_path, .. } = &target.destination else {
+        return None;
+    };
+    let value = indexed_entity_markdown(
+        target.entity.as_ref()?,
+        index,
+        schema,
+        &escape_markdown(doc_path),
+    )?;
+    Some(Documentation::MarkupContent(MarkupContent {
+        kind: MarkupKind::Markdown,
+        value,
+    }))
 }
 
 #[cfg(test)]
@@ -109,6 +134,49 @@ mod tests {
             probe_text("a\n:ref:`in\nc", 1, ":ref:`x`", true),
             "a\n:ref:`x`\nc\n"
         );
+    }
+
+    #[test]
+    fn test_entity_documentation_shows_an_entity_s_fields_and_nothing_else() {
+        // Given
+        let mut index = ProjectIndex::default();
+        let id = rinx_ast::EntityId::new("R_1").unwrap();
+        index.entities.insert(
+            id.clone(),
+            rinx_index::EntityRecord {
+                type_name: "req".to_string(),
+                doc_path: "reqs.rst".to_string(),
+                title: Some("Brakes".to_string()),
+                attributes: std::collections::BTreeMap::new(),
+                outgoing: std::collections::BTreeMap::new(),
+                uml: std::collections::BTreeMap::new(),
+                relation_spans: std::collections::BTreeMap::new(),
+            },
+        );
+        let destination = Destination::Document {
+            doc_path: "reqs.rst".to_string(),
+            anchor: None,
+        };
+        let entity = ReferenceTarget {
+            title: "Brakes".to_string(),
+            destination: destination.clone(),
+            entity: Some(id),
+        };
+        let label = ReferenceTarget {
+            entity: None,
+            ..entity.clone()
+        };
+
+        // When
+        let documented = entity_documentation(&entity, &index, EntitySchema::empty_ref());
+        let undocumented = entity_documentation(&label, &index, EntitySchema::empty_ref());
+
+        // Then
+        let Some(Documentation::MarkupContent(markup)) = documented else {
+            panic!("markdown documentation");
+        };
+        assert_eq!(markup.value, "**req** R\\_1 — Brakes\n\nreqs\\.rst");
+        assert_eq!(undocumented, None);
     }
 
     #[test]

@@ -45,9 +45,36 @@ pub fn entity_anchor(id: &str) -> String {
     format!("entity-{id}")
 }
 
+/// The id of the entity whose anchor is `anchor` — the inverse of
+/// [`entity_anchor`] — or `None` for any other anchor.
+///
+/// What tells a label leading to an entity from one leading to a section: a
+/// label's name is lowercased, so only the anchor still carries the id as
+/// written.
+#[must_use]
+pub fn entity_of_anchor(anchor: &str) -> Option<&str> {
+    anchor.strip_prefix("entity-").filter(|id| !id.is_empty())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_entity_of_anchor_inverts_entity_anchor() {
+        // Given
+        let anchor = entity_anchor("REQ_001");
+
+        // When / Then
+        assert_eq!(entity_of_anchor(&anchor), Some("REQ_001"));
+    }
+
+    #[test]
+    fn test_entity_of_anchor_is_none_for_another_anchor() {
+        // Given / When / Then
+        assert_eq!(entity_of_anchor("install"), None);
+        assert_eq!(entity_of_anchor("entity-"), None);
+    }
 
     #[test]
     fn test_relative_doc_href_within_the_same_directory() {

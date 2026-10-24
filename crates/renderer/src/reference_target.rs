@@ -6,7 +6,7 @@
 //! links on the page has a target here, and one that is broken on the page
 //! has none: the editor cannot describe a link the build would not write.
 
-use rinx_ast::{Document, InlineNode};
+use rinx_ast::{Document, EntityId, InlineNode};
 use rinx_entity::EntitySchema;
 use rinx_index::{ExternalInventory, ExternalTarget, ProjectIndex};
 use rinx_scope::DocumentScopes;
@@ -23,6 +23,10 @@ pub struct ReferenceTarget {
     /// without an explicit title shows, whatever this one was written with.
     pub title: String,
     pub destination: Destination,
+    /// The entity the target is, when it is one: what an entity role names,
+    /// and a label or `:any:` leading to an entity — so a reader can show
+    /// the entity's fields beside the link.
+    pub entity: Option<EntityId>,
 }
 
 /// Where a [`ReferenceTarget`] is.
@@ -55,6 +59,15 @@ impl ReferenceTarget {
                 doc_path: doc_path.to_string(),
                 anchor,
             },
+            entity: None,
+        }
+    }
+
+    /// This target, as the entity `id`.
+    pub(crate) fn naming_entity(self, id: EntityId) -> Self {
+        Self {
+            entity: Some(id),
+            ..self
         }
     }
 
@@ -73,6 +86,7 @@ impl ReferenceTarget {
                 url: hit.href(doc_path),
                 site: hit.tooltip(),
             },
+            entity: None,
         }
     }
 }
