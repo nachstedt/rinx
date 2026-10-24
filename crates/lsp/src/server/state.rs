@@ -62,10 +62,10 @@ use super::projects::ProjectId;
 use super::scan::ScanEvent;
 use crate::code_action::quick_fixes;
 use crate::completion::{
-    DirectiveContext, DirectiveVocabulary, PLACEHOLDER, RoleContext, RoleVocabulary,
+    DirectiveContext, DirectiveVocabulary, ItemStyle, PLACEHOLDER, RoleContext, RoleVocabulary,
     TargetQuestion, TextFormat, WrittenRole, directive_at, directive_items, identity_marker_line,
-    is_scoped, probe_text, relation_target_at, role_at, role_name_at, role_name_items,
-    target_items,
+    is_scoped, on_option_marker, probe_text, relation_target_at, role_at, role_name_at,
+    role_name_items, target_items,
 };
 use crate::definition::reference_definition;
 use crate::diagnostics::{
@@ -130,8 +130,9 @@ pub struct ServerState {
     definition_links: bool,
     /// How the client takes a document's outline.
     outline_shape: OutlineShape,
-    /// How the client takes a completion's text.
-    completion_format: TextFormat,
+    /// How the client takes a completion item: its text's format, and
+    /// whether it reopens completion when an item says to.
+    completion: ItemStyle,
     /// Whether the client watches files for the server when asked to.
     watched_files: bool,
     /// The scan's progress while one runs.
@@ -220,7 +221,10 @@ impl ServerState {
             progress_supported: false,
             definition_links: false,
             outline_shape: OutlineShape::Flat,
-            completion_format: TextFormat::Plain,
+            completion: ItemStyle {
+                format: TextFormat::Plain,
+                reopens: false,
+            },
             watched_files: false,
             scan: None,
             next_request_id: 1,
@@ -264,7 +268,16 @@ impl ServerState {
     /// directive's name as a snippet for a client taking one.
     #[must_use]
     pub fn with_completion_format(mut self, completion_format: TextFormat) -> Self {
-        self.completion_format = completion_format;
+        self.completion.format = completion_format;
+        self
+    }
+
+    /// This server, asking the client to reopen completion after an option
+    /// whose values complete when `reopens`, as a client passing the
+    /// `reopenCompletion` initialization option does.
+    #[must_use]
+    pub fn with_completion_reopening(mut self, reopens: bool) -> Self {
+        self.completion.reopens = reopens;
         self
     }
 
@@ -493,10 +506,15 @@ impl ServerState {
     ///
     /// The list is incomplete while the workspace scan runs, so the client
     /// asks again rather than filtering a list missing most documents.
+    ///
+    /// `trigger` is the character whose typing asked, if one did. A space
+    /// asks only where an option's value starts: anywhere else — a role's
+    /// title among them — it would pop a list up at every word.
     pub(super) fn complete(
         &mut self,
         uri: &Uri,
         position: lsp_types::Position,
+        trigger: Option<&str>,
     ) -> Option<CompletionResponse> {
         let text = &self.documents.get(uri)?.text;
         let lines: Vec<&str> = text.lines().collect();
@@ -523,18 +541,28 @@ impl ServerState {
             )
         };
         let scanning = self.scan.is_some();
+        if trigger == Some(" ")
+            && !matches!(
+                directive_at(&lines, line_index, cursor),
+                Some(DirectiveContext::Value(_))
+            )
+        {
+            return None;
+        }
         let (items, incomplete) = if let Some(context) = role_at(line, cursor) {
             let range = lsp_types::Range::new(at(context.replace.start), at(context.replace.end));
             self.complete_target(uri, project, &doc_path, line_index, &context, range)?
         } else if let Some(context) = directive_at(&lines, line_index, cursor) {
-            let format = self.completion_format;
+            let style = self.completion;
             let index = self.projects.get_mut(&project)?.project_index();
             let vocabulary = DirectiveVocabulary {
                 domain,
                 schema: &schema,
                 index,
             };
-            directive_items(&context, &vocabulary, &at, format)
+            directive_items(&context, &vocabulary, &at, style)
+        } else if on_option_marker(&lines, line_index, cursor) {
+            return None;
         } else {
             let context = role_name_at(line, cursor)?;
             let range = lsp_types::Range::new(at(context.replace.start), at(context.replace.end));
@@ -560,7 +588,7 @@ impl ServerState {
                 in_force: &in_force,
             };
             (
-                role_name_items(&context, &vocabulary, range, self.completion_format),
+                role_name_items(&context, &vocabulary, range, self.completion.format),
                 false,
             )
         };
