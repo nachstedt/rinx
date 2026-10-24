@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>types — Dynamic type creation and names for built-in types — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="datatypes.html">Data Types</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Data Types"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="datetime.html">datetime — Basic date and time types</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="zoneinfo.html">zoneinfo — IANA time zone support</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="calendar.html">calendar — General calendar-related functions</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="collections.html">collections — Container datatypes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="collections.abc.html">collections.abc — Abstract Base Classes for Containers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="heapq.html">heapq — Heap queue algorithm</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="bisect.html">bisect — Array bisection algorithm</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="array.html">array — Efficient arrays of numeric values</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="weakref.html">weakref — Weak references</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="types.html">types — Dynamic type creation and names for built-in types</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle types — Dynamic type creation and names for built-in types"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="types.html#dynamic-type-creation">Dynamic Type Creation</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="types.html#standard-interpreter-types">Standard Interpreter Types</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="types.html#additional-utility-classes-and-functions">Additional Utility Classes and Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="types.html#coroutine-utility-functions">Coroutine Utility Functions</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="copy.html">copy — Shallow and deep copy operations</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pprint.html">pprint — Data pretty printer</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="reprlib.html">reprlib — Alternate repr implementation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="enum.html">enum — Support for enumerations</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="graphlib.html">graphlib — Functionality to operate with graph-like structures</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="weakref.html">&larr; weakref — Weak references</a>
+        <a class="next" href="copy.html">copy — Shallow and deep copy operations &rarr;</a>
+      </nav>
+      
+      <h1 id="types-dynamic-type-creation-and-names-for-built-in-types"><code class="xref py module docutils literal">types</code> — Dynamic type creation and names for built-in types</h1>
+<dl class="py module">
+  <dt id="py:module:types"><code class="sig-name">types</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/types.py`</p>
+<hr />
+<p>This module defines utility functions to assist in dynamic creation of
+new types.</p>
+<p>It also defines names for some object types that are used by the standard
+Python interpreter, but not exposed as builtins like <a class="reference internal" href="functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a> or
+<a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> are.</p>
+<p>Finally, it provides some additional type-related utility classes and functions
+that are not fundamental enough to be builtins.</p>
+<h2 id="dynamic-type-creation">Dynamic Type Creation</h2>
+<dl class="py function">
+  <dt id="py:function:types.new_class"><code class="sig-name">new_class(name, bases=(), kwds=None, exec_body=None)</code></dt>
+  <dd><p>Creates a class object dynamically using the appropriate metaclass.</p>
+<p>The first three arguments are the components that make up a class
+definition header: the class name, the base classes (in order), the
+keyword arguments (such as <code>metaclass</code>).</p>
+<p>The <em>exec_body</em> argument is a callback that is used to populate the
+freshly created class namespace. It should accept the class namespace
+as its sole argument and update the namespace directly with the class
+contents. If no callback is provided, it has the same effect as passing
+in <code>lambda ns: None</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:types.prepare_class"><code class="sig-name">prepare_class(name, bases=(), kwds=None)</code></dt>
+  <dd><p>Calculates the appropriate metaclass and creates the class namespace.</p>
+<p>The arguments are the components that make up a class definition header:
+the class name, the base classes (in order) and the keyword arguments
+(such as <code>metaclass</code>).</p>
+<p>The return value is a 3-tuple: <code>metaclass, namespace, kwds</code></p>
+<p><em>metaclass</em> is the appropriate metaclass, <em>namespace</em> is the
+prepared class namespace and <em>kwds</em> is an updated copy of the passed
+in <em>kwds</em> argument with any <code>'metaclass'</code> entry removed. If no <em>kwds</em>
+argument is passed in, this will be an empty dict.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>The default value for the <code>namespace</code> element of the returned
+tuple has changed.  Now an insertion-order-preserving mapping is
+used when the metaclass does not have a <code>__prepare__</code> method.</p>
+</div>
+</dd>
+</dl>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt><a href="../reference/datamodel.html#metaclasses">Metaclasses</a></dt>
+<dd><p>Full details of the class creation process supported by these functions</p>
+</dd>
+<dt><span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-3115/"><strong>PEP 3115</strong></a> - Metaclasses in Python 3000</dt>
+<dd><p>Introduced the <code>__prepare__</code> namespace hook</p>
+</dd>
+</dl>
+</div>
+<dl class="py function">
+  <dt id="py:function:types.resolve_bases"><code class="sig-name">resolve_bases(bases)</code></dt>
+  <dd><p>Resolve MRO entries dynamically as specified by <span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0560/"><strong>PEP 560</strong></a>.</p>
+<p>This function looks for items in <em>bases</em> that are not instances of
+<a class="reference internal" href="functions.html#py:class:type"><code class="xref py class docutils literal">type</code></a>, and returns a tuple where each such object that has
+an <a class="reference internal" href="../reference/datamodel.html#py:method:object.__mro_entries__"><code class="xref py method docutils literal">__mro_entries__</code></a> method is replaced with an unpacked result of
+calling this method.  If a <em>bases</em> item is an instance of <a class="reference internal" href="functions.html#py:class:type"><code class="xref py class docutils literal">type</code></a>,
+or it doesn't have an <code class="xref py method docutils literal">__mro_entries__</code> method, then it is included in
+the return tuple unchanged.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:types.get_original_bases"><code class="sig-name">get_original_bases(cls, /)</code></dt>
+  <dd><p>Return the tuple of objects originally given as the bases of <em>cls</em> before
+the <a class="reference internal" href="../reference/datamodel.html#py:method:object.__mro_entries__"><code class="xref py method docutils literal">__mro_entries__</code></a> method has been called on any bases
+(following the mechanisms laid out in <span class="target" id="index-3"></span><a class="pep reference external" href="https://peps.python.org/pep-0560/"><strong>PEP 560</strong></a>). This is useful for
+introspecting <a href="typing.html#user-defined-generics">Generics</a>.</p>
+<p>For classes that have an <code>__orig_bases__</code> attribute, this
+function returns the value of <code>cls.__orig_bases__</code>.
+For classes without the <code>__orig_bases__</code> attribute,
+<a class="reference internal" href="../reference/datamodel.html#py:attribute:type.__bases__"><code class="xref py attribute docutils literal">cls.__bases__</code></a> is returned.</p>
+<p>Examples:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">typing</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">TypeVar</span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-generic-name hl-python">Generic</span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-generic-name hl-python">NamedTuple</span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-generic-name hl-python">TypedDict</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">T</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">TypeVar</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">T<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-class hl-python"><span class="hl-storage hl-type hl-class hl-python"><span class="hl-keyword hl-declaration hl-class hl-python">class</span></span> <span class="hl-entity hl-name hl-class hl-python"><span class="hl-meta hl-generic-name hl-python">Foo</span></span><span class="hl-meta hl-class hl-inheritance hl-python"><span class="hl-punctuation hl-section hl-inheritance hl-begin hl-python">(</span></span></span><span class="hl-meta hl-class hl-inheritance hl-python"><span class="hl-entity hl-other hl-inherited-class hl-python">Generic</span><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">T</span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-inheritance hl-end hl-python">)</span></span><span class="hl-meta hl-class hl-python"><span class="hl-punctuation hl-section hl-class hl-begin hl-python">:</span></span> <span class="hl-constant hl-language hl-python">...</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-class hl-python"><span class="hl-storage hl-type hl-class hl-python"><span class="hl-keyword hl-declaration hl-class hl-python">class</span></span> <span class="hl-entity hl-name hl-class hl-python"><span class="hl-meta hl-generic-name hl-python">Bar</span></span><span class="hl-meta hl-class hl-inheritance hl-python"><span class="hl-punctuation hl-section hl-inheritance hl-begin hl-python">(</span></span></span><span class="hl-meta hl-class hl-inheritance hl-python"><span class="hl-entity hl-other hl-inherited-class hl-python">Foo</span><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-separator hl-inheritance hl-python">,</span> <span class="hl-entity hl-other hl-inherited-class hl-python">float</span><span class="hl-punctuation hl-section hl-inheritance hl-end hl-python">)</span></span><span class="hl-meta hl-class hl-python"><span class="hl-punctuation hl-section hl-class hl-begin hl-python">:</span></span> <span class="hl-constant hl-language hl-python">...</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-class hl-python"><span class="hl-storage hl-type hl-class hl-python"><span class="hl-keyword hl-declaration hl-class hl-python">class</span></span> <span class="hl-entity hl-name hl-class hl-python"><span class="hl-meta hl-generic-name hl-python">Baz</span></span><span class="hl-meta hl-class hl-inheritance hl-python"><span class="hl-punctuation hl-section hl-inheritance hl-begin hl-python">(</span></span></span><span class="hl-meta hl-class hl-inheritance hl-python"><span class="hl-entity hl-other hl-inherited-class hl-python">list</span><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">str</span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-inheritance hl-end hl-python">)</span></span><span class="hl-meta hl-class hl-python"><span class="hl-punctuation hl-section hl-class hl-begin hl-python">:</span></span> <span class="hl-constant hl-language hl-python">...</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Eggs</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">NamedTuple</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Eggs<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">a<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">b<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">str</span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Spam</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">TypedDict</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Spam<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-begin hl-python">{</span></span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">a<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span> </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">b<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">str</span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-control hl-flow hl-assert hl-python">assert</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Bar</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-support hl-variable hl-magic hl-python">__bases__</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Foo</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">float</span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-control hl-flow hl-assert hl-python">assert</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_original_bases</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Bar</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-group hl-python"><span class="hl-punctuation hl-section hl-group hl-begin hl-python">(</span><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Foo</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span><span class="hl-punctuation hl-separator hl-tuple hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">float</span></span><span class="hl-punctuation hl-section hl-group hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-control hl-flow hl-assert hl-python">assert</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Baz</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-support hl-variable hl-magic hl-python">__bases__</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">list</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-control hl-flow hl-assert hl-python">assert</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_original_bases</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Baz</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-group hl-python"><span class="hl-punctuation hl-section hl-group hl-begin hl-python">(</span><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">list</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">str</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span><span class="hl-punctuation hl-separator hl-tuple hl-python">,</span><span class="hl-punctuation hl-section hl-group hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-control hl-flow hl-assert hl-python">assert</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Eggs</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-support hl-variable hl-magic hl-python">__bases__</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">tuple</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-control hl-flow hl-assert hl-python">assert</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_original_bases</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Eggs</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">NamedTuple</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-control hl-flow hl-assert hl-python">assert</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Spam</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-support hl-variable hl-magic hl-python">__bases__</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">dict</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-control hl-flow hl-assert hl-python">assert</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_original_bases</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Spam</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">TypedDict</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-control hl-flow hl-assert hl-python">assert</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-support hl-variable hl-magic hl-python">__bases__</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">object</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-control hl-flow hl-assert hl-python">assert</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_original_bases</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">object</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span></pre></div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p><span class="target" id="index-4"></span><a class="pep reference external" href="https://peps.python.org/pep-0560/"><strong>PEP 560</strong></a> - Core support for typing module and generic types</p>
+</div>
+<h2 id="standard-interpreter-types">Standard Interpreter Types</h2>
+<p>This module provides names for many of the types that are required to
+implement a Python interpreter. It deliberately avoids including some of
+the types that arise only incidentally during processing such as the
+<code>listiterator</code> type.</p>
+<p>Typical use of these names is for <a class="reference internal" href="functions.html#py:function:isinstance"><code class="xref py function docutils literal">isinstance</code></a> or
+<a class="reference internal" href="functions.html#py:function:issubclass"><code class="xref py function docutils literal">issubclass</code></a> checks.</p>
+<p>If you instantiate any of these types, note that signatures may vary between Python versions.</p>
+<p>Standard names are defined for the following types:</p>
+<dl class="py data">
+  <dt id="py:data:types.nonetype"><code class="sig-name">NoneType</code></dt>
+  <dd><p>The type of <a class="reference internal" href="constants.html#py:data:none"><code class="xref py data docutils literal">None</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.10:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.functiontype"><code class="sig-name">FunctionType</code></dt>
+  <dt id="py:data:types.lambdatype"><code class="sig-name">LambdaType</code></dt>
+  <dd><p>The type of user-defined functions and functions created by
+:keyword:`lambda`  expressions.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: function.__new__ code types.FunctionType</pre>
+</div>
+<p>The audit event only occurs for direct instantiation of function objects,
+and is not raised for normal compilation.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.generatortype"><code class="sig-name">GeneratorType</code></dt>
+  <dd><p>The type of <a class="reference internal" href="../glossary.html#term-generator"><span class="xref std std-term">generator</span></a>-iterator objects, created by
+generator functions.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.coroutinetype"><code class="sig-name">CoroutineType</code></dt>
+  <dd><p>The type of <a class="reference internal" href="../glossary.html#term-coroutine"><span class="xref std std-term">coroutine</span></a> objects, created by
+:keyword:`async def` functions.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.asyncgeneratortype"><code class="sig-name">AsyncGeneratorType</code></dt>
+  <dd><p>The type of <a class="reference internal" href="../glossary.html#term-asynchronous-generator"><span class="xref std std-term">asynchronous generator</span></a>-iterator objects, created by
+asynchronous generator functions.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:types.codetype"><em class="property">class</em> <code class="sig-name">CodeType(**kwargs)</code></dt>
+  <dd><span id="index-0"></span>
+<p>The type of <a href="../reference/datamodel.html#code-objects">code objects</a> such as returned by <a class="reference internal" href="functions.html#py:function:compile"><code class="xref py function docutils literal">compile</code></a>.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: code.__new__ code,filename,name,argcount,posonlyargcount,kwonlyargcount,nlocals,stacksize,flags types.CodeType</pre>
+</div>
+<p>Note that the audited arguments may not match the names or positions
+required by the initializer.  The audit event only occurs for direct
+instantiation of code objects, and is not raised for normal compilation.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.celltype"><code class="sig-name">CellType</code></dt>
+  <dd><p>The type for cell objects: such objects are used as containers for
+a function's <a class="reference internal" href="../glossary.html#term-closure-variable"><span class="xref std std-term">closure variables</span></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.8:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.methodtype"><code class="sig-name">MethodType</code></dt>
+  <dd><p>The type of methods of user-defined class instances.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.builtinfunctiontype"><code class="sig-name">BuiltinFunctionType</code></dt>
+  <dt id="py:data:types.builtinmethodtype"><code class="sig-name">BuiltinMethodType</code></dt>
+  <dd><p>The type of built-in functions like <a class="reference internal" href="functions.html#py:function:len"><code class="xref py function docutils literal">len</code></a> or <a class="reference internal" href="sys.html#py:function:sys.exit"><code class="xref py function docutils literal">sys.exit</code></a>, and
+methods of built-in classes.  (Here, the term "built-in" means "written in
+C".)</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.wrapperdescriptortype"><code class="sig-name">WrapperDescriptorType</code></dt>
+  <dd><p>The type of methods of some built-in data types and base classes such as
+<a class="reference internal" href="../reference/datamodel.html#py:method:object.__init__"><code class="xref py method docutils literal">object.__init__</code></a> or <a class="reference internal" href="../reference/datamodel.html#py:method:object.__lt__"><code class="xref py method docutils literal">object.__lt__</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.methodwrappertype"><code class="sig-name">MethodWrapperType</code></dt>
+  <dd><p>The type of <em>bound</em> methods of some built-in data types and base classes.
+For example it is the type of <code class="code">object().__str__</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.notimplementedtype"><code class="sig-name">NotImplementedType</code></dt>
+  <dd><p>The type of <a class="reference internal" href="constants.html#py:data:notimplemented"><code class="xref py data docutils literal">NotImplemented</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.10:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.methoddescriptortype"><code class="sig-name">MethodDescriptorType</code></dt>
+  <dd><p>The type of methods of some built-in data types such as <a class="reference internal" href="stdtypes.html#py:method:str.join"><code class="xref py method docutils literal">str.join</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.classmethoddescriptortype"><code class="sig-name">ClassMethodDescriptorType</code></dt>
+  <dd><p>The type of <em>unbound</em> class methods of some built-in data types such as
+<code>dict.__dict__['fromkeys']</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:types.moduletype"><em class="property">class</em> <code class="sig-name">ModuleType(name, doc=None)</code></dt>
+  <dd><p>The type of <a class="reference internal" href="../glossary.html#term-module"><span class="xref std std-term">modules</span></a>. The constructor takes the name of the
+module to be created and optionally its <a class="reference internal" href="../glossary.html#term-docstring"><span class="xref std std-term">docstring</span></a>.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt><a href="../reference/datamodel.html#module-objects">Documentation on module objects</a></dt>
+<dd><p>Provides details on the special attributes that can be found on
+instances of <code class="xref py class docutils literal">ModuleType</code>.</p>
+</dd>
+<dt><a class="reference internal" href="importlib.html#py:function:importlib.util.module_from_spec"><code class="xref py function docutils literal">importlib.util.module_from_spec</code></a></dt>
+<dd><p>Modules created using the <code class="xref py class docutils literal">ModuleType</code> constructor are
+created with many of their special attributes unset or set to default
+values. <code class="xref py function docutils literal">module_from_spec</code> provides a more robust way of
+creating <code class="xref py class docutils literal">ModuleType</code> instances which ensures the various
+attributes are set appropriately.</p>
+</dd>
+</dl>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.ellipsistype"><code class="sig-name">EllipsisType</code></dt>
+  <dd><p>The type of <a class="reference internal" href="constants.html#py:data:ellipsis"><code class="xref py data docutils literal">Ellipsis</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.10:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:types.genericalias"><em class="property">class</em> <code class="sig-name">GenericAlias(t_origin, t_args)</code></dt>
+  <dd><p>The type of <a href="stdtypes.html#types-genericalias">parameterized generics</a> such as
+<code>list[int]</code>.</p>
+<p><code>t_origin</code> should be a non-parameterized generic class, such as <code>list</code>,
+<code>tuple</code> or <code>dict</code>.  <code>t_args</code> should be a <a class="reference internal" href="stdtypes.html#py:class:tuple"><code class="xref py class docutils literal">tuple</code></a> (possibly of
+length 1) of types which parameterize <code>t_origin</code>:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">types</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">GenericAlias</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">list</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">GenericAlias</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">list</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">True</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">dict</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">str</span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">GenericAlias</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">dict</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">str</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">True</span></span></pre></div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.9.2:</span></p>
+<p>This type can now be subclassed.</p>
+</div>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt><a href="stdtypes.html#types-genericalias">Generic Alias Types</a></dt>
+<dd><p>In-depth documentation on instances of <code class="xref py class docutils literal">types.GenericAlias</code></p>
+</dd>
+<dt><span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> - Type Hinting Generics In Standard Collections</dt>
+<dd><p>Introducing the <code class="xref py class docutils literal">types.GenericAlias</code> class</p>
+</dd>
+</dl>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:types.uniontype"><em class="property">class</em> <code class="sig-name">UnionType</code></dt>
+  <dd><p>The type of <a href="stdtypes.html#types-union">union type expressions</a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.10:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>This is now an alias for <a class="reference internal" href="typing.html#py:class:typing.union"><code class="xref py class docutils literal">typing.Union</code></a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:types.tracebacktype"><em class="property">class</em> <code class="sig-name">TracebackType(tb_next, tb_frame, tb_lasti, tb_lineno)</code></dt>
+  <dd><p>The type of traceback objects such as found in <code>sys.exception().__traceback__</code>.</p>
+<p>See <a href="../reference/datamodel.html#traceback-objects">the language reference</a> for details of the
+available attributes and operations, and guidance on creating tracebacks
+dynamically.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.frametype"><code class="sig-name">FrameType</code></dt>
+  <dd><p>The type of <a href="../reference/datamodel.html#frame-objects">frame objects</a> such as found in
+<a class="reference internal" href="../reference/datamodel.html#py:attribute:traceback.tb_frame"><code class="xref py attribute docutils literal">tb.tb_frame</code></a> if <code>tb</code> is a traceback object.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.getsetdescriptortype"><code class="sig-name">GetSetDescriptorType</code></dt>
+  <dd><p>The type of objects defined in extension modules with <code>PyGetSetDef</code>, such
+as <a class="reference internal" href="../reference/datamodel.html#py:attribute:frame.f_locals"><code class="xref py attribute docutils literal">FrameType.f_locals</code></a> or <code>array.array.typecode</code>.
+This type is used as
+descriptor for object attributes; it has the same purpose as the
+<a class="reference internal" href="functions.html#py:class:property"><code class="xref py class docutils literal">property</code></a> type, but for classes defined in extension modules.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:types.memberdescriptortype"><code class="sig-name">MemberDescriptorType</code></dt>
+  <dd><p>The type of objects defined in extension modules with <code>PyMemberDef</code>, such
+as <code>datetime.timedelta.days</code>.  This type is used as descriptor for simple C
+data members which use standard conversion functions; it has the same purpose
+as the <a class="reference internal" href="functions.html#py:class:property"><code class="xref py class docutils literal">property</code></a> type, but for classes defined in extension modules.</p>
+<p>In addition, when a class is defined with a <a href="#" class="broken-link"><code class="xref py attribute docutils literal">__slots__</code></a> attribute, then for
+each slot, an instance of <code class="xref py class docutils literal">MemberDescriptorType</code> will be added as an attribute
+on the class. This allows the slot to appear in the class's <a class="reference internal" href="../reference/datamodel.html#py:attribute:type.__dict__"><code class="xref py attribute docutils literal">__dict__</code></a>.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+
+   In other implementations of Python, this type may be identical to
+   ``GetSetDescriptorType``.</pre>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:types.mappingproxytype"><em class="property">class</em> <code class="sig-name">MappingProxyType(mapping)</code></dt>
+  <dd><p>Read-only proxy of a mapping. It provides a dynamic view on the mapping's
+entries, which means that when the mapping changes, the view reflects these
+changes.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.9:</span></p>
+<p>Updated to support the new union (<code>|</code>) operator from <span class="target" id="index-6"></span><a class="pep reference external" href="https://peps.python.org/pep-0584/"><strong>PEP 584</strong></a>, which
+simply delegates to the underlying mapping.</p>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'describe'</p>
+<pre class="directive-error-source">.. describe:: key in proxy
+
+   Return ``True`` if the underlying mapping has a key *key*, else
+   ``False``.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'describe'</p>
+<pre class="directive-error-source">.. describe:: proxy[key]
+
+   Return the item of the underlying mapping with key *key*.  Raises a
+   :exc:`KeyError` if *key* is not in the underlying mapping.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'describe'</p>
+<pre class="directive-error-source">.. describe:: iter(proxy)
+
+   Return an iterator over the keys of the underlying mapping.  This is a
+   shortcut for ``iter(proxy.keys())``.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'describe'</p>
+<pre class="directive-error-source">.. describe:: len(proxy)
+
+   Return the number of items in the underlying mapping.</pre>
+</div>
+<dl class="py method">
+  <dt id="py:method:types.mappingproxytype.copy"><code class="sig-name">copy()</code></dt>
+  <dd><p>Return a shallow copy of the underlying mapping.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:types.mappingproxytype.get"><code class="sig-name">get(key[, default])</code></dt>
+  <dd><p>Return the value for <em>key</em> if <em>key</em> is in the underlying mapping, else
+<em>default</em>.  If <em>default</em> is not given, it defaults to <code>None</code>, so that
+this method never raises a <a class="reference internal" href="exceptions.html#py:exception:keyerror"><code class="xref py exception docutils literal">KeyError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:types.mappingproxytype.items"><code class="sig-name">items()</code></dt>
+  <dd><p>Return a new view of the underlying mapping's items (<code>(key, value)</code>
+pairs).</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:types.mappingproxytype.keys"><code class="sig-name">keys()</code></dt>
+  <dd><p>Return a new view of the underlying mapping's keys.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:types.mappingproxytype.values"><code class="sig-name">values()</code></dt>
+  <dd><p>Return a new view of the underlying mapping's values.</p>
+</dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'describe'</p>
+<pre class="directive-error-source">.. describe:: reversed(proxy)
+
+   Return a reverse iterator over the keys of the underlying mapping.
+
+   .. versionadded:: 3.9</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'describe'</p>
+<pre class="directive-error-source">.. describe:: hash(proxy)
+
+   Return a hash of the underlying mapping.
+
+   .. versionadded:: 3.12</pre>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:types.capsuletype"><em class="property">class</em> <code class="sig-name">CapsuleType</code></dt>
+  <dd><p>The type of <a href="../c-api/capsule.html#capsules">capsule objects</a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<h2 id="additional-utility-classes-and-functions">Additional Utility Classes and Functions</h2>
+<dl class="py class">
+  <dt id="py:class:types.simplenamespace"><em class="property">class</em> <code class="sig-name">SimpleNamespace</code></dt>
+  <dd><p>A simple <a class="reference internal" href="functions.html#py:class:object"><code class="xref py class docutils literal">object</code></a> subclass that provides attribute access to its
+namespace, as well as a meaningful repr.</p>
+<p>Unlike <a class="reference internal" href="functions.html#py:class:object"><code class="xref py class docutils literal">object</code></a>, with <code class="xref py class docutils literal">SimpleNamespace</code> you can add and remove
+attributes.</p>
+<p><a class="reference internal" href="types.html#py:class:types.simplenamespace"><code class="xref py class docutils literal">SimpleNamespace</code></a> objects may be initialized
+in the same way as <a class="reference internal" href="stdtypes.html#py:class:dict"><code class="xref py class docutils literal">dict</code></a>: either with keyword arguments,
+with a single positional argument, or with both.
+When initialized with keyword arguments,
+those are directly added to the underlying namespace.
+Alternatively, when initialized with a positional argument,
+the underlying namespace will be updated with key-value pairs
+from that argument (either a mapping object or
+an <a class="reference internal" href="../glossary.html#term-iterable"><span class="xref std std-term">iterable</span></a> object producing key-value pairs).
+All such keys must be strings.</p>
+<p>The type is roughly equivalent to the following code:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-class hl-python"><span class="hl-storage hl-type hl-class hl-python"><span class="hl-keyword hl-declaration hl-class hl-python">class</span></span> <span class="hl-entity hl-name hl-class hl-python"><span class="hl-meta hl-generic-name hl-python">SimpleNamespace</span></span><span class="hl-punctuation hl-section hl-class hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-support hl-function hl-magic hl-python">__init__</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">mapping_or_iterable</span></span><span class="hl-meta hl-function hl-parameters hl-default-value hl-python"><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-sequence hl-tuple hl-empty hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-storage hl-modifier hl-positional-args-only hl-python">/</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-keyword hl-operator hl-unpacking hl-mapping hl-python">**</span><span class="hl-variable hl-parameter hl-python">kwargs</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-support hl-variable hl-magic hl-python">__dict__</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">update</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mapping_or_iterable</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-support hl-variable hl-magic hl-python">__dict__</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">update</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">kwargs</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-support hl-function hl-magic hl-python">__repr__</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">items</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">f</span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-begin hl-python">{</span><span class="hl-source hl-python hl-embedded"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">k</span></span></span></span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-end hl-python">}</span></span><span class="hl-string hl-quoted hl-double hl-python">=</span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-begin hl-python">{</span><span class="hl-source hl-python hl-embedded"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">v</span></span></span><span class="hl-storage hl-modifier hl-conversion hl-python">!r</span></span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-end hl-python">}</span></span><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span> <span class="hl-meta hl-expression hl-generator hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-generator hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">k</span><span class="hl-punctuation hl-separator hl-target-list hl-python">,</span> <span class="hl-meta hl-generic-name hl-python">v</span> <span class="hl-keyword hl-control hl-loop hl-for hl-in hl-python">in</span></span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-support hl-variable hl-magic hl-python">__dict__</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">items</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-constant hl-other hl-placeholder hl-python"><span class="hl-punctuation hl-definition hl-placeholder hl-begin hl-python">{</span><span class="hl-punctuation hl-definition hl-placeholder hl-end hl-python">}</span></span>(<span class="hl-constant hl-other hl-placeholder hl-python"><span class="hl-punctuation hl-definition hl-placeholder hl-begin hl-python">{</span><span class="hl-punctuation hl-definition hl-placeholder hl-end hl-python">}</span></span>)<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">format</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">type</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-support hl-variable hl-magic hl-python">__name__</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">, <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">join</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">items</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-support hl-function hl-magic hl-python">__eq__</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">other</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">isinstance</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">SimpleNamespace</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">and</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">isinstance</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">other</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">SimpleNamespace</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">           <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-support hl-variable hl-magic hl-python">__dict__</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">other</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-support hl-variable hl-magic hl-python">__dict__</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-constant hl-language hl-python">NotImplemented</span></span></pre></div>
+<p><code>SimpleNamespace</code> may be useful as a replacement for <code>class NS: pass</code>.
+However, for a structured record type use <a class="reference internal" href="collections.html#py:function:collections.namedtuple"><code class="xref py function docutils literal">namedtuple</code></a>
+instead.</p>
+<p><code class="xref py class docutils literal">SimpleNamespace</code> objects are supported by <a class="reference internal" href="copy.html#py:function:copy.replace"><code class="xref py function docutils literal">copy.replace</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.9:</span></p>
+<p>Attribute order in the repr changed from alphabetical to insertion (like
+<code>dict</code>).</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Added support for an optional positional argument.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:types.dynamicclassattribute"><code class="sig-name">DynamicClassAttribute(fget=None, fset=None, fdel=None, doc=None)</code></dt>
+  <dd><p>Route attribute access on a class to <a href="#" class="broken-link">__getattr</a>.</p>
+<p>This is a descriptor, used to define attributes that act differently when
+accessed through an instance and through a class.  Instance access remains
+normal, but access to an attribute through a class will be routed to the
+class's <a href="#" class="broken-link">__getattr</a> method; this is done by raising AttributeError.</p>
+<p>This allows one to have properties active on an instance, and have virtual
+attributes on the class with the same name (see <a class="reference internal" href="enum.html#py:class:enum.enum"><code class="xref py class docutils literal">enum.Enum</code></a> for an example).</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<h2 id="coroutine-utility-functions">Coroutine Utility Functions</h2>
+<dl class="py function">
+  <dt id="py:function:types.coroutine"><code class="sig-name">coroutine(gen_func)</code></dt>
+  <dd><p>This function transforms a <a class="reference internal" href="../glossary.html#term-generator"><span class="xref std std-term">generator</span></a> function into a
+<a class="reference internal" href="../glossary.html#term-coroutine-function"><span class="xref std std-term">coroutine function</span></a> which returns a generator-based coroutine.
+The generator-based coroutine is still a <a class="reference internal" href="../glossary.html#term-generator-iterator"><span class="xref std std-term">generator iterator</span></a>,
+but is also considered to be a <a class="reference internal" href="../glossary.html#term-coroutine"><span class="xref std std-term">coroutine</span></a> object and is
+<a class="reference internal" href="../glossary.html#term-awaitable"><span class="xref std std-term">awaitable</span></a>.  However, it may not necessarily implement
+the <a class="reference internal" href="../reference/datamodel.html#py:method:object.__await__"><code class="xref py method docutils literal">__await__</code></a> method.</p>
+<p>If <em>gen_func</em> is a generator function, it will be modified in-place.</p>
+<p>If <em>gen_func</em> is not a generator function, it will be wrapped. If it
+returns an instance of <a class="reference internal" href="collections.abc.html#py:class:collections.abc.generator"><code class="xref py class docutils literal">collections.abc.Generator</code></a>, the instance
+will be wrapped in an <em>awaitable</em> proxy object.  All other types
+of objects will be returned as is.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="weakref.html">&larr; weakref — Weak references</a>
+        <a class="next" href="copy.html">copy — Shallow and deep copy operations &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
