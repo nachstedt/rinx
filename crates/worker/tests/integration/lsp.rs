@@ -331,7 +331,7 @@ fn test_lsp_completes_a_label_defined_in_another_document() {
     let capabilities = &initialized.response_result.expect("initialized")["capabilities"];
     assert_eq!(
         capabilities["completionProvider"]["triggerCharacters"],
-        json!(["`", "<", "/", ".", ":"])
+        json!(["`", "<", "/", ".", ":", " "])
     );
     let list = completed.response_result.expect("a completion");
     assert_eq!(list["isIncomplete"], false);

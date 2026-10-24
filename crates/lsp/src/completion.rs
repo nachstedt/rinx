@@ -24,8 +24,12 @@ mod role_name_items;
 mod targets;
 
 pub use context::{RoleContext, WrittenRole, role_at};
-pub use directive_context::{DirectiveContext, directive_at, identity_marker_line};
-pub use directive_items::{DirectiveVocabulary, TextFormat, directive_items, relation_target_at};
+pub use directive_context::{
+    DirectiveContext, directive_at, identity_marker_line, on_option_marker,
+};
+pub use directive_items::{
+    DirectiveVocabulary, ItemStyle, TextFormat, directive_items, relation_target_at,
+};
 pub use role_name_context::role_name_at;
 pub use role_name_items::{RoleVocabulary, role_name_items};
 pub use targets::{PLACEHOLDER, TargetQuestion, is_scoped, probe_text, target_items};
