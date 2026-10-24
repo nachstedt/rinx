@@ -18,7 +18,7 @@ fn did_change_to(text: &str, version: i32) -> Notification {
 }
 
 /// A completion request at `line` and `character` of the open document `uri`.
-fn completion_at(uri: Uri, line: u32, character: u32) -> Request {
+fn completion_at(uri: &Uri, line: u32, character: u32) -> Request {
     Request::new(
         RequestId::from(9),
         "textDocument/completion".to_string(),
@@ -46,7 +46,7 @@ proptest! {
         handle_notification(&mut state, workspace.open("index.rst", &text));
 
         // When
-        let response = handle_request(&mut state, completion_at(workspace.uri("index.rst"), line, character));
+        let response = handle_request(&mut state, completion_at(&workspace.uri("index.rst"), line, character));
 
         // Then — an answer, never an error
         prop_assert!(response.response_result.is_ok(), "{:?}", response.response_result);
