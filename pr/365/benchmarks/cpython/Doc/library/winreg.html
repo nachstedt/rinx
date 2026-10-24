@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>winreg — Windows registry access — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle MS Windows Specific Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="msvcrt.html">msvcrt — Useful routines from the MS VC++ runtime</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="winreg.html">winreg — Windows registry access</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle winreg — Windows registry access"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="winreg.html#functions">Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="winreg.html#constants">Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="winreg.html#registry-handle-objects">Registry Handle Objects</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="winsound.html">winsound — Sound-playing interface for Windows</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="msvcrt.html">&larr; msvcrt — Useful routines from the MS VC++ runtime</a>
+        <a class="next" href="winsound.html">winsound — Sound-playing interface for Windows &rarr;</a>
+      </nav>
+      
+      <h1 id="winreg-windows-registry-access"><code class="xref py module docutils literal">winreg</code> — Windows registry access</h1>
+<dl class="py module">
+  <dt id="py:module:winreg"><code class="sig-name">winreg</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Mark Hammond &lt;MarkH@ActiveState.com&gt;</pre>
+</div>
+<hr />
+<p>These functions expose the Windows registry API to Python.  Instead of using an
+integer as the registry handle, a <a href="winreg.html#handle-object">handle object</a> is used
+to ensure that the handles are closed correctly, even if the programmer neglects
+to explicitly close them.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'availability'</p>
+<pre class="directive-error-source">.. availability:: Windows.</pre>
+</div>
+<a id="exception-changed"></a>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Several functions in this module used to raise a
+<a class="reference internal" href="exceptions.html#py:exception:windowserror"><code class="xref py exception docutils literal">WindowsError</code></a>, which is now an alias of <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a>.</p>
+</div>
+<a id="functions"></a>
+<h2 id="functions">Functions</h2>
+<p>This module offers the following functions:</p>
+<dl class="py function">
+  <dt id="py:function:winreg.closekey"><code class="sig-name">CloseKey(hkey)</code></dt>
+  <dd><p>Closes a previously opened registry key.  The <em>hkey</em> argument specifies a
+previously opened key.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>If <em>hkey</em> is not closed using this method (or via <a class="reference internal" href="winreg.html#py:method:winreg.pyhkey.close"><code class="xref py method docutils literal">hkey.Close()</code></a>), it is closed when the <em>hkey</em> object is destroyed by
+Python.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.connectregistry"><code class="sig-name">ConnectRegistry(computer_name, key)</code></dt>
+  <dd><p>Establishes a connection to a predefined registry handle on another computer,
+and returns a <a href="winreg.html#handle-object">handle object</a>.</p>
+<p><em>computer_name</em> is the name of the remote computer, of the form
+<code>r"\\computername"</code>.  If <code>None</code>, the local computer is used.</p>
+<p><em>key</em> is the predefined handle to connect to.</p>
+<p>The return value is the handle of the opened key. If the function fails, an
+<a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> exception is raised.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.ConnectRegistry computer_name,key winreg.ConnectRegistry</pre>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>See <a href="winreg.html#exception-changed">above</a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.createkey"><code class="sig-name">CreateKey(key, sub_key)</code></dt>
+  <dd><p>Creates or opens the specified key, returning a
+<a href="winreg.html#handle-object">handle object</a>.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p><em>sub_key</em> is a string that names the key this method opens or creates.</p>
+<p>If <em>key</em> is one of the predefined keys, <em>sub_key</em> may be <code>None</code>. In that
+case, the handle returned is the same key handle passed in to the function.</p>
+<p>If the key already exists, this function opens the existing key.</p>
+<p>The return value is the handle of the opened key. If the function fails, an
+<a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> exception is raised.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.CreateKey key,sub_key,access winreg.CreateKey</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.OpenKey/result key winreg.CreateKey</pre>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>See <a href="winreg.html#exception-changed">above</a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.createkeyex"><code class="sig-name">CreateKeyEx(key, sub_key, reserved=0, access=KEY_WRITE)</code></dt>
+  <dd><p>Creates or opens the specified key, returning a
+<a href="winreg.html#handle-object">handle object</a>.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p><em>sub_key</em> is a string that names the key this method opens or creates.</p>
+<p><em>reserved</em> is a reserved integer, and must be zero. The default is zero.</p>
+<p><em>access</em> is an integer that specifies an access mask that describes the desired
+security access for the key.  Default is <a class="reference internal" href="winreg.html#py:data:winreg.key_write"><code class="xref py data docutils literal">KEY_WRITE</code></a>.  See
+<a href="winreg.html#access-rights">Access Rights</a> for other allowed values.</p>
+<p>If <em>key</em> is one of the predefined keys, <em>sub_key</em> may be <code>None</code>. In that
+case, the handle returned is the same key handle passed in to the function.</p>
+<p>If the key already exists, this function opens the existing key.</p>
+<p>The return value is the handle of the opened key. If the function fails, an
+<a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> exception is raised.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.CreateKey key,sub_key,access winreg.CreateKeyEx</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.OpenKey/result key winreg.CreateKeyEx</pre>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>See <a href="winreg.html#exception-changed">above</a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.deletekey"><code class="sig-name">DeleteKey(key, sub_key)</code></dt>
+  <dd><p>Deletes the specified key.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p><em>sub_key</em> is a string that must be a subkey of the key identified by the <em>key</em>
+parameter.  This value must not be <code>None</code>, and the key may not have subkeys.</p>
+<p><em>This method can not delete keys with subkeys.</em></p>
+<p>If the method succeeds, the entire key, including all of its values, is removed.
+If the method fails, an <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> exception is raised.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.DeleteKey key,sub_key,access winreg.DeleteKey</pre>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>See <a href="winreg.html#exception-changed">above</a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.deletekeyex"><code class="sig-name">DeleteKeyEx(key, sub_key, access=KEY_WOW64_64KEY, reserved=0)</code></dt>
+  <dd><p>Deletes the specified key.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p><em>sub_key</em> is a string that must be a subkey of the key identified by the
+<em>key</em> parameter. This value must not be <code>None</code>, and the key may not have
+subkeys.</p>
+<p><em>reserved</em> is a reserved integer, and must be zero. The default is zero.</p>
+<p><em>access</em> is an integer that specifies an access mask that describes the
+desired security access for the key.  Default is <a class="reference internal" href="winreg.html#py:data:winreg.key_wow64_64key"><code class="xref py data docutils literal">KEY_WOW64_64KEY</code></a>.
+On 32-bit Windows, the WOW64 constants are ignored.
+See <a href="winreg.html#access-rights">Access Rights</a> for other allowed values.</p>
+<p><em>This method can not delete keys with subkeys.</em></p>
+<p>If the method succeeds, the entire key, including all of its values, is
+removed. If the method fails, an <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> exception is raised.</p>
+<p>On unsupported Windows versions, <a class="reference internal" href="exceptions.html#py:exception:notimplementederror"><code class="xref py exception docutils literal">NotImplementedError</code></a> is raised.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.DeleteKey key,sub_key,access winreg.DeleteKeyEx</pre>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>See <a href="winreg.html#exception-changed">above</a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.deletevalue"><code class="sig-name">DeleteValue(key, value)</code></dt>
+  <dd><p>Removes a named value from a registry key.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p><em>value</em> is a string that identifies the value to remove.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.DeleteValue key,value winreg.DeleteValue</pre>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.enumkey"><code class="sig-name">EnumKey(key, index)</code></dt>
+  <dd><p>Enumerates subkeys of an open registry key, returning a string.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p><em>index</em> is an integer that identifies the index of the key to retrieve.</p>
+<p>The function retrieves the name of one subkey each time it is called.  It is
+typically called repeatedly until an <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> exception is
+raised, indicating, no more values are available.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.EnumKey key,index winreg.EnumKey</pre>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>See <a href="winreg.html#exception-changed">above</a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.enumvalue"><code class="sig-name">EnumValue(key, index)</code></dt>
+  <dd><p>Enumerates values of an open registry key, returning a tuple.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p><em>index</em> is an integer that identifies the index of the value to retrieve.</p>
+<p>The function retrieves the name of one subkey each time it is called. It is
+typically called repeatedly, until an <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> exception is
+raised, indicating no more values.</p>
+<p>The result is a tuple of 3 items:</p>
+<table>
+<thead>
+<tr>
+<th><p>Index</p>
+</th>
+<th><p>Meaning</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>0</code></p>
+</td>
+<td><p>A string that identifies the value name</p>
+</td>
+</tr>
+<tr>
+<td><p><code>1</code></p>
+</td>
+<td><p>An object that holds the value data, and
+whose type depends on the underlying
+registry type</p>
+</td>
+</tr>
+<tr>
+<td><p><code>2</code></p>
+</td>
+<td><p>An integer that identifies the type of the
+value data (see table in docs for
+<a href="#" class="broken-link"><code class="xref py method docutils literal">SetValueEx</code></a>)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.EnumValue key,index winreg.EnumValue</pre>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>See <a href="winreg.html#exception-changed">above</a>.</p>
+</div>
+</dd>
+</dl>
+<span id="index-0"></span>
+<dl class="py function">
+  <dt id="py:function:winreg.expandenvironmentstrings"><code class="sig-name">ExpandEnvironmentStrings(str)</code></dt>
+  <dd><p>Expands environment variable placeholders <code>%NAME%</code> in strings like
+<a class="reference internal" href="winreg.html#py:data:winreg.reg_expand_sz"><code class="xref py data docutils literal">REG_EXPAND_SZ</code></a>:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ExpandEnvironmentStrings</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-constant hl-other hl-placeholder hl-python">%w</span>indir%<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">C:<span class="hl-constant hl-character hl-escape hl-python">\\</span>Windows<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.ExpandEnvironmentStrings str winreg.ExpandEnvironmentStrings</pre>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.flushkey"><code class="sig-name">FlushKey(key)</code></dt>
+  <dd><p>Writes all the attributes of a key to the registry.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p>It is not necessary to call <a class="reference internal" href="winreg.html#py:function:winreg.flushkey"><code class="xref py function docutils literal">FlushKey</code></a> to change a key. Registry changes are
+flushed to disk by the registry using its lazy flusher.  Registry changes are
+also flushed to disk at system shutdown.  Unlike <a class="reference internal" href="winreg.html#py:function:winreg.closekey"><code class="xref py function docutils literal">CloseKey</code></a>, the
+<a class="reference internal" href="winreg.html#py:function:winreg.flushkey"><code class="xref py function docutils literal">FlushKey</code></a> method returns only when all the data has been written to the
+registry. An application should only call <a class="reference internal" href="winreg.html#py:function:winreg.flushkey"><code class="xref py function docutils literal">FlushKey</code></a> if it requires
+absolute certainty that registry changes are on disk.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>If you don't know whether a <a class="reference internal" href="winreg.html#py:function:winreg.flushkey"><code class="xref py function docutils literal">FlushKey</code></a> call is required, it probably
+isn't.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.loadkey"><code class="sig-name">LoadKey(key, sub_key, file_name)</code></dt>
+  <dd><p>Creates a subkey under the specified key and stores registration information
+from a specified file into that subkey.</p>
+<p><em>key</em> is a handle returned by <a class="reference internal" href="winreg.html#py:function:winreg.connectregistry"><code class="xref py function docutils literal">ConnectRegistry</code></a> or one of the constants
+<a class="reference internal" href="winreg.html#py:data:winreg.hkey_users"><code class="xref py data docutils literal">HKEY_USERS</code></a> or <a class="reference internal" href="winreg.html#py:data:winreg.hkey_local_machine"><code class="xref py data docutils literal">HKEY_LOCAL_MACHINE</code></a>.</p>
+<p><em>sub_key</em> is a string that identifies the subkey to load.</p>
+<p><em>file_name</em> is the name of the file to load registry data from. This file must
+have been created with the <a class="reference internal" href="winreg.html#py:function:winreg.savekey"><code class="xref py function docutils literal">SaveKey</code></a> function. Under the file allocation
+table (FAT) file system, the filename may not have an extension.</p>
+<p>A call to <a class="reference internal" href="winreg.html#py:function:winreg.loadkey"><code class="xref py function docutils literal">LoadKey</code></a> fails if the calling process does not have the
+<code class="xref c member docutils literal">SE_RESTORE_PRIVILEGE</code> privilege.  Note that privileges are different
+from permissions – see the <a href="https://msdn.microsoft.com/en-us/library/ms724889%28v=VS.85%29.aspx">RegLoadKey documentation</a> for
+more details.</p>
+<p>If <em>key</em> is a handle returned by <a class="reference internal" href="winreg.html#py:function:winreg.connectregistry"><code class="xref py function docutils literal">ConnectRegistry</code></a>, then the path
+specified in <em>file_name</em> is relative to the remote computer.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.LoadKey key,sub_key,file_name winreg.LoadKey</pre>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.openkey"><code class="sig-name">OpenKey(key, sub_key, reserved=0, access=KEY_READ)</code></dt>
+  <dt id="py:function:winreg.openkeyex"><code class="sig-name">OpenKeyEx(key, sub_key, reserved=0, access=KEY_READ)</code></dt>
+  <dd><p>Opens the specified key, returning a <a href="winreg.html#handle-object">handle object</a>.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p><em>sub_key</em> is a string that identifies the sub_key to open.</p>
+<p><em>reserved</em> is a reserved integer, and must be zero.  The default is zero.</p>
+<p><em>access</em> is an integer that specifies an access mask that describes the desired
+security access for the key.  Default is <a class="reference internal" href="winreg.html#py:data:winreg.key_read"><code class="xref py data docutils literal">KEY_READ</code></a>.  See <a href="winreg.html#access-rights">Access
+Rights</a> for other allowed values.</p>
+<p>The result is a new handle to the specified key.</p>
+<p>If the function fails, <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> is raised.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.OpenKey key,sub_key,access winreg.OpenKey</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.OpenKey/result key winreg.OpenKey</pre>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p>Allow the use of named arguments.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>See <a href="winreg.html#exception-changed">above</a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.queryinfokey"><code class="sig-name">QueryInfoKey(key)</code></dt>
+  <dd><p>Returns information about a key, as a tuple.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p>The result is a tuple of 3 items:</p>
+<table>
+<thead>
+<tr>
+<th><p>Index</p>
+</th>
+<th><p>Meaning</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>0</code></p>
+</td>
+<td><p>An integer giving the number of sub keys
+this key has.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>1</code></p>
+</td>
+<td><p>An integer giving the number of values this
+key has.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>2</code></p>
+</td>
+<td><p>An integer giving when the key was last
+modified (if available) as 100's of
+nanoseconds since Jan 1, 1601.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.QueryInfoKey key winreg.QueryInfoKey</pre>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.queryvalue"><code class="sig-name">QueryValue(key, sub_key)</code></dt>
+  <dd><p>Retrieves the unnamed value for a key, as a string.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p><em>sub_key</em> is a string that holds the name of the subkey with which the value is
+associated.  If this parameter is <code>None</code> or empty, the function retrieves the
+value set by the <a class="reference internal" href="winreg.html#py:function:winreg.setvalue"><code class="xref py function docutils literal">SetValue</code></a> method for the key identified by <em>key</em>.</p>
+<p>Values in the registry have name, type, and data components. This method
+retrieves the data for a key's first value that has a <code>NULL</code> name. But the
+underlying API call doesn't return the type, so always use
+<a class="reference internal" href="winreg.html#py:function:winreg.queryvalueex"><code class="xref py function docutils literal">QueryValueEx</code></a> if possible.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.QueryValue key,sub_key,value_name winreg.QueryValue</pre>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.queryvalueex"><code class="sig-name">QueryValueEx(key, value_name)</code></dt>
+  <dd><p>Retrieves the type and data for a specified value name associated with
+an open registry key.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p><em>value_name</em> is a string indicating the value to query.</p>
+<p>The result is a tuple of 2 items:</p>
+<table>
+<thead>
+<tr>
+<th><p>Index</p>
+</th>
+<th><p>Meaning</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>0</code></p>
+</td>
+<td><p>The value of the registry item.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>1</code></p>
+</td>
+<td><p>An integer giving the registry type for
+this value (see table in docs for
+<a href="#" class="broken-link"><code class="xref py method docutils literal">SetValueEx</code></a>)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.QueryValue key,sub_key,value_name winreg.QueryValueEx</pre>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.savekey"><code class="sig-name">SaveKey(key, file_name)</code></dt>
+  <dd><p>Saves the specified key, and all its subkeys to the specified file.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p><em>file_name</em> is the name of the file to save registry data to.  This file
+cannot already exist. If this filename includes an extension, it cannot be
+used on file allocation table (FAT) file systems by the <a href="#" class="broken-link"><code class="xref py method docutils literal">LoadKey</code></a>
+method.</p>
+<p>If <em>key</em> represents a key on a remote computer, the path described by
+<em>file_name</em> is relative to the remote computer. The caller of this method must
+possess the <strong>SeBackupPrivilege</strong> security privilege.  Note that
+privileges are different than permissions – see the
+<a href="https://msdn.microsoft.com/en-us/library/ms724878%28v=VS.85%29.aspx">Conflicts Between User Rights and Permissions documentation</a>
+for more details.</p>
+<p>This function passes <code>NULL</code> for <em>security_attributes</em> to the API.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.SaveKey key,file_name winreg.SaveKey</pre>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.setvalue"><code class="sig-name">SetValue(key, sub_key, type, value)</code></dt>
+  <dd><p>Associates a value with a specified key.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p><em>sub_key</em> is a string that names the subkey with which the value is associated.</p>
+<p><em>type</em> is an integer that specifies the type of the data. Currently this must be
+<a class="reference internal" href="winreg.html#py:data:winreg.reg_sz"><code class="xref py data docutils literal">REG_SZ</code></a>, meaning only strings are supported.  Use the <a class="reference internal" href="winreg.html#py:function:winreg.setvalueex"><code class="xref py function docutils literal">SetValueEx</code></a>
+function for support for other data types.</p>
+<p><em>value</em> is a string that specifies the new value.</p>
+<p>If the key specified by the <em>sub_key</em> parameter does not exist, the SetValue
+function creates it.</p>
+<p>Value lengths are limited by available memory. Long values (more than 2048
+bytes) should be stored as files with the filenames stored in the configuration
+registry.  This helps the registry perform efficiently.</p>
+<p>The key identified by the <em>key</em> parameter must have been opened with
+<a class="reference internal" href="winreg.html#py:data:winreg.key_set_value"><code class="xref py data docutils literal">KEY_SET_VALUE</code></a> access.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.SetValue key,sub_key,type,value winreg.SetValue</pre>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.setvalueex"><code class="sig-name">SetValueEx(key, value_name, reserved, type, value)</code></dt>
+  <dd><p>Stores data in the value field of an open registry key.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p><em>value_name</em> is a string that names the subkey with which the value is
+associated.</p>
+<p><em>reserved</em> can be anything – zero is always passed to the API.</p>
+<p><em>type</em> is an integer that specifies the type of the data. See
+<a href="winreg.html#value-types">Value Types</a> for the available types.</p>
+<p><em>value</em> is a string that specifies the new value.</p>
+<p>This method can also set additional value and type information for the specified
+key.  The key identified by the key parameter must have been opened with
+<a class="reference internal" href="winreg.html#py:data:winreg.key_set_value"><code class="xref py data docutils literal">KEY_SET_VALUE</code></a> access.</p>
+<p>To open the key, use the <a class="reference internal" href="winreg.html#py:function:winreg.createkey"><code class="xref py function docutils literal">CreateKey</code></a> or <a class="reference internal" href="winreg.html#py:function:winreg.openkey"><code class="xref py function docutils literal">OpenKey</code></a> methods.</p>
+<p>Value lengths are limited by available memory. Long values (more than 2048
+bytes) should be stored as files with the filenames stored in the configuration
+registry.  This helps the registry perform efficiently.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.SetValue key,sub_key,type,value winreg.SetValueEx</pre>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.disablereflectionkey"><code class="sig-name">DisableReflectionKey(key)</code></dt>
+  <dd><p>Disables registry reflection for 32-bit processes running on a 64-bit
+operating system.</p>
+<p><em>key</em> is an already open key, or one of the predefined <a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p>Will generally raise <a class="reference internal" href="exceptions.html#py:exception:notimplementederror"><code class="xref py exception docutils literal">NotImplementedError</code></a> if executed on a 32-bit operating
+system.</p>
+<p>If the key is not on the reflection list, the function succeeds but has no
+effect.  Disabling reflection for a key does not affect reflection of any
+subkeys.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.DisableReflectionKey key winreg.DisableReflectionKey</pre>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.enablereflectionkey"><code class="sig-name">EnableReflectionKey(key)</code></dt>
+  <dd><p>Restores registry reflection for the specified disabled key.</p>
+<p><em>key</em> is an already open key, or one of the predefined <a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p>Will generally raise <a class="reference internal" href="exceptions.html#py:exception:notimplementederror"><code class="xref py exception docutils literal">NotImplementedError</code></a> if executed on a 32-bit operating
+system.</p>
+<p>Restoring reflection for a key does not affect reflection of any subkeys.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.EnableReflectionKey key winreg.EnableReflectionKey</pre>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:winreg.queryreflectionkey"><code class="sig-name">QueryReflectionKey(key)</code></dt>
+  <dd><p>Determines the reflection state for the specified key.</p>
+<p><em>key</em> is an already open key, or one of the predefined
+<a href="winreg.html#hkey-constants">HKEY_* constants</a>.</p>
+<p>Returns <code>True</code> if reflection is disabled.</p>
+<p>Will generally raise <a class="reference internal" href="exceptions.html#py:exception:notimplementederror"><code class="xref py exception docutils literal">NotImplementedError</code></a> if executed on a 32-bit
+operating system.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.QueryReflectionKey key winreg.QueryReflectionKey</pre>
+</div>
+</dd>
+</dl>
+<a id="constants"></a>
+<h2 id="constants">Constants</h2>
+<p>The following constants are defined for use in many <a class="reference internal" href="winreg.html#py:module:winreg" title="winreg: Routines and objects for manipulating the Windows registry. (Windows)"><code class="xref py module docutils literal">winreg</code></a> functions.</p>
+<a id="hkey-constants"></a>
+<h3 id="hkey-constants"><a href="#" class="broken-link">HKEY</a>* Constants</h3>
+<dl class="py data">
+  <dt id="py:data:winreg.hkey_classes_root"><code class="sig-name">HKEY_CLASSES_ROOT</code></dt>
+  <dd><p>Registry entries subordinate to this key define types (or classes) of
+documents and the properties associated with those types. Shell and
+COM applications use the information stored under this key.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.hkey_current_user"><code class="sig-name">HKEY_CURRENT_USER</code></dt>
+  <dd><p>Registry entries subordinate to this key define the preferences of
+the current user. These preferences include the settings of
+environment variables, data about program groups, colors, printers,
+network connections, and application preferences.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.hkey_local_machine"><code class="sig-name">HKEY_LOCAL_MACHINE</code></dt>
+  <dd><p>Registry entries subordinate to this key define the physical state
+of the computer, including data about the bus type, system memory,
+and installed hardware and software.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.hkey_users"><code class="sig-name">HKEY_USERS</code></dt>
+  <dd><p>Registry entries subordinate to this key define the default user
+configuration for new users on the local computer and the user
+configuration for the current user.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.hkey_performance_data"><code class="sig-name">HKEY_PERFORMANCE_DATA</code></dt>
+  <dd><p>Registry entries subordinate to this key allow you to access
+performance data. The data is not actually stored in the registry;
+the registry functions cause the system to collect the data from
+its source.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.hkey_current_config"><code class="sig-name">HKEY_CURRENT_CONFIG</code></dt>
+  <dd><p>Contains information about the current hardware profile of the
+local computer system.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.hkey_dyn_data"><code class="sig-name">HKEY_DYN_DATA</code></dt>
+  <dd><p>This key is not used in versions of Windows after 98.</p>
+</dd>
+</dl>
+<a id="access-rights"></a>
+<h3 id="access-rights">Access Rights</h3>
+<p>For more information, see <a href="https://msdn.microsoft.com/en-us/library/ms724878%28v=VS.85%29.aspx">Registry Key Security and Access</a>.</p>
+<dl class="py data">
+  <dt id="py:data:winreg.key_all_access"><code class="sig-name">KEY_ALL_ACCESS</code></dt>
+  <dd><p>Combines the STANDARD_RIGHTS_REQUIRED, <a class="reference internal" href="winreg.html#py:data:winreg.key_query_value"><code class="xref py data docutils literal">KEY_QUERY_VALUE</code></a>,
+<a class="reference internal" href="winreg.html#py:data:winreg.key_set_value"><code class="xref py data docutils literal">KEY_SET_VALUE</code></a>, <a class="reference internal" href="winreg.html#py:data:winreg.key_create_sub_key"><code class="xref py data docutils literal">KEY_CREATE_SUB_KEY</code></a>,
+<a class="reference internal" href="winreg.html#py:data:winreg.key_enumerate_sub_keys"><code class="xref py data docutils literal">KEY_ENUMERATE_SUB_KEYS</code></a>, <a class="reference internal" href="winreg.html#py:data:winreg.key_notify"><code class="xref py data docutils literal">KEY_NOTIFY</code></a>,
+and <a class="reference internal" href="winreg.html#py:data:winreg.key_create_link"><code class="xref py data docutils literal">KEY_CREATE_LINK</code></a> access rights.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.key_write"><code class="sig-name">KEY_WRITE</code></dt>
+  <dd><p>Combines the STANDARD_RIGHTS_WRITE, <a class="reference internal" href="winreg.html#py:data:winreg.key_set_value"><code class="xref py data docutils literal">KEY_SET_VALUE</code></a>, and
+<a class="reference internal" href="winreg.html#py:data:winreg.key_create_sub_key"><code class="xref py data docutils literal">KEY_CREATE_SUB_KEY</code></a> access rights.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.key_read"><code class="sig-name">KEY_READ</code></dt>
+  <dd><p>Combines the STANDARD_RIGHTS_READ, <a class="reference internal" href="winreg.html#py:data:winreg.key_query_value"><code class="xref py data docutils literal">KEY_QUERY_VALUE</code></a>,
+<a class="reference internal" href="winreg.html#py:data:winreg.key_enumerate_sub_keys"><code class="xref py data docutils literal">KEY_ENUMERATE_SUB_KEYS</code></a>, and <a class="reference internal" href="winreg.html#py:data:winreg.key_notify"><code class="xref py data docutils literal">KEY_NOTIFY</code></a> values.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.key_execute"><code class="sig-name">KEY_EXECUTE</code></dt>
+  <dd><p>Equivalent to <a class="reference internal" href="winreg.html#py:data:winreg.key_read"><code class="xref py data docutils literal">KEY_READ</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.key_query_value"><code class="sig-name">KEY_QUERY_VALUE</code></dt>
+  <dd><p>Required to query the values of a registry key.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.key_set_value"><code class="sig-name">KEY_SET_VALUE</code></dt>
+  <dd><p>Required to create, delete, or set a registry value.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.key_create_sub_key"><code class="sig-name">KEY_CREATE_SUB_KEY</code></dt>
+  <dd><p>Required to create a subkey of a registry key.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.key_enumerate_sub_keys"><code class="sig-name">KEY_ENUMERATE_SUB_KEYS</code></dt>
+  <dd><p>Required to enumerate the subkeys of a registry key.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.key_notify"><code class="sig-name">KEY_NOTIFY</code></dt>
+  <dd><p>Required to request change notifications for a registry key or for
+subkeys of a registry key.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.key_create_link"><code class="sig-name">KEY_CREATE_LINK</code></dt>
+  <dd><p>Reserved for system use.</p>
+</dd>
+</dl>
+<a id="64-bit-access-rights"></a>
+<h4 id="bit-specific">64-bit Specific</h4>
+<p>For more information, see <a href="https://msdn.microsoft.com/en-us/library/aa384129(v=VS.85).aspx">Accessing an Alternate Registry View</a>.</p>
+<dl class="py data">
+  <dt id="py:data:winreg.key_wow64_64key"><code class="sig-name">KEY_WOW64_64KEY</code></dt>
+  <dd><p>Indicates that an application on 64-bit Windows should operate on
+the 64-bit registry view. On 32-bit Windows, this constant is ignored.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.key_wow64_32key"><code class="sig-name">KEY_WOW64_32KEY</code></dt>
+  <dd><p>Indicates that an application on 64-bit Windows should operate on
+the 32-bit registry view. On 32-bit Windows, this constant is ignored.</p>
+</dd>
+</dl>
+<a id="value-types"></a>
+<h3 id="value-types">Value Types</h3>
+<p>For more information, see <a href="https://msdn.microsoft.com/en-us/library/ms724884%28v=VS.85%29.aspx">Registry Value Types</a>.</p>
+<dl class="py data">
+  <dt id="py:data:winreg.reg_binary"><code class="sig-name">REG_BINARY</code></dt>
+  <dd><p>Binary data in any form.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.reg_dword"><code class="sig-name">REG_DWORD</code></dt>
+  <dd><p>32-bit number.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.reg_dword_little_endian"><code class="sig-name">REG_DWORD_LITTLE_ENDIAN</code></dt>
+  <dd><p>A 32-bit number in little-endian format. Equivalent to <a class="reference internal" href="winreg.html#py:data:winreg.reg_dword"><code class="xref py data docutils literal">REG_DWORD</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.reg_dword_big_endian"><code class="sig-name">REG_DWORD_BIG_ENDIAN</code></dt>
+  <dd><p>A 32-bit number in big-endian format.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.reg_expand_sz"><code class="sig-name">REG_EXPAND_SZ</code></dt>
+  <dd><p>Null-terminated string containing references to environment
+variables (<code>%PATH%</code>).</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.reg_link"><code class="sig-name">REG_LINK</code></dt>
+  <dd><p>A Unicode symbolic link.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.reg_multi_sz"><code class="sig-name">REG_MULTI_SZ</code></dt>
+  <dd><p>A sequence of null-terminated strings, terminated by two null characters.
+(Python handles this termination automatically.)</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.reg_none"><code class="sig-name">REG_NONE</code></dt>
+  <dd><p>No defined value type.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.reg_qword"><code class="sig-name">REG_QWORD</code></dt>
+  <dd><p>A 64-bit number.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.reg_qword_little_endian"><code class="sig-name">REG_QWORD_LITTLE_ENDIAN</code></dt>
+  <dd><p>A 64-bit number in little-endian format. Equivalent to <a class="reference internal" href="winreg.html#py:data:winreg.reg_qword"><code class="xref py data docutils literal">REG_QWORD</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.reg_resource_list"><code class="sig-name">REG_RESOURCE_LIST</code></dt>
+  <dd><p>A device-driver resource list.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.reg_full_resource_descriptor"><code class="sig-name">REG_FULL_RESOURCE_DESCRIPTOR</code></dt>
+  <dd><p>A hardware setting.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.reg_resource_requirements_list"><code class="sig-name">REG_RESOURCE_REQUIREMENTS_LIST</code></dt>
+  <dd><p>A hardware resource list.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:winreg.reg_sz"><code class="sig-name">REG_SZ</code></dt>
+  <dd><p>A null-terminated string.</p>
+</dd>
+</dl>
+<a id="handle-object"></a>
+<h2 id="registry-handle-objects">Registry Handle Objects</h2>
+<p>This object wraps a Windows HKEY object, automatically closing it when the
+object is destroyed.  To guarantee cleanup, you can call either the
+<a class="reference internal" href="winreg.html#py:method:winreg.pyhkey.close"><code class="xref py method docutils literal">Close</code></a> method on the object, or the <a class="reference internal" href="winreg.html#py:function:winreg.closekey"><code class="xref py function docutils literal">CloseKey</code></a> function.</p>
+<p>All registry functions in this module return one of these objects.</p>
+<p>All registry functions in this module which accept a handle object also accept
+an integer, however, use of the handle object is encouraged.</p>
+<p>Handle objects provide semantics for <a class="reference internal" href="../reference/datamodel.html#py:method:object.__bool__"><code class="xref py method docutils literal">__bool__</code></a> – thus :</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">handle</span></span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Yes<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>will print <code>Yes</code> if the handle is currently valid (has not been closed or
+detached).</p>
+<p>Handle objects can be converted to an integer (e.g., using the built-in
+<a href="#" class="broken-link"><code class="xref py function docutils literal">int</code></a> function), in which case the underlying Windows handle value is
+returned.  You can also use the <a class="reference internal" href="winreg.html#py:method:winreg.pyhkey.detach"><code class="xref py method docutils literal">Detach</code></a> method to return the
+integer handle, and also disconnect the Windows handle from the handle object.</p>
+<dl class="py method">
+  <dt id="py:method:winreg.pyhkey.close"><code class="sig-name">PyHKEY.Close()</code></dt>
+  <dd><p>Closes the underlying Windows handle.</p>
+<p>If the handle is already closed, no error is raised.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:winreg.pyhkey.detach"><code class="sig-name">PyHKEY.Detach()</code></dt>
+  <dd><p>Detaches the Windows handle from the handle object.</p>
+<p>The result is an integer that holds the value of the handle before it is
+detached.  If the handle is already detached or closed, this will return
+zero.</p>
+<p>After calling this function, the handle is effectively invalidated, but the
+handle is not closed.  You would call this function when you need the
+underlying Win32 handle to exist beyond the lifetime of the handle object.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: winreg.PyHKEY.Detach key winreg.PyHKEY.Detach</pre>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:winreg.pyhkey.__enter__"><code class="sig-name">PyHKEY.__enter__()</code></dt>
+  <dt id="py:method:winreg.pyhkey.__exit__"><code class="sig-name">PyHKEY.__exit__(*exc_info)</code></dt>
+  <dd><p>The HKEY object implements <a class="reference internal" href="../reference/datamodel.html#py:method:object.__enter__"><code class="xref py method docutils literal">__enter__</code></a> and
+<a class="reference internal" href="../reference/datamodel.html#py:method:object.__exit__"><code class="xref py method docutils literal">__exit__</code></a> and thus supports the context protocol for the
+:keyword:`with` statement:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">OpenKey</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">HKEY_LOCAL_MACHINE</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">foo<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">key</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-constant hl-language hl-python">...</span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> work with key</span></span></pre></div>
+<p>will automatically close <em>key</em> when control leaves the :keyword:`with` block.</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="msvcrt.html">&larr; msvcrt — Useful routines from the MS VC++ runtime</a>
+        <a class="next" href="winsound.html">winsound — Sound-playing interface for Windows &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
