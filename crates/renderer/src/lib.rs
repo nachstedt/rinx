@@ -53,6 +53,7 @@ pub use page::{
 };
 pub use page_assets::{DiagramPictures, ImageLocator, PageAssets};
 pub use reference_target::{Destination, ReferenceResolver, ReferenceTarget};
+pub use resolution::{InventoryEntryTypes, inventory_entry_types};
 pub use uml_error::{DiagramError, DiagramFailure};
 
 use rinx_ast::HashedContent;

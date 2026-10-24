@@ -1,4 +1,4 @@
-//! Which reference role the cursor is completing, read from its line alone.
+//! Which role's target the cursor is completing, read from its line alone.
 //!
 //! The parse is no help here: while the author types, the role is unfinished
 //! — no closing backtick yet — so the parser has turned it into text. The
@@ -7,61 +7,90 @@
 //! backticks are not roles', and a single backtick opens interpreted text
 //! that the next one closes. A role whose text wraps onto the next line is
 //! not recognised; completion is offered while it is still on one.
+//!
+//! What the role *is* is not decided here: the role written before the
+//! backtick, or the default role for a bare one, is the parser's to read.
 
 use std::ops::Range;
 
-/// A reference role completion answers for.
+/// The role a target is being typed for, as written before its backtick.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum CompletedRole {
-    /// `:ref:`, completed with labels.
-    Ref,
-    /// `:doc:` or `:std:doc:`, completed with document names.
-    Doc,
-    /// A role of the project's entity schema — `:need:`, a type's own,
-    /// the built-in `:entity:` — completed with entity ids.
-    Entity(String),
+pub enum WrittenRole {
+    /// ``:name:`…` ``, with its domain and any `:external:` prefix:
+    /// `ref`, `py:class`, `external+python:ref`.
+    Named(String),
+    /// A bare `` `…` ``, read as the default role.
+    Default,
 }
 
-/// The role the cursor is inside, and what completing it replaces.
+/// The role target the cursor is in, and what completing it replaces.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RoleContext {
-    pub role: CompletedRole,
-    /// The target typed so far, from its start up to the cursor.
+    pub role: WrittenRole,
+    /// The `~` and `.` written before the target, which shorten its display
+    /// and change its search, and which a completion leaves in place.
+    pub sigils: String,
+    /// The target typed so far, after its sigils and up to the cursor.
     pub typed: String,
     /// The characters a completion replaces, as 0-based character indices on
-    /// the line: the whole target, including whatever follows the cursor up
-    /// to the closing `` ` `` or `>`.
+    /// the line: the whole target after its sigils, including whatever
+    /// follows the cursor up to the closing `` ` `` or `>`.
     pub replace: Range<usize>,
+    /// Whether the target is the `<target>` of a `Title <target>`.
+    pub angled: bool,
 }
 
-/// The reference role whose target the cursor at character index `cursor` on
-/// `line` is in, or `None` when it is in no role completion answers for —
-/// `is_entity_role` saying which role names the project's entity schema
-/// declares.
+impl RoleContext {
+    /// `line` with this target closed around `placeholder`, and everything
+    /// after it dropped: the line a probe parses to learn what the parser
+    /// reads the role as, where it is written.
+    #[must_use]
+    pub fn closed_line(&self, line: &str, placeholder: &str) -> String {
+        let written: String = line.chars().take(self.replace.start).collect();
+        let close = if self.angled { ">`" } else { "`" };
+        format!("{written}{placeholder}{close}")
+    }
+}
+
+/// The role target the cursor at character index `cursor` on `line` is in,
+/// or `None` when it is in none.
 ///
 /// In the `Title <target>` form only the target completes, once its `<` is
 /// written. Nothing completes inside a `!`-prefixed target, which is never
-/// looked up, nor under an `:external:` prefix, since the server reads no
-/// inventory.
+/// looked up.
 #[must_use]
-pub fn role_at(
-    line: &str,
-    cursor: usize,
-    is_entity_role: &dyn Fn(&str) -> bool,
-) -> Option<RoleContext> {
+pub fn role_at(line: &str, cursor: usize) -> Option<RoleContext> {
     let chars: Vec<char> = line.chars().collect();
     let cursor = cursor.min(chars.len());
-    let (role, content_start) = open_role_before(&chars[..cursor], is_entity_role)?;
+    let OpenMarkup::Interpreted { backtick } = open_markup(&chars[..cursor]) else {
+        return None;
+    };
+    let name = role_name_before(&chars[..backtick]);
+    let role = if name.is_empty() {
+        WrittenRole::Default
+    } else {
+        WrittenRole::Named(name)
+    };
+    let content_start = backtick + 1;
     let content = &chars[content_start..cursor];
     let (target_start, angled) = match content.iter().rposition(|&c| c == '<') {
         Some(at) if content[at..].contains(&'>') => return None,
         Some(at) => (content_start + at + 1, true),
         None => (content_start, false),
     };
-    let typed: String = chars[target_start..cursor].iter().collect();
-    if typed.starts_with('!') {
+    if chars.get(target_start) == Some(&'!') && target_start < cursor {
         return None;
     }
+    let sigil_count = chars[target_start..cursor]
+        .iter()
+        .take(2)
+        .take_while(|&&c| c == '~' || c == '.')
+        .count();
+    let sigils: String = chars[target_start..target_start + sigil_count]
+        .iter()
+        .collect();
+    let typed_start = target_start + sigil_count;
+    let typed: String = chars[typed_start..cursor].iter().collect();
     let rest = &chars[cursor..];
     let end = rest.iter().position(|&c| c == '`' || (angled && c == '>'));
     // The cursor is in a title whose `<target>` follows it: nothing to name.
@@ -71,23 +100,11 @@ pub fn role_at(
     let end = end.map_or(cursor, |offset| cursor + offset);
     Some(RoleContext {
         role,
+        sigils,
         typed,
-        replace: target_start..end,
+        replace: typed_start..end,
+        angled,
     })
-}
-
-/// The role whose interpreted text is still open at the end of `before`, and
-/// the index its content starts at; `None` when the text is closed, inside
-/// an inline literal, or of a role completion does not answer for.
-fn open_role_before(
-    before: &[char],
-    is_entity_role: &dyn Fn(&str) -> bool,
-) -> Option<(CompletedRole, usize)> {
-    let OpenMarkup::Interpreted { backtick } = open_markup(before) else {
-        return None;
-    };
-    let name = role_name_before(&before[..backtick]);
-    Some((completed_role(&name, is_entity_role)?, backtick + 1))
 }
 
 /// Where the inline scan stands at the end of a line's text.
@@ -146,16 +163,6 @@ fn role_name_before(before: &[char]) -> String {
         .to_string()
 }
 
-/// The completed role a role named `name` is, as the parser spells them.
-fn completed_role(name: &str, is_entity_role: &dyn Fn(&str) -> bool) -> Option<CompletedRole> {
-    match name {
-        "ref" => Some(CompletedRole::Ref),
-        "doc" | "std:doc" => Some(CompletedRole::Doc),
-        _ if is_entity_role(name) => Some(CompletedRole::Entity(name.to_string())),
-        _ => None,
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -163,14 +170,16 @@ mod tests {
     /// The context at the `|` in `marked`, which is removed first.
     fn at_marker(marked: &str) -> Option<RoleContext> {
         let cursor = marked.chars().position(|c| c == '|').expect("a marker");
-        role_at(&marked.replacen('|', "", 1), cursor, &|name| name == "need")
+        role_at(&marked.replacen('|', "", 1), cursor)
     }
 
-    fn context(role: CompletedRole, typed: &str, replace: Range<usize>) -> RoleContext {
+    fn named(name: &str, typed: &str, replace: Range<usize>) -> RoleContext {
         RoleContext {
-            role,
+            role: WrittenRole::Named(name.to_string()),
+            sigils: String::new(),
             typed: typed.to_string(),
             replace,
+            angled: false,
         }
     }
 
@@ -211,10 +220,7 @@ mod tests {
     #[test]
     fn test_role_at_opens_a_ref_at_its_backtick() {
         // When / Then
-        assert_eq!(
-            at_marker("See :ref:`|"),
-            Some(context(CompletedRole::Ref, "", 10..10))
-        );
+        assert_eq!(at_marker("See :ref:`|"), Some(named("ref", "", 10..10)));
     }
 
     #[test]
@@ -222,30 +228,53 @@ mod tests {
         // When / Then
         assert_eq!(
             at_marker(":ref:`ins|tall` and more"),
-            Some(context(CompletedRole::Ref, "ins", 6..13))
+            Some(named("ref", "ins", 6..13))
         );
     }
 
     #[test]
-    fn test_role_at_reads_both_spellings_of_doc() {
+    fn test_role_at_reads_any_role_with_its_domain_and_prefix() {
         // When / Then
         assert_eq!(
-            at_marker(":doc:`gu|"),
-            Some(context(CompletedRole::Doc, "gu", 6..8))
+            at_marker(":py:class:`Pa|"),
+            Some(named("py:class", "Pa", 11..13))
         );
         assert_eq!(
-            at_marker(":std:doc:`/|"),
-            Some(context(CompletedRole::Doc, "/", 10..11))
+            at_marker(":external+python:ref:`|"),
+            Some(named("external+python:ref", "", 22..22))
         );
+    }
+
+    #[test]
+    fn test_role_at_reads_a_bare_backtick_as_the_default_role() {
+        // When
+        let context = at_marker("See `fo|").unwrap();
+
+        // Then
+        assert_eq!(context.role, WrittenRole::Default);
+        assert_eq!(context.typed, "fo");
+    }
+
+    #[test]
+    fn test_role_at_keeps_the_sigils_out_of_what_is_replaced() {
+        // When
+        let context = at_marker(":meth:`~.ru|`").unwrap();
+
+        // Then
+        assert_eq!(context.sigils, "~.");
+        assert_eq!(context.typed, "ru");
+        assert_eq!(context.replace, 9..11);
     }
 
     #[test]
     fn test_role_at_completes_the_target_of_a_titled_reference() {
-        // When / Then
-        assert_eq!(
-            at_marker(":ref:`Install it <ins|tall>`"),
-            Some(context(CompletedRole::Ref, "ins", 18..25))
-        );
+        // When
+        let context = at_marker(":ref:`Install it <ins|tall>`").unwrap();
+
+        // Then
+        assert_eq!(context.typed, "ins");
+        assert_eq!(context.replace, 18..25);
+        assert!(context.angled);
     }
 
     #[test]
@@ -259,7 +288,6 @@ mod tests {
     fn test_role_at_offers_nothing_after_the_role_closed() {
         // When / Then
         assert_eq!(at_marker(":ref:`install` and |"), None);
-        assert_eq!(at_marker(":ref:`install` and `|"), None);
     }
 
     #[test]
@@ -267,23 +295,8 @@ mod tests {
         // When / Then
         assert_eq!(
             at_marker(":ref:`a` then :doc:`b|"),
-            Some(context(CompletedRole::Doc, "b", 20..21))
+            Some(named("doc", "b", 20..21))
         );
-    }
-
-    #[test]
-    fn test_role_at_offers_nothing_for_other_roles() {
-        // When / Then
-        assert_eq!(at_marker(":numref:`|"), None);
-        assert_eq!(at_marker(":py:class:`|"), None);
-        assert_eq!(at_marker("`|"), None);
-    }
-
-    #[test]
-    fn test_role_at_offers_nothing_under_an_external_prefix() {
-        // When / Then
-        assert_eq!(at_marker(":external:ref:`|"), None);
-        assert_eq!(at_marker(":external+py:doc:`|"), None);
     }
 
     #[test]
@@ -302,40 +315,39 @@ mod tests {
     fn test_role_at_skips_an_inline_literal() {
         // When / Then
         assert_eq!(at_marker("``:ref:`|"), None);
-        assert_eq!(
-            at_marker("``x`` :ref:`|"),
-            Some(context(CompletedRole::Ref, "", 12..12))
-        );
+        assert_eq!(at_marker("``x`` :ref:`|"), Some(named("ref", "", 12..12)));
     }
 
     #[test]
     fn test_role_at_counts_characters_not_bytes() {
         // When / Then
-        assert_eq!(
-            at_marker("π :ref:`a|"),
-            Some(context(CompletedRole::Ref, "a", 8..9))
-        );
+        assert_eq!(at_marker("π :ref:`a|"), Some(named("ref", "a", 8..9)));
     }
 
     #[test]
     fn test_role_at_clamps_a_cursor_past_the_line_end() {
         // When / Then
-        assert_eq!(
-            role_at(":ref:`a", 40, &|_| false),
-            Some(context(CompletedRole::Ref, "a", 6..7))
-        );
+        assert_eq!(role_at(":ref:`a", 40), Some(named("ref", "a", 6..7)));
     }
 
     #[test]
-    fn test_open_role_before_ends_with_the_content_start() {
+    fn test_closed_line_closes_the_target_around_the_placeholder() {
         // Given
-        let before: Vec<char> = ":doc:`x".chars().collect();
+        let line = "See :meth:`~.ru and more";
+        let context = role_at(line, 15).unwrap();
 
         // When / Then
-        assert_eq!(
-            open_role_before(&before, &|_| false),
-            Some((CompletedRole::Doc, 6))
-        );
+        assert_eq!(context.closed_line(line, "x"), "See :meth:`~.x`");
+    }
+
+    #[test]
+    fn test_closed_line_closes_an_angled_target() {
+        // Given
+        let line = ":ref:`Title <ins";
+        let context = role_at(line, 16).unwrap();
+
+        // When / Then
+        assert_eq!(context.closed_line(line, "x"), ":ref:`Title <x>`");
     }
 
     #[test]
@@ -346,33 +358,5 @@ mod tests {
         // When / Then
         assert_eq!(role_name_before(&before), "std:doc");
         assert_eq!(role_name_before(&['x']), "");
-    }
-
-    #[test]
-    fn test_completed_role_names_the_roles_the_parser_reads() {
-        // When / Then
-        assert_eq!(completed_role("ref", &|_| false), Some(CompletedRole::Ref));
-        assert_eq!(completed_role("doc", &|_| false), Some(CompletedRole::Doc));
-        assert_eq!(
-            completed_role("std:doc", &|_| false),
-            Some(CompletedRole::Doc)
-        );
-        // The parser reads no `:std:ref:` yet (#268).
-        assert_eq!(completed_role("std:ref", &|_| false), None);
-    }
-
-    #[test]
-    fn test_role_at_opens_an_entity_role_the_schema_declares() {
-        // When / Then
-        assert_eq!(
-            at_marker("Implements :need:`R_|`."),
-            Some(context(CompletedRole::Entity("need".into()), "R_", 18..20))
-        );
-    }
-
-    #[test]
-    fn test_role_at_ignores_a_role_the_schema_does_not_declare() {
-        // When / Then
-        assert_eq!(at_marker("See :req:`R_|`."), None);
     }
 }

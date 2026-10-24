@@ -17,6 +17,42 @@ fn did_change_to(text: &str, version: i32) -> Notification {
     )
 }
 
+/// A completion request at `line` and `character` of the open document `uri`.
+fn completion_at(uri: &Uri, line: u32, character: u32) -> Request {
+    Request::new(
+        RequestId::from(9),
+        "textDocument/completion".to_string(),
+        serde_json::json!({
+            "textDocument": { "uri": uri },
+            "position": { "line": line, "character": character },
+        }),
+    )
+}
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(64))]
+
+    #[test]
+    fn test_completion_answers_anywhere_in_any_text(
+        text in "(:py:|:ref:|:any:|:option:|\\.\\. |default-role:: |[ :`<>~.!a-z_\n-]){0,30}",
+        line in 0u32..4,
+        character in 0u32..40,
+    ) {
+        // Given — a scanned folder defining a function and a label
+        let (workspace, mut state) = scanned(
+            "property_completion",
+            &[("api.rst", ".. _intro:\n\n.. py:function:: run()\n")],
+        );
+        handle_notification(&mut state, workspace.open("index.rst", &text));
+
+        // When
+        let response = handle_request(&mut state, completion_at(&workspace.uri("index.rst"), line, character));
+
+        // Then — an answer, never an error
+        prop_assert!(response.response_result.is_ok(), "{:?}", response.response_result);
+    }
+}
+
 proptest! {
     #[test]
     fn test_every_edit_publishes_once_for_its_version(

@@ -21,6 +21,8 @@ pub(crate) use document::resolve_document;
 pub(crate) use domain_object::{DomainObjectResolution, DomainObjectResolver};
 pub(crate) use entity::{EntityResolution, EntityResolver};
 pub(crate) use external::{
-    ExternalHit, external_entry_types, resolve_external, resolve_external_any, unresolved_kind,
+    DOC_ENTRY_TYPE, ExternalHit, LABEL_ENTRY_TYPE, TERM_ENTRY_TYPE, external_entry_types,
+    resolve_external, resolve_external_any, unresolved_kind,
 };
+pub use external::{InventoryEntryTypes, inventory_entry_types};
 pub(crate) use option::{OptionResolution, OptionResolver};

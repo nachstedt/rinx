@@ -14,6 +14,7 @@ use super::reference::label_target;
 use super::term_reference::term_target;
 use crate::resolution::AnyResolver;
 use crate::{ReferenceResolver, ReferenceTarget};
+use rinx_scope::Scope;
 
 /// Where `inline` leads when the page `resolver` holds renders it — `None`
 /// for anything but a cross-reference resolved against the project index,
@@ -57,7 +58,9 @@ pub(crate) fn reference_target(
         InlineNode::EquationReference { label, .. } => equation_target(index, label),
         InlineNode::DomainObjectReference { .. }
         | InlineNode::OptionReference { .. }
-        | InlineNode::AnyReference { .. } => scoped_reference_target(inline, resolver),
+        | InlineNode::AnyReference { .. } => {
+            scoped_reference_target(inline, resolver.scopes.scope_at(inline), resolver)
+        }
         InlineNode::EntityReference { role, target, .. } => {
             entity_target(role, target, &resolver.entities)
         }
@@ -89,15 +92,18 @@ pub(crate) fn reference_target(
 }
 
 /// [`reference_target`] for the roles resolved against the scope they are
-/// written in — the domain roles, `:option:` and `:any:` — split out to keep
-/// that function readable, as `render_cross_reference` splits its arms.
-fn scoped_reference_target(
+/// written in — the domain roles, `:option:` and `:any:` — resolved in
+/// `scope`. Split out to keep that function readable, as
+/// `render_cross_reference` splits its arms, and reached on its own by
+/// [`ReferenceResolver::resolve_as`], which resolves a node the document does
+/// not hold in the scope of one it does.
+pub(crate) fn scoped_reference_target(
     inline: &InlineNode,
+    scope: &Scope,
     resolver: &ReferenceResolver<'_>,
 ) -> Option<ReferenceTarget> {
     let index = resolver.index;
     let doc_path = resolver.doc_path;
-    let scope = resolver.scopes.scope_at(inline);
     match inline {
         InlineNode::DomainObjectReference {
             object_type,
@@ -152,7 +158,7 @@ fn scoped_reference_target(
             scope,
             doc_path,
         ),
-        _ => unreachable!("reference_target routes only scoped references here"),
+        _ => unreachable!("only scoped references are resolved in a scope"),
     }
 }
 

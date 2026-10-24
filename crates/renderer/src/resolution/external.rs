@@ -20,10 +20,49 @@
 //! the one type other sites publish that this build never defines (see
 //! [`external_entry_types`]).
 
-use rinx_ast::{InventorySelector, ObjectType, PyObjectType};
+use rinx_ast::{InlineNode, InventorySelector, ObjectType, PyObjectType};
 use rinx_index::{ExternalInventory, ExternalTarget};
 
 use crate::BrokenLinkKind;
+
+/// The entry type a `:ref:` is looked up under in another site's inventory.
+pub(crate) const LABEL_ENTRY_TYPE: &str = "std:label";
+/// The entry type a `:doc:` is looked up under.
+pub(crate) const DOC_ENTRY_TYPE: &str = "std:doc";
+/// The entry type a `:term:` is looked up under.
+pub(crate) const TERM_ENTRY_TYPE: &str = "std:term";
+/// The entry type an `:option:` is looked up under.
+pub(crate) const OPTION_ENTRY_TYPE: &str = "std:cmdoption";
+
+/// Which entries of another site's inventory a reference is looked up among.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum InventoryEntryTypes {
+    /// Those of these types, in the order they are tried.
+    Listed(Vec<String>),
+    /// Every entry, whatever its type: `:any:`'s.
+    Every,
+}
+
+/// The entries of another site's inventory a reference like `reference` is
+/// looked up among — the same types its resolution searches — or `None` for
+/// a reference never looked up in one (`:numref:`, `:eq:`, an entity's).
+///
+/// What an editor completing such a reference offers from an inventory.
+#[must_use]
+pub fn inventory_entry_types(reference: &InlineNode) -> Option<InventoryEntryTypes> {
+    let listed = |entry_type: &str| Some(InventoryEntryTypes::Listed(vec![entry_type.to_string()]));
+    match reference {
+        InlineNode::Reference { .. } => listed(LABEL_ENTRY_TYPE),
+        InlineNode::DocReference { .. } => listed(DOC_ENTRY_TYPE),
+        InlineNode::TermReference { .. } => listed(TERM_ENTRY_TYPE),
+        InlineNode::OptionReference { .. } => listed(OPTION_ENTRY_TYPE),
+        InlineNode::DomainObjectReference { object_type, .. } => Some(InventoryEntryTypes::Listed(
+            external_entry_types(*object_type),
+        )),
+        InlineNode::AnyReference { .. } => Some(InventoryEntryTypes::Every),
+        _ => None,
+    }
+}
 
 /// A target another site's inventory lists.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -174,6 +213,53 @@ pub(crate) fn external_entry_types(object_type: ObjectType) -> Vec<String> {
 mod tests {
     use super::*;
     use rinx_ast::CObjectType;
+
+    #[test]
+    fn test_inventory_entry_types_of_a_label_is_std_label() {
+        // Given
+        let reference = InlineNode::Reference {
+            display: None,
+            target: "intro".to_string(),
+            span: None,
+            inventory: InventorySelector::Any,
+        };
+
+        // When / Then
+        assert_eq!(
+            inventory_entry_types(&reference),
+            Some(InventoryEntryTypes::Listed(vec!["std:label".to_string()]))
+        );
+    }
+
+    #[test]
+    fn test_inventory_entry_types_of_any_is_every_type() {
+        // Given
+        let reference = InlineNode::AnyReference {
+            display: None,
+            target: "intro".to_string(),
+            link: true,
+            span: None,
+            inventory: InventorySelector::Any,
+        };
+
+        // When / Then
+        assert_eq!(
+            inventory_entry_types(&reference),
+            Some(InventoryEntryTypes::Every)
+        );
+    }
+
+    #[test]
+    fn test_inventory_entry_types_of_an_equation_is_none() {
+        // Given
+        let reference = InlineNode::EquationReference {
+            label: "euler".to_string(),
+            span: None,
+        };
+
+        // When / Then
+        assert_eq!(inventory_entry_types(&reference), None);
+    }
     use rinx_inventory::{EntryType, Inventory, InventoryEntry, InventoryName};
 
     fn inventory(name: &str, entries: &[(&str, &str, &str)]) -> ExternalInventory {

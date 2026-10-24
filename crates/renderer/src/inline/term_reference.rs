@@ -7,7 +7,7 @@ use rinx_ast::{InventorySelector, TargetName};
 use rinx_index::ProjectIndex;
 
 use super::external_link::write_external_link;
-use crate::resolution::{ExternalHit, resolve_external, unresolved_kind};
+use crate::resolution::{ExternalHit, TERM_ENTRY_TYPE, resolve_external, unresolved_kind};
 use crate::{BrokenLink, BrokenLinkKind, ReferenceTarget};
 
 /// Renders a glossary term reference (`:term:`). Resolves the term via the project
@@ -90,7 +90,7 @@ fn resolve_term<'a>(
     if contested.is_none()
         && let Some(hit) = resolve_external(
             &index.external_inventories,
-            &["std:term".to_string()],
+            &[TERM_ENTRY_TYPE.to_string()],
             term,
             inventory,
         )

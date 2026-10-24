@@ -438,3 +438,187 @@ fn test_completion_lists_options_not_roles_in_an_option_block() {
     assert!(labels.iter().any(|label| label == "alt"));
     assert!(!labels.iter().any(|label| label == "ref"));
 }
+
+/// The labels and details of the items completing the open document
+/// `index.rst`, opened at `text` in a scanned workspace of `files`, at
+/// `line` and `character`.
+fn targets_at(
+    name: &str,
+    files: &[(&str, &str)],
+    text: &str,
+    (line, character): (u32, u32),
+) -> Vec<(String, Option<String>)> {
+    let (workspace, mut state) = scanned(name, files);
+    handle_notification(&mut state, workspace.open("index.rst", text));
+    let response = handle_request(
+        &mut state,
+        completion(workspace.uri("index.rst"), line, character),
+    );
+    list(&response).map(|list| shown(&list)).unwrap_or_default()
+}
+
+/// Two methods: `pkg.Box.open`, written in `index.rst` itself, and
+/// `other.Crate.close`, in `api.rst`.
+const API: &str = ".. py:module:: other\n\n.. py:class:: Crate\n\n   .. py:method:: close()\n";
+const METHODS: &str =
+    ".. py:module:: pkg\n\n.. py:class:: Box\n\n   .. py:method:: open()\n\n   See :py:meth:`\n";
+
+#[test]
+fn test_completion_writes_a_method_of_the_current_class_by_its_bare_name() {
+    // When — inside class `Box` of module `pkg`
+    let shown = targets_at(
+        "complete_methods",
+        &[("index.rst", ""), ("api.rst", API)],
+        METHODS,
+        (6, 17),
+    );
+
+    // Then — the nearer method first, each titled with its qualified name
+    assert_eq!(
+        shown,
+        [
+            ("open".to_string(), Some("pkg.Box.open".to_string())),
+            (
+                "other.Crate.close".to_string(),
+                Some("other.Crate.close".to_string())
+            ),
+        ]
+    );
+}
+
+#[test]
+fn test_completion_of_a_domain_role_is_incomplete_and_filtered_by_what_is_typed() {
+    // Given
+    let (workspace, mut state) = scanned(
+        "complete_methods_typed",
+        &[("index.rst", ""), ("api.rst", API)],
+    );
+    let text = METHODS.replace(":py:meth:`", ":py:meth:`oth");
+    handle_notification(&mut state, workspace.open("index.rst", &text));
+
+    // When
+    let response = handle_request(&mut state, completion(workspace.uri("index.rst"), 6, 20));
+
+    // Then
+    let list = list(&response).expect("items");
+    assert!(list.is_incomplete);
+    assert_eq!(
+        shown(&list),
+        [(
+            "other.Crate.close".to_string(),
+            Some("other.Crate.close".to_string())
+        )]
+    );
+}
+
+#[test]
+fn test_completion_names_an_option_of_the_ambient_program_alone() {
+    // Given
+    let text = ".. program:: tool\n\n.. option:: -v\n\n   Verbose.\n\nSee :option:`\n";
+
+    // When
+    let shown = targets_at("complete_option", &[("index.rst", "")], text, (6, 13));
+
+    // Then
+    assert_eq!(shown, [("-v".to_string(), Some("tool.-v".to_string()))]);
+}
+
+#[test]
+fn test_completion_lists_glossary_terms_and_equations() {
+    // Given
+    let glossary = ".. glossary::\n\n   widget\n      A thing.\n\n.. math::\n   :label: euler\n\n   e^{i\\pi} = -1\n";
+
+    // When
+    let terms = targets_at(
+        "complete_terms",
+        &[("index.rst", ""), ("glossary.rst", glossary)],
+        "See :term:`\n",
+        (0, 11),
+    );
+    let equations = targets_at(
+        "complete_equations",
+        &[("index.rst", ""), ("glossary.rst", glossary)],
+        "See :eq:`\n",
+        (0, 9),
+    );
+
+    // Then
+    assert_eq!(
+        terms.first().map(|(label, _)| label.as_str()),
+        Some("widget")
+    );
+    assert_eq!(
+        equations.first().map(|(label, _)| label.as_str()),
+        Some("euler")
+    );
+}
+
+#[test]
+fn test_completion_reads_a_bare_role_as_the_default_role_in_force() {
+    // Given — `py:func` made the default above the cursor
+    let api = ".. py:module:: tools\n\n.. py:function:: run()\n";
+    let text = ".. default-role:: py:func\n\nCall `\n";
+
+    // When
+    let shown = targets_at(
+        "complete_default_role",
+        &[("index.rst", ""), ("api.rst", api)],
+        text,
+        (2, 6),
+    );
+
+    // Then
+    assert_eq!(
+        shown,
+        [("tools.run".to_string(), Some("tools.run".to_string()))]
+    );
+}
+
+#[test]
+fn test_completion_offers_nothing_for_a_bare_backtick_without_a_default_role() {
+    // When / Then
+    assert!(
+        targets_at(
+            "complete_title_reference",
+            &[("index.rst", "")],
+            "A `\n",
+            (0, 3)
+        )
+        .is_empty()
+    );
+}
+
+#[test]
+fn test_completion_lists_an_inventory_s_entries_for_a_role_naming_it() {
+    // Given — a project whose `conf.py` reads Python's inventory from a file
+    let conf = "extensions = ['sphinx.ext.intersphinx']\nintersphinx_mapping = {'python': ('https://docs.python.org/3/', '_inv/python.inv')}\n";
+    let workspace = Workspace::new(
+        "complete_inventory",
+        &[("conf.py", conf), ("index.rst", "")],
+    );
+    write_python_inventory(
+        &workspace.root.join("_inv/python.inv"),
+        &[("dict", "py:class", "library/stdtypes.html#$")],
+    );
+    let (mut state, _) = workspace.server(false);
+    state.on_scan_event(workspace.scanned());
+    let text = "See :external+python:py:class:`\n";
+    handle_notification(&mut state, workspace.open("index.rst", text));
+
+    // When
+    let response = handle_request(&mut state, completion(workspace.uri("index.rst"), 0, 31));
+
+    // Then
+    let list = list(&response).expect("items");
+    assert_eq!(
+        shown(&list),
+        [("dict".to_string(), Some("dict".to_string()))]
+    );
+    assert_eq!(
+        list.items[0]
+            .label_details
+            .as_ref()
+            .and_then(|d| d.description.as_deref()),
+        Some("(in Python v3.14)")
+    );
+}

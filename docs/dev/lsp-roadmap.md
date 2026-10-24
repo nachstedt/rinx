@@ -38,9 +38,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   #14 (PR #300), #15 (PR #305), #16 (PR #311), #17 (PR #315), #18 (PR #317),
   #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333),
   #40 (PR #335), #24 (PR #340) and #25 (PR #355, prepared by #343, #345,
-  #348, #351 and #353). #26 is partly done: role names (PR #358, prepared
-  by #357).
-- **Next: the rest of #26, completing every index-resolved role's target.**
+  #348, #351 and #353) and #26 (PRs #358 and #362, prepared by #357).
+- **Next: #27, entity hover and id completion.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -917,7 +916,7 @@ Not done here:
 - Unknown and unsupported options are still reported by `classify_options`
   per directive, rather than by the dispatcher from the spec (issue #352).
 
-### 26. Role and domain-object completion 🔶 (#358, prepared by #357)
+### 26. Role and domain-object completion ✅ (#358 and #362, prepared by #357)
 
 **You experience:** `:py:func:` completes the indexed functions.
 
@@ -931,15 +930,29 @@ from it (#357), so `rinx_parser::role_specs()` lists exactly the names the
 parser matches. Role names complete from it (#358): a `:` where a role may
 start lists the built-in roles spelled for the default domain, the schema's
 entity roles, and the roles a `.. role::` defined above the cursor. Those
-come from a parse of the text up to the cursor's line
-(`parse_prefix_with_ctx`), which is also where target completion will read
-the cursor's scope. That probe takes 48 ms at the end of CPython's
-`library/stdtypes.rst`.
+come from a *probe*, a parse of the text up to the cursor's line
+(`parse_prefix_with_ctx`).
 
-Still to do: completing the targets of every role the index resolves, which
-covers the domain roles ranked by scope, `:option:`, `:term:`, `:numref:`,
-`:eq:`, `:any:`, the default role's bare `` `x` ``, and another site's
-inventory.
+The step went beyond domain objects: every role the index resolves completes
+its target (#362). That covers `:ref:`, `:doc:`, `:term:`, `:numref:`,
+`:eq:`, the entity roles, `:option:`, the domain roles, `:any:`, and a bare
+backtick read as the default role. The targets of loaded inventories are
+included, closing #13's gap. What a role is comes from the parser
+(`rinx_parser::read_role`). Where it is written comes from the same probe,
+with the target closed, for a role resolved in its scope.
+
+A candidate is offered only if the page would link it, checked by the new
+`ReferenceResolver::resolve_as`. It is written in its shortest spelling that
+leads to the same place, so the ranking by scope falls out of the resolver
+rather than a copy of its rules: a method of the current class is `open`,
+and comes first. Lists are cut at 200, and a scoped role's is always
+incomplete, so the editor asks again as you type.
+
+Measured at the end of CPython's `library/stdtypes.rst`, probe included:
+`:ref:` 5 ms, `:py:func:` 51 ms, `:any:` with nothing typed 61 ms.
+
+Not done here: `:download:` targets, which are files (issue #360), and a
+role wrapping onto the next line (issue #361).
 
 ### 27. Entity hover + id completion
 

@@ -151,6 +151,27 @@ pub(super) fn scanned(name: &str, files: &[(&str, &str)]) -> (Workspace, ServerS
     (workspace, state)
 }
 
+/// Writes to `path` an inventory of the project `Python` listing `entries`,
+/// each a name, an entry type and the page it is on.
+pub(super) fn write_python_inventory(path: &std::path::Path, entries: &[(&str, &str, &str)]) {
+    let inventory = rinx_inventory::Inventory {
+        project: "Python".to_string(),
+        version: "3.14".to_string(),
+        entries: entries
+            .iter()
+            .map(|(name, entry_type, uri)| rinx_inventory::InventoryEntry {
+                name: (*name).to_string(),
+                entry_type: rinx_inventory::EntryType::new(entry_type).unwrap(),
+                priority: 1,
+                uri: (*uri).to_string(),
+                display_name: None,
+            })
+            .collect(),
+    };
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+    std::fs::write(path, rinx_inventory::write_inventory(&inventory)).unwrap();
+}
+
 /// The labels the `index`th project's index defines.
 pub(super) fn project_labels(state: &mut ServerState, index: usize) -> Vec<String> {
     project(state, index)

@@ -7,7 +7,7 @@ use rinx_index::relative_doc_href;
 use rinx_index::{ProjectIndex, SpecialPage};
 
 use super::external_link::write_external_link;
-use crate::resolution::{ExternalHit, resolve_external, unresolved_kind};
+use crate::resolution::{ExternalHit, LABEL_ENTRY_TYPE, resolve_external, unresolved_kind};
 use crate::{BrokenLink, BrokenLinkKind, Destination, ReferenceTarget};
 
 /// A `:ref:` as the author wrote it.
@@ -73,7 +73,7 @@ fn resolve_label<'a>(
     if contested.is_none()
         && let Some(hit) = resolve_external(
             &index.external_inventories,
-            &["std:label".to_string()],
+            &[LABEL_ENTRY_TYPE.to_string()],
             target,
             inventory,
         )

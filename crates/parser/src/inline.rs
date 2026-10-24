@@ -43,6 +43,7 @@ mod registry_pipeline_tests;
 mod script_pipeline_tests;
 
 pub(crate) use interpreted::find_role_kind;
+pub use interpreted::read_role;
 pub(crate) use link_destination::read_target_destination;
 pub use punctuation::can_precede_start_string as can_precede_inline_markup;
 pub use regexes::role_specs;
