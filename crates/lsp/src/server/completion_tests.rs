@@ -1,7 +1,7 @@
-//! Completing a `:ref:` or `:doc:` target, and a directive's name, option or
-//! option value: the capability the server announces, and the items a
-//! request is answered with from the workspace index and the directive
-//! specs.
+//! Completing a `:ref:` or `:doc:` target, a directive's name, option or
+//! option value, and a role's name: the capability the server announces,
+//! and the items a request is answered with from the workspace index, the
+//! directive specs and the role table.
 
 use super::test_support::*;
 use lsp_types::request::Completion;
@@ -372,4 +372,69 @@ fn test_completion_answers_null_in_a_directive_s_content() {
 
     // Then
     assert_eq!(list(&response), None);
+}
+
+#[test]
+fn test_completion_lists_role_names_after_a_colon() {
+    // When
+    let labels = labels_at(
+        "complete_role_name",
+        &[("index.rst", "")],
+        ("index.rst", "See :\n"),
+        (0, 5),
+    );
+
+    // Then — the table's roles, spelled for the default domain `py`
+    for name in ["ref", "doc", "py:func", "class", "c:macro", "entity"] {
+        assert!(labels.iter().any(|label| label == name), "{name}");
+    }
+    assert!(!labels.iter().any(|label| label == "macro"));
+}
+
+#[test]
+fn test_completion_spells_bare_role_names_for_the_primary_domain() {
+    // When
+    let labels = labels_at(
+        "complete_role_name_c",
+        &[("index.rst", ""), ("conf.py", "primary_domain = 'c'\n")],
+        ("index.rst", "See :\n"),
+        (0, 5),
+    );
+
+    // Then
+    assert!(labels.iter().any(|label| label == "macro"));
+    assert!(!labels.iter().any(|label| label == "class"));
+}
+
+#[test]
+fn test_completion_lists_the_roles_defined_above_the_cursor() {
+    // Given — one role defined above the cursor, one below
+    let text = ".. role:: python(code)\n\nSee :\n\n.. role:: shell(code)\n";
+
+    // When
+    let labels = labels_at(
+        "complete_defined_role",
+        &[("index.rst", "")],
+        ("index.rst", text),
+        (2, 5),
+    );
+
+    // Then
+    assert!(labels.iter().any(|label| label == "python"));
+    assert!(!labels.iter().any(|label| label == "shell"));
+}
+
+#[test]
+fn test_completion_lists_options_not_roles_in_an_option_block() {
+    // When
+    let labels = labels_at(
+        "complete_option_not_role",
+        &[("index.rst", "")],
+        ("index.rst", ".. image:: a.png\n   :\n"),
+        (1, 4),
+    );
+
+    // Then
+    assert!(labels.iter().any(|label| label == "alt"));
+    assert!(!labels.iter().any(|label| label == "ref"));
 }

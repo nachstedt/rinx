@@ -44,6 +44,7 @@ mod script_pipeline_tests;
 
 pub(crate) use interpreted::find_role_kind;
 pub(crate) use link_destination::read_target_destination;
+pub use punctuation::can_precede_start_string as can_precede_inline_markup;
 pub use regexes::role_specs;
 pub(crate) use regexes::{is_fixed_role_name, is_writable_role_name};
 pub use roles::spec::{ExternalPrefix, RoleSpec};

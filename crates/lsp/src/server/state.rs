@@ -62,10 +62,13 @@ use super::projects::ProjectId;
 use super::scan::ScanEvent;
 use crate::code_action::quick_fixes;
 use crate::completion::{
-    DirectiveVocabulary, TextFormat, completion_items, directive_at, directive_items, role_at,
+    DirectiveVocabulary, RoleVocabulary, TextFormat, completion_items, directive_at,
+    directive_items, role_at, role_name_at, role_name_items,
 };
 use crate::definition::reference_definition;
-use crate::diagnostics::{ParsedSource, diagnose_source, parse_source};
+use crate::diagnostics::{
+    ParsedSource, diagnose_source, parse_prefix, parse_source, text_through_line,
+};
 use crate::documents::DocumentStore;
 use crate::hover::reference_hover;
 use crate::includes::IncludeGraph;
@@ -511,8 +514,7 @@ impl ServerState {
             let range = lsp_types::Range::new(at(context.replace.start), at(context.replace.end));
             let index = self.projects.get_mut(&project)?.project_index();
             completion_items(index, &schema, &doc_path, &context, range)
-        } else {
-            let context = directive_at(&lines, line_index, cursor)?;
+        } else if let Some(context) = directive_at(&lines, line_index, cursor) {
             let format = self.completion_format;
             let index = self.projects.get_mut(&project)?.project_index();
             let vocabulary = DirectiveVocabulary {
@@ -521,6 +523,31 @@ impl ServerState {
                 index,
             };
             directive_items(&context, &vocabulary, &at, format)
+        } else {
+            let context = role_name_at(line, cursor)?;
+            let range = lsp_types::Range::new(at(context.replace.start), at(context.replace.end));
+            let source_root = &self.projects.get(&project)?.model().source_root;
+            let in_force = parse_prefix(
+                uri,
+                Some(&doc_path),
+                Some(source_root),
+                // A templated document is probed whole: a cut could split a
+                // `{% … %}` block, and then nothing below it would render.
+                if settings.jinja.is_some() {
+                    text
+                } else {
+                    text_through_line(text, line_index)
+                },
+                settings,
+                &self.documents,
+            )
+            .roles;
+            let vocabulary = RoleVocabulary {
+                domain,
+                schema: &schema,
+                in_force: &in_force,
+            };
+            role_name_items(&context, &vocabulary, range, self.completion_format)
         };
         Some(CompletionResponse::List(CompletionList {
             is_incomplete,

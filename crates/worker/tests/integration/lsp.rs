@@ -403,6 +403,61 @@ fn test_lsp_completes_a_directive_s_name_as_a_snippet_and_its_options() {
 }
 
 #[test]
+fn test_lsp_completes_a_role_s_name_as_a_snippet() {
+    // Given — a client taking snippets, typing a role below a `.. role::`
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_role_name_completion");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    let index = format!("file://{}", root.join("index.rst").display());
+    let mut server = Server::spawn();
+    server.initialize_with(json!({
+        "capabilities": { "textDocument": { "completion": {
+            "completionItem": { "snippetSupport": true },
+        }}},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+    while !matches!(
+        server.receive(),
+        Message::Notification(notification)
+            if notification.method == "rinx/status" && notification.params["state"] == "ready"
+    ) {}
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": index, "languageId": "restructuredtext", "version": 1,
+            "text": ".. role:: python(code)\n\nSee :\n",
+        }}),
+    );
+    server.published_until(&index);
+
+    // When — after `See :`
+    server.request(
+        2,
+        "textDocument/completion",
+        json!({
+            "textDocument": { "uri": index },
+            "position": { "line": 2, "character": 5 },
+        }),
+    );
+    let Message::Response(completed) = server.receive() else {
+        panic!("expected the completion");
+    };
+
+    // Then
+    let items = completed.response_result.expect("a completion")["items"]
+        .as_array()
+        .expect("items")
+        .clone();
+    let reference = items
+        .iter()
+        .find(|item| item["label"] == "ref")
+        .expect("`ref` is offered");
+    assert_eq!(reference["textEdit"]["newText"], "ref:`$1`$0");
+    assert_eq!(reference["insertTextFormat"], 2);
+    assert!(items.iter().any(|item| item["label"] == "python"));
+}
+
+#[test]
 fn test_lsp_shows_where_a_reference_leads_on_hover() {
     // Given — a scanned folder whose `setup.rst` labels a section
     let root = std::env::temp_dir().join("rinx_lsp_stdio_hover");

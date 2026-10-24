@@ -83,27 +83,51 @@ fn open_role_before(
     before: &[char],
     is_entity_role: &dyn Fn(&str) -> bool,
 ) -> Option<(CompletedRole, usize)> {
-    let mut open: Option<(Option<CompletedRole>, usize)> = None;
+    let OpenMarkup::Interpreted { backtick } = open_markup(before) else {
+        return None;
+    };
+    let name = role_name_before(&before[..backtick]);
+    Some((completed_role(&name, is_entity_role)?, backtick + 1))
+}
+
+/// Where the inline scan stands at the end of a line's text.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum OpenMarkup {
+    /// In plain text: every backtick is closed.
+    Text,
+    /// Inside interpreted text, opened by the backtick at this index.
+    Interpreted { backtick: usize },
+    /// Inside an inline literal, whose backticks are not roles'.
+    Literal,
+}
+
+/// Where the inline scan stands at the end of `before`, read the way the
+/// inline parser reads it: a backslash escapes the next character, ``` `` ```
+/// opens an inline literal, and a single backtick opens interpreted text that
+/// the next one closes.
+pub(super) fn open_markup(before: &[char]) -> OpenMarkup {
+    let mut open = None;
     let mut i = 0;
     while i < before.len() {
         match before[i] {
             '\\' => i += 1,
             '`' if open.is_some() => open = None,
             '`' if before.get(i + 1) == Some(&'`') => {
-                let closing = (i + 2..before.len().saturating_sub(1))
-                    .find(|&at| before[at] == '`' && before[at + 1] == '`')?;
+                let Some(closing) = (i + 2..before.len().saturating_sub(1))
+                    .find(|&at| before[at] == '`' && before[at + 1] == '`')
+                else {
+                    return OpenMarkup::Literal;
+                };
                 i = closing + 1;
             }
-            '`' => {
-                let name = role_name_before(&before[..i]);
-                open = Some((completed_role(&name, is_entity_role), i + 1));
-            }
+            '`' => open = Some(i),
             _ => {}
         }
         i += 1;
     }
-    let (role, start) = open?;
-    Some((role?, start))
+    open.map_or(OpenMarkup::Text, |backtick| OpenMarkup::Interpreted {
+        backtick,
+    })
 }
 
 /// The role name written immediately before a backtick at the end of
@@ -148,6 +172,40 @@ mod tests {
             typed: typed.to_string(),
             replace,
         }
+    }
+
+    fn chars(text: &str) -> Vec<char> {
+        text.chars().collect()
+    }
+
+    #[test]
+    fn test_open_markup_is_text_once_every_backtick_closed() {
+        // When / Then
+        assert_eq!(
+            open_markup(&chars("a :ref:`x` and ``y`` ")),
+            OpenMarkup::Text
+        );
+    }
+
+    #[test]
+    fn test_open_markup_finds_the_backtick_opening_interpreted_text() {
+        // When / Then
+        assert_eq!(
+            open_markup(&chars("a :ref:`x")),
+            OpenMarkup::Interpreted { backtick: 7 }
+        );
+    }
+
+    #[test]
+    fn test_open_markup_is_inside_an_unclosed_literal() {
+        // When / Then
+        assert_eq!(open_markup(&chars("a ``x :ref:`")), OpenMarkup::Literal);
+    }
+
+    #[test]
+    fn test_open_markup_skips_an_escaped_backtick() {
+        // When / Then
+        assert_eq!(open_markup(&chars("a \\`x")), OpenMarkup::Text);
     }
 
     #[test]

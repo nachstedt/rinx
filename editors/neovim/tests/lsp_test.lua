@@ -95,6 +95,14 @@ local directive_labels = vim.tbl_map(function(item)
 end, directive_items)
 check('completion lists the directives', vim.tbl_contains(directive_labels, 'figure'), directive_labels)
 
+-- Completion right after the reference's opening colon lists the roles.
+local roles = request_until_answered('textDocument/completion', at(7, 5))
+local role_items = roles and (roles.items or roles) or {}
+local role_labels = vim.tbl_map(function(item)
+  return item.label
+end, role_items)
+check('completion lists the roles', vim.tbl_contains(role_labels, 'ref'), role_labels)
+
 if failures > 0 then
   -- `vim.lsp.log.get_filename` since 0.11; `vim.lsp.get_log_path` before.
   local path = (vim.lsp.log.get_filename or vim.lsp.get_log_path)()

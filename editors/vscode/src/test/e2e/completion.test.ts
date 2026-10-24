@@ -108,3 +108,27 @@ suite('Directive completion (e2e)', () => {
         assert.strictEqual(maxdepth.detail, 'How many heading levels the tree shows; zero or less shows all.');
     });
 });
+
+suite('Role name completion (e2e)', () => {
+    teardown(async () => {
+        await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    });
+
+    test('a colon lists the roles, the ones the document defined among them', async () => {
+        // Given — the cursor stands after "See :", below `.. role:: python(code)`.
+        const roles = workspaceFile('roles.rst');
+        await vscode.window.showTextDocument(roles);
+        const api = await rinx();
+        await waitFor('the index to be ready', () => api.indexStatus()?.state === 'ready');
+
+        // When
+        const items = await completionsAt(roles, new vscode.Position(2, 5));
+
+        // Then
+        const ref = items.find((item) => labelOf(item) === 'ref');
+        assert.ok(ref, `ref among ${JSON.stringify(items.map(labelOf))}`);
+        assert.strictEqual(ref.detail, 'Link a label, showing the title of what it labels.');
+        const python = items.find((item) => labelOf(item) === 'python');
+        assert.ok(python, `python among ${JSON.stringify(items.map(labelOf))}`);
+    });
+});
