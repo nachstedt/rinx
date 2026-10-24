@@ -17,8 +17,8 @@
 use std::ops::Range;
 
 use lsp_types::{
-    CompletionItem, CompletionItemKind, CompletionItemTag, CompletionTextEdit, Documentation,
-    InsertTextFormat, InsertTextMode, TextEdit,
+    Command, CompletionItem, CompletionItemKind, CompletionItemTag, CompletionTextEdit,
+    Documentation, InsertTextFormat, InsertTextMode, TextEdit,
 };
 use rinx_ast::{Domain, EntityId, EntityUpdateSource, UpdateTarget};
 use rinx_entity::EntitySchema;
@@ -54,16 +54,32 @@ pub enum TextFormat {
     Snippet,
 }
 
+/// How a client takes a directive's completion items.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ItemStyle {
+    /// How it takes their text.
+    pub format: TextFormat,
+    /// Whether it asks for completion again when an item says to, by the
+    /// `editor.action.triggerSuggest` command: the VS Code extension, which
+    /// passes the `reopenCompletion` initialization option. An option
+    /// written with a value to come says to when its values complete.
+    pub reopens: bool,
+}
+
+/// The command reopening completion in a client whose [`ItemStyle`]
+/// reopens: VS Code's own, which its language client runs as it is.
+const REOPEN_COMPLETION: &str = "editor.action.triggerSuggest";
+
 /// The items completing `context`, where `position` turns a character index
-/// on the line into the protocol's position, and `format` says how the
-/// client takes their text — and whether the list was cut, so the editor
-/// should ask again as the text is typed.
+/// on the line into the protocol's position, and `style` says how the client
+/// takes them — and whether the list was cut, so the editor should ask again
+/// as the text is typed.
 #[must_use]
 pub fn directive_items(
     context: &DirectiveContext,
     vocabulary: &DirectiveVocabulary<'_>,
     position: &dyn Fn(usize) -> lsp_types::Position,
-    format: TextFormat,
+    style: ItemStyle,
 ) -> (Vec<CompletionItem>, bool) {
     let range = |characters: &Range<usize>| {
         lsp_types::Range::new(position(characters.start), position(characters.end))
@@ -81,7 +97,7 @@ pub fn directive_items(
                 vocabulary.domain,
                 &entity_specs,
                 range(&name.replace),
-                format,
+                style.format,
             ),
             false,
         ),
@@ -94,6 +110,7 @@ pub fn directive_items(
                 &spec,
                 &update_fields(&option.directive, &spec, vocabulary, &entity_specs),
                 range(&option.replace),
+                style.reopens,
             );
             (items, false)
         }
@@ -340,12 +357,14 @@ fn update_fields<'s>(
 
 /// One item per option `spec` takes and the block does not already hold —
 /// after a mode sign only an `.. entity-update::`'s list fields, which are
-/// the ones a sign applies to.
+/// the ones a sign applies to — each reopening completion when `reopens` and
+/// its values complete.
 fn option_items(
     context: &OptionContext,
     spec: &DirectiveSpec<'_>,
     fields: &[UpdateField<'_>],
     range: lsp_types::Range,
+    reopens: bool,
 ) -> Vec<CompletionItem> {
     let listed = spec.option_specs().filter(|_| context.mode.is_none());
     let most = fields.first().map_or(0, |field| field.declared_by);
@@ -361,8 +380,30 @@ fn option_items(
                 .names()
                 .any(|name| context.written.iter().any(|written| written == name))
         })
-        .map(|(option, partial)| option_item(option, partial, context.closed, range))
+        .map(|(option, partial)| {
+            let mut item = option_item(option, partial, context.closed, range);
+            if reopens && !context.closed && completes_values(option.value) {
+                item.command = Some(Command::new(
+                    String::new(),
+                    REOPEN_COMPLETION.to_string(),
+                    None,
+                ));
+            }
+            item
+        })
         .collect()
+}
+
+/// Whether an option's `value` completes: a choice of words, or a relation's
+/// entity ids.
+fn completes_values(value: OptionValue<'_>) -> bool {
+    matches!(
+        value,
+        OptionValue::Choice(_)
+            | OptionValue::Declared(_)
+            | OptionValue::DeclaredList(_)
+            | OptionValue::EntityIds(_)
+    )
 }
 
 /// The item completing `option`'s name over `range`: its canonical name, the
@@ -515,6 +556,16 @@ mod tests {
     }
 
     fn items(context: &DirectiveContext, format: TextFormat) -> Vec<CompletionItem> {
+        items_styled(
+            context,
+            ItemStyle {
+                format,
+                reopens: false,
+            },
+        )
+    }
+
+    fn items_styled(context: &DirectiveContext, style: ItemStyle) -> Vec<CompletionItem> {
         let schema = schema();
         let index = index();
         let vocabulary = DirectiveVocabulary {
@@ -526,7 +577,7 @@ mod tests {
             context,
             &vocabulary,
             &|character| lsp_types::Position::new(0, u32::try_from(character).unwrap()),
-            format,
+            style,
         )
         .0
     }
@@ -722,6 +773,57 @@ mod tests {
         // Then
         assert_eq!(new_text(named(&items, "maxdepth")), "maxdepth: ");
         assert_eq!(new_text(named(&items, "hidden")), "hidden:");
+    }
+
+    #[test]
+    fn test_option_items_reopen_completion_where_a_value_completes() {
+        // Given
+        let style = ItemStyle {
+            format: TextFormat::Plain,
+            reopens: true,
+        };
+
+        // When
+        let items = items_styled(&option_context("req", "", None), style);
+
+        // Then — a choice and a relation reopen; free text has nothing to offer
+        let command_of = |label: &str| {
+            named(&items, label)
+                .command
+                .as_ref()
+                .map(|command| command.command.as_str())
+        };
+        assert_eq!(command_of("status"), Some(REOPEN_COMPLETION));
+        assert_eq!(command_of("links"), Some(REOPEN_COMPLETION));
+        assert_eq!(command_of("id"), None);
+    }
+
+    #[test]
+    fn test_option_items_reopen_nothing_once_the_closing_colon_is_written() {
+        // Given
+        let style = ItemStyle {
+            format: TextFormat::Plain,
+            reopens: true,
+        };
+        let DirectiveContext::Option(mut option) = option_context("req", "", None) else {
+            unreachable!("an option context");
+        };
+        option.closed = true;
+
+        // When
+        let items = items_styled(&DirectiveContext::Option(option), style);
+
+        // Then — the cursor ends before the colon, where no value completes
+        assert!(items.iter().all(|item| item.command.is_none()));
+    }
+
+    #[test]
+    fn test_completes_values_holds_for_choices_and_relations() {
+        // When / Then
+        assert!(completes_values(OptionValue::Declared(&[])));
+        assert!(completes_values(OptionValue::EntityIds(None)));
+        assert!(!completes_values(OptionValue::Text));
+        assert!(!completes_values(OptionValue::Flag));
     }
 
     #[test]

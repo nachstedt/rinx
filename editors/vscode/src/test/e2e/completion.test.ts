@@ -107,6 +107,31 @@ suite('Directive completion (e2e)', () => {
         assert.ok(maxdepth, `maxdepth among ${JSON.stringify(items.map(labelOf))}`);
         assert.strictEqual(maxdepth.detail, 'How many heading levels the tree shows; zero or less shows all.');
     });
+
+    test('a value opens as its space is typed, and at once after an option chosen from the list', async () => {
+        // Given — `:align: ` on line 1, and a bare `:` on line 4.
+        const values = workspaceFile('option_values.rst');
+        await vscode.window.showTextDocument(values);
+        const api = await rinx();
+        await waitFor('the index to be ready', () => api.indexStatus()?.state === 'ready');
+
+        // When — the space after `:align:` is typed
+        const typed = await vscode.commands.executeCommand<vscode.CompletionList>(
+            'vscode.executeCompletionItemProvider',
+            values,
+            new vscode.Position(1, 11),
+            ' ',
+        );
+        const options = await completionsAt(values, new vscode.Position(4, 4));
+
+        // Then
+        assert.ok(typed.items.some((item) => labelOf(item) === 'center'), JSON.stringify(typed.items.map(labelOf)));
+        const align = options.find((item) => labelOf(item) === 'align');
+        assert.strictEqual(align?.command?.command, 'editor.action.triggerSuggest');
+        const alt = options.find((item) => labelOf(item) === 'alt');
+        assert.ok(alt, `alt among ${JSON.stringify(options.map(labelOf))}`);
+        assert.strictEqual(alt.command, undefined);
+    });
 });
 
 suite('Role name completion (e2e)', () => {

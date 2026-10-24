@@ -31,6 +31,16 @@ fn completion(uri: Uri, line: u32, character: u32) -> Request {
     )
 }
 
+/// [`completion`] asked by the client as `trigger` was typed.
+fn completion_triggered_by(uri: Uri, line: u32, character: u32, trigger: &str) -> Request {
+    let mut request = completion(uri, line, character);
+    request.params["context"] = serde_json::json!({
+        "triggerKind": 2,
+        "triggerCharacter": trigger,
+    });
+    request
+}
+
 /// The completion list `response` carries, or `None` for a null result.
 fn list(response: &Response) -> Option<CompletionList> {
     let result = response.response_result.clone().expect("a result");
@@ -75,7 +85,7 @@ fn test_initialize_result_announces_completion_on_its_trigger_characters() {
     else {
         panic!("completion announced with trigger characters");
     };
-    assert_eq!(triggers, ["`", "<", "/", ".", ":"]);
+    assert_eq!(triggers, ["`", "<", "/", ".", ":", " "]);
 }
 
 #[test]
@@ -437,6 +447,108 @@ fn test_completion_lists_options_not_roles_in_an_option_block() {
     // Then
     assert!(labels.iter().any(|label| label == "alt"));
     assert!(!labels.iter().any(|label| label == "ref"));
+}
+
+#[test]
+fn test_completion_lists_no_roles_after_an_option_s_closing_colon() {
+    // Given — the colon closing `:align:` is a trigger character, and the
+    // field marker is no role
+    let (workspace, mut state) = server_with_notes("complete_closed_option", "");
+    let text = ".. image:: a.png\n   :align:\n";
+    handle_notification(&mut state, workspace.change("guide/notes.rst", 2, text));
+
+    // When
+    let response = handle_request(
+        &mut state,
+        completion_triggered_by(workspace.uri("guide/notes.rst"), 1, 10, ":"),
+    );
+
+    // Then
+    assert_eq!(list(&response).map(|list| shown(&list)), None);
+}
+
+#[test]
+fn test_a_typed_space_completes_an_option_s_value() {
+    // Given
+    let (workspace, mut state) = server_with_notes("complete_space_value", "");
+    let text = ".. |logo| image:: a.png\n   :align: \n";
+    handle_notification(&mut state, workspace.change("guide/notes.rst", 2, text));
+
+    // When
+    let response = handle_request(
+        &mut state,
+        completion_triggered_by(workspace.uri("guide/notes.rst"), 1, 11, " "),
+    );
+
+    // Then
+    let labels: Vec<String> = list(&response)
+        .map(|list| shown(&list).into_iter().map(|(label, _)| label).collect())
+        .unwrap_or_default();
+    assert!(labels.iter().any(|label| label == "center"), "{labels:?}");
+}
+
+#[test]
+fn test_a_typed_space_completes_nothing_but_an_option_s_value() {
+    // Given — a space typed inside a reference's title, which completes its
+    // target when asked
+    let (workspace, mut state) = server_with_notes("complete_space_title", "");
+    let text = "See :ref:`Installing the \n";
+    handle_notification(&mut state, workspace.change("guide/notes.rst", 2, text));
+    let uri = workspace.uri("guide/notes.rst");
+
+    // When
+    let typed = handle_request(&mut state, completion_triggered_by(uri.clone(), 0, 25, " "));
+    let asked = handle_request(&mut state, completion(uri, 0, 25));
+
+    // Then
+    assert_eq!(list(&typed).map(|list| shown(&list)), None);
+    assert!(list(&asked).is_some_and(|list| !list.items.is_empty()));
+}
+
+#[test]
+fn test_an_option_with_values_reopens_completion_for_a_client_asking_for_it() {
+    // Given — a client passing the `reopenCompletion` option
+    let workspace = Workspace::new("complete_reopen", &[("index.rst", "")]);
+    let (state, _) = workspace.server(false);
+    let mut state = state.with_completion_reopening(true);
+    state.on_scan_event(workspace.scanned());
+    let text = ".. image:: a.png\n   :\n";
+    handle_notification(&mut state, workspace.open("index.rst", text));
+
+    // When
+    let response = handle_request(&mut state, completion(workspace.uri("index.rst"), 1, 4));
+
+    // Then — after `:align: ` its values are offered; after `:alt: ` there
+    // is nothing to offer
+    let list = list(&response).expect("a list");
+    let command_of = |label: &str| {
+        list.items
+            .iter()
+            .find(|item| item.label == label)
+            .and_then(|item| item.command.as_ref())
+            .map(|command| command.command.clone())
+    };
+    assert_eq!(
+        command_of("align").as_deref(),
+        Some("editor.action.triggerSuggest")
+    );
+    assert_eq!(command_of("alt"), None);
+}
+
+#[test]
+fn test_an_option_reopens_no_completion_for_a_client_not_asking() {
+    // Given / When
+    let (workspace, mut state) = server_with_notes("complete_no_reopen", "");
+    let text = ".. image:: a.png\n   :\n";
+    handle_notification(&mut state, workspace.change("guide/notes.rst", 2, text));
+    let response = handle_request(
+        &mut state,
+        completion(workspace.uri("guide/notes.rst"), 1, 4),
+    );
+
+    // Then
+    let list = list(&response).expect("a list");
+    assert!(list.items.iter().all(|item| item.command.is_none()));
 }
 
 /// The labels and details of the items completing the open document

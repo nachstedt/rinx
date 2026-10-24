@@ -40,7 +40,7 @@ pub fn initialize_result(
             // follows the `..` of its marker, and an option's name the `:`
             // opening its line.
             completion_provider: Some(CompletionOptions {
-                trigger_characters: Some(["`", "<", "/", ".", ":"].map(String::from).to_vec()),
+                trigger_characters: Some(["`", "<", "/", ".", ":", " "].map(String::from).to_vec()),
                 ..CompletionOptions::default()
             }),
             hover_provider: Some(HoverProviderCapability::Simple(true)),
@@ -152,9 +152,13 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
         Completion::METHOD => match serde_json::from_value::<CompletionParams>(params) {
             Ok(params) => {
                 let position = params.text_document_position;
+                let trigger = params
+                    .context
+                    .as_ref()
+                    .and_then(|context| context.trigger_character.as_deref());
                 Response::new_ok(
                     id,
-                    state.complete(&position.text_document.uri, position.position),
+                    state.complete(&position.text_document.uri, position.position, trigger),
                 )
             }
             Err(error) => invalid_params(id, &method, &error),

@@ -42,7 +42,12 @@ export function clientOptions(outputChannel: vscode.LogOutputChannel): LanguageC
             { scheme: 'file', language: 'restructuredtext' },
             { scheme: 'untitled', language: 'restructuredtext' },
         ],
-        initializationOptions: { fetchInventories: true, evaluateConf: true, bazelManifests: true },
+        initializationOptions: {
+            fetchInventories: true,
+            evaluateConf: true,
+            bazelManifests: true,
+            reopenCompletion: true,
+        },
         outputChannel,
     };
 }
