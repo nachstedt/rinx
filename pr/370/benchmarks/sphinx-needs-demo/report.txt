@@ -54,26 +54,26 @@ network schema rule (1):
 entity.unknown-target (6):
 --------------------------
     1  basic_example/index.rst: entity 'EX_TEST_001' links to 'REQ_1_1_ext' via ':links:', which no document declares
+    1  automotive-adas/sys_5_sys_quali_test.rst: broken entity 'TF_TEST_SYS_QUAL_TEST_SUMMARY'
     1  basic_example/index.rst: broken entity 'REQ_1_1_ext'
     1  basic_example/index.rst: broken entity 'REQ_1_2_ext'
     1  basic_example/index.rst: broken entity 'SPEC_1_1_ext'
     1  basic_example/index.rst: broken entity 'SPEC_1_2_ext'
-    1  automotive-adas/sys_5_sys_quali_test.rst: broken entity 'TF_TEST_SYS_QUAL_TEST_SUMMARY'
 
 entity.role-type-mismatch (5):
 ------------------------------
     1  automotive-adas/external_data.rst: broken entity type mismatch 'SWREQ_001'
     1  automotive-adas/external_data.rst: broken entity type mismatch 'SWREQ_002'
     1  automotive-adas/external_data.rst: broken entity type mismatch 'REQ_001'
-    1  basic_example/index.rst: broken entity type mismatch 'EX_TEST_001'
     1  coffee-machine/index.rst: broken entity type mismatch 'SEQSTART_01'
+    1  basic_example/index.rst: broken entity type mismatch 'EX_TEST_001'
 
 directive.unknown (4):
 ----------------------
     1  coffee-machine/index.rst: unknown directive type 'src-trace'
     1  automotive-adas/sys_5_sys_quali_test_results.rst: unknown directive type 'test-file'
-    1  automotive-adas/swe_3_sw_detailed_design.rst: unknown directive type 'automodule'
     1  automotive-adas/swe_4_unit_tests.rst: unknown directive type 'automodule'
+    1  automotive-adas/swe_3_sw_detailed_design.rst: unknown directive type 'automodule'
 
 directive.unsupported-option (4):
 ---------------------------------
