@@ -9,7 +9,8 @@
 //! - `server` is the protocol loop and the pure handlers it dispatches to;
 //! - `completion` completes a `:ref:` or `:doc:` target from the index;
 //! - `reference_at` finds the reference under the cursor, `hover` shows where
-//!   it leads, and `definition` opens the document it leads to;
+//!   it leads — `entity_hover` an entity's fields, also on the directive
+//!   `entity_at` finds — and `definition` opens the document it leads to;
 //! - `diagnostics` parses an open document and converts what the parser found;
 //! - `render` renders a document for the diagnostics only a render finds, and
 //!   `preview` renders its whole page for the editor's preview, whose links
@@ -29,6 +30,8 @@ mod completion;
 mod definition;
 mod diagnostics;
 mod documents;
+mod entity_at;
+mod entity_hover;
 mod files;
 mod hover;
 mod include_summary;

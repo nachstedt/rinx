@@ -10,7 +10,9 @@
 //! `.. entity-update::` is the one directive whose options depend on the
 //! project: besides `:strict:`, it takes the fields of the entities its
 //! argument matches, resolved against the project index as the build
-//! resolves them (`rinx_analyzer::matched_entities`).
+//! resolves them (`rinx_analyzer::matched_entities`). A relation's value is
+//! the other: its ids are the project's entities, which `entity_id_items`
+//! lists.
 
 use std::ops::Range;
 
@@ -18,7 +20,7 @@ use lsp_types::{
     CompletionItem, CompletionItemKind, CompletionItemTag, CompletionTextEdit, Documentation,
     InsertTextFormat, InsertTextMode, TextEdit,
 };
-use rinx_ast::{Domain, EntityUpdateSource, UpdateTarget};
+use rinx_ast::{Domain, EntityId, EntityUpdateSource, UpdateTarget};
 use rinx_entity::EntitySchema;
 use rinx_index::ProjectIndex;
 use rinx_parser::{
@@ -27,8 +29,9 @@ use rinx_parser::{
 };
 
 use super::directive_context::{
-    DirectiveContext, NameContext, OptionContext, ValueContext, WrittenDirective,
+    DirectiveContext, NameContext, OptionContext, ValueContext, WrittenDirective, list_item_at,
 };
+use super::entity_id_items::{TargetTypes, entity_id_items};
 
 /// What a document's directives are resolved against: its project's default
 /// domain, entity schema and index.
@@ -53,14 +56,15 @@ pub enum TextFormat {
 
 /// The items completing `context`, where `position` turns a character index
 /// on the line into the protocol's position, and `format` says how the
-/// client takes their text.
+/// client takes their text — and whether the list was cut, so the editor
+/// should ask again as the text is typed.
 #[must_use]
 pub fn directive_items(
     context: &DirectiveContext,
     vocabulary: &DirectiveVocabulary<'_>,
     position: &dyn Fn(usize) -> lsp_types::Position,
     format: TextFormat,
-) -> Vec<CompletionItem> {
+) -> (Vec<CompletionItem>, bool) {
     let range = |characters: &Range<usize>| {
         lsp_types::Range::new(position(characters.start), position(characters.end))
     };
@@ -71,39 +75,93 @@ pub fn directive_items(
         .map(EntitySpec::new)
         .collect();
     match context {
-        DirectiveContext::Name(name) => name_items(
-            name,
-            vocabulary.domain,
-            &entity_specs,
-            range(&name.replace),
-            format,
+        DirectiveContext::Name(name) => (
+            name_items(
+                name,
+                vocabulary.domain,
+                &entity_specs,
+                range(&name.replace),
+                format,
+            ),
+            false,
         ),
         DirectiveContext::Option(option) => {
             let Some(spec) = resolve(&option.directive, vocabulary, &entity_specs) else {
-                return Vec::new();
+                return (Vec::new(), false);
             };
-            option_items(
+            let items = option_items(
                 option,
                 &spec,
                 &update_fields(&option.directive, &spec, vocabulary, &entity_specs),
                 range(&option.replace),
-            )
+            );
+            (items, false)
         }
         DirectiveContext::Value(value) => {
-            let Some(spec) = resolve(&value.directive, vocabulary, &entity_specs) else {
-                return Vec::new();
-            };
-            let fields = update_fields(&value.directive, &spec, vocabulary, &entity_specs);
-            let Some(option) = spec
-                .option_specs()
-                .chain(fields.iter().map(|field| field.option))
-                .find(|option| option.is_spelled(&value.option))
-            else {
-                return Vec::new();
-            };
-            value_items(value, option.value, &range)
+            with_value_option(value, vocabulary, |option, accepted| match option.value {
+                OptionValue::EntityIds(_) => {
+                    entity_id_items(value, accepted, vocabulary.index, vocabulary.schema, &range)
+                }
+                other => (value_items(value, other, &range), false),
+            })
+            .unwrap_or_default()
         }
     }
+}
+
+/// The entity id the cursor is on in `context`'s value when the option is a
+/// relation, and the characters it covers on the line — `None` for any
+/// other option, or an item that is no id.
+#[must_use]
+pub fn relation_target_at(
+    context: &ValueContext,
+    vocabulary: &DirectiveVocabulary<'_>,
+) -> Option<(Range<usize>, EntityId)> {
+    with_value_option(context, vocabulary, |option, _| {
+        matches!(option.value, OptionValue::EntityIds(_)).then(|| list_item_at(context).0)
+    })
+    .flatten()
+    .and_then(|characters| {
+        let item: String = context
+            .value
+            .chars()
+            .skip(characters.start - context.value_start)
+            .take(characters.len())
+            .collect();
+        Some((characters, EntityId::new(&item).ok()?))
+    })
+}
+
+/// `answer` asked of the option whose value `context` is on, and of the
+/// types its targets may have when it is a relation (see [`TargetTypes`]) —
+/// or `None` when the directive or the option is unknown.
+fn with_value_option<R>(
+    context: &ValueContext,
+    vocabulary: &DirectiveVocabulary<'_>,
+    answer: impl FnOnce(&OptionSpec<'_>, &TargetTypes<'_>) -> R,
+) -> Option<R> {
+    let entity_specs: Vec<EntitySpec<'_>> = vocabulary
+        .schema
+        .types()
+        .iter()
+        .map(EntitySpec::new)
+        .collect();
+    let spec = resolve(&context.directive, vocabulary, &entity_specs)?;
+    if let Some(option) = spec
+        .option_specs()
+        .find(|option| option.is_spelled(&context.option))
+    {
+        let accepted = match option.value {
+            OptionValue::EntityIds(types) => vec![types],
+            _ => Vec::new(),
+        };
+        return Some(answer(option, &accepted));
+    }
+    let fields = update_fields(&context.directive, &spec, vocabulary, &entity_specs);
+    let field = fields
+        .iter()
+        .find(|field| field.option.is_spelled(&context.option))?;
+    Some(answer(field.option, &field.target_types))
 }
 
 /// The spec of the directive written as `directive`: a built-in's, a domain
@@ -203,11 +261,13 @@ fn name_insertion(
     )
 }
 
-/// A field an `.. entity-update::` may change, and how many of the matched
-/// types declare it.
+/// A field an `.. entity-update::` may change, how many of the matched
+/// types declare it, and — for a relation — the types its targets may have
+/// under each of them.
 struct UpdateField<'s> {
     option: &'s OptionSpec<'s>,
     declared_by: usize,
+    target_types: Vec<Option<&'s [String]>>,
 }
 
 /// The fields `directive` takes beyond its listed options when it is an
@@ -254,14 +314,22 @@ fn update_fields<'s>(
     let mut fields: Vec<UpdateField<'s>> = Vec::new();
     for entity_spec in &types {
         for option in entity_spec.updatable_fields() {
+            let target_types = match option.value {
+                OptionValue::EntityIds(types) => Some(types),
+                _ => None,
+            };
             match fields
                 .iter_mut()
                 .find(|field| field.option.name == option.name)
             {
-                Some(field) => field.declared_by += 1,
+                Some(field) => {
+                    field.declared_by += 1;
+                    field.target_types.extend(target_types);
+                }
                 None => fields.push(UpdateField {
                     option,
                     declared_by: 1,
+                    target_types: target_types.into_iter().collect(),
                 }),
             }
         }
@@ -376,44 +444,11 @@ fn value_items(
         .collect()
 }
 
-/// The characters of the comma-separated item the cursor is in, and the
-/// list's other items.
-fn list_item_at(context: &ValueContext) -> (Range<usize>, Vec<&str>) {
-    let chars: Vec<char> = context.value.chars().collect();
-    let cursor = context.cursor.min(chars.len());
-    let mut start = chars[..cursor]
-        .iter()
-        .rposition(|&c| c == ',')
-        .map_or(0, |at| at + 1);
-    while start < cursor && chars[start].is_whitespace() {
-        start += 1;
-    }
-    let mut end = chars[cursor..]
-        .iter()
-        .position(|&c| c == ',')
-        .map_or(chars.len(), |offset| cursor + offset);
-    while end > start && chars[end - 1].is_whitespace() {
-        end -= 1;
-    }
-    let current: String = chars[start..end].iter().collect();
-    let listed = context
-        .value
-        .split(',')
-        .map(str::trim)
-        .filter(|item| !item.is_empty() && *item != current)
-        .collect();
-    (
-        context.value_start + start..context.value_start + end,
-        listed,
-    )
-}
-
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
 
     use super::*;
-    use rinx_ast::EntityId;
     use rinx_entity::{NoReservedNames, load_schema};
     use rinx_index::EntityRecord;
 
@@ -493,6 +528,7 @@ mod tests {
             &|character| lsp_types::Position::new(0, u32::try_from(character).unwrap()),
             format,
         )
+        .0
     }
 
     fn name_context(closed: bool, needs_space: bool) -> DirectiveContext {
@@ -533,6 +569,7 @@ mod tests {
             value: value.to_string(),
             value_start: 10,
             cursor,
+            id: None,
         })
     }
 
@@ -830,54 +867,5 @@ mod tests {
         // When / Then
         assert!(labels(&value_context("figure", "alt", "", 0)).is_empty());
         assert!(labels(&value_context("figure", "nope", "", 0)).is_empty());
-    }
-
-    #[test]
-    fn test_list_item_at_finds_the_item_under_the_cursor() {
-        // Given
-        let context = ValueContext {
-            directive: WrittenDirective {
-                name: "req".to_string(),
-                argument: String::new(),
-            },
-            option: "tags".to_string(),
-            value: "ui,  co , docs".to_string(),
-            value_start: 0,
-            cursor: 6,
-        };
-
-        // When
-        let (range, listed) = list_item_at(&context);
-
-        // Then
-        assert_eq!(range, 5..7);
-        assert_eq!(listed, ["ui", "docs"]);
-    }
-
-    proptest::proptest! {
-        #[test]
-        fn test_list_item_at_stays_within_the_value(
-            value in "[ a-z,é]{0,16}",
-            cursor in 0usize..20,
-        ) {
-            // Given
-            let context = ValueContext {
-                directive: WrittenDirective {
-                    name: "req".to_string(),
-                    argument: String::new(),
-                },
-                option: "tags".to_string(),
-                value: value.clone(),
-                value_start: 4,
-                cursor,
-            };
-
-            // When
-            let (range, _) = list_item_at(&context);
-
-            // Then
-            proptest::prop_assert!(range.start <= range.end);
-            proptest::prop_assert!(range.end <= 4 + value.chars().count());
-        }
     }
 }

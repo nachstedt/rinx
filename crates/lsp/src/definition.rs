@@ -52,6 +52,7 @@ mod tests {
         ReferenceTarget {
             title: "Installing".to_string(),
             destination,
+            entity: None,
         }
     }
 

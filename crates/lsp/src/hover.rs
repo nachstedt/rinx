@@ -3,35 +3,48 @@
 //! The answer is the renderer's own (`rinx_renderer::ReferenceResolver`), so
 //! the hover names exactly what the built page links to — and a reference the
 //! page would draw broken shows no hover, since its diagnostic already says
-//! why.
+//! why. A reference leading to an entity shows the entity's fields instead
+//! of its title alone (`entity_hover`).
 
 use lsp_types::{Hover, HoverContents, MarkupContent, MarkupKind, Range, Uri};
 use rinx_renderer::{Destination, ReferenceTarget};
 
-/// The hover for a reference at `range` that leads to `target`, where
-/// `file_link` gives the URI a document of the target's workspace folder is
-/// opened by, given its `.rst` path.
+/// The hover for a reference at `range` that leads to `target`, which is
+/// at `location` (see [`location_markdown`]): `entity_text` when the target
+/// is an entity whose fields were found, else the target's title.
 #[must_use]
 pub fn reference_hover(
     target: &ReferenceTarget,
     range: Range,
-    file_link: impl Fn(&str) -> Option<Uri>,
+    location: &str,
+    entity_text: Option<String>,
 ) -> Hover {
+    let value = entity_text
+        .unwrap_or_else(|| format!("**{}**\n\n{location}", escape_markdown(&target.title)));
+    markdown_hover(value, range)
+}
+
+/// A hover showing the Markdown `value` over `range`.
+#[must_use]
+pub fn markdown_hover(value: String, range: Range) -> Hover {
     Hover {
         contents: HoverContents::Markup(MarkupContent {
             kind: MarkupKind::Markdown,
-            value: hover_markdown(target, file_link),
+            value,
         }),
         range: Some(range),
     }
 }
 
-/// The hover's text: the target's title, and below it where the target is —
-/// a link to the document's file, the address of another site's page, or the
-/// page the build writes.
-fn hover_markdown(target: &ReferenceTarget, file_link: impl Fn(&str) -> Option<Uri>) -> String {
-    let title = escape_markdown(&target.title);
-    let location = match &target.destination {
+/// Where a target is, as a hover's line: a link to the document's file, the
+/// address of another site's page, or the page the build writes — where
+/// `file_link` gives the URI a document of the target's workspace folder is
+/// opened by, given its `.rst` path.
+pub fn location_markdown(
+    destination: &Destination,
+    file_link: impl Fn(&str) -> Option<Uri>,
+) -> String {
+    match destination {
         Destination::Document { doc_path, .. } => {
             let shown = escape_markdown(doc_path);
             match file_link(doc_path) {
@@ -45,13 +58,12 @@ fn hover_markdown(target: &ReferenceTarget, file_link: impl Fn(&str) -> Option<U
         Destination::External { url, site } => {
             format!("<{url}> {}", escape_markdown(site))
         }
-    };
-    format!("**{title}**\n\n{location}")
+    }
 }
 
 /// `text` with every character Markdown would read as markup escaped, so a
 /// title like `__init__` or `a*b` shows as written.
-fn escape_markdown(text: &str) -> String {
+pub(crate) fn escape_markdown(text: &str) -> String {
     let mut escaped = String::with_capacity(text.len());
     for character in text.chars() {
         if "\\`*_{}[]()<>#+-.!|~".contains(character) {
@@ -71,7 +83,15 @@ mod tests {
         ReferenceTarget {
             title: "Installing".to_string(),
             destination,
+            entity: None,
         }
+    }
+
+    /// The hover of `target`, whose file has no URI and which shows no
+    /// entity's fields.
+    fn plain_hover(target: &ReferenceTarget) -> Hover {
+        let location = location_markdown(&target.destination, |_| None);
+        reference_hover(target, Range::default(), &location, None)
     }
 
     fn markdown_of(hover: &Hover) -> &str {
@@ -91,9 +111,10 @@ mod tests {
         let range = Range::default();
 
         // When
-        let hover = reference_hover(&target, range, |doc_path| {
+        let location = location_markdown(&target.destination, |doc_path| {
             Uri::from_str(&format!("file:///project/{doc_path}")).ok()
         });
+        let hover = reference_hover(&target, range, &location, None);
 
         // Then
         assert_eq!(
@@ -112,7 +133,7 @@ mod tests {
         });
 
         // When
-        let hover = reference_hover(&target, Range::default(), |_| None);
+        let hover = plain_hover(&target);
 
         // Then
         assert_eq!(markdown_of(&hover), "**Installing**\n\nsetup\\.rst");
@@ -126,7 +147,7 @@ mod tests {
         });
 
         // When
-        let hover = reference_hover(&target, Range::default(), |_| None);
+        let hover = plain_hover(&target);
 
         // Then
         assert_eq!(
@@ -144,7 +165,7 @@ mod tests {
         });
 
         // When
-        let hover = reference_hover(&target, Range::default(), |_| None);
+        let hover = plain_hover(&target);
 
         // Then
         assert_eq!(
@@ -152,6 +173,26 @@ mod tests {
             "**Installing**\n\n<https://docs.python.org/3/library/stdtypes.html#dict> \
              \\(in Python v3\\.12\\)"
         );
+    }
+
+    #[test]
+    fn test_reference_hover_shows_an_entity_s_text_in_place_of_the_title() {
+        // Given
+        let target = target(Destination::Document {
+            doc_path: "reqs.rst".to_string(),
+            anchor: None,
+        });
+
+        // When
+        let hover = reference_hover(
+            &target,
+            Range::default(),
+            "reqs\\.rst",
+            Some("**Requirement** REQ\\_1".to_string()),
+        );
+
+        // Then
+        assert_eq!(markdown_of(&hover), "**Requirement** REQ\\_1");
     }
 
     #[test]

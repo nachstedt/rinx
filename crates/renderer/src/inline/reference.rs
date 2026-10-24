@@ -2,7 +2,7 @@
 
 use std::fmt::Write as _;
 
-use rinx_ast::{InventorySelector, Span, TargetName};
+use rinx_ast::{EntityId, InventorySelector, Span, TargetName};
 use rinx_index::relative_doc_href;
 use rinx_index::{ProjectIndex, SpecialPage};
 
@@ -182,11 +182,27 @@ pub(super) fn label_reference_target(
     target: &str,
     target_doc: &str,
 ) -> ReferenceTarget {
-    ReferenceTarget::in_document(
+    let anchor = index.target_anchor(name);
+    let found = ReferenceTarget::in_document(
         label_link_text(index, None, name, target),
         target_doc,
-        Some(index.target_anchor(name).to_string()),
-    )
+        Some(anchor.to_string()),
+    );
+    match entity_at(index, anchor, target_doc) {
+        Some(id) => found.naming_entity(id),
+        None => found,
+    }
+}
+
+/// The entity a label anchored at `anchor` in `target_doc` is, when it is
+/// one: the index holds an entity of that id, declared in that document.
+fn entity_at(index: &ProjectIndex, anchor: &str, target_doc: &str) -> Option<EntityId> {
+    let id = EntityId::new(rinx_index::entity_of_anchor(anchor)?).ok()?;
+    index
+        .entities
+        .get(&id)
+        .is_some_and(|record| record.doc_path == target_doc)
+        .then_some(id)
 }
 
 /// A page the build writes as a reference target — shared with `:any:`.
@@ -196,6 +212,7 @@ pub(super) fn special_page_target(page: SpecialPage) -> ReferenceTarget {
         destination: Destination::GeneratedPage {
             path: page.path.to_string(),
         },
+        entity: None,
     }
 }
 

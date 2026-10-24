@@ -68,6 +68,10 @@ pub struct ValueContext {
     pub value_start: usize,
     /// The cursor's offset within `value`.
     pub cursor: usize,
+    /// The value of the block's `:id:` line, when another line of it is
+    /// one: the entity the block declares, which none of its relations
+    /// should name.
+    pub id: Option<String>,
 }
 
 /// A directive marker, as written above the line being completed.
@@ -90,7 +94,11 @@ pub fn directive_at(lines: &[&str], line: usize, cursor: usize) -> Option<Direct
         return Some(DirectiveContext::Name(name));
     }
     let field = field_at(&chars, cursor)?;
-    let (directive, written) = enclosing_directive(lines, line)?;
+    let OptionBlock {
+        directive,
+        written,
+        id,
+    } = enclosing_directive(lines, line)?;
     let without_mode = |name: &str| name.trim_start_matches(['+', '-']).to_string();
     match field {
         Field::Name {
@@ -117,6 +125,7 @@ pub fn directive_at(lines: &[&str], line: usize, cursor: usize) -> Option<Direct
             value,
             value_start,
             cursor,
+            id,
         })),
     }
 }
@@ -253,32 +262,105 @@ fn field_at(chars: &[char], cursor: usize) -> Option<Field> {
     })
 }
 
-/// The directive whose option block holds line `line` of `lines`, and the
-/// names of the block's other option lines — or `None` when the line is in
-/// no option block: a blank line, or a line indented no deeper than the
-/// marker, comes between it and any marker above.
-fn enclosing_directive(lines: &[&str], line: usize) -> Option<(WrittenDirective, Vec<String>)> {
+/// The option block a line is in, as [`enclosing_directive`] reads it.
+struct OptionBlock {
+    /// The directive whose block it is.
+    directive: WrittenDirective,
+    /// The names of the block's other option lines.
+    written: Vec<String>,
+    /// The value of the block's other `:id:` line, if it has one.
+    id: Option<String>,
+}
+
+/// The option block holding line `line` of `lines` — or `None` when the line
+/// is in none: a blank line, or a line indented no deeper than the marker,
+/// comes between it and any marker above.
+fn enclosing_directive(lines: &[&str], line: usize) -> Option<OptionBlock> {
+    let marker_line = marker_above(lines, line)?;
     let indent = indent_of(lines[line]);
-    let mut written = Vec::new();
-    let mut directive = None;
+    let below = lines[line + 1..]
+        .iter()
+        .take_while(|below| !below.trim().is_empty() && indent_of(below) >= indent);
+    let others: Vec<&str> = lines[marker_line + 1..line]
+        .iter()
+        .chain(below)
+        .copied()
+        .collect();
+    let id = others.iter().find_map(|text| {
+        let value = text.trim_start().strip_prefix(":id:")?;
+        (indent_of(text) == indent).then(|| value.trim().to_string())
+    });
+    Some(OptionBlock {
+        directive: marker(lines[marker_line])?,
+        written: others
+            .iter()
+            .filter_map(|text| option_name(text, indent))
+            .collect(),
+        id,
+    })
+}
+
+/// The line of the marker whose option block holds line `line` of `lines`,
+/// by the rule of [`enclosing_directive`].
+fn marker_above(lines: &[&str], line: usize) -> Option<usize> {
+    let indent = indent_of(lines[line]);
     for above in (0..line).rev() {
         let text = lines[above];
         if text.trim().is_empty() {
             return None;
         }
         if indent_of(text) < indent {
-            directive = Some(marker(text)?);
-            break;
+            return marker(text).map(|_| above);
         }
-        written.extend(option_name(text, indent));
     }
-    for below in &lines[line + 1..] {
-        if below.trim().is_empty() || indent_of(below) < indent {
-            break;
-        }
-        written.extend(option_name(below, indent));
+    None
+}
+
+/// The line of the directive marker whose identity line `line` of `lines`
+/// states: the marker itself, or the `:id:` line of its option block — or
+/// `None` for any other line.
+#[must_use]
+pub fn identity_marker_line(lines: &[&str], line: usize) -> Option<usize> {
+    let text = lines.get(line)?;
+    if marker(text).is_some() {
+        return Some(line);
     }
-    Some((directive?, written))
+    (option_name(text, indent_of(text)).as_deref() == Some("id"))
+        .then(|| marker_above(lines, line))
+        .flatten()
+}
+
+/// The comma-separated item of `context`'s value the cursor is in, as the
+/// characters it covers on the line, and the list's other items.
+#[must_use]
+pub fn list_item_at(context: &ValueContext) -> (Range<usize>, Vec<&str>) {
+    let chars: Vec<char> = context.value.chars().collect();
+    let cursor = context.cursor.min(chars.len());
+    let mut start = chars[..cursor]
+        .iter()
+        .rposition(|&c| c == ',')
+        .map_or(0, |at| at + 1);
+    while start < cursor && chars[start].is_whitespace() {
+        start += 1;
+    }
+    let mut end = chars[cursor..]
+        .iter()
+        .position(|&c| c == ',')
+        .map_or(chars.len(), |offset| cursor + offset);
+    while end > start && chars[end - 1].is_whitespace() {
+        end -= 1;
+    }
+    let current: String = chars[start..end].iter().collect();
+    let listed = context
+        .value
+        .split(',')
+        .map(str::trim)
+        .filter(|item| !item.is_empty() && *item != current)
+        .collect();
+    (
+        context.value_start + start..context.value_start + end,
+        listed,
+    )
 }
 
 /// How many characters of indentation `line` has.
@@ -483,8 +565,21 @@ mod tests {
                 value: "center".to_string(),
                 value_start: 11,
                 cursor: 2,
+                id: None,
             }))
         );
+    }
+
+    #[test]
+    fn test_directive_at_reads_the_id_another_line_of_the_block_writes() {
+        // When
+        let context = at_marker(".. req:: Brakes\n   :id: R_1\n   :links: S|");
+
+        // Then
+        let Some(DirectiveContext::Value(value)) = context else {
+            panic!("a value context, not {context:?}");
+        };
+        assert_eq!(value.id.as_deref(), Some("R_1"));
     }
 
     #[test]
@@ -551,6 +646,85 @@ mod tests {
         // When / Then
         assert!(closes_at(&chars, 1));
         assert!(!closes_at(&chars, 2));
+    }
+
+    #[test]
+    fn test_identity_marker_line_is_the_marker_or_the_id_line_below_it() {
+        // Given
+        let lines = [
+            ".. req:: Brakes",
+            "   :status: open",
+            "   :id: R_1",
+            "",
+            "Text.",
+        ];
+
+        // When / Then
+        assert_eq!(identity_marker_line(&lines, 0), Some(0));
+        assert_eq!(identity_marker_line(&lines, 2), Some(0));
+        assert_eq!(identity_marker_line(&lines, 1), None);
+        assert_eq!(identity_marker_line(&lines, 4), None);
+        assert_eq!(identity_marker_line(&lines, 9), None);
+    }
+
+    #[test]
+    fn test_identity_marker_line_needs_the_id_line_in_the_option_block() {
+        // Given — a blank line ends the block
+        let lines = [".. req:: Brakes", "", "   :id: R_1"];
+
+        // When / Then
+        assert_eq!(identity_marker_line(&lines, 2), None);
+    }
+
+    #[test]
+    fn test_list_item_at_finds_the_item_under_the_cursor() {
+        // Given
+        let context = ValueContext {
+            directive: WrittenDirective {
+                name: "req".to_string(),
+                argument: String::new(),
+            },
+            option: "tags".to_string(),
+            value: "ui,  co , docs".to_string(),
+            value_start: 0,
+            cursor: 6,
+            id: None,
+        };
+
+        // When
+        let (range, listed) = list_item_at(&context);
+
+        // Then
+        assert_eq!(range, 5..7);
+        assert_eq!(listed, ["ui", "docs"]);
+    }
+
+    proptest::proptest! {
+        #[test]
+        fn test_list_item_at_stays_within_the_value(
+            value in "[ a-z,é]{0,16}",
+            cursor in 0usize..20,
+        ) {
+            // Given
+            let context = ValueContext {
+                directive: WrittenDirective {
+                    name: "req".to_string(),
+                    argument: String::new(),
+                },
+                option: "tags".to_string(),
+                value: value.clone(),
+                value_start: 4,
+                cursor,
+                id: None,
+            };
+
+            // When
+            let (range, _) = list_item_at(&context);
+
+            // Then
+            proptest::prop_assert!(range.start <= range.end);
+            proptest::prop_assert!(range.end <= 4 + value.chars().count());
+        }
     }
 
     proptest::proptest! {

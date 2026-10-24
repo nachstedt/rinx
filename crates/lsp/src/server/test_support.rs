@@ -144,6 +144,34 @@ pub(super) fn render_all(state: &mut ServerState) -> Vec<Message> {
 }
 
 /// A scanned server over `files`, with nothing open.
+/// The Markdown the hover at `line`/`character` of `uri` shows, or `None`
+/// for a null result.
+pub(super) fn hover_markdown(
+    state: &mut ServerState,
+    uri: Uri,
+    line: u32,
+    character: u32,
+) -> Option<String> {
+    let request = Request::new(
+        RequestId::from(80),
+        lsp_types::request::HoverRequest::METHOD.to_string(),
+        lsp_types::HoverParams {
+            text_document_position_params: lsp_types::TextDocumentPositionParams::new(
+                TextDocumentIdentifier::new(uri),
+                lsp_types::Position::new(line, character),
+            ),
+            work_done_progress_params: lsp_types::WorkDoneProgressParams::default(),
+        },
+    );
+    let response = handle_request(state, request);
+    let hover: Option<lsp_types::Hover> =
+        serde_json::from_value(response.response_result.expect("a result")).expect("a hover");
+    hover.map(|hover| match hover.contents {
+        lsp_types::HoverContents::Markup(markup) => markup.value,
+        other => panic!("not markup: {other:?}"),
+    })
+}
+
 pub(super) fn scanned(name: &str, files: &[(&str, &str)]) -> (Workspace, ServerState) {
     let workspace = Workspace::new(name, files);
     let (mut state, _) = workspace.server(false);

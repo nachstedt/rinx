@@ -4,11 +4,7 @@
 
 use super::inventories::{FETCH_INVENTORY_METHOD, FetchInventoryParams};
 use super::test_support::*;
-use lsp_types::request::HoverRequest;
-use lsp_types::{
-    DiagnosticSeverity, FileChangeType, Hover, HoverContents, HoverParams, Position,
-    TextDocumentPositionParams,
-};
+use lsp_types::{DiagnosticSeverity, FileChangeType};
 
 const PYTHON_CONF: &str = "extensions = ['sphinx.ext.intersphinx']\nintersphinx_mapping = {'python': ('https://docs.python.org/3/', None)}\nintersphinx_cache_limit = 7\n";
 
@@ -80,27 +76,6 @@ fn shown(
                 .collect()
         })
         .unwrap_or_default()
-}
-
-fn hover_markdown(state: &mut ServerState, uri: Uri, line: u32, character: u32) -> Option<String> {
-    let request = Request::new(
-        RequestId::from(80),
-        HoverRequest::METHOD.to_string(),
-        HoverParams {
-            text_document_position_params: TextDocumentPositionParams::new(
-                TextDocumentIdentifier::new(uri),
-                Position::new(line, character),
-            ),
-            work_done_progress_params: lsp_types::WorkDoneProgressParams::default(),
-        },
-    );
-    let response = handle_request(state, request);
-    let hover: Option<Hover> =
-        serde_json::from_value(response.response_result.expect("a result")).expect("a hover");
-    hover.map(|hover| match hover.contents {
-        HoverContents::Markup(markup) => markup.value,
-        other => panic!("not markup: {other:?}"),
-    })
 }
 
 #[test]
