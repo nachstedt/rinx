@@ -39,8 +39,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333),
   #40 (PR #335), #24 (PR #340) and #25 (PR #355, prepared by #343, #345,
   #348, #351 and #353), #26 (PRs #358 and #362, prepared by #357) and
-  #27 (PR #365, prepared by #363).
-- **Next: #28, definition spans and outline.**
+  #27 (PR #365, prepared by #363) and #28 (PR #374).
+- **Next: #29, precise go to definition.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -994,7 +994,7 @@ item, and each entity-role target, is documented with the hover's text:
 Not done here: a sphinx-needs link has no `to`, so every need is offered,
 and a relation with `multiple = false` still completes as a list.
 
-### 28. Definition spans + outline
+### 28. Definition spans + outline ✅ (#374)
 
 **You experience:** the Outline view and breadcrumbs show sections.
 
