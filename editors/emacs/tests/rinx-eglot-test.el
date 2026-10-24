@@ -109,4 +109,11 @@ The workspace scan may still be running when it is first asked."
       (should (seq-some (lambda (item) (equal (plist-get item :label) "ref"))
                         items)))))
 
+(ert-deftest rinx-eglot-completes-the-domain-role-target ()
+  (rinx-test--with-index
+    (let* ((completion (rinx-test--request :textDocument/completion (rinx-test--at 13 14)))
+           (items (if (vectorp completion) completion (plist-get completion :items))))
+      (should (seq-some (lambda (item) (equal (plist-get item :label) "run"))
+                        items)))))
+
 ;;; rinx-eglot-test.el ends here

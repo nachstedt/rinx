@@ -19,19 +19,7 @@ const PYTHON_INVENTORY: &str = "https://docs.python.org/3/objects.inv";
 
 /// Writes an inventory listing the Python class `dict` to `path`.
 fn write_inventory(path: &std::path::Path) {
-    let inventory = rinx_inventory::Inventory {
-        project: "Python".to_string(),
-        version: "3.14".to_string(),
-        entries: vec![rinx_inventory::InventoryEntry {
-            name: "dict".to_string(),
-            entry_type: rinx_inventory::EntryType::new("py:class").unwrap(),
-            priority: 1,
-            uri: "library/stdtypes.html#$".to_string(),
-            display_name: None,
-        }],
-    };
-    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-    std::fs::write(path, rinx_inventory::write_inventory(&inventory)).unwrap();
+    write_python_inventory(path, &[("dict", "py:class", "library/stdtypes.html#$")]);
 }
 
 /// A server over `files` that downloads inventories when `fetching`, its

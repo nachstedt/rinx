@@ -59,4 +59,4 @@ mod term_reference;
 
 pub(crate) use dispatch::render_inline;
 use ref_text::RefText;
-pub(crate) use target::reference_target;
+pub(crate) use target::{reference_target, scoped_reference_target};

@@ -69,7 +69,8 @@ impl DefaultRole {
 
     /// The name of the role a bare `` `text` `` is dispatched as, or `None`
     /// for `title-reference`, which is built directly.
-    pub(crate) fn role_name(&self) -> Option<&str> {
+    #[must_use]
+    pub fn role_name(&self) -> Option<&str> {
         match &self.0 {
             Kind::TitleReference => None,
             Kind::Role(name) => Some(name),

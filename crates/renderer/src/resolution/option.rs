@@ -38,6 +38,7 @@
 use rinx_ast::{InventorySelector, ObjectType, StdObjectType, TargetName};
 use rinx_index::{ExternalInventory, ProjectIndex};
 
+use super::external::OPTION_ENTRY_TYPE;
 use super::{ExternalHit, resolve_external};
 
 /// The outcome of resolving one `:option:` reference.
@@ -137,7 +138,7 @@ impl<'a> OptionResolver<'a> {
         target: &str,
         selector: &InventorySelector,
     ) -> Option<ExternalHit<'a>> {
-        let entry_types = ["std:cmdoption".to_string()];
+        let entry_types = [OPTION_ENTRY_TYPE.to_string()];
         let inventories = &self.index.external_inventories;
         ambient_program
             .and_then(|program| {

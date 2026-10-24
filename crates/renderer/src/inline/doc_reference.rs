@@ -7,7 +7,9 @@ use rinx_ast::{InventorySelector, Span};
 use rinx_index::{ProjectIndex, relative_doc_href};
 
 use super::external_link::write_external_link;
-use crate::resolution::{ExternalHit, resolve_document, resolve_external, unresolved_kind};
+use crate::resolution::{
+    DOC_ENTRY_TYPE, ExternalHit, resolve_document, resolve_external, unresolved_kind,
+};
 use crate::{BrokenLink, BrokenLinkKind, ReferenceTarget};
 
 /// What Sphinx shows for a document that has no title.
@@ -111,7 +113,7 @@ fn resolve_doc<'a>(
     if !inventory.is_any()
         && let Some(hit) = resolve_external(
             &index.external_inventories,
-            &["std:doc".to_string()],
+            &[DOC_ENTRY_TYPE.to_string()],
             target,
             inventory,
         )

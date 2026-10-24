@@ -23,5 +23,5 @@ pub use directives::{
 };
 pub use document_roles::{DefinedRole, RolesInForce};
 pub use entity_schema::load_entity_schema;
-pub use inline::{ExternalPrefix, RoleSpec, can_precede_inline_markup, role_specs};
+pub use inline::{ExternalPrefix, RoleSpec, can_precede_inline_markup, read_role, role_specs};
 pub use templating::rendered_source;

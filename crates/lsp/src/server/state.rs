@@ -62,8 +62,9 @@ use super::projects::ProjectId;
 use super::scan::ScanEvent;
 use crate::code_action::quick_fixes;
 use crate::completion::{
-    DirectiveVocabulary, RoleVocabulary, TextFormat, completion_items, directive_at,
-    directive_items, role_at, role_name_at, role_name_items,
+    DirectiveVocabulary, PLACEHOLDER, RoleContext, RoleVocabulary, TargetQuestion, TextFormat,
+    WrittenRole, directive_at, directive_items, is_scoped, probe_text, role_at, role_name_at,
+    role_name_items, target_items,
 };
 use crate::definition::reference_definition;
 use crate::diagnostics::{
@@ -507,13 +508,10 @@ impl ServerState {
                 encoding,
             )
         };
-        let is_incomplete = self.scan.is_some();
-        let items = if let Some(context) =
-            role_at(line, cursor, &|name| schema.role(name).is_some())
-        {
+        let scanning = self.scan.is_some();
+        let (items, incomplete) = if let Some(context) = role_at(line, cursor) {
             let range = lsp_types::Range::new(at(context.replace.start), at(context.replace.end));
-            let index = self.projects.get_mut(&project)?.project_index();
-            completion_items(index, &schema, &doc_path, &context, range)
+            self.complete_target(uri, project, &doc_path, line_index, &context, range)?
         } else if let Some(context) = directive_at(&lines, line_index, cursor) {
             let format = self.completion_format;
             let index = self.projects.get_mut(&project)?.project_index();
@@ -522,7 +520,7 @@ impl ServerState {
                 schema: &schema,
                 index,
             };
-            directive_items(&context, &vocabulary, &at, format)
+            (directive_items(&context, &vocabulary, &at, format), false)
         } else {
             let context = role_name_at(line, cursor)?;
             let range = lsp_types::Range::new(at(context.replace.start), at(context.replace.end));
@@ -547,11 +545,105 @@ impl ServerState {
                 schema: &schema,
                 in_force: &in_force,
             };
-            role_name_items(&context, &vocabulary, range, self.completion_format)
+            (
+                role_name_items(&context, &vocabulary, range, self.completion_format),
+                false,
+            )
         };
         Some(CompletionResponse::List(CompletionList {
-            is_incomplete,
+            is_incomplete: scanning || incomplete,
             items,
+        }))
+    }
+
+    /// The completion of the role target `context` describes, on the line
+    /// `line_index` of the open document `uri`, each item written over
+    /// `range` — and whether it is incomplete — or `None` when the role names
+    /// no target the index resolves.
+    ///
+    /// The role is what the parser reads it as. A role resolved in the scope
+    /// it is written in, and a bare one read as the default role, are learnt
+    /// from a probe: the text above the cursor parsed with this target
+    /// closed, which holds the `.. default-role::`, the module, class and
+    /// program in force there. Each candidate is then resolved as the page
+    /// would resolve it, from that document.
+    fn complete_target(
+        &mut self,
+        uri: &Uri,
+        project: ProjectId,
+        doc_path: &str,
+        line_index: usize,
+        context: &RoleContext,
+        range: lsp_types::Range,
+    ) -> Option<(Vec<lsp_types::CompletionItem>, bool)> {
+        let text = &self.documents.get(uri)?.text;
+        let line = text.lines().nth(line_index).unwrap_or_default();
+        let model = self.projects.get(&project)?.model();
+        let settings = model.parse_settings(Some(doc_path));
+        let schema = Arc::clone(&settings.schema);
+        let named = match &context.role {
+            WrittenRole::Named(name) => Some(rinx_parser::read_role(
+                name,
+                PLACEHOLDER,
+                &rinx_parser::ParseCtx::with_domain(settings.domain).with_schema(&schema),
+            )?),
+            WrittenRole::Default => None,
+        };
+        // A bare backtick is a title reference unless a default role says
+        // otherwise: the library's, or a `.. default-role::` the probe would
+        // find. Prose holds many, so the probe is spared when neither can.
+        if named.is_none()
+            && settings.default_role.role_name().is_none()
+            && !text.contains("default-role::")
+            && !settings
+                .prolog
+                .as_ref()
+                .is_some_and(|prolog| prolog.text.contains("default-role::"))
+        {
+            return None;
+        }
+        let probe = match &named {
+            Some(reference) if !is_scoped(reference) => None,
+            _ => Some(parse_prefix(
+                uri,
+                Some(doc_path),
+                Some(&model.source_root),
+                &probe_text(
+                    text,
+                    line_index,
+                    &context.closed_line(line, PLACEHOLDER),
+                    settings.jinja.is_some(),
+                ),
+                settings,
+                &self.documents,
+            )),
+        };
+        let probed = match &probe {
+            Some(probe) => {
+                let start = u32::try_from(context.replace.start + 1).ok()?;
+                let at = rinx_ast::Position::new(u32::try_from(line_index + 1).ok()?, start);
+                Some((&probe.document, reference_at(&probe.document, at)?))
+            }
+            None => None,
+        };
+        let latest = &self.tracked.get(uri)?.parsed.document;
+        let (document, reference) = match (&probed, &named) {
+            (Some((document, reference)), _) => (*document, *reference),
+            (None, Some(reference)) => (latest, reference),
+            (None, None) => return None,
+        };
+        let project = self.projects.get_mut(&project)?;
+        let config = project.site_config();
+        let index = project.project_index();
+        let resolver = ReferenceResolver::new(document, index, &config, &schema);
+        Some(target_items(&TargetQuestion {
+            reference,
+            resolver: &resolver,
+            index,
+            schema: &schema,
+            doc_path,
+            typed: &context.typed,
+            range,
         }))
     }
 

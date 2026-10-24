@@ -103,6 +103,14 @@ local role_labels = vim.tbl_map(function(item)
 end, role_items)
 check('completion lists the roles', vim.tbl_contains(role_labels, 'ref'), role_labels)
 
+-- Completion of the domain role's target lists the function the file defines.
+local functions = request_until_answered('textDocument/completion', at(13, 14))
+local function_items = functions and (functions.items or functions) or {}
+local function_labels = vim.tbl_map(function(item)
+  return item.label
+end, function_items)
+check('completion lists the functions', vim.tbl_contains(function_labels, 'run'), function_labels)
+
 if failures > 0 then
   -- `vim.lsp.log.get_filename` since 0.11; `vim.lsp.get_log_path` before.
   local path = (vim.lsp.log.get_filename or vim.lsp.get_log_path)()

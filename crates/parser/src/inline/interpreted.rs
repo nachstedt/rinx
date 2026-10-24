@@ -228,6 +228,18 @@ fn dispatch_as_role(
     ))
 }
 
+/// The node ``:role:`body` `` is read as under `ctx`, with `role` spelled as a
+/// document writes it — its domain and an `:external:` prefix included — or
+/// `None` when no role answers to that spelling.
+///
+/// What an editor asks to learn what a role being typed refers to: the
+/// parser's own reading, so the role table, the schema's roles and the
+/// default domain decide it as they decide every written one.
+#[must_use]
+pub fn read_role(role: &str, body: &str, ctx: &ParseCtx<'_>) -> Option<InlineNode> {
+    dispatch_as_role(role, body, ctx.default_domain, ctx)
+}
+
 /// The `kind` tag of the role `name` is in the role table, or `None` when no
 /// role answers to it: what makes a name a valid default role.
 pub(crate) fn find_role_kind(name: &str, ctx: &ParseCtx<'_>) -> Option<&'static str> {
@@ -265,6 +277,45 @@ mod tests {
 
     fn ctx() -> ParseCtx<'static> {
         ParseCtx::with_domain(Domain::Py)
+    }
+
+    #[test]
+    fn test_read_role_reads_a_domain_role_in_the_default_domain() {
+        // Given
+        let ctx = ParseCtx::with_domain(Domain::C);
+
+        // When
+        let node = read_role("func", "x", &ctx);
+
+        // Then
+        assert!(matches!(
+            node,
+            Some(InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(_),
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn test_read_role_keeps_the_inventory_an_external_prefix_names() {
+        // When
+        let node = read_role("external+python:py:class", "x", &ctx());
+
+        // Then
+        let Some(InlineNode::DomainObjectReference { inventory, .. }) = node else {
+            panic!("a domain object reference, got {node:?}");
+        };
+        assert_eq!(
+            inventory,
+            rinx_ast::InventorySelector::Named(rinx_ast::InventoryName::new("python").unwrap())
+        );
+    }
+
+    #[test]
+    fn test_read_role_answers_none_for_no_role() {
+        // When / Then
+        assert_eq!(read_role("nonesuch", "x", &ctx()), None);
     }
 
     #[test]

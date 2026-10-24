@@ -132,3 +132,25 @@ suite('Role name completion (e2e)', () => {
         assert.ok(python, `python among ${JSON.stringify(items.map(labelOf))}`);
     });
 });
+
+suite('Domain role completion (e2e)', () => {
+    teardown(async () => {
+        await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    });
+
+    test('a method of the current class is offered by its bare name', async () => {
+        // Given — the cursor stands in ":py:meth:`" inside class `pkg.Box`.
+        const objects = workspaceFile('objects.rst');
+        await vscode.window.showTextDocument(objects);
+        const api = await rinx();
+        await waitFor('the index to be ready', () => api.indexStatus()?.state === 'ready');
+
+        // When
+        const items = await completionsAt(objects, new vscode.Position(6, 17));
+
+        // Then
+        const open = items.find((item) => labelOf(item) === 'open');
+        assert.ok(open, `open among ${JSON.stringify(items.map(labelOf))}`);
+        assert.strictEqual(open.detail, 'pkg.Box.open');
+    });
+});
