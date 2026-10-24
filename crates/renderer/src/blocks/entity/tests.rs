@@ -261,6 +261,26 @@ fn test_attributes_render_under_their_declared_labels() {
 }
 
 #[test]
+fn test_an_entity_two_documents_declare_shows_what_each_wrote() {
+    // Given — `REQ_001` is contested, so the index holds no record of it
+    let mut index = index();
+    index.ambiguous_definitions.entities.insert(
+        EntityId::new("REQ_001").unwrap(),
+        ["specs/boot".to_string(), "specs/copy".to_string()].into(),
+    );
+
+    // When
+    let html = render(requirement(), &index);
+
+    // Then
+    assert!(
+        html.contains("<th>Current status</th><td>open</td>"),
+        "unexpected html: {html}"
+    );
+    assert!(html.contains(">SPEC_003</a>"), "unexpected html: {html}");
+}
+
+#[test]
 fn test_render_attributes_prefers_the_index_record_over_the_ast() {
     // Given — REQ_001's own EntityBody says `status: open`, but the merged
     // project index (as a `.. entity-update::` would leave it) says `closed`

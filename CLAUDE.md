@@ -495,7 +495,11 @@ follow, and none of them is optional:
 `rinx_index`'s `relative_doc_href`/`entity_anchor` — which is why those
 two, and `EntitySubject`, live in `index` rather than in the renderer where
 they began. A filter or a link meaning one thing in a table and another in a
-diagram would be a bug neither crate's tests could see.
+diagram would be a bug neither crate's tests could see. `EntityFields`
+(`index/src/entity_fields.rs`) is there for the same reason: it is what an
+entity shows besides its prose — labelled attributes, relations and
+back-links, with every update applied — read by the renderer's built-in box
+and, next, the language server's hover.
 
 **`.. entity-flow::` / `.. needflow::`** (ADR-014) is the flowchart: a
 `Directive::EntityFlow` carrying a *question* — a filter and which relations

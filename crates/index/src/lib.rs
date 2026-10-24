@@ -9,6 +9,7 @@ mod ambiguous_definitions;
 mod document_outline;
 mod domain_index;
 mod element_numbering;
+mod entity_fields;
 mod entity_record;
 mod entity_subject;
 mod entity_update_history;
@@ -29,6 +30,7 @@ pub use element_numbering::{
     DEFAULT_NUMFIG_SECNUM_DEPTH, ElementNumbers, NumberingStep, NumrefSubject, NumrefTarget,
     join_number,
 };
+pub use entity_fields::{EntityFields, OwnFields, ShownAttribute, ShownLinks};
 pub use entity_record::EntityRecord;
 pub use entity_subject::EntitySubject;
 pub use entity_update_history::{

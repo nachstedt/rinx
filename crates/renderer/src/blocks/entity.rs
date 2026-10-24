@@ -12,9 +12,19 @@
 use std::fmt::Write as _;
 
 use rinx_ast::{EntityBody, EntityId, EntitySection};
+use rinx_index::{EntityFields, OwnFields, ShownLinks};
 
 use crate::RenderCtx;
 use crate::inline::entity_reference::entity_href;
+
+/// What `entity` holds as written, for the index's effective values to fall
+/// back to.
+fn own_fields(entity: &EntityBody) -> OwnFields<'_> {
+    OwnFields {
+        attributes: &entity.attributes,
+        relations: &entity.relations,
+    }
+}
 
 /// The value to show for one attribute of `entity` — the merged project
 /// index's *effective* value (the entity's own value, or a
@@ -27,66 +37,31 @@ use crate::inline::entity_reference::entity_href;
 /// [`rinx_index::EntitySubject`], which already does this, but
 /// nothing about the built-in rendering read the index before this existed —
 /// there was nothing else to read. See `docs/decisions/019-entity-update.md`.
+///
+/// An entity the index does not hold shows its written value: one whose id
+/// two documents declare is in `ambiguous_definitions` instead, and each of
+/// its declarations is still drawn.
 fn effective_attribute<'a>(
     entity: &'a EntityBody,
     name: &str,
     ctx: &'a RenderCtx<'_>,
 ) -> Option<&'a rinx_ast::AttributeValue> {
-    // Trusting the index fully whenever the entity is in it — including a
-    // `None` that means "cleared" — rather than falling back to the AST's own
-    // copy, which `or_else` would wrongly resurrect for a cleared field.
-    if ctx.index.entities.contains_key(&entity.id) {
-        return ctx.index.effective_attribute(&entity.id, name);
-    }
-    entity.attributes.get(name)
+    own_fields(entity).effective_attribute(&entity.id, name, ctx.index)
 }
 
 /// The targets to show for one outgoing relation of `entity`, same rule as
 /// [`effective_attribute`].
-///
-/// Falls back to `entity.relation_targets` only when the id is somehow
-/// missing from the index — a defensive path that should never actually
-/// trigger: every entity this renders was itself indexed before rendering
-/// starts, in both the full-build path (`build_project_index_reporting`) and
-/// the language server's fold (`build_project_index_from_analyses`).
 fn effective_relation_targets<'a>(
     entity: &'a EntityBody,
     relation: &str,
     ctx: &'a RenderCtx<'_>,
 ) -> &'a [EntityId] {
-    if ctx.index.entities.contains_key(&entity.id) {
-        return ctx.index.effective_relation_targets(&entity.id, relation);
-    }
-    entity.relation_targets(relation)
+    own_fields(entity).effective_relation_targets(&entity.id, relation, ctx.index)
 }
 
-/// Whether the current value of one attribute was the losing (or winning —
-/// either side is marked, since neither directive is more "right") side of a
-/// `.. entity-update::`/`.. needextend::` conflict — see
-/// `docs/decisions/019-entity-update.md`'s "Conflicting updates". The visible
-/// counterpart to the `entity-update.conflicting-update` diagnostic: a reader
-/// of the page, not just of the build log, should be able to see a value is
-/// in dispute.
-fn attribute_conflict(entity: &EntityBody, name: &str, ctx: &RenderCtx<'_>) -> bool {
-    ctx.index
-        .entity_update_history
-        .get(&entity.id)
-        .and_then(|history| history.attributes.get(name))
-        .and_then(|history| history.applied.last())
-        .is_some_and(|entry| entry.conflicts_with.is_some())
-}
-
-/// As [`attribute_conflict`], for a relation's current targets.
-fn relation_conflict(entity: &EntityBody, name: &str, ctx: &RenderCtx<'_>) -> bool {
-    ctx.index
-        .entity_update_history
-        .get(&entity.id)
-        .and_then(|history| history.relations.get(name))
-        .and_then(|history| history.applied.last())
-        .is_some_and(|entry| entry.conflicts_with.is_some())
-}
-
-/// Wraps `value` in the visible conflict marker when `conflict` is set.
+/// Wraps `value` in the visible conflict marker when `conflict` is set: the
+/// counterpart, for a reader of the page, to the
+/// `entity-update.conflicting-update` diagnostic.
 fn mark_if_conflicting(value: &str, conflict: bool) -> String {
     let escaped = html_escape::encode_text(value);
     if conflict {
@@ -128,8 +103,13 @@ pub(super) fn render_entity(html: &mut String, entity: &EntityBody, ctx: &mut Re
 
 /// The built-in rendering, which every type gets without configuring anything.
 fn render_builtin(html: &mut String, entity: &EntityBody, ctx: &mut RenderCtx<'_>) {
-    let entity_type = ctx.schema.entity_type(&entity.type_name);
-    let type_label = entity_type.map_or(entity.type_name.as_str(), |t| t.display_label());
+    let fields = EntityFields::of(
+        &entity.id,
+        &entity.type_name,
+        own_fields(entity),
+        ctx.index,
+        ctx.schema,
+    );
 
     let _ = write!(
         html,
@@ -138,7 +118,7 @@ fn render_builtin(html: &mut String, entity: &EntityBody, ctx: &mut RenderCtx<'_
         html_escape::encode_double_quoted_attribute(&entity_anchor(entity.id.as_str()))
     );
 
-    render_header(html, entity, type_label);
+    render_header(html, entity, fields.type_label);
 
     // Collapsed, an entity shows its header and its leading prose; everything
     // else is folded away. The split is forced rather than chosen: a closed
@@ -155,14 +135,14 @@ fn render_builtin(html: &mut String, entity: &EntityBody, ctx: &mut RenderCtx<'_
             "<details class=\"entity-more\">\
              <summary class=\"entity-more-toggle\">Details</summary>",
         );
-        render_attributes(html, entity, ctx);
+        render_attributes(html, &fields);
         render_sections(html, folded.iter().copied(), ctx);
-        render_links(html, entity, ctx);
+        render_links(html, &fields, ctx);
         html.push_str("</details>");
     } else {
-        render_attributes(html, entity, ctx);
+        render_attributes(html, &fields);
         render_sections(html, ordered.into_iter(), ctx);
-        render_links(html, entity, ctx);
+        render_links(html, &fields, ctx);
     }
 
     html.push_str("</div>");
@@ -238,50 +218,18 @@ fn render_header(html: &mut String, entity: &EntityBody, type_label: &str) {
     );
 }
 
-/// The attribute table, skipping the title already shown in the header.
-fn render_attributes(html: &mut String, entity: &EntityBody, ctx: &RenderCtx<'_>) {
-    let entity_type = ctx.schema.entity_type(&entity.type_name);
-
-    // Declared order, not the map's key order, so two entities of one type put
-    // the same field in the same place. An attribute the schema does not
-    // declare is appended rather than dropped, for the same reason a section is.
-    let declared: Vec<&str> = entity_type
-        .map(|t| t.attributes.iter().map(|a| a.name.as_str()).collect())
-        .unwrap_or_default();
-    let ordered = declared
-        .iter()
-        .filter_map(|name| Some((*name, effective_attribute(entity, name, ctx)?)))
-        .chain(entity.attributes.keys().filter_map(|name| {
-            if declared.contains(&name.as_str()) {
-                return None;
-            }
-            Some((name.as_str(), effective_attribute(entity, name, ctx)?))
-        }));
-
-    let rows: Vec<(&str, String, bool)> = ordered
-        .filter(|(name, _)| *name != "title")
-        .map(|(name, value)| {
-            let label = entity_type
-                .and_then(|t| t.attribute(name))
-                .map_or(name, |a| a.display_label());
-            (
-                label,
-                value.to_string(),
-                attribute_conflict(entity, name, ctx),
-            )
-        })
-        .collect();
-    if rows.is_empty() {
+/// The attribute table; the title is already shown in the header.
+fn render_attributes(html: &mut String, fields: &EntityFields<'_>) {
+    if fields.attributes.is_empty() {
         return;
     }
-
     html.push_str("<table class=\"entity-attributes\"><tbody>");
-    for (label, value, conflict) in rows {
+    for attribute in &fields.attributes {
         let _ = write!(
             html,
             "<tr><th>{}</th><td>{}</td></tr>",
-            html_escape::encode_text(label),
-            mark_if_conflicting(&value, conflict)
+            html_escape::encode_text(attribute.label),
+            mark_if_conflicting(&attribute.value.to_string(), attribute.conflict)
         );
     }
     html.push_str("</tbody></table>");
@@ -321,63 +269,23 @@ fn render_sections<'a>(
 }
 
 /// The outgoing relations and the derived incoming ones.
-fn render_links(html: &mut String, entity: &EntityBody, ctx: &RenderCtx<'_>) {
-    let Some(entity_type) = ctx.schema.entity_type(&entity.type_name) else {
-        return;
-    };
-
+fn render_links(html: &mut String, fields: &EntityFields<'_>, ctx: &RenderCtx<'_>) {
     let mut lists = String::new();
-    for relation in &entity_type.relations {
-        let targets = effective_relation_targets(entity, &relation.name, ctx);
-        if targets.is_empty() {
-            continue;
-        }
-        render_link_list(
-            &mut lists,
-            relation.display_label(),
-            targets.iter().map(rinx_ast::EntityId::as_str),
-            relation_conflict(entity, &relation.name, ctx),
-            ctx,
-        );
+    for links in fields.relations.iter().chain(&fields.backlinks) {
+        render_link_list(&mut lists, links, ctx);
     }
-
-    // Incoming links come from the index, not from this node: they are a fact
-    // about the whole project, which is exactly why they are derived there.
-    // Never subject to a conflict marker of their own: a back-link is
-    // derived, never itself the target of a `.. entity-update::`.
-    if let Some(incoming) = ctx.index.entity_backlinks.get(&entity.id) {
-        for backlink in ctx.schema.backlinks_for(&entity.type_name) {
-            let Some(sources) = incoming.get(&backlink.name) else {
-                continue;
-            };
-            render_link_list(
-                &mut lists,
-                &backlink.label,
-                sources.iter().map(rinx_ast::EntityId::as_str),
-                false,
-                ctx,
-            );
-        }
-    }
-
     if !lists.is_empty() {
         let _ = write!(html, "<div class=\"entity-links\">{lists}</div>");
     }
 }
 
-/// One labelled list of links to other entities. `conflict` marks the whole
+/// One labelled list of links to other entities. A conflict marks the whole
 /// list — a relation conflict changes which targets are on it, not one
 /// specific link — the same way [`mark_if_conflicting`] marks an attribute's
 /// value.
-fn render_link_list<'t>(
-    html: &mut String,
-    label: &str,
-    targets: impl Iterator<Item = &'t str>,
-    conflict: bool,
-    ctx: &RenderCtx<'_>,
-) {
+fn render_link_list(html: &mut String, links: &ShownLinks<'_>, ctx: &RenderCtx<'_>) {
     let mut items = String::new();
-    for target in targets {
+    for target in links.targets.iter().map(EntityId::as_str) {
         // A target that resolves links; one that does not is shown as plain
         // text. The diagnostic for it was already raised by the index phase,
         // which is the only place that can see the whole graph — reporting it
@@ -407,7 +315,7 @@ fn render_link_list<'t>(
             }
         }
     }
-    let label_html = mark_if_conflicting(label, conflict);
+    let label_html = mark_if_conflicting(links.label, links.conflict);
     let _ = write!(
         html,
         "<p class=\"entity-link-label\">{label_html}</p><ul class=\"entity-link-list\">{items}</ul>",
