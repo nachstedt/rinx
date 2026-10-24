@@ -134,6 +134,7 @@ mod tests {
             Node::Heading {
                 level: 1,
                 text: vec![InlineNode::Text("Title".to_string())],
+                span: None,
             },
             Node::Paragraph(vec![InlineNode::Text("Body".to_string())]),
         ];

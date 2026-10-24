@@ -71,6 +71,7 @@ use crate::definition::reference_definition;
 use crate::diagnostics::{
     ParsedSource, diagnose_source, parse_prefix, parse_source, text_through_line,
 };
+use crate::document_symbol::{DocumentSymbols, OutlineShape, document_symbols};
 use crate::documents::DocumentStore;
 use crate::entity_at::entity_marked_at;
 use crate::entity_hover::{declared_entity_markdown, indexed_entity_markdown};
@@ -127,6 +128,8 @@ pub struct ServerState {
     progress_supported: bool,
     /// Whether the client takes a definition as a link from the reference.
     definition_links: bool,
+    /// How the client takes a document's outline.
+    outline_shape: OutlineShape,
     /// How the client takes a completion's text.
     completion_format: TextFormat,
     /// Whether the client watches files for the server when asked to.
@@ -216,6 +219,7 @@ impl ServerState {
             scan_elapsed: None,
             progress_supported: false,
             definition_links: false,
+            outline_shape: OutlineShape::Flat,
             completion_format: TextFormat::Plain,
             watched_files: false,
             scan: None,
@@ -246,6 +250,13 @@ impl ServerState {
     #[must_use]
     pub fn with_definition_links(mut self, definition_links: bool) -> Self {
         self.definition_links = definition_links;
+        self
+    }
+
+    /// This server, answering for a document's outline in `outline_shape`.
+    #[must_use]
+    pub fn with_outline_shape(mut self, outline_shape: OutlineShape) -> Self {
+        self.outline_shape = outline_shape;
         self
     }
 
@@ -637,12 +648,13 @@ impl ServerState {
         };
         let project = self.projects.get_mut(&project)?;
         let config = project.site_config();
-        let index = project.project_index();
+        let (index, definitions) = project.index_and_definitions();
         let resolver = ReferenceResolver::new(document, index, &config, &schema);
         Some(target_items(&TargetQuestion {
             reference,
             resolver: &resolver,
             index,
+            definitions,
             schema: &schema,
             doc_path,
             typed: &context.typed,
@@ -873,6 +885,19 @@ impl ServerState {
             |doc_path| file_uri(&project.path_of(doc_path)),
             self.definition_links,
         )
+    }
+
+    /// The outline of the open document `uri`, from its latest parse — `None`
+    /// when it is not open.
+    pub(super) fn document_symbols(&self, uri: &Uri) -> Option<DocumentSymbols> {
+        let parsed = &self.tracked.get(uri)?.parsed;
+        Some(document_symbols(
+            &parsed.document,
+            &parsed.text,
+            uri,
+            self.outline_shape,
+            self.encoding,
+        ))
     }
 
     /// The reference at `position` in the open document `uri` — its range,

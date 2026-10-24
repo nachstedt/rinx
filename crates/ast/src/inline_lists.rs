@@ -163,7 +163,7 @@ macro_rules! inline_list_walker {
                 // Inline markup only: a button's content is its label, not a
                 // body.
                 Directive::ButtonLink(button) => visit(& $($m)? button.label),
-                Directive::DomainObject(body) => $walk(body.$body(), visit),
+                Directive::DomainObject { object: body, .. } => $walk(body.$body(), visit),
                 Directive::Figure(figure) => {
                     if let Some(caption) = & $($m)? figure.caption {
                         visit(caption);
@@ -246,6 +246,7 @@ mod tests {
             Node::Heading {
                 level: 1,
                 text: text("title"),
+                span: None,
             },
             Node::DefinitionList {
                 items: vec![DefinitionListItem {

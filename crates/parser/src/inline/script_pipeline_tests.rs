@@ -7,7 +7,7 @@
 //! its text, and that a heading or a substitution carries one through.
 
 use crate::parse;
-use rinx_ast::{DiagnosticCode, InlineNode, Node, ScriptPosition};
+use rinx_ast::{DiagnosticCode, InlineNode, Node, Position, ScriptPosition, Span};
 
 fn script(position: ScriptPosition, text: &str, classes: &[&str]) -> InlineNode {
     InlineNode::Script {
@@ -120,6 +120,7 @@ fn test_parse_keeps_a_script_in_a_heading() {
                 script(ScriptPosition::Subscript, "2", &[]),
                 text(" levels"),
             ],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 20)))
         }
     );
 }

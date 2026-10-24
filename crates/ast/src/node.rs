@@ -10,6 +10,7 @@ use crate::line_block::LineBlockItem;
 use crate::link_destination::LinkDestination;
 use crate::list_item::ListItem;
 use crate::option_list_item::OptionListItem;
+use crate::span::Span;
 use crate::table::TableRow;
 use crate::target_name::TargetName;
 
@@ -18,6 +19,11 @@ pub enum Node {
     Heading {
         level: u8,
         text: Vec<InlineNode>,
+        /// The title's line, where an editor's outline and a definition
+        /// lead. Never read by the index, which must not change when lines
+        /// move (`docs/decisions/045-definition-spans.md`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
     },
     Paragraph(Vec<InlineNode>),
     Directive(Directive),
@@ -26,6 +32,9 @@ pub enum Node {
     Target {
         name: TargetName,
         destination: Option<LinkDestination>,
+        /// Where the target was written, which the label's definition is.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
     },
     /// `.. __: destination`, consumed in order by anonymous references.
     AnonymousTarget {

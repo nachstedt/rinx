@@ -138,15 +138,20 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyAttribute {
-            flags: _,
-            signatures,
-            type_,
-            value,
-            canonical,
-            module: _,
-            body,
-        })) = &doc.nodes[0]
+        if let Node::Directive(Directive::DomainObject {
+            object:
+                DomainObjectBody::PyAttribute {
+                    flags: _,
+                    signatures,
+                    type_,
+                    value,
+                    canonical,
+                    module: _,
+                    body,
+                    ..
+                },
+            ..
+        }) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["Greeter.name"]);
             assert_eq!(type_, &None);
@@ -167,13 +172,17 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyAttribute {
-            type_,
-            value,
-            canonical,
-            body,
+        if let Node::Directive(Directive::DomainObject {
+            object:
+                DomainObjectBody::PyAttribute {
+                    type_,
+                    value,
+                    canonical,
+                    body,
+                    ..
+                },
             ..
-        })) = &doc.nodes[0]
+        }) = &doc.nodes[0]
         {
             assert_eq!(type_.as_deref(), Some("str"));
             assert_eq!(value.as_deref(), Some("\"anonymous\""));

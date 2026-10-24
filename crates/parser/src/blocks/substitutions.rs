@@ -611,6 +611,7 @@ mod tests {
             Node::Heading {
                 level: 1,
                 text: vec![InlineNode::Text("Version ".to_string()), reference("v")],
+                span: None,
             },
         ];
         let mut diagnostics = Diagnostics::default();

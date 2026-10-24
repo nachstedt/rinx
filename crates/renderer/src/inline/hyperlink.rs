@@ -113,6 +113,7 @@ mod tests {
             destination: Some(rinx_ast::LinkDestination::Uri(
                 "https://python.org".to_string(),
             )),
+            span: None,
         }];
 
         // When
@@ -154,6 +155,7 @@ mod tests {
         let nodes = vec![Node::Heading {
             level: 1,
             text: vec![rinx_ast::InlineNode::Text("Getting Started".to_string())],
+            span: None,
         }];
 
         // When

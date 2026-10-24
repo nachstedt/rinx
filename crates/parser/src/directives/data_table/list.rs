@@ -74,7 +74,15 @@ pub(in crate::directives) fn parse_list_table(
     // their own, so every row-level diagnostic points at the table's first line.
     let table_span = invocation.content_span();
     let (rows, ncols) = lower_list_table_rows(row_items, diagnostics, table_span);
-    build_list_table(title, options, rows, ncols, diagnostics, ctx)
+    build_list_table(
+        title,
+        options,
+        rows,
+        ncols,
+        diagnostics,
+        ctx,
+        invocation.span,
+    )
 }
 
 /// Assembles the parsed pieces into the AST node, resolving `:widths:` (which
@@ -92,6 +100,7 @@ fn build_list_table(
     ncols: usize,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
+    span: Option<Span>,
 ) -> Directive {
     let widths: Option<TableWidths> = options
         .widths
@@ -108,6 +117,7 @@ fn build_list_table(
         classes: options.classes,
         name: options.name,
         rows,
+        span,
     }
 }
 
@@ -189,6 +199,28 @@ mod tests {
     use super::*;
     use crate::context::ParseCtx;
     use rinx_ast::{Domain, InlineNode, TableAlign, TargetName};
+
+    #[test]
+    fn test_parse_records_the_list_tables_marker_line_as_its_span() {
+        // Given — a named table below a paragraph
+        let input = "Intro\n\n.. list-table:: Sizes\n   :name: sizes\n\n   * - a\n     - b\n";
+
+        // When
+        let doc = crate::parse("test.rst", input);
+
+        // Then
+        let span = doc.nodes.iter().find_map(|node| match node {
+            Node::Directive(Directive::DataTable { span, .. }) => Some(*span),
+            _ => None,
+        });
+        assert_eq!(
+            span,
+            Some(Some(rinx_ast::Span::new(
+                rinx_ast::Position::new(3, 1),
+                rinx_ast::Position::new(3, 22)
+            )))
+        );
+    }
 
     fn parse(body_lines: &[&str]) -> (Directive, Diagnostics) {
         let mut adornment_order = Vec::new();
@@ -573,7 +605,7 @@ mod tests {
             assert_eq!(rows.len(), 1);
             assert!(matches!(
                 rows[0].cells[0].content.as_slice(),
-                [Node::Directive(Directive::DomainObject(_))]
+                [Node::Directive(Directive::DomainObject { .. })]
             ));
         } else {
             panic!("Expected DataTable directive");

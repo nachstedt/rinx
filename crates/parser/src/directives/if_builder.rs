@@ -215,7 +215,7 @@ mod tests {
         nodes
             .iter()
             .filter_map(|node| match node {
-                Node::Heading { level, text } => Some((
+                Node::Heading { level, text, .. } => Some((
                     *level,
                     text.iter()
                         .map(|part| match part {

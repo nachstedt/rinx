@@ -112,6 +112,7 @@ pub fn preceding_labels(siblings: &[Node], index: usize) -> Vec<&TargetName> {
             Node::Target {
                 name,
                 destination: None,
+                ..
             } => Some(name),
             _ => None,
         })
@@ -172,6 +173,7 @@ mod tests {
             classes: Vec::new(),
             name: name.map(TargetName::new),
             rows: Vec::new(),
+            span: None,
         })
     }
 
@@ -195,6 +197,7 @@ mod tests {
         Node::Target {
             name: TargetName::new(name),
             destination: None,
+            span: None,
         }
     }
 
@@ -303,6 +306,7 @@ mod tests {
                 destination: Some(crate::LinkDestination::Uri(
                     "https://example.org".to_string(),
                 )),
+                span: None,
             },
             target("near"),
             Node::Transition,

@@ -7,7 +7,7 @@ use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::spec::{Arguments, DirectiveSpec};
 use crate::headings::Adornment;
 use crate::indent::{indent_width, unindent_body_lines};
-use rinx_ast::{Directive, Node};
+use rinx_ast::{Directive, GlossaryTerm, Node};
 
 use super::options::{DirectiveOptions, classify_options, directive_options};
 
@@ -99,7 +99,7 @@ pub(super) fn parse_glossary(
     // A line with NO leading whitespace (after base-indent stripping) is a term.
     // A line WITH leading whitespace is part of the definition.
     let mut entries: Vec<rinx_ast::GlossaryEntry> = Vec::new();
-    let mut current_terms: Vec<String> = Vec::new();
+    let mut current_terms: Vec<GlossaryTerm> = Vec::new();
     let mut definition_lines: Vec<String> = Vec::new();
     let mut in_definition = false;
 
@@ -150,7 +150,10 @@ pub(super) fn parse_glossary(
                 definition_lines.clear();
                 in_definition = false;
             }
-            current_terms.push(line.trim().to_string());
+            current_terms.push(GlossaryTerm {
+                text: line.trim().to_string(),
+                span: ctx.line_span(body_start + offset, line.trim_end()),
+            });
         }
     }
 
@@ -176,12 +179,12 @@ pub(super) fn parse_glossary(
             let a_key = a
                 .terms
                 .first()
-                .map(|s| s.to_lowercase())
+                .map(|term| term.text.to_lowercase())
                 .unwrap_or_default();
             let b_key = b
                 .terms
                 .first()
-                .map(|s| s.to_lowercase())
+                .map(|term| term.text.to_lowercase())
                 .unwrap_or_default();
             a_key.cmp(&b_key)
         });
@@ -217,11 +220,49 @@ mod tests {
         // Then a single entry with the parsed term is produced
         if let Directive::Glossary { entries, sorted } = directive {
             assert_eq!(entries.len(), 1);
-            assert_eq!(entries[0].terms, vec!["term".to_string()]);
+            let terms: Vec<&str> = entries[0]
+                .terms
+                .iter()
+                .map(|term| term.text.as_str())
+                .collect();
+            assert_eq!(terms, ["term"]);
             assert!(!sorted);
         } else {
             panic!("Expected Glossary directive");
         }
+    }
+
+    #[test]
+    fn test_parse_records_each_terms_line_in_the_document() {
+        // Given — two terms sharing a definition, and a second entry
+        let input = "Intro\n\n.. glossary::\n\n   API\n   interface\n      A contract.\n\n   ABI\n      A binary one.\n";
+
+        // When
+        let doc = crate::parse("test.rst", input);
+
+        // Then — each term at its own line, its column past the body's indent
+        let Some(Node::Directive(Directive::Glossary { entries, .. })) = doc.nodes.get(1) else {
+            panic!("expected a glossary, got {:?}", doc.nodes);
+        };
+        let spans: Vec<(&str, Option<rinx_ast::Span>)> = entries
+            .iter()
+            .flat_map(|entry| &entry.terms)
+            .map(|term| (term.text.as_str(), term.span))
+            .collect();
+        let at = |line, end| {
+            Some(rinx_ast::Span::new(
+                rinx_ast::Position::new(line, 4),
+                rinx_ast::Position::new(line, end),
+            ))
+        };
+        assert_eq!(
+            spans,
+            vec![
+                ("API", at(5, 7)),
+                ("interface", at(6, 13)),
+                ("ABI", at(9, 7))
+            ]
+        );
     }
 
     #[test]

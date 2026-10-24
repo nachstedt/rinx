@@ -11,6 +11,7 @@
 //! `.`/`..` components in the document paths a toctree may name.
 
 mod declarations;
+mod definition_spans;
 mod document_analysis;
 mod document_index;
 mod domain_object_index;

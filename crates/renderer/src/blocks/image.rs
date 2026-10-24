@@ -500,6 +500,7 @@ mod tests {
                     destination: Some(rinx_ast::LinkDestination::Uri(
                         "https://python.org".to_string(),
                     )),
+                    span: None,
                 },
             ],
         );

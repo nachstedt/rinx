@@ -24,8 +24,9 @@ use super::is_scoped;
 pub(super) const MAX_ITEMS: usize = 200;
 
 /// The items completing a target with one of `candidates`, each written over
-/// `range` and documented by `document`, and whether the answer is
-/// incomplete.
+/// `range`, documented by `document` and said to lie in the file `written_in`
+/// names for it, given its full spelling — or else its target's document —
+/// and whether the answer is incomplete.
 ///
 /// `reference` stands for the role being typed, `resolver` answers for the
 /// document it is written in, and `typed` is what the author has written of
@@ -40,6 +41,7 @@ pub(super) fn select(
     typed: &str,
     range: Range,
     document: &dyn Fn(&ReferenceTarget) -> Option<Documentation>,
+    written_in: &dyn Fn(&ReferenceTarget, &str) -> Option<String>,
 ) -> (Vec<CompletionItem>, bool) {
     let scoped = is_scoped(reference);
     let filtered = scoped || candidates.len() > MAX_ITEMS;
@@ -70,7 +72,7 @@ pub(super) fn select(
     chosen.truncate(MAX_ITEMS);
     let items = chosen
         .into_iter()
-        .map(|chosen| item(chosen, range, document))
+        .map(|chosen| item(chosen, range, document, written_in))
         .collect();
     (items, scoped || cut)
 }
@@ -94,6 +96,8 @@ fn rank(external: bool, written: &str) -> (bool, usize, String) {
 #[derive(Debug)]
 struct Chosen {
     written: String,
+    /// The candidate's full spelling, which names it whatever is written.
+    full: String,
     filtered_by: String,
     kind: CompletionItemKind,
     external: bool,
@@ -131,6 +135,7 @@ fn choose(
         .clone();
     Some(Chosen {
         written,
+        full: forms.last()?.clone(),
         filtered_by,
         kind: candidate.kind,
         external: candidate.external,
@@ -139,18 +144,22 @@ fn choose(
 }
 
 /// The completion item offering `chosen`, written over `range`: titled as a
-/// reference to it with no title of its own would show, saying where it is,
-/// and documented by `document`.
+/// reference to it with no title of its own would show, saying where it is —
+/// the file `written_in` names, else the document it leads to — and
+/// documented by `document`.
 fn item(
     chosen: Chosen,
     range: Range,
     document: &dyn Fn(&ReferenceTarget) -> Option<Documentation>,
+    written_in: &dyn Fn(&ReferenceTarget, &str) -> Option<String>,
 ) -> CompletionItem {
-    let description = match &chosen.target.destination {
-        Destination::Document { doc_path, .. } => doc_path.clone(),
-        Destination::GeneratedPage { path } => path.clone(),
-        Destination::External { site, .. } => site.clone(),
-    };
+    let description = written_in(&chosen.target, &chosen.full).unwrap_or_else(|| {
+        match &chosen.target.destination {
+            Destination::Document { doc_path, .. } => doc_path.clone(),
+            Destination::GeneratedPage { path } => path.clone(),
+            Destination::External { site, .. } => site.clone(),
+        }
+    });
     CompletionItem {
         documentation: document(&chosen.target),
         detail: Some(chosen.target.title),
@@ -265,10 +274,15 @@ mod tests {
         let resolver = ReferenceResolver::new(&doc, &index, &config, EntitySchema::empty_ref());
 
         // When
-        let (items, incomplete) =
-            select(candidates(), written(&doc), &resolver, "", range(), &|_| {
-                None
-            });
+        let (items, incomplete) = select(
+            candidates(),
+            written(&doc),
+            &resolver,
+            "",
+            range(),
+            &|_| None,
+            &|_, _| None,
+        );
 
         // Then — the nearer one first; both marked incomplete, being scoped
         assert_eq!(labels(&items), ["Box.open", "other.Box.close"]);
@@ -299,6 +313,7 @@ mod tests {
             "oth",
             range(),
             &|_| None,
+            &|_, _| None,
         );
 
         // Then
@@ -321,6 +336,7 @@ mod tests {
             "pkg.",
             range(),
             &|_| None,
+            &|_, _| None,
         );
 
         // Then
@@ -343,6 +359,7 @@ mod tests {
             "",
             range(),
             &|_| None,
+            &|_, _| None,
         );
 
         // Then
@@ -379,6 +396,7 @@ mod tests {
             "zz",
             range(),
             &|_| None,
+            &|_, _| None,
         );
 
         // Then — the editor filters a complete list itself
@@ -416,12 +434,69 @@ mod tests {
             .collect();
 
         // When
-        let (items, incomplete) = select(candidates, &reference, &resolver, "", range(), &|_| None);
+        let (items, incomplete) = select(
+            candidates,
+            &reference,
+            &resolver,
+            "",
+            range(),
+            &|_| None,
+            &|_, _| None,
+        );
 
         // Then — the first of them by rank, and the editor told to ask again
         assert_eq!(items.len(), MAX_ITEMS);
         assert_eq!(items[0].label, "label-00000");
         assert!(incomplete);
+    }
+
+    #[test]
+    fn test_select_says_an_item_lies_where_written_in_names_else_in_its_document() {
+        // Given — two labels of `setup.rst`, one written in a fragment
+        let mut index = ProjectIndex::default();
+        for name in ["install", "shared"] {
+            index
+                .targets
+                .insert(TargetName::new(name), "setup.rst".to_string());
+        }
+        let doc = Document::new("guide.rst".to_string(), Vec::new());
+        let config = SiteConfig::default();
+        let resolver = ReferenceResolver::new(&doc, &index, &config, EntitySchema::empty_ref());
+        let reference = InlineNode::Reference {
+            display: None,
+            target: "x".to_string(),
+            span: None,
+            inventory: InventorySelector::Any,
+        };
+        let candidates = ["install", "shared"]
+            .map(|name| Candidate {
+                forms: vec![name.to_string()],
+                kind: CompletionItemKind::REFERENCE,
+                external: false,
+            })
+            .to_vec();
+
+        // When
+        let (items, _) = select(
+            candidates,
+            &reference,
+            &resolver,
+            "",
+            range(),
+            &|_| None,
+            &|_, full| (full == "shared").then(|| "parts/shared.inc".to_string()),
+        );
+
+        // Then
+        let described: Vec<Option<&str>> = items
+            .iter()
+            .map(|item| {
+                item.label_details
+                    .as_ref()
+                    .and_then(|details| details.description.as_deref())
+            })
+            .collect();
+        assert_eq!(described, [Some("setup.rst"), Some("parts/shared.inc")]);
     }
 
     #[test]

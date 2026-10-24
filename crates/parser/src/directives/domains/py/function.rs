@@ -110,12 +110,16 @@ mod tests {
 
         // Then — it parses as a `py:function` with `is_decorator` forced on
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
-            signatures,
-            is_decorator,
-            body,
+        if let Node::Directive(Directive::DomainObject {
+            object:
+                DomainObjectBody::PyFunction {
+                    signatures,
+                    is_decorator,
+                    body,
+                    ..
+                },
             ..
-        })) = &doc.nodes[0]
+        }) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["classmethod"]);
             assert!(*is_decorator);
@@ -133,10 +137,10 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
-            is_decorator,
+        if let Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::PyFunction { is_decorator, .. },
             ..
-        })) = &doc.nodes[0]
+        }) = &doc.nodes[0]
         {
             assert!(*is_decorator);
         } else {
@@ -153,10 +157,10 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
-            is_decorator,
+        if let Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::PyFunction { is_decorator, .. },
             ..
-        })) = &doc.nodes[0]
+        }) = &doc.nodes[0]
         {
             assert!(!is_decorator);
         } else {
@@ -204,9 +208,10 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then
-        let Some(Node::Directive(Directive::DomainObject(
-            object @ DomainObjectBody::PyFunction { module, body, .. },
-        ))) = doc.nodes.first()
+        let Some(Node::Directive(Directive::DomainObject {
+            object: object @ DomainObjectBody::PyFunction { module, body, .. },
+            ..
+        })) = doc.nodes.first()
         else {
             panic!("Expected PyFunction, got {:?}", doc.nodes);
         };
@@ -225,12 +230,16 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
-            signatures,
-            is_decorator,
-            body,
+        if let Node::Directive(Directive::DomainObject {
+            object:
+                DomainObjectBody::PyFunction {
+                    signatures,
+                    is_decorator,
+                    body,
+                    ..
+                },
             ..
-        })) = &doc.nodes[0]
+        }) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["greet(name)"]);
             assert!(!is_decorator);
@@ -249,12 +258,16 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
-            signatures,
-            is_decorator,
-            body,
+        if let Node::Directive(Directive::DomainObject {
+            object:
+                DomainObjectBody::PyFunction {
+                    signatures,
+                    is_decorator,
+                    body,
+                    ..
+                },
             ..
-        })) = &doc.nodes[0]
+        }) = &doc.nodes[0]
         {
             assert_eq!(
                 signatures.as_slice(),
@@ -281,9 +294,10 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
-            body, ..
-        })) = &doc.nodes[0]
+        if let Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::PyFunction { body, .. },
+            ..
+        }) = &doc.nodes[0]
         {
             assert_eq!(body.len(), 1);
         } else {

@@ -216,7 +216,7 @@ fn for_each_directive_child<'a>(directive: &'a Directive, visit: &mut impl FnMut
                 }
             }
         }
-        Directive::DomainObject(body) => visit(Child::Nodes(body.body())),
+        Directive::DomainObject { object: body, .. } => visit(Child::Nodes(body.body())),
         // Every section's prose is ordinary body content — a target, a nested
         // directive or even another entity inside a `.. verification-criteria::`
         // must be reached, or it would be invisible to indexing. Attribute
@@ -278,7 +278,7 @@ mod tests {
     use crate::admonition_kind::AdmonitionKind;
     use crate::definition_list_item::DefinitionListItem;
     use crate::domain_object_body::DomainObjectBody;
-    use crate::glossary_entry::GlossaryEntry;
+    use crate::glossary_entry::{GlossaryEntry, GlossaryTerm};
     use crate::inline_node::InlineNode;
     use crate::list_item::ListItem;
     use crate::non_empty_vector::NonEmptyVector;
@@ -499,6 +499,7 @@ mod tests {
             classes: Vec::new(),
             name: None,
             rows: vec![row_with(vec![diagram("in-list-table")])],
+            span: None,
         })];
 
         // When
@@ -520,6 +521,7 @@ mod tests {
             name: None,
             header_rows: vec![row_with(vec![diagram("in-header")])],
             body_rows: vec![row_with(vec![diagram("in-body")])],
+            span: None,
         })];
 
         // When
@@ -534,7 +536,7 @@ mod tests {
         // Given
         let nodes = vec![Node::Directive(Directive::Glossary {
             entries: vec![GlossaryEntry {
-                terms: vec!["term".to_string()],
+                terms: vec![GlossaryTerm::unplaced("term")],
                 definition: vec![diagram("nested-in-glossary")],
             }],
             sorted: false,
@@ -550,13 +552,14 @@ mod tests {
     #[test]
     fn test_walk_nodes_descends_into_domain_object_bodies() {
         // Given
-        let nodes = vec![Node::Directive(Directive::DomainObject(
-            DomainObjectBody::CFunction {
+        let nodes = vec![Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::CFunction {
                 flags: crate::DescriptionFlags::default(),
                 signatures: NonEmptyVector::single("int add(int a, int b)".into()),
                 body: vec![diagram("nested-in-domain-object")],
             },
-        ))];
+            span: None,
+        })];
 
         // When
         let bodies = walk_diagram_bodies(&nodes);
@@ -720,11 +723,14 @@ mod tests {
     #[test]
     fn test_for_each_child_passes_a_domain_object_body() {
         // Given
-        let node = Node::Directive(Directive::DomainObject(DomainObjectBody::PyModule {
-            name: "pkg".to_string(),
-            options: crate::module_options::ModuleOptions::default(),
-            body: vec![Node::Transition],
-        }));
+        let node = Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::PyModule {
+                name: "pkg".to_string(),
+                options: crate::module_options::ModuleOptions::default(),
+                body: vec![Node::Transition],
+            },
+            span: None,
+        });
 
         // When / Then
         assert_eq!(children_of(&node), ["1 nodes"]);

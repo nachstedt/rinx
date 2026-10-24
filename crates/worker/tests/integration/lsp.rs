@@ -730,6 +730,59 @@ fn test_lsp_opens_the_document_a_reference_leads_to() {
 }
 
 #[test]
+fn test_lsp_outlines_an_open_document_nested_for_a_client_taking_it() {
+    // Given — a client taking nested symbols, with a document open
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_outline");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    let guide = format!("file://{}", root.join("guide.rst").display());
+    let mut server = Server::spawn();
+    let initialized = server.initialize_with(json!({
+        "capabilities": { "textDocument": { "documentSymbol": {
+            "hierarchicalDocumentSymbolSupport": true,
+        }}},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+    while !matches!(
+        server.receive(),
+        Message::Notification(notification)
+            if notification.method == "rinx/status" && notification.params["state"] == "ready"
+    ) {}
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": guide, "languageId": "restructuredtext", "version": 1,
+            "text": "Guide\n=====\n\nInstall\n-------\n",
+        }}),
+    );
+    server.published_until(&guide);
+
+    // When
+    server.request(
+        2,
+        "textDocument/documentSymbol",
+        json!({ "textDocument": { "uri": guide } }),
+    );
+    let answered = std::iter::from_fn(|| Some(server.receive()))
+        .find_map(|message| match message {
+            Message::Response(response) => Some(response),
+            _ => None,
+        })
+        .expect("the outline");
+
+    // Then
+    let capabilities = &initialized.response_result.expect("initialized")["capabilities"];
+    assert_eq!(capabilities["documentSymbolProvider"], true);
+    let outline = answered.response_result.expect("an outline");
+    assert_eq!(outline[0]["name"], "Guide");
+    assert_eq!(outline[0]["children"][0]["name"], "Install");
+    assert_eq!(
+        outline[0]["children"][0]["selectionRange"]["start"],
+        json!({ "line": 3, "character": 0 })
+    );
+}
+
+#[test]
 fn test_lsp_underlines_a_reference_to_a_label_no_document_defines() {
     // Given — a workspace folder whose document references a missing label
     let root = std::env::temp_dir().join("rinx_lsp_stdio_broken_reference");

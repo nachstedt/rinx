@@ -20,7 +20,7 @@ pub fn page_title(document: &Document) -> String {
         .nodes
         .iter()
         .find_map(|node| match node {
-            Node::Heading { level: 1, text } => Some(inline_plain_text(text)),
+            Node::Heading { level: 1, text, .. } => Some(inline_plain_text(text)),
             _ => None,
         })
         .unwrap_or_default()
@@ -134,6 +134,7 @@ mod tests {
         Node::Heading {
             level,
             text: vec![rinx_ast::InlineNode::Text(text.to_string())],
+            span: None,
         }
     }
 

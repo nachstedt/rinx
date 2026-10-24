@@ -434,8 +434,8 @@ mod tests {
     /// class, each named `name`, after a heading.
     fn defining(path: &str, name: &str) -> Document {
         use rinx_ast::{
-            DescriptionFlags, Directive, DomainObjectBody, GlossaryEntry, InlineNode, Node,
-            NonEmptyVector, TargetName,
+            DescriptionFlags, Directive, DomainObjectBody, GlossaryEntry, GlossaryTerm, InlineNode,
+            Node, NonEmptyVector, TargetName,
         };
         Document::new(
             path.to_string(),
@@ -443,25 +443,30 @@ mod tests {
                 Node::Heading {
                     level: 1,
                     text: vec![InlineNode::Text(path.to_string())],
+                    span: None,
                 },
                 Node::Target {
                     name: TargetName::new(name),
                     destination: None,
+                    span: None,
                 },
                 Node::Directive(Directive::Glossary {
                     entries: vec![GlossaryEntry {
-                        terms: vec![name.to_string()],
+                        terms: vec![GlossaryTerm::unplaced(name)],
                         definition: Vec::new(),
                     }],
                     sorted: false,
                 }),
-                Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass {
-                    flags: DescriptionFlags::default(),
-                    module: None,
-                    signatures: NonEmptyVector::single(name.to_string()),
-                    is_final: false,
-                    body: Vec::new(),
-                })),
+                Node::Directive(Directive::DomainObject {
+                    object: DomainObjectBody::PyClass {
+                        flags: DescriptionFlags::default(),
+                        module: None,
+                        signatures: NonEmptyVector::single(name.to_string()),
+                        is_final: false,
+                        body: Vec::new(),
+                    },
+                    span: None,
+                }),
             ],
         )
     }

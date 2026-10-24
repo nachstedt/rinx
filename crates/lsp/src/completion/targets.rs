@@ -11,13 +11,14 @@ mod candidates;
 mod select;
 
 use lsp_types::{CompletionItem, Documentation, MarkupContent, MarkupKind, Range};
-use rinx_ast::InlineNode;
+use rinx_ast::{InlineNode, TargetName};
 use rinx_entity::EntitySchema;
-use rinx_index::ProjectIndex;
+use rinx_index::{DefinitionKey, ProjectIndex};
 use rinx_renderer::{Destination, ReferenceResolver, ReferenceTarget};
 
 use crate::entity_hover::indexed_entity_markdown;
 use crate::hover::escape_markdown;
+use crate::project::Definitions;
 use candidates::{Asking, candidates};
 
 /// What a probe writes where the target being typed is, so the role reads as
@@ -64,6 +65,8 @@ pub struct TargetQuestion<'a> {
     pub reference: &'a InlineNode,
     pub resolver: &'a ReferenceResolver<'a>,
     pub index: &'a ProjectIndex,
+    /// Where the project's documents wrote their definitions.
+    pub definitions: Definitions<'a>,
     pub schema: &'a EntitySchema,
     /// The document being completed in.
     pub doc_path: &'a str,
@@ -89,7 +92,27 @@ pub fn target_items(question: &TargetQuestion<'_>) -> (Vec<CompletionItem>, bool
         question.typed,
         question.range,
         &|target| entity_documentation(target, question.index, question.schema),
+        &|target, full| label_fragment(question, target, full),
     )
+}
+
+/// The fragment a label offered to a `:ref:` was written in, named from the
+/// source root — `None` for any other role, and for a label its document
+/// wrote itself, which the item's document already names.
+fn label_fragment(
+    question: &TargetQuestion<'_>,
+    target: &ReferenceTarget,
+    full: &str,
+) -> Option<String> {
+    let InlineNode::Reference { .. } = question.reference else {
+        return None;
+    };
+    let Destination::Document { doc_path, .. } = &target.destination else {
+        return None;
+    };
+    question
+        .definitions
+        .fragment_of(doc_path, &DefinitionKey::Label(TargetName::new(full)))
 }
 
 /// What an item offering `target` documents: its fields, when it is an

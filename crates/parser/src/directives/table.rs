@@ -101,6 +101,7 @@ pub(in crate::directives) fn parse_table_directive(
         name: options.name,
         header_rows: header_rows.clone(),
         body_rows: body_rows.clone(),
+        span,
     }
 }
 
@@ -149,6 +150,28 @@ mod tests {
     use super::*;
     use crate::context::ParseCtx;
     use rinx_ast::{Domain, TableAlign, TableWidths, TargetName};
+
+    #[test]
+    fn test_parse_records_the_tables_marker_line_as_its_span() {
+        // Given — a named table below a paragraph
+        let input = "Intro\n\n.. table:: Sizes\n   :name: sizes\n\n   =  =\n   a  b\n   =  =\n";
+
+        // When
+        let doc = crate::parse("test.rst", input);
+
+        // Then
+        let span = doc.nodes.iter().find_map(|node| match node {
+            Node::Directive(Directive::Table { span, .. }) => Some(*span),
+            _ => None,
+        });
+        assert_eq!(
+            span,
+            Some(Some(rinx_ast::Span::new(
+                rinx_ast::Position::new(3, 1),
+                rinx_ast::Position::new(3, 17)
+            )))
+        );
+    }
 
     fn parse(body_lines: &[&str]) -> (Directive, Diagnostics) {
         parse_with("", body_lines)

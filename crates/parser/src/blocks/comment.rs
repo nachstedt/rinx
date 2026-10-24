@@ -233,7 +233,7 @@ mod tests {
 #[cfg(test)]
 mod integration_tests {
     use crate::parse;
-    use rinx_ast::{InlineNode, Node};
+    use rinx_ast::{InlineNode, Node, Position, Span};
 
     // --- Comment integration tests ---
 
@@ -297,7 +297,8 @@ mod integration_tests {
             doc.nodes[0],
             Node::Heading {
                 level: 1,
-                text: vec![InlineNode::Text("Title".to_string())]
+                text: vec![InlineNode::Text("Title".to_string())],
+                span: Some(Span::new(Position::new(1, 1), Position::new(1, 6)))
             }
         );
         assert_eq!(doc.nodes[1], Node::Comment);
@@ -333,7 +334,8 @@ mod integration_tests {
                 level: 1,
                 text: vec![InlineNode::Text(
                     "\u{2026} install scientific Python packages?".to_string()
-                )]
+                )],
+                span: Some(Span::new(Position::new(1, 1), Position::new(1, 40)))
             }
         );
     }

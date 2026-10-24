@@ -47,7 +47,7 @@ pub(super) fn assign_index_ids(nodes: &mut [Node], counter: &mut usize) {
             Node::Directive(Directive::GridItem(item)) => {
                 assign_index_ids(&mut item.body, counter);
             }
-            Node::Directive(Directive::DomainObject(obj)) => {
+            Node::Directive(Directive::DomainObject { object: obj, .. }) => {
                 assign_index_ids(obj.body_mut(), counter);
             }
             Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
@@ -192,8 +192,8 @@ mod tests {
     #[test]
     fn test_assign_index_ids_recurses_into_domain_object_body() {
         // Given
-        let mut nodes = vec![Node::Directive(Directive::DomainObject(
-            DomainObjectBody::PyFunction {
+        let mut nodes = vec![Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::PyFunction {
                 is_async: false,
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
@@ -201,14 +201,15 @@ mod tests {
                 is_decorator: false,
                 body: vec![index_directive()],
             },
-        ))];
+            span: None,
+        })];
         let mut counter = 0;
 
         // When
         assign_index_ids(&mut nodes, &mut counter);
 
         // Then
-        if let Node::Directive(Directive::DomainObject(obj)) = &nodes[0] {
+        if let Node::Directive(Directive::DomainObject { object: obj, .. }) = &nodes[0] {
             assert_eq!(id_of(&obj.body()[0]), "index-0");
         } else {
             panic!("Expected DomainObject");
@@ -307,7 +308,7 @@ mod tests {
         // Given a role where `assign_index_ids` does not look
         let mut nodes = vec![Node::Directive(Directive::Glossary {
             entries: vec![rinx_ast::GlossaryEntry {
-                terms: vec!["term".to_string()],
+                terms: vec![rinx_ast::GlossaryTerm::unplaced("term")],
                 definition: vec![pep_paragraph()],
             }],
             sorted: false,

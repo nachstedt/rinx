@@ -294,7 +294,7 @@ mod tests {
 #[cfg(test)]
 mod integration_tests {
     use crate::parse;
-    use rinx_ast::{InlineNode, Node};
+    use rinx_ast::{InlineNode, Node, Position, Span};
 
     // --- Transition integration tests ---
 
@@ -328,7 +328,8 @@ mod integration_tests {
             vec![
                 Node::Heading {
                     level: 1,
-                    text: vec![InlineNode::Text("Heading".to_string())]
+                    text: vec![InlineNode::Text("Heading".to_string())],
+                    span: Some(Span::new(Position::new(1, 1), Position::new(1, 8)))
                 },
                 Node::Paragraph(vec![InlineNode::Text("Some text.".to_string())]),
             ]

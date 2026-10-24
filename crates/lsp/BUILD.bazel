@@ -27,6 +27,7 @@ rust_library(
         "//crates/parser:rinx_parser",
         "//crates/pyconf:rinx_pyconf",
         "//crates/renderer:rinx_renderer",
+        "//crates/scope:rinx_scope",
         "//crates/toctree:rinx_toctree",
     ],
 )

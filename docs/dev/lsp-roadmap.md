@@ -39,8 +39,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333),
   #40 (PR #335), #24 (PR #340) and #25 (PR #355, prepared by #343, #345,
   #348, #351 and #353), #26 (PRs #358 and #362, prepared by #357) and
-  #27 (PR #365, prepared by #363).
-- **Next: #28, definition spans and outline.**
+  #27 (PR #365, prepared by #363) and #28 (PR #374).
+- **Next: #29, precise go to definition.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -994,7 +994,7 @@ item, and each entity-role target, is documented with the hover's text:
 Not done here: a sphinx-needs link has no `to`, so every need is offered,
 and a relation with `multiple = false` still completes as a list.
 
-### 28. Definition spans + outline
+### 28. Definition spans + outline ✅ (#374)
 
 **You experience:** the Outline view and breadcrumbs show sections.
 
@@ -1007,6 +1007,35 @@ and a relation with `multiple = false` still completes as a list.
   `targets` knows until then
 - `documentSymbol` handler
 - Tests
+
+The spans live in the `.ast`, on the definitions themselves: a section's
+title line, a target's line, a domain object's or a table's marker line, and
+each glossary term's line (`GlossaryTerm`). The analyzer records each one where
+it inserts the name into the index, under the key the index names it by
+(`rinx_index::DefinitionKey`), into the `DefinitionSites` a `DocumentAnalysis`
+keeps beside its index fragment. No fold reads them, and the build's `index`
+action writes only the `ProjectIndex` (ADR-045). A test parses a document with
+every definition moved down: the written index stays byte-identical while
+every site moves. The server keeps one analysis per document, open or closed,
+so a closed document's definitions have their lines too. An analysis
+differing only in its sites replaces the recorded one without folding again,
+so pressing Enter above a heading costs no fold. `EntityRecord::relation_spans`,
+which only the fold reads, is no longer written either.
+
+The outline reads the open document's latest parse. It shows the sections
+nested by level, each spanning up to the next, and under them each domain
+object, named as the index names it, a class's methods under the class, and
+each entity by its id. A section or object an `.. include::` brought in is
+placed on the `.. include::` line. A client that does not announce nested
+symbols gets them flat, each naming its holder. `:ref:` completion names the
+fragment a label was written in.
+
+Not done here:
+- The written index still carries the lines of toctree entries and entity
+  updates (issue #372).
+- `.. contents::` and a toctree's `:name:` have no span, so their labels have
+  no site.
+- Labels and glossary terms are not outline entries.
 
 ### 29. Precise go to definition
 

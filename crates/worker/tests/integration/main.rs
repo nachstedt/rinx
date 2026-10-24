@@ -4,6 +4,7 @@ mod any_role;
 mod builder_conditionals;
 mod c_domain;
 mod code_role;
+mod definition_spans;
 mod doc_role;
 mod domain_directives;
 mod domain_scoping;

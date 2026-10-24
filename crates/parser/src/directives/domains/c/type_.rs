@@ -63,11 +63,16 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CType {
-            signatures,
-            flags,
-            body,
-        })) = &doc.nodes[0]
+        if let Node::Directive(Directive::DomainObject {
+            object:
+                DomainObjectBody::CType {
+                    signatures,
+                    flags,
+                    body,
+                    ..
+                },
+            ..
+        }) = &doc.nodes[0]
         {
             assert_eq!(signature_texts(signatures), ["PyMemAllocatorDomain"]);
             assert_eq!(flags, &rinx_ast::DescriptionFlags::default());
@@ -86,10 +91,10 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CType {
-            signatures,
+        if let Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::CType { signatures, .. },
             ..
-        })) = &doc.nodes[0]
+        }) = &doc.nodes[0]
         {
             assert_eq!(signature_texts(signatures), ["unsigned long ulong"]);
         } else {
@@ -106,8 +111,10 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CType { flags, .. })) =
-            &doc.nodes[0]
+        if let Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::CType { flags, .. },
+            ..
+        }) = &doc.nodes[0]
         {
             assert!(flags.has(rinx_ast::DescriptionFlag::NoIndex));
         } else {
@@ -126,13 +133,18 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CType { body, .. })) =
-            &doc.nodes[0]
+        if let Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::CType { body, .. },
+            ..
+        }) = &doc.nodes[0]
         {
             assert_eq!(body.len(), 1);
             assert!(matches!(
                 &body[0],
-                Node::Directive(Directive::DomainObject(DomainObjectBody::CMacro { .. }))
+                Node::Directive(Directive::DomainObject {
+                    object: DomainObjectBody::CMacro { .. },
+                    ..
+                })
             ));
         } else {
             panic!("Expected CType, got {:?}", doc.nodes[0]);

@@ -105,7 +105,7 @@ pub(crate) fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<LinkDe
             Node::Directive(Directive::GridItem(item)) => {
                 collect_anonymous_targets(&item.body, targets);
             }
-            Node::Directive(Directive::DomainObject(obj)) => {
+            Node::Directive(Directive::DomainObject { object: obj, .. }) => {
                 collect_anonymous_targets(obj.body(), targets);
             }
             Node::Directive(Directive::Glossary { entries, .. }) => {
@@ -237,7 +237,7 @@ pub(crate) fn render_nodes_with_paragraph_class(
         .unwrap_or(usize::MAX);
     for (index, node) in nodes.iter().enumerate() {
         match node {
-            Node::Heading { level, text } => {
+            Node::Heading { level, text, .. } => {
                 let id = at_top_level
                     .then(|| ctx.section_ids.get(&index))
                     .flatten()
@@ -247,7 +247,9 @@ pub(crate) fn render_nodes_with_paragraph_class(
             Node::Paragraph(inlines) => {
                 render_paragraph(html, inlines, paragraph_class, ctx);
             }
-            Node::Target { name, destination } => {
+            Node::Target {
+                name, destination, ..
+            } => {
                 if destination.is_none() {
                     let escaped_name = html_escape::encode_text(name.as_str());
                     let _ = writeln!(html, "<a id=\"{escaped_name}\"></a>");
@@ -430,6 +432,46 @@ fn render_toctree_directive(html: &mut String, toctree: &Toctree, ctx: &mut Rend
     write_nav_list(html, &entries, toctree.options.caption.as_deref());
 }
 
+/// Renders a `.. table::`.
+///
+/// Split out of [`render_directive`] for [`render_data_table_directive`]'s
+/// reason: its options destructured inline made that match too long to read.
+fn render_wrapped_table_directive(
+    html: &mut String,
+    directive: &Directive,
+    ctx: &mut RenderCtx<'_>,
+) {
+    let Directive::Table {
+        title,
+        widths,
+        width,
+        align,
+        classes,
+        name,
+        header_rows,
+        body_rows,
+        ..
+    } = directive
+    else {
+        return;
+    };
+    render_table_directive(
+        html,
+        TableDirectiveParams {
+            title: title.as_deref(),
+            widths: widths.as_ref(),
+            width: width.as_deref(),
+            align: *align,
+            classes,
+            name: name.as_ref(),
+            number: ctx.numbering.caption_number(directive),
+            header_rows,
+            body_rows,
+        },
+        ctx,
+    );
+}
+
 /// Renders a `.. list-table::`/`.. csv-table::`.
 ///
 /// Split out of [`render_directive`] because destructuring its ten options
@@ -446,6 +488,7 @@ fn render_data_table_directive(html: &mut String, directive: &Directive, ctx: &m
         classes,
         name,
         rows,
+        ..
     } = directive
     else {
         return;
@@ -529,7 +572,7 @@ fn render_directive(
         Directive::EntitySection { body, .. } => render_nodes(html, body, ctx),
         Directive::Glossary { entries, .. } => render_glossary(html, entries, ctx),
         Directive::Index { id, .. } => render_index_anchor(html, id),
-        Directive::DomainObject(obj) => render_domain_object(html, obj, ctx),
+        Directive::DomainObject { object: obj, .. } => render_domain_object(html, obj, ctx),
         Directive::Entity(entity) => super::entity::render_entity(html, entity, ctx),
         Directive::EntityTable(table) => {
             super::entity_table::render_entity_table(html, table, ctx);
@@ -542,30 +585,7 @@ fn render_directive(
             span,
         } => render_math(html, parts, label.as_ref(), *nowrap, classes, *span, ctx),
         Directive::DataTable { .. } => render_data_table_directive(html, directive, ctx),
-        Directive::Table {
-            title,
-            widths,
-            width,
-            align,
-            classes,
-            name,
-            header_rows,
-            body_rows,
-        } => render_table_directive(
-            html,
-            TableDirectiveParams {
-                title: title.as_deref(),
-                widths: widths.as_ref(),
-                width: width.as_deref(),
-                align: *align,
-                classes,
-                name: name.as_ref(),
-                number,
-                header_rows,
-                body_rows,
-            },
-            ctx,
-        ),
+        Directive::Table { .. } => render_wrapped_table_directive(html, directive, ctx),
         // A directive this build could not turn into content is the one
         // failure that must never be silent: it takes everything written
         // inside it off the page, so it is drawn as a visible error block

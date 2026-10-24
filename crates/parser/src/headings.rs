@@ -376,7 +376,14 @@ pub(super) fn try_parse_heading(
         ctx,
     );
 
-    Some((consumed, Node::Heading { level, text }))
+    Some((
+        consumed,
+        Node::Heading {
+            level,
+            text,
+            span: ctx.line_span(text_line, lines[text_line]),
+        },
+    ))
 }
 
 #[cfg(test)]
@@ -385,5 +392,7 @@ mod adornment_tests;
 mod malformed_tests;
 #[cfg(test)]
 mod nested_tests;
+#[cfg(test)]
+mod span_tests;
 #[cfg(test)]
 mod test_support;

@@ -116,4 +116,20 @@ The workspace scan may still be running when it is first asked."
       (should (seq-some (lambda (item) (equal (plist-get item :label) "run"))
                         items)))))
 
+;; The outline lists the title, and under it the function the file defines:
+;; nested when the client takes it so, else naming the title as its holder.
+(ert-deftest rinx-eglot-outlines-the-document ()
+  (rinx-test--with-index
+    (let* ((outline (rinx-test--request
+                     :textDocument/documentSymbol
+                     `(:textDocument (:uri ,(concat "file://" (expand-file-name buffer-file-name))))))
+           (title (aref outline 0)))
+      (should (equal (plist-get title :name) "Editor fixture"))
+      (should (or (seq-some (lambda (symbol) (equal (plist-get symbol :name) "run"))
+                            (plist-get title :children))
+                  (seq-some (lambda (symbol)
+                              (and (equal (plist-get symbol :name) "run")
+                                   (equal (plist-get symbol :containerName) "Editor fixture")))
+                            outline))))))
+
 ;;; rinx-eglot-test.el ends here

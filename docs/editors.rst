@@ -5,7 +5,7 @@ Other editors
 
 The language server is the ``rinx`` binary itself, run as ``rinx lsp``. It speaks the Language Server Protocol over standard input and output, so any editor with a language client can use it. The :ref:`VS Code extension <vscode>` is one such client. This page configures three others: Neovim, Helix and Emacs.
 
-Each configuration below is a file in the repository, under ``editors/``, and continuous integration runs every one in its editor against the server. Neovim and Emacs are checked for diagnostics, hover, go to definition, and completion of references, domain objects, directives and role names. Helix, which cannot be scripted, is checked for finding the server and showing its diagnostics.
+Each configuration below is a file in the repository, under ``editors/``, and continuous integration runs every one in its editor against the server. Neovim and Emacs are checked for diagnostics, hover, go to definition, the outline, and completion of references, domain objects, directives and role names. Helix, which cannot be scripted, is checked for finding the server and showing its diagnostics.
 
 Installing the server
 ---------------------
@@ -61,6 +61,7 @@ The server behaves the same in every editor. :ref:`vscode-diagnostics` describes
 - Diagnostics as you type, with the build's codes and messages, linking to :ref:`diagnostics`. This includes the problems an ``.. include::`` brings in, and broken references once you pause.
 - Completion of every role's targets — labels, documents, terms, numbers, equations, options, domain objects and entity ids, and the targets of loaded inventories — of directive names, options and option values, and of role names.
 - Hover and go to definition on references.
+- The document's outline: its sections, with the objects and entities written in them.
 - Reading a Sphinx project's ``conf.py``, and the extensions it declares (see :ref:`vscode-sphinx-projects`).
 - Inventories that ``intersphinx_mapping`` names as files (see :ref:`vscode-intersphinx`).
 - Watching the workspace for files changed by other programs, when the editor announces that it watches files for a server.

@@ -267,7 +267,7 @@ fn test_no_index_is_false_by_default_for_pre_existing_variants() {
         !DomainObjectBody::CFunction {
             flags: crate::DescriptionFlags::default(),
             signatures: NonEmptyVector::single("int add(int a, int b)".into()),
-            body: vec![],
+            body: vec![]
         }
         .no_index()
     );
@@ -454,7 +454,7 @@ fn test_module_override_is_none_by_default_for_every_py_variant_that_carries_it(
             module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("greet(name)".to_string()),
-            body: vec![],
+            body: vec![]
         }
         .module_override(),
         None
@@ -469,7 +469,7 @@ fn test_module_override_is_none_by_default_for_every_py_variant_that_carries_it(
             is_staticmethod: false,
             is_abstractmethod: false,
             is_async: false,
-            body: vec![],
+            body: vec![]
         }
         .module_override(),
         None
@@ -480,7 +480,7 @@ fn test_module_override_is_none_by_default_for_every_py_variant_that_carries_it(
             module: None,
             signatures: NonEmptyVector::single("Greeter".to_string()),
             is_final: false,
-            body: vec![],
+            body: vec![]
         }
         .module_override(),
         None
@@ -491,7 +491,7 @@ fn test_module_override_is_none_by_default_for_every_py_variant_that_carries_it(
             module: None,
             signatures: NonEmptyVector::single("GreeterError".to_string()),
             is_final: false,
-            body: vec![],
+            body: vec![]
         }
         .module_override(),
         None
@@ -503,7 +503,7 @@ fn test_module_override_is_none_by_default_for_every_py_variant_that_carries_it(
             signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
             type_: None,
             value: None,
-            body: vec![],
+            body: vec![]
         }
         .module_override(),
         None
@@ -516,7 +516,7 @@ fn test_module_override_is_none_by_default_for_every_py_variant_that_carries_it(
             type_: None,
             value: None,
             canonical: None,
-            body: vec![],
+            body: vec![]
         }
         .module_override(),
         None
@@ -533,7 +533,7 @@ fn test_module_override_reflects_the_field_for_every_py_variant_that_carries_it(
             module: Some("ctypes.util".to_string()),
             is_decorator: false,
             signatures: NonEmptyVector::single("find_library(name)".to_string()),
-            body: vec![],
+            body: vec![]
         }
         .module_override(),
         Some("ctypes.util")
@@ -548,7 +548,7 @@ fn test_module_override_reflects_the_field_for_every_py_variant_that_carries_it(
             is_staticmethod: false,
             is_abstractmethod: false,
             is_async: false,
-            body: vec![],
+            body: vec![]
         }
         .module_override(),
         Some("multiprocessing.managers")
@@ -559,7 +559,7 @@ fn test_module_override_reflects_the_field_for_every_py_variant_that_carries_it(
             module: Some("multiprocessing.managers".to_string()),
             signatures: NonEmptyVector::single("SharedMemoryManager".to_string()),
             is_final: false,
-            body: vec![],
+            body: vec![]
         }
         .module_override(),
         Some("multiprocessing.managers")
@@ -570,7 +570,7 @@ fn test_module_override_reflects_the_field_for_every_py_variant_that_carries_it(
             module: Some("mymodule.other".to_string()),
             signatures: NonEmptyVector::single("GreeterError".to_string()),
             is_final: false,
-            body: vec![],
+            body: vec![]
         }
         .module_override(),
         Some("mymodule.other")
@@ -582,7 +582,7 @@ fn test_module_override_reflects_the_field_for_every_py_variant_that_carries_it(
             signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
             type_: None,
             value: None,
-            body: vec![],
+            body: vec![]
         }
         .module_override(),
         Some("ctypes.util")
@@ -595,7 +595,7 @@ fn test_module_override_reflects_the_field_for_every_py_variant_that_carries_it(
             type_: None,
             value: None,
             canonical: None,
-            body: vec![],
+            body: vec![]
         }
         .module_override(),
         Some("mymodule.other")
@@ -619,7 +619,7 @@ fn test_module_override_is_always_none_for_py_module_and_every_c_variant() {
         DomainObjectBody::CFunction {
             flags: crate::DescriptionFlags::default(),
             signatures: NonEmptyVector::single("int add(int a, int b)".into()),
-            body: vec![],
+            body: vec![]
         }
         .module_override(),
         None
@@ -628,7 +628,7 @@ fn test_module_override_is_always_none_for_py_module_and_every_c_variant() {
         DomainObjectBody::CMacro {
             flags: crate::DescriptionFlags::default(),
             signatures: NonEmptyVector::single("MAX(a, b)".into()),
-            body: vec![],
+            body: vec![]
         }
         .module_override(),
         None

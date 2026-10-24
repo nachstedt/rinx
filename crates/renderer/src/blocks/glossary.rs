@@ -13,8 +13,8 @@ pub(super) fn render_glossary(
     let _ = writeln!(html, "<dl class=\"glossary\">");
     for entry in entries {
         for term in &entry.terms {
-            let term_escaped = html_escape::encode_text(term);
-            let id = rinx_ast::term_id(term);
+            let term_escaped = html_escape::encode_text(&term.text);
+            let id = rinx_ast::term_id(&term.text);
             let id_attr = html_escape::encode_double_quoted_attribute(&id);
             let _ = writeln!(html, "  <dt id=\"{id_attr}\">{term_escaped}</dt>");
         }
@@ -71,7 +71,7 @@ mod tests {
             "glossary.rst".to_string(),
             vec![Node::Directive(Directive::Glossary {
                 entries: vec![rinx_ast::GlossaryEntry {
-                    terms: vec!["environment".to_string()],
+                    terms: vec![rinx_ast::GlossaryTerm::unplaced("environment")],
                     definition: vec![Node::Paragraph(vec![InlineNode::Text(
                         "A structure.".to_string(),
                     )])],
@@ -97,7 +97,10 @@ mod tests {
             "glossary.rst".to_string(),
             vec![Node::Directive(Directive::Glossary {
                 entries: vec![rinx_ast::GlossaryEntry {
-                    terms: vec!["term 1".to_string(), "term 2".to_string()],
+                    terms: vec![
+                        rinx_ast::GlossaryTerm::unplaced("term 1"),
+                        rinx_ast::GlossaryTerm::unplaced("term 2"),
+                    ],
                     definition: vec![Node::Paragraph(vec![InlineNode::Text(
                         "Shared.".to_string(),
                     )])],
@@ -121,7 +124,7 @@ mod tests {
             "glossary.rst".to_string(),
             vec![Node::Directive(Directive::Glossary {
                 entries: vec![rinx_ast::GlossaryEntry {
-                    terms: vec!["a < b".to_string()],
+                    terms: vec![rinx_ast::GlossaryTerm::unplaced("a < b")],
                     definition: vec![],
                 }],
                 sorted: false,

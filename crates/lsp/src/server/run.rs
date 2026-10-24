@@ -16,6 +16,7 @@ use super::handlers::{handle_notification, handle_request, initialize_result};
 use super::scan::{ScanEvent, spawn_scan};
 use super::state::ServerState;
 use crate::completion::TextFormat;
+use crate::document_symbol::OutlineShape;
 use crate::uri::file_path;
 
 /// How long the client must have sent nothing before the server renders: a
@@ -52,6 +53,7 @@ pub fn run(connection: &Connection) -> Result<()> {
             supports_progress(&params.capabilities),
         )
         .with_definition_links(supports_definition_links(&params.capabilities))
+        .with_outline_shape(outline_shape(&params.capabilities))
         .with_completion_format(completion_format(&params.capabilities))
         .with_watched_files(supports_watched_files(&params.capabilities))
         .with_inventory_fetching(fetches_inventories(&params))
@@ -211,6 +213,22 @@ fn supports_definition_links(capabilities: &ClientCapabilities) -> bool {
         .and_then(|text_document| text_document.definition.as_ref())
         .and_then(|definition| definition.link_support)
         .unwrap_or(false)
+}
+
+/// How the client takes a document's outline: nested when it announces
+/// support for that, else as a flat list.
+fn outline_shape(capabilities: &ClientCapabilities) -> OutlineShape {
+    let nested = capabilities
+        .text_document
+        .as_ref()
+        .and_then(|text_document| text_document.document_symbol.as_ref())
+        .and_then(|symbols| symbols.hierarchical_document_symbol_support)
+        .unwrap_or(false);
+    if nested {
+        OutlineShape::Nested
+    } else {
+        OutlineShape::Flat
+    }
 }
 
 /// How the client takes a completion item's text: as a snippet when it
@@ -399,6 +417,28 @@ mod tests {
         assert_eq!(
             completion_format(&ClientCapabilities::default()),
             TextFormat::Plain
+        );
+    }
+
+    #[test]
+    fn test_outline_shape_reads_the_document_symbol_capability() {
+        // Given
+        let capable = ClientCapabilities {
+            text_document: Some(lsp_types::TextDocumentClientCapabilities {
+                document_symbol: Some(lsp_types::DocumentSymbolClientCapabilities {
+                    hierarchical_document_symbol_support: Some(true),
+                    ..lsp_types::DocumentSymbolClientCapabilities::default()
+                }),
+                ..lsp_types::TextDocumentClientCapabilities::default()
+            }),
+            ..ClientCapabilities::default()
+        };
+
+        // When / Then
+        assert_eq!(outline_shape(&capable), OutlineShape::Nested);
+        assert_eq!(
+            outline_shape(&ClientCapabilities::default()),
+            OutlineShape::Flat
         );
     }
 

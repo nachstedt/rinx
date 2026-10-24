@@ -117,6 +117,7 @@ mod tests {
         Node::Heading {
             level,
             text: vec![InlineNode::Text(title.to_string())],
+            span: None,
         }
     }
 
@@ -130,6 +131,7 @@ mod tests {
         Node::Target {
             name: TargetName::new(name),
             destination: None,
+            span: None,
         }
     }
 

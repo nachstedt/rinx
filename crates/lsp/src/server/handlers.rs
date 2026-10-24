@@ -7,13 +7,14 @@ use lsp_types::notification::{
     Notification as _, PublishDiagnostics, ShowMessage,
 };
 use lsp_types::request::{
-    CodeActionRequest, Completion, GotoDefinition, HoverRequest, Request as _,
+    CodeActionRequest, Completion, DocumentSymbolRequest, GotoDefinition, HoverRequest,
+    Request as _,
 };
 use lsp_types::{
     ClientCapabilities, CodeActionKind, CodeActionOptions, CodeActionOrCommand, CodeActionParams,
-    CodeActionProviderCapability, CompletionOptions, CompletionParams, GotoDefinitionParams,
-    HoverParams, HoverProviderCapability, InitializeResult, MessageType, OneOf,
-    PublishDiagnosticsParams, ServerCapabilities, ServerInfo, ShowMessageParams,
+    CodeActionProviderCapability, CompletionOptions, CompletionParams, DocumentSymbolParams,
+    GotoDefinitionParams, HoverParams, HoverProviderCapability, InitializeResult, MessageType,
+    OneOf, PublishDiagnosticsParams, ServerCapabilities, ServerInfo, ShowMessageParams,
     TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
 };
 
@@ -45,6 +46,7 @@ pub fn initialize_result(
             }),
             hover_provider: Some(HoverProviderCapability::Simple(true)),
             definition_provider: Some(OneOf::Left(true)),
+            document_symbol_provider: Some(OneOf::Left(true)),
             code_action_provider: Some(CodeActionProviderCapability::Options(CodeActionOptions {
                 code_action_kinds: Some(vec![CodeActionKind::QUICKFIX]),
                 ..CodeActionOptions::default()
@@ -123,7 +125,7 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
 }
 
 /// The response to a request other than `shutdown`, which the loop answers
-/// itself: a completion, a hover, a definition, the quick fixes or a
+/// itself: a completion, a hover, a definition, a document's outline, the quick fixes or a
 /// preview or where one of its links leads, or the refusal of a method rinx does not support or of
 /// parameters that do not parse.
 pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
@@ -159,6 +161,14 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
             }
             Err(error) => invalid_params(id, &method, &error),
         },
+        DocumentSymbolRequest::METHOD => {
+            match serde_json::from_value::<DocumentSymbolParams>(params) {
+                Ok(params) => {
+                    Response::new_ok(id, state.document_symbols(&params.text_document.uri))
+                }
+                Err(error) => invalid_params(id, &method, &error),
+            }
+        }
         CodeActionRequest::METHOD => match serde_json::from_value::<CodeActionParams>(params) {
             Ok(params) => {
                 let actions: Vec<CodeActionOrCommand> = state

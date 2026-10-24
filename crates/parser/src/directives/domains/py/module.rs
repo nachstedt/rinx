@@ -116,11 +116,16 @@ mod tests {
     fn parse_module(input: &str) -> (String, ModuleOptions, Vec<Node>) {
         let doc = parse("test.rst", input);
         match doc.nodes.first() {
-            Some(Node::Directive(Directive::DomainObject(DomainObjectBody::PyModule {
-                name,
-                options,
-                body,
-            }))) => (name.clone(), options.clone(), body.clone()),
+            Some(Node::Directive(Directive::DomainObject {
+                object:
+                    DomainObjectBody::PyModule {
+                        name,
+                        options,
+                        body,
+                        ..
+                    },
+                ..
+            })) => (name.clone(), options.clone(), body.clone()),
             other => panic!("Expected PyModule, got {other:?}"),
         }
     }

@@ -351,7 +351,7 @@ fn test_analyze_finds_an_index_role_in_a_glossary_definition() {
         "guide.rst".to_string(),
         vec![Node::Directive(Directive::Glossary {
             entries: vec![rinx_ast::GlossaryEntry {
-                terms: vec!["term".to_string()],
+                terms: vec![rinx_ast::GlossaryTerm::unplaced("term")],
                 definition: vec![Node::Paragraph(vec![index_role(vec![term], "index-0")])],
             }],
             sorted: false,

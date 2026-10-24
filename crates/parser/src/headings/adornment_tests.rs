@@ -4,7 +4,7 @@
 use super::test_support::diagnostic_codes;
 use super::*;
 use crate::parse;
-use rinx_ast::{InlineNode, TargetSearchOrder};
+use rinx_ast::{InlineNode, Position, Span, TargetSearchOrder};
 
 #[test]
 fn test_is_section_adornment_accepts_single_repeated_char() {
@@ -70,7 +70,8 @@ fn test_parse_creates_heading_node() {
         doc.nodes[0],
         Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("Heading".to_string())]
+            text: vec![InlineNode::Text("Heading".to_string())],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 8)))
         }
     );
 }
@@ -89,7 +90,8 @@ fn test_parse_creates_heading_from_punctuation_lines() {
         doc.nodes[0],
         Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("===".to_string())]
+            text: vec![InlineNode::Text("===".to_string())],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 4)))
         }
     );
 }
@@ -108,7 +110,8 @@ fn test_parse_creates_h1_for_first_adornment_char() {
         doc.nodes[0],
         Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("Title".to_string())]
+            text: vec![InlineNode::Text("Title".to_string())],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 6)))
         }
     );
 }
@@ -127,14 +130,16 @@ fn test_parse_creates_h2_for_second_adornment_char() {
         doc.nodes[0],
         Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("H1".to_string())]
+            text: vec![InlineNode::Text("H1".to_string())],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 3)))
         }
     );
     assert_eq!(
         doc.nodes[1],
         Node::Heading {
             level: 2,
-            text: vec![InlineNode::Text("H2".to_string())]
+            text: vec![InlineNode::Text("H2".to_string())],
+            span: Some(Span::new(Position::new(4, 1), Position::new(4, 3)))
         }
     );
 }
@@ -153,14 +158,16 @@ fn test_parse_reuses_level_for_same_adornment_char() {
         doc.nodes[0],
         Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("First".to_string())]
+            text: vec![InlineNode::Text("First".to_string())],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 6)))
         }
     );
     assert_eq!(
         doc.nodes[1],
         Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("Second".to_string())]
+            text: vec![InlineNode::Text("Second".to_string())],
+            span: Some(Span::new(Position::new(4, 1), Position::new(4, 7)))
         }
     );
 }
@@ -179,21 +186,24 @@ fn test_parse_assigns_levels_by_encounter_order() {
         doc.nodes[0],
         Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("H1".to_string())]
+            text: vec![InlineNode::Text("H1".to_string())],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 3)))
         }
     );
     assert_eq!(
         doc.nodes[1],
         Node::Heading {
             level: 2,
-            text: vec![InlineNode::Text("H2".to_string())]
+            text: vec![InlineNode::Text("H2".to_string())],
+            span: Some(Span::new(Position::new(4, 1), Position::new(4, 3)))
         }
     );
     assert_eq!(
         doc.nodes[2],
         Node::Heading {
             level: 3,
-            text: vec![InlineNode::Text("H3".to_string())]
+            text: vec![InlineNode::Text("H3".to_string())],
+            span: Some(Span::new(Position::new(7, 1), Position::new(7, 3)))
         }
     );
 }
@@ -212,7 +222,8 @@ fn test_parse_creates_heading_for_alternate_punctuation() {
         doc.nodes[0],
         Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("Sub Title".to_string())]
+            text: vec![InlineNode::Text("Sub Title".to_string())],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 10)))
         }
     );
 }
@@ -231,7 +242,8 @@ fn test_parse_creates_heading_with_overline() {
         doc.nodes[0],
         Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("Heading".to_string())]
+            text: vec![InlineNode::Text("Heading".to_string())],
+            span: Some(Span::new(Position::new(2, 1), Position::new(2, 8)))
         }
     );
 }
@@ -250,14 +262,16 @@ fn test_parse_overline_and_underline_distinct_levels() {
         doc.nodes[0],
         Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("Overline".to_string())]
+            text: vec![InlineNode::Text("Overline".to_string())],
+            span: Some(Span::new(Position::new(2, 1), Position::new(2, 9)))
         }
     );
     assert_eq!(
         doc.nodes[1],
         Node::Heading {
             level: 2,
-            text: vec![InlineNode::Text("Underline".to_string())]
+            text: vec![InlineNode::Text("Underline".to_string())],
+            span: Some(Span::new(Position::new(5, 1), Position::new(5, 10)))
         }
     );
 }
@@ -293,7 +307,8 @@ fn test_parse_heading_resolves_domain_object_role() {
                     inventory: rinx_ast::InventorySelector::Any,
                 },
                 InlineNode::Text(" Module".to_string()),
-            ]
+            ],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 28)))
         }
     );
 }
@@ -316,7 +331,8 @@ fn test_parse_heading_resolves_strong_emphasis() {
                 InlineNode::Text("A ".to_string()),
                 InlineNode::Strong("Bold".to_string()),
                 InlineNode::Text(" Heading".to_string()),
-            ]
+            ],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 19)))
         }
     );
 }
@@ -337,7 +353,8 @@ fn test_parse_heading_measures_an_emoji_title_in_display_columns() {
         doc.nodes,
         vec![Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("\u{1f50d} Demo details".to_string())]
+            text: vec![InlineNode::Text("\u{1f50d} Demo details".to_string())],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 15)))
         }]
     );
     assert!(diagnostic_codes(&doc).is_empty());
@@ -356,7 +373,8 @@ fn test_parse_heading_requires_two_columns_per_wide_character() {
         doc.nodes,
         vec![Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("\u{6f22}\u{5b57}".to_string())]
+            text: vec![InlineNode::Text("\u{6f22}\u{5b57}".to_string())],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 3)))
         }]
     );
     assert!(diagnostic_codes(&doc).is_empty());
@@ -375,7 +393,8 @@ fn test_parse_heading_measures_an_overlined_emoji_title_in_display_columns() {
         doc.nodes,
         vec![Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("\u{1f50d} Demo details".to_string())]
+            text: vec![InlineNode::Text("\u{1f50d} Demo details".to_string())],
+            span: Some(Span::new(Position::new(2, 1), Position::new(2, 15)))
         }]
     );
     assert!(diagnostic_codes(&doc).is_empty());
@@ -396,7 +415,8 @@ fn test_parse_heading_accepts_a_short_underline_and_reports_it() {
         doc.nodes,
         vec![Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("A Long Title".to_string())]
+            text: vec![InlineNode::Text("A Long Title".to_string())],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 13)))
         }]
     );
     assert_eq!(
@@ -418,7 +438,8 @@ fn test_parse_heading_reports_a_short_overlined_adornment_once() {
         doc.nodes,
         vec![Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("A Long Title".to_string())]
+            text: vec![InlineNode::Text("A Long Title".to_string())],
+            span: Some(Span::new(Position::new(2, 1), Position::new(2, 13)))
         }]
     );
     assert_eq!(
@@ -460,7 +481,8 @@ fn test_parse_heading_reports_nothing_for_an_over_long_underline() {
         doc.nodes,
         vec![Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("Short".to_string())]
+            text: vec![InlineNode::Text("Short".to_string())],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 6)))
         }]
     );
     assert!(diagnostic_codes(&doc).is_empty());

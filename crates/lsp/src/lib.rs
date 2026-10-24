@@ -29,6 +29,7 @@ mod code_action;
 mod completion;
 mod definition;
 mod diagnostics;
+mod document_symbol;
 mod documents;
 mod entity_at;
 mod entity_hover;
