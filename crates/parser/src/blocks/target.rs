@@ -5,9 +5,16 @@
 
 use rinx_ast::{Node, TargetName};
 
+use crate::context::ParseCtx;
 use crate::inline::read_target_destination;
 
-pub(super) fn try_parse_target(lines: &[&str], i: usize) -> Option<(usize, Node)> {
+/// Parses the hyperlink target at `i`, if one starts there. A named target
+/// records the span of its own line, which its label's definition is.
+pub(super) fn try_parse_target(
+    lines: &[&str],
+    i: usize,
+    ctx: &ParseCtx<'_>,
+) -> Option<(usize, Node)> {
     let line = lines[i].trim();
     if let Some(rest) = line.strip_prefix(".. __:") {
         let mut uri = rest.trim().to_string();
@@ -64,9 +71,66 @@ pub(super) fn try_parse_target(lines: &[&str], i: usize) -> Option<(usize, Node)
             Node::Target {
                 name: TargetName::new(name_str),
                 destination,
+                span: ctx.line_span(i, lines[i].trim_end()),
             },
         ));
     }
 
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parse;
+    use rinx_ast::{Node, Position, Span};
+
+    /// The span of every named target in `nodes`, in document order.
+    fn target_spans(nodes: &[Node]) -> Vec<Option<Span>> {
+        let mut spans = Vec::new();
+        rinx_ast::walk_nodes(nodes, &mut |node| {
+            if let Node::Target { span, .. } = node {
+                spans.push(*span);
+            }
+        });
+        spans
+    }
+
+    #[test]
+    fn test_parse_records_an_internal_targets_line() {
+        // When
+        let doc = parse("test.rst", "Intro\n\n.. _install:\n\nText.\n");
+
+        // Then
+        assert_eq!(
+            target_spans(&doc.nodes),
+            vec![Some(Span::new(Position::new(3, 1), Position::new(3, 13)))]
+        );
+    }
+
+    #[test]
+    fn test_parse_records_a_target_with_its_destination_on_the_next_line_at_its_name() {
+        // When
+        let doc = parse("test.rst", ".. _docs:\n   https://example.org\n");
+
+        // Then
+        assert_eq!(
+            target_spans(&doc.nodes),
+            vec![Some(Span::new(Position::new(1, 1), Position::new(1, 10)))]
+        );
+    }
+
+    #[test]
+    fn test_parse_records_a_nested_targets_position_in_the_document() {
+        // Given — a target inside a note's body, indented by three columns
+        let input = ".. note::\n\n   .. _inside:\n\n   Text.\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(
+            target_spans(&doc.nodes),
+            vec![Some(Span::new(Position::new(3, 4), Position::new(3, 15)))]
+        );
+    }
 }

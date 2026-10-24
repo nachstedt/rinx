@@ -93,6 +93,7 @@ mod tests {
                 name: None,
                 header_rows: vec![table_row(&["Fruit", "Colour"])],
                 body_rows: vec![table_row(&["Apple", "Red"])],
+                span: None,
             })],
         )
     }
@@ -130,6 +131,7 @@ mod tests {
                 name: None,
                 header_rows: vec![],
                 body_rows: vec![table_row(&["only"])],
+                span: None,
             })],
         );
 
@@ -154,6 +156,7 @@ mod tests {
                 name: None,
                 header_rows: vec![],
                 body_rows: vec![table_row(&["Cell"])],
+                span: None,
             })],
         );
 
@@ -178,6 +181,7 @@ mod tests {
                 name: None,
                 header_rows: vec![],
                 body_rows: vec![table_row(&["Cell"])],
+                span: None,
             })],
         );
 
@@ -202,6 +206,7 @@ mod tests {
                 name: None,
                 header_rows: vec![],
                 body_rows: vec![table_row(&["Cell"])],
+                span: None,
             })],
         );
 
@@ -229,6 +234,7 @@ mod tests {
                 name: None,
                 header_rows: vec![],
                 body_rows: vec![table_row(&["Cell"])],
+                span: None,
             })],
         );
 
@@ -253,6 +259,7 @@ mod tests {
                 name: None,
                 header_rows: vec![],
                 body_rows: vec![table_row(&["A", "B"])],
+                span: None,
             })],
         );
 
@@ -279,6 +286,7 @@ mod tests {
                 name: Some(TargetName::new("wrapped-table")),
                 header_rows: vec![],
                 body_rows: vec![table_row(&["Cell"])],
+                span: None,
             })],
         );
 

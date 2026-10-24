@@ -622,3 +622,47 @@ fn test_completion_lists_an_inventory_s_entries_for_a_role_naming_it() {
         Some("(in Python v3.14)")
     );
 }
+
+#[test]
+fn test_completion_names_the_fragment_a_label_was_written_in() {
+    // Given — `guide.rst` defines `own` and includes `setup` from a fragment
+    let workspace = Workspace::new(
+        "complete_fragment_label",
+        &[
+            (
+                "guide.rst",
+                "Guide\n=====\n\n.. _own:\n\nText.\n\n.. include:: shared/setup.inc\n",
+            ),
+            ("shared/setup.inc", ".. _setup:\n\nSetting up\n----------\n"),
+            ("index.rst", ""),
+        ],
+    );
+    let (mut state, _) = workspace.server(false);
+    state.on_scan_event(workspace.scanned());
+    handle_notification(&mut state, workspace.open("index.rst", "See :ref:`\n"));
+
+    // When
+    let response = handle_request(&mut state, completion(workspace.uri("index.rst"), 0, 10));
+
+    // Then — each label names the file it was written in
+    let list = list(&response).expect("items");
+    let described: Vec<(&str, Option<&str>)> = list
+        .items
+        .iter()
+        .map(|item| {
+            (
+                item.label.as_str(),
+                item.label_details
+                    .as_ref()
+                    .and_then(|details| details.description.as_deref()),
+            )
+        })
+        .collect();
+    assert_eq!(
+        described,
+        [
+            ("own", Some("guide.rst")),
+            ("setup", Some("shared/setup.inc"))
+        ]
+    );
+}

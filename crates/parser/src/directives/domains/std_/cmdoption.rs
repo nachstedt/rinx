@@ -118,11 +118,16 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::StdCmdoption {
-            flags: _,
-            signatures,
-            body,
-        })) = &doc.nodes[0]
+        if let Node::Directive(Directive::DomainObject {
+            object:
+                DomainObjectBody::StdCmdoption {
+                    flags: _,
+                    signatures,
+                    body,
+                    ..
+                },
+            ..
+        }) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["-m <module-name>"]);
             assert_eq!(body.len(), 1);
@@ -140,10 +145,10 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::StdCmdoption {
-            signatures,
+        if let Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::StdCmdoption { signatures, .. },
             ..
-        })) = &doc.nodes[0]
+        }) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["-c, --compress"]);
         } else {
@@ -159,10 +164,10 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::StdCmdoption {
-            signatures,
+        if let Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::StdCmdoption { signatures, .. },
             ..
-        })) = &doc.nodes[0]
+        }) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["-h", "--help"]);
         } else {
@@ -181,9 +186,10 @@ mod tests {
         // Then
         assert!(matches!(
             &doc.nodes[0],
-            Node::Directive(Directive::DomainObject(
-                DomainObjectBody::StdCmdoption { .. }
-            ))
+            Node::Directive(Directive::DomainObject {
+                object: DomainObjectBody::StdCmdoption { .. },
+                ..
+            })
         ));
     }
     #[test]
@@ -198,9 +204,10 @@ mod tests {
         // fallback convention.
         assert!(matches!(
             &doc.nodes[0],
-            Node::Directive(Directive::DomainObject(
-                DomainObjectBody::StdCmdoption { .. }
-            ))
+            Node::Directive(Directive::DomainObject {
+                object: DomainObjectBody::StdCmdoption { .. },
+                ..
+            })
         ));
         assert!(
             doc.diagnostics

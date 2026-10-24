@@ -268,7 +268,10 @@ fn try_parse_domain_object_directive(
     let domain_object = parse_domain_object(object_type, &invocation, adornment_order, diagnostics);
     Some((
         1 + body.consumed,
-        vec![Node::Directive(Directive::DomainObject(domain_object))],
+        vec![Node::Directive(Directive::DomainObject {
+            object: domain_object,
+            span: invocation.span,
+        })],
     ))
 }
 
@@ -328,7 +331,61 @@ mod tests {
     use super::*;
     use crate::parse;
     use rinx_ast::Domain;
-    use rinx_ast::{CodeBlockSource, CodeLanguage};
+    use rinx_ast::{CodeBlockSource, CodeLanguage, Directive, Node};
+
+    /// The line of every domain object's span in `nodes`, in document order.
+    fn object_lines(nodes: &[Node]) -> Vec<Option<u32>> {
+        let mut lines = Vec::new();
+        rinx_ast::walk_nodes(nodes, &mut |node| {
+            if let Node::Directive(Directive::DomainObject { span, .. }) = node {
+                lines.push(span.map(|span| span.start.line));
+            }
+        });
+        lines
+    }
+
+    #[test]
+    fn test_parse_records_every_domain_objects_marker_line() {
+        // Given — one object of each family, a method nested in a class
+        let input = "\
+.. py:module:: shapes
+
+.. py:class:: Circle
+
+   .. py:method:: area()
+
+.. c:function:: int draw(void)
+
+.. option:: --verbose
+";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(
+            object_lines(&doc.nodes),
+            vec![Some(1), Some(3), Some(5), Some(7), Some(9)]
+        );
+    }
+
+    #[test]
+    fn test_parse_records_the_whole_marker_line_as_an_objects_span() {
+        // When
+        let doc = parse("test.rst", ".. py:function:: greet(name)\n");
+
+        // Then
+        let Some(Node::Directive(Directive::DomainObject { span, .. })) = doc.nodes.first() else {
+            panic!("expected a domain object, got {:?}", doc.nodes);
+        };
+        assert_eq!(
+            *span,
+            Some(rinx_ast::Span::new(
+                rinx_ast::Position::new(1, 1),
+                rinx_ast::Position::new(1, 29)
+            ))
+        );
+    }
 
     /// A plain toctree document entry spanning the whole of source line
     /// `line`, which is the shape `parse_toctree` produces for an unindented

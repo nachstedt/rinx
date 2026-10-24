@@ -40,7 +40,7 @@ pub use discover::{
     DiscoveredProject, contains_conf, discover_projects, discover_projects_with, is_conf,
     is_visible_under, sources_under,
 };
-pub use index::{IndexedDocument, Project};
+pub use index::{Definitions, IndexedDocument, Project};
 pub use inventories::Fetched;
 pub(crate) use model::DEFAULT_ROOT_DOC;
 #[cfg(test)]

@@ -10,7 +10,7 @@ fn test_domain_object_body_object_type_matches_python_variant() {
             module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("greet(name)".to_string()),
-            body: vec![],
+            body: vec![]
         }
         .object_type(),
         ObjectType::Py(PyObjectType::Function)
@@ -19,7 +19,7 @@ fn test_domain_object_body_object_type_matches_python_variant() {
         DomainObjectBody::PyModule {
             name: "greetings".to_string(),
             options: crate::ModuleOptions::default(),
-            body: vec![],
+            body: vec![]
         }
         .object_type(),
         ObjectType::Py(PyObjectType::Module)
@@ -31,7 +31,7 @@ fn test_domain_object_body_object_type_matches_python_variant() {
             signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
             type_: None,
             value: None,
-            body: vec![],
+            body: vec![]
         }
         .object_type(),
         ObjectType::Py(PyObjectType::Data)
@@ -44,7 +44,7 @@ fn test_domain_object_body_object_type_matches_python_variant() {
             type_: None,
             value: None,
             canonical: None,
-            body: vec![],
+            body: vec![]
         }
         .object_type(),
         ObjectType::Py(PyObjectType::Attribute)
@@ -59,7 +59,7 @@ fn test_domain_object_body_object_type_matches_python_variant() {
             is_staticmethod: false,
             is_abstractmethod: false,
             is_async: false,
-            body: vec![],
+            body: vec![]
         }
         .object_type(),
         ObjectType::Py(PyObjectType::Method)
@@ -70,7 +70,7 @@ fn test_domain_object_body_object_type_matches_python_variant() {
             module: None,
             signatures: NonEmptyVector::single("Greeter".to_string()),
             is_final: false,
-            body: vec![],
+            body: vec![]
         }
         .object_type(),
         ObjectType::Py(PyObjectType::Class)
@@ -81,7 +81,7 @@ fn test_domain_object_body_object_type_matches_python_variant() {
             module: None,
             signatures: NonEmptyVector::single("GreeterError".to_string()),
             is_final: false,
-            body: vec![],
+            body: vec![]
         }
         .object_type(),
         ObjectType::Py(PyObjectType::Exception)
@@ -95,7 +95,7 @@ fn test_domain_object_body_object_type_matches_c_variant() {
         DomainObjectBody::CFunction {
             flags: crate::DescriptionFlags::default(),
             signatures: NonEmptyVector::single("int add(int a, int b)".into()),
-            body: vec![],
+            body: vec![]
         }
         .object_type(),
         ObjectType::C(CObjectType::Function)
@@ -104,7 +104,7 @@ fn test_domain_object_body_object_type_matches_c_variant() {
         DomainObjectBody::CMacro {
             flags: crate::DescriptionFlags::default(),
             signatures: NonEmptyVector::single("MAX(a, b)".into()),
-            body: vec![],
+            body: vec![]
         }
         .object_type(),
         ObjectType::C(CObjectType::Macro)

@@ -1,12 +1,14 @@
 use rinx_ast::{
-    Directive, Document, IndexEntry, InlineNode, Node, TableRow, TargetName, for_each_inline_list,
+    Directive, Document, IndexEntry, InlineNode, Node, Span, TableRow, TargetName,
+    allocate_section_ids, for_each_inline_list,
 };
 use rinx_index::{
-    EntityUpdateRecord, EquationLocation, GenIndexEntry, GenIndexRedirect, GenIndexRedirectKind,
-    ProjectIndex,
+    DefinitionKey, DefinitionSites, EntityUpdateRecord, EquationLocation, GenIndexEntry,
+    GenIndexRedirect, GenIndexRedirectKind, ProjectIndex,
 };
 use rinx_scope::DocumentScopes;
 
+use super::definition_spans::DefinitionSpans;
 use super::domain_object_index::index_domain_object;
 use super::equation_numbering::number_equations;
 use super::numbering_steps::collect_numbering;
@@ -19,17 +21,27 @@ use super::outline::build_document_outline;
 /// populated here — it is built globally by [`build_project_index()`].
 #[must_use]
 pub fn analyze(doc: &Document) -> ProjectIndex {
+    analyze_with_sites(doc).0
+}
+
+/// [`analyze`]'s index together with where each definition it names was
+/// written — kept apart because a Bazel build writes the index, and a
+/// position in it would re-render every page whenever a line moved.
+#[must_use]
+pub(crate) fn analyze_with_sites(doc: &Document) -> (ProjectIndex, DefinitionSites) {
     let mut index = ProjectIndex::default();
+    let mut spans = DefinitionSpans::default();
     index.documents.insert(doc.path.clone());
     let mut found_title = false;
     for node in &doc.nodes {
-        if !found_title && let Node::Heading { level: 1, text } = node {
+        if !found_title && let Node::Heading { level: 1, text, .. } = node {
             index
                 .document_titles
                 .insert(doc.path.clone(), rinx_ast::inline_plain_text(text));
             found_title = true;
         }
     }
+    record_section_spans(&doc.nodes, &mut spans);
     let analysis = build_document_outline(&doc.nodes);
     if !analysis.outline.is_empty() {
         index
@@ -63,6 +75,7 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
         &doc.nodes,
         &doc.path,
         &mut index,
+        &mut spans,
         &DocumentScopes::of(&doc.nodes),
     );
     index_inline_index_entries(&doc.nodes, &doc.path, &mut index);
@@ -78,7 +91,19 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
             .equations
             .insert(label, EquationLocation::new(doc.path.clone(), number));
     }
-    index
+    let sites = spans.into_sites(doc);
+    (index, sites)
+}
+
+/// Records where each section's title stands, by the id its anchor is —
+/// from [`allocate_section_ids`], the call the outline and the renderer's
+/// headings make, so the three cannot name a section differently.
+fn record_section_spans(nodes: &[Node], spans: &mut DefinitionSpans) {
+    for (position, id) in allocate_section_ids(nodes) {
+        if let Some(Node::Heading { span, .. }) = nodes.get(position) {
+            spans.record(DefinitionKey::Section(id), *span);
+        }
+    }
 }
 
 /// Records the entries of a `.. index::` directive or an `:index:` role for
@@ -161,13 +186,14 @@ fn index_entity_update(
     update: &rinx_ast::EntityUpdate,
     doc_path: &str,
     index: &mut ProjectIndex,
+    spans: &mut DefinitionSpans,
     scopes: &DocumentScopes,
 ) {
     index.entity_updates.push(EntityUpdateRecord {
         doc_path: doc_path.to_string(),
         update: update.clone(),
     });
-    index_nodes(&update.body, doc_path, index, scopes);
+    index_nodes(&update.body, doc_path, index, spans, scopes);
 }
 
 /// Records one entity, its link target, and everything inside its sections.
@@ -175,14 +201,17 @@ fn index_entity_and_its_sections(
     entity: &rinx_ast::EntityBody,
     doc_path: &str,
     index: &mut ProjectIndex,
+    spans: &mut DefinitionSpans,
     scopes: &DocumentScopes,
 ) {
     super::entity_index::index_entity(entity, doc_path, index);
+    spans.record(DefinitionKey::Entity(entity.id.clone()), entity.span);
     // An entity is also an ordinary link target, so `:ref:` reaches one without
     // any role being declared — which is what makes a schema's roles optional
     // sugar rather than an obligation.
     let name = TargetName::new(entity.id.as_str());
     index.targets.insert(name.clone(), doc_path.to_string());
+    spans.record(DefinitionKey::Label(name.clone()), entity.span);
     // Its anchor is not its name, so a `:ref:` must be told where it is.
     index
         .target_anchors
@@ -191,7 +220,7 @@ fn index_entity_and_its_sections(
     // target, a nested entity, a glossary. Recursing keeps this walk mirroring
     // `render_nodes`, as the module doc requires.
     for section in &entity.sections {
-        index_nodes(&section.body, doc_path, index, scopes);
+        index_nodes(&section.body, doc_path, index, spans, scopes);
     }
 }
 
@@ -210,6 +239,7 @@ pub(super) fn index_nodes(
     nodes: &[Node],
     doc_path: &str,
     index: &mut ProjectIndex,
+    spans: &mut DefinitionSpans,
     scopes: &DocumentScopes,
 ) {
     record_target_titles(nodes, index);
@@ -218,8 +248,13 @@ pub(super) fn index_nodes(
             // An external target (`.. _name: https://…`) is local to its
             // document in docutils, so it stays out of the project index:
             // the renderer reads it from the document it is written in.
-            Node::Target { name, destination: None } => {
+            Node::Target {
+                name,
+                destination: None,
+                span,
+            } => {
                 index.targets.insert(name.clone(), doc_path.to_string());
+                spans.record(DefinitionKey::Label(name.clone()), *span);
             }
             Node::Directive(Directive::Toctree(toctree)) => {
                 // `:name:` makes the toctree itself a `:ref:` target. Recorded
@@ -234,25 +269,19 @@ pub(super) fn index_nodes(
                 }
             }
             Node::Directive(Directive::Entity(entity)) => {
-                index_entity_and_its_sections(entity, doc_path, index, scopes);
+                index_entity_and_its_sections(entity, doc_path, index, spans, scopes);
             }
             Node::Directive(Directive::EntityUpdate(update)) => {
-                index_entity_update(update, doc_path, index, scopes);
+                index_entity_update(update, doc_path, index, spans, scopes);
             }
             Node::Directive(Directive::Glossary { entries, .. }) => {
-                for entry in entries {
-                    for term in &entry.terms {
-                        index
-                            .glossary_terms
-                            .insert(TargetName::new(term), doc_path.to_string());
-                    }
-                }
+                index_glossary(entries, doc_path, index, spans);
             }
             Node::Directive(Directive::Index { entries, id }) => {
                 index_genindex_entries(entries, id, doc_path, index);
             }
-            Node::Directive(Directive::DomainObject(obj)) => {
-                index_domain_object(obj, doc_path, index, scopes);
+            Node::Directive(Directive::DomainObject { object, span }) => {
+                index_domain_object(object, *span, doc_path, index, spans, scopes);
             }
             Node::Directive(
                 directive @ (Directive::Admonition { .. }
@@ -266,35 +295,38 @@ pub(super) fn index_nodes(
                 // document exactly as if it had been written outside one.
                 | Directive::Grid(_)
                 | Directive::GridItem(_)),
-            ) => index_body_only_directive(directive, doc_path, index, scopes),
+            ) => index_body_only_directive(directive, doc_path, index, spans, scopes),
             Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
                 for item in items {
-                    index_nodes(&item.nodes, doc_path, index, scopes);
+                    index_nodes(&item.nodes, doc_path, index, spans, scopes);
                 }
             }
             Node::DefinitionList { items } => {
                 for item in items {
-                    index_nodes(&item.definition, doc_path, index, scopes);
+                    index_nodes(&item.definition, doc_path, index, spans, scopes);
                 }
             }
             Node::Table {
                 header_rows,
                 body_rows,
             } => {
-                index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, scopes);
+                index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, spans, scopes);
             }
-            Node::Directive(Directive::DataTable { rows, name, .. }) => {
-                register_directive_name(name.as_ref(), doc_path, index);
-                index_table_rows(rows, doc_path, index, scopes);
+            Node::Directive(Directive::DataTable {
+                rows, name, span, ..
+            }) => {
+                register_directive_name(name.as_ref(), *span, doc_path, index, spans);
+                index_table_rows(rows, doc_path, index, spans, scopes);
             }
             Node::Directive(Directive::Table {
                 header_rows,
                 body_rows,
                 name,
+                span,
                 ..
             }) => {
-                register_directive_name(name.as_ref(), doc_path, index);
-                index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, scopes);
+                register_directive_name(name.as_ref(), *span, doc_path, index, spans);
+                index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, spans, scopes);
             }
             Node::Directive(
                 directive @ (Directive::CodeBlock(_)
@@ -308,10 +340,34 @@ pub(super) fn index_nodes(
                 | Directive::EntityPie(_)
                 | Directive::EntityBar(_)
                 | Directive::Uml(_)),
-            ) => index_name_bearing_directive(directive, doc_path, index, scopes),
+            ) => index_name_bearing_directive(directive, doc_path, index, spans, scopes),
             Node::Directive(Directive::Sectnum(options)) => index_sectnum(options, doc_path, index),
+            // The equation itself is numbered by its own document-order pass
+            // (`number_equations`); only where its label stands is recorded
+            // here, with every other definition's.
+            Node::Directive(Directive::Math {
+                label: Some(label),
+                span,
+                ..
+            }) => spans.record(DefinitionKey::Equation(label.clone()), *span),
             _ => {}
         }
+    }
+}
+
+/// Records every term of a glossary, and where each was written.
+fn index_glossary(
+    entries: &[rinx_ast::GlossaryEntry],
+    doc_path: &str,
+    index: &mut ProjectIndex,
+    spans: &mut DefinitionSpans,
+) {
+    for term in entries.iter().flat_map(|entry| &entry.terms) {
+        let name = TargetName::new(&term.text);
+        index
+            .glossary_terms
+            .insert(name.clone(), doc_path.to_string());
+        spans.record(DefinitionKey::Term(name), term.span);
     }
 }
 
@@ -333,6 +389,7 @@ fn record_target_titles(nodes: &[Node], index: &mut ProjectIndex) {
         if let Node::Target {
             name,
             destination: None,
+            ..
         } = node
         {
             pending.push(name);
@@ -380,6 +437,7 @@ fn index_body_only_directive(
     directive: &Directive,
     doc_path: &str,
     index: &mut ProjectIndex,
+    spans: &mut DefinitionSpans,
     scopes: &DocumentScopes,
 ) {
     let body = match directive {
@@ -391,7 +449,7 @@ fn index_body_only_directive(
         Directive::GridItem(item) => &item.body,
         _ => return,
     };
-    index_nodes(body, doc_path, index, scopes);
+    index_nodes(body, doc_path, index, spans, scopes);
 }
 
 /// Registers a directive's optional `:name:` as an internal cross-reference
@@ -415,64 +473,83 @@ fn index_name_bearing_directive(
     directive: &Directive,
     doc_path: &str,
     index: &mut ProjectIndex,
+    spans: &mut DefinitionSpans,
     scopes: &DocumentScopes,
 ) {
     match directive {
         Directive::CodeBlock(block) => {
-            register_directive_name(block.name.as_ref(), doc_path, index);
+            register_directive_name(block.name.as_ref(), block.span, doc_path, index, spans);
         }
         Directive::Image(options) => {
-            register_directive_name(options.name.as_ref(), doc_path, index);
+            register_directive_name(options.name.as_ref(), options.span, doc_path, index, spans);
         }
         Directive::Figure(figure) => {
-            register_directive_name(figure.image.name.as_ref(), doc_path, index);
-            index_nodes(&figure.legend, doc_path, index, scopes);
+            register_directive_name(
+                figure.image.name.as_ref(),
+                figure.image.span,
+                doc_path,
+                index,
+                spans,
+            );
+            index_nodes(&figure.legend, doc_path, index, spans, scopes);
         }
         Directive::Contents(contents) => {
-            register_directive_name(contents.options.name.as_ref(), doc_path, index);
+            register_directive_name(contents.options.name.as_ref(), None, doc_path, index, spans);
         }
         // A listing directive's `:name:` is all it contributes: its rows are
         // resolved from this very index while rendering, so there is nothing
         // here to index them from.
         Directive::EntityTable(table) => {
-            register_directive_name(table.name.as_ref(), doc_path, index);
+            register_directive_name(table.name.as_ref(), table.span, doc_path, index, spans);
         }
         // A diagram's `:name:` is all it contributes, for the same reason a
         // listing directive's is: its picture is compiled by a build action
         // and its content, when templated, is resolved from this very index.
         Directive::Uml(uml) => {
-            register_directive_name(uml.name.as_ref(), doc_path, index);
+            register_directive_name(uml.name.as_ref(), uml.span, doc_path, index, spans);
         }
         // A flowchart contributes its `:name:` and nothing else, being both of
         // the above at once: a question answered from this index, drawn as a
         // picture a build action compiles.
         Directive::EntityFlow(flow) => {
-            register_directive_name(flow.name.as_ref(), doc_path, index);
+            register_directive_name(flow.name.as_ref(), flow.span, doc_path, index, spans);
         }
         // A sequence diagram contributes its `:name:` and nothing else, for the
         // flowchart's reason: its participants and messages are walked from
         // this very index while rendering.
         Directive::EntitySequence(sequence) => {
-            register_directive_name(sequence.name.as_ref(), doc_path, index);
+            register_directive_name(
+                sequence.name.as_ref(),
+                sequence.span,
+                doc_path,
+                index,
+                spans,
+            );
         }
         // A pie chart contributes its `:name:` and nothing else, for the
         // listing directive's reason: its wedges are counted from this very
         // index while rendering. Unlike a flowchart, no build action is
         // involved at all — the chart is drawn in the render itself.
         Directive::EntityPie(pie) => {
-            register_directive_name(pie.name.as_ref(), doc_path, index);
+            register_directive_name(pie.name.as_ref(), pie.span, doc_path, index, spans);
         }
         // A bar chart likewise: its cells are counted from this index while
         // rendering, and nothing is compiled.
         Directive::EntityBar(bar) => {
-            register_directive_name(bar.name.as_ref(), doc_path, index);
+            register_directive_name(bar.name.as_ref(), bar.span, doc_path, index, spans);
         }
         // A dropdown carries both: a `:name:` of its own, and a body whose
         // targets, sections and entities belong to this document exactly as
         // if they had been written outside it.
         Directive::Dropdown(dropdown) => {
-            register_directive_name(dropdown.name.as_ref(), doc_path, index);
-            index_nodes(&dropdown.body, doc_path, index, scopes);
+            register_directive_name(
+                dropdown.name.as_ref(),
+                dropdown.span,
+                doc_path,
+                index,
+                spans,
+            );
+            index_nodes(&dropdown.body, doc_path, index, spans, scopes);
         }
         _ => {}
     }
@@ -498,11 +575,18 @@ fn index_sectnum(options: &rinx_ast::SectnumOptions, doc_path: &str, index: &mut
     index.sectnum.insert(doc_path.to_string(), options.clone());
 }
 
-fn register_directive_name(name: Option<&TargetName>, doc_path: &str, index: &mut ProjectIndex) {
+fn register_directive_name(
+    name: Option<&TargetName>,
+    span: Option<Span>,
+    doc_path: &str,
+    index: &mut ProjectIndex,
+    spans: &mut DefinitionSpans,
+) {
     if let Some(target_name) = name {
         index
             .targets
             .insert(target_name.clone(), doc_path.to_string());
+        spans.record(DefinitionKey::Label(target_name.clone()), span);
     }
 }
 
@@ -514,19 +598,23 @@ fn index_table_rows<'a>(
     rows: impl IntoIterator<Item = &'a TableRow>,
     doc_path: &str,
     index: &mut ProjectIndex,
+    spans: &mut DefinitionSpans,
     scopes: &DocumentScopes,
 ) {
     for row in rows {
         for cell in &row.cells {
-            index_nodes(&cell.content, doc_path, index, scopes);
+            index_nodes(&cell.content, doc_path, index, spans, scopes);
         }
     }
 }
 
 /// Tests, split by topic into sibling modules rather than kept inline:
 /// [`targets_and_titles_tests`] for the plain target/title/glossary walk,
-/// [`domain_object_tests`] for the scope-qualified domain-object keys, and
-/// [`index_entry_tests`] for the `.. index::` directive.
+/// [`domain_object_tests`] for the scope-qualified domain-object keys,
+/// [`index_entry_tests`] for the `.. index::` directive, and
+/// [`definition_sites_tests`] for where each definition was written.
+#[cfg(test)]
+mod definition_sites_tests;
 #[cfg(test)]
 mod domain_object_tests;
 #[cfg(test)]

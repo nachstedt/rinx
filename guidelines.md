@@ -18,6 +18,7 @@ entry under the heading it belongs to, as a single short sentence.
 - In a build system, deserialization should validate invariants strictly and return errors on violations.
 - Use enums for fields with a fixed set of predefined values to ensure type safety.
 - When a family of related kinds needs different options per kind, give each kind its own explicit variant/type with only its own fields, rather than one shared struct/variant carrying the union of every kind's options (most of them meaningless on most instances).
+- Put a field that every variant of a family shares, and that does not depend on the kind (where it was written, its body), once beside the family rather than repeated in each variant.
 - When several values play the same role, model them as one uniform collection rather than splitting the first out into its own field; if one of them is special, express that as a named accessor on the collection, not as a structural asymmetry.
 - Give two constructs one shared type when they are structurally identical and carry no kind-specific data; split them into separate types only when they differ in the fields they need.
 - Model a family of valueless flag options as one set of an enum rather than as several `bool` fields, so asking for one cannot be confused with asking for its neighbour.
@@ -60,6 +61,8 @@ entry under the heading it belongs to, as a single short sentence.
 - Give fixtures shared by two sibling test modules their own `#[cfg(test)]` support module rather than copying them into both.
 
 ## Refactoring safely
+
+- Never pick a weaker design to save mechanical edits the compiler finds for you: the number of call sites a change touches is not an argument against it.
 
 - Never mechanically re-indent code while moving it, since blanket whitespace edits silently rewrite string literals; move the text verbatim and let `cargo fmt` re-indent.
 - Treat a pure reorganization as behaviour-preserving and prove it, by comparing test counts before and after and diffing the moved files' string literals against the previous revision.

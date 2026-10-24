@@ -45,7 +45,7 @@ pub(super) fn build_document_outline(nodes: &[Node]) -> DocumentAnalysis {
 
     for (index, node) in nodes.iter().enumerate() {
         match node {
-            Node::Heading { level, text } => {
+            Node::Heading { level, text, .. } => {
                 let Some(id) = ids.get(&index) else {
                     continue;
                 };
@@ -169,6 +169,7 @@ mod tests {
         Node::Heading {
             level,
             text: vec![InlineNode::Text(title.to_string())],
+            span: None,
         }
     }
 
@@ -423,6 +424,7 @@ mod tests {
                     InlineNode::Emphasis("fast".to_string()),
                     InlineNode::Text(" path".to_string()),
                 ],
+                span: None,
             },
         ];
 
@@ -444,6 +446,7 @@ mod tests {
                     InlineNode::Text("Reading ".to_string()),
                     InlineNode::TitleReference("Dune".to_string()),
                 ],
+                span: None,
             },
         ];
 
@@ -470,6 +473,7 @@ mod tests {
                     },
                     InlineNode::Text(" levels".to_string()),
                 ],
+                span: None,
             },
         ];
 

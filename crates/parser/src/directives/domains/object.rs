@@ -133,6 +133,7 @@ mod tests {
             is_decorator,
             module: _,
             body,
+            ..
         } = domain_object
         {
             assert_eq!(signatures.as_slice(), [signature]);
@@ -381,7 +382,8 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then
-        let Some(Node::Directive(Directive::DomainObject(object))) = doc.nodes.first() else {
+        let Some(Node::Directive(Directive::DomainObject { object, .. })) = doc.nodes.first()
+        else {
             panic!("Expected a domain object, got {:?}", doc.nodes);
         };
         assert_eq!(object.names().as_slice(), ["start_unix_server"]);

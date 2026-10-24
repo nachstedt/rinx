@@ -25,6 +25,7 @@ fn test_analyze_returns_default_index_for_populated_document() {
         vec![Node::Heading {
             level: 1,
             text: vec![InlineNode::Text("Title".to_string())],
+            span: None,
         }],
     );
 
@@ -45,6 +46,7 @@ fn test_analyze_populates_targets_for_target_nodes() {
             Node::Target {
                 name: TargetName::new("section-1"),
                 destination: None,
+                span: None,
             },
             Node::Paragraph(vec![InlineNode::Text("some text".to_string())]),
         ],
@@ -71,10 +73,12 @@ fn test_analyze_extracts_h1_title() {
             Node::Heading {
                 level: 1,
                 text: vec![InlineNode::Text("My Title".to_string())],
+                span: None,
             },
             Node::Heading {
                 level: 1,
                 text: vec![InlineNode::Text("Ignored Second H1".to_string())],
+                span: None,
             },
         ],
     );
@@ -128,6 +132,7 @@ fn test_analyze_extracts_h1_title_as_plain_text_when_heading_has_domain_object_r
                 },
                 InlineNode::Text(" Module".to_string()),
             ],
+            span: None,
         }],
     );
 
@@ -148,7 +153,7 @@ fn test_analyze_registers_glossary_terms() {
         "glossary.rst".to_string(),
         vec![Node::Directive(Directive::Glossary {
             entries: vec![rinx_ast::GlossaryEntry {
-                terms: vec!["environment".to_string()],
+                terms: vec![rinx_ast::GlossaryTerm::unplaced("environment")],
                 definition: vec![],
             }],
             sorted: false,
@@ -173,7 +178,10 @@ fn test_analyze_registers_all_terms_in_multi_term_entry() {
         "glossary.rst".to_string(),
         vec![Node::Directive(Directive::Glossary {
             entries: vec![rinx_ast::GlossaryEntry {
-                terms: vec!["term 1".to_string(), "term 2".to_string()],
+                terms: vec![
+                    rinx_ast::GlossaryTerm::unplaced("term 1"),
+                    rinx_ast::GlossaryTerm::unplaced("term 2"),
+                ],
                 definition: vec![],
             }],
             sorted: false,
@@ -211,6 +219,7 @@ fn test_analyze_registers_target_nested_in_table_cell() {
                     content: vec![Node::Target {
                         name: TargetName::new("nested-target"),
                         destination: None,
+                        span: None,
                     }],
                 }],
             }],
@@ -243,6 +252,7 @@ fn test_analyze_registers_list_table_name_as_target() {
             classes: vec![],
             name: Some(TargetName::new("fruit-table")),
             rows: vec![],
+            span: None,
         })],
     );
 
@@ -272,6 +282,7 @@ fn test_analyze_list_table_without_name_registers_no_target() {
             classes: vec![],
             name: None,
             rows: vec![],
+            span: None,
         })],
     );
 
@@ -296,6 +307,7 @@ fn test_analyze_registers_table_directive_name_as_target() {
             name: Some(TargetName::new("wrapped-table")),
             header_rows: vec![],
             body_rows: vec![],
+            span: None,
         })],
     );
 
@@ -328,6 +340,7 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
                     content: vec![Node::Target {
                         name: TargetName::new("in-header"),
                         destination: None,
+                        span: None,
                     }],
                 }],
             }],
@@ -338,9 +351,11 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
                     content: vec![Node::Target {
                         name: TargetName::new("in-body"),
                         destination: None,
+                        span: None,
                     }],
                 }],
             }],
+            span: None,
         })],
     );
 
@@ -478,6 +493,7 @@ fn test_analyze_indexes_targets_inside_a_figure_legend() {
             vec![Node::Target {
                 name: TargetName::new("in-legend"),
                 destination: None,
+                span: None,
             }],
         )],
     );
@@ -630,6 +646,7 @@ fn test_analyze_indexes_targets_inside_a_dropdown_body() {
             vec![Node::Target {
                 name: TargetName::new("in-dropdown"),
                 destination: None,
+                span: None,
             }],
         )],
     );
@@ -837,6 +854,7 @@ fn label(name: &str) -> Node {
     Node::Target {
         name: TargetName::new(name),
         destination: None,
+        span: None,
     }
 }
 
@@ -844,6 +862,7 @@ fn heading(title: &str) -> Node {
     Node::Heading {
         level: 2,
         text: vec![InlineNode::Text(title.to_string())],
+        span: None,
     }
 }
 
@@ -932,6 +951,7 @@ fn test_analyze_records_no_title_for_an_external_hyperlink_target() {
                 destination: Some(rinx_ast::LinkDestination::Uri(
                     "https://python.org".to_string(),
                 )),
+                span: None,
             },
             heading("Installing"),
         ],
@@ -956,6 +976,7 @@ fn test_analyze_leaves_an_external_hyperlink_target_out_of_the_index() {
                 destination: Some(rinx_ast::LinkDestination::Uri(
                     "https://python.org".to_string(),
                 )),
+                span: None,
             },
             label("installing"),
         ],
@@ -1070,6 +1091,7 @@ fn test_analyze_records_a_table_title_for_its_label_and_name() {
                 name: Some(TargetName::new("sizes-table")),
                 header_rows: vec![],
                 body_rows: vec![],
+                span: None,
             }),
         ],
     );

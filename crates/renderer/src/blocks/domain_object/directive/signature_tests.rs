@@ -18,8 +18,8 @@ fn test_render_domain_object_repeats_prefix_labels_on_every_dt() {
     // whole, so every alias's `<dt>` carries them.
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject(
-            rinx_ast::DomainObjectBody::PyMethod {
+        vec![Node::Directive(Directive::DomainObject {
+            object: rinx_ast::DomainObjectBody::PyMethod {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 is_decorator: false,
@@ -33,7 +33,8 @@ fn test_render_domain_object_repeats_prefix_labels_on_every_dt() {
                 is_async: false,
                 body: vec![],
             },
-        ))],
+            span: None,
+        })],
     );
 
     // When
@@ -53,8 +54,8 @@ fn test_render_domain_object_emits_one_dt_per_declared_name() {
     // Given — the confirmed `library/socket.rst` shape.
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject(
-            rinx_ast::DomainObjectBody::PyData {
+        vec![Node::Directive(Directive::DomainObject {
+            object: rinx_ast::DomainObjectBody::PyData {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::new(
@@ -67,7 +68,8 @@ fn test_render_domain_object_emits_one_dt_per_declared_name() {
                     "The address families.".to_string(),
                 )])],
             },
-        ))],
+            span: None,
+        })],
     );
 
     // When
@@ -89,8 +91,8 @@ fn test_render_domain_object_shows_each_signature_as_its_own_dt_text() {
     // uses only the extracted name.
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject(
-            rinx_ast::DomainObjectBody::PyFunction {
+        vec![Node::Directive(Directive::DomainObject {
+            object: rinx_ast::DomainObjectBody::PyFunction {
                 flags: rinx_ast::DescriptionFlags::default(),
                 is_async: false,
                 module: None,
@@ -101,7 +103,8 @@ fn test_render_domain_object_shows_each_signature_as_its_own_dt_text() {
                 ),
                 body: vec![],
             },
-        ))],
+            span: None,
+        })],
     );
 
     // When
@@ -120,15 +123,16 @@ fn test_render_domain_object_qualifies_every_alias_by_the_current_module() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::PyModule {
+            Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::PyModule {
                     name: "socket".to_string(),
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-            )),
-            Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::PyData {
+                span: None,
+            }),
+            Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::PyData {
                     flags: rinx_ast::DescriptionFlags::default(),
                     module: None,
                     signatures: NonEmptyVector::new(
@@ -139,7 +143,8 @@ fn test_render_domain_object_qualifies_every_alias_by_the_current_module() {
                     value: None,
                     body: vec![],
                 },
-            )),
+                span: None,
+            }),
         ],
     );
 
@@ -158,21 +163,22 @@ fn test_render_domain_object_module_option_overrides_the_anchor_id() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::PyModule {
+            Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::PyModule {
                     name: "multiprocessing.shared_memory".to_string(),
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-            )),
-            Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::PyClass {
+                span: None,
+            }),
+            Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::PyClass {
                     flags: rinx_ast::DescriptionFlags::default(),
                     module: Some("multiprocessing.managers".to_string()),
                     signatures: NonEmptyVector::single("SharedMemoryManager".to_string()),
                     is_final: false,
-                    body: vec![Node::Directive(Directive::DomainObject(
-                        rinx_ast::DomainObjectBody::PyMethod {
+                    body: vec![Node::Directive(Directive::DomainObject {
+                        object: rinx_ast::DomainObjectBody::PyMethod {
                             flags: rinx_ast::DescriptionFlags::default(),
                             module: None,
                             is_decorator: false,
@@ -183,11 +189,13 @@ fn test_render_domain_object_module_option_overrides_the_anchor_id() {
                             is_async: false,
                             body: vec![],
                         },
-                    ))],
+                        span: None,
+                    })],
                 },
-            )),
-            Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::PyFunction {
+                span: None,
+            }),
+            Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::PyFunction {
                     flags: rinx_ast::DescriptionFlags::default(),
                     is_async: false,
                     module: None,
@@ -195,7 +203,8 @@ fn test_render_domain_object_module_option_overrides_the_anchor_id() {
                     signatures: NonEmptyVector::single("track(size)".to_string()),
                     body: vec![],
                 },
-            )),
+                span: None,
+            }),
         ],
     );
 

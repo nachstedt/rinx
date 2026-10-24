@@ -1008,6 +1008,35 @@ and a relation with `multiple = false` still completes as a list.
 - `documentSymbol` handler
 - Tests
 
+The spans live in the `.ast`, on the definitions themselves: a section's
+title line, a target's line, a domain object's or a table's marker line, and
+each glossary term's line (`GlossaryTerm`). The analyzer records each one where
+it inserts the name into the index, under the key the index names it by
+(`rinx_index::DefinitionKey`), into the `DefinitionSites` a `DocumentAnalysis`
+keeps beside its index fragment. No fold reads them, and the build's `index`
+action writes only the `ProjectIndex` (ADR-045). A test parses a document with
+every definition moved down: the written index stays byte-identical while
+every site moves. The server keeps one analysis per document, open or closed,
+so a closed document's definitions have their lines too. An analysis
+differing only in its sites replaces the recorded one without folding again,
+so pressing Enter above a heading costs no fold. `EntityRecord::relation_spans`,
+which only the fold reads, is no longer written either.
+
+The outline reads the open document's latest parse. It shows the sections
+nested by level, each spanning up to the next, and under them each domain
+object, named as the index names it, a class's methods under the class, and
+each entity by its id. A section or object an `.. include::` brought in is
+placed on the `.. include::` line. A client that does not announce nested
+symbols gets them flat, each naming its holder. `:ref:` completion names the
+fragment a label was written in.
+
+Not done here:
+- The written index still carries the lines of toctree entries and entity
+  updates (issue #372).
+- `.. contents::` and a toctree's `:name:` have no span, so their labels have
+  no site.
+- Labels and glossary terms are not outline entries.
+
 ### 29. Precise go to definition
 
 **You experience:** F12 jumps to the label's line or the object's directive.

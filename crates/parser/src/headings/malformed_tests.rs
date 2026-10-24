@@ -5,13 +5,13 @@
 use super::test_support::diagnostic_codes;
 use super::*;
 use crate::parse;
-use rinx_ast::InlineNode;
+use rinx_ast::{InlineNode, Position, Span};
 
 fn headings(doc: &rinx_ast::Document) -> Vec<(u8, Vec<InlineNode>)> {
     doc.nodes
         .iter()
         .filter_map(|node| match node {
-            Node::Heading { level, text } => Some((*level, text.clone())),
+            Node::Heading { level, text, .. } => Some((*level, text.clone())),
             _ => None,
         })
         .collect()
@@ -34,7 +34,8 @@ fn test_parse_keeps_a_title_whose_underline_is_longer_than_its_overline() {
         doc.nodes,
         vec![Node::Heading {
             level: 1,
-            text: title("Title")
+            text: title("Title"),
+            span: Some(Span::new(Position::new(2, 1), Position::new(2, 6)))
         }]
     );
     assert_eq!(

@@ -60,6 +60,7 @@ impl DocumentHyperlinkTargets {
             if let Node::Target {
                 name,
                 destination: Some(destination),
+                ..
             } = node
             {
                 explicit
@@ -186,6 +187,7 @@ mod tests {
         Node::Target {
             name: TargetName::new(name),
             destination: Some(LinkDestination::Uri(uri.to_string())),
+            span: None,
         }
     }
 
@@ -193,6 +195,7 @@ mod tests {
         Node::Target {
             name: TargetName::new(name),
             destination: Some(LinkDestination::Name(TargetName::new(of))),
+            span: None,
         }
     }
 
@@ -208,6 +211,7 @@ mod tests {
         Node::Heading {
             level: 1,
             text: vec![InlineNode::Text(title.to_string())],
+            span: None,
         }
     }
 

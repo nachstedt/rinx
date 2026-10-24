@@ -262,7 +262,7 @@ fn try_parse_construct(
     if let Some(found) = try_parse_directive(lines, i, adornment_order, diagnostics, ctx) {
         return Some(found);
     }
-    if let Some(found) = try_parse_target(lines, i) {
+    if let Some(found) = try_parse_target(lines, i, ctx) {
         return Some(single(found));
     }
     if let Some(found) = try_parse_transition(lines, i, nodes, diagnostics, ctx) {

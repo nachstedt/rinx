@@ -171,6 +171,7 @@ pub(in crate::directives) fn parse_csv_table(
             title,
             options,
             header_option_rows: header_rows,
+            marker: invocation.span,
         },
         rows,
         adornment_order,
@@ -341,6 +342,8 @@ struct CsvTableSpec {
     /// Rows contributed by the `:header:` option, over and above
     /// `options.header_rows`.
     header_option_rows: usize,
+    /// The directive's marker line, which the node records as its span.
+    marker: Option<Span>,
 }
 
 fn build_csv_table(
@@ -355,6 +358,7 @@ fn build_csv_table(
         title,
         options,
         header_option_rows,
+        marker,
     } = spec;
     let ncols = field_rows.first().map_or(0, Vec::len);
     let header_rows = header_option_rows + options.header_rows;
@@ -411,6 +415,7 @@ fn build_csv_table(
         classes: options.classes,
         name: options.name,
         rows,
+        span: marker,
     })
 }
 
@@ -455,6 +460,28 @@ mod tests {
     use crate::context::{LoadedFile, ParseFileLoader};
     use rinx_ast::{Domain, InlineNode, TableAlign, TableWidths, TargetName};
     use std::collections::HashMap;
+
+    #[test]
+    fn test_parse_records_the_csv_tables_marker_line_as_its_span() {
+        // Given — a named table below a paragraph
+        let input = "Intro\n\n.. csv-table:: Sizes\n   :name: sizes\n\n   a, b\n   1, 2\n";
+
+        // When
+        let doc = crate::parse("test.rst", input);
+
+        // Then
+        let span = doc.nodes.iter().find_map(|node| match node {
+            Node::Directive(Directive::DataTable { span, .. }) => Some(*span),
+            _ => None,
+        });
+        assert_eq!(
+            span,
+            Some(Some(rinx_ast::Span::new(
+                rinx_ast::Position::new(3, 1),
+                rinx_ast::Position::new(3, 21)
+            )))
+        );
+    }
 
     /// An in-memory stand-in for the worker's filesystem loader, so `:file:`
     /// can be exercised without touching the disk.

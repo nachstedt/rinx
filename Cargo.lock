@@ -1170,6 +1170,7 @@ dependencies = [
  "rinx_parser",
  "rinx_pyconf",
  "rinx_renderer",
+ "rinx_scope",
  "rinx_toctree",
  "serde",
  "serde_json",

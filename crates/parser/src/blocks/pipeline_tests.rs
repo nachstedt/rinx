@@ -5,7 +5,7 @@
 
 use crate::parse;
 use rinx_ast::TargetName;
-use rinx_ast::{CodeLanguage, InlineNode, Node};
+use rinx_ast::{CodeLanguage, InlineNode, Node, Position, Span};
 
 #[test]
 fn test_parse_returns_empty_document_for_empty_input() {
@@ -43,7 +43,8 @@ fn test_parse_creates_mixed_nodes_for_heading_and_paragraph() {
         doc.nodes[0],
         Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("Title".to_string())]
+            text: vec![InlineNode::Text("Title".to_string())],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 6)))
         }
     );
     assert_eq!(
@@ -79,7 +80,8 @@ fn test_parse_ignores_trailing_whitespace_for_heading() {
         doc.nodes[0],
         Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("Heading".to_string())]
+            text: vec![InlineNode::Text("Heading".to_string())],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 10)))
         }
     );
     assert_eq!(
@@ -122,7 +124,8 @@ fn test_parse_handles_carriage_returns_gracefully() {
         doc.nodes[0],
         Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("Heading".to_string())]
+            text: vec![InlineNode::Text("Heading".to_string())],
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 8)))
         }
     );
     assert_eq!(
@@ -143,7 +146,8 @@ fn test_parse_creates_target_node_for_explicit_target() {
         doc.nodes[0],
         Node::Target {
             name: TargetName::new("my-target"),
-            destination: None
+            destination: None,
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 15)))
         }
     );
     assert_eq!(
@@ -166,7 +170,8 @@ fn test_parse_creates_external_target_node() {
             name: TargetName::new("my-link"),
             destination: Some(rinx_ast::LinkDestination::Uri(
                 "https://example.com".to_string()
-            ))
+            )),
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 33)))
         }
     );
 }
@@ -185,7 +190,8 @@ fn test_parse_creates_indented_external_target_node() {
             name: TargetName::new("my-link"),
             destination: Some(rinx_ast::LinkDestination::Uri(
                 "https://example.com".to_string()
-            ))
+            )),
+            span: Some(Span::new(Position::new(1, 1), Position::new(1, 13)))
         }
     );
 }
@@ -208,7 +214,8 @@ fn test_parse_paragraph_breaks_at_overline() {
         doc.nodes[1],
         Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("Hi".to_string())]
+            text: vec![InlineNode::Text("Hi".to_string())],
+            span: Some(Span::new(Position::new(3, 1), Position::new(3, 3)))
         }
     );
 }
@@ -445,7 +452,8 @@ fn test_parse_bodyless_index_directive_inside_glossary_does_not_swallow_followin
         panic!("Expected Glossary directive, got {:?}", doc.nodes[0]);
     };
     assert_eq!(entries.len(), 1);
-    assert_eq!(entries[0].terms, vec!["magic method".to_string()]);
+    assert_eq!(entries[0].terms[0].text, "magic method");
+    assert_eq!(entries[0].terms.len(), 1);
     // The definition must contain the Index directive AND the paragraph
     // as two separate sibling nodes — not one node with the paragraph's
     // text corrupted into bogus index entries.

@@ -45,7 +45,12 @@ pub struct EntityRecord {
     /// spelling — the parse's `EntityBody::relation_spans`, carried into the
     /// index so a target found missing only project-wide is reported on the
     /// line that names it. A toctree entry's span is kept for the same reason.
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    ///
+    /// Read only by the phase reporting that, in the process that folds the
+    /// index, so never written with it: a line moves with every edit above
+    /// it, and every page renders from the written index
+    /// (`docs/decisions/045-definition-spans.md`).
+    #[serde(skip)]
     pub relation_spans: BTreeMap<String, rinx_ast::Span>,
 }
 
@@ -89,6 +94,28 @@ mod tests {
             )]),
             uml: BTreeMap::new(),
         }
+    }
+
+    #[test]
+    fn test_a_record_is_written_without_the_lines_its_relations_stand_on() {
+        // Given — a relation written on line 7
+        let mut written = record(Some("Boot quickly"));
+        written.relation_spans.insert(
+            "links".to_string(),
+            rinx_ast::Span::new(
+                rinx_ast::Position::new(7, 1),
+                rinx_ast::Position::new(7, 20),
+            ),
+        );
+
+        // When
+        let json = serde_json::to_string(&written).expect("serializes");
+        let read: EntityRecord = serde_json::from_str(&json).expect("deserializes");
+
+        // Then — the line moves with every edit above it, so the written
+        // index must not hold it (docs/decisions/045-definition-spans.md)
+        assert!(!json.contains("relation_spans"), "{json}");
+        assert_eq!(read, record(Some("Boot quickly")));
     }
 
     #[test]

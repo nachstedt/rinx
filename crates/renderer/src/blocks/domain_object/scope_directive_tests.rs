@@ -114,22 +114,24 @@ fn test_render_c_namespace_null_inside_c_type_body_unqualifies_nested_macro_anch
     // cross-reference target drift apart.
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject(
-            rinx_ast::DomainObjectBody::CType {
+        vec![Node::Directive(Directive::DomainObject {
+            object: rinx_ast::DomainObjectBody::CType {
                 signatures: rinx_ast::NonEmptyVector::single("PyMemAllocatorDomain".into()),
                 flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![
                     Node::Directive(Directive::CNamespace { namespace: None }),
-                    Node::Directive(Directive::DomainObject(
-                        rinx_ast::DomainObjectBody::CMacro {
+                    Node::Directive(Directive::DomainObject {
+                        object: rinx_ast::DomainObjectBody::CMacro {
                             flags: rinx_ast::DescriptionFlags::default(),
                             signatures: rinx_ast::NonEmptyVector::single("PYMEM_DOMAIN_RAW".into()),
                             body: vec![],
                         },
-                    )),
+                        span: None,
+                    }),
                 ],
             },
-        ))],
+            span: None,
+        })],
     );
     let index = ProjectIndex::default();
 

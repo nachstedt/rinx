@@ -182,7 +182,8 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then
-        let Some(Node::Directive(Directive::DomainObject(object))) = doc.nodes.first() else {
+        let Some(Node::Directive(Directive::DomainObject { object, .. })) = doc.nodes.first()
+        else {
             panic!("Expected a domain object, got {:?}", doc.nodes);
         };
         assert!(object.no_index_entry());
@@ -199,7 +200,8 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then
-        let Some(Node::Directive(Directive::DomainObject(object))) = doc.nodes.first() else {
+        let Some(Node::Directive(Directive::DomainObject { object, .. })) = doc.nodes.first()
+        else {
             panic!("Expected a domain object, got {:?}", doc.nodes);
         };
         assert!(object.no_index());
@@ -214,10 +216,10 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CFunction {
-            signatures,
+        if let Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::CFunction { signatures, .. },
             ..
-        })) = &doc.nodes[0]
+        }) = &doc.nodes[0]
         {
             assert_eq!(signature_texts(signatures), ["int add(int a, int b)"]);
         } else {
@@ -234,11 +236,16 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CMacro {
-            flags: _,
-            signatures,
-            body,
-        })) = &doc.nodes[0]
+        if let Node::Directive(Directive::DomainObject {
+            object:
+                DomainObjectBody::CMacro {
+                    flags: _,
+                    signatures,
+                    body,
+                    ..
+                },
+            ..
+        }) = &doc.nodes[0]
         {
             assert_eq!(signature_texts(signatures), ["PY_SSIZE_T_MAX"]);
             assert_eq!(body.len(), 1);
@@ -256,10 +263,10 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CMacro {
-            signatures,
+        if let Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::CMacro { signatures, .. },
             ..
-        })) = &doc.nodes[0]
+        }) = &doc.nodes[0]
         {
             assert_eq!(signature_texts(signatures), ["MAX(a, b)"]);
         } else {
@@ -278,7 +285,10 @@ mod tests {
         assert_eq!(doc.nodes.len(), 1);
         assert!(matches!(
             &doc.nodes[0],
-            Node::Directive(Directive::DomainObject(DomainObjectBody::CMacro { .. }))
+            Node::Directive(Directive::DomainObject {
+                object: DomainObjectBody::CMacro { .. },
+                ..
+            })
         ));
     }
     #[test]
@@ -293,7 +303,10 @@ mod tests {
         assert_eq!(doc.nodes.len(), 1);
         assert!(matches!(
             &doc.nodes[0],
-            Node::Directive(Directive::DomainObject(DomainObjectBody::CFunction { .. }))
+            Node::Directive(Directive::DomainObject {
+                object: DomainObjectBody::CFunction { .. },
+                ..
+            })
         ));
     }
     #[test]
@@ -306,7 +319,7 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then — the name comes from the declarator, not the return type.
-        let Node::Directive(Directive::DomainObject(object)) = &doc.nodes[0] else {
+        let Node::Directive(Directive::DomainObject { object, .. }) = &doc.nodes[0] else {
             panic!("Expected a domain object, got {:?}", doc.nodes[0]);
         };
         assert_eq!(object.names().as_slice(), ["Py_tracefunc"]);

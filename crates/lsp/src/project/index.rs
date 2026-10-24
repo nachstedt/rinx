@@ -24,13 +24,18 @@
 //!
 //! Which files are documents, what they are named and how the index is built
 //! is the project's [`ProjectModel`]'s to say, the entity schema included.
+//!
+//! Each analysis also holds where the document's definitions were written,
+//! which no fold reads (`docs/decisions/045-definition-spans.md`): a
+//! document whose definitions merely moved replaces its analysis without
+//! folding again, so pressing Enter above a heading costs no fold.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use rinx_analyzer::{DocumentAnalysis, build_project_index_from_analyses};
-use rinx_ast::{Diagnostic, Document};
-use rinx_index::{ExternalInventory, ProjectIndex};
+use rinx_ast::{Diagnostic, Document, Position};
+use rinx_index::{DefinitionKey, ExternalInventory, ProjectIndex};
 use rinx_renderer::config::SiteConfig;
 
 use super::discover::DiscoveredProject;
@@ -64,6 +69,63 @@ impl IndexedDocument {
             analysis: DocumentAnalysis::of(document),
             reads,
         }
+    }
+}
+
+/// Where a definition was written: a file, and the range in it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DefinitionLocation {
+    /// The file: the defining document's, or the `.. include::`d fragment's.
+    pub path: PathBuf,
+    /// The definition's first character.
+    pub start: Position,
+    /// Just past its last character.
+    pub end: Position,
+}
+
+/// Where a project's documents wrote their definitions, borrowed from the
+/// project beside its index by [`Project::index_and_definitions`].
+#[derive(Debug, Clone, Copy)]
+pub struct Definitions<'a> {
+    documents: &'a BTreeMap<String, IndexedDocument>,
+    source_root: &'a Path,
+}
+
+impl Definitions<'_> {
+    /// Where the document `doc_path` wrote the definition `key`, by its
+    /// latest analysis — `None` when the project holds no such document, or
+    /// the document no such definition.
+    #[must_use]
+    pub fn site(&self, doc_path: &str, key: &DefinitionKey) -> Option<DefinitionLocation> {
+        let indexed = self.documents.get(doc_path)?;
+        let site = indexed.analysis.definition_sites().get(key)?;
+        let path = match &site.file {
+            None => indexed.path.clone(),
+            // The build names a fragment from the source root, the server's
+            // loader by its absolute path; joining keeps the latter as it is.
+            Some(file) => self.source_root.join(file),
+        };
+        Some(DefinitionLocation {
+            path,
+            start: site.start,
+            end: site.end,
+        })
+    }
+
+    /// The fragment the document `doc_path` wrote the definition `key` in,
+    /// named from the source root when it lies under it — `None` when the
+    /// document wrote it itself, or wrote no such definition.
+    #[must_use]
+    pub fn fragment_of(&self, doc_path: &str, key: &DefinitionKey) -> Option<String> {
+        let site = self.site(doc_path, key)?;
+        if self.documents.get(doc_path)?.path == site.path {
+            return None;
+        }
+        let shown = site
+            .path
+            .strip_prefix(self.source_root)
+            .unwrap_or(&site.path);
+        Some(shown.to_string_lossy().into_owned())
     }
 }
 
@@ -279,10 +341,18 @@ impl Project {
     }
 
     /// Records `indexed` as the latest analysis of the document `doc_path`.
+    ///
+    /// An analysis differing only in where its definitions were written
+    /// replaces the recorded one without folding again.
     pub fn record(&mut self, doc_path: String, indexed: IndexedDocument) {
         self.forgotten.remove(&doc_path);
-        if self.documents.get(&doc_path) != Some(&indexed) {
-            self.documents.insert(doc_path, indexed);
+        let folds_alike = self.documents.get(&doc_path).is_some_and(|recorded| {
+            recorded.path == indexed.path
+                && recorded.reads == indexed.reads
+                && recorded.analysis.folds_like(&indexed.analysis)
+        });
+        self.documents.insert(doc_path, indexed);
+        if !folds_alike {
             self.invalidate();
         }
     }
@@ -397,6 +467,24 @@ impl Project {
         &self.fold().index
     }
 
+    /// The project index, beside where its definitions were written, for a
+    /// caller reading both at once.
+    pub fn index_and_definitions(&mut self) -> (&ProjectIndex, Definitions<'_>) {
+        let root_doc = self.root_doc().to_string();
+        let fold = fold_documents(
+            &mut self.fold,
+            &self.documents,
+            &self.model,
+            &mut self.external,
+            &root_doc,
+        );
+        let definitions = Definitions {
+            documents: &self.documents,
+            source_root: &self.model.source_root,
+        };
+        (&fold.index, definitions)
+    }
+
     /// What folding the project's documents found about the document
     /// `doc_path` — the build's `index` warnings about it, before any
     /// `.. noqa:` is applied.
@@ -411,36 +499,56 @@ impl Project {
     /// changed since the last.
     fn fold(&mut self) -> &Fold {
         let root_doc = self.root_doc().to_string();
-        let (documents, model, external) = (&self.documents, &self.model, &mut self.external);
-        self.fold.get_or_insert_with(|| {
-            let analyses: BTreeMap<String, DocumentAnalysis> = documents
-                .iter()
-                .map(|(doc_path, indexed)| (doc_path.clone(), indexed.analysis.clone()))
-                .collect();
-            let build = build_project_index_from_analyses(
-                &analyses,
-                &model.index_settings(&root_doc),
-                &model.settings.parse.schema,
-            );
-            let mut index = build.index;
-            index
-                .domain_indices
-                .clone_from(&model.settings.domain_indices);
-            // Whole rather than pruned to what the documents name, as the
-            // build's index is: the next edit may name anything.
-            index.external_inventories = std::mem::take(external);
-            let mut diagnostics: BTreeMap<String, Vec<Diagnostic>> = BTreeMap::new();
-            for reported in build.diagnostics {
-                diagnostics
-                    .entry(reported.source_path)
-                    .or_default()
-                    .extend(reported.diagnostics);
-            }
-            Fold { index, diagnostics }
-        })
+        fold_documents(
+            &mut self.fold,
+            &self.documents,
+            &self.model,
+            &mut self.external,
+            &root_doc,
+        )
     }
 }
 
+/// `fold`, folding `documents` into it first if it holds none — over the
+/// project's fields rather than the project, so a caller may keep borrowing
+/// the documents beside the fold it returns.
+fn fold_documents<'f>(
+    fold: &'f mut Option<Fold>,
+    documents: &BTreeMap<String, IndexedDocument>,
+    model: &ProjectModel,
+    external: &mut Vec<ExternalInventory>,
+    root_doc: &str,
+) -> &'f Fold {
+    fold.get_or_insert_with(|| {
+        let analyses: BTreeMap<String, DocumentAnalysis> = documents
+            .iter()
+            .map(|(doc_path, indexed)| (doc_path.clone(), indexed.analysis.clone()))
+            .collect();
+        let build = build_project_index_from_analyses(
+            &analyses,
+            &model.index_settings(root_doc),
+            &model.settings.parse.schema,
+        );
+        let mut index = build.index;
+        index
+            .domain_indices
+            .clone_from(&model.settings.domain_indices);
+        // Whole rather than pruned to what the documents name, as the
+        // build's index is: the next edit may name anything.
+        index.external_inventories = std::mem::take(external);
+        let mut diagnostics: BTreeMap<String, Vec<Diagnostic>> = BTreeMap::new();
+        for reported in build.diagnostics {
+            diagnostics
+                .entry(reported.source_path)
+                .or_default()
+                .extend(reported.diagnostics);
+        }
+        Fold { index, diagnostics }
+    })
+}
+
+#[cfg(test)]
+mod definition_site_tests;
 #[cfg(test)]
 mod fold_tests;
 #[cfg(test)]

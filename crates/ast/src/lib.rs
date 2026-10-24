@@ -139,7 +139,7 @@ pub use entity_update::{
 };
 pub use enumerable::{EnumerableElement, EnumerableKind, enumerable_elements, preceding_labels};
 pub use enumerator::{Enumerator, EnumeratorError, EnumeratorFormat, EnumeratorSequence};
-pub use glossary_entry::{GlossaryEntry, term_id};
+pub use glossary_entry::{GlossaryEntry, GlossaryTerm, term_id};
 pub use grid::{
     ChildAlign, ChildDirection, ColumnPrefix, ColumnSpec, Grid, GridItem, Gutter, InvalidMediaSpec,
     MediaDomain, MediaSpec, MediaValue,

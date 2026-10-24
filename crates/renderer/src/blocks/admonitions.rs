@@ -353,8 +353,8 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::PyModule {
+            vec![Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::PyModule {
                     name: "greetings".to_string(),
                     options: rinx_ast::ModuleOptions {
                         platform: Some("Unix, Windows".to_string()),
@@ -363,7 +363,8 @@ mod tests {
                     },
                     body: vec![],
                 },
-            ))],
+                span: None,
+            })],
         );
 
         // When

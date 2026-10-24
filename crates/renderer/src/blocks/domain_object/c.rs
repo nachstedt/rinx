@@ -83,15 +83,16 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::CFunction {
+            vec![Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::CFunction {
                     flags: rinx_ast::DescriptionFlags::default(),
                     signatures: NonEmptyVector::single("int add(int a, int b)".into()),
                     body: vec![Node::Paragraph(vec![InlineNode::Text(
                         "Adds two numbers.".to_string(),
                     )])],
                 },
-            ))],
+                span: None,
+            })],
         );
 
         // When
@@ -107,15 +108,16 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::CMacro {
+            vec![Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::CMacro {
                     flags: rinx_ast::DescriptionFlags::default(),
                     signatures: NonEmptyVector::single("MAX(a, b)".into()),
                     body: vec![Node::Paragraph(vec![InlineNode::Text(
                         "Expands to whichever of a or b is greater.".to_string(),
                     )])],
                 },
-            ))],
+                span: None,
+            })],
         );
 
         // When
@@ -131,19 +133,21 @@ mod tests {
         // Given — `.. c:member:: int count` nested inside `.. c:struct:: Data`.
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::CStruct {
+            vec![Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::CStruct {
                     signatures: NonEmptyVector::single("Data".into()),
                     flags: rinx_ast::DescriptionFlags::default(),
-                    body: vec![Node::Directive(Directive::DomainObject(
-                        rinx_ast::DomainObjectBody::CMember {
+                    body: vec![Node::Directive(Directive::DomainObject {
+                        object: rinx_ast::DomainObjectBody::CMember {
                             signatures: NonEmptyVector::single("int count".into()),
                             flags: rinx_ast::DescriptionFlags::default(),
                             body: vec![],
                         },
-                    ))],
+                        span: None,
+                    })],
                 },
-            ))],
+                span: None,
+            })],
         );
 
         // When
@@ -162,13 +166,14 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::CUnion {
+            vec![Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::CUnion {
                     signatures: NonEmptyVector::single("Number".into()),
                     flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
-            ))],
+                span: None,
+            })],
         );
 
         // When
@@ -183,13 +188,14 @@ mod tests {
         // Given — no enclosing `.. c:struct::`, the real CPython-docs shape.
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::CMember {
+            vec![Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::CMember {
                     signatures: NonEmptyVector::single("PyObject *PyTypeObject.tp_bases".into()),
                     flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
-            ))],
+                span: None,
+            })],
         );
 
         // When
@@ -212,19 +218,21 @@ mod tests {
         // uses there (see the analyzer's equivalent test for detail).
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::CType {
+            vec![Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::CType {
                     signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
                     flags: rinx_ast::DescriptionFlags::default(),
-                    body: vec![Node::Directive(Directive::DomainObject(
-                        rinx_ast::DomainObjectBody::CMacro {
+                    body: vec![Node::Directive(Directive::DomainObject {
+                        object: rinx_ast::DomainObjectBody::CMacro {
                             flags: rinx_ast::DescriptionFlags::default(),
                             signatures: NonEmptyVector::single("PYMEM_DOMAIN_RAW".into()),
                             body: vec![],
                         },
-                    ))],
+                        span: None,
+                    })],
                 },
-            ))],
+                span: None,
+            })],
         );
 
         // When
@@ -246,28 +254,31 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![
-                Node::Directive(Directive::DomainObject(
-                    rinx_ast::DomainObjectBody::PyModule {
+                Node::Directive(Directive::DomainObject {
+                    object: rinx_ast::DomainObjectBody::PyModule {
                         name: "greeter_module".to_string(),
                         options: rinx_ast::ModuleOptions::default(),
                         body: vec![],
                     },
-                )),
-                Node::Directive(Directive::DomainObject(
-                    rinx_ast::DomainObjectBody::PyClass {
+                    span: None,
+                }),
+                Node::Directive(Directive::DomainObject {
+                    object: rinx_ast::DomainObjectBody::PyClass {
                         flags: rinx_ast::DescriptionFlags::default(),
                         module: None,
                         signatures: NonEmptyVector::single("Greeter".to_string()),
                         is_final: false,
-                        body: vec![Node::Directive(Directive::DomainObject(
-                            rinx_ast::DomainObjectBody::CFunction {
+                        body: vec![Node::Directive(Directive::DomainObject {
+                            object: rinx_ast::DomainObjectBody::CFunction {
                                 flags: rinx_ast::DescriptionFlags::default(),
                                 signatures: NonEmptyVector::single("int helper(void)".into()),
                                 body: vec![],
                             },
-                        ))],
+                            span: None,
+                        })],
                     },
-                )),
+                    span: None,
+                }),
             ],
         );
 
@@ -285,19 +296,21 @@ mod tests {
         // nesting under `c:struct`/`c:union`.
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::CType {
+            vec![Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::CType {
                     signatures: NonEmptyVector::single("Data".into()),
                     flags: rinx_ast::DescriptionFlags::default(),
-                    body: vec![Node::Directive(Directive::DomainObject(
-                        rinx_ast::DomainObjectBody::CMember {
+                    body: vec![Node::Directive(Directive::DomainObject {
+                        object: rinx_ast::DomainObjectBody::CMember {
                             signatures: NonEmptyVector::single("int count".into()),
                             flags: rinx_ast::DescriptionFlags::default(),
                             body: vec![],
                         },
-                    ))],
+                        span: None,
+                    })],
                 },
-            ))],
+                span: None,
+            })],
         );
 
         // When
@@ -314,13 +327,14 @@ mod tests {
         // Given — real Sphinx's `type name` typedef-alias form.
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::CType {
+            vec![Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::CType {
                     signatures: NonEmptyVector::single("unsigned long ulong".into()),
                     flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
-            ))],
+                span: None,
+            })],
         );
 
         // When
@@ -337,15 +351,16 @@ mod tests {
         // group, while the displayed text stays the full declaration.
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::CType {
+            vec![Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::CType {
                     signatures: NonEmptyVector::single(
                         "int (*Py_tracefunc)(PyObject *obj, int what)".into(),
                     ),
                     flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
-            ))],
+                span: None,
+            })],
         );
 
         // When
@@ -363,13 +378,14 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::CType {
+            vec![Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::CType {
                     signatures: NonEmptyVector::single("Hidden".into()),
                     flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
                     body: vec![],
                 },
-            ))],
+                span: None,
+            })],
         );
 
         // When
@@ -392,15 +408,16 @@ mod pipeline_tests {
         // Given
         let doc = Document::new(
             "cmdline.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::StdCmdoption {
+            vec![Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::StdCmdoption {
                     flags: rinx_ast::DescriptionFlags::default(),
                     signatures: NonEmptyVector::single("-m <module-name>".to_string()),
                     body: vec![Node::Paragraph(vec![InlineNode::Text(
                         "Run a module.".to_string(),
                     )])],
                 },
-            ))],
+                span: None,
+            })],
         );
         let index = ProjectIndex::default();
 
@@ -419,13 +436,14 @@ mod pipeline_tests {
         // Given — real Sphinx's `.. option:: -c, --compress` shape.
         let doc = Document::new(
             "zipapp.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::StdCmdoption {
+            vec![Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::StdCmdoption {
                     flags: rinx_ast::DescriptionFlags::default(),
                     signatures: NonEmptyVector::single("-c, --compress".to_string()),
                     body: vec![],
                 },
-            ))],
+                span: None,
+            })],
         );
         let index = ProjectIndex::default();
 
@@ -447,13 +465,14 @@ mod pipeline_tests {
                 Node::Directive(Directive::StdProgram {
                     name: Some("dis".to_string()),
                 }),
-                Node::Directive(Directive::DomainObject(
-                    rinx_ast::DomainObjectBody::StdCmdoption {
+                Node::Directive(Directive::DomainObject {
+                    object: rinx_ast::DomainObjectBody::StdCmdoption {
                         flags: rinx_ast::DescriptionFlags::default(),
                         signatures: NonEmptyVector::single("-O".to_string()),
                         body: vec![],
                     },
-                )),
+                    span: None,
+                }),
             ],
         );
         let index = ProjectIndex::default();
@@ -469,13 +488,14 @@ mod pipeline_tests {
         // Given — the same flags documented a second time, under `:no-index:`.
         let doc = Document::new(
             "zipapp.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rinx_ast::DomainObjectBody::StdCmdoption {
+            vec![Node::Directive(Directive::DomainObject {
+                object: rinx_ast::DomainObjectBody::StdCmdoption {
                     flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
                     signatures: NonEmptyVector::single("-c, --compress".to_string()),
                     body: vec![],
                 },
-            ))],
+                span: None,
+            })],
         );
         let index = ProjectIndex::default();
 

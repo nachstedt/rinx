@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::node::Node;
+use crate::span::Span;
 
 /// A single entry in a `.. glossary::` directive.
 ///
@@ -9,9 +10,32 @@ use crate::node::Node;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GlossaryEntry {
     /// One or more terms that share this definition.
-    pub terms: Vec<String>,
+    pub terms: Vec<GlossaryTerm>,
     /// The definition body, parsed as block-level RST nodes.
     pub definition: Vec<Node>,
+}
+
+/// One term of a [`GlossaryEntry`], with the line it was written on.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GlossaryTerm {
+    /// The term as written, classifier and index key already stripped.
+    pub text: String,
+    /// The term's line, which a `:term:` reference's definition is. Never
+    /// read by the index (`docs/decisions/045-definition-spans.md`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub span: Option<Span>,
+}
+
+impl GlossaryTerm {
+    /// A term written nowhere in particular — a fixture's, or one whose
+    /// position is not known.
+    #[must_use]
+    pub fn unplaced(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            span: None,
+        }
+    }
 }
 
 /// Generates the HTML anchor `id` for a glossary term.
@@ -93,7 +117,7 @@ mod tests {
     fn test_glossary_entry_serialization_roundtrip() {
         // Given
         let entry = GlossaryEntry {
-            terms: vec!["foo".to_string(), "bar".to_string()],
+            terms: vec![GlossaryTerm::unplaced("foo"), GlossaryTerm::unplaced("bar")],
             definition: vec![Node::Paragraph(vec![InlineNode::Text(
                 "A definition.".to_string(),
             )])],

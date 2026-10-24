@@ -178,6 +178,7 @@ mod tests {
             classes: Vec::new(),
             name: None,
             rows: Vec::new(),
+            span: None,
         });
         let code = Node::Directive(Directive::CodeBlock(rinx_ast::CodeBlock {
             source: rinx_ast::CodeBlockSource::CodeBlock,

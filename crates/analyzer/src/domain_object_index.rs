@@ -1,16 +1,19 @@
-use rinx_ast::DomainObjectBody;
-use rinx_index::{GenIndexEntry, ModuleEntry, ProjectIndex};
+use rinx_ast::{DomainObjectBody, Span, TargetName};
+use rinx_index::{DefinitionKey, GenIndexEntry, ModuleEntry, ProjectIndex};
 use rinx_scope::{DefinitionNames, DocumentScopes};
 
+use super::definition_spans::DefinitionSpans;
 use super::document_index::index_nodes;
 
-/// Registers a single `Directive::DomainObject` under the names `scopes`
-/// qualified it to, and recurses into its body. Split out of [`index_nodes`]
-/// to keep that function's line count manageable.
+/// Registers a single `Directive::DomainObject`, written at `span`, under the
+/// names `scopes` qualified it to, and recurses into its body. Split out of
+/// [`index_nodes`] to keep that function's line count manageable.
 pub(super) fn index_domain_object(
     obj: &rinx_ast::DomainObjectBody,
+    span: Option<Span>,
     doc_path: &str,
     index: &mut ProjectIndex,
+    spans: &mut DefinitionSpans,
     scopes: &DocumentScopes,
 ) {
     // `:no-index:` drops the target and the index entry but keeps the body.
@@ -20,12 +23,12 @@ pub(super) fn index_domain_object(
             // independently-indexed names sharing one rendered `<dt>`.
             DefinitionNames::Options(lines) => {
                 for qualified_name in lines.iter().flatten() {
-                    index_name(obj, qualified_name, doc_path, index);
+                    index_name(obj, qualified_name, span, doc_path, index, spans);
                 }
             }
             DefinitionNames::Object(names) => {
                 for qualified_name in names.as_slice() {
-                    index_name(obj, qualified_name, doc_path, index);
+                    index_name(obj, qualified_name, span, doc_path, index, spans);
                     record_module(obj, qualified_name, doc_path, index);
                 }
             }
@@ -33,18 +36,24 @@ pub(super) fn index_domain_object(
     }
     // The body is indexed exactly once, no matter how many names the object
     // declares — the aliases share it rather than each owning a copy.
-    index_nodes(obj.body(), doc_path, index, scopes);
+    index_nodes(obj.body(), doc_path, index, spans, scopes);
 }
 
-/// Registers `obj` as a target under `qualified_name`, and in the general
-/// index unless it asked not to be.
+/// Registers `obj`, written at `span`, as a target under `qualified_name`,
+/// and in the general index unless it asked not to be.
 fn index_name(
     obj: &DomainObjectBody,
     qualified_name: &str,
+    span: Option<Span>,
     doc_path: &str,
     index: &mut ProjectIndex,
+    spans: &mut DefinitionSpans,
 ) {
     index.insert_domain_object(obj.object_type(), qualified_name, doc_path);
+    spans.record(
+        DefinitionKey::Object(obj.object_type(), TargetName::new(qualified_name)),
+        span,
+    );
     if obj.no_index_entry() {
         return;
     }

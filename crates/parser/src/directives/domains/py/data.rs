@@ -137,14 +137,19 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyData {
-            flags: _,
-            signatures,
-            type_,
-            value,
-            module: _,
-            body,
-        })) = &doc.nodes[0]
+        if let Node::Directive(Directive::DomainObject {
+            object:
+                DomainObjectBody::PyData {
+                    flags: _,
+                    signatures,
+                    type_,
+                    value,
+                    module: _,
+                    body,
+                    ..
+                },
+            ..
+        }) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["DEFAULT_TIMEOUT"]);
             assert_eq!(type_, &None);
@@ -164,12 +169,12 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyData {
-            type_,
-            value,
-            body,
+        if let Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::PyData {
+                type_, value, body, ..
+            },
             ..
-        })) = &doc.nodes[0]
+        }) = &doc.nodes[0]
         {
             assert_eq!(type_.as_deref(), Some("int"));
             assert_eq!(value.as_deref(), Some("30"));
@@ -191,11 +196,12 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyData {
-            signatures,
-            body,
+        if let Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::PyData {
+                signatures, body, ..
+            },
             ..
-        })) = &doc.nodes[0]
+        }) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["AF_UNIX", "AF_INET", "AF_INET6"]);
             // The continuation lines must not leak into the docstring.
@@ -214,12 +220,16 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyData {
-            signatures,
-            type_,
-            body,
+        if let Node::Directive(Directive::DomainObject {
+            object:
+                DomainObjectBody::PyData {
+                    signatures,
+                    type_,
+                    body,
+                    ..
+                },
             ..
-        })) = &doc.nodes[0]
+        }) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["A", "ASCII"]);
             assert_eq!(type_.as_deref(), Some("int"));
@@ -237,12 +247,12 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then
-        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyData {
-            type_,
-            value,
-            body,
+        if let Node::Directive(Directive::DomainObject {
+            object: DomainObjectBody::PyData {
+                type_, value, body, ..
+            },
             ..
-        })) = &doc.nodes[0]
+        }) = &doc.nodes[0]
         {
             assert_eq!(type_.as_deref(), Some("int"));
             assert_eq!(value.as_deref(), Some("30"));

@@ -111,6 +111,21 @@ local function_labels = vim.tbl_map(function(item)
 end, function_items)
 check('completion lists the functions', vim.tbl_contains(function_labels, 'run'), function_labels)
 
+-- The outline lists the title, and under it the function the file defines:
+-- nested when the client takes it so, else naming the title as its holder.
+local outline = request_until_answered('textDocument/documentSymbol', { textDocument = { uri = uri } })
+local symbols = outline or {}
+local title = symbols[1] or {}
+local under_title = vim.tbl_contains(
+  vim.tbl_map(function(symbol)
+    return symbol.name
+  end, title.children or {}),
+  'run'
+) or vim.iter(symbols):any(function(symbol)
+  return symbol.name == 'run' and symbol.containerName == 'Editor fixture'
+end)
+check('the outline lists the function under the title', title.name == 'Editor fixture' and under_title, outline)
+
 if failures > 0 then
   -- `vim.lsp.log.get_filename` since 0.11; `vim.lsp.get_log_path` before.
   local path = (vim.lsp.log.get_filename or vim.lsp.get_log_path)()

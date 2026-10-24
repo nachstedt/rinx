@@ -251,6 +251,10 @@ pub enum Directive {
         /// `ProjectIndex::targets` with no extra conversion.
         name: Option<TargetName>,
         rows: Vec<TableRow>,
+        /// Where the directive was written, which its `:name:`'s definition
+        /// is (`docs/decisions/045-definition-spans.md`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
     },
     /// `.. table::` — wraps an existing grid or simple table (given as the
     /// directive's own content) with a title/caption and the layout options
@@ -282,6 +286,9 @@ pub enum Directive {
         name: Option<TargetName>,
         header_rows: Vec<TableRow>,
         body_rows: Vec<TableRow>,
+        /// Where the directive was written — see [`Self::DataTable`]'s.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
     },
     /// `.. math::` — one or more display equations written in LaTeX.
     ///
@@ -305,11 +312,9 @@ pub enum Directive {
         nowrap: bool,
         /// `:class:` — space-separated class names, already split.
         classes: Vec<String>,
-        /// Where the directive was written. The only [`Directive`] to carry a
-        /// span, because it is the only one whose content can still fail to
-        /// render *after* parsing succeeds — invalid LaTeX is diagnosed by the
-        /// renderer, which would otherwise have no position to report (see
-        /// `docs/decisions/003-diagnostics.md`).
+        /// Where the directive was written: where its `:label:`'s definition
+        /// is, and where the renderer reports invalid LaTeX, which it alone
+        /// diagnoses (see `docs/decisions/003-diagnostics.md`).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
     },
@@ -330,8 +335,8 @@ pub enum Directive {
     /// two in different elements regardless of what is filled in.
     Figure(Box<Figure>),
     /// A `.. code-block::` or `.. code::` — a code block with presentation
-    /// options. A newtype variant, like [`Self::DomainObject`], because the
-    /// two directives form their own closed family with their own option set.
+    /// options. A newtype variant, like [`Self::DocTest`], because the two
+    /// directives form their own closed family with their own option set.
     CodeBlock(CodeBlock),
     /// A `.. highlight::`, which sets the language every following code block
     /// inherits, until the next one.
@@ -349,11 +354,22 @@ pub enum Directive {
         /// `:force:` — applies to every block inheriting this language.
         force: bool,
     },
-    DomainObject(DomainObjectBody),
+    /// A domain object's definition (`.. py:function::`, `.. c:struct::`,
+    /// `.. option::`, …): what it documents, and where it was written.
+    DomainObject {
+        /// The object, one variant per kind, each with its own options.
+        object: DomainObjectBody,
+        /// The directive's marker line, which the object's definition is —
+        /// whatever its kind, so it is kept here once rather than in each
+        /// variant of `object`. Never read by the index
+        /// (`docs/decisions/045-definition-spans.md`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+    },
     /// One block of the `sphinx.ext.doctest` family (`doctest`, `testcode`,
     /// `testoutput`, `testsetup`, `testcleanup`).
     ///
-    /// A newtype variant, like [`Self::DomainObject`], because the five
+    /// A newtype variant, like [`Self::CodeBlock`], because the five
     /// directives form their own closed family with their own option sets —
     /// see [`DocTestBlock`] for why they are not one struct.
     ///
@@ -437,6 +453,7 @@ pub enum Directive {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::glossary_entry::GlossaryTerm;
     use crate::inline_node::InlineNode;
     use crate::non_empty_vector::NonEmptyVector;
 
@@ -445,7 +462,7 @@ mod tests {
         // Given
         let directive = Directive::Glossary {
             entries: vec![GlossaryEntry {
-                terms: vec!["term".to_string()],
+                terms: vec![GlossaryTerm::unplaced("term")],
                 definition: vec![],
             }],
             sorted: true,
@@ -482,13 +499,16 @@ mod tests {
     #[test]
     fn test_domain_object_directive_serialization_roundtrip() {
         // Given
-        let directive = Directive::DomainObject(DomainObjectBody::CFunction {
-            flags: crate::DescriptionFlags::default(),
-            signatures: NonEmptyVector::single("int add(int a, int b)".into()),
-            body: vec![Node::Paragraph(vec![InlineNode::Text(
-                "Adds two numbers.".to_string(),
-            )])],
-        });
+        let directive = Directive::DomainObject {
+            object: DomainObjectBody::CFunction {
+                flags: crate::DescriptionFlags::default(),
+                signatures: NonEmptyVector::single("int add(int a, int b)".into()),
+                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                    "Adds two numbers.".to_string(),
+                )])],
+            },
+            span: None,
+        };
 
         // When
         let json = serde_json::to_string(&directive).expect("Failed to serialize");
@@ -501,19 +521,22 @@ mod tests {
     #[test]
     fn test_domain_object_directive_serialization_roundtrip_with_module_options() {
         // Given
-        let directive = Directive::DomainObject(DomainObjectBody::PyModule {
-            name: "greetings".to_string(),
-            options: crate::ModuleOptions {
-                platform: Some("Unix, Windows".to_string()),
-                synopsis: Some("Greeting utilities.".to_string()),
-                flags: [
-                    crate::ModuleFlag::Deprecated,
-                    crate::ModuleFlag::NoIndexEntry,
-                ]
-                .into(),
+        let directive = Directive::DomainObject {
+            object: DomainObjectBody::PyModule {
+                name: "greetings".to_string(),
+                options: crate::ModuleOptions {
+                    platform: Some("Unix, Windows".to_string()),
+                    synopsis: Some("Greeting utilities.".to_string()),
+                    flags: [
+                        crate::ModuleFlag::Deprecated,
+                        crate::ModuleFlag::NoIndexEntry,
+                    ]
+                    .into(),
+                },
+                body: vec![],
             },
-            body: vec![],
-        });
+            span: None,
+        };
 
         // When
         let json = serde_json::to_string(&directive).expect("Failed to serialize");
@@ -526,14 +549,17 @@ mod tests {
     #[test]
     fn test_domain_object_directive_serialization_roundtrip_with_data_options() {
         // Given
-        let directive = Directive::DomainObject(DomainObjectBody::PyData {
-            flags: crate::DescriptionFlags::default(),
-            module: None,
-            signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
-            type_: Some("int".to_string()),
-            value: Some("30".to_string()),
-            body: vec![],
-        });
+        let directive = Directive::DomainObject {
+            object: DomainObjectBody::PyData {
+                flags: crate::DescriptionFlags::default(),
+                module: None,
+                signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
+                type_: Some("int".to_string()),
+                value: Some("30".to_string()),
+                body: vec![],
+            },
+            span: None,
+        };
 
         // When
         let json = serde_json::to_string(&directive).expect("Failed to serialize");
@@ -695,6 +721,7 @@ mod tests {
                     content: vec![Node::Paragraph(vec![InlineNode::Text("Fruit".to_string())])],
                 }],
             }],
+            span: None,
         };
 
         // When
@@ -725,6 +752,7 @@ mod tests {
                 }],
             }],
             body_rows: vec![],
+            span: None,
         };
 
         // When
