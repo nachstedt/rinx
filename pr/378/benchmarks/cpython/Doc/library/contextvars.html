@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>contextvars — Context Variables — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Concurrent Execution"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="threading.html">threading — Thread-based parallelism</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="multiprocessing.html">multiprocessing — Process-based parallelism</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="multiprocessing.shared_memory.html">multiprocessing.shared_memory — Shared memory for direct access across processes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concurrent.html">The concurrent package</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concurrent.futures.html">concurrent.futures — Launching parallel tasks</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concurrent.interpreters.html">concurrent.interpreters — Multiple interpreters in the same process</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="subprocess.html">subprocess — Subprocess management</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="sched.html">sched — Event scheduler</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="queue.html">queue — A synchronized queue class</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="contextvars.html">contextvars — Context Variables</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle contextvars — Context Variables"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="contextvars.html#context-variables">Context Variables</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="contextvars.html#manual-context-management">Manual Context Management</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="contextvars.html#asyncio-support">asyncio support</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="_thread.html">_thread — Low-level threading API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="queue.html">&larr; queue — A synchronized queue class</a>
+        <a class="next" href="_thread.html">_thread — Low-level threading API &rarr;</a>
+      </nav>
+      
+      <h1 id="contextvars-context-variables"><code class="xref py module docutils literal">contextvars</code> — Context Variables</h1>
+<dl class="py module">
+  <dt id="py:module:contextvars"><code class="sig-name">contextvars</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Yury Selivanov &lt;yury@magic.io&gt;</pre>
+</div>
+<hr />
+<p>This module provides APIs to manage, store, and access context-local
+state.  The <a class="reference internal" href="contextvars.html#py:class:contextvars.contextvar"><code class="xref py class docutils literal">ContextVar</code></a> class is used to declare
+and work with <em>Context Variables</em>.  The <a class="reference internal" href="contextvars.html#py:function:contextvars.copy_context"><code class="xref py function docutils literal">copy_context</code></a>
+function and the <a class="reference internal" href="contextvars.html#py:class:contextvars.context"><code class="xref py class docutils literal">Context</code></a> class should be used to
+manage the current context in asynchronous frameworks.</p>
+<p>Context managers that have state should use Context Variables
+instead of <a href="#" class="broken-link"><code class="xref py function docutils literal">threading.local</code></a> to prevent their state from
+bleeding to other code unexpectedly, when used in concurrent code.</p>
+<p>See also <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0567/"><strong>PEP 567</strong></a> for additional details.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+<h2 id="context-variables">Context Variables</h2>
+<dl class="py class">
+  <dt id="py:class:contextvars.contextvar"><em class="property">class</em> <code class="sig-name">ContextVar(name, [*, default])</code></dt>
+  <dd><p>This class is used to declare a new Context Variable, e.g.:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ContextVar</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ContextVar</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">var<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">default</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">42</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>The required <em>name</em> parameter is used for introspection and debug
+purposes.</p>
+<p>The optional keyword-only <em>default</em> parameter is returned by
+<a class="reference internal" href="contextvars.html#py:method:contextvars.contextvar.get"><code class="xref py method docutils literal">ContextVar.get</code></a> when no value for the variable is found
+in the current context.</p>
+<p><strong>Important:</strong> Context Variables should be created at the top module
+level and never in closures.  <a class="reference internal" href="contextvars.html#py:class:contextvars.context"><code class="xref py class docutils literal">Context</code></a> objects hold strong
+references to context variables which prevents context variables
+from being properly garbage collected.</p>
+<dl class="py attribute">
+  <dt id="py:attribute:contextvars.contextvar.name"><code class="sig-name">ContextVar.name</code></dt>
+  <dd><p>The name of the variable.  This is a read-only property.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7.1:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:contextvars.contextvar.get"><code class="sig-name">get([default])</code></dt>
+  <dd><p>Return a value for the context variable for the current context.</p>
+<p>If there is no value for the variable in the current context,
+the method will:</p>
+<ul>
+<li><p>return the value of the <em>default</em> argument of the method,
+if provided; or</p>
+</li>
+<li><p>return the default value for the context variable,
+if it was created with one; or</p>
+</li>
+<li><p>raise a <a class="reference internal" href="exceptions.html#py:exception:lookuperror"><code class="xref py exception docutils literal">LookupError</code></a>.</p>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:contextvars.contextvar.set"><code class="sig-name">set(value)</code></dt>
+  <dd><p>Call to set a new value for the context variable in the current
+context.</p>
+<p>The required <em>value</em> argument is the new value for the context
+variable.</p>
+<p>Returns a <a class="reference internal" href="contextvars.html#py:class:contextvars.token"><code class="xref py class docutils literal">Token</code></a> object that can be used
+to restore the variable to its previous value via the
+<a class="reference internal" href="contextvars.html#py:method:contextvars.contextvar.reset"><code class="xref py method docutils literal">ContextVar.reset</code></a> method.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:contextvars.contextvar.reset"><code class="sig-name">reset(token)</code></dt>
+  <dd><p>Reset the context variable to the value it had before the
+<a class="reference internal" href="contextvars.html#py:method:contextvars.contextvar.set"><code class="xref py method docutils literal">ContextVar.set</code></a> that created the <em>token</em> was used.</p>
+<p>For example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ContextVar</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">var<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">token</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">set</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">new value<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> code that uses &#39;var&#39;; var.get() returns &#39;new value&#39;.
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">reset</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">token</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> After the reset call the var has no value again, so
+</span></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> var.get() would raise a LookupError.</span></span></pre></div>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:contextvars.token"><em class="property">class</em> <code class="sig-name">Token</code></dt>
+  <dd><p><em>Token</em> objects are returned by the <a class="reference internal" href="contextvars.html#py:method:contextvars.contextvar.set"><code class="xref py method docutils literal">ContextVar.set</code></a> method.
+They can be passed to the <a class="reference internal" href="contextvars.html#py:method:contextvars.contextvar.reset"><code class="xref py method docutils literal">ContextVar.reset</code></a> method to revert
+the value of the variable to what it was before the corresponding
+<em>set</em>.</p>
+<p>The token supports <a href="../reference/datamodel.html#context-managers">context manager protocol</a>
+to restore the corresponding context variable value at the exit from
+:keyword:`with` block:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ContextVar</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">var<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">default</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">default value<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">set</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">new value<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-assert hl-python">assert</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">new value<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-control hl-flow hl-assert hl-python">assert</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">default value<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+<p>Added support for usage as a context manager.</p>
+</div>
+<dl class="py attribute">
+  <dt id="py:attribute:contextvars.token.var"><code class="sig-name">Token.var</code></dt>
+  <dd><p>A read-only property.  Points to the <a class="reference internal" href="contextvars.html#py:class:contextvars.contextvar"><code class="xref py class docutils literal">ContextVar</code></a> object
+that created the token.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:contextvars.token.old_value"><code class="sig-name">Token.old_value</code></dt>
+  <dd><p>A read-only property.  Set to the value the variable had before
+the <a class="reference internal" href="contextvars.html#py:method:contextvars.contextvar.set"><code class="xref py method docutils literal">ContextVar.set</code></a> method call that created the token.
+It points to <a class="reference internal" href="contextvars.html#py:attribute:contextvars.token.missing"><code class="xref py attribute docutils literal">Token.MISSING</code></a> if the variable was not set
+before the call.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:contextvars.token.missing"><code class="sig-name">Token.MISSING</code></dt>
+  <dd><p>A marker object used by <a class="reference internal" href="contextvars.html#py:attribute:contextvars.token.old_value"><code class="xref py attribute docutils literal">Token.old_value</code></a>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<h2 id="manual-context-management">Manual Context Management</h2>
+<dl class="py function">
+  <dt id="py:function:contextvars.copy_context"><code class="sig-name">copy_context()</code></dt>
+  <dd><p>Returns a copy of the current <a class="reference internal" href="contextvars.html#py:class:contextvars.context"><code class="xref py class docutils literal">Context</code></a> object.</p>
+<p>The following snippet gets a copy of the current context and prints
+all variables and their values that are set in it:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ctx</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Context</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">copy_context</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-python">list</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ctx</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">items</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>The function has an <em>O</em>(1) complexity, i.e. works equally fast for
+contexts with a few context variables and for contexts that have
+a lot of them.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:contextvars.context"><em class="property">class</em> <code class="sig-name">Context()</code></dt>
+  <dd><p>A mapping of <a class="reference internal" href="contextvars.html#py:class:contextvars.contextvar"><code class="xref py class docutils literal">ContextVars</code></a> to their values.</p>
+<p><code>Context()</code> creates an empty context with no values in it.
+To get a copy of the current context use the
+<a class="reference internal" href="contextvars.html#py:function:contextvars.copy_context"><code class="xref py function docutils literal">copy_context</code></a> function.</p>
+<p>Each thread has its own effective stack of <code class="xref py class docutils literal">Context</code> objects.  The
+<a class="reference internal" href="../glossary.html#term-current-context"><span class="xref std std-term">current context</span></a> is the <code class="xref py class docutils literal">Context</code> object at the top of the
+current thread's stack.  All <code class="xref py class docutils literal">Context</code> objects in the stacks are
+considered to be <em>entered</em>.</p>
+<p><em>Entering</em> a context, which can be done by calling its <a class="reference internal" href="contextvars.html#py:method:contextvars.context.run"><code class="xref py method docutils literal">run</code></a>
+method, makes the context the current context by pushing it onto the top of
+the current thread's context stack.</p>
+<p><em>Exiting</em> from the current context, which can be done by returning from the
+callback passed to the <a class="reference internal" href="contextvars.html#py:method:contextvars.context.run"><code class="xref py method docutils literal">run</code></a> method, restores the current
+context to what it was before the context was entered by popping the context
+off the top of the context stack.</p>
+<p>Since each thread has its own context stack, <a class="reference internal" href="contextvars.html#py:class:contextvars.contextvar"><code class="xref py class docutils literal">ContextVar</code></a> objects
+behave in a similar fashion to <a href="#" class="broken-link"><code class="xref py function docutils literal">threading.local</code></a> when values are
+assigned in different threads.</p>
+<p>Attempting to enter an already entered context, including contexts entered in
+other threads, raises a <a class="reference internal" href="exceptions.html#py:exception:runtimeerror"><code class="xref py exception docutils literal">RuntimeError</code></a>.</p>
+<p>After exiting a context, it can later be re-entered (from any thread).</p>
+<p>Any changes to <a class="reference internal" href="contextvars.html#py:class:contextvars.contextvar"><code class="xref py class docutils literal">ContextVar</code></a> values via the <a class="reference internal" href="contextvars.html#py:method:contextvars.contextvar.set"><code class="xref py method docutils literal">ContextVar.set</code></a>
+method are recorded in the current context.  The <a class="reference internal" href="contextvars.html#py:method:contextvars.contextvar.get"><code class="xref py method docutils literal">ContextVar.get</code></a>
+method returns the value associated with the current context.  Exiting a
+context effectively reverts any changes made to context variables while the
+context was entered (if needed, the values can be restored by re-entering the
+context).</p>
+<p>Context implements the <a class="reference internal" href="collections.abc.html#py:class:collections.abc.mapping"><code class="xref py class docutils literal">collections.abc.Mapping</code></a> interface.</p>
+<dl class="py method">
+  <dt id="py:method:contextvars.context.run"><code class="sig-name">run(callable, *args, **kwargs)</code></dt>
+  <dd><p>Enters the Context, executes <code>callable(*args, **kwargs)</code>, then exits the
+Context.  Returns <em>callable</em>'s return value, or propagates an exception if
+one occurred.</p>
+<p>Example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">contextvars</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">contextvars</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ContextVar</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">var<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">set</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">spam<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> &#39;spam&#39;
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ctx</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">contextvars</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">copy_context</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> &#39;var&#39; was set to &#39;spam&#39; before
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> calling &#39;copy_context()&#39; and &#39;ctx.run(main)&#39;, so:
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> &#39;spam&#39;
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ctx</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> &#39;spam&#39;
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">set</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">ham<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Now, after setting &#39;var&#39; to &#39;ham&#39;:
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> &#39;ham&#39;
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ctx</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> &#39;ham&#39;
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Any changes that the &#39;main&#39; function makes to &#39;var&#39;
+</span></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> will be contained in &#39;ctx&#39;.
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ctx</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">run</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> The &#39;main()&#39; function was run in the &#39;ctx&#39; context,
+</span></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> so changes to &#39;var&#39; are contained in it:
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ctx</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> &#39;ham&#39;
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> However, outside of &#39;ctx&#39;, &#39;var&#39; is still set to &#39;spam&#39;:
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">var</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> &#39;spam&#39;</span></span></pre></div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:contextvars.context.copy"><code class="sig-name">copy()</code></dt>
+  <dd><p>Return a shallow copy of the context object.</p>
+</dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'describe'</p>
+<pre class="directive-error-source">.. describe:: var in context
+
+   Return ``True`` if the *context* has a value for *var* set;
+   return ``False`` otherwise.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'describe'</p>
+<pre class="directive-error-source">.. describe:: context[var]
+
+   Return the value of the *var* :class:`ContextVar` variable.
+   If the variable is not set in the context object, a
+   :exc:`KeyError` is raised.</pre>
+</div>
+<dl class="py method">
+  <dt id="py:method:contextvars.context.get"><code class="sig-name">get(var, [default])</code></dt>
+  <dd><p>Return the value for <em>var</em> if <em>var</em> has the value in the context
+object.  Return <em>default</em> otherwise.  If <em>default</em> is not given,
+return <code>None</code>.</p>
+</dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'describe'</p>
+<pre class="directive-error-source">.. describe:: iter(context)
+
+   Return an iterator over the variables stored in the context
+   object.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'describe'</p>
+<pre class="directive-error-source">.. describe:: len(proxy)
+
+   Return the number of variables set in the context object.</pre>
+</div>
+<dl class="py method">
+  <dt id="py:method:contextvars.context.keys"><code class="sig-name">keys()</code></dt>
+  <dd><p>Return a list of all variables in the context object.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:contextvars.context.values"><code class="sig-name">values()</code></dt>
+  <dd><p>Return a list of all variables' values in the context object.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:contextvars.context.items"><code class="sig-name">items()</code></dt>
+  <dd><p>Return a list of 2-tuples containing all variables and their
+values in the context object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<h2 id="asyncio-support">asyncio support</h2>
+<p>Context variables are natively supported in <a class="reference internal" href="asyncio.html#py:module:asyncio" title="asyncio: Asynchronous I/O."><code class="xref py module docutils literal">asyncio</code></a> and are
+ready to be used without any extra configuration.  For example, here
+is a simple echo server, that uses a context variable to make the
+address of a remote client available in the Task that handles that
+client:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">contextvars</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">client_addr_var</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">contextvars</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ContextVar</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">client_addr<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">render_goodbye</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> The address of the currently handled client can be accessed
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> without passing it explicitly to this function.
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">client_addr</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">client_addr_var</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-storage hl-type hl-string hl-python">f</span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-single hl-python">Good bye, client @ </span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-begin hl-python">{</span><span class="hl-source hl-python hl-embedded"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">client_addr</span></span></span></span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-end hl-python">}</span></span><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-constant hl-character hl-escape hl-python">\r</span><span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">encode</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async</span> <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">handle_request</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">reader</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">writer</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">addr</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">writer</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">transport</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_extra_info</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">socket<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">getpeername</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">client_addr_var</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">set</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">addr</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> In any code that we call is now possible to get
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> client&#39;s address by calling &#39;client_addr_var.get()&#39;.
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-loop hl-while hl-python"><span class="hl-keyword hl-control hl-loop hl-while hl-python">while</span> <span class="hl-constant hl-language hl-python">True</span><span class="hl-punctuation hl-section hl-block hl-loop hl-while hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">reader</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">readline</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-keyword hl-operator hl-logical hl-python">not</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">strip</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">            <span class="hl-keyword hl-control hl-flow hl-break hl-python">break</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">writer</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">write</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">HTTP/1.1 200 OK<span class="hl-constant hl-character hl-escape hl-python">\r</span><span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> status line
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">writer</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">write</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-constant hl-character hl-escape hl-python">\r</span><span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> headers
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">writer</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">write</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">render_goodbye</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> body
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">writer</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">close</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async</span> <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">srv</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">start_server</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">handle_request</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">127.0.0.1<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">8081</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async </span><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">srv</span></span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">srv</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">serve_forever</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">run</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> To test it you can use telnet or curl:
+</span></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span>     telnet 127.0.0.1 8081
+</span></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span>     curl 127.0.0.1:8081</span></span></pre></div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="queue.html">&larr; queue — A synchronized queue class</a>
+        <a class="next" href="_thread.html">_thread — Low-level threading API &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
