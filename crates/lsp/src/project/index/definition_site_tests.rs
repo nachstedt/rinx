@@ -73,6 +73,23 @@ fn test_definition_site_names_the_fragment_a_definition_was_included_from() {
 }
 
 #[test]
+fn test_definitions_lend_the_sites_without_a_fold() {
+    // Given
+    let mut folder = folder();
+    folder.record(
+        "guide.rst".to_string(),
+        indexed("guide.rst", "Intro\n\n.. _setup:\n\nText.\n"),
+    );
+
+    // When — through a shared borrow, which cannot fold
+    let site = folder.definitions().site("guide.rst", &label("setup"));
+
+    // Then
+    assert_eq!(site, site_of(&mut folder, "guide.rst", "setup"));
+    assert!(site.is_some());
+}
+
+#[test]
 fn test_definition_site_is_none_for_a_document_or_definition_it_does_not_know() {
     // Given
     let mut folder = folder();

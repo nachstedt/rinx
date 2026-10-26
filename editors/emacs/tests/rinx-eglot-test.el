@@ -80,13 +80,17 @@ The workspace scan may still be running when it is first asked."
       (should (string-search "**Installing**"
                              (plist-get (plist-get hover :contents) :value))))))
 
-(ert-deftest rinx-eglot-opens-the-document-a-reference-leads-to ()
+(ert-deftest rinx-eglot-opens-the-label-a-reference-leads-to ()
   (rinx-test--with-index
     (let* ((definition (rinx-test--request :textDocument/definition (rinx-test--at 7 4)))
-           (location (if (vectorp definition) (aref definition 0) definition)))
+           (location (if (vectorp definition) (aref definition 0) definition))
+           (range (or (plist-get location :targetSelectionRange)
+                      (plist-get location :range))))
       (should (string-suffix-p "/target.rst"
                                (or (plist-get location :targetUri)
-                                   (plist-get location :uri)))))))
+                                   (plist-get location :uri))))
+      ;; The label, `.. _install:`, not the start of the file.
+      (should (equal (plist-get (plist-get range :end) :character) 12)))))
 
 (ert-deftest rinx-eglot-completes-the-label ()
   (rinx-test--with-index

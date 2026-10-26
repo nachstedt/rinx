@@ -669,14 +669,15 @@ fn test_lsp_follows_a_link_of_the_preview_to_its_source() {
 }
 
 #[test]
-fn test_lsp_opens_the_document_a_reference_leads_to() {
-    // Given — a scanned folder whose `setup.rst` labels a section
+fn test_lsp_opens_the_line_a_reference_leads_to() {
+    // Given — a scanned folder whose `setup.rst` labels a section on its
+    // third line
     let root = std::env::temp_dir().join("rinx_lsp_stdio_definition");
     let _ = std::fs::remove_dir_all(&root);
     std::fs::create_dir_all(&root).expect("mkdir");
     std::fs::write(
         root.join("setup.rst"),
-        ".. _install:\n\nInstalling\n==========\n",
+        "Intro.\n\n.. _install:\n\nInstalling\n==========\n",
     )
     .expect("write");
     let notes = format!("file://{}", root.join("notes.rst").display());
@@ -724,8 +725,11 @@ fn test_lsp_opens_the_document_a_reference_leads_to() {
         format!("file://{}", root.join("setup.rst").display())
     );
     assert_eq!(
-        location["range"]["start"],
-        json!({ "line": 0, "character": 0 })
+        location["range"],
+        json!({
+            "start": { "line": 2, "character": 0 },
+            "end": { "line": 2, "character": 12 },
+        })
     );
 }
 

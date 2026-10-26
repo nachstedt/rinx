@@ -4,7 +4,7 @@ use std::fmt::Write as _;
 
 use super::RefText;
 use rinx_ast::{InventorySelector, TargetName};
-use rinx_index::ProjectIndex;
+use rinx_index::{DefinitionKey, ProjectIndex};
 
 use super::external_link::write_external_link;
 use crate::resolution::{ExternalHit, TERM_ENTRY_TYPE, resolve_external, unresolved_kind};
@@ -131,6 +131,7 @@ pub(super) fn term_target(
 /// — shared with `:any:`.
 pub(super) fn term_reference_target(term: &str, glossary_doc: &str) -> ReferenceTarget {
     ReferenceTarget::in_document(term, glossary_doc, Some(rinx_ast::term_id(term)))
+        .defined_as(DefinitionKey::Term(TargetName::new(term)))
 }
 
 /// The href a page at `doc_path` links `term`, defined by a glossary in

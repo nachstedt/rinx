@@ -39,8 +39,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333),
   #40 (PR #335), #24 (PR #340) and #25 (PR #355, prepared by #343, #345,
   #348, #351 and #353), #26 (PRs #358 and #362, prepared by #357) and
-  #27 (PR #365, prepared by #363) and #28 (PR #374).
-- **Next: #29, precise go to definition.**
+  #27 (PR #365, prepared by #363), #28 (PR #374) and #29.
+- **Next: #30, find all references.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -1037,13 +1037,42 @@ Not done here:
   no site.
 - Labels and glossary terms are not outline entries.
 
-### 29. Precise go to definition
+### 29. Precise go to definition ✅
 
 **You experience:** F12 jumps to the label's line or the object's directive.
 
-- Server-side `DefinitionMap`: target → (URI, range)
+- Server-side `DefinitionMap`: target → (URI, range) (#28's `Definitions`)
 - Upgrade the definition handler
 - Tests
+
+No map was needed: #28's `Definitions` already answers where a definition
+was written, by the key the index names it under. What was missing was that
+key on a resolved reference, since an anchor cannot be read back into one. A
+`ReferenceTarget` now names its `definition` (`rinx_index::DefinitionKey`),
+set by each role's own resolution, which already held the name it looked up:
+a label for `:ref:`, `:numref:` and a label `:any:` finds, a term, a domain
+object of its resolved type (`:option:` as `std:cmdoption`), an equation and
+an entity. A `:doc:` names none and still opens its document's first line.
+An entity id written in a relation option, an `.. entity-update::`'s
+included, is read as a reference to that entity, the id alone underlined,
+so it has a definition too, and its hover the same line; an entity's own
+directive has none, since the reader is there already.
+
+The definition is the site's range: a label's `.. _name:` line, a term's line,
+an object's or entity's directive marker, an equation's own line, in the
+`.. include::`d fragment's file when it was written there. Its columns are
+counted on the file's open buffer, else the disk, the text the analysis read,
+so an unsaved edit above a label moves the jump with it. A client taking
+links gets the site as both target ranges. Hover's file link carries the same
+line, as a `#L<line>` fragment, as #7 promised.
+
+Not done here:
+- A label written by `.. contents::` or a toctree's `:name:` has no site
+  (#28), so it opens its document's first line (issue #376).
+- A link followed in the preview still opens its document at the first line
+  (#40; issue #375).
+- Hover's link opens an included fragment but names the including document
+  (issue #377).
 
 ### 30. Find all references
 

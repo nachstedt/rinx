@@ -7,7 +7,8 @@ mod scope_tests;
 
 use std::fmt::Write as _;
 
-use rinx_ast::{InventorySelector, ObjectType};
+use rinx_ast::{InventorySelector, ObjectType, TargetName};
+use rinx_index::DefinitionKey;
 
 use super::external_link::write_external_link;
 use crate::resolution::{DomainObjectResolution, DomainObjectResolver, unresolved_kind};
@@ -199,6 +200,10 @@ pub(super) fn domain_object_reference_target(
                 .to_string(),
         ),
     )
+    .defined_as(DefinitionKey::Object(
+        object_type,
+        TargetName::new(qualified_name),
+    ))
 }
 
 /// The href a page at `doc_path` links the object `qualified_name` of

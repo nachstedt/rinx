@@ -73,11 +73,13 @@ local hover = request_until_answered('textDocument/hover', at(7, 4))
 local markdown = hover and hover.contents and hover.contents.value or ''
 check('hover shows the title the reference leads to', markdown:find('**Installing**', 1, true), hover)
 
--- Go to definition opens target.rst.
+-- Go to definition opens target.rst at the label, `.. _install:`.
 local definition = request_until_answered('textDocument/definition', at(7, 4))
 local location = definition and (definition[1] or definition) or {}
 local target = location.targetUri or location.uri or ''
 check('definition opens the target document', vim.endswith(target, '/target.rst'), definition)
+local range = location.targetSelectionRange or location.range or { ['end'] = {} }
+check('definition selects the label', range['end'].character == 12, definition)
 
 -- Completion inside the role lists the label.
 local completion = request_until_answered('textDocument/completion', at(7, 10))

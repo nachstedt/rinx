@@ -97,6 +97,7 @@ pub(super) fn equation_reference_target(
         &location.doc_path,
         Some(equation_anchor_id(label)),
     )
+    .defined_as(rinx_index::DefinitionKey::Equation(label.clone()))
 }
 
 /// Writes a link to the equation labeled `label`, showing its number — what

@@ -170,7 +170,8 @@ mod tests {
     };
     use rinx_entity::EntitySchema;
     use rinx_index::{
-        DocumentNumbers, EntityRecord, EquationLocation, NumrefSubject, NumrefTarget, ProjectIndex,
+        DefinitionKey, DocumentNumbers, EntityRecord, EquationLocation, NumrefSubject,
+        NumrefTarget, ProjectIndex,
     };
 
     use std::collections::BTreeMap;
@@ -204,6 +205,7 @@ mod tests {
                 anchor: anchor.map(str::to_string),
             },
             entity: None,
+            definition: None,
         }
     }
 
@@ -233,7 +235,10 @@ mod tests {
         // Then — the target's own title, not the one this reference wrote
         assert_eq!(
             found,
-            Some(in_document("Installing", "setup.rst", Some("install")))
+            Some(
+                in_document("Installing", "setup.rst", Some("install"))
+                    .defined_as(DefinitionKey::Label(TargetName::new("install")))
+            )
         );
     }
 
@@ -263,6 +268,7 @@ mod tests {
                     path: "genindex.html".to_string(),
                 },
                 entity: None,
+                definition: None,
             })
         );
     }
@@ -286,6 +292,7 @@ mod tests {
                     site: "(in Python v3.12)".to_string(),
                 },
                 entity: None,
+                definition: None,
             })
         );
     }
@@ -350,7 +357,10 @@ mod tests {
         // Then
         assert_eq!(
             found,
-            Some(in_document("widget", "glossary.rst", Some("term-widget")))
+            Some(
+                in_document("widget", "glossary.rst", Some("term-widget"))
+                    .defined_as(DefinitionKey::Term(TargetName::new("widget")))
+            )
         );
     }
 
@@ -384,7 +394,10 @@ mod tests {
         // Then
         assert_eq!(
             found,
-            Some(in_document("Section 2.3", "setup.rst", Some("usage")))
+            Some(
+                in_document("Section 2.3", "setup.rst", Some("usage"))
+                    .defined_as(DefinitionKey::Label(TargetName::new("usage")))
+            )
         );
     }
 
@@ -407,7 +420,10 @@ mod tests {
         // Then
         assert_eq!(
             found,
-            Some(in_document("(3)", "math.rst", Some("equation-euler")))
+            Some(
+                in_document("(3)", "math.rst", Some("equation-euler"))
+                    .defined_as(DefinitionKey::Equation(TargetName::new("euler")))
+            )
         );
     }
 
@@ -437,7 +453,10 @@ mod tests {
         let anchor = rinx_ast::build_domain_object_key(function, "pkg.run");
         assert_eq!(
             found,
-            Some(in_document("pkg.run", "api.rst", Some(anchor.as_str())))
+            Some(
+                in_document("pkg.run", "api.rst", Some(anchor.as_str()))
+                    .defined_as(DefinitionKey::Object(function, TargetName::new("pkg.run")))
+            )
         );
     }
 
@@ -464,7 +483,10 @@ mod tests {
         let anchor = rinx_ast::build_domain_object_key(option, "tool.-v");
         assert_eq!(
             found,
-            Some(in_document("tool.-v", "cli.rst", Some(anchor.as_str())))
+            Some(
+                in_document("tool.-v", "cli.rst", Some(anchor.as_str()))
+                    .defined_as(DefinitionKey::Object(option, TargetName::new("tool.-v")))
+            )
         );
     }
 
@@ -489,7 +511,10 @@ mod tests {
         // Then
         assert_eq!(
             found,
-            Some(in_document("widget", "glossary.rst", Some("term-widget")))
+            Some(
+                in_document("widget", "glossary.rst", Some("term-widget"))
+                    .defined_as(DefinitionKey::Term(TargetName::new("widget")))
+            )
         );
     }
 
@@ -564,7 +589,13 @@ mod tests {
         let found = target_of(&index, Vec::new(), reference);
 
         // Then
-        assert_eq!(found, Some(requirement_target()));
+        assert_eq!(
+            found,
+            Some(
+                requirement_target()
+                    .defined_as(DefinitionKey::Entity(EntityId::new("REQ_001").unwrap()))
+            )
+        );
     }
 
     #[test]
@@ -576,7 +607,10 @@ mod tests {
         let found = target_of(&index, Vec::new(), label("REQ_001"));
 
         // Then
-        assert_eq!(found, Some(requirement_target()));
+        assert_eq!(
+            found,
+            Some(requirement_target().defined_as(DefinitionKey::Label(TargetName::new("REQ_001"))))
+        );
     }
 
     #[test]

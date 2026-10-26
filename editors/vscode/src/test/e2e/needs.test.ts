@@ -31,6 +31,22 @@ async function hoverText(uri: vscode.Uri, position: vscode.Position): Promise<st
         .join('\n');
 }
 
+/** Every place going to the definition at `position` of `uri` leads, as `file:line`. */
+async function definitionsAt(uri: vscode.Uri, position: vscode.Position): Promise<string[]> {
+    const definitions = await vscode.commands.executeCommand<(vscode.Location | vscode.LocationLink)[]>(
+        'vscode.executeDefinitionProvider',
+        uri,
+        position,
+    );
+    return definitions.map((definition) => {
+        const [file, range] =
+            'targetUri' in definition
+                ? [definition.targetUri, definition.targetSelectionRange ?? definition.targetRange]
+                : [definition.uri, definition.range];
+        return `${path.basename(file.fsPath)}:${range.start.line}`;
+    });
+}
+
 /** An item's label as the editor shows it, whichever form the server sent. */
 function labelOf(item: vscode.CompletionItem): string {
     return typeof item.label === 'string' ? item.label : item.label.label;
@@ -50,7 +66,7 @@ suite('sphinx-needs project (e2e)', () => {
         );
     });
 
-    test('a need type is a directive once conf.py declares sphinx-needs, its links are checked, its ids complete and hover', async () => {
+    test('a need type is a directive once conf.py declares sphinx-needs, its links are checked, its ids complete, hover and lead to it', async () => {
         // Given — with no `conf.py`, `.. req::` is an unknown directive
         await vscode.window.showTextDocument(project('index.rst'));
         await waitFor('the need to be unknown', () => codesFor(project('index.rst')).includes('directive.unknown'));
@@ -94,6 +110,12 @@ suite('sphinx-needs project (e2e)', () => {
             const shown = await hoverText(project('index.rst'), at);
             assert.ok(shown.includes('R\\_1 — Brakes'), shown);
             assert.ok(shown.includes('S\\_1'), shown);
+        }
+
+        // Going to the need's definition, by its role or in the relation,
+        // lands on its directive, `.. req:: Brakes`.
+        for (const at of [new vscode.Position(6, 12), new vscode.Position(10, 18)]) {
+            assert.deepStrictEqual(await definitionsAt(project('index.rst'), at), ['index.rst:3']);
         }
     });
 });

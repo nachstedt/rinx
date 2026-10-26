@@ -39,7 +39,7 @@ pub fn markdown_hover(value: String, range: Range) -> Hover {
 /// Where a target is, as a hover's line: a link to the document's file, the
 /// address of another site's page, or the page the build writes — where
 /// `file_link` gives the URI a document of the target's workspace folder is
-/// opened by, given its `.rst` path.
+/// opened by, given its `.rst` path, at the target's line when it has one.
 pub fn location_markdown(
     destination: &Destination,
     file_link: impl Fn(&str) -> Option<Uri>,
@@ -84,6 +84,7 @@ mod tests {
             title: "Installing".to_string(),
             destination,
             entity: None,
+            definition: None,
         }
     }
 
