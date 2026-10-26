@@ -122,7 +122,7 @@
       <a id="editors"></a>
 <h1 id="other-editors">Other editors</h1>
 <p>The language server is the <code>rinx</code> binary itself, run as <code>rinx lsp</code>. It speaks the Language Server Protocol over standard input and output, so any editor with a language client can use it. The <a href="vscode.html#vscode">VS Code extension</a> is one such client. This page configures three others: Neovim, Helix and Emacs.</p>
-<p>Each configuration below is a file in the repository, under <code>editors/</code>, and continuous integration runs every one in its editor against the server. Neovim and Emacs are checked for diagnostics, hover, go to definition, and completion of references, domain objects, directives and role names. Helix, which cannot be scripted, is checked for finding the server and showing its diagnostics.</p>
+<p>Each configuration below is a file in the repository, under <code>editors/</code>, and continuous integration runs every one in its editor against the server. Neovim and Emacs are checked for diagnostics, hover, go to definition, the outline, and completion of references, domain objects, directives and role names. Helix, which cannot be scripted, is checked for finding the server and showing its diagnostics.</p>
 <h2 id="installing-the-server">Installing the server</h2>
 <p>Each configuration starts <code>rinx</code> from the <code>PATH</code>. Install it with Cargo:</p>
 <div class="highlight-console notranslate">
@@ -188,6 +188,8 @@ $ cargo install --git https://github.com/nachstedt/rinx rinx</pre></div>
 <li><p>Completion of every role's targets — labels, documents, terms, numbers, equations, options, domain objects and entity ids, and the targets of loaded inventories — of directive names, options and option values, and of role names.</p>
 </li>
 <li><p>Hover and go to definition on references.</p>
+</li>
+<li><p>The document's outline: its sections, with the objects and entities written in them.</p>
 </li>
 <li><p>Reading a Sphinx project's <code>conf.py</code>, and the extensions it declares (see <a href="vscode.html#vscode-sphinx-projects">Sphinx projects</a>).</p>
 </li>
