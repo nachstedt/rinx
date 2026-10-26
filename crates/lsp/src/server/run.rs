@@ -55,6 +55,7 @@ pub fn run(connection: &Connection) -> Result<()> {
         .with_definition_links(supports_definition_links(&params.capabilities))
         .with_outline_shape(outline_shape(&params.capabilities))
         .with_completion_format(completion_format(&params.capabilities))
+        .with_completion_reopening(reopens_completion(&params))
         .with_watched_files(supports_watched_files(&params.capabilities))
         .with_inventory_fetching(fetches_inventories(&params))
         .with_conf_execution(conf_execution(&params))
@@ -157,6 +158,18 @@ fn fetches_inventories(params: &InitializeParams) -> bool {
         .initialization_options
         .as_ref()
         .and_then(|options| options.get("fetchInventories"))
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false)
+}
+
+/// Whether the client reopens completion when an item's command says to, as
+/// the VS Code extension says with its `reopenCompletion` initialization
+/// option: the command is VS Code's own, which another client may not run.
+fn reopens_completion(params: &InitializeParams) -> bool {
+    params
+        .initialization_options
+        .as_ref()
+        .and_then(|options| options.get("reopenCompletion"))
         .and_then(serde_json::Value::as_bool)
         .unwrap_or(false)
 }
@@ -377,6 +390,19 @@ mod tests {
             manifest_source(&InitializeParams::default()),
             ManifestSource::Off
         );
+    }
+
+    #[test]
+    fn test_reopens_completion_only_for_a_client_passing_the_option() {
+        // Given
+        let asking = InitializeParams {
+            initialization_options: Some(serde_json::json!({"reopenCompletion": true})),
+            ..InitializeParams::default()
+        };
+
+        // When / Then
+        assert!(reopens_completion(&asking));
+        assert!(!reopens_completion(&InitializeParams::default()));
     }
 
     #[test]

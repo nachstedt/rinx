@@ -316,6 +316,31 @@ fn marker_above(lines: &[&str], line: usize) -> Option<usize> {
     None
 }
 
+/// Whether the cursor at character index `cursor` on line `line` of `lines`
+/// is on the field marker of a line in a directive's option block — its
+/// closing colon included, where [`directive_at`] completes nothing, since a
+/// value starts only after the space. No role starts there: `:align:` is an
+/// option, never a role named `align:`.
+#[must_use]
+pub fn on_option_marker(lines: &[&str], line: usize, cursor: usize) -> bool {
+    let Some(text) = lines.get(line) else {
+        return false;
+    };
+    let chars: Vec<char> = text.chars().collect();
+    let indent = indent_of(text);
+    if indent == 0 || chars.get(indent) != Some(&':') || cursor <= indent {
+        return false;
+    }
+    let name_start = indent + 1 + usize::from(matches!(chars.get(indent + 1), Some('+' | '-')));
+    let name_end = name_start
+        + chars[name_start.min(chars.len())..]
+            .iter()
+            .take_while(|&&c| is_option_char(c))
+            .count();
+    let marker_end = name_end + usize::from(chars.get(name_end) == Some(&':'));
+    cursor <= marker_end && marker_above(lines, line).is_some()
+}
+
 /// The line of the directive marker whose identity line `line` of `lines`
 /// states: the marker itself, or the `:id:` line of its option block — or
 /// `None` for any other line.
@@ -646,6 +671,30 @@ mod tests {
         // When / Then
         assert!(closes_at(&chars, 1));
         assert!(!closes_at(&chars, 2));
+    }
+
+    #[test]
+    fn test_on_option_marker_holds_up_to_an_option_s_closing_colon() {
+        // Given
+        let lines = [".. image:: a.png", "   :align: center", "   :+tags:"];
+
+        // When / Then
+        assert!(on_option_marker(&lines, 1, 5));
+        assert!(on_option_marker(&lines, 1, 10));
+        assert!(!on_option_marker(&lines, 1, 11));
+        assert!(on_option_marker(&lines, 2, 10));
+        assert!(!on_option_marker(&lines, 1, 3));
+    }
+
+    #[test]
+    fn test_on_option_marker_needs_a_directive_s_option_block() {
+        // Given — a field list in prose, and an option line past a blank one
+        let lines = [":Author: me", "", ".. note::", "", "   :align:"];
+
+        // When / Then
+        assert!(!on_option_marker(&lines, 0, 8));
+        assert!(!on_option_marker(&lines, 4, 10));
+        assert!(!on_option_marker(&lines, 9, 0));
     }
 
     #[test]
