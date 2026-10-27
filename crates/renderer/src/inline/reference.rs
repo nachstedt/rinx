@@ -4,7 +4,7 @@ use std::fmt::Write as _;
 
 use rinx_ast::{EntityId, InventorySelector, Span, TargetName};
 use rinx_index::relative_doc_href;
-use rinx_index::{ProjectIndex, SpecialPage};
+use rinx_index::{DefinitionKey, ProjectIndex, SpecialPage};
 
 use super::external_link::write_external_link;
 use crate::resolution::{ExternalHit, LABEL_ENTRY_TYPE, resolve_external, unresolved_kind};
@@ -187,7 +187,8 @@ pub(super) fn label_reference_target(
         label_link_text(index, None, name, target),
         target_doc,
         Some(anchor.to_string()),
-    );
+    )
+    .defined_as(DefinitionKey::Label(name.clone()));
     match entity_at(index, anchor, target_doc) {
         Some(id) => found.naming_entity(id),
         None => found,
@@ -213,6 +214,7 @@ pub(super) fn special_page_target(page: SpecialPage) -> ReferenceTarget {
             path: page.path.to_string(),
         },
         entity: None,
+        definition: None,
     }
 }
 

@@ -72,7 +72,7 @@ fn test_hover_shows_the_title_and_file_a_reference_leads_to() {
     assert_eq!(
         markdown(&hover),
         format!(
-            "**Installing**\n\n[setup\\.rst]({})",
+            "**Installing**\n\n[setup\\.rst]({}#L1)",
             workspace.uri("setup.rst").as_str()
         )
     );

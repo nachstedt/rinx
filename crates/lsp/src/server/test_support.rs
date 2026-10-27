@@ -172,6 +172,30 @@ pub(super) fn hover_markdown(
     })
 }
 
+/// The definition `state` answers at `line` and `character` of `uri`, or
+/// `None` for a null result.
+pub(super) fn definition_at(
+    state: &mut ServerState,
+    uri: Uri,
+    line: u32,
+    character: u32,
+) -> Option<lsp_types::GotoDefinitionResponse> {
+    let request = Request::new(
+        RequestId::from(81),
+        lsp_types::request::GotoDefinition::METHOD.to_string(),
+        lsp_types::GotoDefinitionParams {
+            text_document_position_params: lsp_types::TextDocumentPositionParams::new(
+                TextDocumentIdentifier::new(uri),
+                lsp_types::Position::new(line, character),
+            ),
+            work_done_progress_params: lsp_types::WorkDoneProgressParams::default(),
+            partial_result_params: lsp_types::PartialResultParams::default(),
+        },
+    );
+    let response = handle_request(state, request);
+    serde_json::from_value(response.response_result.expect("a result")).expect("a definition")
+}
+
 pub(super) fn scanned(name: &str, files: &[(&str, &str)]) -> (Workspace, ServerState) {
     let workspace = Workspace::new(name, files);
     let (mut state, _) = workspace.server(false);

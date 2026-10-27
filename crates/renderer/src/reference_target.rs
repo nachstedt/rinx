@@ -8,7 +8,7 @@
 
 use rinx_ast::{Document, EntityId, InlineNode};
 use rinx_entity::EntitySchema;
-use rinx_index::{ExternalInventory, ExternalTarget, ProjectIndex};
+use rinx_index::{DefinitionKey, ExternalInventory, ExternalTarget, ProjectIndex};
 use rinx_scope::DocumentScopes;
 
 use crate::config::SiteConfig;
@@ -27,6 +27,11 @@ pub struct ReferenceTarget {
     /// and a label or `:any:` leading to an entity — so a reader can show
     /// the entity's fields beside the link.
     pub entity: Option<EntityId>,
+    /// The definition the target is, by the key the index names it under —
+    /// what the document defining it recorded the site of, so an editor can
+    /// open the line it was written on. `None` for a document itself, and
+    /// for every target that is no document of this site.
+    pub definition: Option<DefinitionKey>,
 }
 
 /// Where a [`ReferenceTarget`] is.
@@ -60,6 +65,7 @@ impl ReferenceTarget {
                 anchor,
             },
             entity: None,
+            definition: None,
         }
     }
 
@@ -67,6 +73,14 @@ impl ReferenceTarget {
     pub(crate) fn naming_entity(self, id: EntityId) -> Self {
         Self {
             entity: Some(id),
+            ..self
+        }
+    }
+
+    /// This target, as the definition the index names `key`.
+    pub(crate) fn defined_as(self, key: DefinitionKey) -> Self {
+        Self {
+            definition: Some(key),
             ..self
         }
     }
@@ -87,6 +101,7 @@ impl ReferenceTarget {
                 site: hit.tooltip(),
             },
             entity: None,
+            definition: None,
         }
     }
 }

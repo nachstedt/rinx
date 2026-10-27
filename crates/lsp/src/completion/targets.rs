@@ -184,6 +184,7 @@ mod tests {
             title: "Brakes".to_string(),
             destination: destination.clone(),
             entity: Some(id),
+            definition: None,
         };
         let label = ReferenceTarget {
             entity: None,

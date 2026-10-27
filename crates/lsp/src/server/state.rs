@@ -46,6 +46,7 @@ use lsp_types::{
     FileChangeType, FileEvent, FileSystemWatcher, GlobPattern, GotoDefinitionResponse, Hover,
     Range, Registration, RegistrationParams, Uri,
 };
+use rinx_index::DefinitionKey;
 use rinx_renderer::{Destination, ReferenceResolver, ReferenceTarget};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -67,7 +68,7 @@ use crate::completion::{
     is_scoped, on_option_marker, probe_text, relation_target_at, role_at, role_name_at,
     role_name_items, target_items,
 };
-use crate::definition::reference_definition;
+use crate::definition::{line_link, reference_definition, site_location, target_location};
 use crate::diagnostics::{
     ParsedSource, diagnose_source, parse_prefix, parse_source, text_through_line,
 };
@@ -690,18 +691,28 @@ impl ServerState {
         }))
     }
 
-    /// The hover for the reference at `position` in the open document `uri`:
-    /// where the built page would link it, from its project's index — or
-    /// `None` when the cursor is on no reference, the reference would be
-    /// drawn broken, or the document is not open or is in no project.
+    /// The hover for the reference at `position` in the open document `uri`
+    /// — or the id written in a relation option there (see
+    /// [`Self::relation_id_at`]): where the built page would link it, from
+    /// its project's index. Else the hover of an entity's own directive
+    /// ([`Self::entity_marker_hover`]), or `None` when the cursor is on none
+    /// of these, the reference would be drawn broken, or the document is not
+    /// open or is in no project.
     pub(super) fn hover(&mut self, uri: &Uri, position: lsp_types::Position) -> Option<Hover> {
-        let Some((range, target, project)) = self.reference_target_at(uri, position) else {
-            return self.entity_hover_in_directive(uri, position);
+        let Some((range, target, project)) = self
+            .reference_target_at(uri, position)
+            .or_else(|| self.relation_id_at(uri, position))
+        else {
+            return self.entity_marker_hover(uri, position);
         };
+        let located = written_at(
+            &target,
+            self.projects.get(&project)?,
+            &self.documents,
+            self.encoding,
+        );
         let project = self.projects.get_mut(&project)?;
-        let location = location_markdown(&target.destination, |doc_path| {
-            file_uri(&project.path_of(doc_path))
-        });
+        let location = location_markdown(&target.destination, |_| located.as_ref().map(line_link));
         let schema = Arc::clone(&project.model().settings.parse.schema);
         let index = project.project_index();
         let entity_text = target
@@ -711,63 +722,81 @@ impl ServerState {
         Some(reference_hover(&target, range, &location, entity_text))
     }
 
-    /// The hover on an entity written in a directive at `position` of the
-    /// open document `uri`: an id in a relation option, or the entity a
-    /// marker or its `:id:` line declares — with its derived back-links,
-    /// which its own text cannot show.
-    fn entity_hover_in_directive(
+    /// The entity id written in a relation option at `position` of the open
+    /// document `uri` — an entity's own or an `.. entity-update::`'s — as a
+    /// reference to that entity: the id's range, the entity as its index
+    /// holds it, and the project whose index that is. `None` when the cursor
+    /// is on no id the index holds.
+    fn relation_id_at(
         &mut self,
         uri: &Uri,
         position: lsp_types::Position,
-    ) -> Option<Hover> {
+    ) -> Option<(Range, ReferenceTarget, ProjectId)> {
         let text = &self.documents.get(uri)?.text;
         let lines: Vec<&str> = text.lines().collect();
         let line_index = position.line as usize;
         let line = *lines.get(line_index)?;
-        let encoding = self.encoding;
-        let range = |characters: std::ops::Range<usize>| {
-            let at = |index: usize| {
-                let column = u32::try_from(index + 1).unwrap_or(u32::MAX);
-                to_lsp_position(
-                    rinx_ast::Position::new(position.line + 1, column),
-                    line,
-                    encoding,
-                )
-            };
-            lsp_types::Range::new(at(characters.start), at(characters.end))
+        let cursor = char_index_of(line, position.character, self.encoding);
+        let Some(DirectiveContext::Value(value)) = directive_at(&lines, line_index, cursor) else {
+            return None;
         };
         let tracked = self.tracked.get(uri)?;
-        let project = self.projects.get_mut(&tracked.project?)?;
+        let id = tracked.project?;
+        let project = self.projects.get_mut(&id)?;
         let settings = project
             .model()
             .parse_settings(Some(&tracked.parsed.document.path));
         let (schema, domain) = (Arc::clone(&settings.schema), settings.domain);
-        let cursor = char_index_of(line, position.character, encoding);
-        if let Some(DirectiveContext::Value(value)) = directive_at(&lines, line_index, cursor) {
-            let index = project.project_index();
-            let vocabulary = DirectiveVocabulary {
-                domain,
-                schema: &schema,
-                index,
-            };
-            if let Some((characters, id)) = relation_target_at(&value, &vocabulary) {
-                let destination = Destination::Document {
-                    doc_path: index.entities.get(&id)?.doc_path.clone(),
-                    anchor: None,
-                };
-                let location = location_markdown(&destination, |doc_path| {
-                    file_uri(&project.path_of(doc_path))
-                });
-                let text =
-                    indexed_entity_markdown(&id, project.project_index(), &schema, &location)?;
-                return Some(markdown_hover(text, range(characters)));
-            }
-        }
+        let index = project.project_index();
+        let vocabulary = DirectiveVocabulary {
+            domain,
+            schema: &schema,
+            index,
+        };
+        let (characters, entity) = relation_target_at(&value, &vocabulary)?;
+        let record = index.entities.get(&entity)?;
+        let target = ReferenceTarget {
+            title: record.display_text(&entity).to_string(),
+            destination: Destination::Document {
+                doc_path: record.doc_path.clone(),
+                anchor: Some(rinx_index::entity_anchor(entity.as_str())),
+            },
+            entity: Some(entity.clone()),
+            definition: Some(DefinitionKey::Entity(entity)),
+        };
+        let range = line_range(line, position.line, characters, self.encoding);
+        Some((range, target, id))
+    }
+
+    /// The hover on the entity a directive marker or its `:id:` line at
+    /// `position` of the open document `uri` declares — with its derived
+    /// back-links, which its own text cannot show.
+    fn entity_marker_hover(&mut self, uri: &Uri, position: lsp_types::Position) -> Option<Hover> {
+        let text = &self.documents.get(uri)?.text;
+        let lines: Vec<&str> = text.lines().collect();
+        let line_index = position.line as usize;
+        let line = *lines.get(line_index)?;
+        let tracked = self.tracked.get(uri)?;
+        let project = self.projects.get_mut(&tracked.project?)?;
+        let schema = Arc::clone(
+            &project
+                .model()
+                .parse_settings(Some(&tracked.parsed.document.path))
+                .schema,
+        );
         let marker = identity_marker_line(&lines, line_index)?;
         let entity = entity_marked_at(&tracked.parsed.document, u32::try_from(marker + 1).ok()?)?;
         let text = declared_entity_markdown(entity, project.project_index(), &schema);
         let indent = line.chars().take_while(|c| c.is_whitespace()).count();
-        Some(markdown_hover(text, range(indent..line.chars().count())))
+        Some(markdown_hover(
+            text,
+            line_range(
+                line,
+                position.line,
+                indent..line.chars().count(),
+                self.encoding,
+            ),
+        ))
     }
 
     /// The page of the open document `uri`, as its project would build it,
@@ -896,23 +925,26 @@ impl ServerState {
         )
     }
 
-    /// The definition of the reference at `position` in the open document
-    /// `uri`: the file of the document the built page would link it to — or
-    /// `None` wherever [`Self::hover`] has none, and for a reference leading
-    /// to no document of the project.
+    /// The definition of the reference, or the id in a relation option, at
+    /// `position` in the open document `uri`: where the target the built
+    /// page would link it to was written (see [`written_at`]) — or `None`
+    /// wherever [`Self::hover`] shows no target, an entity's own directive
+    /// included, and for a reference leading to no document of the project.
     pub(super) fn definition(
         &mut self,
         uri: &Uri,
         position: lsp_types::Position,
     ) -> Option<GotoDefinitionResponse> {
-        let (range, target, project) = self.reference_target_at(uri, position)?;
-        let project = self.projects.get(&project)?;
-        reference_definition(
+        let (range, target, project) = self
+            .reference_target_at(uri, position)
+            .or_else(|| self.relation_id_at(uri, position))?;
+        let location = written_at(
             &target,
-            range,
-            |doc_path| file_uri(&project.path_of(doc_path)),
-            self.definition_links,
-        )
+            self.projects.get(&project)?,
+            &self.documents,
+            self.encoding,
+        )?;
+        Some(reference_definition(location, range, self.definition_links))
     }
 
     /// The outline of the open document `uri`, from its latest parse — `None`
@@ -1407,4 +1439,58 @@ impl ServerState {
 /// directory is not followed, as the scan does not follow one.
 fn is_directory(path: &Path) -> bool {
     std::fs::symlink_metadata(path).is_ok_and(|metadata| metadata.is_dir())
+}
+
+/// Where `target`, resolved against `project`'s index, was written: the
+/// range of its definition, read from the defining document's latest
+/// analysis, else the start of its document's file. A definition's columns
+/// are counted on its file's open buffer, else on the disk, the text that
+/// analysis read — `None` as for [`target_location`].
+fn written_at(
+    target: &ReferenceTarget,
+    project: &Project,
+    documents: &DocumentStore,
+    encoding: PositionEncoding,
+) -> Option<lsp_types::Location> {
+    let definitions = project.definitions();
+    target_location(
+        target,
+        |doc_path| file_uri(&project.path_of(doc_path)),
+        |doc_path, key| {
+            let site = definitions.site(doc_path, key)?;
+            let read;
+            let text = if let Some(open) = documents.get_by_path(&site.path) {
+                Some(open.text.as_str())
+            } else {
+                read = std::fs::read_to_string(&site.path).ok();
+                read.as_deref()
+            };
+            Some(site_location(
+                file_uri(&site.path)?,
+                site.start,
+                site.end,
+                text,
+                encoding,
+            ))
+        },
+    )
+}
+
+/// The protocol range of the characters `characters` on the 0-based line
+/// `line_number`, whose text is `line`.
+fn line_range(
+    line: &str,
+    line_number: u32,
+    characters: std::ops::Range<usize>,
+    encoding: PositionEncoding,
+) -> Range {
+    let at = |index: usize| {
+        let column = u32::try_from(index + 1).unwrap_or(u32::MAX);
+        to_lsp_position(
+            rinx_ast::Position::new(line_number + 1, column),
+            line,
+            encoding,
+        )
+    };
+    Range::new(at(characters.start), at(characters.end))
 }

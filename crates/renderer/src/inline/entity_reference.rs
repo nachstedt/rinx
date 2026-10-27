@@ -101,6 +101,7 @@ pub(super) fn entity_target(
             &record.doc_path,
             Some(crate::blocks::entity_anchor(target)),
         )
+        .defined_as(rinx_index::DefinitionKey::Entity(id.clone()))
         .naming_entity(id),
     )
 }

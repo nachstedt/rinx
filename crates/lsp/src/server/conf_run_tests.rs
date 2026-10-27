@@ -23,17 +23,14 @@ struct FakePython {
 
 impl FakePython {
     fn new(name: &str, output: &str) -> Self {
-        use std::os::unix::fs::PermissionsExt;
         let directory = std::env::temp_dir().join(format!("rinx_lsp_fake_python_{name}"));
         let _ = std::fs::remove_dir_all(&directory);
         std::fs::create_dir_all(&directory).expect("mkdir");
         let path = directory.join("python");
-        std::fs::write(
+        crate::test_scripts::write_executable_script(
             &path,
             "#!/bin/sh\nhere=$(dirname \"$0\")\necho run >> \"$here/runs\"\ncat \"$here/output.json\"\n",
-        )
-        .expect("write");
-        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).expect("chmod");
+        );
         let python = Self { path };
         python.answer(output);
         python

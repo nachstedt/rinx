@@ -8,8 +8,8 @@ use lsp_types::{
     TextDocumentPositionParams,
 };
 
-/// A section labelled `install` in `setup.rst`.
-const SETUP: &str = ".. _install:\n\nInstalling\n==========\n\nText.\n";
+/// A section labelled `install` in `setup.rst`, on its fourth line.
+const SETUP: &str = "Setup\n=====\n\n.. _install:\n\nInstalling\n==========\n\nText.\n";
 
 fn definition(uri: Uri, line: u32, character: u32) -> Request {
     Request::new(
@@ -37,6 +37,35 @@ fn start_of(uri: Uri) -> GotoDefinitionResponse {
     GotoDefinitionResponse::Scalar(Location::new(uri, Range::default()))
 }
 
+/// The range from `start` to `end` on the 0-based `line`.
+fn on_line(line: u32, start: u32, end: u32) -> Range {
+    Range::new(Position::new(line, start), Position::new(line, end))
+}
+
+/// A scanned server over `files`, with `notes.rst` opened at `text`.
+fn server_over(name: &str, files: &[(&str, &str)], text: &str) -> (Workspace, ServerState) {
+    let mut files = files.to_vec();
+    files.push(("notes.rst", ""));
+    let workspace = Workspace::new(name, &files);
+    let (mut state, _) = workspace.server(false);
+    state.on_scan_event(workspace.scanned());
+    handle_notification(&mut state, workspace.open("notes.rst", text));
+    (workspace, state)
+}
+
+/// The definition of the reference at `character` on the first line of
+/// `notes.rst`.
+fn definition_in_notes(
+    workspace: &Workspace,
+    state: &mut ServerState,
+    character: u32,
+) -> Option<GotoDefinitionResponse> {
+    definition_of(&handle_request(
+        state,
+        definition(workspace.uri("notes.rst"), 0, character),
+    ))
+}
+
 /// A scanned server over `setup.rst`, with `notes.rst` opened at `text`,
 /// answering with links when `links`.
 fn server_with_notes(name: &str, text: &str, links: bool) -> (Workspace, ServerState) {
@@ -61,7 +90,7 @@ fn test_initialize_result_announces_definition() {
 }
 
 #[test]
-fn test_definition_of_a_ref_is_the_file_its_label_is_in() {
+fn test_definition_of_a_ref_is_the_line_its_label_is_written_on() {
     // Given
     let (workspace, mut state) =
         server_with_notes("definition_ref", "See :ref:`install` now.\n", false);
@@ -72,7 +101,99 @@ fn test_definition_of_a_ref_is_the_file_its_label_is_in() {
     // Then
     assert_eq!(
         definition_of(&response),
-        Some(start_of(workspace.uri("setup.rst")))
+        Some(GotoDefinitionResponse::Scalar(Location::new(
+            workspace.uri("setup.rst"),
+            on_line(3, 0, 12)
+        )))
+    );
+}
+
+#[test]
+fn test_definition_of_a_term_is_its_line_in_the_glossary() {
+    // Given
+    let glossary = "Glossary\n========\n\n.. glossary::\n\n   widget\n      A thing.\n";
+    let (workspace, mut state) = server_over(
+        "definition_term",
+        &[("glossary.rst", glossary)],
+        "A :term:`widget`.\n",
+    );
+
+    // When
+    let found = definition_in_notes(&workspace, &mut state, 10);
+
+    // Then
+    assert_eq!(
+        found,
+        Some(GotoDefinitionResponse::Scalar(Location::new(
+            workspace.uri("glossary.rst"),
+            on_line(5, 3, 9)
+        )))
+    );
+}
+
+#[test]
+fn test_definition_of_a_domain_object_is_its_directive() {
+    // Given
+    let api = "API\n===\n\n.. py:module:: pkg\n\n.. py:function:: run()\n\n   Runs.\n";
+    let (workspace, mut state) = server_over(
+        "definition_object",
+        &[("api.rst", api)],
+        "Call :py:func:`pkg.run`.\n",
+    );
+
+    // When
+    let found = definition_in_notes(&workspace, &mut state, 16);
+
+    // Then — the marker line
+    let Some(GotoDefinitionResponse::Scalar(location)) = found else {
+        panic!("a location, not {found:?}");
+    };
+    assert_eq!(location.uri, workspace.uri("api.rst"));
+    assert_eq!(location.range.start, Position::new(5, 0));
+}
+
+#[test]
+fn test_definition_of_an_equation_is_the_equation_it_labels() {
+    // Given
+    let math = "Math\n====\n\n.. math::\n   :label: euler\n\n   e^{i\\pi} = -1\n";
+    let (workspace, mut state) = server_over(
+        "definition_equation",
+        &[("math.rst", math)],
+        "See :eq:`euler`.\n",
+    );
+
+    // When
+    let found = definition_in_notes(&workspace, &mut state, 8);
+
+    // Then — the equation's own line, where its span starts
+    let Some(GotoDefinitionResponse::Scalar(location)) = found else {
+        panic!("a location, not {found:?}");
+    };
+    assert_eq!(location.uri, workspace.uri("math.rst"));
+    assert_eq!(location.range.start.line, 6);
+}
+
+#[test]
+fn test_definition_of_a_label_in_an_included_fragment_is_in_the_fragment() {
+    // Given — `.inc`, so the fragment is no document of its own
+    let setup = "Setup\n=====\n\n.. include:: shared/label.inc\n";
+    let fragment = "Intro.\n\n.. _install:\n\nInstalling\n==========\n";
+    let (workspace, mut state) = server_over(
+        "definition_fragment",
+        &[("setup.rst", setup), ("shared/label.inc", fragment)],
+        "See :ref:`install` now.\n",
+    );
+
+    // When
+    let found = definition_in_notes(&workspace, &mut state, 8);
+
+    // Then
+    assert_eq!(
+        found,
+        Some(GotoDefinitionResponse::Scalar(Location::new(
+            workspace.uri("shared/label.inc"),
+            on_line(2, 0, 12)
+        )))
     );
 }
 
@@ -106,20 +227,20 @@ fn test_definition_links_from_the_whole_reference_when_the_client_takes_links() 
         Some(GotoDefinitionResponse::Link(vec![LocationLink {
             origin_selection_range: Some(Range::new(Position::new(0, 4), Position::new(0, 18))),
             target_uri: workspace.uri("setup.rst"),
-            target_range: Range::default(),
-            target_selection_range: Range::default(),
+            target_range: on_line(3, 0, 12),
+            target_selection_range: on_line(3, 0, 12),
         }]))
     );
 }
 
 #[test]
 fn test_definition_reads_a_label_typed_a_moment_ago_in_another_document() {
-    // Given — the label exists only in an unsaved buffer
+    // Given — the label exists only in an unsaved buffer, on its third line
     let (workspace, mut state) =
         server_with_notes("definition_fresh", "See :ref:`usage`.\n", false);
     handle_notification(
         &mut state,
-        workspace.open("setup.rst", ".. _usage:\n\nUsage\n=====\n"),
+        workspace.open("setup.rst", "Intro.\n\n.. _usage:\n\nUsage\n=====\n"),
     );
 
     // When
@@ -128,7 +249,10 @@ fn test_definition_reads_a_label_typed_a_moment_ago_in_another_document() {
     // Then
     assert_eq!(
         definition_of(&response),
-        Some(start_of(workspace.uri("setup.rst")))
+        Some(GotoDefinitionResponse::Scalar(Location::new(
+            workspace.uri("setup.rst"),
+            on_line(2, 0, 10)
+        )))
     );
 }
 

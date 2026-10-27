@@ -669,14 +669,15 @@ fn test_lsp_follows_a_link_of_the_preview_to_its_source() {
 }
 
 #[test]
-fn test_lsp_opens_the_document_a_reference_leads_to() {
-    // Given — a scanned folder whose `setup.rst` labels a section
+fn test_lsp_opens_the_line_a_reference_leads_to() {
+    // Given — a scanned folder whose `setup.rst` labels a section on its
+    // third line
     let root = std::env::temp_dir().join("rinx_lsp_stdio_definition");
     let _ = std::fs::remove_dir_all(&root);
     std::fs::create_dir_all(&root).expect("mkdir");
     std::fs::write(
         root.join("setup.rst"),
-        ".. _install:\n\nInstalling\n==========\n",
+        "Intro.\n\n.. _install:\n\nInstalling\n==========\n",
     )
     .expect("write");
     let notes = format!("file://{}", root.join("notes.rst").display());
@@ -724,8 +725,11 @@ fn test_lsp_opens_the_document_a_reference_leads_to() {
         format!("file://{}", root.join("setup.rst").display())
     );
     assert_eq!(
-        location["range"]["start"],
-        json!({ "line": 0, "character": 0 })
+        location["range"],
+        json!({
+            "start": { "line": 2, "character": 0 },
+            "end": { "line": 2, "character": 12 },
+        })
     );
 }
 
@@ -971,10 +975,38 @@ fn test_lsp_asks_its_client_for_an_inventory_and_resolves_into_it() {
     );
 }
 
+/// Writes `text` to `path` as an executable script.
+///
+/// The file is written by a `/bin/sh` child rather than by this process:
+/// while a test holds the file open for writing, another test thread's
+/// fork inherits that descriptor until its exec, and running the script in
+/// that window fails with `ETXTBSY` ("Text file busy"). A child's
+/// descriptor is gone once it has exited.
+#[cfg(unix)]
+fn write_executable_script(path: &std::path::Path, text: &str) {
+    use std::io::Write;
+    let mut writer = Command::new("/bin/sh")
+        .args(["-c", r#"cat > "$0" && chmod 755 "$0""#])
+        .arg(path)
+        .stdin(Stdio::piped())
+        .spawn()
+        .expect("spawn /bin/sh");
+    writer
+        .stdin
+        .take()
+        .expect("a stdin pipe")
+        .write_all(text.as_bytes())
+        .expect("write the script");
+    assert!(
+        writer.wait().expect("wait").success(),
+        "wrote {}",
+        path.display()
+    );
+}
+
 #[cfg(unix)]
 #[test]
 fn test_lsp_runs_conf_py_in_the_interpreter_its_client_names() {
-    use std::os::unix::fs::PermissionsExt;
     // Given — a project computing its root document, and an interpreter
     // standing in for Python, printing what running `conf.py` would
     let root = std::env::temp_dir().join("rinx_lsp_stdio_conf_run");
@@ -988,12 +1020,10 @@ fn test_lsp_runs_conf_py_in_the_interpreter_its_client_names() {
     std::fs::write(root.join("contents.rst"), "Home\n====\n").expect("write");
     let python = root.join(".bin").join("python");
     std::fs::create_dir_all(python.parent().expect("a parent")).expect("mkdir");
-    std::fs::write(
+    write_executable_script(
         &python,
         "#!/bin/sh\ncat <<'EOF'\n{\"values\": {\"root_doc\": \"'contents'\"}}\nEOF\n",
-    )
-    .expect("write");
-    std::fs::set_permissions(&python, std::fs::Permissions::from_mode(0o755)).expect("chmod");
+    );
     let conf = format!("file://{}", root.join("conf.py").display());
     let mut server = Server::spawn();
     server.initialize_with(json!({

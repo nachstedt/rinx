@@ -4,7 +4,10 @@
 
 use super::test_support::*;
 use lsp_types::request::Completion;
-use lsp_types::{CompletionParams, CompletionResponse, Position, TextDocumentPositionParams};
+use lsp_types::{
+    CompletionParams, CompletionResponse, GotoDefinitionResponse, Location, LocationLink, Position,
+    Range, TextDocumentPositionParams,
+};
 
 const CONF: &str = "extensions = ['sphinx_needs']\nneeds_from_toml = 'ubproject.toml'\n";
 const UBPROJECT: &str = "\
@@ -66,7 +69,7 @@ fn test_hovering_a_need_role_shows_the_need_s_fields_and_back_links() {
         shown.as_deref(),
         Some(
             format!(
-                "**Requirement** R\\_1 — Brakes\n\n[reqs\\.rst]({})\n\n\
+                "**Requirement** R\\_1 — Brakes\n\n[reqs\\.rst]({}#L4)\n\n\
                  - **Priority:** high\n\n\
                  - **implements\\_back:** S\\_1",
                 reqs.as_str()
@@ -113,12 +116,126 @@ fn test_hovering_an_id_in_a_relation_shows_the_entity_it_names() {
     // When — on `R_1` of `   :implements: R_1`
     let shown = hover_markdown(&mut state, workspace.uri("reqs.rst"), 9, 17);
 
-    // Then
+    // Then — linked at the requirement's directive
     let shown = shown.expect("a hover");
-    assert!(
-        shown.starts_with("**Requirement** R\\_1 — Brakes\n\n[reqs\\.rst]("),
-        "{shown}"
+    let linked = format!(
+        "**Requirement** R\\_1 — Brakes\n\n[reqs\\.rst]({}#L4)",
+        workspace.uri("reqs.rst").as_str()
     );
+    assert!(shown.starts_with(&linked), "{shown}");
+}
+
+/// The location `definition` leads to, when it is a single plain one.
+fn location_of(definition: Option<GotoDefinitionResponse>) -> Option<Location> {
+    match definition? {
+        GotoDefinitionResponse::Scalar(location) => Some(location),
+        other => panic!("not one location: {other:?}"),
+    }
+}
+
+/// The requirement `R_1`'s directive in `reqs.rst`: `.. req:: Brakes`.
+fn requirement_marker(workspace: &Workspace) -> Location {
+    Location::new(
+        workspace.uri("reqs.rst"),
+        Range::new(Position::new(3, 0), Position::new(3, 15)),
+    )
+}
+
+#[test]
+fn test_definition_of_a_need_role_or_a_ref_to_an_entity_is_its_directive() {
+    // Given
+    let text = "See :need:`R_1` and :ref:`R_1`.\n";
+    let (workspace, mut state) = project_with("entity_definition_role", text);
+    let uri = workspace.uri("index.rst");
+
+    // When
+    let by_role = definition_at(&mut state, uri.clone(), 0, 12);
+    let by_ref = definition_at(&mut state, uri, 0, 27);
+
+    // Then
+    assert_eq!(location_of(by_role), Some(requirement_marker(&workspace)));
+    assert_eq!(location_of(by_ref), Some(requirement_marker(&workspace)));
+}
+
+#[test]
+fn test_definition_of_an_id_in_a_relation_is_the_entity_s_directive() {
+    // Given
+    let (workspace, mut state) = project_with("entity_definition_relation", "");
+    handle_notification(&mut state, workspace.open("reqs.rst", REQS));
+
+    // When — on `R_1` of `   :implements: R_1`
+    let found = definition_at(&mut state, workspace.uri("reqs.rst"), 9, 17);
+
+    // Then
+    assert_eq!(location_of(found), Some(requirement_marker(&workspace)));
+}
+
+#[test]
+fn test_definition_of_an_id_in_a_relation_leads_into_another_document() {
+    // Given — a specification in `index.rst`, implementing `reqs.rst`'s
+    // requirement among others
+    let text = ".. spec:: Discs\n   :id: S_2\n   :implements: S_1, R_1\n";
+    let (workspace, mut state) = project_with("entity_definition_elsewhere", text);
+
+    // When — on `R_1`, the second id of the list
+    let found = definition_at(&mut state, workspace.uri("index.rst"), 2, 23);
+
+    // Then
+    assert_eq!(location_of(found), Some(requirement_marker(&workspace)));
+}
+
+#[test]
+fn test_definition_of_an_id_an_update_relates_is_the_entity_s_directive() {
+    // Given — an update adding a relation to `S_1`
+    let text = ".. entity-update:: S_1\n   :implements: R_1\n";
+    let (workspace, mut state) = project_with("entity_definition_update", text);
+
+    // When
+    let found = definition_at(&mut state, workspace.uri("index.rst"), 1, 18);
+
+    // Then
+    assert_eq!(location_of(found), Some(requirement_marker(&workspace)));
+}
+
+#[test]
+fn test_definition_of_a_relation_links_from_the_id_alone() {
+    // Given — a client taking links
+    let text = ".. spec:: Discs\n   :id: S_2\n   :implements: R_1\n";
+    let (workspace, state) = project_with("entity_definition_link", text);
+    let mut state = state.with_definition_links(true);
+
+    // When
+    let found = definition_at(&mut state, workspace.uri("index.rst"), 2, 18);
+
+    // Then — the origin is `R_1`, not the option line
+    let marker = requirement_marker(&workspace);
+    assert_eq!(
+        found,
+        Some(GotoDefinitionResponse::Link(vec![LocationLink {
+            origin_selection_range: Some(Range::new(Position::new(2, 16), Position::new(2, 19))),
+            target_uri: marker.uri,
+            target_range: marker.range,
+            target_selection_range: marker.range,
+        }]))
+    );
+}
+
+#[test]
+fn test_definition_is_null_for_an_unknown_id_or_an_entity_s_own_lines() {
+    // Given — a relation to an id no document declares
+    let text = ".. spec:: Discs\n   :id: S_2\n   :implements: R_9\n";
+    let (workspace, mut state) = project_with("entity_definition_none", text);
+    let uri = workspace.uri("index.rst");
+
+    // When
+    let on_unknown = definition_at(&mut state, uri.clone(), 2, 18);
+    let on_marker = definition_at(&mut state, uri.clone(), 0, 4);
+    let on_id = definition_at(&mut state, uri, 1, 9);
+
+    // Then — the reader is at the entity already
+    assert_eq!(on_unknown, None);
+    assert_eq!(on_marker, None);
+    assert_eq!(on_id, None);
 }
 
 #[test]

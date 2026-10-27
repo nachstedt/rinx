@@ -467,6 +467,16 @@ impl Project {
         &self.fold().index
     }
 
+    /// Where the project's documents wrote their definitions, by their
+    /// latest analyses — which no fold reads, so none is needed.
+    #[must_use]
+    pub fn definitions(&self) -> Definitions<'_> {
+        Definitions {
+            documents: &self.documents,
+            source_root: &self.model.source_root,
+        }
+    }
+
     /// The project index, beside where its definitions were written, for a
     /// caller reading both at once.
     pub fn index_and_definitions(&mut self) -> (&ProjectIndex, Definitions<'_>) {

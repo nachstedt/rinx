@@ -127,11 +127,14 @@ pub(super) fn number_reference_target(
         return None;
     }
     let resolved = resolve(reference, index, numbering).ok()?;
-    Some(ReferenceTarget::in_document(
-        resolved.text,
-        resolved.doc_path,
-        Some(index.target_anchor(&resolved.label).to_string()),
-    ))
+    Some(
+        ReferenceTarget::in_document(
+            resolved.text,
+            resolved.doc_path,
+            Some(index.target_anchor(&resolved.label).to_string()),
+        )
+        .defined_as(rinx_index::DefinitionKey::Label(resolved.label)),
+    )
 }
 
 /// A `:numref:` that resolved, ready to be drawn.
