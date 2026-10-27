@@ -146,6 +146,7 @@
     "vscode-languageclient": "^10.1.2"
   },
   "overrides": {
-    "serialize-javascript": "^7.0.5"
+    "@azure/msal-node": "^7.1.0",
+    "serialize-javascript": "^7.1.3"
   }
 }
