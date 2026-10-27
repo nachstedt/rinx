@@ -9,22 +9,22 @@ req: 24
 safety_goal: 20
 sysreq: 18
 seq_msg: 16
-swarch: 10
 arch: 10
+swarch: 10
 need: 8
-person: 6
 interface: 6
+person: 6
 component: 5
 spec: 3
 release: 3
-team: 1
 hazard: 1
+team: 1
 
 Unsupported Directives Summary:
 -------------------------------
 automodule: 2
-test-file: 1
 src-trace: 1
+test-file: 1
 
 Sphinx-Needs Constructs Without An Entity-Model Equivalent:
 ----------------------------------------------------------
