@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>🏗️ System Requirements (SYSREQ) — Sphinx-Needs Demo Benchmark</title>
+  <link rel="stylesheet" href="../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">Sphinx-Needs Demo Benchmark</h2>
+        
+        
+        
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../demo_details.html">🔍 Demo details</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../online_editor.html">⌨ Online Editor</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../basic_example/index.html">🧰 Basic Example</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../coffee-machine/index.html">☕️ Coffee Machine Example</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../automotive-adas/index.html">🚗 Automotive ADAS</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="index.html">🛡️ ISO 26262 Functional Safety Example</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="fsr.html">&larr; 📋 Functional Safety Requirements (FSR)</a>
+        <a class="next" href="analysis.html">📊 Safety Traceability Analysis &rarr;</a>
+      </nav>
+      
+      <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header sd-bg-success sd-bg-text-success">
+<span class="sd-summary-icon"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-light-bulb" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg></span><span class="sd-summary-text">Demo page details</span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<p class="sd-card-text"><strong>Page source code: system_requirements.rst</strong></p>
+<div class="highlight-rst notranslate">
+<div class="highlight hl-code"><pre>
+<span class="linenos">1</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">{% set page=&quot;system_requirements.rst&quot; %}</span></span>
+<span class="linenos">2</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">{% include &quot;demo_page_header.rst&quot; with context %}</span></span>
+<span class="linenos">3</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">4</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">🏗️ System Requirements (SYSREQ)</span></span>
+<span class="linenos">5</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">=================================</span></span></span></span>
+<span class="linenos">6</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">7</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">System Requirements specify concrete system capabilities, performance metrics,</span></span>
+<span class="linenos">8</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">and architectural characteristics that implement Functional Safety Requirements.</span></span>
+<span class="linenos">9</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">SYSREQs are technology-aware and define measurable system properties.</span></span>
+<span class="linenos">10</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">11</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-bold hl-restructuredtext"><span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span>Traceability Chain:<span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span></span> HAZ → SG → FSR → <span class="hl-markup hl-bold hl-restructuredtext"><span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span>SYSREQ<span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span></span> → (SWREQ/HWREQ)</span></span>
+<span class="linenos">12</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">13</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">System requirements:</span></span>
+<span class="linenos">14</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">15</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">- Define specific performance metrics and bounds</span></span>
+<span class="linenos">16</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">- Specify architectural approaches (redundancy, algorithms)</span></span>
+<span class="linenos">17</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">- Remain implementation-independent but technology-aware</span></span>
+<span class="linenos">18</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">- Inherit ASIL from parent FSRs</span></span>
+<span class="linenos">19</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">- Form the basis for software and hardware requirements</span></span>
+<span class="linenos">20</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">21</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">SYSREQ Overview</span></span>
+<span class="linenos">22</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">---------------</span></span></span></span>
+<span class="linenos">23</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">24</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> needtable<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">25</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>filter<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> type == &quot;sysreq&quot; and docname is not None and &quot;safety_example&quot; in docname</span></span>
+<span class="linenos">26</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>columns<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> id, title, asil, implements</span></span>
+<span class="linenos">27</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>style<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> table</span></span>
+<span class="linenos">28</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">29</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Vehicle Dynamics Controller System Requirements</span></span>
+<span class="linenos">30</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">------------------------------------------------</span></span></span></span>
+<span class="linenos">31</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">32</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> VDC Trajectory Tracking Accuracy</span></span>
+<span class="linenos">33</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_VDC_01</span></span>
+<span class="linenos">34</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">35</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_VDC_CTRL_01</span></span>
+<span class="linenos">36</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">37</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">38</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The VDC shall track the commanded trajectory with maximum lateral error ≤0.5m</span></span>
+<span class="linenos">39</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   and longitudinal error ≤0.3m at speeds up to 130 km/h under nominal conditions.</span></span>
+<span class="linenos">40</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Performance degradation allowed under adverse conditions (reduced visibility,</span></span>
+<span class="linenos">41</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   low friction surfaces) with notification to supervision layer.</span></span>
+<span class="linenos">42</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">43</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> VDC Dual-Redundant Processing Architecture</span></span>
+<span class="linenos">44</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_VDC_02</span></span>
+<span class="linenos">45</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">46</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_VDC_CTRL_03</span></span>
+<span class="linenos">47</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">48</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">49</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The VDC shall implement dual-redundant processing with two independent processors</span></span>
+<span class="linenos">50</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   executing diverse control algorithms. Cross-checking shall occur every control</span></span>
+<span class="linenos">51</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   cycle (10ms) with automatic switchover to healthy processor within 20ms upon</span></span>
+<span class="linenos">52</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   detection of discrepancy &gt;10%.</span></span>
+<span class="linenos">53</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">54</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> VDC Multi-Sensor Fusion System</span></span>
+<span class="linenos">55</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_VDC_03</span></span>
+<span class="linenos">56</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">57</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_VEHICLE_SENS_01, FSR_VEHICLE_SENS_02</span></span>
+<span class="linenos">58</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">59</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">60</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The VDC shall implement sensor fusion combining IMU (6-axis accelerometer/gyro),</span></span>
+<span class="linenos">61</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   individual wheel speed sensors, and GNSS/INS using Extended Kalman Filter.</span></span>
+<span class="linenos">62</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   System shall detect sensor failures within 100ms and maintain state estimation</span></span>
+<span class="linenos">63</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   with degraded accuracy using remaining sensors.</span></span>
+<span class="linenos">64</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">65</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> VDC Graceful Degradation Controller</span></span>
+<span class="linenos">66</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_VDC_04</span></span>
+<span class="linenos">67</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">68</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_VDC_CTRL_04</span></span>
+<span class="linenos">69</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">70</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">71</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The VDC shall maintain trajectory control capability with single actuator or</span></span>
+<span class="linenos">72</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   sensor failure. Degraded modes: (1) Single wheel actuator failure: redistribute</span></span>
+<span class="linenos">73</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   torque to remaining wheels; (2) Steering actuator failure: trajectory control</span></span>
+<span class="linenos">74</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   via differential braking; (3) Single sensor failure: continue with reduced accuracy.</span></span>
+<span class="linenos">75</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">76</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Wheel Rotational Dynamics Controller System Requirements</span></span>
+<span class="linenos">77</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">---------------------------------------------------------</span></span></span></span>
+<span class="linenos">78</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">79</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> WRDC Single Wheel Fault Tolerance</span></span>
+<span class="linenos">80</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_WRDC_01</span></span>
+<span class="linenos">81</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">82</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_WRDC_CTRL_01</span></span>
+<span class="linenos">83</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">84</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">85</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The WRDC shall compensate for failed wheel actuator through coordinated control</span></span>
+<span class="linenos">86</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   of remaining three wheels. System shall detect actuator failure within 50ms</span></span>
+<span class="linenos">87</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   (via feedback comparison) and redistribute target torques to maintain yaw</span></span>
+<span class="linenos">88</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   stability within ±2° and lateral acceleration within ±0.5 m/s² of commanded values.</span></span>
+<span class="linenos">89</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">90</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> WRDC Tire Friction Estimation System</span></span>
+<span class="linenos">91</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_WRDC_02</span></span>
+<span class="linenos">92</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">93</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_WRDC_CTRL_03</span></span>
+<span class="linenos">94</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">95</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">96</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The WRDC shall implement real-time tire-road friction coefficient (µ) estimation</span></span>
+<span class="linenos">97</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   with ±10% accuracy across all surface conditions (dry asphalt µ=1.0 to ice µ=0.2).</span></span>
+<span class="linenos">98</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Estimation algorithm shall use wheel slip ratio, longitudinal/lateral forces,</span></span>
+<span class="linenos">99</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   and vehicle dynamics model. Update rate: 100Hz.</span></span>
+<span class="linenos">100</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">101</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> WRDC ABS/ASR Coordination Logic</span></span>
+<span class="linenos">102</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_WRDC_03</span></span>
+<span class="linenos">103</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">104</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_WRDC_CTRL_01</span></span>
+<span class="linenos">105</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">106</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">107</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The WRDC shall implement integrated anti-lock braking (ABS) and anti-slip</span></span>
+<span class="linenos">108</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   regulation (ASR) with coordinated control logic. Wheel lock detection threshold:</span></span>
+<span class="linenos">109</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   slip ratio &gt;0.15. Wheel spin detection threshold: slip ratio &gt;0.10. Control</span></span>
+<span class="linenos">110</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   response time from detection to pressure modulation: &lt;20ms.</span></span>
+<span class="linenos">111</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">112</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> WRDC High-Frequency Control Loop</span></span>
+<span class="linenos">113</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_WRDC_04</span></span>
+<span class="linenos">114</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">115</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_WRDC_CTRL_04</span></span>
+<span class="linenos">116</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">117</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">118</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The WRDC control loop shall execute with 5ms cycle time and maximum jitter</span></span>
+<span class="linenos">119</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   ±0.5ms. Sensor data age shall not exceed 10ms. Anti-lock and anti-spin response</span></span>
+<span class="linenos">120</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   time from wheel slip detection to first pressure modulation: &lt;20ms.</span></span>
+<span class="linenos">121</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">122</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Steering Controller System Requirements</span></span>
+<span class="linenos">123</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">----------------------------------------</span></span></span></span>
+<span class="linenos">124</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">125</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Steering Robust Control Algorithm</span></span>
+<span class="linenos">126</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_STEER_01</span></span>
+<span class="linenos">127</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">128</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_STEER_CTRL_01</span></span>
+<span class="linenos">129</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">130</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">131</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The steering controller shall implement H-infinity robust control algorithm</span></span>
+<span class="linenos">132</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   with guaranteed stability and performance under parameter variations of ±20%</span></span>
+<span class="linenos">133</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   from nominal values. Parameters include: steering inertia, friction, assist</span></span>
+<span class="linenos">134</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   motor torque constant, and rack geometry. Control bandwidth: 10Hz minimum.</span></span>
+<span class="linenos">135</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">136</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Steering Validated Dynamics Model</span></span>
+<span class="linenos">137</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_STEER_02</span></span>
+<span class="linenos">138</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">139</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_STEER_CTRL_02</span></span>
+<span class="linenos">140</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">141</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">142</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The steering system shall use physics-based dynamics model validated through</span></span>
+<span class="linenos">143</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   physical testing with maximum modeling error &lt;5% across operational envelope:</span></span>
+<span class="linenos">144</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   steering angle ±540°, steering rate ±200°/s, vehicle speed 0-130 km/h,</span></span>
+<span class="linenos">145</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   lateral acceleration ±8 m/s².</span></span>
+<span class="linenos">146</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">147</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Steering Redundant Execution Architecture</span></span>
+<span class="linenos">148</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_STEER_03</span></span>
+<span class="linenos">149</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">150</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_STEER_CTRL_03</span></span>
+<span class="linenos">151</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">152</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">153</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The steering controller shall implement dual-channel architecture with</span></span>
+<span class="linenos">154</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   independent power supplies, processors, and motor windings. Each channel</span></span>
+<span class="linenos">155</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   capable of providing minimum 50% of maximum steering torque. Channels operate</span></span>
+<span class="linenos">156</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   in active-active mode with continuous cross-monitoring. Switchover time &lt;10ms.</span></span>
+<span class="linenos">157</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">158</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Steering High-Resolution Feedback System</span></span>
+<span class="linenos">159</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_STEER_04</span></span>
+<span class="linenos">160</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">161</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_STEER_SENS_03</span></span>
+<span class="linenos">162</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">163</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">164</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The steering system shall provide redundant position and velocity feedback</span></span>
+<span class="linenos">165</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   with specifications: position accuracy ±0.5° (absolute), velocity accuracy</span></span>
+<span class="linenos">166</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   ±1°/s, update rate 1kHz, latency &lt;1ms. Dual absolute encoders with diverse</span></span>
+<span class="linenos">167</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   sensing principles (magnetic + optical).</span></span>
+<span class="linenos">168</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">169</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Brake Controller System Requirements</span></span>
+<span class="linenos">170</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">-------------------------------------</span></span></span></span>
+<span class="linenos">171</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">172</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Brake Dual-Circuit Hydraulic Architecture</span></span>
+<span class="linenos">173</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_BRAKE_01</span></span>
+<span class="linenos">174</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">175</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_BRAKE_CTRL_02</span></span>
+<span class="linenos">176</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">177</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">178</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The brake system shall implement X-split dual hydraulic circuits (FL-RR,</span></span>
+<span class="linenos">179</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   FR-RL) with independent pressure generation and control. Each circuit shall</span></span>
+<span class="linenos">180</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   be capable of achieving minimum 0.3g deceleration independently. Electronic</span></span>
+<span class="linenos">181</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   control units are dual-redundant with independent power supplies.</span></span>
+<span class="linenos">182</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">183</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Brake Surface Friction Adaptation</span></span>
+<span class="linenos">184</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_BRAKE_02</span></span>
+<span class="linenos">185</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">186</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_BRAKE_CTRL_01</span></span>
+<span class="linenos">187</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">188</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">189</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The brake controller shall adapt pressure modulation strategy based on</span></span>
+<span class="linenos">190</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   estimated surface friction coefficient across full range µ=0.2 (ice) to</span></span>
+<span class="linenos">191</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   µ=1.0 (dry asphalt). Adaptation includes: brake force distribution, pressure</span></span>
+<span class="linenos">192</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   ramp rates, and ABS threshold tuning. Transition time between friction</span></span>
+<span class="linenos">193</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   regimes: &lt;100ms.</span></span>
+<span class="linenos">194</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">195</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Brake Component Monitoring System</span></span>
+<span class="linenos">196</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_BRAKE_03</span></span>
+<span class="linenos">197</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">198</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_BRAKE_PROC_02</span></span>
+<span class="linenos">199</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">200</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">201</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The brake system shall continuously monitor: brake pad wear (thickness sensors),</span></span>
+<span class="linenos">202</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   hydraulic fluid level and pressure, brake disc temperature (IR sensors),</span></span>
+<span class="linenos">203</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   actuator health (current, position feedback, response time). Monitoring cycle:</span></span>
+<span class="linenos">204</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   100ms. Fault detection and reporting to VDC within 200ms.</span></span>
+<span class="linenos">205</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">206</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Drive Controller System Requirements</span></span>
+<span class="linenos">207</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">-------------------------------------</span></span></span></span>
+<span class="linenos">208</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">209</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Drive Torque Control System</span></span>
+<span class="linenos">210</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_DRIVE_01</span></span>
+<span class="linenos">211</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">212</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_DRIVE_CTRL_01</span></span>
+<span class="linenos">213</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">214</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">215</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The drive controller shall maintain torque control accuracy ±5% of commanded</span></span>
+<span class="linenos">216</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   value across full speed-torque envelope: 0-200 km/h, -100% to +100% torque</span></span>
+<span class="linenos">217</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   (regen to full power). Control bandwidth: 20Hz. Response time from command</span></span>
+<span class="linenos">218</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   to 90% torque achievement: &lt;150ms.</span></span>
+<span class="linenos">219</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">220</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Drive Limp-Home Mode Architecture</span></span>
+<span class="linenos">221</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_DRIVE_02</span></span>
+<span class="linenos">222</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">223</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_DRIVE_CTRL_03</span></span>
+<span class="linenos">224</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">225</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">226</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The drive system shall implement fail-operational architecture with graceful</span></span>
+<span class="linenos">227</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   degradation to limp-home mode upon component failure. Limp-home mode capabilities:</span></span>
+<span class="linenos">228</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   minimum 20% of maximum torque, maximum speed 30 km/h, sufficient power to</span></span>
+<span class="linenos">229</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   reach safe stopping location. Mode transition time: &lt;500ms.</span></span>
+<span class="linenos">230</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">231</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> sysreq<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Drive Electrical and Thermal Protection</span></span>
+<span class="linenos">232</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> SYSREQ_DRIVE_03</span></span>
+<span class="linenos">233</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>asil<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> D</span></span>
+<span class="linenos">234</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>implements<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> FSR_DRIVE_PROC_02</span></span>
+<span class="linenos">235</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">236</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">237</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The drive controller shall implement protection systems: (1) Overspeed: limit</span></span>
+<span class="linenos">238</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   at 210 km/h with soft cutoff; (2) Overcurrent: inverter current limit with</span></span>
+<span class="linenos">239</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   10µs response time; (3) Overtemperature: motor 180°C, inverter 125°C with</span></span>
+<span class="linenos">240</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   thermal derating starting at 80% limits. All limits shall trigger safe state</span></span>
+<span class="linenos">241</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   transition and fault reporting.</span></span>
+<span class="linenos">242</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">243</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Implementation Notes</span></span>
+<span class="linenos">244</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">--------------------</span></span></span></span>
+<span class="linenos">245</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">246</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">These 18 system requirements bridge the gap between functional safety requirements</span></span>
+<span class="linenos">247</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">(FSRs) and implementation-level requirements. They will be further decomposed into:</span></span>
+<span class="linenos">248</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">249</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-bold hl-restructuredtext"><span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span>Software Requirements (SWREQ)<span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span></span></span></span>
+<span class="linenos">250</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span><span class="hl-meta hl-paragraph hl-restructuredtext">   - Control algorithms and signal processing</span></span>
+<span class="linenos">251</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Diagnostic and monitoring software</span></span>
+<span class="linenos">252</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Safety mechanisms (checksums, watchdogs, voting)</span></span>
+<span class="linenos">253</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - State machines and fault management</span></span>
+<span class="linenos">254</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">255</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-bold hl-restructuredtext"><span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span>Hardware Requirements (HWREQ)<span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span></span></span></span>
+<span class="linenos">256</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span><span class="hl-meta hl-paragraph hl-restructuredtext">   - ECU specifications (processing power, memory, I/O)</span></span>
+<span class="linenos">257</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Sensor and actuator specifications</span></span>
+<span class="linenos">258</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Power supply architecture</span></span>
+<span class="linenos">259</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Physical interfaces and connectors</span></span>
+<span class="linenos">260</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">261</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-bold hl-restructuredtext"><span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span>Interface Requirements (IFREQ)<span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span></span></span></span>
+<span class="linenos">262</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span><span class="hl-meta hl-paragraph hl-restructuredtext">   - Communication protocols (CAN, FlexRay, Ethernet)</span></span>
+<span class="linenos">263</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Message formats and timing</span></span>
+<span class="linenos">264</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Diagnostic protocols (UDS, XCP)</span></span>
+<span class="linenos">265</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">266</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> note<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">267</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">268</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-markup hl-bold hl-restructuredtext"><span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span>Example of Further Decomposition<span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span></span></span></span>
+<span class="linenos">269</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">270</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   For a detailed example of how system requirements are further decomposed into</span></span>
+<span class="linenos">271</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   architectural and software requirements following the V-Model development process,</span></span>
+<span class="linenos">272</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   see the <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>doc<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span><span class="hl-markup hl-other hl-command hl-restructuredtext"><span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span>/automotive-adas/index<span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span></span> example. That example demonstrates:</span></span>
+<span class="linenos">273</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">274</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - System architecture design and component decomposition</span></span>
+<span class="linenos">275</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Software requirement analysis and detailed design</span></span>
+<span class="linenos">276</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Software unit implementation and testing</span></span>
+<span class="linenos">277</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Integration testing at both software and system levels</span></span>
+<span class="linenos">278</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Qualification testing and traceability</span></span>
+<span class="linenos">279</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">280</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The automotive-adas example shows the complete V-Model workflow from system</span></span>
+<span class="linenos">281</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   requirements through implementation and back up through verification and validation.</span></span>
+<span class="linenos">282</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">283</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Verification and Validation</span></span>
+<span class="linenos">284</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">----------------------------</span></span></span></span>
+<span class="linenos">285</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">286</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Each system requirement shall be verified through appropriate methods per ASIL D:</span></span>
+<span class="linenos">287</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">288</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-bold hl-restructuredtext"><span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span>Analysis and Simulation<span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span></span></span></span>
+<span class="linenos">289</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span><span class="hl-meta hl-paragraph hl-restructuredtext">   - Model-in-the-Loop (MIL) testing of control algorithms</span></span>
+<span class="linenos">290</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Fault injection simulation for redundancy verification</span></span>
+<span class="linenos">291</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Timing analysis for real-time constraints</span></span>
+<span class="linenos">292</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">293</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-bold hl-restructuredtext"><span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span>Hardware-in-the-Loop Testing<span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span></span></span></span>
+<span class="linenos">294</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span><span class="hl-meta hl-paragraph hl-restructuredtext">   - Controller validation with real actuators and sensors</span></span>
+<span class="linenos">295</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Fault tolerance testing with component failures</span></span>
+<span class="linenos">296</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Environmental stress testing (temperature, vibration, EMI)</span></span>
+<span class="linenos">297</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">298</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-bold hl-restructuredtext"><span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span>Vehicle Integration Testing<span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span></span></span></span>
+<span class="linenos">299</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span><span class="hl-meta hl-paragraph hl-restructuredtext">   - Closed test track validation</span></span>
+<span class="linenos">300</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Edge case scenarios (low friction, emergency maneuvers)</span></span>
+<span class="linenos">301</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Long-duration reliability testing</span></span>
+<span class="linenos">302</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">303</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-bold hl-restructuredtext"><span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span>ISO 26262 Compliance<span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span></span></span></span>
+<span class="linenos">304</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span><span class="hl-meta hl-paragraph hl-restructuredtext">   - Requirements traceability to FSRs</span></span>
+<span class="linenos">305</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Architectural safety analysis (FMEA, FTA)</span></span>
+<span class="linenos">306</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Verification coverage per ASIL D targets</span></span>
+<span class="linenos">307</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   - Independent safety assessment</span></span>
+<span class="linenos">308</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">309</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> seealso<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">310</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">311</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-markup hl-bold hl-restructuredtext"><span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span>ISO 26262-4:2018<span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span></span> - Product development at the system level</span></span>
+<span class="linenos">312</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">313</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-markup hl-bold hl-restructuredtext"><span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span>ISO 26262-5:2018<span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span></span> - Product development at the hardware level</span></span>
+<span class="linenos">314</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">315</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-markup hl-bold hl-restructuredtext"><span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span>ISO 26262-6:2018<span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span></span> - Product development at the software level</span></span>
+<span class="linenos">316</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">317</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Research paper: Stolte, Bagschik, Maurer, &quot;Safety Goals and Functional Safety</span></span>
+<span class="linenos">318</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Requirements for Actuation Systems of Automated Vehicles,&quot; IEEE ITSC 2016</span></span></pre></div>
+</div>
+</div>
+</details>
+<h1 id="system-requirements-sysreq">🏗️ System Requirements (SYSREQ)</h1>
+<p>System Requirements specify concrete system capabilities, performance metrics,
+and architectural characteristics that implement Functional Safety Requirements.
+SYSREQs are technology-aware and define measurable system properties.</p>
+<p><strong>Traceability Chain:</strong> HAZ → SG → FSR → <strong>SYSREQ</strong> → (SWREQ/HWREQ)</p>
+<p>System requirements:</p>
+<ul>
+<li><p>Define specific performance metrics and bounds</p>
+</li>
+<li><p>Specify architectural approaches (redundancy, algorithms)</p>
+</li>
+<li><p>Remain implementation-independent but technology-aware</p>
+</li>
+<li><p>Inherit ASIL from parent FSRs</p>
+</li>
+<li><p>Form the basis for software and hardware requirements</p>
+</li>
+</ul>
+<h2 id="sysreq-overview">SYSREQ Overview</h2>
+<table class="entity-table">
+<thead>
+<tr>
+<th class="head">ID</th>
+<th class="head">Title</th>
+<th class="head">Automotive Safety Integrity Level (ISO 26262)</th>
+<th class="head">implements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_BRAKE_01">SYSREQ_BRAKE_01</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_BRAKE_01">Brake Dual-Circuit Hydraulic Architecture</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_BRAKE_CTRL_02">Brake Controller Fail-Operational Design</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_BRAKE_02">SYSREQ_BRAKE_02</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_BRAKE_02">Brake Surface Friction Adaptation</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_BRAKE_CTRL_01">Brake Controller Robust Algorithm</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_BRAKE_03">SYSREQ_BRAKE_03</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_BRAKE_03">Brake Component Monitoring System</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_BRAKE_PROC_02">Brake Component Health Monitoring</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_DRIVE_01">SYSREQ_DRIVE_01</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_DRIVE_01">Drive Torque Control System</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_DRIVE_CTRL_01">Drive Controller Robust Algorithm</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_DRIVE_02">SYSREQ_DRIVE_02</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_DRIVE_02">Drive Limp-Home Mode Architecture</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_DRIVE_CTRL_03">Drive Controller Fail-Operational Design</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_DRIVE_03">SYSREQ_DRIVE_03</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_DRIVE_03">Drive Electrical and Thermal Protection</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_DRIVE_PROC_02">Drive System Design Limits</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_STEER_01">SYSREQ_STEER_01</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_STEER_01">Steering Robust Control Algorithm</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_STEER_CTRL_01">Steering Controller Robust Control Algorithm</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_STEER_02">SYSREQ_STEER_02</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_STEER_02">Steering Validated Dynamics Model</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_STEER_CTRL_02">Steering Controller Validated Dynamics Model</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_STEER_03">SYSREQ_STEER_03</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_STEER_03">Steering Redundant Execution Architecture</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_STEER_CTRL_03">Steering Controller Fail-Operational Design</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_STEER_04">SYSREQ_STEER_04</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_STEER_04">Steering High-Resolution Feedback System</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_STEER_SENS_03">Steering Sensor Measurement Accuracy</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_VDC_01">SYSREQ_VDC_01</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_VDC_01">VDC Trajectory Tracking Accuracy</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_VDC_CTRL_01">VDC Robust Control Algorithm</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_VDC_02">SYSREQ_VDC_02</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_VDC_02">VDC Dual-Redundant Processing Architecture</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_VDC_CTRL_03">VDC Fail-Operational Design</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_VDC_03">SYSREQ_VDC_03</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_VDC_03">VDC Multi-Sensor Fusion System</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_VEHICLE_SENS_01">Vehicle Motion Sensor Feedback</a>, <a class="reference internal" href="fsr.html#entity-FSR_VEHICLE_SENS_02">Vehicle Motion Sensor Accuracy</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_VDC_04">SYSREQ_VDC_04</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_VDC_04">VDC Graceful Degradation Controller</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_VDC_CTRL_04">VDC Fault-Tolerant Algorithm</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_WRDC_01">SYSREQ_WRDC_01</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_WRDC_01">WRDC Single Wheel Fault Tolerance</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_WRDC_CTRL_01">WRDC Fault-Tolerant Algorithm</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_WRDC_02">SYSREQ_WRDC_02</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_WRDC_02">WRDC Tire Friction Estimation System</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_WRDC_CTRL_03">WRDC Precise Dynamics Model</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_WRDC_03">SYSREQ_WRDC_03</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_WRDC_03">WRDC ABS/ASR Coordination Logic</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_WRDC_CTRL_01">WRDC Fault-Tolerant Algorithm</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_WRDC_04">SYSREQ_WRDC_04</a></td>
+<td><a class="reference internal" href="system_requirements.html#entity-SYSREQ_WRDC_04">WRDC High-Frequency Control Loop</a></td>
+<td>D</td>
+<td><a class="reference internal" href="fsr.html#entity-FSR_WRDC_CTRL_04">WRDC Timing Requirements</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="vehicle-dynamics-controller-system-requirements">Vehicle Dynamics Controller System Requirements</h2>
+<div class="entity entity-sysreq" id="entity-SYSREQ_VDC_01"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">VDC Trajectory Tracking Accuracy</span><span class="entity-id">SYSREQ_VDC_01</span></p><div class="entity-content"><p>The VDC shall track the commanded trajectory with maximum lateral error ≤0.5m
+and longitudinal error ≤0.3m at speeds up to 130 km/h under nominal conditions.
+Performance degradation allowed under adverse conditions (reduced visibility,
+low friction surfaces) with notification to supervision layer.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_VDC_CTRL_01">FSR_VDC_CTRL_01</a></li></ul></div></details></div><div class="entity entity-sysreq" id="entity-SYSREQ_VDC_02"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">VDC Dual-Redundant Processing Architecture</span><span class="entity-id">SYSREQ_VDC_02</span></p><div class="entity-content"><p>The VDC shall implement dual-redundant processing with two independent processors
+executing diverse control algorithms. Cross-checking shall occur every control
+cycle (10ms) with automatic switchover to healthy processor within 20ms upon
+detection of discrepancy &gt;10%.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_VDC_CTRL_03">FSR_VDC_CTRL_03</a></li></ul></div></details></div><div class="entity entity-sysreq" id="entity-SYSREQ_VDC_03"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">VDC Multi-Sensor Fusion System</span><span class="entity-id">SYSREQ_VDC_03</span></p><div class="entity-content"><p>The VDC shall implement sensor fusion combining IMU (6-axis accelerometer/gyro),
+individual wheel speed sensors, and GNSS/INS using Extended Kalman Filter.
+System shall detect sensor failures within 100ms and maintain state estimation
+with degraded accuracy using remaining sensors.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_VEHICLE_SENS_01">FSR_VEHICLE_SENS_01</a></li><li><a class="reference internal" href="fsr.html#entity-FSR_VEHICLE_SENS_02">FSR_VEHICLE_SENS_02</a></li></ul></div></details></div><div class="entity entity-sysreq" id="entity-SYSREQ_VDC_04"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">VDC Graceful Degradation Controller</span><span class="entity-id">SYSREQ_VDC_04</span></p><div class="entity-content"><p>The VDC shall maintain trajectory control capability with single actuator or
+sensor failure. Degraded modes: (1) Single wheel actuator failure: redistribute
+torque to remaining wheels; (2) Steering actuator failure: trajectory control
+via differential braking; (3) Single sensor failure: continue with reduced accuracy.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_VDC_CTRL_04">FSR_VDC_CTRL_04</a></li></ul></div></details></div><h2 id="wheel-rotational-dynamics-controller-system-requirements">Wheel Rotational Dynamics Controller System Requirements</h2>
+<div class="entity entity-sysreq" id="entity-SYSREQ_WRDC_01"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">WRDC Single Wheel Fault Tolerance</span><span class="entity-id">SYSREQ_WRDC_01</span></p><div class="entity-content"><p>The WRDC shall compensate for failed wheel actuator through coordinated control
+of remaining three wheels. System shall detect actuator failure within 50ms
+(via feedback comparison) and redistribute target torques to maintain yaw
+stability within ±2° and lateral acceleration within ±0.5 m/s² of commanded values.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_WRDC_CTRL_01">FSR_WRDC_CTRL_01</a></li></ul></div></details></div><div class="entity entity-sysreq" id="entity-SYSREQ_WRDC_02"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">WRDC Tire Friction Estimation System</span><span class="entity-id">SYSREQ_WRDC_02</span></p><div class="entity-content"><p>The WRDC shall implement real-time tire-road friction coefficient (µ) estimation
+with ±10% accuracy across all surface conditions (dry asphalt µ=1.0 to ice µ=0.2).
+Estimation algorithm shall use wheel slip ratio, longitudinal/lateral forces,
+and vehicle dynamics model. Update rate: 100Hz.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_WRDC_CTRL_03">FSR_WRDC_CTRL_03</a></li></ul></div></details></div><div class="entity entity-sysreq" id="entity-SYSREQ_WRDC_03"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">WRDC ABS/ASR Coordination Logic</span><span class="entity-id">SYSREQ_WRDC_03</span></p><div class="entity-content"><p>The WRDC shall implement integrated anti-lock braking (ABS) and anti-slip
+regulation (ASR) with coordinated control logic. Wheel lock detection threshold:
+slip ratio &gt;0.15. Wheel spin detection threshold: slip ratio &gt;0.10. Control
+response time from detection to pressure modulation: &lt;20ms.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_WRDC_CTRL_01">FSR_WRDC_CTRL_01</a></li></ul></div></details></div><div class="entity entity-sysreq" id="entity-SYSREQ_WRDC_04"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">WRDC High-Frequency Control Loop</span><span class="entity-id">SYSREQ_WRDC_04</span></p><div class="entity-content"><p>The WRDC control loop shall execute with 5ms cycle time and maximum jitter
+±0.5ms. Sensor data age shall not exceed 10ms. Anti-lock and anti-spin response
+time from wheel slip detection to first pressure modulation: &lt;20ms.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_WRDC_CTRL_04">FSR_WRDC_CTRL_04</a></li></ul></div></details></div><h2 id="steering-controller-system-requirements">Steering Controller System Requirements</h2>
+<div class="entity entity-sysreq" id="entity-SYSREQ_STEER_01"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">Steering Robust Control Algorithm</span><span class="entity-id">SYSREQ_STEER_01</span></p><div class="entity-content"><p>The steering controller shall implement H-infinity robust control algorithm
+with guaranteed stability and performance under parameter variations of ±20%
+from nominal values. Parameters include: steering inertia, friction, assist
+motor torque constant, and rack geometry. Control bandwidth: 10Hz minimum.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_STEER_CTRL_01">FSR_STEER_CTRL_01</a></li></ul></div></details></div><div class="entity entity-sysreq" id="entity-SYSREQ_STEER_02"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">Steering Validated Dynamics Model</span><span class="entity-id">SYSREQ_STEER_02</span></p><div class="entity-content"><p>The steering system shall use physics-based dynamics model validated through
+physical testing with maximum modeling error &lt;5% across operational envelope:
+steering angle ±540°, steering rate ±200°/s, vehicle speed 0-130 km/h,
+lateral acceleration ±8 m/s².</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_STEER_CTRL_02">FSR_STEER_CTRL_02</a></li></ul></div></details></div><div class="entity entity-sysreq" id="entity-SYSREQ_STEER_03"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">Steering Redundant Execution Architecture</span><span class="entity-id">SYSREQ_STEER_03</span></p><div class="entity-content"><p>The steering controller shall implement dual-channel architecture with
+independent power supplies, processors, and motor windings. Each channel
+capable of providing minimum 50% of maximum steering torque. Channels operate
+in active-active mode with continuous cross-monitoring. Switchover time &lt;10ms.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_STEER_CTRL_03">FSR_STEER_CTRL_03</a></li></ul></div></details></div><div class="entity entity-sysreq" id="entity-SYSREQ_STEER_04"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">Steering High-Resolution Feedback System</span><span class="entity-id">SYSREQ_STEER_04</span></p><div class="entity-content"><p>The steering system shall provide redundant position and velocity feedback
+with specifications: position accuracy ±0.5° (absolute), velocity accuracy
+±1°/s, update rate 1kHz, latency &lt;1ms. Dual absolute encoders with diverse
+sensing principles (magnetic + optical).</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_STEER_SENS_03">FSR_STEER_SENS_03</a></li></ul></div></details></div><h2 id="brake-controller-system-requirements">Brake Controller System Requirements</h2>
+<div class="entity entity-sysreq" id="entity-SYSREQ_BRAKE_01"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">Brake Dual-Circuit Hydraulic Architecture</span><span class="entity-id">SYSREQ_BRAKE_01</span></p><div class="entity-content"><p>The brake system shall implement X-split dual hydraulic circuits (FL-RR,
+FR-RL) with independent pressure generation and control. Each circuit shall
+be capable of achieving minimum 0.3g deceleration independently. Electronic
+control units are dual-redundant with independent power supplies.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_BRAKE_CTRL_02">FSR_BRAKE_CTRL_02</a></li></ul></div></details></div><div class="entity entity-sysreq" id="entity-SYSREQ_BRAKE_02"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">Brake Surface Friction Adaptation</span><span class="entity-id">SYSREQ_BRAKE_02</span></p><div class="entity-content"><p>The brake controller shall adapt pressure modulation strategy based on
+estimated surface friction coefficient across full range µ=0.2 (ice) to
+µ=1.0 (dry asphalt). Adaptation includes: brake force distribution, pressure
+ramp rates, and ABS threshold tuning. Transition time between friction
+regimes: &lt;100ms.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_BRAKE_CTRL_01">FSR_BRAKE_CTRL_01</a></li></ul></div></details></div><div class="entity entity-sysreq" id="entity-SYSREQ_BRAKE_03"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">Brake Component Monitoring System</span><span class="entity-id">SYSREQ_BRAKE_03</span></p><div class="entity-content"><p>The brake system shall continuously monitor: brake pad wear (thickness sensors),
+hydraulic fluid level and pressure, brake disc temperature (IR sensors),
+actuator health (current, position feedback, response time). Monitoring cycle:
+100ms. Fault detection and reporting to VDC within 200ms.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_BRAKE_PROC_02">FSR_BRAKE_PROC_02</a></li></ul></div></details></div><h2 id="drive-controller-system-requirements">Drive Controller System Requirements</h2>
+<div class="entity entity-sysreq" id="entity-SYSREQ_DRIVE_01"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">Drive Torque Control System</span><span class="entity-id">SYSREQ_DRIVE_01</span></p><div class="entity-content"><p>The drive controller shall maintain torque control accuracy ±5% of commanded
+value across full speed-torque envelope: 0-200 km/h, -100% to +100% torque
+(regen to full power). Control bandwidth: 20Hz. Response time from command
+to 90% torque achievement: &lt;150ms.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_DRIVE_CTRL_01">FSR_DRIVE_CTRL_01</a></li></ul></div></details></div><div class="entity entity-sysreq" id="entity-SYSREQ_DRIVE_02"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">Drive Limp-Home Mode Architecture</span><span class="entity-id">SYSREQ_DRIVE_02</span></p><div class="entity-content"><p>The drive system shall implement fail-operational architecture with graceful
+degradation to limp-home mode upon component failure. Limp-home mode capabilities:
+minimum 20% of maximum torque, maximum speed 30 km/h, sufficient power to
+reach safe stopping location. Mode transition time: &lt;500ms.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_DRIVE_CTRL_03">FSR_DRIVE_CTRL_03</a></li></ul></div></details></div><div class="entity entity-sysreq" id="entity-SYSREQ_DRIVE_03"><p class="entity-header"><span class="entity-type">System Requirement</span><span class="entity-title">Drive Electrical and Thermal Protection</span><span class="entity-id">SYSREQ_DRIVE_03</span></p><div class="entity-content"><p>The drive controller shall implement protection systems: (1) Overspeed: limit
+at 210 km/h with soft cutoff; (2) Overcurrent: inverter current limit with
+10µs response time; (3) Overtemperature: motor 180°C, inverter 125°C with
+thermal derating starting at 80% limits. All limits shall trigger safe state
+transition and fault reporting.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Automotive Safety Integrity Level (ISO 26262)</th><td>D</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="fsr.html#entity-FSR_DRIVE_PROC_02">FSR_DRIVE_PROC_02</a></li></ul></div></details></div><h2 id="implementation-notes">Implementation Notes</h2>
+<p>These 18 system requirements bridge the gap between functional safety requirements
+(FSRs) and implementation-level requirements. They will be further decomposed into:</p>
+<dl>
+<dt><strong>Software Requirements (SWREQ)</strong></dt>
+<dd><ul>
+<li><p>Control algorithms and signal processing</p>
+</li>
+<li><p>Diagnostic and monitoring software</p>
+</li>
+<li><p>Safety mechanisms (checksums, watchdogs, voting)</p>
+</li>
+<li><p>State machines and fault management</p>
+</li>
+</ul>
+</dd>
+<dt><strong>Hardware Requirements (HWREQ)</strong></dt>
+<dd><ul>
+<li><p>ECU specifications (processing power, memory, I/O)</p>
+</li>
+<li><p>Sensor and actuator specifications</p>
+</li>
+<li><p>Power supply architecture</p>
+</li>
+<li><p>Physical interfaces and connectors</p>
+</li>
+</ul>
+</dd>
+<dt><strong>Interface Requirements (IFREQ)</strong></dt>
+<dd><ul>
+<li><p>Communication protocols (CAN, FlexRay, Ethernet)</p>
+</li>
+<li><p>Message formats and timing</p>
+</li>
+<li><p>Diagnostic protocols (UDS, XCP)</p>
+</li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p><strong>Example of Further Decomposition</strong></p>
+<p>For a detailed example of how system requirements are further decomposed into
+architectural and software requirements following the V-Model development process,
+see the <a class="reference internal" href="../automotive-adas/index.html"><span class="doc">🚗 Automotive ADAS</span></a> example. That example demonstrates:</p>
+<ul>
+<li><p>System architecture design and component decomposition</p>
+</li>
+<li><p>Software requirement analysis and detailed design</p>
+</li>
+<li><p>Software unit implementation and testing</p>
+</li>
+<li><p>Integration testing at both software and system levels</p>
+</li>
+<li><p>Qualification testing and traceability</p>
+</li>
+</ul>
+<p>The automotive-adas example shows the complete V-Model workflow from system
+requirements through implementation and back up through verification and validation.</p>
+</div>
+<h2 id="verification-and-validation">Verification and Validation</h2>
+<p>Each system requirement shall be verified through appropriate methods per ASIL D:</p>
+<dl>
+<dt><strong>Analysis and Simulation</strong></dt>
+<dd><ul>
+<li><p>Model-in-the-Loop (MIL) testing of control algorithms</p>
+</li>
+<li><p>Fault injection simulation for redundancy verification</p>
+</li>
+<li><p>Timing analysis for real-time constraints</p>
+</li>
+</ul>
+</dd>
+<dt><strong>Hardware-in-the-Loop Testing</strong></dt>
+<dd><ul>
+<li><p>Controller validation with real actuators and sensors</p>
+</li>
+<li><p>Fault tolerance testing with component failures</p>
+</li>
+<li><p>Environmental stress testing (temperature, vibration, EMI)</p>
+</li>
+</ul>
+</dd>
+<dt><strong>Vehicle Integration Testing</strong></dt>
+<dd><ul>
+<li><p>Closed test track validation</p>
+</li>
+<li><p>Edge case scenarios (low friction, emergency maneuvers)</p>
+</li>
+<li><p>Long-duration reliability testing</p>
+</li>
+</ul>
+</dd>
+<dt><strong>ISO 26262 Compliance</strong></dt>
+<dd><ul>
+<li><p>Requirements traceability to FSRs</p>
+</li>
+<li><p>Architectural safety analysis (FMEA, FTA)</p>
+</li>
+<li><p>Verification coverage per ASIL D targets</p>
+</li>
+<li><p>Independent safety assessment</p>
+</li>
+</ul>
+</dd>
+</dl>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p><strong>ISO 26262-4:2018</strong> - Product development at the system level</p>
+<p><strong>ISO 26262-5:2018</strong> - Product development at the hardware level</p>
+<p><strong>ISO 26262-6:2018</strong> - Product development at the software level</p>
+<p>Research paper: Stolte, Bagschik, Maurer, "Safety Goals and Functional Safety
+Requirements for Actuation Systems of Automated Vehicles," IEEE ITSC 2016</p>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="fsr.html">&larr; 📋 Functional Safety Requirements (FSR)</a>
+        <a class="next" href="analysis.html">📊 Safety Traceability Analysis &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
