@@ -15,7 +15,7 @@
 
 use std::collections::BTreeSet;
 
-use rinx_ast::{SectionId, Toctree, ToctreeFlag};
+use rinx_ast::{SectionId, TocEntry, Toctree, ToctreeFlag};
 use rinx_index::{OutlineSection, ProjectIndex};
 
 use super::collapse::SidebarTree;
@@ -68,7 +68,7 @@ pub(crate) fn expand_toctree_entries(
         index,
         from_doc,
         current_doc,
-        universe: index.document_titles.keys().cloned().collect(),
+        universe: navigable_documents(index),
         maxdepth: toctree.options.maxdepth.map(std::num::NonZeroUsize::get),
         titles_only: toctree.options.has(ToctreeFlag::TitlesOnly),
         include_hidden: toctree.options.has(ToctreeFlag::IncludeHidden),
@@ -81,6 +81,33 @@ pub(crate) fn expand_toctree_entries(
     ancestors.insert(owner.to_string());
 
     expand_one(&walk, toctree, owner, 1, &mut ancestors)
+}
+
+/// Every `.rst` path a toctree entry may lead to: the documents the index
+/// knows a title for, which is what an entry naming any other is drawn
+/// without.
+fn navigable_documents(index: &ProjectIndex) -> BTreeSet<String> {
+    index.document_titles.keys().cloned().collect()
+}
+
+/// The `.rst` paths of the documents `entry`, written in a toctree of the
+/// document `owner`, links — one for a document or `self`, every match for a
+/// glob, none for an external link or a document the index does not know —
+/// as the toctree's own expansion links them.
+#[must_use]
+pub(crate) fn entry_documents(entry: &TocEntry, owner: &str, index: &ProjectIndex) -> Vec<String> {
+    let toctree = Toctree {
+        entries: vec![entry.clone()],
+        ..Toctree::default()
+    };
+    let (targets, _) = rinx_toctree::expand_toctree(&toctree, owner, &navigable_documents(index));
+    targets
+        .into_iter()
+        .filter_map(|target| match target {
+            rinx_toctree::TocTarget::Document { docname, .. } => Some(docname),
+            rinx_toctree::TocTarget::External { .. } => None,
+        })
+        .collect()
 }
 
 /// The entries of `toctree`, whose directive lives in `owner`, at `depth`.
@@ -280,7 +307,7 @@ pub(crate) fn sidebar_entries(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rinx_ast::{TocEntry, ToctreeOptions};
+    use rinx_ast::ToctreeOptions;
     use rinx_index::{DocumentOutline, DocumentToctree, OutlineSection};
 
     fn toctree(docnames: &[&str]) -> Toctree {
@@ -329,6 +356,108 @@ mod tests {
             })
             .collect::<Vec<_>>()
             .join(",")
+    }
+
+    fn document_entry_named(docname: &str) -> TocEntry {
+        TocEntry::Document {
+            title: Some("Shown".to_string()),
+            docname: docname.to_string(),
+            span: None,
+        }
+    }
+
+    fn glob_entry(pattern: &str) -> TocEntry {
+        TocEntry::Glob {
+            pattern: pattern.to_string(),
+            span: None,
+        }
+    }
+
+    #[test]
+    fn test_navigable_documents_are_the_titled_documents() {
+        // Given
+        let index = index_of(&[("index", "Home"), ("guide/setup", "Setup")]);
+
+        // When
+        let documents = navigable_documents(&index);
+
+        // Then
+        assert_eq!(
+            documents.into_iter().collect::<Vec<_>>(),
+            vec!["guide/setup.rst".to_string(), "index.rst".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_entry_documents_resolves_a_document_relative_to_its_owner() {
+        // Given
+        let index = index_of(&[("guide/setup", "Setup"), ("setup", "Other")]);
+
+        // When
+        let documents = entry_documents(&document_entry_named("setup"), "guide/intro.rst", &index);
+
+        // Then
+        assert_eq!(documents, vec!["guide/setup.rst".to_string()]);
+    }
+
+    #[test]
+    fn test_entry_documents_resolves_an_absolute_and_a_climbing_name() {
+        // Given
+        let index = index_of(&[("setup", "Setup")]);
+
+        // When
+        let absolute = entry_documents(&document_entry_named("/setup"), "guide/intro.rst", &index);
+        let climbing =
+            entry_documents(&document_entry_named("../setup"), "guide/intro.rst", &index);
+
+        // Then
+        assert_eq!(absolute, vec!["setup.rst".to_string()]);
+        assert_eq!(climbing, absolute);
+    }
+
+    #[test]
+    fn test_entry_documents_leads_self_to_its_owner() {
+        // Given
+        let entry = TocEntry::SelfRef {
+            title: None,
+            span: None,
+        };
+
+        // When
+        let documents = entry_documents(&entry, "index.rst", &index_of(&[]));
+
+        // Then
+        assert_eq!(documents, vec!["index.rst".to_string()]);
+    }
+
+    #[test]
+    fn test_entry_documents_lists_every_match_of_a_glob_but_its_owner() {
+        // Given
+        let index = index_of(&[("api/b", "B"), ("api/a", "A"), ("api/index", "API")]);
+
+        // When
+        let documents = entry_documents(&glob_entry("*"), "api/index.rst", &index);
+
+        // Then
+        assert_eq!(
+            documents,
+            vec!["api/a.rst".to_string(), "api/b.rst".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_entry_documents_is_empty_for_an_external_link_or_a_missing_document() {
+        // Given
+        let index = index_of(&[("index", "Home")]);
+        let external = TocEntry::External {
+            title: None,
+            url: "https://example.org".to_string(),
+            span: None,
+        };
+
+        // When / Then
+        assert!(entry_documents(&external, "index.rst", &index).is_empty());
+        assert!(entry_documents(&document_entry_named("gone"), "index.rst", &index).is_empty());
     }
 
     fn expand(toctree: &Toctree, index: &ProjectIndex) -> Vec<ResolvedNavEntry> {

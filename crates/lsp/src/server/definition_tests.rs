@@ -303,3 +303,116 @@ fn test_definition_refuses_parameters_that_do_not_parse() {
         Some(ErrorCode::InvalidParams as i32)
     );
 }
+
+/// A toctree in `notes.rst`: a document on the fourth line, a titled one,
+/// `self`, a glob, a missing document and an external link.
+const TOCTREE: &str = ".. toctree::\n   :glob:\n\n   setup\n   Getting started <setup>\n   \
+                       self\n   api/*\n   gone\n   https://example.org\n";
+
+/// A scanned server over `setup.rst` and two documents under `api/`, with
+/// `notes.rst` opened at [`TOCTREE`], answering with links when `links`.
+fn server_with_toctree(name: &str, links: bool) -> (Workspace, ServerState) {
+    let workspace = Workspace::new(
+        name,
+        &[
+            ("setup.rst", SETUP),
+            ("api/a.rst", "Alpha\n=====\n"),
+            ("api/b.rst", "Beta\n====\n"),
+            ("notes.rst", ""),
+        ],
+    );
+    let (state, _) = workspace.server(false);
+    let mut state = state.with_definition_links(links);
+    state.on_scan_event(workspace.scanned());
+    handle_notification(&mut state, workspace.open("notes.rst", TOCTREE));
+    (workspace, state)
+}
+
+#[test]
+fn test_definition_of_a_toctree_entry_is_the_start_of_its_document() {
+    // Given
+    let (workspace, mut state) = server_with_toctree("definition_toc_entry", false);
+
+    // When — on `setup`, and on the titled entry's title
+    let plain = handle_request(&mut state, definition(workspace.uri("notes.rst"), 3, 5));
+    let titled = handle_request(&mut state, definition(workspace.uri("notes.rst"), 4, 6));
+
+    // Then
+    assert_eq!(
+        definition_of(&plain),
+        Some(start_of(workspace.uri("setup.rst")))
+    );
+    assert_eq!(
+        definition_of(&titled),
+        Some(start_of(workspace.uri("setup.rst")))
+    );
+}
+
+#[test]
+fn test_definition_of_a_self_toctree_entry_is_its_own_document() {
+    // Given
+    let (workspace, mut state) = server_with_toctree("definition_toc_self", false);
+
+    // When
+    let response = handle_request(&mut state, definition(workspace.uri("notes.rst"), 5, 4));
+
+    // Then
+    assert_eq!(
+        definition_of(&response),
+        Some(start_of(workspace.uri("notes.rst")))
+    );
+}
+
+#[test]
+fn test_definition_of_a_glob_toctree_entry_is_every_document_it_matches() {
+    // Given
+    let (workspace, mut state) = server_with_toctree("definition_toc_glob", false);
+
+    // When
+    let response = handle_request(&mut state, definition(workspace.uri("notes.rst"), 6, 4));
+
+    // Then
+    assert_eq!(
+        definition_of(&response),
+        Some(GotoDefinitionResponse::Array(vec![
+            Location::new(workspace.uri("api/a.rst"), Range::default()),
+            Location::new(workspace.uri("api/b.rst"), Range::default()),
+        ]))
+    );
+}
+
+#[test]
+fn test_definition_of_a_toctree_entry_links_from_the_whole_entry() {
+    // Given
+    let (workspace, mut state) = server_with_toctree("definition_toc_link", true);
+
+    // When
+    let response = handle_request(&mut state, definition(workspace.uri("notes.rst"), 3, 5));
+
+    // Then
+    assert_eq!(
+        definition_of(&response),
+        Some(GotoDefinitionResponse::Link(vec![LocationLink {
+            origin_selection_range: Some(on_line(3, 3, 8)),
+            target_uri: workspace.uri("setup.rst"),
+            target_range: Range::default(),
+            target_selection_range: Range::default(),
+        }]))
+    );
+}
+
+#[test]
+fn test_definition_of_a_missing_or_external_toctree_entry_is_none() {
+    // Given
+    let (workspace, mut state) = server_with_toctree("definition_toc_none", false);
+
+    // When
+    let missing = handle_request(&mut state, definition(workspace.uri("notes.rst"), 7, 4));
+    let external = handle_request(&mut state, definition(workspace.uri("notes.rst"), 8, 4));
+    let directive = handle_request(&mut state, definition(workspace.uri("notes.rst"), 0, 4));
+
+    // Then
+    assert_eq!(definition_of(&missing), None);
+    assert_eq!(definition_of(&external), None);
+    assert_eq!(definition_of(&directive), None);
+}

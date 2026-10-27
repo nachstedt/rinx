@@ -251,6 +251,12 @@ to a page the build writes (`genindex`), has no definition: there is no
 source to open. The limits are hover's: the default site configuration, no
 inventories, and nothing inside an `.. include::`d fragment.
 
+A `.. toctree::` entry has a definition and a hover too, asked of
+`ReferenceResolver::toc_entry_targets`, which expands the entry as the
+page's navigation does (`nav/expand.rs`'s `entry_documents`): the start of
+the document it names, of its own document for `self`, and every match for
+a `:glob:` pattern — an array, or one link per match from the entry's line.
+
 ### 9. File-system watching ✅ (#276)
 
 **You experience:** renaming a file in the Explorer immediately breaks its

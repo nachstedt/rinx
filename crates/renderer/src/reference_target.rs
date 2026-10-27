@@ -5,8 +5,10 @@
 //! (`inline/target.rs` dispatches to the role modules), so a reference that
 //! links on the page has a target here, and one that is broken on the page
 //! has none: the editor cannot describe a link the build would not write.
+//! A `.. toctree::` entry is answered from the toctree's own expansion
+//! (`nav/expand.rs`), so it leads where the page's navigation links.
 
-use rinx_ast::{Document, EntityId, InlineNode};
+use rinx_ast::{Document, EntityId, InlineNode, TocEntry};
 use rinx_entity::EntitySchema;
 use rinx_index::{DefinitionKey, ExternalInventory, ExternalTarget, ProjectIndex};
 use rinx_scope::DocumentScopes;
@@ -173,6 +175,25 @@ impl<'a> ReferenceResolver<'a> {
             _ => crate::inline::reference_target(&renamed, self),
         }
     }
+
+    /// The documents `entry`, an entry of a `.. toctree::` in this
+    /// resolver's document, links — each under the title its navigation
+    /// entry shows when the entry writes none: one for a document or `self`, every
+    /// match for a glob, none for an external link or a document this site
+    /// does not have.
+    #[must_use]
+    pub fn toc_entry_targets(&self, entry: &TocEntry) -> Vec<ReferenceTarget> {
+        crate::nav::entry_documents(entry, self.doc_path, self.index)
+            .into_iter()
+            .map(|doc_path| {
+                ReferenceTarget::in_document(
+                    crate::nav::document_title(&doc_path, None, self.index),
+                    &doc_path,
+                    None,
+                )
+            })
+            .collect()
+    }
 }
 
 /// `reference` naming `target` instead, shown as `target` where its role
@@ -295,6 +316,53 @@ mod tests {
                 ..
             }) if doc_path == "setup.rst"
         ));
+    }
+
+    #[test]
+    fn test_toc_entry_targets_lead_to_each_document_by_its_title() {
+        // Given — a glob matching two titled documents
+        let mut index = ProjectIndex::default();
+        for (doc_path, title) in [("api/a.rst", "Alpha"), ("api/b.rst", "Beta")] {
+            index
+                .document_titles
+                .insert(doc_path.to_string(), title.to_string());
+        }
+        let doc = Document::new("index.rst".to_string(), Vec::new());
+        let config = SiteConfig::default();
+        let resolver = ReferenceResolver::new(&doc, &index, &config, EntitySchema::empty_ref());
+        let entry = TocEntry::Glob {
+            pattern: "api/*".to_string(),
+            span: None,
+        };
+
+        // When
+        let targets = resolver.toc_entry_targets(&entry);
+
+        // Then
+        assert_eq!(
+            targets,
+            vec![
+                ReferenceTarget::in_document("Alpha", "api/a.rst", None),
+                ReferenceTarget::in_document("Beta", "api/b.rst", None),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_toc_entry_targets_are_empty_for_a_missing_document() {
+        // Given
+        let index = ProjectIndex::default();
+        let doc = Document::new("index.rst".to_string(), Vec::new());
+        let config = SiteConfig::default();
+        let resolver = ReferenceResolver::new(&doc, &index, &config, EntitySchema::empty_ref());
+        let entry = TocEntry::Document {
+            title: None,
+            docname: "gone".to_string(),
+            span: None,
+        };
+
+        // When / Then
+        assert!(resolver.toc_entry_targets(&entry).is_empty());
     }
 
     #[test]

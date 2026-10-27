@@ -3,9 +3,14 @@
 //! Every reference role keeps the span it was written at (ADR-003), so the
 //! reference at a position is the one whose span contains it — found by
 //! walking the parsed document's inline content, without re-reading the
-//! text. Hover and go-to-definition both ask this first.
+//! text. Hover and go-to-definition both ask this first. A `.. toctree::`
+//! entry keeps the span of its line the same way, so the entry at a position
+//! is found alike.
 
-use rinx_ast::{Child, Document, InlineNode, Position, for_each_child, walk_nodes};
+use rinx_ast::{
+    Child, Directive, Document, InlineNode, Node, Position, Span, TocEntry, for_each_child,
+    walk_nodes,
+};
 
 /// The inline node carrying a span that contains `position` in `document` —
 /// a reference, or one of the few other nodes with a span (`:math:`,
@@ -21,15 +26,40 @@ pub fn reference_at(document: &Document, position: Position) -> Option<&InlineNo
             if let Child::Inline(inlines) = child
                 && found.is_none()
             {
-                found = inlines.iter().find(|inline| {
-                    inline.span().is_some_and(|span| {
-                        span.file.is_none() && span.start <= position && position < span.end
-                    })
-                });
+                found = inlines
+                    .iter()
+                    .find(|inline| inline.span().is_some_and(|span| holds(span, position)));
             }
         });
     });
     found
+}
+
+/// The `.. toctree::` entry whose line holds `position` in `document`, or
+/// `None` when the cursor is on no entry — the directive's own line and its
+/// options included.
+///
+/// Only entries written in the document's own text count, as for
+/// [`reference_at`].
+#[must_use]
+pub fn toc_entry_at(document: &Document, position: Position) -> Option<&TocEntry> {
+    let mut found = None;
+    walk_nodes(&document.nodes, &mut |node| {
+        if let Node::Directive(Directive::Toctree(toctree)) = node
+            && found.is_none()
+        {
+            found = toctree
+                .entries
+                .iter()
+                .find(|entry| entry.span().is_some_and(|span| holds(span, position)));
+        }
+    });
+    found
+}
+
+/// Whether `span`, written in the document's own text, holds `position`.
+fn holds(span: Span, position: Position) -> bool {
+    span.file.is_none() && span.start <= position && position < span.end
 }
 
 #[cfg(test)]
@@ -75,6 +105,58 @@ mod tests {
 
         // When / Then
         assert_eq!(target_at(text, 6, 12), Some("install".to_string()));
+    }
+
+    /// What the toctree entry at line `line`, column `column` names.
+    fn entry_at(text: &str, line: u32, column: u32) -> Option<String> {
+        let document = rinx_parser::parse("index.rst", text);
+        toc_entry_at(&document, Position::new(line, column)).map(|entry| match entry {
+            TocEntry::Document { docname, .. } => docname.clone(),
+            other => format!("{other:?}"),
+        })
+    }
+
+    const TOCTREE: &str = ".. toctree::\n   :maxdepth: 2\n\n   intro\n   Getting started <setup>\n";
+
+    #[test]
+    fn test_toc_entry_at_finds_the_entry_on_the_line() {
+        // When / Then
+        assert_eq!(entry_at(TOCTREE, 4, 4), Some("intro".to_string()));
+        assert_eq!(entry_at(TOCTREE, 5, 4), Some("setup".to_string()));
+        assert_eq!(entry_at(TOCTREE, 5, 22), Some("setup".to_string()));
+    }
+
+    #[test]
+    fn test_toc_entry_at_finds_nothing_on_the_directive_or_an_option() {
+        // When / Then
+        assert_eq!(entry_at(TOCTREE, 1, 4), None);
+        assert_eq!(entry_at(TOCTREE, 2, 6), None);
+        assert_eq!(entry_at(TOCTREE, 3, 1), None);
+    }
+
+    #[test]
+    fn test_toc_entry_at_finds_an_entry_nested_in_a_directive_body() {
+        // Given
+        let text = ".. note::\n\n   .. toctree::\n\n      intro\n";
+
+        // When / Then
+        assert_eq!(entry_at(text, 5, 8), Some("intro".to_string()));
+    }
+
+    #[test]
+    fn test_toc_entry_at_ignores_an_entry_spliced_in_from_another_file() {
+        // Given — an entry's span counting lines in an included fragment
+        let mut document = rinx_parser::parse("index.rst", ".. toctree::\n\n   intro\n");
+        let Node::Directive(Directive::Toctree(toctree)) = &mut document.nodes[0] else {
+            unreachable!()
+        };
+        let TocEntry::Document { span, .. } = &mut toctree.entries[0] else {
+            unreachable!()
+        };
+        *span = span.map(|span| span.with_file(Some(rinx_ast::FileId::new(0))));
+
+        // When / Then
+        assert_eq!(toc_entry_at(&document, Position::new(3, 5)), None);
     }
 
     #[test]

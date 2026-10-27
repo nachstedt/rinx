@@ -76,7 +76,7 @@ use crate::document_symbol::{DocumentSymbols, OutlineShape, document_symbols};
 use crate::documents::DocumentStore;
 use crate::entity_at::entity_marked_at;
 use crate::entity_hover::{declared_entity_markdown, indexed_entity_markdown};
-use crate::hover::{location_markdown, markdown_hover, reference_hover};
+use crate::hover::{location_markdown, markdown_hover, reference_hover, targets_hover};
 use crate::includes::IncludeGraph;
 use crate::position::{PositionEncoding, char_index_of, to_lsp_position, to_lsp_range};
 use crate::preview::{
@@ -88,7 +88,7 @@ use crate::project::{
     DiscoveredProject, IndexedDocument, ParseSettings, Project, ScannedProject, Strictness,
     is_visible_under, sources_under,
 };
-use crate::reference_at::reference_at;
+use crate::reference_at::{reference_at, toc_entry_at};
 use crate::render::{RenderFindings, RenderSettings, render_diagnostics};
 use crate::uri::{file_path, file_uri};
 
@@ -694,7 +694,8 @@ impl ServerState {
     /// The hover for the reference at `position` in the open document `uri`
     /// — or the id written in a relation option there (see
     /// [`Self::relation_id_at`]): where the built page would link it, from
-    /// its project's index. Else the hover of an entity's own directive
+    /// its project's index. Else the hover of a `.. toctree::` entry
+    /// ([`Self::toc_entry_hover`]) or of an entity's own directive
     /// ([`Self::entity_marker_hover`]), or `None` when the cursor is on none
     /// of these, the reference would be drawn broken, or the document is not
     /// open or is in no project.
@@ -703,7 +704,9 @@ impl ServerState {
             .reference_target_at(uri, position)
             .or_else(|| self.relation_id_at(uri, position))
         else {
-            return self.entity_marker_hover(uri, position);
+            return self
+                .toc_entry_hover(uri, position)
+                .or_else(|| self.entity_marker_hover(uri, position));
         };
         let located = written_at(
             &target,
@@ -720,6 +723,27 @@ impl ServerState {
             .as_ref()
             .and_then(|id| indexed_entity_markdown(id, index, &schema, &location));
         Some(reference_hover(&target, range, &location, entity_text))
+    }
+
+    /// The hover of the `.. toctree::` entry at `position` of the open
+    /// document `uri`: the document it links, as a reference's hover shows
+    /// one, or each document a `:glob:` entry links, one per line.
+    fn toc_entry_hover(&mut self, uri: &Uri, position: lsp_types::Position) -> Option<Hover> {
+        let (range, targets, project) = self.toc_entry_targets_at(uri, position)?;
+        let project = self.projects.get(&project)?;
+        let located: Vec<(&ReferenceTarget, String)> = targets
+            .iter()
+            .map(|target| {
+                let located = written_at(target, project, &self.documents, self.encoding);
+                let location =
+                    location_markdown(&target.destination, |_| located.as_ref().map(line_link));
+                (target, location)
+            })
+            .collect();
+        Some(match located.as_slice() {
+            [(target, location)] => reference_hover(target, range, location, None),
+            several => targets_hover(several, range),
+        })
     }
 
     /// The entity id written in a relation option at `position` of the open
@@ -925,9 +949,10 @@ impl ServerState {
         )
     }
 
-    /// The definition of the reference, or the id in a relation option, at
-    /// `position` in the open document `uri`: where the target the built
-    /// page would link it to was written (see [`written_at`]) — or `None`
+    /// The definition of the reference, the id in a relation option, or the
+    /// `.. toctree::` entry at `position` in the open document `uri`: where
+    /// each target the built page would link it to was written (see
+    /// [`written_at`]) — every document a `:glob:` entry links — or `None`
     /// wherever [`Self::hover`] shows no target, an entity's own directive
     /// included, and for a reference leading to no document of the project.
     pub(super) fn definition(
@@ -935,16 +960,19 @@ impl ServerState {
         uri: &Uri,
         position: lsp_types::Position,
     ) -> Option<GotoDefinitionResponse> {
-        let (range, target, project) = self
+        let (range, targets, project) = match self
             .reference_target_at(uri, position)
-            .or_else(|| self.relation_id_at(uri, position))?;
-        let location = written_at(
-            &target,
-            self.projects.get(&project)?,
-            &self.documents,
-            self.encoding,
-        )?;
-        Some(reference_definition(location, range, self.definition_links))
+            .or_else(|| self.relation_id_at(uri, position))
+        {
+            Some((range, target, project)) => (range, vec![target], project),
+            None => self.toc_entry_targets_at(uri, position)?,
+        };
+        let project = self.projects.get(&project)?;
+        let locations = targets
+            .iter()
+            .filter_map(|target| written_at(target, project, &self.documents, self.encoding))
+            .collect();
+        reference_definition(locations, range, self.definition_links)
     }
 
     /// The outline of the open document `uri`, from its latest parse — `None`
@@ -991,6 +1019,35 @@ impl ServerState {
         let target =
             ReferenceResolver::new(document, index, &config, &schema).resolve(reference)?;
         Some((range, target, id))
+    }
+
+    /// The `.. toctree::` entry at `position` in the open document `uri` —
+    /// its range, the documents it links and the project whose index
+    /// resolved them — or `None` when the cursor is on no entry, the entry
+    /// links no document of the project, or the document is not open or is
+    /// in no project. Read from the latest parse, as
+    /// [`Self::reference_target_at`] is.
+    fn toc_entry_targets_at(
+        &mut self,
+        uri: &Uri,
+        position: lsp_types::Position,
+    ) -> Option<(Range, Vec<ReferenceTarget>, ProjectId)> {
+        let text = &self.documents.get(uri)?.text;
+        let line = text.lines().nth(position.line as usize).unwrap_or_default();
+        let column = char_index_of(line, position.character, self.encoding) + 1;
+        let at = rinx_ast::Position::new(position.line + 1, u32::try_from(column).ok()?);
+        let tracked = self.tracked.get(uri)?;
+        let id = tracked.project?;
+        let document = &tracked.parsed.document;
+        let entry = toc_entry_at(document, at)?;
+        let range = to_lsp_range(entry.span()?, text, self.encoding);
+        let project = self.projects.get_mut(&id)?;
+        let config = project.site_config();
+        let schema = Arc::clone(&project.model().settings.parse.schema);
+        let index = project.project_index();
+        let targets =
+            ReferenceResolver::new(document, index, &config, &schema).toc_entry_targets(entry);
+        (!targets.is_empty()).then_some((range, targets, id))
     }
 
     /// Re-diagnoses the document at `changed`, which was just opened, edited

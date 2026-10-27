@@ -76,25 +76,37 @@ pub fn line_link(location: &Location) -> Uri {
         .unwrap_or_else(|_| location.uri.clone())
 }
 
-/// The definition of a reference at `origin` that leads to `location` — as a
-/// link carrying `origin` when the client takes links, so the whole reference
-/// is underlined, and as a plain location otherwise.
+/// The definition of a reference at `origin` that leads to `locations` —
+/// as links carrying `origin` when the client takes links, so the whole
+/// reference is underlined, and as plain locations otherwise: one alone, or
+/// every one of several, as a `:glob:` toctree entry leads to. `None` when
+/// it leads nowhere.
 #[must_use]
 pub fn reference_definition(
-    location: Location,
+    locations: Vec<Location>,
     origin: Range,
     links: bool,
-) -> GotoDefinitionResponse {
-    if links {
-        GotoDefinitionResponse::Link(vec![LocationLink {
-            origin_selection_range: Some(origin),
-            target_uri: location.uri,
-            target_range: location.range,
-            target_selection_range: location.range,
-        }])
-    } else {
-        GotoDefinitionResponse::Scalar(location)
+) -> Option<GotoDefinitionResponse> {
+    if locations.is_empty() {
+        return None;
     }
+    Some(if links {
+        GotoDefinitionResponse::Link(
+            locations
+                .into_iter()
+                .map(|location| LocationLink {
+                    origin_selection_range: Some(origin),
+                    target_uri: location.uri,
+                    target_range: location.range,
+                    target_selection_range: location.range,
+                })
+                .collect(),
+        )
+    } else if locations.len() == 1 {
+        GotoDefinitionResponse::Scalar(locations.into_iter().next()?)
+    } else {
+        GotoDefinitionResponse::Array(locations)
+    })
 }
 
 #[cfg(test)]
@@ -289,10 +301,10 @@ mod tests {
         let location = Location::new(project_uri("guide/setup.rst").unwrap(), label_line());
 
         // When
-        let definition = reference_definition(location.clone(), origin(), false);
+        let definition = reference_definition(vec![location.clone()], origin(), false);
 
         // Then
-        assert_eq!(definition, GotoDefinitionResponse::Scalar(location));
+        assert_eq!(definition, Some(GotoDefinitionResponse::Scalar(location)));
     }
 
     #[test]
@@ -301,17 +313,43 @@ mod tests {
         let location = Location::new(project_uri("guide/setup.rst").unwrap(), label_line());
 
         // When
-        let definition = reference_definition(location, origin(), true);
+        let definition = reference_definition(vec![location], origin(), true);
 
         // Then
         assert_eq!(
             definition,
-            GotoDefinitionResponse::Link(vec![LocationLink {
+            Some(GotoDefinitionResponse::Link(vec![LocationLink {
                 origin_selection_range: Some(origin()),
                 target_uri: project_uri("guide/setup.rst").unwrap(),
                 target_range: label_line(),
                 target_selection_range: label_line(),
-            }])
+            }]))
         );
+    }
+
+    #[test]
+    fn test_reference_definition_lists_every_location_of_several() {
+        // Given — a glob entry leading to two documents
+        let first = Location::new(project_uri("api/a.rst").unwrap(), Range::default());
+        let second = Location::new(project_uri("api/b.rst").unwrap(), Range::default());
+
+        // When
+        let plain = reference_definition(vec![first.clone(), second.clone()], origin(), false);
+        let linked = reference_definition(vec![first, second], origin(), true);
+
+        // Then
+        assert!(matches!(plain, Some(GotoDefinitionResponse::Array(ref all)) if all.len() == 2));
+        assert!(matches!(
+            linked,
+            Some(GotoDefinitionResponse::Link(ref links))
+                if links.len() == 2
+                    && links.iter().all(|link| link.origin_selection_range == Some(origin()))
+        ));
+    }
+
+    #[test]
+    fn test_reference_definition_is_none_for_no_location() {
+        // When / Then
+        assert_eq!(reference_definition(Vec::new(), origin(), true), None);
     }
 }
