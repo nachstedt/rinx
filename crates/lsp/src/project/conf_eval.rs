@@ -368,13 +368,11 @@ mod tests {
     /// An executable shell script at a fresh path, running `body`.
     #[cfg(unix)]
     fn fake_interpreter(name: &str, body: &str) -> PathBuf {
-        use std::os::unix::fs::PermissionsExt;
         let directory = std::env::temp_dir().join(format!("rinx_lsp_conf_eval_{name}"));
         let _ = fs::remove_dir_all(&directory);
         fs::create_dir_all(&directory).expect("mkdir");
         let path = directory.join("python");
-        fs::write(&path, format!("#!/bin/sh\n{body}\n")).expect("write");
-        fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).expect("chmod");
+        crate::test_scripts::write_executable_script(&path, &format!("#!/bin/sh\n{body}\n"));
         path
     }
 

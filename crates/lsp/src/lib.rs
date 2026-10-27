@@ -45,6 +45,8 @@ mod project;
 mod reference_at;
 mod render;
 mod server;
+#[cfg(all(test, unix))]
+mod test_scripts;
 mod uri;
 
 pub use position::PositionEncoding;
