@@ -32,5 +32,6 @@ pub use entry::ResolvedNavEntry;
 pub(crate) use entry::format_secnumber;
 pub use relations::{PageLink, page_neighbors};
 
-pub(crate) use expand::{expand_toctree_entries, sidebar_entries};
+pub(crate) use expand::{entry_documents, expand_toctree_entries, sidebar_entries};
 pub(crate) use html::write_nav_list;
+pub(crate) use resolve::document_title;

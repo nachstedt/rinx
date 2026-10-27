@@ -145,3 +145,60 @@ fn test_hover_refuses_parameters_that_do_not_parse() {
         Some(ErrorCode::InvalidParams as i32)
     );
 }
+
+#[test]
+fn test_hover_on_a_toctree_entry_shows_the_document_it_links() {
+    // Given
+    let (workspace, mut state) =
+        server_with_notes("hover_toc_entry", ".. toctree::\n\n   Start <setup>\n");
+
+    // When
+    let response = handle_request(&mut state, hover(workspace.uri("notes.rst"), 2, 5));
+
+    // Then — the document's own title, not the entry's
+    let hover = hover_of(&response).expect("a hover");
+    assert_eq!(
+        markdown(&hover),
+        format!(
+            "**Installing**\n\n[setup\\.rst]({})",
+            workspace.uri("setup.rst").as_str()
+        )
+    );
+    assert_eq!(
+        hover.range,
+        Some(Range::new(Position::new(2, 3), Position::new(2, 16)))
+    );
+}
+
+#[test]
+fn test_hover_on_a_glob_toctree_entry_lists_every_match() {
+    // Given
+    let workspace = Workspace::new(
+        "hover_toc_glob",
+        &[
+            ("api/a.rst", "Alpha\n=====\n"),
+            ("api/b.rst", "Beta\n====\n"),
+            ("notes.rst", ""),
+        ],
+    );
+    let (mut state, _) = workspace.server(false);
+    state.on_scan_event(workspace.scanned());
+    handle_notification(
+        &mut state,
+        workspace.open("notes.rst", ".. toctree::\n   :glob:\n\n   api/*\n"),
+    );
+
+    // When
+    let response = handle_request(&mut state, hover(workspace.uri("notes.rst"), 3, 4));
+
+    // Then
+    let hover = hover_of(&response).expect("a hover");
+    assert_eq!(
+        markdown(&hover),
+        format!(
+            "- **Alpha** — [api/a\\.rst]({})\n- **Beta** — [api/b\\.rst]({})",
+            workspace.uri("api/a.rst").as_str(),
+            workspace.uri("api/b.rst").as_str()
+        )
+    );
+}

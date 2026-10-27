@@ -24,6 +24,19 @@ pub fn reference_hover(
     markdown_hover(value, range)
 }
 
+/// The hover for an entry at `range` leading to several targets, as a
+/// `:glob:` toctree entry does: one line per target, its title and where it
+/// is (see [`location_markdown`]).
+#[must_use]
+pub fn targets_hover(targets: &[(&ReferenceTarget, String)], range: Range) -> Hover {
+    let value = targets
+        .iter()
+        .map(|(target, location)| format!("- **{}** — {location}", escape_markdown(&target.title)))
+        .collect::<Vec<_>>()
+        .join("\n");
+    markdown_hover(value, range)
+}
+
 /// A hover showing the Markdown `value` over `range`.
 #[must_use]
 pub fn markdown_hover(value: String, range: Range) -> Hover {
@@ -194,6 +207,39 @@ mod tests {
 
         // Then
         assert_eq!(markdown_of(&hover), "**Requirement** REQ\\_1");
+    }
+
+    #[test]
+    fn test_targets_hover_lists_each_target_with_its_location() {
+        // Given
+        let alpha = ReferenceTarget {
+            title: "Alpha".to_string(),
+            ..target(Destination::Document {
+                doc_path: "api/a.rst".to_string(),
+                anchor: None,
+            })
+        };
+        let beta = ReferenceTarget {
+            title: "Beta".to_string(),
+            ..alpha.clone()
+        };
+        let range = Range::default();
+
+        // When
+        let hover = targets_hover(
+            &[
+                (&alpha, "a\\.rst".to_string()),
+                (&beta, "b\\.rst".to_string()),
+            ],
+            range,
+        );
+
+        // Then
+        assert_eq!(
+            markdown_of(&hover),
+            "- **Alpha** — a\\.rst\n- **Beta** — b\\.rst"
+        );
+        assert_eq!(hover.range, Some(range));
     }
 
     #[test]
