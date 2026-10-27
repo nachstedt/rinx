@@ -28,17 +28,17 @@ c:enumerator: 5
 awaitablefunction: 4
 .. index: 4
 raw: 4
-Tip: 1
 versionremoved: 1
-sourcecode: 1
 awaitablemethod: 1
-Note: 1
 audit-event-table: 1
+Note: 1
+sourcecode: 1
 limited-api-list: 1
 container: 1
-Contents: 1
 epigraph: 1
 miscnews: 1
+Tip: 1
+Contents: 1
 
 Malformed Directives Summary:
 -----------------------------
