@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>🌎 External Data Examples — Sphinx-Needs Demo Benchmark</title>
+  <link rel="stylesheet" href="../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">Sphinx-Needs Demo Benchmark</h2>
+        
+        
+        
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../demo_details.html">🔍 Demo details</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../online_editor.html">⌨ Online Editor</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../basic_example/index.html">🧰 Basic Example</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../coffee-machine/index.html">☕️ Coffee Machine Example</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">🚗 Automotive ADAS</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle 🚗 Automotive ADAS"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="index.html#v-model-and-service-connectors">V-model and service connectors</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#demo-object-and-meta-model">Demo Object and Meta Model</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="releases.html">📦 Releases</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persons.html">🧍 Persons</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="analysis.html">📊 Analysis</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current">
+            <a href="external_data.html">🌎 External Data Examples</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="sys_1_req_elicitation.html">SYS.1 Requirement Elicitation</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="sys_2_req_analysis.html">SYS.2 Requirement Analysis</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="sys_3_sys_arch.html">SYS.3 Architecture Design</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="swe_1_sw_req_analysis.html">SWE.1 Software Requirements</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="swe_2_sw_arch.html">SWE.2 Software Architecture</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="swe_3_sw_detailed_design.html">SWE.3 Detailed Design</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="swe_4_unit_tests.html">SWE.4 Unit Tests</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="swe_5_sw_integration_tests.html">SWE.5 Integration Test Cases</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="swe_6_sw_quali_tests.html">SWE.6 Qualification Test Cases</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="sys_4_sys_integation_tests.html">SYS.4 Integration Test Cases</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="sys_5_sys_quali_test.html">SYS.5 Qualification Test Cases</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="sys_5_sys_quali_test_results.html">SYS.5 Qualification Test Results</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../safety_example/index.html">🛡️ ISO 26262 Functional Safety Example</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="analysis.html">&larr; 📊 Analysis</a>
+        <a class="next" href="sys_1_req_elicitation.html">SYS.1 Requirement Elicitation &rarr;</a>
+      </nav>
+      
+      <h1 id="external-data-examples">🌎 External Data Examples</h1>
+<h2 id="github">Github</h2>
+<h3 id="links">Links</h3>
+<p>Links to GitHub objects are set directly in the Sphinx-Needs objects
+by using <a href="https://sphinx-needs.readthedocs.io/en/latest/configuration.html#needs-string-links">string-links</a>.</p>
+<p>See for instance the <code>github</code> option of <a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_001"><span class="xref entity entity-swreq">Lane Marking Detection Algorithm</span></a> or <a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_002"><span class="xref entity entity-swreq">Lane Deviation Warning</span></a></p>
+<h3 id="prs">PRs</h3>
+<div class="directive-error">
+<p class="directive-error-message">needservice: querying an external service while building is not supported, since a sandboxed build may only read files declared before it runs; save the needs to a needs.json, declare it in the library's `parse_data` and read it with `.. needimport::`</p>
+<pre class="directive-error-source">.. needservice:: github-prs
+   :specific: useblocks/sphinx-needs-demo/3
+   :layout: adas</pre>
+</div>
+<div class="entity-update"><p class="entity-update-target"><code>needextend</code> &rarr; <code>GH_PR_3</code></p><ul class="entity-update-fields"><li><code>+links</code>: SWREQ_001</li></ul></div><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header sd-bg-success sd-bg-text-success">
+<span class="sd-summary-icon"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-light-bulb" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg></span><span class="sd-summary-text">Show used documentation code.</span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<div class="highlight-rst notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> needservice<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> github-prs</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>specific<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> useblocks/sphinx-needs-demo/3</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>layout<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> adas</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> needextend<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> GH_PR_3</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   :+links: SWREQ_001</span></span></pre></div>
+</div>
+</div>
+</details>
+<h3 id="issues">Issues</h3>
+<div class="directive-error">
+<p class="directive-error-message">needservice: querying an external service while building is not supported, since a sandboxed build may only read files declared before it runs; save the needs to a needs.json, declare it in the library's `parse_data` and read it with `.. needimport::`</p>
+<pre class="directive-error-source">.. needservice:: github-issues
+   :query: repo:useblocks/sphinx-needs-demo adas
+   :id_prefix: GH_ISSUE_</pre>
+</div>
+<div class="entity-update"><p class="entity-update-target"><code>needextend</code> &rarr; <code>"Lane Marking" in title</code></p><ul class="entity-update-fields"><li><code>+links</code>: SWREQ_001</li></ul></div><div class="entity-update"><p class="entity-update-target"><code>needextend</code> &rarr; <code>"Lane Deviation" in title</code></p><ul class="entity-update-fields"><li><code>+links</code>: SWREQ_002</li></ul></div><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header sd-bg-success sd-bg-text-success">
+<span class="sd-summary-icon"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-light-bulb" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg></span><span class="sd-summary-text">Show used documentation code.</span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<div class="highlight-rst notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> needservice<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> github-issues</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>query<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> repo:useblocks/sphinx-needs-demo adas</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id_prefix<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> <span class="hl-meta hl-link hl-reference"><span class="hl-string hl-other hl-link hl-title hl-restructuredtext">GH_ISSUE</span><span class="hl-punctuation hl-definition hl-link hl-restructuredtext">_</span></span></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> needextend<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> &quot;Lane Marking&quot; in title</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   :+links: SWREQ_001</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> needextend<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> &quot;Lane Deviation&quot; in title</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   :+links: SWREQ_002</span></span></pre></div>
+</div>
+</div>
+</details>
+<h2 id="jira">Jira</h2>
+<h3 id="links-1">Links</h3>
+<p>Links to Jira objects are set directly in the Sphinx-Needs objects by
+using <a href="https://sphinx-needs.readthedocs.io/en/latest/configuration.html#needs-string-links">string-links</a>.</p>
+<p>See for instance the <code>jira</code> option of <a class="reference internal" href="sys_1_req_elicitation.html#entity-NEED_001"><span class="xref entity entity-need">Lane Keeping Assistance</span></a> or <a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_001"><span class="xref entity entity-req">Lane Detection Algorithm</span></a></p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="analysis.html">&larr; 📊 Analysis</a>
+        <a class="next" href="sys_1_req_elicitation.html">SYS.1 Requirement Elicitation &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
