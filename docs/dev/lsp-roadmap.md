@@ -39,7 +39,7 @@ finished one 🔶. A heading with no marker means the step has not started.
   #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333),
   #40 (PR #335), #24 (PR #340) and #25 (PR #355, prepared by #343, #345,
   #348, #351 and #353), #26 (PRs #358 and #362, prepared by #357) and
-  #27 (PR #365, prepared by #363), #28 (PR #374), #29 (PR #378) and #30.
+  #27 (PR #365, prepared by #363), #28 (PR #374), #29 (PR #378) and #30 (PR #386).
 - **Next: #31, rename.**
 
 The pull request that finishes a step also updates this section and the
@@ -1080,7 +1080,7 @@ Not done here:
 - Hover's link opens an included fragment but names the including document
   (issue #377).
 
-### 30. Find all references ✅
+### 30. Find all references ✅ (#386)
 
 **You experience:** Shift+F12 lists every use of a label.
 
