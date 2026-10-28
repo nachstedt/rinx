@@ -8,7 +8,8 @@
 //! done, since a render that changes nothing publishes nothing.
 //!
 //! It also times the preview of the documents it is asked to, each right
-//! after an edit, which is how the preview's latency is measured.
+//! after an edit, which is how the preview's latency is measured — and the
+//! references at the places it is asked to, which is how finding them is.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -48,6 +49,26 @@ pub struct FolderCheck {
     /// How each document [`CheckOptions::previews`] names was previewed.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub previews: BTreeMap<Uri, PreviewTiming>,
+    /// How the references at each place [`CheckOptions::references`] names
+    /// were found, in that order.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub references: Vec<ReferencesTiming>,
+}
+
+/// How long finding the references at one place took: first, when no
+/// document's uses are resolved yet; again, with all of them kept; and right
+/// after an edit to the document asked from, which resolves its uses again.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ReferencesTiming {
+    pub uri: Uri,
+    /// The place, 1-based, as a warning names it.
+    pub line: u32,
+    pub column: u32,
+    /// How many uses were found, the definition not counted.
+    pub uses: usize,
+    pub cold_milliseconds: f64,
+    pub warm_milliseconds: f64,
+    pub after_edit_milliseconds: f64,
 }
 
 /// How long previewing a document took right after an edit to it — the
@@ -73,6 +94,17 @@ pub struct CheckOptions {
     pub manifests: Vec<PathBuf>,
     /// The documents whose preview is timed, absolute.
     pub previews: Vec<PathBuf>,
+    /// The places whose references are timed.
+    pub references: Vec<ReferencesAt>,
+}
+
+/// A place in a document, its path absolute and its line and column 1-based,
+/// as a warning names one.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ReferencesAt {
+    pub path: PathBuf,
+    pub line: u32,
+    pub column: u32,
 }
 
 /// Scans `root`, a workspace folder, opens every document its projects
@@ -135,12 +167,47 @@ pub fn check_folder(root: &Path, options: &CheckOptions) -> FolderCheck {
             (uri, timing)
         })
         .collect();
+    let references = options
+        .references
+        .iter()
+        .filter_map(|at| time_references(&mut state, at))
+        .collect();
     FolderCheck {
         documents: documents.len(),
         published: last_published(&messages),
         quick_fixes,
         previews,
+        references,
     }
+}
+
+/// How long finding the references at `at` takes, cold, warm and after an
+/// edit to its document — `None` when the document cannot be read.
+fn time_references(state: &mut ServerState, at: &ReferencesAt) -> Option<ReferencesTiming> {
+    let uri = file_uri(&at.path)?;
+    let text = std::fs::read_to_string(&at.path).ok()?;
+    let position = Position::new(at.line.saturating_sub(1), at.column.saturating_sub(1));
+    let timed = |state: &mut ServerState| {
+        let started = Instant::now();
+        let found = state.references(&uri, position, false);
+        (
+            started.elapsed().as_secs_f64() * 1000.0,
+            found.map_or(0, |found| found.len()),
+        )
+    };
+    let (cold_milliseconds, uses) = timed(state);
+    let (warm_milliseconds, _) = timed(state);
+    handle_notification(state, did_change(uri.clone(), text));
+    let (after_edit_milliseconds, _) = timed(state);
+    Some(ReferencesTiming {
+        uri: uri.clone(),
+        line: at.line,
+        column: at.column,
+        uses,
+        cold_milliseconds,
+        warm_milliseconds,
+        after_edit_milliseconds,
+    })
 }
 
 /// How long previewing the open document `uri` takes after an edit leaving
@@ -321,6 +388,38 @@ mod tests {
             .collect();
         assert_eq!(timed, [(&workspace.uri("index.rst"), None)]);
         assert!(check.previews[&workspace.uri("index.rst")].milliseconds > 0.0);
+    }
+
+    #[test]
+    fn test_check_folder_times_the_references_at_each_place_it_names() {
+        // Given — `install` used twice, asked about from its label's line
+        let workspace = Workspace::new(
+            "check_folder_references",
+            &[
+                ("setup.rst", ".. _install:\n\nInstalling\n==========\n"),
+                ("a.rst", ":ref:`install`\n"),
+                ("b.rst", ":ref:`install`\n"),
+            ],
+        );
+        let options = CheckOptions {
+            references: vec![ReferencesAt {
+                path: workspace.root.join("setup.rst"),
+                line: 1,
+                column: 5,
+            }],
+            ..CheckOptions::default()
+        };
+
+        // When
+        let check = check_folder(&workspace.root, &options);
+
+        // Then
+        let [timing] = check.references.as_slice() else {
+            panic!("one timing: {:?}", check.references);
+        };
+        assert_eq!(timing.uri, workspace.uri("setup.rst"));
+        assert_eq!(timing.uses, 2);
+        assert!(timing.cold_milliseconds > 0.0);
     }
 
     #[test]

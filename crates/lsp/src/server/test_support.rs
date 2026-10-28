@@ -196,6 +196,34 @@ pub(super) fn definition_at(
     serde_json::from_value(response.response_result.expect("a result")).expect("a definition")
 }
 
+/// The references `state` answers at `line` and `character` of `uri`, with
+/// the definition when `include_declaration`, or `None` for a null result.
+pub(super) fn references_at(
+    state: &mut ServerState,
+    uri: Uri,
+    line: u32,
+    character: u32,
+    include_declaration: bool,
+) -> Option<Vec<lsp_types::Location>> {
+    let request = Request::new(
+        RequestId::from(82),
+        lsp_types::request::References::METHOD.to_string(),
+        lsp_types::ReferenceParams {
+            text_document_position: lsp_types::TextDocumentPositionParams::new(
+                TextDocumentIdentifier::new(uri),
+                lsp_types::Position::new(line, character),
+            ),
+            work_done_progress_params: lsp_types::WorkDoneProgressParams::default(),
+            partial_result_params: lsp_types::PartialResultParams::default(),
+            context: lsp_types::ReferenceContext {
+                include_declaration,
+            },
+        },
+    );
+    let response = handle_request(state, request);
+    serde_json::from_value(response.response_result.expect("a result")).expect("references")
+}
+
 pub(super) fn scanned(name: &str, files: &[(&str, &str)]) -> (Workspace, ServerState) {
     let workspace = Workspace::new(name, files);
     let (mut state, _) = workspace.server(false);

@@ -46,8 +46,10 @@ use lsp_types::{
     FileChangeType, FileEvent, FileSystemWatcher, GlobPattern, GotoDefinitionResponse, Hover,
     Range, Registration, RegistrationParams, Uri,
 };
+use rinx_ast::{EntityId, TargetName};
 use rinx_index::DefinitionKey;
 use rinx_renderer::{Destination, ReferenceResolver, ReferenceTarget};
+use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -86,9 +88,10 @@ use crate::preview_link::{PageHref, PreviewLinkKind, PreviewLinkResult, resolve_
 use crate::progress::{IndexState, ScanProgress};
 use crate::project::{
     DiscoveredProject, IndexedDocument, ParseSettings, Project, ScannedProject, Strictness,
-    is_visible_under, sources_under,
+    UseTarget, is_visible_under, sources_under,
 };
 use crate::reference_at::{reference_at, toc_entry_at};
+use crate::references::{ordered_locations, use_location};
 use crate::render::{RenderFindings, RenderSettings, render_diagnostics};
 use crate::uri::{file_path, file_uri};
 
@@ -975,6 +978,143 @@ impl ServerState {
         reference_definition(locations, range, self.definition_links)
     }
 
+    /// Every use of what the reference, the id in a relation option, the
+    /// `.. toctree::` entry or the definition at `position` in the open
+    /// document `uri` leads to — each document a `:glob:` entry links — in
+    /// the project's documents, open or not, as their pages would link it:
+    /// with the definition's own site when `include_declaration` is set.
+    /// `None` wherever [`Self::definition`] leads nowhere and no definition
+    /// was written.
+    pub(super) fn references(
+        &mut self,
+        uri: &Uri,
+        position: lsp_types::Position,
+        include_declaration: bool,
+    ) -> Option<Vec<lsp_types::Location>> {
+        let (targets, project) = self.use_targets_at(uri, position)?;
+        let project = self.projects.get_mut(&project)?;
+        let mut texts: HashMap<PathBuf, Option<Cow<'_, str>>> = HashMap::new();
+        let mut locations = Vec::new();
+        for target in &targets {
+            for site in project.uses_of(target) {
+                let Some(uri) = file_uri(&site.path) else {
+                    continue;
+                };
+                let text = texts
+                    .entry(site.path.clone())
+                    .or_insert_with(|| file_text(&self.documents, &site.path));
+                locations.push(use_location(uri, &site, text.as_deref(), self.encoding));
+            }
+            if include_declaration
+                && let Some(key) = &target.definition
+                && let Some(site) = project.definitions().site(&target.doc_path, key)
+                && let Some(uri) = file_uri(&site.path)
+            {
+                let text = file_text(&self.documents, &site.path);
+                locations.push(site_location(
+                    uri,
+                    site.start,
+                    site.end,
+                    text.as_deref(),
+                    self.encoding,
+                ));
+            }
+        }
+        Some(ordered_locations(locations))
+    }
+
+    /// What the cursor at `position` in the open document `uri` names, for
+    /// [`Self::references`]: where a reference, a relation's id or a
+    /// `.. toctree::` entry there leads, else the definition written there —
+    /// with the project it is of.
+    fn use_targets_at(
+        &mut self,
+        uri: &Uri,
+        position: lsp_types::Position,
+    ) -> Option<(Vec<UseTarget>, ProjectId)> {
+        if let Some((_, target, project)) = self
+            .reference_target_at(uri, position)
+            .or_else(|| self.relation_id_at(uri, position))
+        {
+            return Some((UseTarget::of(&target).into_iter().collect(), project));
+        }
+        if let Some((_, targets, project)) = self.toc_entry_targets_at(uri, position) {
+            return Some((targets.iter().filter_map(UseTarget::of).collect(), project));
+        }
+        if let Some(named) = self.option_definition_at(uri, position) {
+            return Some(named);
+        }
+        let at = self.position_in(uri, position)?;
+        let tracked = self.tracked.get(uri)?;
+        let id = tracked.project?;
+        let doc_path = &tracked.parsed.document.path;
+        let key = self.projects.get(&id)?.definitions().at(doc_path, at)?;
+        let target = UseTarget {
+            doc_path: doc_path.clone(),
+            definition: Some(key),
+        };
+        Some((vec![target], id))
+    }
+
+    /// The definition an option line at `position` of the open document
+    /// `uri` names, wherever on the line the cursor is: a directive's
+    /// `:name:`, a `.. math::`'s `:label:`, an entity's `:id:` — when the
+    /// project's index has the document defining it, as a directive's own
+    /// label and a `.. contents::`'s have even without a recorded site.
+    fn option_definition_at(
+        &mut self,
+        uri: &Uri,
+        position: lsp_types::Position,
+    ) -> Option<(Vec<UseTarget>, ProjectId)> {
+        let text = &self.documents.get(uri)?.text;
+        let lines: Vec<&str> = text.lines().collect();
+        let line_index = position.line as usize;
+        let end = lines.get(line_index)?.chars().count();
+        let Some(DirectiveContext::Value(value)) = directive_at(&lines, line_index, end) else {
+            return None;
+        };
+        let tracked = self.tracked.get(uri)?;
+        let id = tracked.project?;
+        let doc_path = tracked.parsed.document.path.clone();
+        let index = self.projects.get_mut(&id)?.project_index();
+        let name = TargetName::new(&value.value);
+        let defines = |defined_in: Option<&String>| defined_in == Some(&doc_path);
+        let key = match value.option.as_str() {
+            "name" if defines(index.targets.get(&name)) => DefinitionKey::Label(name),
+            "label"
+                if value.directive.name == "math"
+                    && defines(index.equations.get(&name).map(|at| &at.doc_path)) =>
+            {
+                DefinitionKey::Equation(name)
+            }
+            "id" => {
+                let entity = EntityId::new(&value.value).ok()?;
+                if !defines(index.entities.get(&entity).map(|record| &record.doc_path)) {
+                    return None;
+                }
+                DefinitionKey::Entity(entity)
+            }
+            _ => return None,
+        };
+        let target = UseTarget {
+            doc_path,
+            definition: Some(key),
+        };
+        Some((vec![target], id))
+    }
+
+    /// `position` in the open document `uri` as the parser counts it: a
+    /// 1-based line and character column.
+    fn position_in(&self, uri: &Uri, position: lsp_types::Position) -> Option<rinx_ast::Position> {
+        let text = &self.documents.get(uri)?.text;
+        let line = text.lines().nth(position.line as usize).unwrap_or_default();
+        let column = char_index_of(line, position.character, self.encoding) + 1;
+        Some(rinx_ast::Position::new(
+            position.line + 1,
+            u32::try_from(column).ok()?,
+        ))
+    }
+
     /// The outline of the open document `uri`, from its latest parse — `None`
     /// when it is not open.
     pub(super) fn document_symbols(&self, uri: &Uri) -> Option<DocumentSymbols> {
@@ -1001,10 +1141,8 @@ impl ServerState {
         uri: &Uri,
         position: lsp_types::Position,
     ) -> Option<(Range, ReferenceTarget, ProjectId)> {
+        let at = self.position_in(uri, position)?;
         let text = &self.documents.get(uri)?.text;
-        let line = text.lines().nth(position.line as usize).unwrap_or_default();
-        let column = char_index_of(line, position.character, self.encoding) + 1;
-        let at = rinx_ast::Position::new(position.line + 1, u32::try_from(column).ok()?);
         let tracked = self.tracked.get(uri)?;
         let id = tracked.project?;
         let document = &tracked.parsed.document;
@@ -1032,10 +1170,8 @@ impl ServerState {
         uri: &Uri,
         position: lsp_types::Position,
     ) -> Option<(Range, Vec<ReferenceTarget>, ProjectId)> {
+        let at = self.position_in(uri, position)?;
         let text = &self.documents.get(uri)?.text;
-        let line = text.lines().nth(position.line as usize).unwrap_or_default();
-        let column = char_index_of(line, position.character, self.encoding) + 1;
-        let at = rinx_ast::Position::new(position.line + 1, u32::try_from(column).ok()?);
         let tracked = self.tracked.get(uri)?;
         let id = tracked.project?;
         let document = &tracked.parsed.document;
@@ -1515,22 +1651,25 @@ fn written_at(
         |doc_path| file_uri(&project.path_of(doc_path)),
         |doc_path, key| {
             let site = definitions.site(doc_path, key)?;
-            let read;
-            let text = if let Some(open) = documents.get_by_path(&site.path) {
-                Some(open.text.as_str())
-            } else {
-                read = std::fs::read_to_string(&site.path).ok();
-                read.as_deref()
-            };
+            let text = file_text(documents, &site.path);
             Some(site_location(
                 file_uri(&site.path)?,
                 site.start,
                 site.end,
-                text,
+                text.as_deref(),
                 encoding,
             ))
         },
     )
+}
+
+/// The text of the file at `path` as an analysis read it: its open buffer,
+/// else the disk — `None` when neither holds it.
+fn file_text<'d>(documents: &'d DocumentStore, path: &Path) -> Option<Cow<'d, str>> {
+    match documents.get_by_path(path) {
+        Some(open) => Some(Cow::Borrowed(open.text.as_str())),
+        None => std::fs::read_to_string(path).ok().map(Cow::Owned),
+    }
 }
 
 /// The protocol range of the characters `characters` on the 0-based line

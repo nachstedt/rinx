@@ -179,6 +179,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Decide which files a tool reads from explicit configuration, never from a convention meant for another tool such as `.gitignore`, since generated sources are often exactly what such a file ignores.
 - When a Sphinx project already configures a behaviour (such as `intersphinx_cache_limit`), the editor follows that value rather than adding an editor setting for it.
 - Implement a language-server feature in the server itself rather than delegating it to an external tool or to the VS Code extension, so it works in every editor and in `rinx lsp --check`.
+- An editor feature treats a reference exactly as the built page does: one the page draws broken leads nowhere and is nobody's use, even where a label of that name exists.
 
 ## Build, examples and documentation
 

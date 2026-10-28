@@ -43,6 +43,7 @@ mod preview_link;
 mod progress;
 mod project;
 mod reference_at;
+mod references;
 mod render;
 mod server;
 #[cfg(all(test, unix))]
@@ -50,7 +51,7 @@ mod test_scripts;
 mod uri;
 
 pub use position::PositionEncoding;
-pub use server::{CheckOptions, FolderCheck, check_folder, run};
+pub use server::{CheckOptions, FolderCheck, ReferencesAt, check_folder, run};
 
 use anyhow::Result;
 use lsp_server::Connection;

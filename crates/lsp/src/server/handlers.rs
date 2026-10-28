@@ -7,15 +7,15 @@ use lsp_types::notification::{
     Notification as _, PublishDiagnostics, ShowMessage,
 };
 use lsp_types::request::{
-    CodeActionRequest, Completion, DocumentSymbolRequest, GotoDefinition, HoverRequest,
+    CodeActionRequest, Completion, DocumentSymbolRequest, GotoDefinition, HoverRequest, References,
     Request as _,
 };
 use lsp_types::{
     ClientCapabilities, CodeActionKind, CodeActionOptions, CodeActionOrCommand, CodeActionParams,
     CodeActionProviderCapability, CompletionOptions, CompletionParams, DocumentSymbolParams,
     GotoDefinitionParams, HoverParams, HoverProviderCapability, InitializeResult, MessageType,
-    OneOf, PublishDiagnosticsParams, ServerCapabilities, ServerInfo, ShowMessageParams,
-    TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
+    OneOf, PublishDiagnosticsParams, ReferenceParams, ServerCapabilities, ServerInfo,
+    ShowMessageParams, TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
 };
 
 use super::bazel_manifests::BAZEL_MANIFESTS_CHANGED_METHOD;
@@ -46,6 +46,7 @@ pub fn initialize_result(
             }),
             hover_provider: Some(HoverProviderCapability::Simple(true)),
             definition_provider: Some(OneOf::Left(true)),
+            references_provider: Some(OneOf::Left(true)),
             document_symbol_provider: Some(OneOf::Left(true)),
             code_action_provider: Some(CodeActionProviderCapability::Options(CodeActionOptions {
                 code_action_kinds: Some(vec![CodeActionKind::QUICKFIX]),
@@ -147,6 +148,20 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
                 Response::new_ok(
                     id,
                     state.definition(&position.text_document.uri, position.position),
+                )
+            }
+            Err(error) => invalid_params(id, &method, &error),
+        },
+        References::METHOD => match serde_json::from_value::<ReferenceParams>(params) {
+            Ok(params) => {
+                let position = params.text_document_position;
+                Response::new_ok(
+                    id,
+                    state.references(
+                        &position.text_document.uri,
+                        position.position,
+                        params.context.include_declaration,
+                    ),
                 )
             }
             Err(error) => invalid_params(id, &method, &error),

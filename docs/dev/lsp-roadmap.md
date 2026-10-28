@@ -39,8 +39,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333),
   #40 (PR #335), #24 (PR #340) and #25 (PR #355, prepared by #343, #345,
   #348, #351 and #353), #26 (PRs #358 and #362, prepared by #357) and
-  #27 (PR #365, prepared by #363), #28 (PR #374) and #29 (PR #378).
-- **Next: #30, find all references.**
+  #27 (PR #365, prepared by #363), #28 (PR #374), #29 (PR #378) and #30.
+- **Next: #31, rename.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -1080,7 +1080,7 @@ Not done here:
 - Hover's link opens an included fragment but names the including document
   (issue #377).
 
-### 30. Find all references
+### 30. Find all references ✅
 
 **You experience:** Shift+F12 lists every use of a label.
 
@@ -1088,6 +1088,56 @@ Not done here:
 - Incremental update
 - `references` handler
 - Tests
+
+A use's target depends on the whole project: a label two documents define
+leads nowhere, and a domain role searches every scope. So the analysis
+records only what each document *wrote*, and the server resolves it against
+the current fold the way the page resolves it. That covers every reference
+hover covers, every `.. toctree::` entry (`rinx_renderer::written_uses`, each
+scoped reference with the scope it was written in), and each entity id written
+in a relation option, an `.. entity-update::`'s included. The renderer's new
+`UseResolver` is a `ReferenceResolver` that holds no page. It resolves a use
+with the scope the use carries, so a closed document needs no AST. The
+analysis keeps these uses in `IndexedDocument`, beside the definition sites,
+and the `.index` never sees them.
+
+The reverse index is `Project::uses_of`. It keeps what each document's uses
+resolved to until the fold changes, and drops one document's entry when only
+that document's analysis changes. Adding a reference to prose therefore
+re-resolves one document, and only an edit to a definition re-resolves every
+document. It fills on the first request, in parallel. A use counts when its
+resolution names the same definition key in the same document (`UseTarget`),
+so a `:py:func:` in another class naming a method of the same name is not
+listed, and a reference drawn broken is nobody's use. A `:doc:` or a toctree
+entry is a use of its document.
+
+The request answers on a reference, a relation id, a toctree entry, or a
+definition's own site: a label's line, a term, an object's or entity's
+marker. It also answers on the option line naming a definition, wherever the
+cursor is on it: a directive's `:name:`, a `.. math::`'s `:label:`, an
+entity's `:id:`. The option is read with completion's `directive_at` and
+kept only when the index has this document defining the name, so a
+`.. contents::` or a toctree `:name:`, which has no site, finds its uses too. On an entity's marker the entity wins over its label, since every
+reference names the entity. `includeDeclaration` adds the definition's site.
+Uses come back ordered by file and position, each listed once, in the
+fragment an `.. include::` brought them from. A relation id is underlined
+alone. `rinx lsp --check <folder> --references <document>:<line>:<column>`
+times a request cold, warm, and after an edit to the document it is asked
+from.
+
+Measured on CPython's 524 documents with a release build: the 132 uses of
+`dict` (`library/stdtypes.rst:5021`) take 49 ms cold, 11 ms warm and 12 ms
+after an edit; a label with six uses takes 2 ms warm, 3 ms after an edit.
+
+Not done here:
+- A label written by `.. contents::` or a toctree's `:name:` has no site
+  (#28), so its declaration is not listed (issue #376).
+- A code block's `:name:` label is sited on its first content line, so that
+  is the declaration listed, and its marker line finds nothing (issue #385).
+- A use in a `conf.py` project's `rst_prolog` or `rst_epilog` is in no file,
+  so it is not listed (issue #384).
+- An edit to a definition re-resolves every document's uses on the next
+  request (#38).
 
 ### 31. Rename
 

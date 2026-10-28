@@ -734,6 +734,77 @@ fn test_lsp_opens_the_line_a_reference_leads_to() {
 }
 
 #[test]
+fn test_lsp_lists_every_use_of_the_label_a_reference_leads_to() {
+    // Given — a scanned folder whose `setup.rst` labels a section, and whose
+    // `guide.rst`, never opened, uses the label too
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_references");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    std::fs::write(
+        root.join("setup.rst"),
+        "Intro.\n\n.. _install:\n\nInstalling\n==========\n",
+    )
+    .expect("write");
+    std::fs::write(root.join("guide.rst"), "First :ref:`install`.\n").expect("write");
+    let notes = format!("file://{}", root.join("notes.rst").display());
+    let mut server = Server::spawn();
+    let initialized = server.initialize_with(json!({
+        "capabilities": {},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+    while !matches!(
+        server.receive(),
+        Message::Notification(notification)
+            if notification.method == "rinx/status" && notification.params["state"] == "ready"
+    ) {}
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": notes, "languageId": "restructuredtext", "version": 1,
+            "text": "See :ref:`install`.\n",
+        }}),
+    );
+    server.published_until(&notes);
+
+    // When
+    server.request(
+        2,
+        "textDocument/references",
+        json!({
+            "textDocument": { "uri": notes },
+            "position": { "line": 0, "character": 8 },
+            "context": { "includeDeclaration": false },
+        }),
+    );
+    let answered = std::iter::from_fn(|| Some(server.receive()))
+        .find_map(|message| match message {
+            Message::Response(response) => Some(response),
+            _ => None,
+        })
+        .expect("the references");
+
+    // Then
+    let capabilities = &initialized.response_result.expect("initialized")["capabilities"];
+    assert_eq!(capabilities["referencesProvider"], true);
+    let line = |line: u32, start: u32, end: u32| {
+        json!({
+            "start": { "line": line, "character": start },
+            "end": { "line": line, "character": end },
+        })
+    };
+    assert_eq!(
+        answered.response_result.expect("references"),
+        json!([
+            {
+                "uri": format!("file://{}", root.join("guide.rst").display()),
+                "range": line(0, 6, 20),
+            },
+            { "uri": notes, "range": line(0, 4, 18) },
+        ])
+    );
+}
+
+#[test]
 fn test_lsp_outlines_an_open_document_nested_for_a_client_taking_it() {
     // Given — a client taking nested symbols, with a document open
     let root = std::env::temp_dir().join("rinx_lsp_stdio_outline");

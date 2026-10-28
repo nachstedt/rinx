@@ -312,3 +312,70 @@ fn test_a_relation_completes_the_ids_of_the_project_s_entities_but_its_own() {
     assert_eq!(shown, [("R_1", Some("Brakes")), ("S_1", Some("Pads"))]);
     assert!(!list.is_incomplete);
 }
+
+/// Uses of `R_1` in an open `index.rst`: a need role, a relation listing it
+/// second, and an update relating to it.
+const USES: &str = "See :need:`R_1`.\n\n\
+.. spec:: Discs\n   :id: S_2\n   :implements: S_1, R_1\n\n\
+.. entity-update:: S_1\n   :implements: R_1\n";
+
+/// The uses of `R_1` [`REQS`] and [`USES`] write.
+fn requirement_uses(workspace: &Workspace) -> Vec<Location> {
+    let index = workspace.uri("index.rst");
+    vec![
+        Location::new(
+            index.clone(),
+            Range::new(Position::new(0, 4), Position::new(0, 15)),
+        ),
+        Location::new(
+            index.clone(),
+            Range::new(Position::new(4, 21), Position::new(4, 24)),
+        ),
+        Location::new(
+            index,
+            Range::new(Position::new(7, 16), Position::new(7, 19)),
+        ),
+        Location::new(
+            workspace.uri("reqs.rst"),
+            Range::new(Position::new(9, 16), Position::new(9, 19)),
+        ),
+    ]
+}
+
+#[test]
+fn test_references_of_a_need_role_are_its_roles_and_the_ids_relating_to_it() {
+    // Given
+    let (workspace, mut state) = project_with("entity_references_role", USES);
+
+    // When
+    let found = references_at(&mut state, workspace.uri("index.rst"), 0, 12, false);
+
+    // Then — each id alone, not its option's line
+    assert_eq!(found, Some(requirement_uses(&workspace)));
+}
+
+#[test]
+fn test_references_of_an_entity_s_marker_are_its_uses() {
+    // Given
+    let (workspace, mut state) = project_with("entity_references_marker", USES);
+    handle_notification(&mut state, workspace.open("reqs.rst", REQS));
+
+    // When — on `.. req:: Brakes`
+    let found = references_at(&mut state, workspace.uri("reqs.rst"), 3, 4, false);
+
+    // Then
+    assert_eq!(found, Some(requirement_uses(&workspace)));
+}
+
+#[test]
+fn test_references_of_an_entity_s_id_line_are_its_uses() {
+    // Given
+    let (workspace, mut state) = project_with("entity_references_id_line", USES);
+    handle_notification(&mut state, workspace.open("reqs.rst", REQS));
+
+    // When — on `   :id: R_1`
+    let found = references_at(&mut state, workspace.uri("reqs.rst"), 4, 9, false);
+
+    // Then
+    assert_eq!(found, Some(requirement_uses(&workspace)));
+}

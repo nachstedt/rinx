@@ -1214,6 +1214,7 @@ dependencies = [
  "rinx_filter",
  "rinx_index",
  "rinx_inventory",
+ "rinx_parser",
  "rinx_scope",
  "rinx_toctree",
  "rinx_uml",

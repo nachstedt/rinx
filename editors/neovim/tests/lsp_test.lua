@@ -81,6 +81,15 @@ check('definition opens the target document', vim.endswith(target, '/target.rst'
 local range = location.targetSelectionRange or location.range or { ['end'] = {} }
 check('definition selects the label', range['end'].character == 12, definition)
 
+-- Find references lists the use, and the label itself when asked to.
+local params = at(7, 4)
+params.context = { includeDeclaration = true }
+local references = request_until_answered('textDocument/references', params) or {}
+local referenced = vim.tbl_map(function(reference)
+  return vim.fs.basename(reference.uri) .. ':' .. reference.range.start.line
+end, references)
+check('references list the use and the label', vim.deep_equal(referenced, { 'index.rst:7', 'target.rst:0' }), references)
+
 -- Completion inside the role lists the label.
 local completion = request_until_answered('textDocument/completion', at(7, 10))
 local items = completion and (completion.items or completion) or {}

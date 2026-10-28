@@ -92,6 +92,20 @@ The workspace scan may still be running when it is first asked."
       ;; The label, `.. _install:`, not the start of the file.
       (should (equal (plist-get (plist-get range :end) :character) 12)))))
 
+(ert-deftest rinx-eglot-lists-the-uses-of-the-label-a-reference-leads-to ()
+  (rinx-test--with-index
+    (let* ((references (rinx-test--request
+                        :textDocument/references
+                        (append (rinx-test--at 7 4) '(:context (:includeDeclaration t)))))
+           (referenced (mapcar (lambda (reference)
+                                 (format "%s:%d"
+                                         (file-name-nondirectory (plist-get reference :uri))
+                                         (plist-get (plist-get (plist-get reference :range) :start)
+                                                    :line)))
+                               references)))
+      ;; The use in index.rst, and the label, `.. _install:`, in target.rst.
+      (should (equal referenced '("index.rst:7" "target.rst:0"))))))
+
 (ert-deftest rinx-eglot-completes-the-label ()
   (rinx-test--with-index
     (let* ((completion (rinx-test--request :textDocument/completion (rinx-test--at 7 10)))
