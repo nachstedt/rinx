@@ -44,7 +44,7 @@ fn test_analyze_populates_targets_for_target_nodes() {
         "docs/my-file.rst".to_string(),
         vec![
             Node::Target {
-                name: TargetName::new("section-1"),
+                name: TargetName::new("section-1").into(),
                 destination: None,
                 span: None,
             },
@@ -217,7 +217,7 @@ fn test_analyze_registers_target_nested_in_table_cell() {
                     colspan: 1,
                     rowspan: 1,
                     content: vec![Node::Target {
-                        name: TargetName::new("nested-target"),
+                        name: TargetName::new("nested-target").into(),
                         destination: None,
                         span: None,
                     }],
@@ -250,7 +250,7 @@ fn test_analyze_registers_list_table_name_as_target() {
             width: None,
             align: None,
             classes: vec![],
-            name: Some(TargetName::new("fruit-table")),
+            name: Some(TargetName::new("fruit-table").into()),
             rows: vec![],
             span: None,
         })],
@@ -304,7 +304,7 @@ fn test_analyze_registers_table_directive_name_as_target() {
             width: None,
             align: None,
             classes: vec![],
-            name: Some(TargetName::new("wrapped-table")),
+            name: Some(TargetName::new("wrapped-table").into()),
             header_rows: vec![],
             body_rows: vec![],
             span: None,
@@ -338,7 +338,7 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
                     colspan: 1,
                     rowspan: 1,
                     content: vec![Node::Target {
-                        name: TargetName::new("in-header"),
+                        name: TargetName::new("in-header").into(),
                         destination: None,
                         span: None,
                     }],
@@ -349,7 +349,7 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
                     colspan: 1,
                     rowspan: 1,
                     content: vec![Node::Target {
-                        name: TargetName::new("in-body"),
+                        name: TargetName::new("in-body").into(),
                         destination: None,
                         span: None,
                     }],
@@ -380,7 +380,7 @@ fn code_block_named(name: Option<&str>) -> Node {
         language: rinx_ast::CodeLanguage::parse("python"),
         content: "x = 1".to_string(),
         caption: None,
-        name: name.map(TargetName::new),
+        name: name.map(|text| TargetName::new(text).into()),
         classes: vec![],
         linenos: false,
         lineno_start: None,
@@ -424,14 +424,14 @@ fn test_analyze_code_block_without_name_registers_no_target() {
 /// default.
 fn image_named(name: Option<&str>) -> Node {
     let mut options = rinx_ast::ImageOptions::new(rinx_ast::AssetUri::new("logo.png"));
-    options.name = name.map(TargetName::new);
+    options.name = name.map(|text| TargetName::new(text).into());
     Node::Directive(Directive::Image(Box::new(options)))
 }
 
 /// A `.. figure::` carrying `name` on its image and `legend` as its body.
 fn figure_named(name: Option<&str>, legend: Vec<Node>) -> Node {
     let mut options = rinx_ast::ImageOptions::new(rinx_ast::AssetUri::new("logo.png"));
-    options.name = name.map(TargetName::new);
+    options.name = name.map(|text| TargetName::new(text).into());
     let mut figure = rinx_ast::Figure::new(options);
     figure.legend = legend;
     Node::Directive(Directive::Figure(Box::new(figure)))
@@ -491,7 +491,7 @@ fn test_analyze_indexes_targets_inside_a_figure_legend() {
         vec![figure_named(
             None,
             vec![Node::Target {
-                name: TargetName::new("in-legend"),
+                name: TargetName::new("in-legend").into(),
                 destination: None,
                 span: None,
             }],
@@ -511,7 +511,7 @@ fn test_analyze_indexes_targets_inside_a_figure_legend() {
 /// A `.. dropdown::` carrying `name` and `body`.
 fn dropdown_named(name: Option<&str>, body: Vec<Node>) -> Node {
     Node::Directive(Directive::Dropdown(Box::new(rinx_ast::Dropdown {
-        name: name.map(TargetName::new),
+        name: name.map(|text| TargetName::new(text).into()),
         body,
         ..rinx_ast::Dropdown::new()
     })))
@@ -520,14 +520,14 @@ fn dropdown_named(name: Option<&str>, body: Vec<Node>) -> Node {
 /// An `.. entity-table::` carrying `name`.
 fn entity_table_named(name: Option<&str>) -> Node {
     let mut table = rinx_ast::EntityTable::new(rinx_ast::EntityTableSource::EntityTable);
-    table.name = name.map(TargetName::new);
+    table.name = name.map(|text| TargetName::new(text).into());
     Node::Directive(Directive::EntityTable(Box::new(table)))
 }
 
 /// A diagram directive carrying `name`.
 fn diagram_named(name: Option<&str>) -> Node {
     let mut uml = rinx_ast::Uml::new(rinx_ast::UmlSource::PlantUml, "A -> B".to_string());
-    uml.name = name.map(TargetName::new);
+    uml.name = name.map(|text| TargetName::new(text).into());
     Node::Directive(Directive::Uml(Box::new(uml)))
 }
 
@@ -644,7 +644,7 @@ fn test_analyze_indexes_targets_inside_a_dropdown_body() {
         vec![dropdown_named(
             None,
             vec![Node::Target {
-                name: TargetName::new("in-dropdown"),
+                name: TargetName::new("in-dropdown").into(),
                 destination: None,
                 span: None,
             }],
@@ -663,7 +663,7 @@ fn test_analyze_indexes_targets_inside_a_dropdown_body() {
 
 fn contents_named(name: Option<&str>) -> Node {
     let options = rinx_ast::ContentsOptions {
-        name: name.map(TargetName::new),
+        name: name.map(|text| TargetName::new(text).into()),
         ..rinx_ast::ContentsOptions::default()
     };
     Node::Directive(Directive::Contents(rinx_ast::Contents {
@@ -777,7 +777,7 @@ fn test_analyze_registers_a_flowcharts_name_as_a_target() {
         "specs.rst".to_string(),
         vec![Node::Directive(Directive::EntityFlow(Box::new(
             rinx_ast::EntityFlow {
-                name: Some(TargetName::new("requirement-flow")),
+                name: Some(TargetName::new("requirement-flow").into()),
                 ..rinx_ast::EntityFlow::new(rinx_ast::EntityFlowSource::EntityFlow)
             },
         )))],
@@ -801,7 +801,7 @@ fn test_analyze_registers_a_sequence_diagrams_name_as_a_target() {
         "specs.rst".to_string(),
         vec![Node::Directive(Directive::EntitySequence(Box::new(
             rinx_ast::EntitySequence {
-                name: Some(TargetName::new("startup-sequence")),
+                name: Some(TargetName::new("startup-sequence").into()),
                 ..rinx_ast::EntitySequence::new(
                     rinx_ast::EntitySequenceSource::EntitySequence,
                     rinx_ast::NonEmptyVector::single(rinx_ast::EntityId::new("COMP_UI").unwrap()),
@@ -829,7 +829,7 @@ fn test_analyze_registers_a_bar_charts_name_as_a_target() {
         "report.rst".to_string(),
         vec![Node::Directive(Directive::EntityBar(Box::new(
             rinx_ast::EntityBar {
-                name: Some(TargetName::new("authors-chart")),
+                name: Some(TargetName::new("authors-chart").into()),
                 ..rinx_ast::EntityBar::new(
                     rinx_ast::EntityBarSource::NeedBar,
                     rinx_ast::BarGrid::default(),
@@ -852,7 +852,7 @@ fn test_analyze_registers_a_bar_charts_name_as_a_target() {
 /// A target node with no URI — the `.. _name:` form that labels what follows.
 fn label(name: &str) -> Node {
     Node::Target {
-        name: TargetName::new(name),
+        name: TargetName::new(name).into(),
         destination: None,
         span: None,
     }
@@ -947,7 +947,7 @@ fn test_analyze_records_no_title_for_an_external_hyperlink_target() {
         "guide.rst".to_string(),
         vec![
             Node::Target {
-                name: TargetName::new("python"),
+                name: TargetName::new("python").into(),
                 destination: Some(rinx_ast::LinkDestination::Uri(
                     "https://python.org".to_string(),
                 )),
@@ -972,7 +972,7 @@ fn test_analyze_leaves_an_external_hyperlink_target_out_of_the_index() {
         "guide.rst".to_string(),
         vec![
             Node::Target {
-                name: TargetName::new("python"),
+                name: TargetName::new("python").into(),
                 destination: Some(rinx_ast::LinkDestination::Uri(
                     "https://python.org".to_string(),
                 )),
@@ -1018,7 +1018,7 @@ fn test_analyze_records_the_title_of_a_heading_labelled_inside_a_directive_body(
 
 fn figure(caption: Option<&str>, name: Option<&str>) -> Node {
     let mut image = rinx_ast::ImageOptions::new(rinx_ast::AssetUri::new("logo.png"));
-    image.name = name.map(TargetName::new);
+    image.name = name.map(|text| TargetName::new(text).into());
     let mut figure = rinx_ast::Figure::new(image);
     figure.caption = caption.map(|text| vec![InlineNode::Text(text.to_string())]);
     Node::Directive(Directive::Figure(Box::new(figure)))
@@ -1088,7 +1088,7 @@ fn test_analyze_records_a_table_title_for_its_label_and_name() {
                 width: None,
                 align: None,
                 classes: vec![],
-                name: Some(TargetName::new("sizes-table")),
+                name: Some(TargetName::new("sizes-table").into()),
                 header_rows: vec![],
                 body_rows: vec![],
                 span: None,
@@ -1135,7 +1135,7 @@ fn test_analyze_records_an_entity_anchor_for_its_target() {
     let body = rinx_ast::EntityBody {
         relation_spans: std::collections::BTreeMap::new(),
         type_name: "req".to_string(),
-        id: rinx_ast::EntityId::new("REQ_001").unwrap(),
+        id: rinx_ast::EntityId::new("REQ_001").unwrap().into(),
         attributes: std::collections::BTreeMap::new(),
         relations: std::collections::BTreeMap::new(),
         sections: vec![],

@@ -81,7 +81,7 @@ fn test_the_placement_options_reach_the_figure() {
     let mut bar = bar(&[r#"type == "req""#]);
     bar.title = Some("Authors".to_string());
     bar.caption = Some("Who wrote what".to_string());
-    bar.name = Some(TargetName::new("authors-chart"));
+    bar.name = Some(TargetName::new("authors-chart").into());
 
     // When
     let html = render(&bar).html;

@@ -3,7 +3,7 @@ use crate::directives::spec::{Arguments, DirectiveSpec};
 use std::num::NonZeroUsize;
 
 use rinx_ast::{
-    Directive, NumberedDepth, TargetName, TocEntry, Toctree, ToctreeFlag, ToctreeOptions,
+    Directive, NumberedDepth, TargetName, TocEntry, Toctree, ToctreeFlag, ToctreeOptions, Written,
 };
 
 use crate::context::ParseCtx;
@@ -37,7 +37,7 @@ directive_options! {
         /// `:caption:`.
         Caption(String) => (["caption"], "A caption shown above the tree."),
         /// `:name:`.
-        Name(TargetName) => (["name"], "A label to reference the tree by."),
+        Name(Written<TargetName>) => (["name"], "A label to reference the tree by."),
         /// `:titlesonly:`.
         TitlesOnly => (["titlesonly"], Flag, "Lists each document's title only, not its sections."),
         /// `:reversed:`.
@@ -514,7 +514,10 @@ mod tests {
         let (toctree, diagnostics) = parse_body(&body);
 
         // Then
-        assert_eq!(toctree.options.name, Some(TargetName::new("main-toc")));
+        assert_eq!(
+            toctree.options.name,
+            Some(TargetName::new("main-toc").into())
+        );
         assert!(diagnostics.is_empty());
     }
 

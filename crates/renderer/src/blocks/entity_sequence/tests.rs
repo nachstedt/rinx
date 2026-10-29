@@ -109,7 +109,7 @@ fn test_the_presentation_options_reach_the_figure() {
         width: Some(LengthOrPercentage::new("400px").expect("a valid length")),
         scale: Some(50),
         classes: vec!["wide".to_string()],
-        name: Some(TargetName::new("ping-sequence")),
+        name: Some(TargetName::new("ping-sequence").into()),
         ..ping()
     };
 

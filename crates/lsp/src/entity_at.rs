@@ -48,7 +48,7 @@ mod tests {
         let schema = schema();
         let ctx = ParseCtx::new(Domain::Py, &RejectParseFiles).with_schema(&schema);
         let document = parse_with_ctx("index.rst", text, &ctx);
-        entity_marked_at(&document, line).map(|entity| entity.id.to_string())
+        entity_marked_at(&document, line).map(|entity| entity.id.value().to_string())
     }
 
     #[test]

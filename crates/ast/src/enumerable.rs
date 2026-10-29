@@ -22,6 +22,7 @@ use crate::inline_node::inline_plain_text;
 use crate::node::Node;
 use crate::target_name::TargetName;
 use crate::visit::walk_nodes_with_siblings;
+use crate::written::Written;
 
 /// What kind of thing a `:numref:` points at, which picks the format its
 /// number is shown in.
@@ -113,7 +114,7 @@ pub fn preceding_labels(siblings: &[Node], index: usize) -> Vec<&TargetName> {
                 name,
                 destination: None,
                 ..
-            } => Some(name),
+            } => Some(name.value()),
             _ => None,
         })
         .collect();
@@ -129,17 +130,23 @@ fn captioned(directive: &Directive) -> Option<(EnumerableKind, Option<&TargetNam
         Directive::Figure(figure) => figure.caption.as_ref().map(|caption| {
             (
                 EnumerableKind::Figure,
-                figure.image.name.as_ref(),
+                figure.image.name.as_ref().map(Written::value),
                 inline_plain_text(caption),
             )
         }),
-        Directive::Table { title, name, .. } | Directive::DataTable { title, name, .. } => title
-            .as_ref()
-            .map(|title| (EnumerableKind::Table, name.as_ref(), title.clone())),
+        Directive::Table { title, name, .. } | Directive::DataTable { title, name, .. } => {
+            title.as_ref().map(|title| {
+                (
+                    EnumerableKind::Table,
+                    name.as_ref().map(Written::value),
+                    title.clone(),
+                )
+            })
+        }
         Directive::CodeBlock(block) => block.caption.as_ref().map(|caption| {
             (
                 EnumerableKind::CodeBlock,
-                block.name.as_ref(),
+                block.name.as_ref().map(Written::value),
                 caption.clone(),
             )
         }),
@@ -155,7 +162,7 @@ mod tests {
 
     fn figure(caption: Option<&str>, name: Option<&str>) -> Node {
         let mut image = ImageOptions::new(AssetUri::new("a.png"));
-        image.name = name.map(TargetName::new);
+        image.name = name.map(|text| TargetName::new(text).into());
         let mut figure = Figure::new(image);
         figure.caption = caption.map(|text| vec![InlineNode::Text(text.to_string())]);
         Node::Directive(Directive::Figure(Box::new(figure)))
@@ -171,7 +178,7 @@ mod tests {
             width: None,
             align: None,
             classes: Vec::new(),
-            name: name.map(TargetName::new),
+            name: name.map(|text| TargetName::new(text).into()),
             rows: Vec::new(),
             span: None,
         })
@@ -195,7 +202,7 @@ mod tests {
 
     fn target(name: &str) -> Node {
         Node::Target {
-            name: TargetName::new(name),
+            name: TargetName::new(name).into(),
             destination: None,
             span: None,
         }
@@ -302,7 +309,7 @@ mod tests {
             target("too-far"),
             Node::Comment,
             Node::Target {
-                name: TargetName::new("external"),
+                name: TargetName::new("external").into(),
                 destination: Some(crate::LinkDestination::Uri(
                     "https://example.org".to_string(),
                 )),

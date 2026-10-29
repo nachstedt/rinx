@@ -23,7 +23,7 @@ use std::num::NonZeroU32;
 
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, EntityId, EntitySequence, EntitySequenceSource,
-    ImageAlign, LengthOrPercentage, NonEmptyVector, Span, TargetName,
+    ImageAlign, LengthOrPercentage, NonEmptyVector, Span, TargetName, Written,
 };
 use rinx_filter::Expr;
 
@@ -71,7 +71,7 @@ directive_options! {
         /// `:class:`.
         Class(Classes) => (["class"], "Classes for the diagram."),
         /// `:name:`.
-        Name(TargetName) => (["name"], "A label to reference the diagram by."),
+        Name(Written<TargetName>) => (["name"], "A label to reference the diagram by."),
         _ => (["show_filters", "show-filters"], Flag, "Shows the filter below the diagram.", "the filter is visible in the document source"),
         _ => (["show_legend", "show-legend"], Flag, "Draws a legend of the entity types.", "no legend is drawn"),
         _ => (["show_link_names", "show-link-names"], Flag, "Labels each message with its relation.", "every message is labelled with its own title"),
@@ -110,7 +110,7 @@ struct ReadOptions {
     scale: Option<u32>,
     width: Option<LengthOrPercentage>,
     classes: Vec<String>,
-    name: Option<TargetName>,
+    name: Option<Written<TargetName>>,
 }
 
 /// This directive's entry in the table of directives this build implements.

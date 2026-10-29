@@ -302,7 +302,7 @@ mod tests {
     fn test_build_project_index_registers_a_toctree_name_as_a_target() {
         // Given — `:name:` makes the toctree itself referenceable.
         let mut toctree = toctree_of(&["child"]);
-        toctree.options.name = Some(rinx_ast::TargetName::new("main-toc"));
+        toctree.options.name = Some(rinx_ast::TargetName::new("main-toc").into());
         let docs = vec![
             Document::new(
                 "index.rst".to_string(),
@@ -446,7 +446,7 @@ mod tests {
                     span: None,
                 },
                 Node::Target {
-                    name: TargetName::new(name),
+                    name: TargetName::new(name).into(),
                     destination: None,
                     span: None,
                 },

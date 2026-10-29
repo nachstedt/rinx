@@ -1040,7 +1040,7 @@ Not done here:
 - The written index still carries the lines of toctree entries and entity
   updates (issue #372).
 - `.. contents::` and a toctree's `:name:` have no span, so their labels have
-  no site.
+  no site. Fixed since, by #31's name spans: such a label is sited at its name.
 - Labels and glossary terms are not outline entries.
 
 ### 29. Precise go to definition ✅ (#378)
@@ -1074,7 +1074,8 @@ line, as a `#L<line>` fragment, as #7 promised.
 
 Not done here:
 - A label written by `.. contents::` or a toctree's `:name:` has no site
-  (#28), so it opens its document's first line (issue #376).
+  (#28), so it opens its document's first line (issue #376, fixed since by
+  #31's name spans).
 - A link followed in the preview still opens its document at the first line
   (#40; issue #375).
 - Hover's link opens an included fragment but names the including document
@@ -1131,7 +1132,8 @@ after an edit; a label with six uses takes 2 ms warm, 3 ms after an edit.
 
 Not done here:
 - A label written by `.. contents::` or a toctree's `:name:` has no site
-  (#28), so its declaration is not listed (issue #376).
+  (#28), so its declaration is not listed (issue #376, fixed since by #31's
+  name spans).
 - A code block's `:name:` label is sited on its first content line, so that
   is the declaration listed, and its marker line finds nothing (issue #385).
 - A use in a `conf.py` project's `rst_prolog` or `rst_epilog` is in no file,

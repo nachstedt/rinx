@@ -537,7 +537,7 @@ fn build_entity(
     Some(EntityBody {
         relation_spans: BTreeMap::new(),
         type_name: entity_type.name.clone(),
-        id,
+        id: id.into(),
         attributes,
         relations,
         sections,

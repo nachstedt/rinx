@@ -15,7 +15,9 @@ use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::option_value::OptionValueType;
 use crate::directives::spec::OptionValue;
 use crate::directives::spec::{Arguments, DirectiveSpec};
-use rinx_ast::{Animation, Chevron, Directive, Dropdown, OcticonName, SemanticColor, TargetName};
+use rinx_ast::{
+    Animation, Chevron, Directive, Dropdown, OcticonName, SemanticColor, TargetName, Written,
+};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -98,7 +100,7 @@ directive_options! {
         /// `:margin:`.
         Margin(Margin) => (["margin"], DropdownInvalidMargin, "The margin around the dropdown, by spacing level."),
         /// `:name:`.
-        Name(TargetName) => (["name"], "A label to reference the dropdown by."),
+        Name(Written<TargetName>) => (["name"], "A label to reference the dropdown by."),
         /// `:class-container:`.
         ClassContainer(Classes) => (["class-container"], "Classes for the whole dropdown."),
         /// `:class-title:`.
@@ -304,7 +306,7 @@ mod tests {
             })
         );
         assert_eq!(
-            dropdown.name.as_ref().map(TargetName::as_str),
+            dropdown.name.as_ref().map(|name| name.value().as_str()),
             Some("my-dropdown")
         );
         assert_eq!(dropdown.class_container, vec!["one", "two"]);

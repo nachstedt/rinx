@@ -25,7 +25,7 @@ mod section_numbers;
 mod special_page;
 
 pub use ambiguous_definitions::AmbiguousDefinitions;
-pub use definition_sites::{DefinitionKey, DefinitionSite, DefinitionSites};
+pub use definition_sites::{DefinitionKey, DefinitionSite, DefinitionSites, NameRange};
 pub use document_outline::{DocumentOutline, DocumentToctree, OutlineSection};
 pub use domain_index::{DomainIndex, UnknownDomainIndex};
 pub use element_numbering::{

@@ -28,7 +28,7 @@ pub(crate) fn index_entity(entity: &EntityBody, doc_path: &str, index: &mut Proj
         uml: collect_entity_umls(entity),
         relation_spans: entity.relation_spans.clone(),
     };
-    index.entities.insert(entity.id.clone(), record);
+    index.entities.insert(entity.id.value().clone(), record);
 }
 
 /// The diagram templates written inside `entity`, by `:key:`.

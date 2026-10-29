@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::span::Span;
 use crate::target_name::TargetName;
+use crate::written::Written;
 
 use super::align::ImageAlign;
 use super::length::{Length, LengthOrPercentage, scaled_width};
@@ -90,7 +91,7 @@ pub struct ImageOptions {
     pub classes: Vec<String>,
     /// `:name:` — reuses [`TargetName`] like the table and math directives do,
     /// so it registers in `ProjectIndex::targets` with no conversion.
-    pub name: Option<TargetName>,
+    pub name: Option<Written<TargetName>>,
     /// `:loading:` — how the bytes reach the page.
     pub loading: ImageLoading,
     /// Where the directive was written.
@@ -316,7 +317,7 @@ mod tests {
         options.align = Some(ImageAlign::Center);
         options.target = Some(ImageTarget::new("https://example.com"));
         options.classes = vec!["fancy".to_string()];
-        options.name = Some(TargetName::new("the logo"));
+        options.name = Some(TargetName::new("the logo").into());
         options.loading = ImageLoading::Embed;
 
         // When

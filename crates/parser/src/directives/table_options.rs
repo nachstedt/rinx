@@ -20,7 +20,7 @@ use super::option_value::{Classes, Located};
 use super::options::{OptionLine, directive_options};
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rinx_ast::{TableAlign, TableWidths, TargetName};
+use rinx_ast::{TableAlign, TableWidths, TargetName, Written};
 
 /// The five presentation options every option-bearing table directive shares:
 /// `.. list-table::`, `.. csv-table::` and `.. table::` alike.
@@ -33,7 +33,7 @@ pub(in crate::directives) struct CommonTableOptions {
     pub width: Option<String>,
     pub align: Option<TableAlign>,
     pub classes: Vec<String>,
-    pub name: Option<TargetName>,
+    pub name: Option<Written<TargetName>>,
 }
 
 impl CommonTableOptions {
@@ -61,7 +61,7 @@ directive_options! {
         /// `:class:`.
         Class(Classes) => (["class"], "Classes for the table."),
         /// `:name:`.
-        Name(String) => (["name"], "A label to reference the table by."),
+        Name(Written<TargetName>) => (["name"], "A label to reference the table by."),
     }
 }
 
@@ -79,7 +79,7 @@ pub(in crate::directives) fn read_table_option(
         TableOption::Width => options.width = Some(line.value.clone()),
         TableOption::Align(align) => options.align = Some(align),
         TableOption::Class(classes) => options.classes = classes.0,
-        TableOption::Name(name) => options.name = Some(TargetName::new(&name)),
+        TableOption::Name(name) => options.name = Some(name),
     }
 }
 
@@ -151,7 +151,7 @@ mod tests {
         assert_eq!(options.width.as_deref(), Some("50%"));
         assert_eq!(options.align, Some(TableAlign::Right));
         assert_eq!(options.classes, vec!["foo".to_string(), "bar".to_string()]);
-        assert_eq!(options.name, Some(TargetName::new("My Table")));
+        assert_eq!(options.name, Some(TargetName::new("My Table").into()));
     }
 
     #[test]

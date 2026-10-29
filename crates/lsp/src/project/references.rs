@@ -381,7 +381,7 @@ mod tests {
         // Given
         let mut entity = rinx_ast::EntityBody {
             type_name: "req".to_string(),
-            id: id("REQ_2"),
+            id: id("REQ_2").into(),
             attributes: std::collections::BTreeMap::new(),
             relations: std::collections::BTreeMap::from([("links".to_string(), vec![id("REQ_1")])]),
             sections: Vec::new(),

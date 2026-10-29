@@ -55,7 +55,7 @@ pub(super) fn render_figure_directive(
 
     let _ = write!(html, "<figure");
     if let Some(name) = &figure.image.name {
-        let id_attr = html_escape::encode_double_quoted_attribute(name.as_str());
+        let id_attr = html_escape::encode_double_quoted_attribute(name.value().as_str());
         let _ = write!(html, " id=\"{id_attr}\"");
     }
     if !classes.is_empty() {
@@ -296,7 +296,7 @@ mod tests {
     fn test_renders_the_name_as_the_figures_id() {
         // Given
         let mut figure = figure("logo.png");
-        figure.image.name = Some(TargetName::new("the-figure"));
+        figure.image.name = Some(TargetName::new("the-figure").into());
 
         // When
         let html = render(figure);

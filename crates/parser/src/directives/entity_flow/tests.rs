@@ -282,7 +282,10 @@ fn test_reads_the_presentation_options() {
     assert_eq!(flow.align, Some(ImageAlign::Center));
     assert_eq!(flow.rendered_width().unwrap().to_string(), "200px");
     assert_eq!(flow.classes, ["wide", "framed"]);
-    assert_eq!(flow.name.as_ref().unwrap().as_str(), "coverage-flow");
+    assert_eq!(
+        flow.name.as_ref().unwrap().value().as_str(),
+        "coverage-flow"
+    );
     assert_eq!(flow.config.as_deref(), Some("monochrome"));
     assert!(flow.debug);
     assert_eq!(codes(rst), Vec::<String>::new());

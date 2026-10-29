@@ -438,7 +438,7 @@ mod tests {
                 width: None,
                 align: None,
                 classes: vec![],
-                name: Some(TargetName::new("fruit-table")),
+                name: Some(TargetName::new("fruit-table").into()),
                 rows: vec![table_row(&["Cell"])],
                 span: None,
             })],

@@ -1,5 +1,5 @@
 use rinx_ast::{
-    Directive, Document, IndexEntry, InlineNode, Node, Span, TableRow, TargetName,
+    Directive, Document, IndexEntry, InlineNode, Node, Span, TableRow, TargetName, Written,
     allocate_section_ids, for_each_inline_list,
 };
 use rinx_index::{
@@ -205,17 +205,21 @@ fn index_entity_and_its_sections(
     scopes: &DocumentScopes,
 ) {
     super::entity_index::index_entity(entity, doc_path, index);
-    spans.record(DefinitionKey::Entity(entity.id.clone()), entity.span);
+    spans.record_named(
+        DefinitionKey::Entity(entity.id.value().clone()),
+        entity.span,
+        &entity.id,
+    );
     // An entity is also an ordinary link target, so `:ref:` reaches one without
     // any role being declared — which is what makes a schema's roles optional
     // sugar rather than an obligation.
-    let name = TargetName::new(entity.id.as_str());
+    let name = TargetName::new(entity.id.value().as_str());
     index.targets.insert(name.clone(), doc_path.to_string());
-    spans.record(DefinitionKey::Label(name.clone()), entity.span);
+    spans.record_named(DefinitionKey::Label(name.clone()), entity.span, &entity.id);
     // Its anchor is not its name, so a `:ref:` must be told where it is.
     index
         .target_anchors
-        .insert(name, rinx_index::entity_anchor(entity.id.as_str()));
+        .insert(name, rinx_index::entity_anchor(entity.id.value().as_str()));
     // Every section is body content and may hold definitions of its own — a
     // target, a nested entity, a glossary. Recursing keeps this walk mirroring
     // `render_nodes`, as the module doc requires.
@@ -253,8 +257,10 @@ pub(super) fn index_nodes(
                 destination: None,
                 span,
             } => {
-                index.targets.insert(name.clone(), doc_path.to_string());
-                spans.record(DefinitionKey::Label(name.clone()), *span);
+                index
+                    .targets
+                    .insert(name.value().clone(), doc_path.to_string());
+                spans.record_named(DefinitionKey::Label(name.value().clone()), *span, name);
             }
             Node::Directive(Directive::Toctree(toctree)) => {
                 // `:name:` makes the toctree itself a `:ref:` target. Recorded
@@ -262,11 +268,13 @@ pub(super) fn index_nodes(
                 // same way — and registered even for a `:hidden:` toctree,
                 // which still renders its anchor precisely so the reference
                 // does not dangle.
-                if let Some(name) = &toctree.options.name {
-                    index
-                        .targets
-                        .insert(name.clone(), doc_path.to_string());
-                }
+                register_directive_name(
+                    toctree.options.name.as_ref(),
+                    None,
+                    doc_path,
+                    index,
+                    spans,
+                );
             }
             Node::Directive(Directive::Entity(entity)) => {
                 index_entity_and_its_sections(entity, doc_path, index, spans, scopes);
@@ -349,7 +357,7 @@ pub(super) fn index_nodes(
                 label: Some(label),
                 span,
                 ..
-            }) => spans.record(DefinitionKey::Equation(label.clone()), *span),
+            }) => spans.record_named(DefinitionKey::Equation(label.value().clone()), *span, label),
             _ => {}
         }
     }
@@ -392,7 +400,7 @@ fn record_target_titles(nodes: &[Node], index: &mut ProjectIndex) {
             ..
         } = node
         {
-            pending.push(name);
+            pending.push(name.value());
             continue;
         }
         let (own_name, title) = element_title(node);
@@ -411,15 +419,16 @@ fn element_title(node: &Node) -> (Option<&TargetName>, Option<String>) {
     match node {
         Node::Heading { text, .. } => (None, Some(rinx_ast::inline_plain_text(text))),
         Node::Directive(Directive::Figure(figure)) => (
-            figure.image.name.as_ref(),
+            figure.image.name.as_ref().map(Written::value),
             figure.caption.as_deref().map(rinx_ast::inline_plain_text),
         ),
         Node::Directive(
             Directive::Table { title, name, .. } | Directive::DataTable { title, name, .. },
-        ) => (name.as_ref(), title.clone()),
-        Node::Directive(Directive::CodeBlock(block)) => {
-            (block.name.as_ref(), block.caption.clone())
-        }
+        ) => (name.as_ref().map(Written::value), title.clone()),
+        Node::Directive(Directive::CodeBlock(block)) => (
+            block.name.as_ref().map(Written::value),
+            block.caption.clone(),
+        ),
         _ => (None, None),
     }
 }
@@ -575,18 +584,26 @@ fn index_sectnum(options: &rinx_ast::SectnumOptions, doc_path: &str, index: &mut
     index.sectnum.insert(doc_path.to_string(), options.clone());
 }
 
+/// Registers a directive's `:name:`, defined where the directive is written
+/// — or, for a directive the parser gave no span of its own (`.. contents::`,
+/// `.. toctree::`), where the name is.
 fn register_directive_name(
-    name: Option<&TargetName>,
+    name: Option<&Written<TargetName>>,
     span: Option<Span>,
     doc_path: &str,
     index: &mut ProjectIndex,
     spans: &mut DefinitionSpans,
 ) {
-    if let Some(target_name) = name {
+    if let Some(name) = name {
+        let target_name = name.value();
         index
             .targets
             .insert(target_name.clone(), doc_path.to_string());
-        spans.record(DefinitionKey::Label(target_name.clone()), span);
+        spans.record_named(
+            DefinitionKey::Label(target_name.clone()),
+            span.or(name.span()),
+            name,
+        );
     }
 }
 

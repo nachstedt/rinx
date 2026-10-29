@@ -10,6 +10,7 @@ use crate::image::{ImageAlign, LengthOrPercentage, scaled_width};
 use crate::span::Span;
 use crate::target_name::TargetName;
 use crate::uml::source::UmlSource;
+use crate::written::Written;
 
 /// A `PlantUML` diagram — `.. plantuml::`, `.. entity-diagram::`/`.. needuml::`
 /// and `.. entity-arch::`/`.. needarch::` alike.
@@ -80,7 +81,7 @@ pub struct Uml {
     /// `:name:` — reuses [`TargetName`] like the image and table directives
     /// do, so it registers in `ProjectIndex::targets` with no conversion.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<TargetName>,
+    pub name: Option<Written<TargetName>>,
     /// The entity this diagram was written inside, when it was.
     ///
     /// Recorded while parsing, where the enclosing entity is already in hand,
@@ -237,7 +238,7 @@ mod tests {
             scale: Some(80),
             width: None,
             classes: vec!["wide".to_string()],
-            name: Some(TargetName::new("my-diagram")),
+            name: Some(TargetName::new("my-diagram").into()),
             entity: Some(EntityId::new("REQ_001").expect("a valid id")),
             span: None,
             template_span: Some(Span::new(Position::new(4, 4), Position::new(4, 23))),

@@ -646,7 +646,7 @@ mod tests {
         assert_eq!(width, Some("50%".to_string()));
         assert_eq!(align, Some(TableAlign::Center));
         assert_eq!(classes, vec!["compact".to_string()]);
-        assert_eq!(name, Some(TargetName::new("fruit-csv")));
+        assert_eq!(name, Some(TargetName::new("fruit-csv").into()));
     }
 
     #[test]

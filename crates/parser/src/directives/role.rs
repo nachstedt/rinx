@@ -625,6 +625,7 @@ mod tests {
             value: "A_b  C".to_string(),
             raw: ":class: A_b  C".to_string(),
             line_index: 0,
+            continued: false,
         };
         let mut diagnostics = Diagnostics::default();
 

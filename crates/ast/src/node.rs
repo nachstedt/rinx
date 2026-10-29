@@ -13,6 +13,7 @@ use crate::option_list_item::OptionListItem;
 use crate::span::Span;
 use crate::table::TableRow;
 use crate::target_name::TargetName;
+use crate::written::Written;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Node {
@@ -30,7 +31,8 @@ pub enum Node {
     /// `.. _name:` — an internal target, labelling what follows — or
     /// `.. _name: destination`, which is a URI or another target's name.
     Target {
-        name: TargetName,
+        /// The label, with the span of its characters.
+        name: Written<TargetName>,
         destination: Option<LinkDestination>,
         /// Where the target was written, which the label's definition is.
         #[serde(default, skip_serializing_if = "Option::is_none")]

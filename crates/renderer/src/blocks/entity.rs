@@ -46,7 +46,7 @@ fn effective_attribute<'a>(
     name: &str,
     ctx: &'a RenderCtx<'_>,
 ) -> Option<&'a rinx_ast::AttributeValue> {
-    own_fields(entity).effective_attribute(&entity.id, name, ctx.index)
+    own_fields(entity).effective_attribute(entity.id.value(), name, ctx.index)
 }
 
 /// The targets to show for one outgoing relation of `entity`, same rule as
@@ -56,7 +56,7 @@ fn effective_relation_targets<'a>(
     relation: &str,
     ctx: &'a RenderCtx<'_>,
 ) -> &'a [EntityId] {
-    own_fields(entity).effective_relation_targets(&entity.id, relation, ctx.index)
+    own_fields(entity).effective_relation_targets(entity.id.value(), relation, ctx.index)
 }
 
 /// Wraps `value` in the visible conflict marker when `conflict` is set: the
@@ -104,7 +104,7 @@ pub(super) fn render_entity(html: &mut String, entity: &EntityBody, ctx: &mut Re
 /// The built-in rendering, which every type gets without configuring anything.
 fn render_builtin(html: &mut String, entity: &EntityBody, ctx: &mut RenderCtx<'_>) {
     let fields = EntityFields::of(
-        &entity.id,
+        entity.id.value(),
         &entity.type_name,
         own_fields(entity),
         ctx.index,
@@ -115,7 +115,7 @@ fn render_builtin(html: &mut String, entity: &EntityBody, ctx: &mut RenderCtx<'_
         html,
         "<div class=\"entity entity-{}\" id=\"{}\">",
         html_escape::encode_double_quoted_attribute(&entity.type_name),
-        html_escape::encode_double_quoted_attribute(&entity_anchor(entity.id.as_str()))
+        html_escape::encode_double_quoted_attribute(&entity_anchor(entity.id.value().as_str()))
     );
 
     render_header(html, entity, fields.type_label);
@@ -214,7 +214,7 @@ fn render_header(html: &mut String, entity: &EntityBody, type_label: &str) {
     let _ = write!(
         html,
         "<span class=\"entity-id\">{}</span></p>",
-        html_escape::encode_text(entity.id.as_str())
+        html_escape::encode_text(entity.id.value().as_str())
     );
 }
 

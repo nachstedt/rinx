@@ -5,7 +5,7 @@
 
 use crate::parse;
 use rinx_ast::TargetName;
-use rinx_ast::{CodeLanguage, InlineNode, Node, Position, Span};
+use rinx_ast::{CodeLanguage, Directive, InlineNode, Node, Position, Span, Written};
 
 #[test]
 fn test_parse_returns_empty_document_for_empty_input() {
@@ -145,7 +145,7 @@ fn test_parse_creates_target_node_for_explicit_target() {
     assert_eq!(
         doc.nodes[0],
         Node::Target {
-            name: TargetName::new("my-target"),
+            name: TargetName::new("my-target").into(),
             destination: None,
             span: Some(Span::new(Position::new(1, 1), Position::new(1, 15)))
         }
@@ -167,7 +167,7 @@ fn test_parse_creates_external_target_node() {
     assert_eq!(
         doc.nodes[0],
         Node::Target {
-            name: TargetName::new("my-link"),
+            name: TargetName::new("my-link").into(),
             destination: Some(rinx_ast::LinkDestination::Uri(
                 "https://example.com".to_string()
             )),
@@ -187,7 +187,7 @@ fn test_parse_creates_indented_external_target_node() {
     assert_eq!(
         doc.nodes[0],
         Node::Target {
-            name: TargetName::new("my-link"),
+            name: TargetName::new("my-link").into(),
             destination: Some(rinx_ast::LinkDestination::Uri(
                 "https://example.com".to_string()
             )),
@@ -495,7 +495,10 @@ fn test_parse_reads_a_math_directive_with_a_label() {
         panic!("expected a math directive, got {:?}", doc.nodes[0]);
     };
     assert_eq!(parts, &vec!["e^{i\\pi} + 1 = 0".to_string()]);
-    assert_eq!(label.as_ref(), Some(&TargetName::new("euler")));
+    assert_eq!(
+        label.as_ref().map(rinx_ast::Written::value),
+        Some(&TargetName::new("euler"))
+    );
     assert!(!nowrap);
 }
 
@@ -663,5 +666,81 @@ fn test_parse_reports_an_undefined_substitution_reference() {
     assert_eq!(
         doc.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>(),
         vec![rinx_ast::DiagnosticCode::SubstitutionUndefined]
+    );
+}
+
+/// Where the `:name:` and `:label:` values of `input` were written, in
+/// document order: one entry per name-bearing directive.
+fn written_name_spans(input: &str) -> Vec<Option<Span>> {
+    let doc = parse("test.rst", input);
+    let mut spans = Vec::new();
+    rinx_ast::walk_nodes(&doc.nodes, &mut |node| match node {
+        Node::Directive(Directive::Figure(figure)) => {
+            spans.push(figure.image.name.as_ref().and_then(Written::span));
+        }
+        Node::Directive(Directive::CodeBlock(block)) => {
+            spans.push(block.name.as_ref().and_then(Written::span));
+        }
+        Node::Directive(Directive::DataTable { name, .. } | Directive::Table { name, .. }) => {
+            spans.push(name.as_ref().and_then(Written::span));
+        }
+        Node::Directive(Directive::Toctree(toctree)) => {
+            spans.push(toctree.options.name.as_ref().and_then(Written::span));
+        }
+        Node::Directive(Directive::Math { label, .. }) => {
+            spans.push(label.as_ref().and_then(Written::span));
+        }
+        _ => {}
+    });
+    spans
+}
+
+/// A span on `line` from column `start` up to `end`.
+fn columns(line: u32, start: u32, end: u32) -> Span {
+    Span::new(Position::new(line, start), Position::new(line, end))
+}
+
+#[test]
+fn test_parse_records_where_each_directive_s_name_was_written() {
+    // Given — a name on a figure, a code block, a list table and a toctree
+    let input = "\
+.. figure:: a.png
+   :name: fig-a
+
+.. code-block:: python
+   :name: snippet
+
+   x = 1
+
+.. list-table:: Sizes
+   :name: sizes
+
+   * - 1
+
+.. toctree::
+   :name: tree
+";
+
+    // When / Then
+    assert_eq!(
+        written_name_spans(input),
+        vec![
+            Some(columns(2, 11, 16)),
+            Some(columns(5, 11, 18)),
+            Some(columns(10, 11, 16)),
+            Some(columns(15, 11, 15)),
+        ]
+    );
+}
+
+#[test]
+fn test_parse_records_where_an_equation_s_label_was_written() {
+    // Given — either spelling Sphinx takes
+    let input = ".. math::\n   :label: euler\n\n   a = b\n\n.. math::\n   :name: pi\n\n   p\n";
+
+    // When / Then
+    assert_eq!(
+        written_name_spans(input),
+        vec![Some(columns(2, 12, 17)), Some(columns(7, 11, 13))]
     );
 }

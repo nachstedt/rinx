@@ -11,6 +11,7 @@ use crate::image::{ImageAlign, LengthOrPercentage, scaled_width};
 use crate::label_rotation::LabelRotation;
 use crate::span::Span;
 use crate::target_name::TargetName;
+use crate::written::Written;
 
 /// A bar chart of how many entities each cell of a grid of filters selects —
 /// `.. entity-bar::`, and its sphinx-needs spelling `.. needbar::`.
@@ -97,7 +98,7 @@ pub struct EntityBar {
     pub classes: Vec<String>,
     /// `:name:` — registers the chart as a `:ref:` target.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<TargetName>,
+    pub name: Option<Written<TargetName>>,
     /// Where the directive was written, so the renderer has a position to
     /// report against.
     #[serde(default, skip_serializing_if = "Option::is_none")]

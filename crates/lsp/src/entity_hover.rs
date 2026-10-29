@@ -57,8 +57,8 @@ pub fn declared_entity_markdown(
         attributes: &entity.attributes,
         relations: &entity.relations,
     };
-    let fields = EntityFields::of(&entity.id, &entity.type_name, own, index, schema);
-    entity_markdown(&entity.id, entity.title().as_deref(), &fields, None)
+    let fields = EntityFields::of(entity.id.value(), &entity.type_name, own, index, schema);
+    entity_markdown(entity.id.value(), entity.title().as_deref(), &fields, None)
 }
 
 /// The hover text for the entity `id`, titled `title`, showing `fields`
@@ -258,7 +258,7 @@ mod tests {
         .unwrap();
         let entity = EntityBody {
             type_name: "req".to_string(),
-            id: id("REQ_1"),
+            id: id("REQ_1").into(),
             attributes: BTreeMap::from([
                 (
                     "title".to_string(),

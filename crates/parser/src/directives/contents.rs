@@ -1,6 +1,6 @@
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::spec::{Arguments, DirectiveSpec};
-use rinx_ast::{Contents, ContentsBacklinks, ContentsOptions, Directive, TargetName};
+use rinx_ast::{Contents, ContentsBacklinks, ContentsOptions, Directive, TargetName, Written};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -22,7 +22,7 @@ directive_options! {
         /// `:class:`.
         Class(Classes) => (["class"], "Classes for the table."),
         /// `:name:`.
-        Name(TargetName) => (["name"], "A label to reference the table by."),
+        Name(Written<TargetName>) => (["name"], "A label to reference the table by."),
     }
 }
 
@@ -307,7 +307,7 @@ mod tests {
         // Then
         assert_eq!(
             contents.options.name,
-            Some(TargetName::new("main-contents"))
+            Some(TargetName::new("main-contents").into())
         );
         assert!(diagnostics.is_empty());
     }
@@ -364,6 +364,6 @@ mod tests {
         assert!(contents.options.local);
         assert_eq!(contents.options.backlinks, ContentsBacklinks::Top);
         assert_eq!(contents.options.classes, vec!["wide"]);
-        assert_eq!(contents.options.name, Some(TargetName::new("toc")));
+        assert_eq!(contents.options.name, Some(TargetName::new("toc").into()));
     }
 }

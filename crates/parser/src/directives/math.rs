@@ -16,7 +16,7 @@
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::option_value::Classes;
 use crate::directives::spec::{Arguments, DirectiveSpec};
-use rinx_ast::{Directive, Span, TargetName};
+use rinx_ast::{Directive, Span, TargetName, Written};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -28,7 +28,7 @@ const DIRECTIVE: &str = "math";
 
 /// The options `.. math::` recognizes.
 struct MathOptions {
-    label: Option<TargetName>,
+    label: Option<Written<TargetName>>,
     nowrap: bool,
     classes: Vec<String>,
 }
@@ -47,7 +47,7 @@ directive_options! {
     /// The options `.. math::` takes: Sphinx's five spellings.
     enum MathOption {
         /// `:label:`.
-        Label(TargetName) => (["label", "name"], "A label to reference the equation by, which numbers it."),
+        Label(Written<TargetName>) => (["label", "name"], "A label to reference the equation by, which numbers it."),
         /// `:nowrap:`.
         NoWrap => (["nowrap", "no-wrap"], Flag, "Leaves the LaTeX unwrapped, its environment written by the author."),
         /// `:class:`.
@@ -275,7 +275,10 @@ mod tests {
         let Directive::Math { label, parts, .. } = &directive else {
             panic!("expected a math directive");
         };
-        assert_eq!(label.as_ref(), Some(&TargetName::new("euler")));
+        assert_eq!(
+            label.as_ref().map(rinx_ast::Written::value),
+            Some(&TargetName::new("euler"))
+        );
         assert_eq!(parts, &vec!["a = b".to_string()]);
     }
 
@@ -289,7 +292,10 @@ mod tests {
         let Directive::Math { label, .. } = &directive else {
             panic!("expected a math directive");
         };
-        assert_eq!(label.as_ref(), Some(&TargetName::new("euler")));
+        assert_eq!(
+            label.as_ref().map(rinx_ast::Written::value),
+            Some(&TargetName::new("euler"))
+        );
     }
 
     #[test]

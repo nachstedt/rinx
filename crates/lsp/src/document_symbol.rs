@@ -231,7 +231,7 @@ impl Outline<'_> {
                 }
                 match self.placed(entity.span) {
                     Some(marker) => out.push(OutlineSymbol {
-                        name: entity.id.as_str().to_string(),
+                        name: entity.id.value().as_str().to_string(),
                         detail: Some(entity.type_name.clone()),
                         kind: SymbolKind::OBJECT,
                         range: self.block_range(marker),
@@ -555,7 +555,7 @@ API
         let text = "Reqs\n====\n\n.. req:: Boot\n   :id: REQ_1\n";
         let entity = EntityBody {
             type_name: "req".to_string(),
-            id: EntityId::new("REQ_1").unwrap(),
+            id: EntityId::new("REQ_1").unwrap().into(),
             attributes: BTreeMap::new(),
             relations: BTreeMap::new(),
             sections: vec![],
@@ -646,7 +646,7 @@ API
         // Given — a class the parser gave no span, holding an entity
         let entity = EntityBody {
             type_name: "req".to_string(),
-            id: EntityId::new("REQ_1").unwrap(),
+            id: EntityId::new("REQ_1").unwrap().into(),
             attributes: BTreeMap::new(),
             relations: BTreeMap::new(),
             sections: vec![],

@@ -4,6 +4,7 @@ use std::num::NonZeroUsize;
 
 use super::{NumberedDepth, ToctreeFlag};
 use crate::TargetName;
+use crate::written::Written;
 
 /// The nine options a `.. toctree::` accepts, each already interpreted.
 ///
@@ -29,7 +30,7 @@ pub struct ToctreeOptions {
     pub caption: Option<String>,
     /// `:name:` — a label making the toctree itself a `:ref:` target.
     #[serde(default)]
-    pub name: Option<TargetName>,
+    pub name: Option<Written<TargetName>>,
     /// The valueless options the author wrote.
     #[serde(default)]
     pub flags: BTreeSet<ToctreeFlag>,
@@ -102,7 +103,7 @@ mod tests {
             maxdepth: NonZeroUsize::new(2),
             numbered: Some(NumberedDepth::Unlimited),
             caption: Some("Contents".to_string()),
-            name: Some(TargetName::new("main-toc")),
+            name: Some(TargetName::new("main-toc").into()),
             flags: BTreeSet::new(),
         };
         for flag in ToctreeFlag::ALL {

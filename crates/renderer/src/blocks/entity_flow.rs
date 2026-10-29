@@ -11,6 +11,7 @@
 //! Everything visible on the page is [`super::diagram_figure`], shared with the
 //! written diagrams: a flowchart is a diagram, and should look like one.
 
+use rinx_ast::Written;
 use rinx_ast::{EntityFlow, HashedContent};
 use rinx_uml::{UmlContext, build_flow};
 
@@ -69,7 +70,7 @@ pub(super) fn render_entity_flow(html: &mut String, flow: &EntityFlow, ctx: &mut
             align: flow.align,
             width: flow.rendered_width(),
             caption: flow.caption.as_deref(),
-            name: flow.name.as_ref(),
+            name: flow.name.as_ref().map(Written::value),
             debug: flow.debug,
         },
         ctx,

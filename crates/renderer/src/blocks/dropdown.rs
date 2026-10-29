@@ -37,7 +37,7 @@ pub(super) fn render_dropdown(html: &mut String, dropdown: &Dropdown, ctx: &mut 
     let id_attr = dropdown.name.as_ref().map_or_else(String::new, |name| {
         format!(
             " id=\"{}\"",
-            html_escape::encode_double_quoted_attribute(name.as_str())
+            html_escape::encode_double_quoted_attribute(name.value().as_str())
         )
     });
 
@@ -409,7 +409,7 @@ mod tests {
     fn test_name_becomes_the_details_element_id() {
         // Given
         let dropdown = Dropdown {
-            name: Some(TargetName::new("My Dropdown")),
+            name: Some(TargetName::new("My Dropdown").into()),
             ..titled("Details")
         };
 

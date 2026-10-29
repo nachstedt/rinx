@@ -22,7 +22,7 @@ use crate::directives::spec::OptionValue;
 use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, EntityFlow, EntityFlowSource, FlowDirection, ImageAlign,
-    LengthOrPercentage, TargetName,
+    LengthOrPercentage, TargetName, Written,
 };
 use rinx_filter::Expr;
 
@@ -71,7 +71,7 @@ directive_options! {
         /// `:class:`.
         Class(Classes) => (["class"], "Classes for the chart."),
         /// `:name:`.
-        Name(TargetName) => (["name"], "A label to reference the chart by."),
+        Name(Written<TargetName>) => (["name"], "A label to reference the chart by."),
         _ => (["show_filters", "show-filters"], Flag, "Shows the filter below the chart.", "the filter is visible in the document source"),
         _ => (["show_legend", "show-legend"], Flag, "Draws a legend of the entity types.", "no legend is drawn"),
         _ => (["filter-func", "filter_func"], Text, "The entities drawn, by a Python function.", "write the selection as :filter:"),

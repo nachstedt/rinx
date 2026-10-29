@@ -705,7 +705,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Target {
-                name: TargetName::new("section-1"),
+                name: TargetName::new("section-1").into(),
                 destination: None,
                 span: None,
             }],
@@ -736,7 +736,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Target {
-                name: TargetName::new("google"),
+                name: TargetName::new("google").into(),
                 destination: Some(rinx_ast::LinkDestination::Uri(
                     "https://google.com".to_string(),
                 )),
@@ -884,7 +884,7 @@ mod tests {
                     span: None,
                 }]),
                 Node::Target {
-                    name: TargetName::new("Python"),
+                    name: TargetName::new("Python").into(),
                     destination: Some(rinx_ast::LinkDestination::Uri(
                         "https://python.org".to_string(),
                     )),
@@ -915,7 +915,7 @@ mod tests {
                         span: None,
                     }]),
                     Node::Target {
-                        name: TargetName::new("Python Packaging User Guide"),
+                        name: TargetName::new("Python Packaging User Guide").into(),
                         destination: Some(rinx_ast::LinkDestination::Uri(url.to_string())),
                         span: None,
                     },

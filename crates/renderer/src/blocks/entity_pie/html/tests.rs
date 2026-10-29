@@ -178,7 +178,7 @@ fn test_the_caption_is_shown_under_the_chart() {
 fn test_the_name_becomes_the_wrappers_id_so_a_ref_lands_on_it() {
     // Given
     let mut pie = pie(&[r#"type == "req""#]);
-    pie.name = Some(TargetName::new("type-split"));
+    pie.name = Some(TargetName::new("type-split").into());
 
     // When
     let html = html_of(&pie);

@@ -78,7 +78,7 @@ fn find_section<'a>(sections: &'a [OutlineSection], id: &SectionId) -> Option<&'
 /// in the same document.
 fn resolve_anchor_id(contents: &Contents, title: &str, ctx: &mut RenderCtx<'_>) -> String {
     match &contents.options.name {
-        Some(name) => name.as_str().to_string(),
+        Some(name) => name.value().as_str().to_string(),
         None => ctx
             .contents_id_allocator
             .allocate(title)
@@ -651,7 +651,7 @@ mod tests {
             Node::Directive(Directive::Contents(Contents {
                 title: None,
                 options: ContentsOptions {
-                    name: Some(TargetName::new("main-toc")),
+                    name: Some(TargetName::new("main-toc").into()),
                     ..ContentsOptions::default()
                 },
             })),

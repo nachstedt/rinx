@@ -147,7 +147,7 @@ fn test_presentation_options_are_read() {
     assert_eq!(sequence.align, Some(ImageAlign::Left));
     assert_eq!(sequence.rendered_width().unwrap().to_string(), "200px");
     assert_eq!(sequence.classes, ["wide", "tall"]);
-    assert_eq!(sequence.name.unwrap().as_str(), "boot-sequence");
+    assert_eq!(sequence.name.unwrap().value().as_str(), "boot-sequence");
     assert!(codes(rst).is_empty(), "{:?}", codes(rst));
 }
 

@@ -14,7 +14,7 @@
 //! caller stores the value where its own node keeps it.
 
 use rinx_ast::{
-    ChartColor, Diagnostic, DiagnosticCode, ImageAlign, LengthOrPercentage, TargetName,
+    ChartColor, Diagnostic, DiagnosticCode, ImageAlign, LengthOrPercentage, TargetName, Written,
 };
 
 use crate::context::ParseCtx;
@@ -55,7 +55,7 @@ pub(in crate::directives) enum FigureOption {
     Scale(u32),
     Width(LengthOrPercentage),
     Classes(Vec<String>),
-    Name(TargetName),
+    Name(Written<TargetName>),
 }
 
 directive_options! {
@@ -134,7 +134,10 @@ pub(in crate::directives) fn read_figure_option(
                 report_missing_value(line, owner.directive, diagnostics, ctx);
                 None
             } else {
-                Some(FigureOption::Name(TargetName::new(&line.value)))
+                Some(FigureOption::Name(Written::new(
+                    TargetName::new(&line.value),
+                    line.value_span(ctx),
+                )))
             }
         }
     }

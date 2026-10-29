@@ -315,7 +315,7 @@ fn test_the_presentation_options_are_read() {
     );
     assert_eq!(pie.classes, ["wide", "framed"]);
     assert_eq!(
-        pie.name.as_ref().map(rinx_ast::TargetName::as_str),
+        pie.name.as_ref().map(|name| name.value().as_str()),
         Some("type-split")
     );
     assert!(codes(rst).is_empty(), "{:?}", codes(rst));

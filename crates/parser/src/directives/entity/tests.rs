@@ -144,7 +144,7 @@ fn test_parses_an_entity_with_every_kind_of_declaration() {
 
     // Then
     assert_eq!(entity.type_name, "req");
-    assert_eq!(entity.id.as_str(), "REQ_001");
+    assert_eq!(entity.id.value().as_str(), "REQ_001");
     assert_eq!(
         entity.attributes["title"],
         AttributeValue::String("The system shall boot".to_string())
@@ -202,7 +202,7 @@ fn test_an_id_is_derived_from_the_named_attributes() {
     let entity = parse_entity_of(rst);
 
     // Then
-    assert_eq!(entity.id.as_str(), "os.system");
+    assert_eq!(entity.id.value().as_str(), "os.system");
 }
 
 #[test]
@@ -215,10 +215,39 @@ fn test_a_generated_id_carries_the_declared_prefix() {
 
     // Then
     assert!(
-        entity.id.as_str().starts_with("REQ_req-"),
+        entity.id.value().as_str().starts_with("REQ_req-"),
         "unexpected id {}",
-        entity.id
+        entity.id.value()
     );
+}
+
+#[test]
+fn test_a_written_id_records_where_its_value_stands() {
+    // Given
+    let rst = ".. req:: Boot\n   :id:   REQ_001\n";
+
+    // When
+    let entity = parse_entity_of(rst);
+
+    // Then — the value alone, past the blanks after `:id:`
+    assert_eq!(
+        entity.id.span(),
+        Some(rinx_ast::Span::new(
+            rinx_ast::Position::new(2, 11),
+            rinx_ast::Position::new(2, 18)
+        ))
+    );
+}
+
+#[test]
+fn test_a_derived_or_generated_id_has_no_span() {
+    // Given — one composed from the argument, one generated
+    let derived = parse_entity_of(".. audit-event:: os.system, command, 3.8\n");
+    let generated = parse_entity_of(".. req:: Boot\n   :owner: platform\n");
+
+    // When / Then
+    assert_eq!(derived.id.span(), None);
+    assert_eq!(generated.id.span(), None);
 }
 
 #[test]
@@ -587,7 +616,10 @@ fn test_an_explicit_id_outside_the_pattern_is_diagnosed_on_its_line_and_kept() {
         .find(|d| d.code == rinx_ast::DiagnosticCode::EntityIdPatternMismatch)
         .expect("the mismatch is reported");
     assert_eq!(diagnostic.span.unwrap().start.line, 3);
-    assert_eq!(first_entity(&doc.nodes).unwrap().id.as_str(), "RISK_1");
+    assert_eq!(
+        first_entity(&doc.nodes).unwrap().id.value().as_str(),
+        "RISK_1"
+    );
 }
 
 #[test]
@@ -745,7 +777,7 @@ fn test_a_diagram_in_an_entity_body_records_the_entity_it_sits_in() {
 
     // Then — the diagram names the very entity it was written in, whatever
     // that entity's id turned out to be
-    assert_eq!(uml.entity.as_ref(), Some(&entity.id));
+    assert_eq!(uml.entity.as_ref(), Some(entity.id.value()));
 }
 
 #[test]

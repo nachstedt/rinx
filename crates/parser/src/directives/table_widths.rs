@@ -68,6 +68,7 @@ mod tests {
             value: value.to_string(),
             raw: format!(":widths: {value}"),
             line_index: 0,
+            continued: false,
         }
     }
 

@@ -10,7 +10,7 @@ use rinx_ast::{
     GlossaryEntry, GlossaryTerm, InlineNode, LinkDestination, ModuleOptions, NonEmptyVector,
     ObjectType, Position, PyObjectType, SectionId, Span, TableSource,
 };
-use rinx_index::{DefinitionKey, DefinitionSite, DefinitionSites};
+use rinx_index::{DefinitionKey, DefinitionSite, DefinitionSites, NameRange};
 
 /// A span on `line` of the document itself, `columns` characters wide.
 fn span_at(line: u32, columns: u32) -> Span {
@@ -23,6 +23,7 @@ fn site_at(line: u32, columns: u32) -> DefinitionSite {
         file: None,
         start: Position::new(line, 1),
         end: Position::new(line, columns + 1),
+        name: None,
     }
 }
 
@@ -40,7 +41,7 @@ fn heading(level: u8, title: &str, span: Option<Span>) -> Node {
 
 fn label(name: &str, span: Option<Span>) -> Node {
     Node::Target {
-        name: TargetName::new(name),
+        name: TargetName::new(name).into(),
         destination: None,
         span,
     }
@@ -73,7 +74,7 @@ fn test_analyze_with_sites_records_an_internal_target_but_not_an_external_one() 
     let sites = sites_of(vec![
         label("install", Some(span_at(3, 13))),
         Node::Target {
-            name: TargetName::new("home"),
+            name: TargetName::new("home").into(),
             destination: Some(LinkDestination::Uri("https://example.org".to_string())),
             span: Some(span_at(5, 30)),
         },
@@ -219,7 +220,7 @@ fn test_analyze_with_sites_records_a_tables_name_as_a_label() {
         width: None,
         align: None,
         classes: vec![],
-        name: Some(TargetName::new("sizes")),
+        name: Some(TargetName::new("sizes").into()),
         rows: vec![],
         span: Some(span_at(2, 18)),
     })]);
@@ -236,7 +237,7 @@ fn test_analyze_with_sites_records_an_entity_by_its_id_and_as_a_label() {
     // Given
     let entity = EntityBody {
         type_name: "req".to_string(),
-        id: EntityId::new("REQ_001").unwrap(),
+        id: EntityId::new("REQ_001").unwrap().into(),
         attributes: BTreeMap::from([(
             "title".to_string(),
             AttributeValue::String("Boot quickly".to_string()),
@@ -264,7 +265,7 @@ fn test_analyze_with_sites_records_an_equations_label() {
     // When
     let sites = sites_of(vec![Node::Directive(Directive::Math {
         parts: vec!["e = mc^2".to_string()],
-        label: Some(TargetName::new("energy")),
+        label: Some(TargetName::new("energy").into()),
         nowrap: false,
         classes: vec![],
         span: Some(span_at(4, 9)),
@@ -297,6 +298,116 @@ fn test_analyze_with_sites_names_the_fragment_a_definition_was_included_from() {
             file: Some("shared/install.rst".to_string()),
             ..site_at(2, 12)
         })
+    );
+}
+
+/// `name` written at columns `start` to `end` of `line`.
+fn written_at(name: &str, line: u32, start: u32, end: u32) -> Written<TargetName> {
+    Written::new(
+        TargetName::new(name),
+        Some(Span::new(
+            Position::new(line, start),
+            Position::new(line, end),
+        )),
+    )
+}
+
+#[test]
+fn test_analyze_with_sites_records_where_a_labels_name_was_written() {
+    // Given — `.. _install:`, the name in columns 5 to 11
+    let target = Node::Target {
+        name: written_at("install", 3, 5, 12),
+        destination: None,
+        span: Some(span_at(3, 12)),
+    };
+
+    // When
+    let sites = sites_of(vec![target]);
+
+    // Then
+    assert_eq!(
+        sites.get(&DefinitionKey::Label(TargetName::new("install"))),
+        Some(&DefinitionSite {
+            name: Some(NameRange {
+                start: Position::new(3, 5),
+                end: Position::new(3, 12),
+            }),
+            ..site_at(3, 12)
+        })
+    );
+}
+
+#[test]
+fn test_analyze_with_sites_places_a_name_no_directive_span_holds_at_the_name() {
+    // Given — a toctree's and a table of contents' `:name:`, the parser
+    // giving neither directive a span of its own
+    let mut toctree = rinx_ast::Toctree::default();
+    toctree.options.name = Some(written_at("tree", 2, 11, 15));
+    let mut contents = rinx_ast::Contents::default();
+    contents.options.name = Some(written_at("toc", 6, 11, 14));
+
+    // When
+    let sites = sites_of(vec![
+        Node::Directive(Directive::Toctree(toctree)),
+        Node::Directive(Directive::Contents(contents)),
+    ]);
+
+    // Then
+    let at_name = |line, start, end| DefinitionSite {
+        file: None,
+        start: Position::new(line, start),
+        end: Position::new(line, end),
+        name: Some(NameRange {
+            start: Position::new(line, start),
+            end: Position::new(line, end),
+        }),
+    };
+    assert_eq!(
+        sites.get(&DefinitionKey::Label(TargetName::new("tree"))),
+        Some(&at_name(2, 11, 15))
+    );
+    assert_eq!(
+        sites.get(&DefinitionKey::Label(TargetName::new("toc"))),
+        Some(&at_name(6, 11, 14))
+    );
+}
+
+#[test]
+fn test_analyze_with_sites_records_where_a_written_entity_id_stands() {
+    // Given — `:id: REQ_001` on the entity's second line
+    let entity = EntityBody {
+        type_name: "req".to_string(),
+        id: Written::new(
+            EntityId::new("REQ_001").unwrap(),
+            Some(Span::new(Position::new(8, 9), Position::new(8, 16))),
+        ),
+        attributes: BTreeMap::new(),
+        relations: BTreeMap::new(),
+        sections: vec![],
+        span: Some(span_at(7, 20)),
+        relation_spans: BTreeMap::new(),
+    };
+
+    // When
+    let sites = sites_of(vec![Node::Directive(Directive::Entity(Box::new(entity)))]);
+
+    // Then — as the entity and as its label
+    let name = Some(NameRange {
+        start: Position::new(8, 9),
+        end: Position::new(8, 16),
+    });
+    let id = EntityId::new("REQ_001").unwrap();
+    assert_eq!(
+        sites
+            .get(&DefinitionKey::Entity(id))
+            .and_then(|site| site.name),
+        name
+    );
+    assert_eq!(
+        sites
+            .get(&DefinitionKey::Label(TargetName::new("REQ_001")))
+            .and_then(|site| site.name),
+        name
     );
 }
 

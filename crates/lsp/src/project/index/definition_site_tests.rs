@@ -130,7 +130,7 @@ fn with_fragment() -> Project {
     let mut document = rinx_parser::parse("guide.rst", ".. _own:\n\nText.\n");
     let fragment = document.intern_source_file("/work/docs/shared/setup.rst");
     document.nodes.push(rinx_ast::Node::Target {
-        name: TargetName::new("setup"),
+        name: TargetName::new("setup").into(),
         destination: None,
         span: Some(
             rinx_ast::Span::new(Position::new(2, 1), Position::new(2, 11))
