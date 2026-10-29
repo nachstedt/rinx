@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Using Python on Android — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python Setup and Usage</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python Setup and Usage"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="cmdline.html"><span class="section-number">1. </span>Command line and environment</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html"><span class="section-number">2. </span>Using Python on Unix platforms</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="configure.html"><span class="section-number">3. </span>Configure Python</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html"><span class="section-number">4. </span>Using Python on Windows</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mac.html"><span class="section-number">5. </span>Using Python on macOS</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="android.html"><span class="section-number">6. </span>Using Python on Android</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Using Python on Android"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="android.html#adding-python-to-an-android-app"><span class="section-number">6.1. </span>Adding Python to an Android app</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="android.html#building-a-python-package-for-android"><span class="section-number">6.2. </span>Building a Python package for Android</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ios.html"><span class="section-number">7. </span>Using Python on iOS</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="editors.html"><span class="section-number">8. </span>Editors and IDEs</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="mac.html">&larr; Using Python on macOS</a>
+        <a class="next" href="ios.html">Using Python on iOS &rarr;</a>
+      </nav>
+      
+      <a id="using-android"></a>
+<h1 id="using-python-on-android"><span class="section-number">6. </span>Using Python on Android</h1>
+<p>Python on Android is unlike Python on desktop platforms. On a desktop platform,
+Python is generally installed as a system resource that can be used by any user
+of that computer. Users then interact with Python by running a <strong class="program">python</strong>
+executable and entering commands at an interactive prompt, or by running a
+Python script.</p>
+<p>On Android, there is no concept of installing as a system resource. The only unit
+of software distribution is an "app". There is also no console where you could
+run a <strong class="program">python</strong> executable, or interact with a Python REPL.</p>
+<p>As a result, the only way you can use Python on Android is in embedded mode – that
+is, by writing a native Android application, embedding a Python interpreter
+using <code>libpython</code>, and invoking Python code using the <a href="../extending/embedding.html#embedding">Python embedding
+API</a>. The full Python interpreter, the standard library, and all
+your Python code is then packaged into your app for its own private use.</p>
+<p>The Python standard library has some notable omissions and restrictions on
+Android. See the <a href="../library/intro.html#mobile-availability">API availability guide</a> for
+details.</p>
+<h2 id="adding-python-to-an-android-app"><span class="section-number">6.1. </span>Adding Python to an Android app</h2>
+<p>Most app developers should use one of the following tools, which will provide a
+much easier experience:</p>
+<ul>
+<li><p><a href="https://briefcase.readthedocs.io">Briefcase</a>, from the BeeWare project</p>
+</li>
+<li><p><a href="https://buildozer.readthedocs.io">Buildozer</a>, from the Kivy project</p>
+</li>
+<li><p><a href="https://chaquo.com/chaquopy">Chaquopy</a></p>
+</li>
+<li><p><a href="https://www.riverbankcomputing.com/static/Docs/pyqtdeploy/">pyqtdeploy</a></p>
+</li>
+<li><p><a href="https://termux.dev/en/">Termux</a></p>
+</li>
+</ul>
+<p>If you're sure you want to do all of this manually, read on. You can use the
+:source:`testbed app &lt;Android/testbed&gt;` as a guide; each step below contains a
+link to the relevant file.</p>
+<ul>
+<li><p>First, acquire a build of Python for Android:</p>
+<ul>
+<li><p>The easiest way is to download an Android release from <a href="https://www.python.org/downloads/android/">python.org</a>. The <code>prefix</code> directory
+mentioned below is at the top level of the package.</p>
+</li>
+<li><p>Or if you want to build it yourself, follow the instructions in
+:source:`Android/README.md`. The <code>prefix</code> directory will be created under
+:samp:`cross-build/{HOST}`.</p>
+</li>
+</ul>
+</li>
+<li><p>Add code to your :source:`build.gradle &lt;Android/testbed/app/build.gradle.kts&gt;`
+file to copy the following items into your project. All except your own Python
+code can be copied from <code>prefix/lib</code>:</p>
+<ul>
+<li><p>In your JNI libraries:</p>
+<ul>
+<li><p><code>libpython*.*.so</code></p>
+</li>
+<li><p><code>lib*_python.so</code> (external libraries such as OpenSSL)</p>
+</li>
+</ul>
+</li>
+<li><p>In your assets:</p>
+<ul>
+<li><p><code>python*.*</code> (the Python standard library)</p>
+</li>
+<li><p><code>python*.*/site-packages</code> (your own Python code)</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Add code to your app to :source:`extract the assets to the filesystem
+&lt;Android/testbed/app/src/main/java/org/python/testbed/MainActivity.kt&gt;`.</p>
+</li>
+<li><p>Add code to your app to :source:`start Python in embedded mode
+&lt;Android/testbed/app/src/main/c/main_activity.c&gt;`. This will need to be C code
+called via JNI.</p>
+</li>
+</ul>
+<h2 id="building-a-python-package-for-android"><span class="section-number">6.2. </span>Building a Python package for Android</h2>
+<p>Python packages can be built for Android as wheels and released on PyPI. The
+recommended tool for doing this is <a href="https://cibuildwheel.pypa.io/en/stable/platforms/#android">cibuildwheel</a>, which automates
+all the details of setting up a cross-compilation environment, building the
+wheel, and testing it on an emulator.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="mac.html">&larr; Using Python on macOS</a>
+        <a class="next" href="ios.html">Using Python on iOS &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
