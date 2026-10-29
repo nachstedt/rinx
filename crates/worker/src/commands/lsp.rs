@@ -4,8 +4,9 @@
 //! `conf.py` the server could not read exactly, as an editor allowed to
 //! would, each `--manifest <file>` reads a Bazel site from the manifest
 //! its `lsp_manifest` output group wrote, as the VS Code extension builds,
-//! and each `--preview <document>` times that document's preview after an
-//! edit.
+//! each `--preview <document>` times that document's preview after an
+//! edit, and each `--references <document>:<line>:<column>` the references
+//! found there.
 //!
 //! The server itself is the `rinx_lsp` crate, whose handlers are already
 //! pure; what is left here is the one decision the command line makes —
@@ -14,7 +15,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
-use rinx_lsp::CheckOptions;
+use rinx_lsp::{CheckOptions, ReferencesAt};
 
 /// What `rinx lsp` was asked to do.
 #[derive(Debug, PartialEq, Eq)]
@@ -34,8 +35,8 @@ enum LspMode {
 /// Accepts `--stdio`, which clients such as `vscode-languageclient` append
 /// when told the transport, and which names the only one this server has, or
 /// `--check <folder>`, followed by any of `--python <exe>` (once),
-/// `--manifest <file>` (each a site) and `--preview <document>` (each
-/// timed). Anything else is refused rather than ignored, so a flag that a
+/// `--manifest <file>` (each a site), `--preview <document>` (each timed)
+/// and `--references <document>:<line>:<column>` (each timed). Anything else is refused rather than ignored, so a flag that a
 /// later version of the server would understand is not silently dropped by
 /// this one.
 fn read_lsp_args(args: &[String]) -> Result<LspMode> {
@@ -67,6 +68,7 @@ fn read_check_options(mut args: &[String]) -> Result<CheckOptions> {
                 "--python" => bail!("lsp: --python needs the interpreter to run conf.py in"),
                 "--manifest" => bail!("lsp: --manifest needs the manifest file to read"),
                 "--preview" => bail!("lsp: --preview needs the document to preview"),
+                "--references" => bail!("lsp: --references needs <document>:<line>:<column>"),
                 _ => bail!("lsp: unknown argument '{flag}' after --check"),
             }
         };
@@ -75,11 +77,31 @@ fn read_check_options(mut args: &[String]) -> Result<CheckOptions> {
             "--python" => bail!("lsp: --python is given twice"),
             "--manifest" => options.manifests.push(absolute(Path::new(value))?),
             "--preview" => options.previews.push(absolute(Path::new(value))?),
+            "--references" => options.references.push(read_place(value)?),
             _ => bail!("lsp: unknown argument '{flag}' after --check"),
         }
         args = rest;
     }
     Ok(options)
+}
+
+/// The place `<document>:<line>:<column>` names, its document absolute.
+fn read_place(value: &str) -> Result<ReferencesAt> {
+    let mut parts = value.rsplitn(3, ':');
+    let (Some(column), Some(line), Some(path)) = (parts.next(), parts.next(), parts.next()) else {
+        bail!("lsp: --references needs <document>:<line>:<column>, not '{value}'");
+    };
+    let number = |text: &str| {
+        text.parse::<u32>()
+            .ok()
+            .filter(|&number| number > 0)
+            .with_context(|| format!("lsp: '{text}' in '{value}' is no 1-based number"))
+    };
+    Ok(ReferencesAt {
+        path: absolute(Path::new(path))?,
+        line: number(line)?,
+        column: number(column)?,
+    })
 }
 
 /// `path`, made absolute against the working directory, as the server
@@ -223,6 +245,46 @@ mod tests {
 
         // Then
         assert!(error.to_string().contains("--preview needs"), "{error}");
+    }
+
+    #[test]
+    fn test_read_lsp_args_reads_each_place_to_find_references_at() {
+        // Given / When
+        let Ok(LspMode::Check { options, .. }) = read_lsp_args(&args(&[
+            "--check",
+            "Doc",
+            "--references",
+            "/doc/a.rst:12:5",
+        ])) else {
+            panic!("a check");
+        };
+
+        // Then
+        assert_eq!(
+            options.references,
+            [ReferencesAt {
+                path: PathBuf::from("/doc/a.rst"),
+                line: 12,
+                column: 5,
+            }]
+        );
+    }
+
+    #[test]
+    fn test_read_lsp_args_refuses_a_place_that_is_not_one() {
+        // Given / When
+        let bare = read_lsp_args(&args(&["--check", "Doc", "--references", "a.rst"])).unwrap_err();
+        let zero =
+            read_lsp_args(&args(&["--check", "Doc", "--references", "a.rst:0:1"])).unwrap_err();
+        let missing = read_lsp_args(&args(&["--check", "Doc", "--references"])).unwrap_err();
+
+        // Then
+        assert!(bare.to_string().contains("<line>:<column>"), "{bare}");
+        assert!(zero.to_string().contains("1-based"), "{zero}");
+        assert!(
+            missing.to_string().contains("--references needs"),
+            "{missing}"
+        );
     }
 
     #[test]

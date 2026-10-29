@@ -25,6 +25,7 @@ mod inventories;
 mod model;
 mod needs;
 mod python_value;
+mod references;
 mod scan;
 mod sphinx_conf;
 mod strictness;
@@ -48,6 +49,7 @@ pub use model::{LibraryModel, Listing, ProjectSettings};
 pub use model::{
     Membership, PageFile, ParseSettings, Presentation, ProjectModel, ProjectSource, Splice,
 };
+pub use references::{UseSite, UseTarget, relation_id_columns};
 pub use scan::{ScannedProject, scan_projects};
 #[cfg(test)]
 pub use scan::{parse_project_documents, scan_folder};

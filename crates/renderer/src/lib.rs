@@ -38,6 +38,7 @@ mod resolution;
 #[cfg(test)]
 mod test_support;
 mod uml_error;
+mod written_reference;
 
 pub use blocks::{EntityTemplates, load_entity_templates};
 pub use broken_link::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
@@ -55,6 +56,7 @@ pub use page_assets::{DiagramPictures, ImageLocator, PageAssets};
 pub use reference_target::{Destination, ReferenceResolver, ReferenceTarget};
 pub use resolution::{InventoryEntryTypes, inventory_entry_types};
 pub use uml_error::{DiagramError, DiagramFailure};
+pub use written_reference::{UseResolver, WrittenUse, written_uses};
 
 use rinx_ast::HashedContent;
 

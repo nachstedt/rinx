@@ -52,6 +52,16 @@ impl<'a> Numbering<'a> {
         }
     }
 
+    /// Reads `config`'s settings for a resolver holding no page, which
+    /// numbers no caption of its own — all a `:numref:` elsewhere needs.
+    pub(crate) fn without_captions(config: &'a SiteConfig) -> Self {
+        Self {
+            enabled: config.numfig,
+            formats: &config.numfig_format,
+            captions: HashMap::new(),
+        }
+    }
+
     /// Whether `numfig` is on for this site.
     pub(crate) const fn is_enabled(&self) -> bool {
         self.enabled
@@ -147,6 +157,24 @@ mod tests {
 
         // Then
         assert!(!numbering.is_enabled());
+        assert_eq!(numbering.caption_number(directive(&doc.nodes[2])), None);
+    }
+
+    #[test]
+    fn test_without_captions_keeps_the_settings_and_numbers_no_caption() {
+        // Given
+        let (doc, _) = page();
+        let config = SiteConfig {
+            numfig: true,
+            ..SiteConfig::default()
+        };
+
+        // When
+        let numbering = Numbering::without_captions(&config);
+
+        // Then
+        assert!(numbering.is_enabled());
+        assert_eq!(numbering.formats(), &config.numfig_format);
         assert_eq!(numbering.caption_number(directive(&doc.nodes[2])), None);
     }
 

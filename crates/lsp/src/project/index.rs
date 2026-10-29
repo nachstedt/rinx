@@ -33,6 +33,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
+use rayon::prelude::*;
 use rinx_analyzer::{DocumentAnalysis, build_project_index_from_analyses};
 use rinx_ast::{Diagnostic, Document, Position};
 use rinx_index::{DefinitionKey, ExternalInventory, ProjectIndex};
@@ -41,6 +42,7 @@ use rinx_renderer::config::SiteConfig;
 use super::discover::DiscoveredProject;
 use super::inventories::{Fetched, ProjectInventories};
 use super::model::{DEFAULT_ROOT_DOC, ProjectModel, ProjectSource, RST_SUFFIX};
+use super::references::{DocumentUses, Resolution, UseSite, UseTarget, resolve_uses};
 use super::strictness::Strictness;
 use crate::files::reads_at_or_under;
 
@@ -57,6 +59,8 @@ pub struct IndexedDocument {
     /// Every file the document's latest parse read, so an edit to one of
     /// them re-analyses the document.
     pub reads: BTreeSet<PathBuf>,
+    /// What the document wrote that uses a definition, which no fold reads.
+    pub uses: DocumentUses,
 }
 
 impl IndexedDocument {
@@ -68,6 +72,7 @@ impl IndexedDocument {
             path,
             analysis: DocumentAnalysis::of(document),
             reads,
+            uses: DocumentUses::of(document),
         }
     }
 }
@@ -110,6 +115,30 @@ impl Definitions<'_> {
             start: site.start,
             end: site.end,
         })
+    }
+
+    /// The definition the document `doc_path` wrote at `position` in its own
+    /// text, by its latest analysis — a label's line, a heading, a term, an
+    /// object's or an entity's marker. An entity, which is a label too, is
+    /// preferred to its label, since every reference to it names the entity,
+    /// and a section is the last resort, since none names a section. `None`
+    /// where it wrote none.
+    #[must_use]
+    pub fn at(&self, doc_path: &str, position: Position) -> Option<DefinitionKey> {
+        self.documents
+            .get(doc_path)?
+            .analysis
+            .definition_sites()
+            .iter()
+            .filter(|(_, site)| {
+                site.file.is_none() && site.start <= position && position < site.end
+            })
+            .min_by_key(|(key, _)| match key {
+                DefinitionKey::Entity(_) => 0,
+                DefinitionKey::Section(_) => 2,
+                _ => 1,
+            })
+            .map(|(key, _)| key.clone())
     }
 
     /// The fragment the document `doc_path` wrote the definition `key` in,
@@ -168,6 +197,9 @@ pub struct Project {
     external: Vec<ExternalInventory>,
     /// The model's strictness, knowing which inventories are not loaded.
     strictness: Strictness,
+    /// What each document's uses resolved to against `fold`, for the
+    /// documents asked about since it or they last changed.
+    uses: BTreeMap<String, Vec<(UseTarget, UseSite)>>,
 }
 
 impl Project {
@@ -202,6 +234,7 @@ impl Project {
             generation: 0,
             forgotten: BTreeSet::new(),
             scanned: false,
+            uses: BTreeMap::new(),
         }
     }
 
@@ -351,6 +384,7 @@ impl Project {
                 && recorded.reads == indexed.reads
                 && recorded.analysis.folds_like(&indexed.analysis)
         });
+        self.uses.remove(&doc_path);
         self.documents.insert(doc_path, indexed);
         if !folds_alike {
             self.invalidate();
@@ -418,6 +452,7 @@ impl Project {
         if let Some(fold) = self.fold.take() {
             self.external = fold.index.external_inventories;
         }
+        self.uses.clear();
         self.generation += 1;
     }
 
@@ -495,6 +530,54 @@ impl Project {
         (&fold.index, definitions)
     }
 
+    /// Where the project's documents use `target`, by their latest analyses,
+    /// resolved against the project's index as their pages would resolve
+    /// them: in document order, one document after another.
+    ///
+    /// What a document's uses resolved to is kept until the index changes or
+    /// the document does, so asking again after an edit to prose resolves
+    /// that one document's uses alone.
+    pub fn uses_of(&mut self, target: &UseTarget) -> Vec<UseSite> {
+        self.resolve_uses();
+        self.uses
+            .values()
+            .flatten()
+            .filter(|(used, _)| used == target)
+            .map(|(_, site)| site.clone())
+            .collect()
+    }
+
+    /// Resolves the uses of every document whose resolution is not kept, in
+    /// parallel.
+    fn resolve_uses(&mut self) {
+        let root_doc = self.root_doc().to_string();
+        let config = self.site_config();
+        let fold = fold_documents(
+            &mut self.fold,
+            &self.documents,
+            &self.model,
+            &mut self.external,
+            &root_doc,
+        );
+        let resolution = Resolution {
+            index: &fold.index,
+            config: &config,
+            schema: &self.model.settings.parse.schema,
+            source_root: &self.model.source_root,
+        };
+        let kept = &self.uses;
+        let resolved: Vec<(String, Vec<(UseTarget, UseSite)>)> = self
+            .documents
+            .par_iter()
+            .filter(|(doc_path, _)| !kept.contains_key(*doc_path))
+            .map(|(doc_path, indexed)| {
+                let uses = resolve_uses(doc_path, &indexed.path, &indexed.uses, &resolution);
+                (doc_path.clone(), uses)
+            })
+            .collect();
+        self.uses.extend(resolved);
+    }
+
     /// What folding the project's documents found about the document
     /// `doc_path` — the build's `index` warnings about it, before any
     /// `.. noqa:` is applied.
@@ -565,5 +648,7 @@ mod fold_tests;
 mod inventory_tests;
 #[cfg(test)]
 mod naming_tests;
+#[cfg(test)]
+mod references_tests;
 #[cfg(test)]
 mod test_support;

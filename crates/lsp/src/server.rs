@@ -60,6 +60,8 @@ mod project_tests;
 #[cfg(test)]
 mod property_tests;
 #[cfg(test)]
+mod references_tests;
+#[cfg(test)]
 mod render_tests;
 #[cfg(test)]
 mod session_tests;
@@ -72,5 +74,5 @@ mod watch_tests;
 #[cfg(test)]
 mod workspace_tests;
 
-pub use check::{CheckOptions, FolderCheck, check_folder};
+pub use check::{CheckOptions, FolderCheck, ReferencesAt, check_folder};
 pub use run::run;
