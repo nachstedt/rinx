@@ -5,8 +5,9 @@
 //! would, each `--manifest <file>` reads a Bazel site from the manifest
 //! its `lsp_manifest` output group wrote, as the VS Code extension builds,
 //! each `--preview <document>` times that document's preview after an
-//! edit, and each `--references <document>:<line>:<column>` the references
-//! found there.
+//! edit, each `--references <document>:<line>:<column>` the references
+//! found there, and each `--rename <document>:<line>:<column>=<name>` the
+//! rename of what is named there.
 //!
 //! The server itself is the `rinx_lsp` crate, whose handlers are already
 //! pure; what is left here is the one decision the command line makes —
@@ -36,7 +37,9 @@ enum LspMode {
 /// when told the transport, and which names the only one this server has, or
 /// `--check <folder>`, followed by any of `--python <exe>` (once),
 /// `--manifest <file>` (each a site), `--preview <document>` (each timed)
-/// and `--references <document>:<line>:<column>` (each timed). Anything else is refused rather than ignored, so a flag that a
+/// `--references <document>:<line>:<column>` and
+/// `--rename <document>:<line>:<column>=<name>` (each timed). Anything else
+/// is refused rather than ignored, so a flag that a
 /// later version of the server would understand is not silently dropped by
 /// this one.
 fn read_lsp_args(args: &[String]) -> Result<LspMode> {
@@ -69,6 +72,7 @@ fn read_check_options(mut args: &[String]) -> Result<CheckOptions> {
                 "--manifest" => bail!("lsp: --manifest needs the manifest file to read"),
                 "--preview" => bail!("lsp: --preview needs the document to preview"),
                 "--references" => bail!("lsp: --references needs <document>:<line>:<column>"),
+                "--rename" => bail!("lsp: --rename needs <document>:<line>:<column>=<name>"),
                 _ => bail!("lsp: unknown argument '{flag}' after --check"),
             }
         };
@@ -77,7 +81,8 @@ fn read_check_options(mut args: &[String]) -> Result<CheckOptions> {
             "--python" => bail!("lsp: --python is given twice"),
             "--manifest" => options.manifests.push(absolute(Path::new(value))?),
             "--preview" => options.previews.push(absolute(Path::new(value))?),
-            "--references" => options.references.push(read_place(value)?),
+            "--references" => options.references.push(read_place("--references", value)?),
+            "--rename" => options.renames.push(read_rename(value)?),
             _ => bail!("lsp: unknown argument '{flag}' after --check"),
         }
         args = rest;
@@ -85,11 +90,21 @@ fn read_check_options(mut args: &[String]) -> Result<CheckOptions> {
     Ok(options)
 }
 
-/// The place `<document>:<line>:<column>` names, its document absolute.
-fn read_place(value: &str) -> Result<ReferencesAt> {
+/// The rename `<document>:<line>:<column>=<name>` asks for: the place, and
+/// the name after the last `=`.
+fn read_rename(value: &str) -> Result<(ReferencesAt, String)> {
+    let Some((place, name)) = value.rsplit_once('=') else {
+        bail!("lsp: --rename needs <document>:<line>:<column>=<name>, not '{value}'");
+    };
+    Ok((read_place("--rename", place)?, name.to_string()))
+}
+
+/// The place `<document>:<line>:<column>` names, its document absolute — the
+/// value of `flag`.
+fn read_place(flag: &str, value: &str) -> Result<ReferencesAt> {
     let mut parts = value.rsplitn(3, ':');
     let (Some(column), Some(line), Some(path)) = (parts.next(), parts.next(), parts.next()) else {
-        bail!("lsp: --references needs <document>:<line>:<column>, not '{value}'");
+        bail!("lsp: {flag} needs <document>:<line>:<column>, not '{value}'");
     };
     let number = |text: &str| {
         text.parse::<u32>()
@@ -285,6 +300,50 @@ mod tests {
             missing.to_string().contains("--references needs"),
             "{missing}"
         );
+    }
+
+    #[test]
+    fn test_read_lsp_args_reads_each_rename_with_its_new_name() {
+        // Given / When
+        let Ok(LspMode::Check { options, .. }) = read_lsp_args(&args(&[
+            "--check",
+            "Doc",
+            "--rename",
+            "/doc/a.rst:12:5=setup guide",
+        ])) else {
+            panic!("a check");
+        };
+
+        // Then
+        assert_eq!(
+            options.renames,
+            [(
+                ReferencesAt {
+                    path: PathBuf::from("/doc/a.rst"),
+                    line: 12,
+                    column: 5,
+                },
+                "setup guide".to_string()
+            )]
+        );
+    }
+
+    #[test]
+    fn test_read_lsp_args_refuses_a_rename_without_its_name_or_place() {
+        // Given / When
+        let nameless =
+            read_lsp_args(&args(&["--check", "Doc", "--rename", "a.rst:1:1"])).unwrap_err();
+        let placeless =
+            read_lsp_args(&args(&["--check", "Doc", "--rename", "a.rst=x"])).unwrap_err();
+        let missing = read_lsp_args(&args(&["--check", "Doc", "--rename"])).unwrap_err();
+
+        // Then
+        assert!(nameless.to_string().contains("=<name>"), "{nameless}");
+        assert!(
+            placeless.to_string().contains("--rename needs"),
+            "{placeless}"
+        );
+        assert!(missing.to_string().contains("--rename needs"), "{missing}");
     }
 
     #[test]

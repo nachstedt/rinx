@@ -29,7 +29,8 @@ fn install_lines(project: &mut Project) -> Vec<(String, u32)> {
         .map(|site| {
             let name = site
                 .path
-                .file_name()
+                .as_deref()
+                .and_then(Path::file_name)
                 .unwrap()
                 .to_string_lossy()
                 .into_owned();

@@ -16,7 +16,7 @@
 use std::path::{Path, PathBuf};
 
 use rinx_ast::{
-    Directive, Document, EntityId, FieldMutationMode, Node, Position, Span, walk_nodes,
+    Directive, Document, EntityId, FieldMutationMode, Node, Position, Span, TargetName, walk_nodes,
 };
 use rinx_entity::EntitySchema;
 use rinx_index::{DefinitionKey, ProjectIndex};
@@ -138,9 +138,15 @@ impl UseTarget {
         let Destination::Document { doc_path, .. } = &target.destination else {
             return None;
         };
+        // A label that is an entity's names the entity, as every other
+        // reference to it does: one definition, whichever way it is named.
+        let definition = match &target.entity {
+            Some(id) => Some(DefinitionKey::Entity(id.clone())),
+            None => target.definition.clone(),
+        };
         Some(Self {
             doc_path: doc_path.clone(),
-            definition: target.definition.clone(),
+            definition,
         })
     }
 }
@@ -148,15 +154,46 @@ impl UseTarget {
 /// Where one use was written.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UseSite {
-    /// The file: the using document's, or an `.. include::`d fragment's.
-    pub path: PathBuf,
+    /// The file: the using document's, or an `.. include::`d fragment's —
+    /// `None` for a `conf.py` project's prolog or epilog, which no file holds.
+    pub path: Option<PathBuf>,
     /// The use's first character.
     pub start: Position,
     /// Just past its last character.
     pub end: Position,
-    /// For an id in a relation option, which the span holds only the line
-    /// of: the id, to be found on that line.
-    pub entity: Option<EntityId>,
+    /// How it was written, which says where in it the name stands.
+    pub form: UseForm,
+}
+
+/// How a use was written, which says where within it the name it uses
+/// stands.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum UseForm {
+    /// A role, `` :ref:`Title <install>` ``: the target inside its
+    /// backquotes, after any explicit title.
+    Role,
+    /// A `.. toctree::` entry, which names a document.
+    TocEntry,
+    /// A named reference written as the name it holds, which reaches the
+    /// definition directly when that is the definition's name, and through
+    /// the aliases its page writes otherwise.
+    Named(TargetName),
+    /// One id among others on a relation option's line, which the span
+    /// holds only the line of.
+    RelationId(EntityId),
+    /// Exactly the name: an `.. entity-update::`'s argument.
+    Name,
+}
+
+impl UseForm {
+    /// How `written` was written.
+    fn of(written: &WrittenUse) -> Self {
+        match written {
+            WrittenUse::Reference { .. } => Self::Role,
+            WrittenUse::TocEntry { .. } => Self::TocEntry,
+            WrittenUse::NamedReference { chain, .. } => Self::Named(chain.first().clone()),
+        }
+    }
 }
 
 /// Everything one project's documents are resolved against.
@@ -182,12 +219,17 @@ pub(super) fn resolve_uses(
         resolution.config,
         resolution.schema,
     );
-    let site_of = |span: Span, entity: Option<EntityId>| {
+    let site_of = |span: Span, form: UseForm| {
+        let path = match span_path(span, path, uses, resolution.source_root) {
+            SpanFile::File(path) => Some(path),
+            SpanFile::Setting => None,
+            SpanFile::Unlisted => return None,
+        };
         Some(UseSite {
-            path: span_path(span, path, uses, resolution.source_root)?,
+            path,
             start: span.start,
             end: span.end,
-            entity,
+            form,
         })
     };
     let mut found: Vec<(UseTarget, UseSite)> = uses
@@ -198,7 +240,7 @@ pub(super) fn resolve_uses(
                 .targets(written)
                 .iter()
                 .filter_map(UseTarget::of)
-                .filter_map(|target| Some((target, site_of(written.span(), None)?)))
+                .filter_map(|target| Some((target, site_of(written.span(), UseForm::of(written))?)))
                 .collect::<Vec<_>>()
         })
         .collect();
@@ -214,7 +256,7 @@ pub(super) fn resolve_uses(
                 doc_path: record.doc_path.clone(),
                 definition: Some(DefinitionKey::Entity(id.clone())),
             };
-            if let Some(site) = site_of(relation.span, Some(id.clone())) {
+            if let Some(site) = site_of(relation.span, UseForm::RelationId(id.clone())) {
                 found.push((target, site));
             }
         }
@@ -229,24 +271,37 @@ pub(super) fn resolve_uses(
             doc_path: record.doc_path.clone(),
             definition: Some(DefinitionKey::Entity(id.clone())),
         };
-        if let Some(site) = site_of(*span, None) {
+        if let Some(site) = site_of(*span, UseForm::Name) {
             found.push((target, site));
         }
     }
     found
 }
 
+/// Which file a span counts its lines in.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum SpanFile {
+    /// The document's own file, or an `.. include::`d fragment's.
+    File(PathBuf),
+    /// A `conf.py` project's prolog or epilog, which no file holds.
+    Setting,
+    /// A file id the document does not list.
+    Unlisted,
+}
+
 /// The file `span` counts lines in: `path`, the document's own, or the
-/// fragment its file id names — `None` for one no file holds, a `conf.py`
-/// project's prolog or epilog.
-fn span_path(span: Span, path: &Path, uses: &DocumentUses, source_root: &Path) -> Option<PathBuf> {
+/// fragment its file id names.
+fn span_path(span: Span, path: &Path, uses: &DocumentUses, source_root: &Path) -> SpanFile {
     let Some(file) = span.file else {
-        return Some(path.to_path_buf());
+        return SpanFile::File(path.to_path_buf());
     };
-    let name = uses.files.get(file.index())?;
-    // The server's loader names a fragment by its absolute path, which
-    // joining keeps as it is.
-    (name != RST_PROLOG && name != RST_EPILOG).then(|| source_root.join(name))
+    match uses.files.get(file.index()) {
+        None => SpanFile::Unlisted,
+        Some(name) if name == RST_PROLOG || name == RST_EPILOG => SpanFile::Setting,
+        // The server's loader names a fragment by its absolute path, which
+        // joining keeps as it is.
+        Some(name) => SpanFile::File(source_root.join(name)),
+    }
 }
 
 /// The characters `id` takes on the relation option `line` — `:links: A, B`,
@@ -327,10 +382,10 @@ mod tests {
             vec![(
                 label("setup.rst", "install"),
                 UseSite {
-                    path: PathBuf::from("/project/index.rst"),
+                    path: Some(PathBuf::from("/project/index.rst")),
                     start: Position::new(1, 5),
                     end: Position::new(1, 19),
-                    entity: None,
+                    form: UseForm::Role,
                 }
             )]
         );
@@ -384,11 +439,11 @@ mod tests {
         let uses = resolved(&document, &index());
 
         // Then
-        assert_eq!(uses[0].1.path, PathBuf::from("/project/part.rst"));
+        assert_eq!(uses[0].1.path, Some(PathBuf::from("/project/part.rst")));
     }
 
     #[test]
-    fn test_span_path_is_none_for_a_prolog_no_file_holds() {
+    fn test_span_path_is_a_setting_for_a_prolog_no_file_holds() {
         // Given
         let uses = DocumentUses {
             files: vec![RST_PROLOG.to_string()],
@@ -405,7 +460,7 @@ mod tests {
                 &uses,
                 Path::new("/project")
             ),
-            None
+            SpanFile::Setting
         );
     }
 

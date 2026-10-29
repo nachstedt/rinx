@@ -8,6 +8,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'ert)
 (require 'eglot)
 (require 'flymake)
@@ -105,6 +106,35 @@ The workspace scan may still be running when it is first asked."
                                references)))
       ;; The use in index.rst, and the label, `.. _install:`, in target.rst.
       (should (equal referenced '("index.rst:7" "target.rst:0"))))))
+
+;; Each edit as FILE:LINE:CHARACTER=TEXT, from a rename's changes or its
+;; document changes, whichever the client announced; nothing is applied.
+(defun rinx-test--rename-edits (edit)
+  (let (edits)
+    (cl-loop for (uri text-edits) on (plist-get edit :changes) by #'cddr
+             do (seq-doseq (text-edit text-edits)
+                  (push (rinx-test--edit-string (substring (symbol-name uri) 1) text-edit) edits)))
+    (seq-doseq (change (plist-get edit :documentChanges))
+      (seq-doseq (text-edit (plist-get change :edits))
+        (push (rinx-test--edit-string
+               (plist-get (plist-get change :textDocument) :uri) text-edit)
+              edits)))
+    (sort edits #'string<)))
+
+(defun rinx-test--edit-string (uri text-edit)
+  (let ((start (plist-get (plist-get text-edit :range) :start)))
+    (format "%s:%d:%d=%s" (file-name-nondirectory uri)
+            (plist-get start :line) (plist-get start :character)
+            (plist-get text-edit :newText))))
+
+(ert-deftest rinx-eglot-renames-the-label-a-reference-leads-to ()
+  (rinx-test--with-index
+    (let ((edit (rinx-test--request
+                 :textDocument/rename
+                 (append (rinx-test--at 7 4) '(:newName "setup")))))
+      ;; The use in index.rst, and the label's name in target.rst.
+      (should (equal (rinx-test--rename-edits edit)
+                     '("index.rst:7:10=setup" "target.rst:0:4=setup"))))))
 
 (ert-deftest rinx-eglot-completes-the-label ()
   (rinx-test--with-index

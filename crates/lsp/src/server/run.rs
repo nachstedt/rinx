@@ -13,6 +13,7 @@ use serde::Deserialize;
 use super::bazel_manifests::ManifestSource;
 use super::conf_runs::ConfExecution;
 use super::handlers::{handle_notification, handle_request, initialize_result};
+use super::renames::EditShape;
 use super::scan::{ScanEvent, spawn_scan};
 use super::state::ServerState;
 use crate::completion::TextFormat;
@@ -53,6 +54,7 @@ pub fn run(connection: &Connection) -> Result<()> {
             supports_progress(&params.capabilities),
         )
         .with_definition_links(supports_definition_links(&params.capabilities))
+        .with_edit_shape(edit_shape(&params.capabilities))
         .with_outline_shape(outline_shape(&params.capabilities))
         .with_completion_format(completion_format(&params.capabilities))
         .with_completion_reopening(reopens_completion(&params))
@@ -226,6 +228,22 @@ fn supports_definition_links(capabilities: &ClientCapabilities) -> bool {
         .and_then(|text_document| text_document.definition.as_ref())
         .and_then(|definition| definition.link_support)
         .unwrap_or(false)
+}
+
+/// How the client takes a workspace edit: versioned per document when it
+/// announces document changes, else by URI.
+fn edit_shape(capabilities: &ClientCapabilities) -> EditShape {
+    let versioned = capabilities
+        .workspace
+        .as_ref()
+        .and_then(|workspace| workspace.workspace_edit.as_ref())
+        .and_then(|edit| edit.document_changes)
+        .unwrap_or(false);
+    if versioned {
+        EditShape::Versioned
+    } else {
+        EditShape::ByUri
+    }
 }
 
 /// How the client takes a document's outline: nested when it announces

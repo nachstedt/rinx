@@ -805,6 +805,101 @@ fn test_lsp_lists_every_use_of_the_label_a_reference_leads_to() {
 }
 
 #[test]
+fn test_lsp_prepares_and_renames_a_label_in_every_document_using_it() {
+    // Given — a client preparing its renames and taking document changes,
+    // over a folder whose `guide.rst`, never opened, uses the label
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_rename");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    std::fs::write(root.join("setup.rst"), "Intro.\n\n.. _install:\n\nText.\n").expect("write");
+    std::fs::write(root.join("guide.rst"), "First :ref:`install`.\n").expect("write");
+    let notes = format!("file://{}", root.join("notes.rst").display());
+    let mut server = Server::spawn();
+    let initialized = server.initialize_with(json!({
+        "capabilities": {
+            "textDocument": { "rename": { "prepareSupport": true } },
+            "workspace": { "workspaceEdit": { "documentChanges": true } },
+        },
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+    while !matches!(
+        server.receive(),
+        Message::Notification(notification)
+            if notification.method == "rinx/status" && notification.params["state"] == "ready"
+    ) {}
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": notes, "languageId": "restructuredtext", "version": 3,
+            "text": "See :ref:`Install`.\n",
+        }}),
+    );
+    server.published_until(&notes);
+    let mut answer = |id: i32, method: &str, params: serde_json::Value| {
+        server.request(id, method, params);
+        std::iter::from_fn(|| Some(server.receive()))
+            .find_map(|message| match message {
+                Message::Response(response) => Some(response),
+                _ => None,
+            })
+            .expect("an answer")
+    };
+
+    // When
+    let at = json!({ "textDocument": { "uri": notes }, "position": { "line": 0, "character": 8 } });
+    let prepared = answer(2, "textDocument/prepareRename", at.clone());
+    let mut rename = at;
+    rename["newName"] = json!("setup");
+    let renamed = answer(3, "textDocument/rename", rename);
+    let refused = answer(
+        4,
+        "textDocument/rename",
+        json!({
+            "textDocument": { "uri": notes },
+            "position": { "line": 0, "character": 8 },
+            "newName": "a:b",
+        }),
+    );
+
+    // Then
+    let capabilities = &initialized.response_result.expect("initialized")["capabilities"];
+    assert_eq!(
+        capabilities["renameProvider"],
+        json!({ "prepareProvider": true })
+    );
+    let line = |line: u32, start: u32, end: u32| {
+        json!({
+            "start": { "line": line, "character": start },
+            "end": { "line": line, "character": end },
+        })
+    };
+    assert_eq!(
+        prepared.response_result.expect("prepared"),
+        json!({ "range": line(0, 10, 17), "placeholder": "Install" })
+    );
+    let edit = |file: &str, version: serde_json::Value, range: serde_json::Value| {
+        json!({
+            "textDocument": {
+                "uri": format!("file://{}", root.join(file).display()),
+                "version": version,
+            },
+            "edits": [{ "range": range, "newText": "setup" }],
+        })
+    };
+    assert_eq!(
+        renamed.response_result.expect("renamed"),
+        json!({ "documentChanges": [
+            edit("guide.rst", json!(null), line(0, 12, 19)),
+            edit("notes.rst", json!(3), line(0, 10, 17)),
+            edit("setup.rst", json!(null), line(2, 4, 11)),
+        ]})
+    );
+    let error = refused.response_result.expect_err("refused");
+    assert_eq!(error.code, -32803);
+    assert!(error.message.contains("colon"), "{}", error.message);
+}
+
+#[test]
 fn test_lsp_outlines_an_open_document_nested_for_a_client_taking_it() {
     // Given — a client taking nested symbols, with a document open
     let root = std::env::temp_dir().join("rinx_lsp_stdio_outline");

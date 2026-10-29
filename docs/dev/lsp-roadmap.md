@@ -39,8 +39,9 @@ finished one 🔶. A heading with no marker means the step has not started.
   #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333),
   #40 (PR #335), #24 (PR #340) and #25 (PR #355, prepared by #343, #345,
   #348, #351 and #353), #26 (PRs #358 and #362, prepared by #357) and
-  #27 (PR #365, prepared by #363), #28 (PR #374), #29 (PR #378) and #30 (PR #386).
-- **Next: #31, rename.**
+  #27 (PR #365, prepared by #363), #28 (PR #374), #29 (PR #378), #30 (PR #386)
+  and #31 (prepared by #387 and #390).
+- **Next: #32, workspace symbols.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -1147,7 +1148,7 @@ Not done here:
 - An edit to a definition re-resolves every document's uses on the next
   request (#38).
 
-### 31. Rename
+### 31. Rename ✅ (prepared by #387 and #390)
 
 **You experience:** F2 renames a label or entity id across the workspace.
 
@@ -1155,6 +1156,57 @@ Not done here:
 - Rewrite the definition, all reference forms (explicit titles) and entity relation options
 - Refuse external or generated targets
 - Tests
+
+Two preparatory pull requests gave the server what a rewrite needs. In #387
+the parser records where each name was written, as `rinx_ast::Written<T>`: a
+label after `.. _`, every `:name:`, a `.. math::` `:label:`, an entity's
+`:id:`. The span is never serialized, so the `.ast` and `.index` are unchanged,
+and an entity id has one only when written as `:id:`. A toctree's or a
+`.. contents::`' `:name:` is sited at its name, closing #376. In #390 a named
+reference (`install_`, `` `text <install_>`_ ``, an alias target) became a use
+of the label its page defines, and an `.. entity-update::` naming an entity a
+use of it; Shift+F12 lists both.
+
+Rename asks what the cursor names as find-references does, and rewrites the
+definition's name and every use `Project::uses_of` lists. Labels, entities and
+equations are renamed (ADR-046). Each place is narrowed to the name's
+characters by how it was written (`UseForm`): a role's target inside its
+backquotes after any explicit title (`rinx_parser::role_target_range`, the
+parser's own split), an id on a relation line, a named reference's name, an
+exact name. Every place is then read, from the open buffer or the disk, and
+must still name the definition, or the whole rename is refused, naming the file
+and line. So a stale disk, a Jinja line or an escape never yields a partial
+rename. A named reference's text is its name, so it changes on the page too; a
+bare `install_` gains backquotes when the new name needs them, and a reference
+through an alias keeps the alias. A `:ref:` to an entity's label now names the
+entity, for find-references too, so both are rewritten.
+
+The refusals are errors the editor shows: a document (rename its file), a
+section, a term or a domain object; a name two documents define; an id not
+written as `:id:`; a new name already defined, not an id, or holding what a
+label cannot; a new id the type's `pattern` refuses; a use in `conf.py`'s
+`rst_prolog` or `rst_epilog`; a place outside every workspace folder. A client
+announcing `prepareSupport` gets the refusal before typing a name, and one
+taking `documentChanges` gets each open document's edit versioned.
+`rinx lsp --check <folder> --rename <document>:<line>:<column>=<name>` prints
+the edit and times it.
+
+Measured on CPython's 556 documents with a release build: renaming
+`types-genericalias` (`builtins/stdtypes.rst:6170`) writes 55 edits in 12
+files in 59 ms, 15 ms again with every document's uses resolved; renaming
+`debug-build`, 52 edits in 25 files, 6 ms.
+
+Not done here:
+- Ids inside a `:filter:`, a diagram template (`ref()`, `flow()`), a
+  `needs.json` or a `jinja_context` are not renamed (issue #391), and nor is
+  another site linking in through its `objects.inv`.
+- A reference inside a directive the build does not know is not read, so not
+  renamed: the 56th occurrence of `types-genericalias` is in a
+  `.. describe::` body.
+- The cursor on a named reference itself names nothing yet (#388), and an
+  image's `:target: name_` is no use (#389).
+- Terms, domain objects and documents are refused (issue #392 for terms,
+  and for documents through their files).
 
 ### 32. Workspace symbols
 

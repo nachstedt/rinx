@@ -90,6 +90,24 @@ local referenced = vim.tbl_map(function(reference)
 end, references)
 check('references list the use and the label', vim.deep_equal(referenced, { 'index.rst:7', 'target.rst:0' }), references)
 
+-- Rename rewrites the use and the label, each its name alone; nothing is applied.
+local rename_params = at(7, 4)
+rename_params.newName = 'setup'
+local rename = request_until_answered('textDocument/rename', rename_params) or {}
+local renamed = {}
+for uri, edits in pairs(rename.changes or {}) do
+  for _, edit in ipairs(edits) do
+    table.insert(renamed, vim.fs.basename(uri) .. ':' .. edit.range.start.line .. ':' .. edit.range.start.character .. '=' .. edit.newText)
+  end
+end
+for _, change in ipairs(rename.documentChanges or {}) do
+  for _, edit in ipairs(change.edits) do
+    table.insert(renamed, vim.fs.basename(change.textDocument.uri) .. ':' .. edit.range.start.line .. ':' .. edit.range.start.character .. '=' .. edit.newText)
+  end
+end
+table.sort(renamed)
+check('rename rewrites the use and the label', vim.deep_equal(renamed, { 'index.rst:7:10=setup', 'target.rst:0:4=setup' }), rename)
+
 -- Completion inside the role lists the label.
 local completion = request_until_answered('textDocument/completion', at(7, 10))
 local items = completion and (completion.items or completion) or {}

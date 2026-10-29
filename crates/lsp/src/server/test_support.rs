@@ -224,6 +224,102 @@ pub(super) fn references_at(
     serde_json::from_value(response.response_result.expect("a result")).expect("references")
 }
 
+/// The reply to a `textDocument/prepareRename` at `line`/`character` of
+/// `uri`: its result, or the error's message.
+pub(super) fn prepare_rename_at(
+    state: &mut ServerState,
+    uri: Uri,
+    line: u32,
+    character: u32,
+) -> Result<Option<lsp_types::PrepareRenameResponse>, String> {
+    let request = Request::new(
+        RequestId::from(83),
+        lsp_types::request::PrepareRenameRequest::METHOD.to_string(),
+        lsp_types::TextDocumentPositionParams::new(
+            TextDocumentIdentifier::new(uri),
+            lsp_types::Position::new(line, character),
+        ),
+    );
+    reply(handle_request(state, request))
+}
+
+/// The reply to a `textDocument/rename` to `new_name` at `line`/`character`
+/// of `uri`: its result, or the error's message.
+pub(super) fn rename_at(
+    state: &mut ServerState,
+    uri: Uri,
+    line: u32,
+    character: u32,
+    new_name: &str,
+) -> Result<Option<lsp_types::WorkspaceEdit>, String> {
+    let request = Request::new(
+        RequestId::from(84),
+        lsp_types::request::Rename::METHOD.to_string(),
+        lsp_types::RenameParams {
+            text_document_position: lsp_types::TextDocumentPositionParams::new(
+                TextDocumentIdentifier::new(uri),
+                lsp_types::Position::new(line, character),
+            ),
+            new_name: new_name.to_string(),
+            work_done_progress_params: lsp_types::WorkDoneProgressParams::default(),
+        },
+    );
+    reply(handle_request(state, request))
+}
+
+/// `response`'s result read as a `T`, or its error's message.
+fn reply<T: serde::de::DeserializeOwned>(response: Response) -> Result<T, String> {
+    response
+        .response_result
+        .map(|result| serde_json::from_value(result).expect("a result"))
+        .map_err(|error| error.message)
+}
+
+pub(super) const CONF: &str = "extensions = ['sphinx_needs']\nneeds_from_toml = 'ubproject.toml'\n";
+pub(super) const UBPROJECT: &str = "\
+[[needs.types]]
+directive = \"req\"
+title = \"Requirement\"
+
+[[needs.types]]
+directive = \"spec\"
+title = \"Specification\"
+
+[needs.fields.priority]
+
+[needs.links.implements]
+";
+/// A requirement, and a specification implementing it, written in
+/// `reqs.rst`.
+pub(super) const REQS: &str = "\
+Requirements
+============
+
+.. req:: Brakes
+   :id: R_1
+   :priority: high
+
+.. spec:: Pads
+   :id: S_1
+   :implements: R_1
+";
+
+/// A scanned sphinx-needs project holding [`REQS`], with `index.rst` opened
+/// at `text`.
+pub(super) fn project_with(name: &str, text: &str) -> (Workspace, ServerState) {
+    let (workspace, mut state) = scanned(
+        name,
+        &[
+            ("conf.py", CONF),
+            ("ubproject.toml", UBPROJECT),
+            ("reqs.rst", REQS),
+            ("index.rst", text),
+        ],
+    );
+    handle_notification(&mut state, workspace.open("index.rst", text));
+    (workspace, state)
+}
+
 pub(super) fn scanned(name: &str, files: &[(&str, &str)]) -> (Workspace, ServerState) {
     let workspace = Workspace::new(name, files);
     let (mut state, _) = workspace.server(false);

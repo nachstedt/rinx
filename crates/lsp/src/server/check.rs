@@ -9,7 +9,8 @@
 //!
 //! It also times the preview of the documents it is asked to, each right
 //! after an edit, which is how the preview's latency is measured — and the
-//! references at the places it is asked to, which is how finding them is.
+//! references at the places it is asked to, which is how finding them is,
+//! and the renames it is asked for, each with the edit it would apply.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -53,6 +54,28 @@ pub struct FolderCheck {
     /// were found, in that order.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub references: Vec<ReferencesTiming>,
+    /// How each rename [`CheckOptions::renames`] names went, in that order.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub renames: Vec<RenameTiming>,
+}
+
+/// How long one rename took — first, and again with every document's uses
+/// resolved — and what it would change, or why it was refused.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct RenameTiming {
+    pub uri: Uri,
+    /// The place, 1-based, as a warning names it.
+    pub line: u32,
+    pub column: u32,
+    pub new_name: String,
+    pub first_milliseconds: f64,
+    pub again_milliseconds: f64,
+    /// The edit, when the rename is not refused.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub edit: Option<lsp_types::WorkspaceEdit>,
+    /// Why it was refused, when it was.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub refusal: Option<String>,
 }
 
 /// How long finding the references at one place took: first, when no
@@ -96,6 +119,8 @@ pub struct CheckOptions {
     pub previews: Vec<PathBuf>,
     /// The places whose references are timed.
     pub references: Vec<ReferencesAt>,
+    /// The renames timed, each a place and the new name.
+    pub renames: Vec<(ReferencesAt, String)>,
 }
 
 /// A place in a document, its path absolute and its line and column 1-based,
@@ -172,13 +197,48 @@ pub fn check_folder(root: &Path, options: &CheckOptions) -> FolderCheck {
         .iter()
         .filter_map(|at| time_references(&mut state, at))
         .collect();
+    let renames = options
+        .renames
+        .iter()
+        .filter_map(|(at, new_name)| time_rename(&mut state, at, new_name))
+        .collect();
     FolderCheck {
         documents: documents.len(),
         published: last_published(&messages),
         quick_fixes,
         previews,
         references,
+        renames,
     }
+}
+
+/// How long renaming what `at` names to `new_name` takes, first and again,
+/// and its edit or refusal — `None` when the document cannot be read.
+fn time_rename(state: &mut ServerState, at: &ReferencesAt, new_name: &str) -> Option<RenameTiming> {
+    let uri = file_uri(&at.path)?;
+    std::fs::metadata(&at.path).ok()?;
+    let position = Position::new(at.line.saturating_sub(1), at.column.saturating_sub(1));
+    let timed = |state: &mut ServerState| {
+        let started = Instant::now();
+        let renamed = state.rename(&uri, position, new_name);
+        (started.elapsed().as_secs_f64() * 1000.0, renamed)
+    };
+    let (first_milliseconds, renamed) = timed(state);
+    let (again_milliseconds, _) = timed(state);
+    let (edit, refusal) = match renamed {
+        Ok(edit) => (edit, None),
+        Err(refusal) => (None, Some(refusal.to_string())),
+    };
+    Some(RenameTiming {
+        uri: uri.clone(),
+        line: at.line,
+        column: at.column,
+        new_name: new_name.to_string(),
+        first_milliseconds,
+        again_milliseconds,
+        edit,
+        refusal,
+    })
 }
 
 /// How long finding the references at `at` takes, cold, warm and after an
@@ -420,6 +480,44 @@ mod tests {
         assert_eq!(timing.uri, workspace.uri("setup.rst"));
         assert_eq!(timing.uses, 2);
         assert!(timing.cold_milliseconds > 0.0);
+    }
+
+    #[test]
+    fn test_check_folder_renames_at_each_place_it_names() {
+        // Given — `install` used once, and a rename asked from its label
+        let workspace = Workspace::new(
+            "check_folder_renames",
+            &[
+                ("setup.rst", ".. _install:\n\nInstalling\n==========\n"),
+                ("a.rst", ":ref:`install`\n"),
+            ],
+        );
+        let at = ReferencesAt {
+            path: workspace.root.join("setup.rst"),
+            line: 1,
+            column: 6,
+        };
+        let options = CheckOptions {
+            renames: vec![(at.clone(), "setup".to_string()), (at, "a:b".to_string())],
+            ..CheckOptions::default()
+        };
+
+        // When
+        let check = check_folder(&workspace.root, &options);
+
+        // Then — one edit of each file, and one refusal
+        let [renamed, refused] = check.renames.as_slice() else {
+            panic!("two renames: {:?}", check.renames);
+        };
+        let changes = renamed.edit.as_ref().and_then(|edit| edit.changes.as_ref());
+        assert_eq!(changes.map(std::collections::HashMap::len), Some(2));
+        assert!(refused.edit.is_none());
+        assert!(
+            refused
+                .refusal
+                .as_deref()
+                .is_some_and(|why| why.contains("colon"))
+        );
     }
 
     #[test]
