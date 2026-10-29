@@ -40,7 +40,7 @@ finished one 🔶. A heading with no marker means the step has not started.
   #40 (PR #335), #24 (PR #340) and #25 (PR #355, prepared by #343, #345,
   #348, #351 and #353), #26 (PRs #358 and #362, prepared by #357) and
   #27 (PR #365, prepared by #363), #28 (PR #374), #29 (PR #378), #30 (PR #386)
-  and #31 (prepared by #387 and #390).
+  and #31 (PR #393, prepared by #387 and #390).
 - **Next: #32, workspace symbols.**
 
 The pull request that finishes a step also updates this section and the
@@ -1148,7 +1148,7 @@ Not done here:
 - An edit to a definition re-resolves every document's uses on the next
   request (#38).
 
-### 31. Rename ✅ (prepared by #387 and #390)
+### 31. Rename ✅ (#393, prepared by #387 and #390)
 
 **You experience:** F2 renames a label or entity id across the workspace.
 
