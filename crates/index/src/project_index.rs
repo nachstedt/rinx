@@ -1118,7 +1118,7 @@ mod tests {
             update: rinx_ast::EntityUpdate::new(
                 rinx_ast::EntityUpdateSource::EntityUpdate,
                 rinx_ast::UpdateTarget {
-                    candidate_id: EntityId::new("REQ_001").ok(),
+                    candidate_id: EntityId::new("REQ_001").ok().map(Into::into),
                     filter: None,
                     raw: "REQ_001".to_string(),
                 },
@@ -1310,7 +1310,7 @@ mod tests {
             update: rinx_ast::EntityUpdate::new(
                 rinx_ast::EntityUpdateSource::EntityUpdate,
                 rinx_ast::UpdateTarget {
-                    candidate_id: EntityId::new("REQ_001").ok(),
+                    candidate_id: EntityId::new("REQ_001").ok().map(Into::into),
                     filter: None,
                     raw: "REQ_001".to_string(),
                 },
@@ -1322,7 +1322,7 @@ mod tests {
             update: rinx_ast::EntityUpdate::new(
                 rinx_ast::EntityUpdateSource::NeedExtend,
                 rinx_ast::UpdateTarget {
-                    candidate_id: EntityId::new("REQ_002").ok(),
+                    candidate_id: EntityId::new("REQ_002").ok().map(Into::into),
                     filter: None,
                     raw: "REQ_002".to_string(),
                 },

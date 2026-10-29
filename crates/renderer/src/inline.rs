@@ -58,5 +58,6 @@ mod target;
 mod term_reference;
 
 pub(crate) use dispatch::render_inline;
+pub(crate) use hyperlink::named_reference_target;
 use ref_text::RefText;
 pub(crate) use target::{reference_target, scoped_reference_target};

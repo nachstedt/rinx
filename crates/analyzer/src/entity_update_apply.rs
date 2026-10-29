@@ -126,7 +126,7 @@ fn resolve_targets(
     let names_an_entity = target
         .candidate_id
         .as_ref()
-        .is_some_and(|candidate| index.entities.contains_key(candidate));
+        .is_some_and(|candidate| index.entities.contains_key(candidate.value()));
     let filter = target.filter.as_ref().filter(|_| !names_an_entity);
     for name in filter.iter().flat_map(|filter| filter.field_names()) {
         if !schema.declares_field(name.as_str()) {
@@ -157,9 +157,9 @@ pub fn matched_entities(
     schema: &EntitySchema,
 ) -> Vec<EntityId> {
     if let Some(candidate) = &target.candidate_id
-        && index.entities.contains_key(candidate)
+        && index.entities.contains_key(candidate.value())
     {
-        return vec![candidate.clone()];
+        return vec![candidate.value().clone()];
     }
     let Some(filter) = &target.filter else {
         return Vec::new();

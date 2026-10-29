@@ -23,7 +23,7 @@ mod tests {
             update: rinx_ast::EntityUpdate::new(
                 rinx_ast::EntityUpdateSource::EntityUpdate,
                 rinx_ast::UpdateTarget {
-                    candidate_id: rinx_ast::EntityId::new("REQ_001").ok(),
+                    candidate_id: rinx_ast::EntityId::new("REQ_001").ok().map(Into::into),
                     filter: None,
                     raw: "REQ_001".to_string(),
                 },

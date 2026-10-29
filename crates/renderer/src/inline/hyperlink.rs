@@ -2,10 +2,12 @@
 
 use std::fmt::Write as _;
 
-use rinx_ast::{HyperlinkTarget, LinkDestination, Span};
+use rinx_ast::{HyperlinkTarget, LinkDestination, NonEmptyVector, Span, TargetName};
+use rinx_index::ProjectIndex;
 
+use super::reference::label_reference_target;
 use crate::hyperlink_target::DocumentHyperlinkTargets;
-use crate::{BrokenLink, BrokenLinkKind};
+use crate::{BrokenLink, BrokenLinkKind, ReferenceTarget};
 
 /// Renders a named hyperlink: to the destination written in it
 /// (`` `text <destination>`_ ``), or to the target its name stands for in this
@@ -43,6 +45,44 @@ pub(super) fn render_inline_hyperlink(
         target: missing,
         span,
     });
+}
+
+/// Where a named reference passing through `chain` in the page at
+/// `doc_path` leads, when it is a label: the last name, an internal target of
+/// that page — and none of the aliases before it, which would give the name
+/// a second destination and the reference none. `None` for a section, which
+/// is no label, and for every reference the page draws broken.
+pub(crate) fn named_reference_target(
+    index: &ProjectIndex,
+    chain: &NonEmptyVector<TargetName>,
+    doc_path: &str,
+) -> Option<ReferenceTarget> {
+    let (label, aliases) = chain.as_slice().split_last()?;
+    let own = |name: &TargetName| {
+        index
+            .targets
+            .get(name)
+            .is_some_and(|defined| defined == doc_path)
+            || index
+                .ambiguous_definitions
+                .targets
+                .get(name)
+                .is_some_and(|claimants| claimants.contains(doc_path))
+    };
+    if aliases.iter().any(own)
+        || index
+            .targets
+            .get(label)
+            .is_none_or(|defined| defined != doc_path)
+    {
+        return None;
+    }
+    Some(label_reference_target(
+        index,
+        label,
+        label.as_str(),
+        doc_path,
+    ))
 }
 
 #[cfg(test)]

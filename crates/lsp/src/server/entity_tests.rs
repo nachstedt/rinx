@@ -379,3 +379,29 @@ fn test_references_of_an_entity_s_id_line_are_its_uses() {
     // Then
     assert_eq!(found, Some(requirement_uses(&workspace)));
 }
+
+#[test]
+fn test_references_of_an_entity_include_the_updates_naming_it() {
+    // Given — `S_1`, which [`USES`] relates to and updates
+    let (workspace, mut state) = project_with("entity_references_update", USES);
+    handle_notification(&mut state, workspace.open("reqs.rst", REQS));
+
+    // When — on `   :id: S_1`
+    let found = references_at(&mut state, workspace.uri("reqs.rst"), 8, 9, false);
+
+    // Then — the id in the relation, and the update's argument alone
+    let index = workspace.uri("index.rst");
+    assert_eq!(
+        found,
+        Some(vec![
+            Location::new(
+                index.clone(),
+                Range::new(Position::new(4, 16), Position::new(4, 19)),
+            ),
+            Location::new(
+                index,
+                Range::new(Position::new(6, 19), Position::new(6, 22)),
+            ),
+        ])
+    );
+}

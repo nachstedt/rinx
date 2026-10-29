@@ -87,10 +87,33 @@ fn test_a_bare_id_target_reads_as_a_candidate_id() {
             .target
             .candidate_id
             .as_ref()
-            .map(rinx_ast::EntityId::as_str),
+            .map(|id| id.value().as_str()),
         Some("REQ_001")
     );
     assert!(diagnostics.is_empty());
+}
+
+#[test]
+fn test_a_bare_id_target_records_where_it_was_written() {
+    // Given — the id after `::` and two blanks
+    let input = ".. entity-update::  REQ_001\n   :status: closed\n";
+
+    // When
+    let (directive, _) = parse_update(input);
+
+    // Then
+    let span = update_of(&directive)
+        .target
+        .candidate_id
+        .as_ref()
+        .and_then(rinx_ast::Written::span);
+    assert_eq!(
+        span,
+        Some(rinx_ast::Span::new(
+            rinx_ast::Position::new(1, 21),
+            rinx_ast::Position::new(1, 28)
+        ))
+    );
 }
 
 #[test]

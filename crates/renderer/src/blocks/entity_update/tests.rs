@@ -33,7 +33,7 @@ fn test_is_visible_matches_the_show_variant_only() {
 
 fn target(raw: &str) -> UpdateTarget {
     UpdateTarget {
-        candidate_id: rinx_ast::EntityId::new(raw).ok(),
+        candidate_id: rinx_ast::EntityId::new(raw).ok().map(Into::into),
         filter: None,
         raw: raw.to_string(),
     }

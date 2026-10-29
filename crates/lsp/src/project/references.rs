@@ -32,6 +32,9 @@ pub struct DocumentUses {
     written: Vec<WrittenUse>,
     /// The entity ids its relation options name.
     relations: Vec<RelationUse>,
+    /// The ids `.. entity-update::` arguments name, each with exactly its
+    /// characters.
+    updated: Vec<(EntityId, Span)>,
     /// The files its spans name by [`rinx_ast::FileId`], as the parse
     /// recorded them.
     files: Vec<String>,
@@ -58,6 +61,7 @@ impl DocumentUses {
         Self {
             written: written_uses(document),
             relations: relation_uses(document),
+            updated: updated_ids(document),
             files: document.source_files.clone(),
         }
     }
@@ -99,6 +103,21 @@ fn relation_uses(document: &Document) -> Vec<RelationUse> {
         _ => {}
     });
     uses
+}
+
+/// Every `.. entity-update::` argument written in `document` that reads as
+/// an id, where its characters are known.
+fn updated_ids(document: &Document) -> Vec<(EntityId, Span)> {
+    let mut updated = Vec::new();
+    walk_nodes(&document.nodes, &mut |node| {
+        if let Node::Directive(Directive::EntityUpdate(update)) = node
+            && let Some(id) = &update.target.candidate_id
+            && let Some(span) = id.span()
+        {
+            updated.push((id.value().clone(), span));
+        }
+    });
+    updated
 }
 
 /// What a use leads to: a definition of the document `doc_path`, or the
@@ -198,6 +217,20 @@ pub(super) fn resolve_uses(
             if let Some(site) = site_of(relation.span, Some(id.clone())) {
                 found.push((target, site));
             }
+        }
+    }
+    // An argument naming an existing entity updates that entity, whatever
+    // its filter reading would match — as the build applies it.
+    for (id, span) in &uses.updated {
+        let Some(record) = resolution.index.entities.get(id) else {
+            continue;
+        };
+        let target = UseTarget {
+            doc_path: record.doc_path.clone(),
+            definition: Some(DefinitionKey::Entity(id.clone())),
+        };
+        if let Some(site) = site_of(*span, None) {
+            found.push((target, site));
         }
     }
     found
@@ -413,13 +446,37 @@ mod tests {
     }
 
     #[test]
+    fn test_updated_ids_are_the_placed_id_arguments_of_updates() {
+        // Given — an id argument placed by the parser, one built unplaced,
+        // and a filter, which names no id
+        let span = Span::new(Position::new(1, 20), Position::new(1, 23));
+        let update = |target: rinx_ast::UpdateTarget| {
+            Node::Directive(Directive::EntityUpdate(Box::new(
+                rinx_ast::EntityUpdate::new(rinx_ast::EntityUpdateSource::EntityUpdate, target),
+            )))
+        };
+        let read = |raw: &str| rinx_ast::UpdateTarget::read(raw).expect("a target");
+        let document = Document::new(
+            "index.rst".to_string(),
+            vec![
+                update(read("S_1").written_at(Some(span))),
+                update(read("S_2")),
+                update(read("status == 'open'").written_at(Some(span))),
+            ],
+        );
+
+        // When / Then
+        assert_eq!(updated_ids(&document), vec![(id("S_1"), span)]);
+    }
+
+    #[test]
     fn test_relation_uses_reads_the_ids_an_update_sets_appends_or_removes() {
         // Given — `+links: A_1, B_2` and `-tags:`, which names no id
         let line = |n| Span::new(Position::new(n, 4), Position::new(n, 20));
         let mut update = rinx_ast::EntityUpdate::new(
             rinx_ast::EntityUpdateSource::EntityUpdate,
             rinx_ast::UpdateTarget {
-                candidate_id: Some(id("S_1")),
+                candidate_id: Some(id("S_1").into()),
                 filter: None,
                 raw: "S_1".to_string(),
             },
