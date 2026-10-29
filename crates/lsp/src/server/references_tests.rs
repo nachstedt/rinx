@@ -325,8 +325,8 @@ fn test_references_of_a_math_label_line_are_its_eq_roles() {
 }
 
 #[test]
-fn test_references_of_a_toctree_s_name_line_are_found_without_a_site() {
-    // Given — a toctree's `:name:` records no site to stand on
+fn test_references_of_a_toctree_s_name_line_are_found() {
+    // Given — a toctree, which has no span of its own, named on its option line
     let index = "Index\n=====\n\n.. toctree::\n   :name: contents-tree\n\n   setup\n";
     let (workspace, mut state) = server_over(
         "references_toctree_name",

@@ -11,7 +11,7 @@ use crate::diagnostics::Diagnostics;
 use crate::directives::option_value::Located;
 use crate::directives::options::{OptionLine, classify_options, directive_options};
 use crate::directives::table_options::{CommonTableOptions, TableOption, read_table_option};
-use rinx_ast::{TableAlign, TableSource, TableWidths, TargetName};
+use rinx_ast::{TableAlign, TableSource, TableWidths, TargetName, Written};
 
 /// The seven options `.. list-table::` and `.. csv-table::` share — the five
 /// common options plus `header-rows`/`stub-columns`.
@@ -22,7 +22,7 @@ pub(super) struct SharedTableOptions {
     pub width: Option<String>,
     pub align: Option<TableAlign>,
     pub classes: Vec<String>,
-    pub name: Option<TargetName>,
+    pub name: Option<Written<TargetName>>,
 }
 
 directive_options! {
@@ -192,7 +192,7 @@ mod tests {
         assert_eq!(options.width.as_deref(), Some("50%"));
         assert_eq!(options.align, Some(TableAlign::Right));
         assert_eq!(options.classes, vec!["foo".to_string(), "bar".to_string()]);
-        assert_eq!(options.name, Some(TargetName::new("My Table")));
+        assert_eq!(options.name, Some(TargetName::new("My Table").into()));
     }
 
     #[test]

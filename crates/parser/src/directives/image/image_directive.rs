@@ -228,7 +228,7 @@ mod tests {
         );
         assert_eq!(options.align, Some(ImageAlign::Center));
         assert_eq!(options.classes, vec!["fancy".to_string()]);
-        assert_eq!(options.name, Some(TargetName::new("the logo")));
+        assert_eq!(options.name, Some(TargetName::new("the logo").into()));
         assert_eq!(options.loading, ImageLoading::Lazy);
         assert!(diagnostics.entries().is_empty());
     }

@@ -225,6 +225,10 @@ entry under the heading it belongs to, as a single short sentence.
 - Make a preview show what the reader will see; showing source in place of rendered output is no fallback to settle for while a faithful renderer exists.
 - To render a third party's format where its native tool cannot run, prefer that tool's own code built for the new platform over a reimplementation, since only the original agrees with the build.
 
+## Editor features
+
+- A rename rewrites the name everywhere it is written, even where it doubles as visible text, rather than adding an alias that keeps the old wording.
+
 ## Scope of a guideline
 
 - A guideline that bars a technique bars it as a workaround, not as the feature the user explicitly asked for.

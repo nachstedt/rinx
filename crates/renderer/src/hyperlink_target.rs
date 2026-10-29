@@ -64,7 +64,7 @@ impl DocumentHyperlinkTargets {
             } = node
             {
                 explicit
-                    .entry(name.clone())
+                    .entry(name.value().clone())
                     .or_default()
                     .insert(destination.clone());
             }
@@ -185,7 +185,7 @@ mod tests {
 
     fn external(name: &str, uri: &str) -> Node {
         Node::Target {
-            name: TargetName::new(name),
+            name: TargetName::new(name).into(),
             destination: Some(LinkDestination::Uri(uri.to_string())),
             span: None,
         }
@@ -193,7 +193,7 @@ mod tests {
 
     fn alias(name: &str, of: &str) -> Node {
         Node::Target {
-            name: TargetName::new(name),
+            name: TargetName::new(name).into(),
             destination: Some(LinkDestination::Name(TargetName::new(of))),
             span: None,
         }

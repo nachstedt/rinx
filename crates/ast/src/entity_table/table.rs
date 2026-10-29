@@ -7,6 +7,7 @@ use crate::entity_table::source::EntityTableSource;
 use crate::span::Span;
 use crate::table::{TableAlign, TableWidths};
 use crate::target_name::TargetName;
+use crate::written::Written;
 
 /// A table of the entities matching a filter — `.. entity-table::`, and its
 /// sphinx-needs spelling `.. needtable::`.
@@ -53,7 +54,7 @@ pub struct EntityTable {
     /// `:name:` — reuses [`TargetName`] like every other table directive, so
     /// it registers in `ProjectIndex::targets` with no conversion.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<TargetName>,
+    pub name: Option<Written<TargetName>>,
     /// Where the directive was written, so the renderer — which is where a
     /// table's rows are actually resolved — has a position to report against.
     #[serde(default, skip_serializing_if = "Option::is_none")]

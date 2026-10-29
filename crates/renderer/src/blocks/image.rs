@@ -207,7 +207,7 @@ pub(super) fn render_image_directive(
         .collect();
 
     if let Some(name) = &options.name {
-        let id_attr = html_escape::encode_double_quoted_attribute(name.as_str());
+        let id_attr = html_escape::encode_double_quoted_attribute(name.value().as_str());
         let _ = write!(html, "<span id=\"{id_attr}\"></span>");
     }
     render_linked_image(html, options, &align_class, ctx);
@@ -496,7 +496,7 @@ mod tests {
             vec![
                 rinx_ast::Node::Directive(Directive::Image(Box::new(options))),
                 rinx_ast::Node::Target {
-                    name: TargetName::new("python"),
+                    name: TargetName::new("python").into(),
                     destination: Some(rinx_ast::LinkDestination::Uri(
                         "https://python.org".to_string(),
                     )),
@@ -534,7 +534,7 @@ mod tests {
     fn test_renders_the_name_as_an_anchor() {
         // Given
         let mut options = image("logo.png");
-        options.name = Some(TargetName::new("the logo"));
+        options.name = Some(TargetName::new("the logo").into());
 
         // When
         let html = render(options);

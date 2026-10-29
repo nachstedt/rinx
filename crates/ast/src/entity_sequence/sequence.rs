@@ -12,6 +12,7 @@ use crate::image::{ImageAlign, LengthOrPercentage, scaled_width};
 use crate::non_empty_vector::NonEmptyVector;
 use crate::span::Span;
 use crate::target_name::TargetName;
+use crate::written::Written;
 
 /// A sequence diagram walked through the entity graph —
 /// `.. entity-sequence::`, and its sphinx-needs spelling `.. needsequence::`.
@@ -76,7 +77,7 @@ pub struct EntitySequence {
     pub classes: Vec<String>,
     /// `:name:` — registers the diagram as an ordinary `:ref:` target.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<TargetName>,
+    pub name: Option<Written<TargetName>>,
     /// Where the directive was written, so the renderer has a position to
     /// report an unknown start or an empty walk against.
     #[serde(default, skip_serializing_if = "Option::is_none")]

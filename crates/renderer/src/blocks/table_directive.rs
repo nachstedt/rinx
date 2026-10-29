@@ -283,7 +283,7 @@ mod tests {
                 width: None,
                 align: None,
                 classes: vec![],
-                name: Some(TargetName::new("wrapped-table")),
+                name: Some(TargetName::new("wrapped-table").into()),
                 header_rows: vec![],
                 body_rows: vec![table_row(&["Cell"])],
                 span: None,

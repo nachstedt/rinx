@@ -447,7 +447,7 @@ mod tests {
         // container, which is what lets a `:ref:` elsewhere resolve to it.
         assert!(
             document.nodes.iter().any(
-                |node| matches!(node, Node::Target { name, .. } if name.as_str() == "inside-label")
+                |node| matches!(node, Node::Target { name, .. } if name.value().as_str() == "inside-label")
             ),
             "{:?}",
             document.nodes

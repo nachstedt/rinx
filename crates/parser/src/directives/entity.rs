@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 
 use rinx_ast::{
     AttributeValue, Diagnostic, DiagnosticCode, Directive, EntityBody, EntityId, EntitySection,
-    Node, Span,
+    Node, Span, Written,
 };
 use rinx_entity::{EntityType, ID_OPTION, IdContext};
 
@@ -90,13 +90,16 @@ pub(in crate::directives) fn parse_entity(
     );
     // An explicit id is pointed at where it was written; a composed or
     // generated one exists only as the directive, so that is what is named.
-    let id_span = option_lines
-        .iter()
-        .find(|line| line.name == ID_OPTION)
-        .map_or(directive_span, |line| {
-            ctx.line_span(line.line_index, &line.raw)
-        });
+    let id_line = option_lines.iter().find(|line| line.name == ID_OPTION);
+    let id_span = id_line.map_or(directive_span, |line| {
+        ctx.line_span(line.line_index, &line.raw)
+    });
     report_id_pattern(entity_type, &id, id_span, diagnostics);
+    // Only an id written as the `:id:` value has characters of its own; one
+    // the line failed to give is composed or generated, as the others are.
+    let written_id_span = id_line
+        .filter(|line| line.value == id.as_str())
+        .and_then(|line| line.value_span(ctx));
 
     let content = invocation.content();
     let sections = parse_sections(
@@ -114,7 +117,7 @@ pub(in crate::directives) fn parse_entity(
 
     Directive::Entity(Box::new(EntityBody {
         type_name: entity_type.name.clone(),
-        id,
+        id: Written::new(id, written_id_span),
         attributes,
         relations,
         sections,

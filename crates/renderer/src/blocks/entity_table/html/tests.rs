@@ -335,7 +335,7 @@ fn test_the_shared_presentation_options_reach_the_markup() {
     table.classes = vec!["wide".to_string()];
     table.width = Some("80%".to_string());
     table.widths = Some(TableWidths::Explicit(vec![30, 70]));
-    table.name = Some(rinx_ast::TargetName::new("every-requirement"));
+    table.name = Some(rinx_ast::TargetName::new("every-requirement").into());
 
     // When
     let html = html_of(&table);

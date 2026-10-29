@@ -9,6 +9,7 @@ use crate::entity_pie::source::EntityPieSource;
 use crate::image::{ImageAlign, LengthOrPercentage, scaled_width};
 use crate::span::Span;
 use crate::target_name::TargetName;
+use crate::written::Written;
 
 /// A pie chart of how many entities each of several filters selects —
 /// `.. entity-pie::`, and its sphinx-needs spelling `.. needpie::`.
@@ -79,7 +80,7 @@ pub struct EntityPie {
     /// `:name:` — reuses [`TargetName`] like every other directive that takes
     /// one, so it registers in `ProjectIndex::targets` with no conversion.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<TargetName>,
+    pub name: Option<Written<TargetName>>,
     /// Where the directive was written, so the renderer — which is where the
     /// chart is actually drawn — has a position to report against.
     #[serde(default, skip_serializing_if = "Option::is_none")]

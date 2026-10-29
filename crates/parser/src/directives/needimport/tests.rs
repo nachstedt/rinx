@@ -176,7 +176,7 @@ fn entities(document: &Document) -> Vec<EntityBody> {
 fn ids(document: &Document) -> Vec<String> {
     entities(document)
         .iter()
-        .map(|entity| entity.id.as_str().to_string())
+        .map(|entity| entity.id.value().as_str().to_string())
         .collect()
 }
 
@@ -214,7 +214,7 @@ fn an_imported_entity_carries_the_same_body_a_written_one_does() {
     let document = import("");
     let entity = entities(&document)
         .into_iter()
-        .find(|entity| entity.id.as_str() == "REQ_1")
+        .find(|entity| entity.id.value().as_str() == "REQ_1")
         .expect("REQ_1 was imported");
 
     // Then every part of it is an ordinary EntityBody: the declared type, the
@@ -469,7 +469,7 @@ fn id_prefix_rewrites_a_link_into_the_same_import() {
     let document = import("   :id_prefix: EXT_");
     let entity = entities(&document)
         .into_iter()
-        .find(|entity| entity.id.as_str() == "EXT_REQ_1")
+        .find(|entity| entity.id.value().as_str() == "EXT_REQ_1")
         .expect("the prefixed entity exists");
 
     // Then the link follows the copy it was imported with
@@ -539,7 +539,7 @@ fn ignores_sphinx_needs_own_bookkeeping_fields() {
     let document = import("");
     let entity = entities(&document)
         .into_iter()
-        .find(|entity| entity.id.as_str() == "REQ_1")
+        .find(|entity| entity.id.value().as_str() == "REQ_1")
         .expect("REQ_1 was imported");
 
     // Then none of them became an attribute and none was reported
@@ -746,7 +746,7 @@ fn tags_are_added_to_the_types_own_tags_attribute() {
     let document = import("   :tags: imported");
     let entity = entities(&document)
         .into_iter()
-        .find(|entity| entity.id.as_str() == "REQ_1")
+        .find(|entity| entity.id.value().as_str() == "REQ_1")
         .expect("REQ_1 was imported");
 
     // Then it joins the ones the file held
@@ -767,7 +767,7 @@ fn tags_are_given_to_a_need_that_had_none() {
     let document = import("   :tags: imported");
     let entity = entities(&document)
         .into_iter()
-        .find(|entity| entity.id.as_str() == "REQ_2")
+        .find(|entity| entity.id.value().as_str() == "REQ_2")
         .expect("REQ_2 was imported");
 
     // Then the attribute is created

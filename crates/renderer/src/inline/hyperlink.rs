@@ -109,7 +109,7 @@ mod tests {
     fn test_render_inline_hyperlink_documents_own_external_target() {
         // Given
         let nodes = vec![Node::Target {
-            name: TargetName::new("Python"),
+            name: TargetName::new("Python").into(),
             destination: Some(rinx_ast::LinkDestination::Uri(
                 "https://python.org".to_string(),
             )),

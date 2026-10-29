@@ -3,7 +3,7 @@
 //! destination on the following indented line instead of inline. A
 //! destination is a URI, or another target's name (`.. _a: b_`).
 
-use rinx_ast::{Node, TargetName};
+use rinx_ast::{Node, Span, TargetName, Written};
 
 use crate::context::ParseCtx;
 use crate::inline::read_target_destination;
@@ -66,10 +66,11 @@ pub(super) fn try_parse_target(
         // follows; anything else leads to a URI or to another target.
         let destination = (!uri.is_empty()).then(|| read_target_destination(&uri));
 
+        let name_span = name_span(lines[i], name_str, ctx, i);
         return Some((
             consumed,
             Node::Target {
-                name: TargetName::new(name_str),
+                name: Written::new(TargetName::new(name_str), name_span),
                 destination,
                 span: ctx.line_span(i, lines[i].trim_end()),
             },
@@ -77,6 +78,16 @@ pub(super) fn try_parse_target(
     }
 
     None
+}
+
+/// Exactly the characters `name` takes on `line`, the `i`th: what follows
+/// the `.. _` marker, without the blanks around it.
+fn name_span(line: &str, name: &str, ctx: &ParseCtx<'_>, i: usize) -> Option<Span> {
+    let marker = line.find(".. _")? + ".. _".len();
+    let blanks = line[marker..].len() - line[marker..].trim_start().len();
+    let start = line[..marker + blanks].chars().count();
+    let end = start + name.chars().count();
+    Some(ctx.position(i, start)?.to(ctx.position(i, end)?))
 }
 
 #[cfg(test)]
@@ -131,6 +142,56 @@ mod tests {
         assert_eq!(
             target_spans(&doc.nodes),
             vec![Some(Span::new(Position::new(3, 4), Position::new(3, 15)))]
+        );
+    }
+
+    /// The span of every named target's name in `nodes`, in document order.
+    fn name_spans(nodes: &[Node]) -> Vec<Option<Span>> {
+        let mut spans = Vec::new();
+        rinx_ast::walk_nodes(nodes, &mut |node| {
+            if let Node::Target { name, .. } = node {
+                spans.push(name.span());
+            }
+        });
+        spans
+    }
+
+    #[test]
+    fn test_parse_records_exactly_a_targets_name() {
+        // When
+        let doc = parse("test.rst", "Intro\n\n.. _install:\n\nText.\n");
+
+        // Then — `install` takes columns 5 to 11
+        assert_eq!(
+            name_spans(&doc.nodes),
+            vec![Some(Span::new(Position::new(3, 5), Position::new(3, 12)))]
+        );
+    }
+
+    #[test]
+    fn test_parse_records_a_name_without_the_blanks_around_it() {
+        // When
+        let doc = parse("test.rst", ".. _  Getting Started :\n\nText.\n");
+
+        // Then
+        assert_eq!(
+            name_spans(&doc.nodes),
+            vec![Some(Span::new(Position::new(1, 7), Position::new(1, 22)))]
+        );
+    }
+
+    #[test]
+    fn test_parse_records_a_nested_targets_name_in_the_document() {
+        // Given — a target inside a note's body, indented by three columns
+        let input = ".. note::\n\n   .. _inside:\n\n   Text.\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(
+            name_spans(&doc.nodes),
+            vec![Some(Span::new(Position::new(3, 8), Position::new(3, 14)))]
         );
     }
 }

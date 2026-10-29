@@ -31,6 +31,7 @@ use crate::target_name::TargetName;
 use crate::toctree::Toctree;
 use crate::uml::Uml;
 use crate::version_change_kind::VersionChangeKind;
+use crate::written::Written;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Directive {
@@ -249,7 +250,7 @@ pub enum Directive {
         /// `:name:` — reuses [`TargetName`] (the same type explicit
         /// hyperlink targets use) so it can be registered in
         /// `ProjectIndex::targets` with no extra conversion.
-        name: Option<TargetName>,
+        name: Option<Written<TargetName>>,
         rows: Vec<TableRow>,
         /// Where the directive was written, which its `:name:`'s definition
         /// is (`docs/decisions/045-definition-spans.md`).
@@ -283,7 +284,7 @@ pub enum Directive {
         /// `:name:` — reuses [`TargetName`] (the same type explicit
         /// hyperlink targets use) so it can be registered in
         /// `ProjectIndex::targets` with no extra conversion.
-        name: Option<TargetName>,
+        name: Option<Written<TargetName>>,
         header_rows: Vec<TableRow>,
         body_rows: Vec<TableRow>,
         /// Where the directive was written — see [`Self::DataTable`]'s.
@@ -305,7 +306,7 @@ pub enum Directive {
         /// `:label:` (or its `:name:` spelling) — reuses [`TargetName`] like
         /// the table directives do, so an `:eq:` reference resolves against it
         /// with no extra conversion.
-        label: Option<TargetName>,
+        label: Option<Written<TargetName>>,
         /// `:nowrap:` — the author supplies their own LaTeX environment, so
         /// nothing may be wrapped around the body. Suppresses equation
         /// numbering too, matching Sphinx.
@@ -713,7 +714,7 @@ mod tests {
             width: Some("100%".to_string()),
             align: Some(TableAlign::Center),
             classes: vec!["custom".to_string()],
-            name: Some(TargetName::new("fruit-table")),
+            name: Some(TargetName::new("fruit-table").into()),
             rows: vec![TableRow {
                 cells: vec![TableCell {
                     colspan: 1,
@@ -743,7 +744,7 @@ mod tests {
             width: Some("100%".to_string()),
             align: Some(TableAlign::Center),
             classes: vec!["custom".to_string()],
-            name: Some(TargetName::new("fruit-table")),
+            name: Some(TargetName::new("fruit-table").into()),
             header_rows: vec![TableRow {
                 cells: vec![TableCell {
                     colspan: 1,

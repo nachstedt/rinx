@@ -16,7 +16,7 @@
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rinx_ast::{Diagnostic, DiagnosticCode};
+use rinx_ast::{Diagnostic, DiagnosticCode, Span};
 
 use super::spec::{OptionSet, OptionSpec, OptionSupport, OptionValue};
 
@@ -30,6 +30,33 @@ pub(in crate::directives) struct OptionLine {
     /// option can point at the line the author wrote rather than at the
     /// directive as a whole.
     pub line_index: usize,
+    /// Whether the value runs on below the option's own line, so its
+    /// characters are no one range of it.
+    pub continued: bool,
+}
+
+impl OptionLine {
+    /// Exactly the characters of the value — `None` for an empty one, one
+    /// continued onto the lines below, or one read from no source line.
+    pub(in crate::directives) fn value_span(&self, ctx: &ParseCtx<'_>) -> Option<Span> {
+        if self.continued || self.value.is_empty() {
+            return None;
+        }
+        // `:name:`, then the blanks before the value.
+        let marker = self.name.chars().count() + 2;
+        let blanks = self
+            .raw
+            .chars()
+            .skip(marker)
+            .take_while(|c| c.is_whitespace())
+            .count();
+        let start = marker + blanks;
+        let end = start + self.value.chars().count();
+        Some(
+            ctx.position(self.line_index, start)?
+                .to(ctx.position(self.line_index, end)?),
+        )
+    }
 }
 
 /// Splits the leading `:option:` lines off an already-unindented directive
@@ -83,6 +110,7 @@ pub(in crate::directives) fn scan_option_lines(
             previous.value.push_str(line);
             previous.raw.push(' ');
             previous.raw.push_str(line);
+            previous.continued = true;
             index += 1;
             continue;
         }
@@ -98,6 +126,7 @@ pub(in crate::directives) fn scan_option_lines(
             value: value.to_string(),
             raw: line.to_string(),
             line_index: index,
+            continued: false,
         });
         index += 1;
     }
@@ -547,6 +576,7 @@ mod tests {
             value: String::new(),
             raw: format!(":{name}:"),
             line_index: 0,
+            continued: false,
         })
     }
 
@@ -715,6 +745,7 @@ mod tests {
             value: String::new(),
             raw: ":bogus:".to_string(),
             line_index: 0,
+            continued: false,
         };
 
         // When
@@ -868,6 +899,45 @@ mod tests {
         assert_eq!(options[1].name, "widths");
         assert_eq!(options[1].value, "30 70");
         assert_eq!(body_start, 3);
+    }
+
+    /// The span `value_span` gives the first option of `body`, read with
+    /// no origin to rebase onto.
+    fn first_value_span(body: &[&str]) -> Option<Span> {
+        let (options, _) = scan_option_lines(&lines(body));
+        options[0].value_span(&ParseCtx::with_domain(Domain::Py))
+    }
+
+    #[test]
+    fn test_value_span_is_the_value_alone() {
+        // When — `install` past `:name:` and two blanks
+        let span = first_value_span(&[":name:  install"]);
+
+        // Then
+        assert_eq!(
+            span,
+            Some(Span::new(
+                rinx_ast::Position::new(1, 9),
+                rinx_ast::Position::new(1, 16)
+            ))
+        );
+    }
+
+    #[test]
+    fn test_value_span_is_none_for_an_empty_or_continued_value() {
+        // When / Then
+        assert_eq!(first_value_span(&[":name:"]), None);
+        assert_eq!(first_value_span(&[":name: first", "   second"]), None);
+    }
+
+    #[test]
+    fn test_scan_option_lines_marks_a_value_continued_below() {
+        // When
+        let (options, _) = scan_option_lines(&lines(&[":alt: one", "   two", ":name: x"]));
+
+        // Then
+        assert!(options[0].continued);
+        assert!(!options[1].continued);
     }
 
     #[test]

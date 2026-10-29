@@ -82,8 +82,8 @@ fold, as before.
   entity update records, and the update history, whose `line` entity
   templates show. Issue #372 tracks projecting the first two away, so the
   line-shift test can take them into its fixture.
-- `.. contents::` and a toctree's `:name:` have no span, so their labels have
-  no site.
+- `.. contents::` and a toctree have no span, so their labels had no site at
+  first. Since name spans (below), such a label is sited at its name.
 
 ## Alternatives considered
 
@@ -98,3 +98,30 @@ fold, as before.
   text.** A heading or a label could be found again by scanning, but a domain
   object's qualified name, an option's several names, or a definition spliced
   in from a fragment cannot be recovered without the parse.
+
+## Amendment: name spans
+
+Renaming (roadmap #31) needs a definition's *name*, not its line: the
+`install` in `.. _install:`, the value of a `:name:`, `:label:` or `:id:`.
+The parser records it where it reads the name, as `rinx_ast::Written<T>`, a
+value with the span of exactly its characters, and a `DefinitionSite` carries
+it as `name`.
+
+- **Never serialized.** `Written<T>` writes and reads the value alone, as
+  `IncludeSite` is skipped, so the `.ast` stays byte for byte what it was and
+  a name read back from one has no span. Only the editor, which analyses its
+  own parse, ever sees one. A test pushes every `:name:` and `:label:` value
+  right and compares the written `.ast`.
+- **Equality ignores it.** Two values a round trip through the `.ast` cannot
+  tell apart are equal, so a definition moved along its line still folds like
+  it did, as one moved down does.
+- **An entity's id is `Written<EntityId>`**, with a span only when it was
+  written as the `:id:` value. A composed, generated or imported id has none,
+  which is how an editor tells an id the author can rename from one it cannot.
+- **A directive with no span of its own** (`.. contents::`, `.. toctree::`)
+  is sited at its `:name:` value, which gives those labels a definition and a
+  declaration at last.
+
+The alternative, the server finding the name again on the site's line, would
+be a second reader of every name's grammar: a label after `.. _`, an option
+value after blanks, an id the `:id:` line failed to give.

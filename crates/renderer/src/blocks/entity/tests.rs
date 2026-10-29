@@ -72,7 +72,7 @@ fn requirement() -> EntityBody {
     EntityBody {
         relation_spans: BTreeMap::new(),
         type_name: "req".to_string(),
-        id: EntityId::new("REQ_001").unwrap(),
+        id: EntityId::new("REQ_001").unwrap().into(),
         attributes: BTreeMap::from([
             (
                 "title".to_string(),

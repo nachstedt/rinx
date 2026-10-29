@@ -7,6 +7,7 @@ use crate::entity::id::EntityId;
 use crate::entity::section::EntitySection;
 use crate::node::Node;
 use crate::span::Span;
+use crate::written::Written;
 
 /// One entity as written in a document.
 ///
@@ -23,8 +24,9 @@ use crate::span::Span;
 pub struct EntityBody {
     /// The declaring type's name, e.g. `req`.
     pub type_name: String,
-    /// The determined id — explicit, derived or generated.
-    pub id: EntityId,
+    /// The determined id — explicit, derived or generated. Only an explicit
+    /// `:id:` has a span, which is how an editor tells it from the others.
+    pub id: Written<EntityId>,
     /// Parsed attribute values, including any filled from the directive's
     /// argument and any supplied by a schema default.
     pub attributes: BTreeMap<String, AttributeValue>,
@@ -103,7 +105,7 @@ mod tests {
         EntityBody {
             relation_spans: BTreeMap::new(),
             type_name: "req".to_string(),
-            id: EntityId::new("REQ_001").unwrap(),
+            id: EntityId::new("REQ_001").unwrap().into(),
             attributes: BTreeMap::from([(
                 "title".to_string(),
                 AttributeValue::String("Boot quickly".to_string()),

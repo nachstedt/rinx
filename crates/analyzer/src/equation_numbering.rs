@@ -40,7 +40,7 @@ pub(super) fn number_equations(doc: &Document) -> Vec<(TargetName, usize)> {
         }) = node
         {
             counter += 1;
-            numbered.push((label.clone(), counter));
+            numbered.push((label.value().clone(), counter));
         }
     });
     numbered
@@ -54,7 +54,7 @@ mod tests {
     fn math(label: Option<&str>, nowrap: bool) -> Node {
         Node::Directive(Directive::Math {
             parts: vec!["x = y".to_string()],
-            label: label.map(TargetName::new),
+            label: label.map(|text| TargetName::new(text).into()),
             nowrap,
             classes: Vec::new(),
             span: None,

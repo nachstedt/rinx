@@ -101,6 +101,7 @@ mod toctree;
 mod uml;
 mod version_change_kind;
 mod visit;
+mod written;
 
 pub use admonition_kind::AdmonitionKind;
 pub use asset_uri::AssetUri;
@@ -189,3 +190,4 @@ pub use toctree::{NumberedDepth, TocEntry, Toctree, ToctreeFlag, ToctreeOptions}
 pub use uml::{Uml, UmlSource};
 pub use version_change_kind::VersionChangeKind;
 pub use visit::{Child, for_each_child, walk_nodes, walk_nodes_with_siblings};
+pub use written::Written;

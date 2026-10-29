@@ -42,6 +42,19 @@ pub struct DefinitionSite {
     pub start: Position,
     /// Just past its last character, in that file.
     pub end: Position,
+    /// Exactly the characters its name was written as, in that file — a
+    /// label's name, a `:name:`, `:label:` or `:id:` value — when it has a
+    /// name of its own and the parser knew where.
+    pub name: Option<NameRange>,
+}
+
+/// The characters a definition's name takes, on its site's line.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct NameRange {
+    /// Its first character.
+    pub start: Position,
+    /// Just past its last character.
+    pub end: Position,
 }
 
 /// Every definition one document writes, by what the index names it.
@@ -82,6 +95,7 @@ mod tests {
             file: None,
             start: Position::new(line, 1),
             end: Position::new(line, 10),
+            name: None,
         }
     }
 

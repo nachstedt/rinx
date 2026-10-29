@@ -37,7 +37,7 @@ pub(super) fn render_code_block_directive(
         let _ = write!(
             html,
             " id=\"{}\"",
-            html_escape::encode_double_quoted_attribute(name.as_str())
+            html_escape::encode_double_quoted_attribute(name.value().as_str())
         );
     }
     let _ = writeln!(html, ">");
@@ -327,7 +327,7 @@ mod tests {
     fn test_render_code_block_emits_the_name_as_an_anchor_id() {
         // Given
         let mut code = block("python", "x = 1");
-        code.name = Some(TargetName::new("my-block"));
+        code.name = Some(TargetName::new("my-block").into());
 
         // When
         let html = render(&code);

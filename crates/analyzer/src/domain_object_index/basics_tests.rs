@@ -809,7 +809,7 @@ fn cmdoption_with(flags: rinx_ast::DescriptionFlags) -> Document {
                 flags,
                 signatures: NonEmptyVector::single("-v, --verbose".to_string()),
                 body: vec![Node::Target {
-                    name: TargetName::new("verbosity"),
+                    name: TargetName::new("verbosity").into(),
                     destination: None,
                     span: None,
                 }],

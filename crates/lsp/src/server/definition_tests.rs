@@ -109,6 +109,29 @@ fn test_definition_of_a_ref_is_the_line_its_label_is_written_on() {
 }
 
 #[test]
+fn test_definition_of_a_toctree_s_name_is_where_the_name_is_written() {
+    // Given — a toctree, which has no span of its own, named `tree`
+    let index = "Index\n=====\n\n.. toctree::\n   :name: tree\n\n   setup\n";
+    let (workspace, mut state) = server_over(
+        "definition_toctree_name",
+        &[("setup.rst", SETUP), ("index.rst", index)],
+        "See :ref:`tree`.\n",
+    );
+
+    // When
+    let found = definition_in_notes(&workspace, &mut state, 8);
+
+    // Then — the value on the `:name:` line
+    assert_eq!(
+        found,
+        Some(GotoDefinitionResponse::Scalar(Location::new(
+            workspace.uri("index.rst"),
+            on_line(4, 10, 14)
+        )))
+    );
+}
+
+#[test]
 fn test_definition_of_a_term_is_its_line_in_the_glossary() {
     // Given
     let glossary = "Glossary\n========\n\n.. glossary::\n\n   widget\n      A thing.\n";

@@ -72,7 +72,7 @@ fn test_index_entity_records_what_a_reader_of_the_index_needs() {
     let body = EntityBody {
         relation_spans: BTreeMap::new(),
         type_name: "req".to_string(),
-        id: id("REQ_001"),
+        id: id("REQ_001").into(),
         attributes: BTreeMap::from([(
             "title".to_string(),
             AttributeValue::String("Boot quickly".to_string()),
@@ -100,7 +100,7 @@ fn test_index_entity_keeps_no_section_prose() {
     let body = EntityBody {
         relation_spans: BTreeMap::new(),
         type_name: "req".to_string(),
-        id: id("REQ_001"),
+        id: id("REQ_001").into(),
         attributes: BTreeMap::new(),
         relations: BTreeMap::new(),
         sections: vec![EntitySection::named(

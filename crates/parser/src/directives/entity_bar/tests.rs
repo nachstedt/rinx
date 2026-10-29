@@ -365,7 +365,7 @@ fn test_the_presentation_options_are_read() {
     assert_eq!(bar.caption.as_deref(), Some("Who wrote what"));
     assert_eq!(bar.classes, ["wide"]);
     assert_eq!(
-        bar.name.as_ref().map(rinx_ast::TargetName::as_str),
+        bar.name.as_ref().map(|name| name.value().as_str()),
         Some("report-chart")
     );
     assert!(codes(rst).is_empty(), "{:?}", codes(rst));

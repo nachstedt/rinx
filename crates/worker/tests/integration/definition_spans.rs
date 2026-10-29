@@ -114,3 +114,50 @@ fn test_moving_lines_moves_every_definition_site() {
         assert!(new > old, "{key:?} stayed at line {old}");
     }
 }
+
+#[test]
+fn test_moving_a_name_along_its_line_leaves_the_written_ast_unchanged() {
+    // Given — every `:name:` and `:label:` value pushed right
+    let pushed = GUIDE
+        .replace(":name: ", ":name:    ")
+        .replace(":label: ", ":label:    ");
+
+    // When
+    let written = |source: &str| {
+        serde_json::to_string(&rinx_parser::parse("guide.rst", source)).expect("serializes")
+    };
+
+    // Then — a name's span is the editor's alone
+    assert_eq!(written(GUIDE), written(&pushed));
+}
+
+#[test]
+fn test_each_named_definition_s_site_holds_exactly_its_name() {
+    // Given — the parse the editor analyses, never read back from a `.ast`
+    let analysis = DocumentAnalysis::of(&rinx_parser::parse("guide.rst", GUIDE));
+    let lines: Vec<&str> = GUIDE.lines().collect();
+
+    // When — the text each site's name range covers
+    let named: Vec<(String, String)> = analysis
+        .definition_sites()
+        .iter()
+        .filter_map(|(key, site)| {
+            let name = site.name?;
+            let line = lines[name.start.line as usize - 1];
+            let text: String = line
+                .chars()
+                .skip(name.start.column as usize - 1)
+                .take((name.end.column - name.start.column) as usize)
+                .collect();
+            Some((format!("{key:?}"), text))
+        })
+        .collect();
+
+    // Then — in key order: the labels, then the equation
+    let texts: Vec<&str> = named.iter().map(|(_, text)| text.as_str()).collect();
+    assert_eq!(
+        texts,
+        ["example", "install", "sizes", "energy"],
+        "{named:?}"
+    );
+}

@@ -2,6 +2,7 @@
 //! lists, and the directive dispatcher — everything [`render_nodes`] reaches
 //! while walking a document's node tree.
 
+use rinx_ast::Written;
 use rinx_ast::{
     Directive, Enumerator, InlineNode, LinkDestination, ListItem, Node, Toctree, ToctreeFlag,
 };
@@ -251,7 +252,7 @@ pub(crate) fn render_nodes_with_paragraph_class(
                 name, destination, ..
             } => {
                 if destination.is_none() {
-                    let escaped_name = html_escape::encode_text(name.as_str());
+                    let escaped_name = html_escape::encode_text(name.value().as_str());
                     let _ = writeln!(html, "<a id=\"{escaped_name}\"></a>");
                 }
             }
@@ -414,7 +415,7 @@ fn render_toctree_directive(html: &mut String, toctree: &Toctree, ctx: &mut Rend
     // even for a `:hidden:` toctree — which otherwise renders nothing, and
     // would leave every reference to it dangling.
     if let Some(name) = &toctree.options.name {
-        let escaped = html_escape::encode_double_quoted_attribute(name.as_str());
+        let escaped = html_escape::encode_double_quoted_attribute(name.value().as_str());
         let _ = writeln!(html, "<a id=\"{escaped}\"></a>");
     }
 
@@ -463,7 +464,7 @@ fn render_wrapped_table_directive(
             width: width.as_deref(),
             align: *align,
             classes,
-            name: name.as_ref(),
+            name: name.as_ref().map(Written::value),
             number: ctx.numbering.caption_number(directive),
             header_rows,
             body_rows,
@@ -504,7 +505,7 @@ fn render_data_table_directive(html: &mut String, directive: &Directive, ctx: &m
             width: width.as_deref(),
             align: *align,
             classes,
-            name: name.as_ref(),
+            name: name.as_ref().map(Written::value),
             number: ctx.numbering.caption_number(directive),
             rows,
         },
@@ -583,7 +584,15 @@ fn render_directive(
             nowrap,
             classes,
             span,
-        } => render_math(html, parts, label.as_ref(), *nowrap, classes, *span, ctx),
+        } => render_math(
+            html,
+            parts,
+            label.as_ref().map(Written::value),
+            *nowrap,
+            classes,
+            *span,
+            ctx,
+        ),
         Directive::DataTable { .. } => render_data_table_directive(html, directive, ctx),
         Directive::Table { .. } => render_wrapped_table_directive(html, directive, ctx),
         // A directive this build could not turn into content is the one

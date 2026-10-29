@@ -166,11 +166,11 @@ fn build_context(entity: &EntityBody, ctx: &mut RenderCtx<'_>) -> Value {
     context! {
         labels => declared_labels(entity_type, &entity.type_name, ctx),
         section_list => section_list,
-        id => entity.id.as_str(),
+        id => entity.id.value().as_str(),
         type => entity.type_name.clone(),
         label => label,
         title => entity.title(),
-        anchor => super::entity_anchor(entity.id.as_str()),
+        anchor => super::entity_anchor(entity.id.value().as_str()),
         content => content,
         sections => sections,
         attributes => attributes,
@@ -179,7 +179,7 @@ fn build_context(entity: &EntityBody, ctx: &mut RenderCtx<'_>) -> Value {
         incoming => ctx
             .index
             .entity_backlinks
-            .get(&entity.id)
+            .get(entity.id.value())
             .map(|backlinks| link_namespace(backlinks, ctx))
             .unwrap_or_default(),
     }
@@ -193,7 +193,12 @@ fn build_context(entity: &EntityBody, ctx: &mut RenderCtx<'_>) -> Value {
 /// variable, so a template can read `history.attributes.status.current`
 /// unconditionally.
 fn build_history(entity: &EntityBody, ctx: &mut RenderCtx<'_>) -> Value {
-    let Some(field_history) = ctx.index.entity_update_history.get(&entity.id).cloned() else {
+    let Some(field_history) = ctx
+        .index
+        .entity_update_history
+        .get(entity.id.value())
+        .cloned()
+    else {
         return context! {
             attributes => BTreeMap::<String, Value>::new(),
             relations => BTreeMap::<String, Value>::new(),

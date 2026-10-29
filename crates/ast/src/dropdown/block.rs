@@ -11,6 +11,7 @@ use crate::node::Node;
 use crate::spacing::Spacing;
 use crate::span::Span;
 use crate::target_name::TargetName;
+use crate::written::Written;
 
 /// A collapsible container — sphinx-design's `.. dropdown::`.
 ///
@@ -44,7 +45,7 @@ pub struct Dropdown {
     /// `:name:` — reuses [`TargetName`] like the image, table and math
     /// directives do, so it registers in `ProjectIndex::targets` with no
     /// conversion.
-    pub name: Option<TargetName>,
+    pub name: Option<Written<TargetName>>,
     /// `:class-container:` — extra classes for the `<details>`.
     pub class_container: Vec<String>,
     /// `:class-title:` — extra classes for the `<summary>`.
@@ -184,7 +185,7 @@ mod tests {
             chevron: Chevron::DownUp,
             animate: Some(Animation::FadeIn),
             margin: Some(Spacing::All(SpacingValue::Three)),
-            name: Some(TargetName::new("my-dropdown")),
+            name: Some(TargetName::new("my-dropdown").into()),
             class_container: vec!["a".to_string()],
             class_title: vec!["b".to_string()],
             class_body: vec!["c".to_string()],

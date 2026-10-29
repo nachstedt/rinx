@@ -489,7 +489,7 @@ mod tests {
         // Then
         assert!(diagnostics.is_empty());
         if let Directive::DataTable { name, .. } = directive {
-            assert_eq!(name, Some(TargetName::new("My Table")));
+            assert_eq!(name, Some(TargetName::new("My Table").into()));
         } else {
             panic!("Expected DataTable directive");
         }

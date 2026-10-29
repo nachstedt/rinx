@@ -22,7 +22,7 @@ use crate::directives::option_value::{Classes, NonEmptyText, Percentage};
 use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, ImageAlign, LengthOrPercentage, TargetName, Uml,
-    UmlSource,
+    UmlSource, Written,
 };
 
 use crate::context::ParseCtx;
@@ -68,7 +68,7 @@ directive_options! {
         /// `:class:`.
         Class(Classes) => (["class"], "Classes for the diagram."),
         /// `:name:`.
-        Name(TargetName) => (["name"], "A label to reference the diagram by."),
+        Name(Written<TargetName>) => (["name"], "A label to reference the diagram by."),
         /// `:config:`.
         Config(NonEmptyText) => (["config"], "PlantUML configuration written before the diagram."),
         /// `:debug:`.
@@ -360,7 +360,7 @@ mod tests {
         );
         assert_eq!(uml.scale, Some(50));
         assert_eq!(uml.classes, ["wide", "framed"]);
-        assert_eq!(uml.name, Some(TargetName::new("my-diagram")));
+        assert_eq!(uml.name, Some(TargetName::new("my-diagram").into()));
         assert_eq!(codes(&diagnostics), []);
     }
 

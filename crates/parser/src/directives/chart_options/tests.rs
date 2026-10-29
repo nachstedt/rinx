@@ -22,6 +22,7 @@ fn option(name: &str, value: &str) -> OptionLine {
         value: value.to_string(),
         raw: format!(":{name}: {value}"),
         line_index: 0,
+        continued: false,
     }
 }
 

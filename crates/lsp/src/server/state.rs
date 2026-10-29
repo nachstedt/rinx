@@ -1059,8 +1059,8 @@ impl ServerState {
     /// The definition an option line at `position` of the open document
     /// `uri` names, wherever on the line the cursor is: a directive's
     /// `:name:`, a `.. math::`'s `:label:`, an entity's `:id:` — when the
-    /// project's index has the document defining it, as a directive's own
-    /// label and a `.. contents::`'s have even without a recorded site.
+    /// project's index has the document defining it, whether or not its
+    /// analysis recorded a site for it.
     fn option_definition_at(
         &mut self,
         uri: &Uri,

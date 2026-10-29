@@ -13,6 +13,7 @@
 //! with its own idea of the text would emit an `<img>` pointing at a file
 //! nothing compiled.
 
+use rinx_ast::Written;
 use rinx_ast::{HashedContent, Position, Span, Uml};
 use rinx_uml::{UmlContext, UmlError, expand};
 
@@ -98,7 +99,7 @@ pub(super) fn render_uml_directive(html: &mut String, uml: &Uml, ctx: &mut Rende
             align: uml.align,
             width: uml.rendered_width(),
             caption: uml.caption.as_deref(),
-            name: uml.name.as_ref(),
+            name: uml.name.as_ref().map(Written::value),
             debug: uml.debug,
         },
         ctx,
@@ -440,7 +441,7 @@ mod tests {
     fn test_a_named_diagram_carries_an_id_a_ref_can_land_on() {
         // Given
         let uml = Uml {
-            name: Some(TargetName::new("my-diagram")),
+            name: Some(TargetName::new("my-diagram").into()),
             ..diagram()
         };
 
