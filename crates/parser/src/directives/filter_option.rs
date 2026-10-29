@@ -289,7 +289,10 @@ mod update_argument_tests {
             .expect("a bare id should read as a target");
 
         // Then
-        assert_eq!(target.candidate_id, EntityId::new("REQ_001").ok());
+        assert_eq!(
+            target.candidate_id,
+            EntityId::new("REQ_001").ok().map(Into::into)
+        );
         assert!(target.filter.is_some());
         assert!(diagnostics.is_empty());
     }
@@ -304,7 +307,10 @@ mod update_argument_tests {
             .expect("a legal id spelling should still read as a target");
 
         // Then
-        assert_eq!(target.candidate_id, EntityId::new("REQ:001").ok());
+        assert_eq!(
+            target.candidate_id,
+            EntityId::new("REQ:001").ok().map(Into::into)
+        );
         assert_eq!(target.filter, None);
         assert!(diagnostics.is_empty());
     }

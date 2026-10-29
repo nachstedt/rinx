@@ -21,7 +21,7 @@ use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unk
 use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, EntityUpdate, EntityUpdateSource, FieldMutation,
-    FieldMutationMode,
+    FieldMutationMode, Span,
 };
 
 use crate::context::ParseCtx;
@@ -32,6 +32,25 @@ use super::error_node::malformed_node;
 use super::filter_option::read_update_argument;
 use super::option_value::Boolean;
 use super::options::{DirectiveOptions, OptionLine, OptionRead, directive_options};
+
+/// Exactly the characters of the argument, when it is the marker line's
+/// alone: the block's first line is the text after the `::`, positioned by
+/// the invocation's context.
+fn argument_span(invocation: &DirectiveInvocation<'_, '_>) -> Option<Span> {
+    let line = invocation.lines.first()?;
+    let argument = line.trim();
+    if argument.is_empty() || argument != invocation.argument(0).trim() {
+        return None;
+    }
+    let start = line.chars().take_while(|c| c.is_whitespace()).count();
+    let end = start + argument.chars().count();
+    Some(
+        invocation
+            .ctx
+            .position(0, start)?
+            .to(invocation.ctx.position(0, end)?),
+    )
+}
 
 /// Identity fields this directive refuses to mutate — exactly
 /// `rinx_entity::field::BUILTIN_FIELDS`, spelled out rather than
@@ -107,6 +126,7 @@ pub(super) fn parse_entity_update(
         );
     };
 
+    let target = target.written_at(argument_span(invocation));
     let mut update = EntityUpdate::new(source, target);
     for line in option_lines {
         match UpdateOption::read(line, directive, diagnostics, ctx) {

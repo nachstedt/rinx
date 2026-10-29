@@ -80,7 +80,7 @@ fn update_record(
     fields: Vec<(&str, FieldMutationMode)>,
     strict: bool,
 ) -> EntityUpdateRecord {
-    let candidate_id = EntityId::new(target_raw).ok();
+    let candidate_id = EntityId::new(target_raw).ok().map(Into::into);
     let filter = rinx_filter::parse_filter(target_raw).ok();
     let mut update = EntityUpdate::new(
         EntityUpdateSource::EntityUpdate,

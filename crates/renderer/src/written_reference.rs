@@ -12,13 +12,15 @@
 //! each document it holds no parse of.
 
 use rinx_ast::{
-    Child, Directive, Document, InlineNode, Node, Span, TocEntry, for_each_child, walk_nodes,
+    Child, Directive, Document, HyperlinkTarget, InlineNode, LinkDestination, Node, NonEmptyVector,
+    Span, TargetName, TocEntry, for_each_child, walk_nodes,
 };
 use rinx_entity::EntitySchema;
 use rinx_index::ProjectIndex;
 use rinx_scope::{DocumentScopes, Scope};
 
 use crate::config::SiteConfig;
+use crate::hyperlink_target::{alias_chain, written_link_targets};
 use crate::numbering::Numbering;
 use crate::resolution::{DomainObjectResolver, EntityResolver, OptionResolver};
 use crate::{ReferenceResolver, ReferenceTarget};
@@ -36,6 +38,13 @@ pub enum WrittenUse {
     },
     /// An entry of a `.. toctree::`.
     TocEntry { entry: TocEntry, span: Span },
+    /// A named reference — `name_`, `` `text <name_>`_ ``, or an alias
+    /// target's `.. _a: name_` — with the names it passes through in its own
+    /// document, from the one written to the one it lands on.
+    NamedReference {
+        chain: NonEmptyVector<TargetName>,
+        span: Span,
+    },
 }
 
 impl WrittenUse {
@@ -44,22 +53,42 @@ impl WrittenUse {
     #[must_use]
     pub const fn span(&self) -> Span {
         match self {
-            Self::Reference { span, .. } | Self::TocEntry { span, .. } => *span,
+            Self::Reference { span, .. }
+            | Self::TocEntry { span, .. }
+            | Self::NamedReference { span, .. } => *span,
         }
     }
 }
 
-/// Every cross-reference and `.. toctree::` entry written in `doc` with a
-/// span, in document order — those spliced in from an `.. include::`d
-/// fragment included, since the including document resolves them.
+/// Every cross-reference, named reference and `.. toctree::` entry written
+/// in `doc` with a span, in document order — those spliced in from an
+/// `.. include::`d fragment included, since the including document resolves
+/// them.
 ///
 /// Found by the walk the language server finds the one under the cursor by,
-/// so "every use" and "the use here" cover the same nodes.
+/// so "every use" and "the use here" cover the same nodes. A named reference
+/// is followed through the aliases the document writes here, while the
+/// document is at hand: it resolves within its own document only.
 #[must_use]
 pub fn written_uses(doc: &Document) -> Vec<WrittenUse> {
     let scopes = DocumentScopes::of(&doc.nodes);
+    let link_targets = written_link_targets(doc);
+    let named = |name: &TargetName, span: Option<Span>| {
+        Some(WrittenUse::NamedReference {
+            chain: alias_chain(&link_targets, name)?,
+            span: span?,
+        })
+    };
     let mut uses = Vec::new();
     walk_nodes(&doc.nodes, &mut |node| {
+        if let Node::Target {
+            destination: Some(LinkDestination::Name(name)),
+            span,
+            ..
+        } = node
+        {
+            uses.extend(named(name, *span));
+        }
         if let Node::Directive(Directive::Toctree(toctree)) = node {
             uses.extend(toctree.entries.iter().filter_map(|entry| {
                 Some(WrittenUse::TocEntry {
@@ -70,11 +99,16 @@ pub fn written_uses(doc: &Document) -> Vec<WrittenUse> {
         }
         for_each_child(node, &mut |child| {
             if let Child::Inline(inlines) = child {
-                uses.extend(
-                    inlines
-                        .iter()
-                        .filter_map(|inline| written_reference(inline, &scopes)),
-                );
+                uses.extend(inlines.iter().filter_map(|inline| match inline {
+                    InlineNode::Hyperlink {
+                        target:
+                            HyperlinkTarget::Reference(name)
+                            | HyperlinkTarget::Embedded(LinkDestination::Name(name)),
+                        span,
+                        ..
+                    } => named(name, *span),
+                    _ => written_reference(inline, &scopes),
+                }));
             }
         });
     });
@@ -150,6 +184,13 @@ impl<'a> UseResolver<'a> {
                 .into_iter()
                 .collect(),
             WrittenUse::TocEntry { entry, .. } => self.resolver.toc_entry_targets(entry),
+            WrittenUse::NamedReference { chain, .. } => crate::inline::named_reference_target(
+                self.resolver.index,
+                chain,
+                self.resolver.doc_path,
+            )
+            .into_iter()
+            .collect(),
         }
     }
 }
@@ -216,7 +257,7 @@ mod tests {
             .into_iter()
             .map(|written| match written {
                 WrittenUse::Reference { scope, .. } => scope,
-                WrittenUse::TocEntry { .. } => None,
+                WrittenUse::TocEntry { .. } | WrittenUse::NamedReference { .. } => None,
             })
             .collect();
         assert_eq!(scopes, vec![Some(pkg), None]);
@@ -320,5 +361,132 @@ mod tests {
 
         // When / Then
         assert_eq!(uses[0].span().start, Position::new(1, 5));
+    }
+
+    /// The chain of every named reference written in `text`, in order.
+    fn named_chains(text: &str) -> Vec<Vec<String>> {
+        written_uses(&rinx_parser::parse("index.rst", text))
+            .into_iter()
+            .filter_map(|written| match written {
+                WrittenUse::NamedReference { chain, .. } => Some(
+                    chain
+                        .as_slice()
+                        .iter()
+                        .map(|name| name.as_str().to_string())
+                        .collect(),
+                ),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn test_written_uses_lists_every_named_reference_form() {
+        // Given — a bare name, a quoted one, an embedded alias and an alias
+        // target, and an embedded URI, which names nothing
+        let text = ".. _install:\n\nSee install_, `Install`_, `the guide <install_>`_ \
+                    and `site <https://example.org>`_.\n\n.. _setup: install_\n";
+
+        // When / Then — the three in the paragraph, then the alias target
+        assert_eq!(named_chains(text), vec![vec!["install"]; 4]);
+    }
+
+    #[test]
+    fn test_written_uses_follows_a_named_reference_through_its_aliases() {
+        // Given — `docs_` names `guide`, which names `install`
+        let text = ".. _install:\n\nSee docs_.\n\n.. _docs: guide_\n.. _guide: install_\n";
+
+        // When / Then — the reference, then each alias target
+        assert_eq!(
+            named_chains(text),
+            vec![
+                vec!["docs", "guide", "install"],
+                vec!["guide", "install"],
+                vec!["install"],
+            ]
+        );
+    }
+
+    #[test]
+    fn test_written_uses_skips_a_name_leading_to_a_uri_or_round_a_cycle() {
+        // Given
+        let text = "See python_ and loop_.\n\n.. _python: https://python.org\n\
+                    .. _loop: back_\n.. _back: loop_\n";
+
+        // When / Then
+        assert!(named_chains(text).is_empty());
+    }
+
+    /// The titles `targets` gives each named reference of `text`, written in
+    /// `index.rst` and resolved against `index`.
+    fn named_titles(text: &str, index: &ProjectIndex) -> Vec<Vec<String>> {
+        let config = SiteConfig::default();
+        let resolver = UseResolver::new("index.rst", index, &config, EntitySchema::empty_ref());
+        written_uses(&rinx_parser::parse("index.rst", text))
+            .iter()
+            .filter(|written| matches!(written, WrittenUse::NamedReference { .. }))
+            .map(|written| {
+                resolver
+                    .targets(written)
+                    .into_iter()
+                    .map(|target| format!("{:?}", target.definition))
+                    .collect()
+            })
+            .collect()
+    }
+
+    #[test]
+    fn test_targets_of_a_named_reference_are_the_label_of_its_own_page() {
+        // Given — `install` is this page's, `setup` another's
+        let mut index = ProjectIndex::default();
+        index
+            .targets
+            .insert(TargetName::new("install"), "index.rst".to_string());
+        index
+            .targets
+            .insert(TargetName::new("setup"), "setup.rst".to_string());
+
+        // When
+        let titles = named_titles("install_ and setup_ and `Intro`_\n", &index);
+
+        // Then — `setup_` resolves in its own page only, and `Intro` is no label
+        assert_eq!(
+            titles,
+            vec![
+                vec![format!(
+                    "{:?}",
+                    Some(rinx_index::DefinitionKey::Label(TargetName::new("install")))
+                )],
+                vec![],
+                vec![],
+            ]
+        );
+    }
+
+    #[test]
+    fn test_targets_of_a_named_reference_are_none_through_an_alias_the_page_also_labels() {
+        // Given — `docs` is both an alias and an internal target of the page,
+        // so the reference has two destinations and the page draws it broken
+        let mut index = ProjectIndex::default();
+        for name in ["install", "docs"] {
+            index
+                .targets
+                .insert(TargetName::new(name), "index.rst".to_string());
+        }
+
+        // When
+        let titles = named_titles("See docs_.\n\n.. _docs: install_\n", &index);
+
+        // Then — the reference leads nowhere; the alias line still names `install`
+        assert_eq!(
+            titles,
+            vec![
+                vec![],
+                vec![format!(
+                    "{:?}",
+                    Some(rinx_index::DefinitionKey::Label(TargetName::new("install")))
+                )],
+            ]
+        );
     }
 }

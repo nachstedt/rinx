@@ -1126,6 +1126,12 @@ alone. `rinx lsp --check <folder> --references <document>:<line>:<column>`
 times a request cold, warm, and after an edit to the document it is asked
 from.
 
+Later, preparing #31: a named reference (`install_`, `` `text <install_>`_ ``,
+an alias target's `.. _docs: install_`) is a use of the label its page
+defines, followed through the aliases the page writes, and an
+`.. entity-update::` whose argument names an entity is a use of it, its id
+alone underlined.
+
 Measured on CPython's 524 documents with a release build: the 132 uses of
 `dict` (`library/stdtypes.rst:5021`) take 49 ms cold, 11 ms warm and 12 ms
 after an edit; a label with six uses takes 2 ms warm, 3 ms after an edit.

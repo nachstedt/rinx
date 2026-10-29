@@ -28,8 +28,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use rinx_ast::{
-    Document, HyperlinkTarget, InlineNode, LinkDestination, Node, SectionId, TargetName,
-    for_each_inline_list, inline_plain_text, walk_nodes,
+    Document, HyperlinkTarget, InlineNode, LinkDestination, Node, NonEmptyVector, SectionId,
+    TargetName, for_each_inline_list, inline_plain_text, walk_nodes,
 };
 use rinx_index::ProjectIndex;
 
@@ -55,35 +55,7 @@ impl DocumentHyperlinkTargets {
         index: &ProjectIndex,
         section_ids: &BTreeMap<usize, SectionId>,
     ) -> Self {
-        let mut explicit: BTreeMap<TargetName, BTreeSet<LinkDestination>> = BTreeMap::new();
-        walk_nodes(&doc.nodes, &mut |node| {
-            if let Node::Target {
-                name,
-                destination: Some(destination),
-                ..
-            } = node
-            {
-                explicit
-                    .entry(name.value().clone())
-                    .or_default()
-                    .insert(destination.clone());
-            }
-        });
-        for_each_inline_list(&doc.nodes, &mut |list| {
-            for node in list {
-                if let InlineNode::Hyperlink {
-                    text,
-                    target: HyperlinkTarget::Embedded(destination),
-                    ..
-                } = node
-                {
-                    explicit
-                        .entry(TargetName::new(text))
-                        .or_default()
-                        .insert(destination.clone());
-                }
-            }
-        });
+        let mut explicit = written_link_targets(doc);
         for (name, doc_path) in &index.targets {
             if *doc_path == doc.path {
                 let anchor = format!("#{}", index.target_anchor(name));
@@ -156,6 +128,67 @@ impl DocumentHyperlinkTargets {
     }
 }
 
+/// The destinations `doc` gives names in its own text: its targets with a
+/// destination (a URI or an alias), wherever they are nested, and the text
+/// of each embedded `` `text <destination>`_ ``.
+pub(crate) fn written_link_targets(
+    doc: &Document,
+) -> BTreeMap<TargetName, BTreeSet<LinkDestination>> {
+    let mut written: BTreeMap<TargetName, BTreeSet<LinkDestination>> = BTreeMap::new();
+    walk_nodes(&doc.nodes, &mut |node| {
+        if let Node::Target {
+            name,
+            destination: Some(destination),
+            ..
+        } = node
+        {
+            written
+                .entry(name.value().clone())
+                .or_default()
+                .insert(destination.clone());
+        }
+    });
+    for_each_inline_list(&doc.nodes, &mut |list| {
+        for node in list {
+            if let InlineNode::Hyperlink {
+                text,
+                target: HyperlinkTarget::Embedded(destination),
+                ..
+            } = node
+            {
+                written
+                    .entry(TargetName::new(text))
+                    .or_default()
+                    .insert(destination.clone());
+            }
+        }
+    });
+    written
+}
+
+/// The names a reference to `name` passes through in a document giving the
+/// `written` destinations: `name`, then each alias it leads on to, ending at
+/// the first name the document's text gives no destination — which only an
+/// internal target or a section can then stand for. `None` where it leads
+/// to a URI, to a name given several destinations, or round a cycle.
+pub(crate) fn alias_chain(
+    written: &BTreeMap<TargetName, BTreeSet<LinkDestination>>,
+    name: &TargetName,
+) -> Option<NonEmptyVector<TargetName>> {
+    let mut chain = vec![name.clone()];
+    loop {
+        let current = chain.last()?;
+        let Some(destinations) = written.get(current) else {
+            return NonEmptyVector::try_from(chain).ok();
+        };
+        match only(destinations)? {
+            LinkDestination::Uri(_) => return None,
+            LinkDestination::Name(next) if chain.contains(next) => return None,
+            LinkDestination::Name(next) => chain.push(next.clone()),
+        }
+    }
+}
+
 /// The anchor of a contested target, whose recorded anchor the merge dropped
 /// with it: an entity's own `entity-<id>`, else the name.
 fn contested_target_anchor(index: &ProjectIndex, name: &TargetName) -> String {
@@ -197,6 +230,76 @@ mod tests {
             destination: Some(LinkDestination::Name(TargetName::new(of))),
             span: None,
         }
+    }
+
+    /// The chain from `name` through `nodes`' own destinations, as strings.
+    fn chain_of(nodes: Vec<Node>, name: &str) -> Option<Vec<String>> {
+        let doc = Document::new("page.rst".to_string(), nodes);
+        let chain = alias_chain(&written_link_targets(&doc), &TargetName::new(name))?;
+        Some(
+            chain
+                .as_slice()
+                .iter()
+                .map(|n| n.as_str().to_string())
+                .collect(),
+        )
+    }
+
+    #[test]
+    fn test_written_link_targets_reads_targets_and_embedded_references() {
+        // Given
+        let doc = Document::new(
+            "page.rst".to_string(),
+            vec![
+                external("python", "https://python.org"),
+                alias("docs", "install"),
+                embedded("Guide", LinkDestination::Name(TargetName::new("install"))),
+            ],
+        );
+
+        // When
+        let written = written_link_targets(&doc);
+
+        // Then
+        let names: Vec<&str> = written.keys().map(TargetName::as_str).collect();
+        assert_eq!(names, ["docs", "guide", "python"]);
+    }
+
+    #[test]
+    fn test_alias_chain_ends_at_the_first_name_the_text_gives_no_destination() {
+        // When / Then
+        assert_eq!(
+            chain_of(vec![], "install"),
+            Some(vec!["install".to_string()])
+        );
+        assert_eq!(
+            chain_of(
+                vec![alias("docs", "guide"), alias("guide", "install")],
+                "docs"
+            ),
+            Some(vec![
+                "docs".to_string(),
+                "guide".to_string(),
+                "install".to_string()
+            ])
+        );
+    }
+
+    #[test]
+    fn test_alias_chain_is_none_for_a_uri_a_duplicate_or_a_cycle() {
+        // When / Then
+        assert_eq!(
+            chain_of(vec![external("python", "https://python.org")], "python"),
+            None
+        );
+        assert_eq!(
+            chain_of(vec![alias("docs", "a"), alias("docs", "b")], "docs"),
+            None
+        );
+        assert_eq!(
+            chain_of(vec![alias("loop", "back"), alias("back", "loop")], "loop"),
+            None
+        );
     }
 
     fn embedded(text: &str, destination: LinkDestination) -> Node {

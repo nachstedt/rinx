@@ -362,3 +362,27 @@ fn test_references_of_a_name_line_naming_another_document_s_label_are_none() {
         None
     );
 }
+
+#[test]
+fn test_references_of_a_label_include_its_page_s_named_references() {
+    // Given — `install_`, the same through an alias target, and a bare
+    // `:ref:`; `setup_` names a label of no page here
+    let text = ".. _install:\n\nSee install_ and `the guide <install_>`_ and docs_.\n\n\
+                .. _docs: install_\n";
+    let (workspace, mut state) = server_over("references_named", &[], text);
+
+    // When — on the label's line
+    let found = references_at(&mut state, workspace.uri("notes.rst"), 0, 6, false);
+
+    // Then — each reference, then the alias target's line
+    let notes = workspace.uri("notes.rst");
+    assert_eq!(
+        found,
+        Some(vec![
+            Location::new(notes.clone(), on_line(2, 4, 12)),
+            Location::new(notes.clone(), on_line(2, 17, 40)),
+            Location::new(notes.clone(), on_line(2, 45, 50)),
+            Location::new(notes, on_line(4, 0, 18)),
+        ])
+    );
+}

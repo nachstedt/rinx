@@ -64,7 +64,7 @@ mod tests {
 
     fn target() -> UpdateTarget {
         UpdateTarget {
-            candidate_id: Some(EntityId::new("REQ_001").unwrap()),
+            candidate_id: Some(EntityId::new("REQ_001").unwrap().into()),
             filter: None,
             raw: "REQ_001".to_string(),
         }
