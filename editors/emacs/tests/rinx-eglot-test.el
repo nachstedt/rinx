@@ -180,4 +180,14 @@ The workspace scan may still be running when it is first asked."
                                    (equal (plist-get symbol :containerName) "Editor fixture")))
                             outline))))))
 
+;; A workspace search finds the label of a document no buffer holds.
+(ert-deftest rinx-eglot-searches-the-workspace ()
+  (rinx-test--with-index
+    (let ((found (rinx-test--request :workspace/symbol '(:query "instal"))))
+      (should (seq-some (lambda (symbol)
+                          (and (equal (plist-get symbol :name) "install")
+                               (string-suffix-p "/target.rst"
+                                                (plist-get (plist-get symbol :location) :uri))))
+                        found)))))
+
 ;;; rinx-eglot-test.el ends here

@@ -9,7 +9,9 @@
 //! sphinx-needs configuration by [`needs`] (reading `conf.py`'s literals
 //! through [`python_value`]). [`scan`] parses and analyses their
 //! documents in parallel when the server starts, and [`index`] keeps one
-//! analysis per document and folds them into the project's index.
+//! analysis per document and folds them into the project's index — beside
+//! which [`references`] keeps what each document uses and [`symbols`] what it
+//! defines, as a workspace search lists it.
 
 mod bazel_manifest;
 mod build_file;
@@ -29,6 +31,7 @@ mod references;
 mod scan;
 mod sphinx_conf;
 mod strictness;
+mod symbols;
 
 pub use bazel_manifest::{BazelGrant, BazelRoots, read_bazel_projects};
 pub use build_file::{add_deps, build_file_of, library_listing};
@@ -43,7 +46,7 @@ pub use discover::{
 };
 pub use index::{Definitions, IndexedDocument, Project};
 pub use inventories::Fetched;
-pub(crate) use model::DEFAULT_ROOT_DOC;
+pub(crate) use model::{DEFAULT_ROOT_DOC, RST_SUFFIX};
 #[cfg(test)]
 pub use model::{LibraryModel, Listing, ProjectSettings};
 pub use model::{
@@ -56,3 +59,6 @@ pub use scan::{parse_project_documents, scan_folder};
 #[cfg(test)]
 pub use sphinx_conf::read_sphinx_conf;
 pub use strictness::{Judgement, Strictness};
+pub use symbols::SymbolCandidate;
+#[cfg(test)]
+pub use symbols::SymbolEntry;

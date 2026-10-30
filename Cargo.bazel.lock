@@ -1,5 +1,5 @@
 {
-  "checksum": "969d819cf76174b643536d367cc658bf67565ba997a49c52ec29deaa4ece4ca0",
+  "checksum": "526fccd87fa3b423ae5784538af139f539c68662257d70623fd73905d99b09f2",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -1870,6 +1870,38 @@
       ],
       "version": "0.17.0"
     },
+    "frizbee 0.13.0": {
+      "common_attrs": {
+        "crate_features": [
+          "default",
+          "std"
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "frizbee",
+      "license": "MIT",
+      "license_file": "LICENSE",
+      "license_ids": [
+        "MIT"
+      ],
+      "name": "frizbee",
+      "package_url": "https://github.com/saghen/frizbee",
+      "repository": {
+        "Http": {
+          "sha256": "19435f276a44d90570cb403d22fbe4b20c80eabc134f718d6ec0ae888eb47edc",
+          "url": "https://static.crates.io/crates/frizbee/0.13.0/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "frizbee",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.13.0"
+    },
     "futures-core 0.3.34": {
       "common_attrs": {
         "edition": "2018"
@@ -2448,7 +2480,7 @@
       ],
       "version": "0.3.105"
     },
-    "jsonschema 0.58.6": {
+    "jsonschema 0.59.0": {
       "common_attrs": {
         "deps": {
           "common": [
@@ -2481,11 +2513,11 @@
               "target": "itoa"
             },
             {
-              "id": "jsonschema-regex 0.58.6",
+              "id": "jsonschema-regex 0.59.0",
               "target": "jsonschema_regex"
             },
             {
-              "id": "jsonschema-value 0.58.6",
+              "id": "jsonschema-value 0.59.0",
               "target": "jsonschema_value"
             },
             {
@@ -2501,7 +2533,7 @@
               "target": "percent_encoding"
             },
             {
-              "id": "referencing 0.58.6",
+              "id": "referencing 0.59.0",
               "target": "referencing"
             },
             {
@@ -2550,8 +2582,8 @@
       "package_url": "https://github.com/Stranger6667/jsonschema",
       "repository": {
         "Http": {
-          "sha256": "f622c574a29fb3034a0a90645afee194dfedc75fc124228801b6e77041075bd1",
-          "url": "https://static.crates.io/crates/jsonschema/0.58.6/download"
+          "sha256": "1b320ad34c177093d21622edc9215bb608294c2333ff296672c0c8265a5ee60c",
+          "url": "https://static.crates.io/crates/jsonschema/0.59.0/download"
         }
       },
       "targets": [
@@ -2562,9 +2594,9 @@
           }
         }
       ],
-      "version": "0.58.6"
+      "version": "0.59.0"
     },
-    "jsonschema-regex 0.58.6": {
+    "jsonschema-regex 0.59.0": {
       "common_attrs": {
         "deps": [
           {
@@ -2583,8 +2615,8 @@
       "package_url": "https://github.com/Stranger6667/jsonschema",
       "repository": {
         "Http": {
-          "sha256": "a968fffd387b2ab005bf00c1851f5d26e90df05b6f7ad609ed0d620033cca5e7",
-          "url": "https://static.crates.io/crates/jsonschema-regex/0.58.6/download"
+          "sha256": "1472f7be79026f79e01a9b172263311e829d7c210d57b39cb57037abc0ce0500",
+          "url": "https://static.crates.io/crates/jsonschema-regex/0.59.0/download"
         }
       },
       "targets": [
@@ -2595,9 +2627,9 @@
           }
         }
       ],
-      "version": "0.58.6"
+      "version": "0.59.0"
     },
-    "jsonschema-value 0.58.6": {
+    "jsonschema-value 0.59.0": {
       "build_script_attrs": {},
       "common_attrs": {
         "crate_features": [
@@ -2658,8 +2690,8 @@
       "package_url": "https://github.com/Stranger6667/jsonschema",
       "repository": {
         "Http": {
-          "sha256": "39b7670345e5ce87371339d13705dbb9276b7e3e934bbe1efa2c6734a1f65a96",
-          "url": "https://static.crates.io/crates/jsonschema-value/0.58.6/download"
+          "sha256": "e5a7550a7a84787e715ead0b47e01fa8c6bb7c3413630f91a8f2094c06c2078a",
+          "url": "https://static.crates.io/crates/jsonschema-value/0.59.0/download"
         }
       },
       "targets": [
@@ -2676,7 +2708,7 @@
           }
         }
       ],
-      "version": "0.58.6"
+      "version": "0.59.0"
     },
     "kstring 2.0.4": {
       "common_attrs": {
@@ -4804,7 +4836,7 @@
       ],
       "version": "1.0.27"
     },
-    "referencing 0.58.6": {
+    "referencing 0.59.0": {
       "common_attrs": {
         "crate_features": [
           "default"
@@ -4865,8 +4897,8 @@
       "package_url": "https://github.com/Stranger6667/jsonschema",
       "repository": {
         "Http": {
-          "sha256": "558f3855529c0a7e78a48e409fa653456e55f1b167eab4109c16a255b7727e3f",
-          "url": "https://static.crates.io/crates/referencing/0.58.6/download"
+          "sha256": "473f4dcca28ead7ee0f8e5b5d0bbae2549f4fc4c958fb20af328961b6c174be3",
+          "url": "https://static.crates.io/crates/referencing/0.59.0/download"
         }
       },
       "targets": [
@@ -4877,7 +4909,7 @@
           }
         }
       ],
-      "version": "0.58.6"
+      "version": "0.59.0"
     },
     "regex 1.13.1": {
       "common_attrs": {
@@ -5154,7 +5186,7 @@
             "target": "sha2"
           },
           {
-            "id": "unicode-normalization 0.1.25",
+            "id": "unicode-normalization 0.1.26",
             "target": "unicode_normalization"
           }
         ],
@@ -5232,7 +5264,7 @@
         ],
         "deps_dev": [
           {
-            "id": "jsonschema 0.58.6",
+            "id": "jsonschema 0.59.0",
             "target": "jsonschema"
           }
         ],
@@ -5388,6 +5420,10 @@
           {
             "id": "crossbeam-channel 0.5.17",
             "target": "crossbeam_channel"
+          },
+          {
+            "id": "frizbee 0.13.0",
+            "target": "frizbee"
           },
           {
             "id": "lsp-server 0.10.0",
@@ -7391,7 +7427,7 @@
       ],
       "version": "1.0.24"
     },
-    "unicode-normalization 0.1.25": {
+    "unicode-normalization 0.1.26": {
       "common_attrs": {
         "crate_features": [
           "default",
@@ -7406,18 +7442,19 @@
         "edition": "2018"
       },
       "library_target_name": "unicode_normalization",
-      "license": "MIT OR Apache-2.0",
+      "license": "(MIT OR Apache-2.0) AND Unicode-3.0",
       "license_file": "LICENSE-APACHE",
       "license_ids": [
         "Apache-2.0",
-        "MIT"
+        "MIT",
+        "Unicode-3.0"
       ],
       "name": "unicode-normalization",
       "package_url": "https://github.com/unicode-rs/unicode-normalization",
       "repository": {
         "Http": {
-          "sha256": "5fd4f6878c9cb28d874b009da9e8d183b5abc80117c40bbd187a1fde336be6e8",
-          "url": "https://static.crates.io/crates/unicode-normalization/0.1.25/download"
+          "sha256": "75cd3fb03d5288b3ba9a1ee103ac7e9cbb59f0b03d64f8ddfcc04dd42758a85d",
+          "url": "https://static.crates.io/crates/unicode-normalization/0.1.26/download"
         }
       },
       "targets": [
@@ -7428,7 +7465,7 @@
           }
         }
       ],
-      "version": "0.1.25"
+      "version": "0.1.26"
     },
     "unicode-width 0.2.2": {
       "common_attrs": {
@@ -8237,6 +8274,7 @@
     "crossbeam-channel 0.5.17",
     "csv 1.4.0",
     "flate2 1.1.10",
+    "frizbee 0.13.0",
     "html-escape 0.3.0",
     "lsp-server 0.10.0",
     "lsp-types 0.97.0",
@@ -8254,11 +8292,11 @@
     "syntect 5.3.0",
     "toml 1.1.8+spec-1.1.0",
     "two-face 0.5.2+bat-0.26.1",
-    "unicode-normalization 0.1.25",
+    "unicode-normalization 0.1.26",
     "unicode-width 0.2.2"
   ],
   "direct_dev_deps": [
-    "jsonschema 0.58.6",
+    "jsonschema 0.59.0",
     "proptest 1.12.0"
   ],
   "workspace_members": {

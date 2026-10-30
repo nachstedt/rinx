@@ -39,9 +39,9 @@ finished one 🔶. A heading with no marker means the step has not started.
   #19 (PR #319), #20 (PR #324), #21 (PR #328), #22 (PR #330), #23 (PR #333),
   #40 (PR #335), #24 (PR #340) and #25 (PR #355, prepared by #343, #345,
   #348, #351 and #353), #26 (PRs #358 and #362, prepared by #357) and
-  #27 (PR #365, prepared by #363), #28 (PR #374), #29 (PR #378), #30 (PR #386)
-  and #31 (PR #393, prepared by #387 and #390).
-- **Next: #32, workspace symbols.**
+  #27 (PR #365, prepared by #363), #28 (PR #374), #29 (PR #378), #30 (PR #386),
+  #31 (PR #393, prepared by #387 and #390) and #32.
+- **Next: #33, folding and semantic tokens.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -1208,12 +1208,43 @@ Not done here:
 - Terms, domain objects and documents are refused (issue #392 for terms,
   and for documents through their files).
 
-### 32. Workspace symbols
+### 32. Workspace symbols ✅
 
 **You experience:** Ctrl+T searches sections, labels, objects and entities.
 
 - `workspace/symbol` with fuzzy matching
 - Tests
+
+The list is #28's definition sites, named. Each document's analysis now
+lends its own index fragment (`DocumentAnalysis::index_fragment`), and
+`IndexedDocument` builds its `DocumentSymbols` beside its uses, once per
+analysis and in parallel during the scan: a section by its title, a label,
+a glossary term as written, an equation, a domain object as its definition spelled it
+(`pkg.Box.open`), an entity by its id. An entity, which is a label too, is
+listed once. Reading the document's own fragment rather than the fold keeps
+a label two documents define (ADR-039), listed under both, and needs no fold
+to answer. A definition an `.. include::` brought in is placed in its
+fragment; one a `conf.py`'s `rst_prolog` wrote, in no file, is left out.
+
+A request matches the names of every project with frizbee, case-insensitively
+and without typos, since VS Code filters what it shows with its own matcher
+and would hide a name the query does not spell. nucleo-matcher was the first
+choice and was rejected for its MPL-2.0 licence. Ties go to the shorter name,
+then by document and place, so the answer never depends on the order projects
+are held in. The best 200 are listed, a definition two Bazel sites index once,
+each naming its document as `containerName`, in the flat
+`SymbolInformation` shape every client takes. Only those are placed, reading
+their files' text then. `rinx lsp --check <folder> --symbols <query>` times a
+search. `handle_request`'s arms now share one parse-or-refuse helper.
+
+Measured on CPython's 524 documents with a release build: `os.path.join`
+takes 1.3 ms, `dict` 14 ms and an empty query 28 ms, most of it placing the
+200 it lists.
+
+Not done here:
+- No `workspaceSymbol/resolve`: each symbol's range is computed with the
+  answer.
+- Labels and terms are no outline entries yet (#28).
 
 ### 33. Folding + semantic tokens
 

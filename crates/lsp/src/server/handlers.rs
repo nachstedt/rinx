@@ -8,7 +8,7 @@ use lsp_types::notification::{
 };
 use lsp_types::request::{
     CodeActionRequest, Completion, DocumentSymbolRequest, GotoDefinition, HoverRequest,
-    PrepareRenameRequest, References, Rename, Request as _,
+    PrepareRenameRequest, References, Rename, Request as _, WorkspaceSymbolRequest,
 };
 use lsp_types::{
     ClientCapabilities, CodeActionKind, CodeActionOptions, CodeActionOrCommand, CodeActionParams,
@@ -17,7 +17,9 @@ use lsp_types::{
     OneOf, PublishDiagnosticsParams, ReferenceParams, RenameOptions, RenameParams,
     ServerCapabilities, ServerInfo, ShowMessageParams, TextDocumentPositionParams,
     TextDocumentSyncCapability, TextDocumentSyncKind, Uri, WorkDoneProgressOptions,
+    WorkspaceSymbolParams,
 };
+use serde::de::DeserializeOwned;
 
 use super::bazel_manifests::BAZEL_MANIFESTS_CHANGED_METHOD;
 use super::conf_runs::CONF_INTERPRETER_CHANGED_METHOD;
@@ -50,6 +52,7 @@ pub fn initialize_result(
             references_provider: Some(OneOf::Left(true)),
             rename_provider: Some(rename_provider(capabilities)),
             document_symbol_provider: Some(OneOf::Left(true)),
+            workspace_symbol_provider: Some(OneOf::Left(true)),
             code_action_provider: Some(CodeActionProviderCapability::Options(CodeActionOptions {
                 code_action_kinds: Some(vec![CodeActionKind::QUICKFIX]),
                 ..CodeActionOptions::default()
@@ -128,104 +131,89 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
 }
 
 /// The response to a request other than `shutdown`, which the loop answers
-/// itself: a completion, a hover, a definition, a document's outline, the quick fixes or a
-/// preview or where one of its links leads, or the refusal of a method rinx does not support or of
-/// parameters that do not parse.
+/// itself: a completion, a hover, a definition, the uses of a definition, a
+/// rename, a document's outline, a search of the workspace's definitions, the quick
+/// fixes, or a preview or where one of its links leads — or the refusal of a
+/// method rinx does not support or of parameters that do not parse.
 pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
     let Request { id, method, params } = request;
     match method.as_str() {
-        HoverRequest::METHOD => match serde_json::from_value::<HoverParams>(params) {
-            Ok(params) => {
+        HoverRequest::METHOD => answer(id, &method, params, |id, params: HoverParams| {
+            let position = params.text_document_position_params;
+            let hover = state.hover(&position.text_document.uri, position.position);
+            Response::new_ok(id, hover)
+        }),
+        GotoDefinition::METHOD => {
+            answer(id, &method, params, |id, params: GotoDefinitionParams| {
                 let position = params.text_document_position_params;
-                Response::new_ok(
-                    id,
-                    state.hover(&position.text_document.uri, position.position),
-                )
-            }
-            Err(error) => invalid_params(id, &method, &error),
-        },
-        GotoDefinition::METHOD => match serde_json::from_value::<GotoDefinitionParams>(params) {
-            Ok(params) => {
-                let position = params.text_document_position_params;
-                Response::new_ok(
-                    id,
-                    state.definition(&position.text_document.uri, position.position),
-                )
-            }
-            Err(error) => invalid_params(id, &method, &error),
-        },
-        References::METHOD => match serde_json::from_value::<ReferenceParams>(params) {
-            Ok(params) => {
-                let position = params.text_document_position;
-                Response::new_ok(
-                    id,
-                    state.references(
-                        &position.text_document.uri,
-                        position.position,
-                        params.context.include_declaration,
-                    ),
-                )
-            }
-            Err(error) => invalid_params(id, &method, &error),
-        },
-        PrepareRenameRequest::METHOD | Rename::METHOD => answer_rename(state, id, &method, params),
-        Completion::METHOD => match serde_json::from_value::<CompletionParams>(params) {
-            Ok(params) => {
-                let position = params.text_document_position;
-                let trigger = params
-                    .context
-                    .as_ref()
-                    .and_then(|context| context.trigger_character.as_deref());
-                Response::new_ok(
-                    id,
-                    state.complete(&position.text_document.uri, position.position, trigger),
-                )
-            }
-            Err(error) => invalid_params(id, &method, &error),
-        },
-        DocumentSymbolRequest::METHOD => {
-            match serde_json::from_value::<DocumentSymbolParams>(params) {
-                Ok(params) => {
-                    Response::new_ok(id, state.document_symbols(&params.text_document.uri))
-                }
-                Err(error) => invalid_params(id, &method, &error),
-            }
+                let definition = state.definition(&position.text_document.uri, position.position);
+                Response::new_ok(id, definition)
+            })
         }
-        CodeActionRequest::METHOD => match serde_json::from_value::<CodeActionParams>(params) {
-            Ok(params) => {
-                let actions: Vec<CodeActionOrCommand> = state
-                    .code_actions(&params.text_document.uri, params.range)
-                    .into_iter()
-                    .map(CodeActionOrCommand::CodeAction)
-                    .collect();
-                Response::new_ok(id, actions)
+        References::METHOD => answer(id, &method, params, |id, params: ReferenceParams| {
+            let position = params.text_document_position;
+            let uses = state.references(
+                &position.text_document.uri,
+                position.position,
+                params.context.include_declaration,
+            );
+            Response::new_ok(id, uses)
+        }),
+        PrepareRenameRequest::METHOD | Rename::METHOD => answer_rename(state, id, &method, params),
+        Completion::METHOD => answer(id, &method, params, |id, params: CompletionParams| {
+            let position = params.text_document_position;
+            let trigger = params
+                .context
+                .as_ref()
+                .and_then(|context| context.trigger_character.as_deref());
+            let items = state.complete(&position.text_document.uri, position.position, trigger);
+            Response::new_ok(id, items)
+        }),
+        DocumentSymbolRequest::METHOD => {
+            answer(id, &method, params, |id, params: DocumentSymbolParams| {
+                Response::new_ok(id, state.document_symbols(&params.text_document.uri))
+            })
+        }
+        WorkspaceSymbolRequest::METHOD => {
+            answer(id, &method, params, |id, params: WorkspaceSymbolParams| {
+                Response::new_ok(id, state.workspace_symbols(&params.query))
+            })
+        }
+        CodeActionRequest::METHOD => answer(id, &method, params, |id, params: CodeActionParams| {
+            let actions: Vec<CodeActionOrCommand> = state
+                .code_actions(&params.text_document.uri, params.range)
+                .into_iter()
+                .map(CodeActionOrCommand::CodeAction)
+                .collect();
+            Response::new_ok(id, actions)
+        }),
+        PREVIEW_METHOD => answer(id, &method, params, |id, params: PreviewParams| match state
+            .preview(&params.text_document.uri, params.resource_root.as_deref())
+        {
+            Ok(html) => Response::new_ok(id, PreviewResult { html }),
+            Err(refusal) => {
+                let code = match refusal {
+                    PreviewRefusal::NotOpen => ErrorCode::InvalidParams,
+                    PreviewRefusal::Failed(_) => ErrorCode::RequestFailed,
+                };
+                Response::new_err(id, code as i32, refusal.to_string())
             }
-            Err(error) => invalid_params(id, &method, &error),
-        },
-        PREVIEW_METHOD => match serde_json::from_value::<PreviewParams>(params) {
-            Ok(params) => {
-                match state.preview(&params.text_document.uri, params.resource_root.as_deref()) {
-                    Ok(html) => Response::new_ok(id, PreviewResult { html }),
+        }),
+        PREVIEW_LINK_METHOD => {
+            answer(
+                id,
+                &method,
+                params,
+                |id, params: PreviewLinkParams| match state
+                    .preview_link(&params.text_document.uri, &params.href)
+                {
+                    Ok(target) => Response::new_ok(id, target),
                     Err(refusal) => {
-                        let code = match refusal {
-                            PreviewRefusal::NotOpen => ErrorCode::InvalidParams,
-                            PreviewRefusal::Failed(_) => ErrorCode::RequestFailed,
-                        };
-                        Response::new_err(id, code as i32, refusal.to_string())
+                        Response::new_err(id, ErrorCode::InvalidParams as i32, refusal.to_string())
                     }
-                }
-            }
-            Err(error) => invalid_params(id, &method, &error),
-        },
-        PREVIEW_LINK_METHOD => match serde_json::from_value::<PreviewLinkParams>(params) {
-            Ok(params) => match state.preview_link(&params.text_document.uri, &params.href) {
-                Ok(target) => Response::new_ok(id, target),
-                Err(refusal) => {
-                    Response::new_err(id, ErrorCode::InvalidParams as i32, refusal.to_string())
-                }
-            },
-            Err(error) => invalid_params(id, &method, &error),
-        },
+                },
+            )
+        }
         _ => Response::new_err(
             id,
             ErrorCode::MethodNotFound as i32,
@@ -234,7 +222,6 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
     }
 }
 
-/// The refusal of a `method` request whose parameters did not parse.
 /// The answer to a `textDocument/prepareRename` or `textDocument/rename`
 /// request: its result, or the error saying why the rename is refused.
 fn answer_rename(
@@ -244,28 +231,29 @@ fn answer_rename(
     params: serde_json::Value,
 ) -> Response {
     if method == PrepareRenameRequest::METHOD {
-        return match serde_json::from_value::<TextDocumentPositionParams>(params) {
-            Ok(params) => match state.prepare_rename(&params.text_document.uri, params.position) {
+        return answer(
+            id,
+            method,
+            params,
+            |id, params: TextDocumentPositionParams| match state
+                .prepare_rename(&params.text_document.uri, params.position)
+            {
                 Ok(prepared) => Response::new_ok(id, prepared),
                 Err(refusal) => refused(id, &refusal),
             },
-            Err(error) => invalid_params(id, method, &error),
-        };
+        );
     }
-    match serde_json::from_value::<RenameParams>(params) {
-        Ok(params) => {
-            let position = params.text_document_position;
-            match state.rename(
-                &position.text_document.uri,
-                position.position,
-                &params.new_name,
-            ) {
-                Ok(edit) => Response::new_ok(id, edit),
-                Err(refusal) => refused(id, &refusal),
-            }
+    answer(id, method, params, |id, params: RenameParams| {
+        let position = params.text_document_position;
+        match state.rename(
+            &position.text_document.uri,
+            position.position,
+            &params.new_name,
+        ) {
+            Ok(edit) => Response::new_ok(id, edit),
+            Err(refusal) => refused(id, &refusal),
         }
-        Err(error) => invalid_params(id, method, &error),
-    }
+    })
 }
 
 /// How the server announces renaming to a client with `capabilities`: with
@@ -294,12 +282,22 @@ fn refused(id: RequestId, refusal: &crate::rename::RenameRefusal) -> Response {
     Response::new_err(id, ErrorCode::RequestFailed as i32, refusal.to_string())
 }
 
-fn invalid_params(id: RequestId, method: &str, error: &serde_json::Error) -> Response {
-    Response::new_err(
-        id,
-        ErrorCode::InvalidParams as i32,
-        format!("invalid '{method}' parameters: {error}"),
-    )
+/// The response to the `method` request `id`: what `respond` makes of its
+/// `params`, read as `P` — or the refusal of parameters that do not read so.
+fn answer<P: DeserializeOwned>(
+    id: RequestId,
+    method: &str,
+    params: serde_json::Value,
+    respond: impl FnOnce(RequestId, P) -> Response,
+) -> Response {
+    match serde_json::from_value::<P>(params) {
+        Ok(params) => respond(id, params),
+        Err(error) => Response::new_err(
+            id,
+            ErrorCode::InvalidParams as i32,
+            format!("invalid '{method}' parameters: {error}"),
+        ),
+    }
 }
 
 /// A `window/showMessage` notification telling the user `message`, as

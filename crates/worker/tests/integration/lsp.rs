@@ -900,6 +900,63 @@ fn test_lsp_prepares_and_renames_a_label_in_every_document_using_it() {
 }
 
 #[test]
+fn test_lsp_searches_the_definitions_of_documents_no_editor_holds_open() {
+    // Given — a scanned folder whose `setup.rst`, never opened, labels a
+    // section
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_workspace_symbols");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    std::fs::write(
+        root.join("setup.rst"),
+        "Intro.\n\n.. _install:\n\nInstalling\n==========\n",
+    )
+    .expect("write");
+    let mut server = Server::spawn();
+    let initialized = server.initialize_with(json!({
+        "capabilities": {},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+    while !matches!(
+        server.receive(),
+        Message::Notification(notification)
+            if notification.method == "rinx/status" && notification.params["state"] == "ready"
+    ) {}
+
+    // When
+    server.request(2, "workspace/symbol", json!({ "query": "instal" }));
+    let answered = std::iter::from_fn(|| Some(server.receive()))
+        .find_map(|message| match message {
+            Message::Response(response) => Some(response),
+            _ => None,
+        })
+        .expect("the symbols");
+
+    // Then — the label first, then the section, each where it was written
+    let capabilities = &initialized.response_result.expect("initialized")["capabilities"];
+    assert_eq!(capabilities["workspaceSymbolProvider"], true);
+    let setup = format!("file://{}", root.join("setup.rst").display());
+    let line = |line: u32, end: u32| {
+        json!({
+            "start": { "line": line, "character": 0 },
+            "end": { "line": line, "character": end },
+        })
+    };
+    assert_eq!(
+        answered.response_result.expect("symbols"),
+        json!([
+            {
+                "name": "install", "kind": 20, "containerName": "setup",
+                "location": { "uri": setup, "range": line(2, 12) },
+            },
+            {
+                "name": "Installing", "kind": 15, "containerName": "setup",
+                "location": { "uri": setup, "range": line(4, 10) },
+            },
+        ])
+    );
+}
+
+#[test]
 fn test_lsp_outlines_an_open_document_nested_for_a_client_taking_it() {
     // Given — a client taking nested symbols, with a document open
     let root = std::env::temp_dir().join("rinx_lsp_stdio_outline");

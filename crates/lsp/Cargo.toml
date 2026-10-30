@@ -24,6 +24,7 @@ rinx_toctree.workspace = true
 anyhow = "1.0.102"
 base64 = "0.23"
 crossbeam-channel = "0.5"
+frizbee = "0.13"
 lsp-server = "0.10"
 lsp-types = "0.97"
 pathdiff = "0.2"

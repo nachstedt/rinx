@@ -10,7 +10,8 @@
 //! It also times the preview of the documents it is asked to, each right
 //! after an edit, which is how the preview's latency is measured — and the
 //! references at the places it is asked to, which is how finding them is,
-//! and the renames it is asked for, each with the edit it would apply.
+//! the renames it is asked for, each with the edit it would apply, and the
+//! workspace searches it is asked for.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -57,6 +58,10 @@ pub struct FolderCheck {
     /// How each rename [`CheckOptions::renames`] names went, in that order.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub renames: Vec<RenameTiming>,
+    /// How each search [`CheckOptions::symbols`] names was answered, in that
+    /// order.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub symbols: Vec<SymbolsTiming>,
 }
 
 /// How long one rename took — first, and again with every document's uses
@@ -76,6 +81,15 @@ pub struct RenameTiming {
     /// Why it was refused, when it was.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refusal: Option<String>,
+}
+
+/// How long searching the workspace's definitions for one query took.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct SymbolsTiming {
+    pub query: String,
+    /// How many symbols were listed.
+    pub symbols: usize,
+    pub milliseconds: f64,
 }
 
 /// How long finding the references at one place took: first, when no
@@ -121,6 +135,8 @@ pub struct CheckOptions {
     pub references: Vec<ReferencesAt>,
     /// The renames timed, each a place and the new name.
     pub renames: Vec<(ReferencesAt, String)>,
+    /// The queries whose workspace search is timed.
+    pub symbols: Vec<String>,
 }
 
 /// A place in a document, its path absolute and its line and column 1-based,
@@ -202,6 +218,11 @@ pub fn check_folder(root: &Path, options: &CheckOptions) -> FolderCheck {
         .iter()
         .filter_map(|(at, new_name)| time_rename(&mut state, at, new_name))
         .collect();
+    let symbols = options
+        .symbols
+        .iter()
+        .map(|query| time_symbols(&state, query))
+        .collect();
     FolderCheck {
         documents: documents.len(),
         published: last_published(&messages),
@@ -209,6 +230,18 @@ pub fn check_folder(root: &Path, options: &CheckOptions) -> FolderCheck {
         previews,
         references,
         renames,
+        symbols,
+    }
+}
+
+/// How long searching the workspace's definitions for `query` takes.
+fn time_symbols(state: &ServerState, query: &str) -> SymbolsTiming {
+    let started = Instant::now();
+    let symbols = state.workspace_symbols(query).len();
+    SymbolsTiming {
+        query: query.to_string(),
+        symbols,
+        milliseconds: started.elapsed().as_secs_f64() * 1000.0,
     }
 }
 
@@ -518,6 +551,29 @@ mod tests {
                 .as_deref()
                 .is_some_and(|why| why.contains("colon"))
         );
+    }
+
+    #[test]
+    fn test_check_folder_times_each_search_it_names() {
+        // Given
+        let workspace = Workspace::new(
+            "check_folder_symbols",
+            &[("setup.rst", ".. _install:\n\nInstalling\n==========\n")],
+        );
+        let options = CheckOptions {
+            symbols: vec!["install".to_string()],
+            ..CheckOptions::default()
+        };
+
+        // When
+        let check = check_folder(&workspace.root, &options);
+
+        // Then
+        let [timing] = check.symbols.as_slice() else {
+            panic!("one timing: {:?}", check.symbols);
+        };
+        assert_eq!((timing.query.as_str(), timing.symbols), ("install", 2));
+        assert!(timing.milliseconds > 0.0);
     }
 
     #[test]
