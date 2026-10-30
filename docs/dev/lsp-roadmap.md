@@ -40,7 +40,7 @@ finished one 🔶. A heading with no marker means the step has not started.
   #40 (PR #335), #24 (PR #340) and #25 (PR #355, prepared by #343, #345,
   #348, #351 and #353), #26 (PRs #358 and #362, prepared by #357) and
   #27 (PR #365, prepared by #363), #28 (PR #374), #29 (PR #378), #30 (PR #386),
-  #31 (PR #393, prepared by #387 and #390) and #32.
+  #31 (PR #393, prepared by #387 and #390) and #32 (PR #395).
 - **Next: #33, folding and semantic tokens.**
 
 The pull request that finishes a step also updates this section and the
@@ -1208,7 +1208,7 @@ Not done here:
 - Terms, domain objects and documents are refused (issue #392 for terms,
   and for documents through their files).
 
-### 32. Workspace symbols ✅
+### 32. Workspace symbols ✅ (#395)
 
 **You experience:** Ctrl+T searches sections, labels, objects and entities.
 
