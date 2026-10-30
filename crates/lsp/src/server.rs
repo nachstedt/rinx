@@ -24,6 +24,7 @@ mod conf_runs;
 mod handlers;
 mod inventories;
 mod projects;
+mod renames;
 mod run;
 mod scan;
 mod state;
@@ -61,6 +62,8 @@ mod project_tests;
 mod property_tests;
 #[cfg(test)]
 mod references_tests;
+#[cfg(test)]
+mod rename_tests;
 #[cfg(test)]
 mod render_tests;
 #[cfg(test)]

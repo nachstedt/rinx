@@ -11,6 +11,8 @@
 //! - `reference_at` finds the reference under the cursor, `hover` shows where
 //!   it leads — `entity_hover` an entity's fields, also on the directive
 //!   `entity_at` finds — and `definition` opens the document it leads to;
+//! - `references` lists the uses of a definition, and `rename` says where in
+//!   each its name stands and when renaming it is refused;
 //! - `diagnostics` parses an open document and converts what the parser found;
 //! - `render` renders a document for the diagnostics only a render finds, and
 //!   `preview` renders its whole page for the editor's preview, whose links
@@ -44,6 +46,7 @@ mod progress;
 mod project;
 mod reference_at;
 mod references;
+mod rename;
 mod render;
 mod server;
 #[cfg(all(test, unix))]

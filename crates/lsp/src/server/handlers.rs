@@ -7,15 +7,16 @@ use lsp_types::notification::{
     Notification as _, PublishDiagnostics, ShowMessage,
 };
 use lsp_types::request::{
-    CodeActionRequest, Completion, DocumentSymbolRequest, GotoDefinition, HoverRequest, References,
-    Request as _,
+    CodeActionRequest, Completion, DocumentSymbolRequest, GotoDefinition, HoverRequest,
+    PrepareRenameRequest, References, Rename, Request as _,
 };
 use lsp_types::{
     ClientCapabilities, CodeActionKind, CodeActionOptions, CodeActionOrCommand, CodeActionParams,
     CodeActionProviderCapability, CompletionOptions, CompletionParams, DocumentSymbolParams,
     GotoDefinitionParams, HoverParams, HoverProviderCapability, InitializeResult, MessageType,
-    OneOf, PublishDiagnosticsParams, ReferenceParams, ServerCapabilities, ServerInfo,
-    ShowMessageParams, TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
+    OneOf, PublishDiagnosticsParams, ReferenceParams, RenameOptions, RenameParams,
+    ServerCapabilities, ServerInfo, ShowMessageParams, TextDocumentPositionParams,
+    TextDocumentSyncCapability, TextDocumentSyncKind, Uri, WorkDoneProgressOptions,
 };
 
 use super::bazel_manifests::BAZEL_MANIFESTS_CHANGED_METHOD;
@@ -47,6 +48,7 @@ pub fn initialize_result(
             hover_provider: Some(HoverProviderCapability::Simple(true)),
             definition_provider: Some(OneOf::Left(true)),
             references_provider: Some(OneOf::Left(true)),
+            rename_provider: Some(rename_provider(capabilities)),
             document_symbol_provider: Some(OneOf::Left(true)),
             code_action_provider: Some(CodeActionProviderCapability::Options(CodeActionOptions {
                 code_action_kinds: Some(vec![CodeActionKind::QUICKFIX]),
@@ -166,6 +168,7 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
             }
             Err(error) => invalid_params(id, &method, &error),
         },
+        PrepareRenameRequest::METHOD | Rename::METHOD => answer_rename(state, id, &method, params),
         Completion::METHOD => match serde_json::from_value::<CompletionParams>(params) {
             Ok(params) => {
                 let position = params.text_document_position;
@@ -232,6 +235,65 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
 }
 
 /// The refusal of a `method` request whose parameters did not parse.
+/// The answer to a `textDocument/prepareRename` or `textDocument/rename`
+/// request: its result, or the error saying why the rename is refused.
+fn answer_rename(
+    state: &mut ServerState,
+    id: RequestId,
+    method: &str,
+    params: serde_json::Value,
+) -> Response {
+    if method == PrepareRenameRequest::METHOD {
+        return match serde_json::from_value::<TextDocumentPositionParams>(params) {
+            Ok(params) => match state.prepare_rename(&params.text_document.uri, params.position) {
+                Ok(prepared) => Response::new_ok(id, prepared),
+                Err(refusal) => refused(id, &refusal),
+            },
+            Err(error) => invalid_params(id, method, &error),
+        };
+    }
+    match serde_json::from_value::<RenameParams>(params) {
+        Ok(params) => {
+            let position = params.text_document_position;
+            match state.rename(
+                &position.text_document.uri,
+                position.position,
+                &params.new_name,
+            ) {
+                Ok(edit) => Response::new_ok(id, edit),
+                Err(refusal) => refused(id, &refusal),
+            }
+        }
+        Err(error) => invalid_params(id, method, &error),
+    }
+}
+
+/// How the server announces renaming to a client with `capabilities`: with
+/// a `prepareRename` when the client asks one before a rename, so a refusal
+/// is shown before the new name is typed.
+fn rename_provider(capabilities: &ClientCapabilities) -> OneOf<bool, RenameOptions> {
+    let prepares = capabilities
+        .text_document
+        .as_ref()
+        .and_then(|text_document| text_document.rename.as_ref())
+        .and_then(|rename| rename.prepare_support)
+        .unwrap_or(false);
+    if prepares {
+        OneOf::Right(RenameOptions {
+            prepare_provider: Some(true),
+            work_done_progress_options: WorkDoneProgressOptions::default(),
+        })
+    } else {
+        OneOf::Left(true)
+    }
+}
+
+/// The error answering a request whose rename is refused, saying why — what
+/// an editor shows the author.
+fn refused(id: RequestId, refusal: &crate::rename::RenameRefusal) -> Response {
+    Response::new_err(id, ErrorCode::RequestFailed as i32, refusal.to_string())
+}
+
 fn invalid_params(id: RequestId, method: &str, error: &serde_json::Error) -> Response {
     Response::new_err(
         id,

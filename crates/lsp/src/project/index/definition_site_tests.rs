@@ -53,6 +53,10 @@ fn test_definition_site_is_in_the_file_of_the_document_defining_it() {
             path: PathBuf::from("/work/docs/guide.rst"),
             start: Position::new(3, 1),
             end: Position::new(3, 11),
+            name: Some(rinx_index::NameRange {
+                start: Position::new(3, 5),
+                end: Position::new(3, 10),
+            }),
         })
     );
 }

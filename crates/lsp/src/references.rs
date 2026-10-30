@@ -6,7 +6,7 @@ use lsp_types::{Location, Range, Uri};
 use rinx_ast::Span;
 
 use crate::position::{PositionEncoding, to_lsp_range};
-use crate::project::{UseSite, relation_id_columns};
+use crate::project::{UseForm, UseSite, relation_id_columns};
 
 /// The location of `site` in the file at `uri`, whose text is `text`: the use
 /// itself, or the id alone on a relation option's line — or, when the text
@@ -24,7 +24,7 @@ pub fn use_location(
         Range::new(start, start)
     };
     let range = text.map_or_else(line_start, |text| {
-        let Some(id) = &site.entity else {
+        let UseForm::RelationId(id) = &site.form else {
             return to_lsp_range(Span::new(site.start, site.end), text, encoding);
         };
         let Some(line) = text.lines().nth(site.start.line.saturating_sub(1) as usize) else {
@@ -76,10 +76,10 @@ mod tests {
 
     fn site(line: u32, start: u32, end: u32) -> UseSite {
         UseSite {
-            path: PathBuf::from("/project/a.rst"),
+            path: Some(PathBuf::from("/project/a.rst")),
             start: Position::new(line, start),
             end: Position::new(line, end),
-            entity: None,
+            form: UseForm::Role,
         }
     }
 
@@ -112,7 +112,7 @@ mod tests {
         // Given
         let text = ".. req:: Two\n   :links: REQ_0, REQ_1\n";
         let relation = UseSite {
-            entity: Some(EntityId::new("REQ_1").unwrap()),
+            form: UseForm::RelationId(EntityId::new("REQ_1").unwrap()),
             ..site(2, 4, 24)
         };
 

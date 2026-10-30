@@ -9,51 +9,6 @@ use lsp_types::{
     Range, TextDocumentPositionParams,
 };
 
-const CONF: &str = "extensions = ['sphinx_needs']\nneeds_from_toml = 'ubproject.toml'\n";
-const UBPROJECT: &str = "\
-[[needs.types]]
-directive = \"req\"
-title = \"Requirement\"
-
-[[needs.types]]
-directive = \"spec\"
-title = \"Specification\"
-
-[needs.fields.priority]
-
-[needs.links.implements]
-";
-/// A requirement, and a specification implementing it, written in
-/// `reqs.rst`.
-const REQS: &str = "\
-Requirements
-============
-
-.. req:: Brakes
-   :id: R_1
-   :priority: high
-
-.. spec:: Pads
-   :id: S_1
-   :implements: R_1
-";
-
-/// A scanned sphinx-needs project holding [`REQS`], with `index.rst` opened
-/// at `text`.
-fn project_with(name: &str, text: &str) -> (Workspace, ServerState) {
-    let (workspace, mut state) = scanned(
-        name,
-        &[
-            ("conf.py", CONF),
-            ("ubproject.toml", UBPROJECT),
-            ("reqs.rst", REQS),
-            ("index.rst", text),
-        ],
-    );
-    handle_notification(&mut state, workspace.open("index.rst", text));
-    (workspace, state)
-}
-
 #[test]
 fn test_hovering_a_need_role_shows_the_need_s_fields_and_back_links() {
     // Given
@@ -401,6 +356,36 @@ fn test_references_of_an_entity_include_the_updates_naming_it() {
             Location::new(
                 index,
                 Range::new(Position::new(6, 19), Position::new(6, 22)),
+            ),
+        ])
+    );
+}
+
+#[test]
+fn test_references_of_an_entity_include_a_ref_to_its_label() {
+    // Given — `:ref:` names the entity by its label, lowercased
+    let text = "See :need:`R_1` and :ref:`r_1`.\n";
+    let (workspace, mut state) = project_with("entity_references_label", text);
+
+    // When — on the need role
+    let found = references_at(&mut state, workspace.uri("index.rst"), 0, 12, false);
+
+    // Then — both roles, and the relation in reqs.rst
+    let index = workspace.uri("index.rst");
+    assert_eq!(
+        found,
+        Some(vec![
+            Location::new(
+                index.clone(),
+                Range::new(Position::new(0, 4), Position::new(0, 15)),
+            ),
+            Location::new(
+                index,
+                Range::new(Position::new(0, 20), Position::new(0, 30)),
+            ),
+            Location::new(
+                workspace.uri("reqs.rst"),
+                Range::new(Position::new(9, 16), Position::new(9, 19)),
             ),
         ])
     );

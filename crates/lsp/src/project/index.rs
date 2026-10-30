@@ -36,7 +36,7 @@ use std::path::{Path, PathBuf};
 use rayon::prelude::*;
 use rinx_analyzer::{DocumentAnalysis, build_project_index_from_analyses};
 use rinx_ast::{Diagnostic, Document, Position};
-use rinx_index::{DefinitionKey, ExternalInventory, ProjectIndex};
+use rinx_index::{DefinitionKey, ExternalInventory, NameRange, ProjectIndex};
 use rinx_renderer::config::SiteConfig;
 
 use super::discover::DiscoveredProject;
@@ -86,6 +86,9 @@ pub struct DefinitionLocation {
     pub start: Position,
     /// Just past its last character.
     pub end: Position,
+    /// Exactly the characters its name was written as, in the same file,
+    /// when the parser knew them.
+    pub name: Option<NameRange>,
 }
 
 /// Where a project's documents wrote their definitions, borrowed from the
@@ -114,6 +117,7 @@ impl Definitions<'_> {
             path,
             start: site.start,
             end: site.end,
+            name: site.name,
         })
     }
 

@@ -62,6 +62,7 @@ use super::conf_runs::{ConfExecution, ConfRunEvent, ConfRuns};
 use super::handlers::publish_diagnostics;
 use super::inventories::InventoryFetches;
 use super::projects::ProjectId;
+use super::renames::EditShape;
 use super::scan::ScanEvent;
 use crate::code_action::quick_fixes;
 use crate::completion::{
@@ -132,6 +133,8 @@ pub struct ServerState {
     progress_supported: bool,
     /// Whether the client takes a definition as a link from the reference.
     definition_links: bool,
+    /// How the client takes a workspace edit.
+    pub(super) edit_shape: EditShape,
     /// How the client takes a document's outline.
     outline_shape: OutlineShape,
     /// How the client takes a completion item: its text's format, and
@@ -224,6 +227,7 @@ impl ServerState {
             scan_elapsed: None,
             progress_supported: false,
             definition_links: false,
+            edit_shape: EditShape::ByUri,
             outline_shape: OutlineShape::Flat,
             completion: ItemStyle {
                 format: TextFormat::Plain,
@@ -258,6 +262,14 @@ impl ServerState {
     #[must_use]
     pub fn with_definition_links(mut self, definition_links: bool) -> Self {
         self.definition_links = definition_links;
+        self
+    }
+
+    /// This server, answering a rename with a workspace edit in
+    /// `edit_shape`.
+    #[must_use]
+    pub fn with_edit_shape(mut self, edit_shape: EditShape) -> Self {
+        self.edit_shape = edit_shape;
         self
     }
 
@@ -997,12 +1009,15 @@ impl ServerState {
         let mut locations = Vec::new();
         for target in &targets {
             for site in project.uses_of(target) {
-                let Some(uri) = file_uri(&site.path) else {
+                let Some(path) = &site.path else {
+                    continue;
+                };
+                let Some(uri) = file_uri(path) else {
                     continue;
                 };
                 let text = texts
-                    .entry(site.path.clone())
-                    .or_insert_with(|| file_text(&self.documents, &site.path));
+                    .entry(path.clone())
+                    .or_insert_with(|| file_text(&self.documents, path));
                 locations.push(use_location(uri, &site, text.as_deref(), self.encoding));
             }
             if include_declaration
@@ -1027,7 +1042,7 @@ impl ServerState {
     /// [`Self::references`]: where a reference, a relation's id or a
     /// `.. toctree::` entry there leads, else the definition written there —
     /// with the project it is of.
-    fn use_targets_at(
+    pub(super) fn use_targets_at(
         &mut self,
         uri: &Uri,
         position: lsp_types::Position,
@@ -1105,7 +1120,11 @@ impl ServerState {
 
     /// `position` in the open document `uri` as the parser counts it: a
     /// 1-based line and character column.
-    fn position_in(&self, uri: &Uri, position: lsp_types::Position) -> Option<rinx_ast::Position> {
+    pub(super) fn position_in(
+        &self,
+        uri: &Uri,
+        position: lsp_types::Position,
+    ) -> Option<rinx_ast::Position> {
         let text = &self.documents.get(uri)?.text;
         let line = text.lines().nth(position.line as usize).unwrap_or_default();
         let column = char_index_of(line, position.character, self.encoding) + 1;
@@ -1665,7 +1684,7 @@ fn written_at(
 
 /// The text of the file at `path` as an analysis read it: its open buffer,
 /// else the disk — `None` when neither holds it.
-fn file_text<'d>(documents: &'d DocumentStore, path: &Path) -> Option<Cow<'d, str>> {
+pub(super) fn file_text<'d>(documents: &'d DocumentStore, path: &Path) -> Option<Cow<'d, str>> {
     match documents.get_by_path(path) {
         Some(open) => Some(Cow::Borrowed(open.text.as_str())),
         None => std::fs::read_to_string(path).ok().map(Cow::Owned),
