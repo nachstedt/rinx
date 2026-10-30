@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>email.utils: Miscellaneous utilities — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Internet Data Handling"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 ancestor has-children">
+            <a href="email.html">email — An email and MIME handling package</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle email — An email and MIME handling package"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="email.message.html">email.message: Representing an email message</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.parser.html">email.parser: Parsing email messages</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.generator.html">email.generator: Generating MIME documents</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.policy.html">email.policy: Policy Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.errors.html">email.errors: Exception and Defect classes</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.headerregistry.html">email.headerregistry: Custom Header Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.contentmanager.html">email.contentmanager: Managing MIME Content</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.examples.html">email: Examples</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.compat32-message.html">email.message.Message: Representing an email message using the compat32 API</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.mime.html">email.mime: Creating email and MIME objects from scratch</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.header.html">email.header: Internationalized headers</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.charset.html">email.charset: Representing character sets</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.encoders.html">email.encoders: Encoders</a>
+            
+          </li>
+        
+          <li class="toctree-l4 current">
+            <a href="email.utils.html">email.utils: Miscellaneous utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.iterators.html">email.iterators: Iterators</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="json.html">json — JSON encoder and decoder</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mailbox.html">mailbox — Manipulate mailboxes in various formats</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mimetypes.html">mimetypes — Map filenames to MIME types</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="base64.html">base64 — Base16, Base32, Base64, Base85 Data Encodings</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="binascii.html">binascii — Convert between binary and ASCII</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="quopri.html">quopri — Encode and decode MIME quoted-printable data</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="email.encoders.html">&larr; email.encoders: Encoders</a>
+        <a class="next" href="email.iterators.html">email.iterators: Iterators &rarr;</a>
+      </nav>
+      
+      <h1 id="email-utils-miscellaneous-utilities"><code class="xref py module docutils literal">email.utils</code>: Miscellaneous utilities</h1>
+<dl class="py module">
+  <dt id="py:module:email.utils"><code class="sig-name">email.utils</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/email/utils.py`</p>
+<hr />
+<p>There are a couple of useful utilities provided in the <a class="reference internal" href="email.utils.html#py:module:email.utils" title="email.utils: Miscellaneous email package utilities."><code class="xref py module docutils literal">email.utils</code></a>
+module:</p>
+<dl class="py function">
+  <dt id="py:function:email.utils.localtime"><code class="sig-name">localtime(dt=None)</code></dt>
+  <dd><p>Return local time as an aware datetime object.  If called without
+arguments, return current time.  Otherwise <em>dt</em> argument should be a
+<a class="reference internal" href="datetime.html#py:class:datetime.datetime"><code class="xref py class docutils literal">datetime</code></a> instance, and it is converted to the local time
+zone according to the system time zone database.  If <em>dt</em> is naive (that
+is, <code>dt.tzinfo</code> is <code>None</code>), it is assumed to be in local time.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'deprecated-removed'</p>
+<pre class="directive-error-source">.. deprecated-removed:: 3.12 3.14
+   The *isdst* parameter.</pre>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.utils.make_msgid"><code class="sig-name">make_msgid(idstring=None, domain=None)</code></dt>
+  <dd><p>Returns a string suitable for an <span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2822.html"><strong>RFC 2822</strong></a>-compliant
+:mailheader:`Message-ID` header.  Optional <em>idstring</em> if given, is a string
+used to strengthen the uniqueness of the message id.  Optional <em>domain</em> if
+given provides the portion of the msgid after the '@'.  The default is the
+local hostname.  It is not normally necessary to override this default, but
+may be useful certain cases, such as a constructing distributed system that
+uses a consistent domain name across multiple hosts.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p>Added the <em>domain</em> keyword.</p>
+</div>
+</dd>
+</dl>
+<p>The remaining functions are part of the legacy (<code>Compat32</code>) email API.  There
+is no need to directly use these with the new API, since the parsing and
+formatting they provide is done automatically by the header parsing machinery
+of the new API.</p>
+<dl class="py function">
+  <dt id="py:function:email.utils.quote"><code class="sig-name">quote(str)</code></dt>
+  <dd><p>Return a new string with backslashes in <em>str</em> replaced by two backslashes, and
+double quotes replaced by backslash-double quote.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.utils.unquote"><code class="sig-name">unquote(str)</code></dt>
+  <dd><p>Return a new string which is an <em>unquoted</em> version of <em>str</em>. If <em>str</em> ends and
+begins with double quotes, they are stripped off.  Likewise if <em>str</em> ends and
+begins with angle brackets, they are stripped off.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.utils.parseaddr"><code class="sig-name">parseaddr(address, *, strict=True)</code></dt>
+  <dd><p>Parse address – which should be the value of some address-containing field such
+as :mailheader:`To` or :mailheader:`Cc` – into its constituent <em>realname</em> and
+<em>email address</em> parts.  Returns a tuple of that information, unless the parse
+fails, in which case a 2-tuple of <code>('', '')</code> is returned.</p>
+<p>If <em>strict</em> is true, use a strict parser which rejects malformed inputs.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Add <em>strict</em> optional parameter and reject malformed inputs by default.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.utils.formataddr"><code class="sig-name">formataddr(pair, charset='utf-8')</code></dt>
+  <dd><p>The inverse of <a href="#" class="broken-link"><code class="xref py method docutils literal">parseaddr</code></a>, this takes a 2-tuple of the form <code>(realname,
+email_address)</code> and returns the string value suitable for a :mailheader:`To` or
+:mailheader:`Cc` header.  If the first element of <em>pair</em> is false, then the
+second element is returned unmodified.</p>
+<p>Optional <em>charset</em> is the character set that will be used in the <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2047.html"><strong>RFC 2047</strong></a>
+encoding of the <code>realname</code> if the <code>realname</code> contains non-ASCII
+characters.  Can be an instance of <a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> or a
+<a class="reference internal" href="email.charset.html#py:class:email.charset.charset"><code class="xref py class docutils literal">Charset</code></a>.  Defaults to <code>utf-8</code>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Added the <em>charset</em> option.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.utils.getaddresses"><code class="sig-name">getaddresses(fieldvalues, *, strict=True)</code></dt>
+  <dd><p>This method returns a list of 2-tuples of the form returned by <code>parseaddr()</code>.
+<em>fieldvalues</em> is a sequence of header field values as might be returned by
+<a class="reference internal" href="email.compat32-message.html#py:method:email.message.message.get_all"><code class="xref py method docutils literal">Message.get_all</code></a>.</p>
+<p>If <em>strict</em> is true, use a strict parser which rejects malformed inputs.</p>
+<p>Here's a simple example that gets all the recipients of a message:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">email</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-import-name hl-python">utils</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">getaddresses</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">tos</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">msg</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_all</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">to<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-sequence hl-list hl-empty hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ccs</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">msg</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_all</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">cc<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-sequence hl-list hl-empty hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">resent_tos</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">msg</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_all</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">resent-to<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-sequence hl-list hl-empty hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">resent_ccs</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">msg</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_all</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">resent-cc<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-sequence hl-list hl-empty hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">all_recipients</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">getaddresses</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">tos</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ccs</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">resent_tos</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">resent_ccs</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Add <em>strict</em> optional parameter and reject malformed inputs by default.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.utils.parsedate"><code class="sig-name">parsedate(date)</code></dt>
+  <dd><p>Attempts to parse a date according to the rules in <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2822.html"><strong>RFC 2822</strong></a>. however, some
+mailers don't follow that format as specified, so <a class="reference internal" href="email.utils.html#py:function:email.utils.parsedate"><code class="xref py function docutils literal">parsedate</code></a> tries to
+guess correctly in such cases.  <em>date</em> is a string containing an <span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2822.html"><strong>RFC 2822</strong></a>
+date, such as  <code>"Mon, 20 Nov 1995 19:12:08 -0500"</code>.  If it succeeds in parsing
+the date, <a class="reference internal" href="email.utils.html#py:function:email.utils.parsedate"><code class="xref py function docutils literal">parsedate</code></a> returns a 9-tuple that can be passed directly to
+<a class="reference internal" href="time.html#py:function:time.mktime"><code class="xref py function docutils literal">time.mktime</code></a>; otherwise <code>None</code> will be returned.  Note that indexes 6,
+7, and 8 of the result tuple are not usable.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.utils.parsedate_tz"><code class="sig-name">parsedate_tz(date)</code></dt>
+  <dd><p>Performs the same function as <a class="reference internal" href="email.utils.html#py:function:email.utils.parsedate"><code class="xref py function docutils literal">parsedate</code></a>, but returns either <code>None</code> or
+a 10-tuple; the first 9 elements make up a tuple that can be passed directly to
+<a class="reference internal" href="time.html#py:function:time.mktime"><code class="xref py function docutils literal">time.mktime</code></a>, and the tenth is the offset of the date's timezone from UTC
+(which is the official term for Greenwich Mean Time) [#]_.  If the input string
+has no timezone, the last element of the tuple returned is <code>0</code>, which represents
+UTC. Note that indexes 6, 7, and 8 of the result tuple are not usable.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.utils.parsedate_to_datetime"><code class="sig-name">parsedate_to_datetime(date)</code></dt>
+  <dd><p>The inverse of <a class="reference internal" href="email.utils.html#py:function:email.utils.format_datetime"><code class="xref py function docutils literal">format_datetime</code></a>.  Performs the same function as
+<a class="reference internal" href="email.utils.html#py:function:email.utils.parsedate"><code class="xref py function docutils literal">parsedate</code></a>, but on success returns a <a href="#" class="broken-link"><code class="xref py module docutils literal">datetime</code></a>;
+otherwise <code>ValueError</code> is raised if <em>date</em> contains an invalid value such
+as an hour greater than 23 or a timezone offset not between -24 and 24 hours.
+If the input date has a timezone of <code>-0000</code>, the <code>datetime</code> will be a naive
+<code>datetime</code>, and if the date is conforming to the RFCs it will represent a
+time in UTC but with no indication of the actual source timezone of the
+message the date comes from.  If the input date has any other valid timezone
+offset, the <code>datetime</code> will be an aware <code>datetime</code> with the
+corresponding a <a class="reference internal" href="datetime.html#py:class:datetime.timezone"><code class="xref py class docutils literal">timezone</code></a> <a class="reference internal" href="datetime.html#py:class:datetime.tzinfo"><code class="xref py class docutils literal">tzinfo</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.utils.mktime_tz"><code class="sig-name">mktime_tz(tuple)</code></dt>
+  <dd><p>Turn a 10-tuple as returned by <a class="reference internal" href="email.utils.html#py:function:email.utils.parsedate_tz"><code class="xref py function docutils literal">parsedate_tz</code></a> into a UTC
+timestamp (seconds since the Epoch).  If the timezone item in the
+tuple is <code>None</code>, assume local time.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.utils.formatdate"><code class="sig-name">formatdate(timeval=None, localtime=False, usegmt=False)</code></dt>
+  <dd><p>Returns a date string as per <span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2822.html"><strong>RFC 2822</strong></a>, e.g.:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Fri</span></span>, 09 <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Nov</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2001</span> <span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>1</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span>08<span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">47</span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>000</span></span></pre></div>
+<p>Optional <em>timeval</em> if given is a floating-point time value as accepted by
+<a class="reference internal" href="time.html#py:function:time.gmtime"><code class="xref py function docutils literal">time.gmtime</code></a> and <a class="reference internal" href="time.html#py:function:time.localtime"><code class="xref py function docutils literal">time.localtime</code></a>, otherwise the current time is
+used.</p>
+<p>Optional <em>localtime</em> is a flag that when <code>True</code>, interprets <em>timeval</em>, and
+returns a date relative to the local timezone instead of UTC, properly taking
+daylight savings time into account. The default is <code>False</code> meaning UTC is
+used.</p>
+<p>Optional <em>usegmt</em> is a flag that when <code>True</code>, outputs a  date string with the
+timezone as an ascii string <code>GMT</code>, rather than a numeric <code>-0000</code>. This is
+needed for some protocols (such as HTTP). This only applies when <em>localtime</em> is
+<code>False</code>.  The default is <code>False</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.utils.format_datetime"><code class="sig-name">format_datetime(dt, usegmt=False)</code></dt>
+  <dd><p>Like <code>formatdate</code>, but the input is a <a class="reference internal" href="datetime.html#py:module:datetime" title="datetime: Basic date and time types."><code class="xref py module docutils literal">datetime</code></a> instance.  If it is
+a naive datetime, it is assumed to be "UTC with no information about the
+source timezone", and the conventional <code>-0000</code> is used for the timezone.
+If it is an aware <code>datetime</code>, then the numeric timezone offset is used.
+If it is an aware timezone with offset zero, then <em>usegmt</em> may be set to
+<code>True</code>, in which case the string <code>GMT</code> is used instead of the numeric
+timezone offset.  This provides a way to generate standards conformant HTTP
+date headers.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.utils.decode_rfc2231"><code class="sig-name">decode_rfc2231(s)</code></dt>
+  <dd><p>Decode the string <em>s</em> according to <span class="target" id="index-5"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2231.html"><strong>RFC 2231</strong></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.utils.encode_rfc2231"><code class="sig-name">encode_rfc2231(s, charset=None, language=None)</code></dt>
+  <dd><p>Encode the string <em>s</em> according to <span class="target" id="index-6"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2231.html"><strong>RFC 2231</strong></a>.  Optional <em>charset</em> and
+<em>language</em>, if given is the character set name and language name to use.  If
+neither is given, <em>s</em> is returned as-is.  If <em>charset</em> is given but <em>language</em>
+is not, the string is encoded using the empty string for <em>language</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.utils.collapse_rfc2231_value"><code class="sig-name">collapse_rfc2231_value(value, errors='replace', fallback_charset='us-ascii')</code></dt>
+  <dd><p>When a header parameter is encoded in <span class="target" id="index-7"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2231.html"><strong>RFC 2231</strong></a> format,
+<a class="reference internal" href="email.compat32-message.html#py:method:email.message.message.get_param"><code class="xref py method docutils literal">Message.get_param</code></a> may return a
+3-tuple containing the character set,
+language, and value.  <a class="reference internal" href="email.utils.html#py:function:email.utils.collapse_rfc2231_value"><code class="xref py function docutils literal">collapse_rfc2231_value</code></a> turns this into a unicode
+string.  Optional <em>errors</em> is passed to the <em>errors</em> argument of <a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a>'s
+<a href="#" class="broken-link"><code class="xref py function docutils literal">encode</code></a> method; it defaults to <code>'replace'</code>.  Optional
+<em>fallback_charset</em> specifies the character set to use if the one in the
+<span class="target" id="index-8"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2231.html"><strong>RFC 2231</strong></a> header is not known by Python; it defaults to <code>'us-ascii'</code>.</p>
+<p>For convenience, if the <em>value</em> passed to <a class="reference internal" href="email.utils.html#py:function:email.utils.collapse_rfc2231_value"><code class="xref py function docutils literal">collapse_rfc2231_value</code></a> is not
+a tuple, it should be a string and it is returned unquoted.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.utils.decode_params"><code class="sig-name">decode_params(params)</code></dt>
+  <dd><p>Decode parameters list according to <span class="target" id="index-9"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2231.html"><strong>RFC 2231</strong></a>.  <em>params</em> is a sequence of
+2-tuples containing elements of the form <code>(content-type, string-value)</code>.</p>
+</dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Footnotes</pre>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="email.encoders.html">&larr; email.encoders: Encoders</a>
+        <a class="next" href="email.iterators.html">email.iterators: Iterators &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
