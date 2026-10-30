@@ -19,7 +19,8 @@ async function rinx(): Promise<RinxApi> {
 
 /**
  * Every edit renaming at `position` in `uri` to `newName` would make, as
- * `file:line:start-end=text` — never applied, so the fixture stays as it is.
+ * `file:line:start-end=text`, in the order the edit lists them — never
+ * applied, so the fixture stays as it is.
  */
 async function renameEdits(uri: vscode.Uri, position: vscode.Position, newName: string): Promise<string[]> {
     const edit = await vscode.commands.executeCommand<vscode.WorkspaceEdit>(
@@ -35,8 +36,7 @@ async function renameEdits(uri: vscode.Uri, position: vscode.Position, newName: 
                 ({ range, newText }) =>
                     `${path.basename(file.fsPath)}:${range.start.line}:${range.start.character}-${range.end.character}=${newText}`,
             ),
-        )
-        .sort();
+        );
 }
 
 suite('Rename (e2e)', () => {
@@ -55,12 +55,13 @@ suite('Rename (e2e)', () => {
         // When — the cursor inside the role
         const edits = await renameEdits(navigating, new vscode.Position(0, 8), 'setup');
 
-        // Then — the label's name and each role's target, nothing else
-        assert.deepStrictEqual(edits, [
-            'hovering.rst:0:10-23=setup',
-            'labelled.rst:0:4-17=setup',
-            'navigating.rst:0:10-23=setup',
-        ]);
+        // Then — the label's name and each role's target, each once and
+        // nothing else, in whichever order the files are listed
+        assert.strictEqual(edits.length, 3);
+        assert.deepStrictEqual(
+            new Set(edits),
+            new Set(['hovering.rst:0:10-23=setup', 'labelled.rst:0:4-17=setup', 'navigating.rst:0:10-23=setup']),
+        );
     });
 
     test('a refused rename says why', async () => {
