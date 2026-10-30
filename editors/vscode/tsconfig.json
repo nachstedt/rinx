@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "module": "node16",
-    "target": "es2020",
+    "target": "es2025",
     "outDir": "out",
-    "lib": ["es2020"],
+    "lib": ["es2025"],
     "types": ["node", "mocha", "vscode"],
     "sourceMap": true,
     "rootDir": "src",

@@ -114,7 +114,7 @@
     "vscode:prepublish": "npm run bundle -- --minify",
     "compile": "tsc -p ./",
     "prebundle": "node scripts/copy-plantuml.mjs",
-    "bundle": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node20 --sourcemap",
+    "bundle": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node24 --sourcemap",
     "watch": "tsc -watch -p ./",
     "typecheck": "tsc -p ./ --noEmit",
     "lint": "oxlint --type-aware --deny-warnings",
