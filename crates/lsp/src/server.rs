@@ -75,6 +75,8 @@ mod test_support;
 #[cfg(test)]
 mod watch_tests;
 #[cfg(test)]
+mod workspace_symbol_tests;
+#[cfg(test)]
 mod workspace_tests;
 
 pub use check::{CheckOptions, FolderCheck, ReferencesAt, check_folder};

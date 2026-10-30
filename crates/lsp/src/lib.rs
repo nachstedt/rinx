@@ -23,6 +23,7 @@
 //! - `include_summary` notes on an `.. include::` the problems it brought in;
 //! - `includes` decides what a file shows when open documents include it;
 //! - `files` is the loader a file-reading directive goes through;
+//! - `workspace_symbol` searches every project's definitions by name;
 //! - `uri` converts between the protocol's `file:` URIs and paths;
 //! - `project` finds the workspace's projects, reads their `conf.py`, and
 //!   scans and keeps each one's project index.
@@ -52,6 +53,7 @@ mod server;
 #[cfg(all(test, unix))]
 mod test_scripts;
 mod uri;
+mod workspace_symbol;
 
 pub use position::PositionEncoding;
 pub use server::{CheckOptions, FolderCheck, ReferencesAt, check_folder, run};

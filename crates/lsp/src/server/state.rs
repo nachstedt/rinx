@@ -75,7 +75,7 @@ use crate::definition::{line_link, reference_definition, site_location, target_l
 use crate::diagnostics::{
     ParsedSource, diagnose_source, parse_prefix, parse_source, text_through_line,
 };
-use crate::document_symbol::{DocumentSymbols, OutlineShape, document_symbols};
+use crate::document_symbol::{DocumentSymbols, FlatSymbol, OutlineShape, document_symbols};
 use crate::documents::DocumentStore;
 use crate::entity_at::entity_marked_at;
 use crate::entity_hover::{declared_entity_markdown, indexed_entity_markdown};
@@ -95,6 +95,7 @@ use crate::reference_at::{reference_at, toc_entry_at};
 use crate::references::{ordered_locations, use_location};
 use crate::render::{RenderFindings, RenderSettings, render_diagnostics};
 use crate::uri::{file_path, file_uri};
+use crate::workspace_symbol::{best_matches, workspace_symbol};
 
 /// The id the file watcher is registered under.
 const WATCH_REGISTRATION: &str = "rinx/watch";
@@ -1145,6 +1146,30 @@ impl ServerState {
             self.outline_shape,
             self.encoding,
         ))
+    }
+
+    /// The definitions of every project whose names match `query`, best
+    /// first — in documents open or not, by their latest analyses, each
+    /// placed in the file it was written in.
+    pub(super) fn workspace_symbols(&self, query: &str) -> Vec<FlatSymbol> {
+        let candidates: Vec<_> = self.projects.values().flat_map(Project::symbols).collect();
+        let mut texts: HashMap<PathBuf, Option<Cow<'_, str>>> = HashMap::new();
+        best_matches(query, &candidates)
+            .iter()
+            .filter_map(|candidate| {
+                let path = candidate.path();
+                let uri = file_uri(&path)?;
+                let text = texts
+                    .entry(path)
+                    .or_insert_with_key(|path| file_text(&self.documents, path));
+                Some(workspace_symbol(
+                    candidate,
+                    uri,
+                    text.as_deref(),
+                    self.encoding,
+                ))
+            })
+            .collect()
     }
 
     /// The reference at `position` in the open document `uri` — its range,

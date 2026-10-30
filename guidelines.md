@@ -80,6 +80,7 @@ entry under the heading it belongs to, as a single short sentence.
 - A pure phase should take an injected trait object for anything it cannot do itself (like reading a file) rather than acquiring the capability directly.
 - Convert an embedded notation (LaTeX, CSV) with an established library during the build rather than shipping a client-side script, so the output stays self-contained and malformed input becomes a build diagnostic instead of a silent failure in the reader's browser.
 - Let the build system's constraints decide a third-party library, not the library's feature list: a dependency needing a foreign toolchain costs more in a sandboxed, multi-platform build than any feature it adds.
+- Keep every linked dependency under MIT or Apache-2.0; when the best-known library is copyleft, take a maintained permissive alternative rather than hand-writing one.
 - Generate a derived artefact (a stylesheet, a table) from the same source the code uses, and check it in with a test that regenerates and compares, rather than maintaining a parallel copy by hand.
 - Before generating and vendoring a third party's data set, look for a crate that already redistributes it; a maintained redistribution tracks upstream for free, where a checked-in copy is ours to re-cut forever.
 - Store an embedded notation in the AST exactly as written and convert it only while rendering, so the choice of backend never reaches a serialized `.ast` file.

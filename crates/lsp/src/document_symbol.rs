@@ -368,7 +368,7 @@ fn indentation(line: &str) -> usize {
 
 /// `name`, or `fallback` when it is empty: a client refuses a symbol with no
 /// name.
-fn non_empty(name: String, fallback: &str) -> String {
+pub(crate) fn non_empty(name: String, fallback: &str) -> String {
     if name.trim().is_empty() {
         fallback.to_string()
     } else {
@@ -377,7 +377,7 @@ fn non_empty(name: String, fallback: &str) -> String {
 }
 
 /// How the editor marks an object of `object_type`.
-fn symbol_kind(object_type: ObjectType) -> SymbolKind {
+pub(crate) fn symbol_kind(object_type: ObjectType) -> SymbolKind {
     match object_type {
         ObjectType::Py(PyObjectType::Function) | ObjectType::C(CObjectType::Function) => {
             SymbolKind::FUNCTION

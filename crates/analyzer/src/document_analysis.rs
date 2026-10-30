@@ -56,6 +56,14 @@ impl DocumentAnalysis {
         &self.sites
     }
 
+    /// The document's own index fragment: what it defines and how each is
+    /// titled or spelled, before any fold — so a name two documents define is
+    /// still here, where the fold keeps it in neither.
+    #[must_use]
+    pub fn index_fragment(&self) -> &ProjectIndex {
+        &self.index
+    }
+
     /// Whether `other` contributes to a fold exactly what this does — equal
     /// but, perhaps, for where its definitions were written, which no fold
     /// reads. A document whose lines only moved folds into the same index.
@@ -116,6 +124,18 @@ mod tests {
             .definition_sites()
             .get(&DefinitionKey::Section(SectionId::from_title("Notes")));
         assert_eq!(site.map(|site| site.start), Some(Position::new(1, 1)));
+    }
+
+    #[test]
+    fn test_index_fragment_is_the_documents_own_index() {
+        // Given
+        let doc = noted(1);
+
+        // When
+        let analysis = DocumentAnalysis::of(&doc);
+
+        // Then
+        assert_eq!(analysis.index_fragment(), &analyze(&doc));
     }
 
     fn noted(line: u32) -> Document {

@@ -44,6 +44,7 @@ use super::inventories::{Fetched, ProjectInventories};
 use super::model::{DEFAULT_ROOT_DOC, ProjectModel, ProjectSource, RST_SUFFIX};
 use super::references::{DocumentUses, Resolution, UseSite, UseTarget, resolve_uses};
 use super::strictness::Strictness;
+use super::symbols::{DocumentSymbols, SymbolCandidate};
 use crate::files::reads_at_or_under;
 
 /// The root document Sphinx falls back to when `index` is missing
@@ -61,6 +62,8 @@ pub struct IndexedDocument {
     pub reads: BTreeSet<PathBuf>,
     /// What the document wrote that uses a definition, which no fold reads.
     pub uses: DocumentUses,
+    /// What the document defines, as a workspace search lists it.
+    pub symbols: DocumentSymbols,
 }
 
 impl IndexedDocument {
@@ -68,12 +71,25 @@ impl IndexedDocument {
     /// parse read `reads`.
     #[must_use]
     pub fn of(path: PathBuf, document: &Document, reads: BTreeSet<PathBuf>) -> Self {
+        let analysis = DocumentAnalysis::of(document);
         Self {
             path,
-            analysis: DocumentAnalysis::of(document),
+            symbols: DocumentSymbols::of(document, &analysis),
+            analysis,
             reads,
             uses: DocumentUses::of(document),
         }
+    }
+}
+
+/// The file a definition of the document at `document` was written in: the
+/// document's own, or the `.. include::`d fragment `file` names.
+pub(super) fn site_path(document: &Path, source_root: &Path, file: Option<&str>) -> PathBuf {
+    match file {
+        None => document.to_path_buf(),
+        // The build names a fragment from the source root, the server's
+        // loader by its absolute path; joining keeps the latter as it is.
+        Some(file) => source_root.join(file),
     }
 }
 
@@ -107,14 +123,8 @@ impl Definitions<'_> {
     pub fn site(&self, doc_path: &str, key: &DefinitionKey) -> Option<DefinitionLocation> {
         let indexed = self.documents.get(doc_path)?;
         let site = indexed.analysis.definition_sites().get(key)?;
-        let path = match &site.file {
-            None => indexed.path.clone(),
-            // The build names a fragment from the source root, the server's
-            // loader by its absolute path; joining keeps the latter as it is.
-            Some(file) => self.source_root.join(file),
-        };
         Some(DefinitionLocation {
-            path,
+            path: site_path(&indexed.path, self.source_root, site.file.as_deref()),
             start: site.start,
             end: site.end,
             name: site.name,
@@ -516,6 +526,19 @@ impl Project {
         }
     }
 
+    /// What every document of the project defines, as a workspace search
+    /// lists it, by their latest analyses — document after document.
+    pub fn symbols(&self) -> impl Iterator<Item = SymbolCandidate<'_>> {
+        self.documents.iter().flat_map(|(doc_path, indexed)| {
+            indexed.symbols.iter().map(|entry| SymbolCandidate {
+                doc_path,
+                entry,
+                document: &indexed.path,
+                source_root: &self.model.source_root,
+            })
+        })
+    }
+
     /// The project index, beside where its definitions were written, for a
     /// caller reading both at once.
     pub fn index_and_definitions(&mut self) -> (&ProjectIndex, Definitions<'_>) {
@@ -654,5 +677,7 @@ mod inventory_tests;
 mod naming_tests;
 #[cfg(test)]
 mod references_tests;
+#[cfg(test)]
+mod symbol_tests;
 #[cfg(test)]
 mod test_support;

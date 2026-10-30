@@ -6,8 +6,9 @@
 //! its `lsp_manifest` output group wrote, as the VS Code extension builds,
 //! each `--preview <document>` times that document's preview after an
 //! edit, each `--references <document>:<line>:<column>` the references
-//! found there, and each `--rename <document>:<line>:<column>=<name>` the
-//! rename of what is named there.
+//! found there, each `--rename <document>:<line>:<column>=<name>` the
+//! rename of what is named there, and each `--symbols <query>` a search of
+//! the workspace's definitions.
 //!
 //! The server itself is the `rinx_lsp` crate, whose handlers are already
 //! pure; what is left here is the one decision the command line makes —
@@ -37,9 +38,9 @@ enum LspMode {
 /// when told the transport, and which names the only one this server has, or
 /// `--check <folder>`, followed by any of `--python <exe>` (once),
 /// `--manifest <file>` (each a site), `--preview <document>` (each timed)
-/// `--references <document>:<line>:<column>` and
-/// `--rename <document>:<line>:<column>=<name>` (each timed). Anything else
-/// is refused rather than ignored, so a flag that a
+/// `--references <document>:<line>:<column>`,
+/// `--rename <document>:<line>:<column>=<name>` and `--symbols <query>` (each
+/// timed). Anything else is refused rather than ignored, so a flag that a
 /// later version of the server would understand is not silently dropped by
 /// this one.
 fn read_lsp_args(args: &[String]) -> Result<LspMode> {
@@ -73,6 +74,7 @@ fn read_check_options(mut args: &[String]) -> Result<CheckOptions> {
                 "--preview" => bail!("lsp: --preview needs the document to preview"),
                 "--references" => bail!("lsp: --references needs <document>:<line>:<column>"),
                 "--rename" => bail!("lsp: --rename needs <document>:<line>:<column>=<name>"),
+                "--symbols" => bail!("lsp: --symbols needs the query to search for"),
                 _ => bail!("lsp: unknown argument '{flag}' after --check"),
             }
         };
@@ -83,6 +85,7 @@ fn read_check_options(mut args: &[String]) -> Result<CheckOptions> {
             "--preview" => options.previews.push(absolute(Path::new(value))?),
             "--references" => options.references.push(read_place("--references", value)?),
             "--rename" => options.renames.push(read_rename(value)?),
+            "--symbols" => options.symbols.push(value.clone()),
             _ => bail!("lsp: unknown argument '{flag}' after --check"),
         }
         args = rest;
@@ -283,6 +286,33 @@ mod tests {
                 column: 5,
             }]
         );
+    }
+
+    #[test]
+    fn test_read_lsp_args_reads_each_query_to_search_for() {
+        // Given / When
+        let Ok(LspMode::Check { options, .. }) = read_lsp_args(&args(&[
+            "--check",
+            "Doc",
+            "--symbols",
+            "dict",
+            "--symbols",
+            "",
+        ])) else {
+            panic!("a check");
+        };
+
+        // Then
+        assert_eq!(options.symbols, ["dict", ""]);
+    }
+
+    #[test]
+    fn test_read_lsp_args_refuses_a_search_without_its_query() {
+        // Given / When
+        let error = read_lsp_args(&args(&["--check", "Doc", "--symbols"])).unwrap_err();
+
+        // Then
+        assert!(error.to_string().contains("--symbols needs"), "{error}");
     }
 
     #[test]

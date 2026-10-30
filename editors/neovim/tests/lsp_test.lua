@@ -155,6 +155,13 @@ local under_title = vim.tbl_contains(
 end)
 check('the outline lists the function under the title', title.name == 'Editor fixture' and under_title, outline)
 
+-- A workspace search finds the label of a document no buffer holds.
+local found = request_until_answered('workspace/symbol', { query = 'instal' }) or {}
+local found_label = vim.iter(found):any(function(symbol)
+  return symbol.name == 'install' and vim.endswith(symbol.location.uri, '/target.rst')
+end)
+check('a workspace search finds the label in target.rst', found_label, found)
+
 if failures > 0 then
   -- `vim.lsp.log.get_filename` since 0.11; `vim.lsp.get_log_path` before.
   local path = (vim.lsp.log.get_filename or vim.lsp.get_log_path)()
