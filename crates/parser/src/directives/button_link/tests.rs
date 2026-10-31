@@ -3,8 +3,6 @@ use rinx_ast::{
     SemanticColor, TextAlign, walk_nodes,
 };
 
-use crate::parse;
-
 /// Parses a whole document and returns its single `.. button-link::` with the
 /// document's diagnostics — the dispatcher is what positions the parse
 /// context, so spans are only meaningful this way.
@@ -12,7 +10,7 @@ use crate::parse;
 /// Walks the whole tree rather than the top level, so a button written inside
 /// a container is found by the same helper.
 fn parse_document(input: &str) -> (ButtonLink, Vec<Diagnostic>) {
-    let doc = parse("test.rst", input);
+    let doc = crate::parse_document("test.rst", input);
     let mut found = None;
     walk_nodes(&doc.nodes, &mut |node| {
         if let Node::Directive(Directive::ButtonLink(button)) = node {
@@ -195,7 +193,7 @@ fn test_a_missing_argument_becomes_a_malformed_directive() {
     let input = ".. button-link::\n\n   Nowhere to go\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = crate::parse_document("test.rst", input);
 
     // Then — the name is recognized, so the content is refused rather than
     // swallowed as an unknown directive

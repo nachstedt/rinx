@@ -364,7 +364,8 @@ mod tests {
             ]
         );
         for name in names {
-            let document = crate::parse("index.rst", &format!(".. {name}::\n\n   >>> 1\n"));
+            let document =
+                crate::parse_document("index.rst", &format!(".. {name}::\n\n   >>> 1\n"));
             assert!(
                 matches!(
                     document.nodes[..],

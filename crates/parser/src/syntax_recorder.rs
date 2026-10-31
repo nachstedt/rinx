@@ -96,7 +96,7 @@ mod tests {
 
     /// The blocks parsing `text` records, as (kind, first line, last line).
     fn blocks(text: &str) -> Vec<(BlockKind, u32, u32)> {
-        crate::parse("test.rst", text)
+        crate::blocks::parse_source_map("test.rst", text)
             .syntax
             .blocks
             .iter()
@@ -164,10 +164,11 @@ mod tests {
     #[test]
     fn test_parse_records_a_directives_name_and_option_names() {
         // When
-        let document = crate::parse("test.rst", ".. image:: logo.png\n   :alt: Logo\n");
+        let map =
+            crate::blocks::parse_source_map("test.rst", ".. image:: logo.png\n   :alt: Logo\n");
 
         // Then
-        let found: Vec<(TokenKind, u32, u32, u32)> = document
+        let found: Vec<(TokenKind, u32, u32, u32)> = map
             .syntax
             .tokens
             .iter()

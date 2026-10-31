@@ -10,7 +10,7 @@ use crate::headings::{Adornment, detect_adornment, try_parse_heading};
 use crate::inline::{SourceMap, parse_inline_text_mapped};
 use crate::syntax_recorder::SyntaxRecorder;
 use rinx_ast::{
-    BlockKind, CodeLanguage, Diagnostic, DiagnosticCode, Document, Domain, Node, Span, Suppression,
+    BlockKind, CodeLanguage, Diagnostic, DiagnosticCode, Document, Node, Span, Suppression,
     SuppressionCodes,
 };
 
@@ -29,70 +29,83 @@ use super::table::try_parse_grid_table;
 use super::target::try_parse_target;
 use super::transition::try_parse_transition;
 
-/// Parses an RST-formatted string into a Document.
+/// Parses an RST-formatted string into a [`Document`], beside the
+/// [`rinx_ast::SourceMap`] of where its markup was written.
 ///
-/// Current logic:
-/// - A heading is defined as a line of text followed by a line composed purely
-///   of punctuation character(s) (e.g. `===` or `---`) that is at least as long
-///   as the text line above it.
-/// - Heading levels are determined by the order in which each underline character
-///   is first encountered in the document: the first character seen becomes level
-///   1, the second distinct character level 2, etc.
-/// - Otherwise, consecutive non-blank lines are grouped into a Paragraph.
+/// `ctx` says how: the default domain bare constructs resolve in, the
+/// [`crate::ParseFileLoader`] a directive reads files through, the entity
+/// schema, and so on. [`ParseCtx::default`] resolves in the Python domain and
+/// reads no file, so a `.. csv-table::` carrying a `:file:` option reports a
+/// diagnostic instead.
 ///
-/// # Panics
-///
-/// The internal implementation uses `expect()` on an iterator that is guaranteed
-/// to be non-empty by preceding checks.
-#[must_use]
-pub fn parse(path: &str, input: &str) -> Document {
-    parse_with_domain(path, input, Domain::Py)
-}
-
-/// Parses an RST-formatted string into a `Document`, resolving any bare
-/// (unprefixed) domain directive or role — e.g. `.. function::` or `:func:` —
-/// via `default_domain`. `parse` is a thin wrapper defaulting to `Domain::Py`.
-///
-/// The parse runs with no filesystem access, so a `.. csv-table::` carrying a
-/// `:file:` option reports a diagnostic instead of reading anything. Callers
-/// that *can* resolve paths use [`parse_with_ctx`] instead.
-#[must_use]
-pub fn parse_with_domain(path: &str, input: &str, default_domain: Domain) -> Document {
-    parse_with_ctx(path, input, &ParseCtx::with_domain(default_domain))
-}
-
-/// Parses an RST-formatted string into a `Document` under a fully specified
-/// [`ParseCtx`] — the entry point for callers that can supply a
-/// [`crate::CsvFileLoader`] alongside the default domain.
+/// A build keeps only the [`Parsed::document`]: it is what the `.ast` holds,
+/// and the source map is only for an editor holding this parse.
 ///
 /// # Panics
 ///
 /// The internal implementation uses `expect()` on an iterator that is guaranteed
 /// to be non-empty by preceding checks.
 #[must_use]
-pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
-    parse_document(path, input, ctx, Epilog::Appended).document
+pub fn parse(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Parsed {
+    read_document(path, input, ctx, Epilog::Appended).parsed
 }
 
-/// A document's beginning, parsed: the document [`parse_prefix_with_ctx`]
-/// read, and the roles in force where the text ends.
+/// The document [`parse`] reads from `input` under the default context —
+/// what the tests of each construct's parsing read.
+#[cfg(test)]
+pub(crate) fn parse_document(path: &str, input: &str) -> Document {
+    parse(path, input, &ParseCtx::default()).document
+}
+
+/// The source map [`parse`] leaves beside the document of `input` under the
+/// default context — what the tests of each construct's recording read.
+#[cfg(test)]
+pub(crate) fn parse_source_map(path: &str, input: &str) -> rinx_ast::SourceMap {
+    parse(path, input, &ParseCtx::default()).source_map
+}
+
+/// A document parsed, beside where its markup was written.
+///
+/// The [`Document`] is what a build writes to its `.ast`, the
+/// [`rinx_ast::SourceMap`] what only an editor holding this parse can ask
+/// about. Kept as a pair because the map describes this parse of this
+/// document and no other.
+#[derive(Debug)]
+pub struct Parsed {
+    pub document: Document,
+    pub source_map: rinx_ast::SourceMap,
+}
+
+/// A document's beginning, parsed: the document [`parse_prefix`] read, and
+/// the roles in force where the text ends.
 #[derive(Debug)]
 pub struct PrefixParse {
     pub document: Document,
     pub roles: RolesInForce,
 }
 
+/// What [`read_document`] read: the parse, and the roles in force at its
+/// end, which only a prefix parse reports.
+struct DocumentParse {
+    parsed: Parsed,
+    roles: RolesInForce,
+}
+
 /// Parses `input` as the beginning of a document, up to some point of it, as
-/// [`parse_with_ctx`] parses a whole one — but without the epilog, which
-/// follows the document's end — and reports the roles `.. role::` and
+/// [`parse`] parses a whole one — but without the epilog, which follows the
+/// document's end — and reports the roles `.. role::` and
 /// `.. default-role::` have put in force by its end.
 ///
 /// What an editor asks at the cursor: those directives apply from where they
 /// are written onwards, so the roles of the text above the cursor are the
 /// ones in force there.
 #[must_use]
-pub fn parse_prefix_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> PrefixParse {
-    parse_document(path, input, ctx, Epilog::Left)
+pub fn parse_prefix(path: &str, input: &str, ctx: &ParseCtx<'_>) -> PrefixParse {
+    let DocumentParse { parsed, roles } = read_document(path, input, ctx, Epilog::Left);
+    PrefixParse {
+        document: parsed.document,
+        roles,
+    }
 }
 
 /// Whether a parse appends the epilog to the document's lines.
@@ -103,7 +116,7 @@ enum Epilog {
 }
 
 /// The parse both entry points share.
-fn parse_document(path: &str, input: &str, ctx: &ParseCtx<'_>, epilog: Epilog) -> PrefixParse {
+fn read_document(path: &str, input: &str, ctx: &ParseCtx<'_>, epilog: Epilog) -> DocumentParse {
     let mut diagnostics = Diagnostics::default();
     // The Jinja pass runs before anything reads a line, because it decides
     // what the lines *are*. Its map is what every position below it is
@@ -169,14 +182,18 @@ fn parse_document(path: &str, input: &str, ctx: &ParseCtx<'_>, epilog: Epilog) -
     let include_sites = diagnostics.take_include_sites();
     let (entries, suppressions, source_files) = diagnostics.into_parts();
     let mut doc = Document::new(path.to_string(), nodes);
-    doc.include_sites = include_sites;
-    doc.syntax = syntax.into_table();
     doc.diagnostics = entries;
     doc.suppressions = suppressions;
     doc.metadata = metadata;
     doc.source_files = source_files;
-    PrefixParse {
-        document: doc,
+    DocumentParse {
+        parsed: Parsed {
+            document: doc,
+            source_map: rinx_ast::SourceMap {
+                syntax: syntax.into_table(),
+                include_sites,
+            },
+        },
         roles: document_roles.in_force(),
     }
 }
@@ -465,7 +482,7 @@ mod tests {
             &[],
             &mut adornment_order,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ParseCtx::default(),
         );
         assert!(nodes.is_empty());
     }
@@ -479,7 +496,7 @@ mod tests {
             &lines,
             &mut adornment_order,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ParseCtx::default(),
         );
         assert_eq!(nodes.len(), 1);
         match &nodes[0] {
@@ -501,7 +518,7 @@ mod tests {
             &lines1,
             &mut adornment_order,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ParseCtx::default(),
         );
         assert_eq!(nodes1.len(), 1);
 
@@ -510,7 +527,7 @@ mod tests {
             &lines2,
             &mut adornment_order,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ParseCtx::default(),
         );
         assert_eq!(nodes2.len(), 1);
 
@@ -528,7 +545,7 @@ mod tests {
             &lines,
             &mut adornment_order,
             &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
+            &ParseCtx::default(),
         );
 
         assert_eq!(nodes.len(), 1);

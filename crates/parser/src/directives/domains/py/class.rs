@@ -109,7 +109,7 @@ pub(in crate::directives) const EXCEPTION_SPEC: DirectiveSpec = DirectiveSpec {
 mod tests {
     use super::super::super::body::test_support::read_options;
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::Domain;
     use rinx_ast::{Directive, Node};
 
@@ -169,7 +169,7 @@ mod tests {
         let input = ".. class:: bytearray(source=b'')\n           bytearray(source, encoding)\n   :noindex:\n\n   Return a new array of bytes.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let Some(Node::Directive(Directive::DomainObject {
@@ -197,7 +197,7 @@ mod tests {
         let input = ".. py:class:: Greeter\n\n   A greeter.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -225,7 +225,7 @@ mod tests {
         let input = ".. py:class:: Greeter(Base)\n   :final:\n\n   A greeter.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -256,7 +256,7 @@ mod tests {
         let input = ".. class:: SharedMemoryManager([address[, authkey]])\n   :module: multiprocessing.managers\n\n   A subclass of BaseManager.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -298,7 +298,7 @@ mod tests {
         let input = ".. py:class:: Greeter";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::Directive(Directive::DomainObject {
@@ -318,7 +318,7 @@ mod tests {
         let input = ".. py:exception:: GreeterError\n\n   Raised when greeting fails.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -346,7 +346,7 @@ mod tests {
         let input = ".. py:exception:: InvalidNameError(GreeterError)\n   :final:\n\n   Raised for an invalid name.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -374,7 +374,7 @@ mod tests {
         let input = ".. py:exception:: GreeterError";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::Directive(Directive::DomainObject {
@@ -394,7 +394,8 @@ mod tests {
         let input = ".. exception:: GreeterError\n\n   Raised when greeting fails.";
 
         // When
-        let doc = crate::parse_with_domain("test.rst", input, Domain::Py);
+        let doc =
+            crate::parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -412,7 +413,8 @@ mod tests {
         let input = ".. class:: Greeter\n\n   A greeter.";
 
         // When
-        let doc = crate::parse_with_domain("test.rst", input, Domain::Py);
+        let doc =
+            crate::parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
         // Then
         assert_eq!(doc.nodes.len(), 1);

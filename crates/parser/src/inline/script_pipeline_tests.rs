@@ -6,7 +6,7 @@
 //! idiom joins a script to the word around it, how the escape rewrite treats
 //! its text, and that a heading or a substitution carries one through.
 
-use crate::parse;
+use crate::parse_document;
 use rinx_ast::{DiagnosticCode, InlineNode, Node, Position, ScriptPosition, Span};
 
 fn script(position: ScriptPosition, text: &str, classes: &[&str]) -> InlineNode {
@@ -23,7 +23,7 @@ fn text(text: &str) -> InlineNode {
 
 /// The inline content of the document's only paragraph.
 fn paragraph(input: &str) -> Vec<InlineNode> {
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     let paragraphs: Vec<_> = doc
         .nodes
         .into_iter()
@@ -108,7 +108,7 @@ fn test_parse_keeps_a_script_in_a_heading() {
     let input = "CO\\ :sub:`2` levels\n==================\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(
@@ -151,7 +151,7 @@ fn test_parse_builds_a_role_derived_from_sub() {
     let input = ".. role:: chem(sub)\n\nH\\ :chem:`2`\\ O\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — classed by its own name
     assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
@@ -189,7 +189,7 @@ fn test_parse_refuses_a_role_named_like_a_script_role() {
     let input = ".. role:: sup(code)\n\nx :sup:`2`\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — refused, and `:sup:` stays the built-in role
     let codes: Vec<_> = doc.diagnostics.iter().map(|d| d.code).collect();

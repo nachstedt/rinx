@@ -105,7 +105,7 @@ pub(super) fn format_diagnostic(origin: &WarningOrigin<'_>, finding: &impl Repor
 /// Prints one parse diagnostic to stderr.
 ///
 /// Printing lives here rather than in `rinx_parser` — where it used to
-/// happen, inside `parse_with_ctx` — because the parser must only *record*
+/// happen, inside `parse` — because the parser must only *record*
 /// what went wrong. Deciding whether a diagnostic is shown at all is the
 /// build step's business, and a parser that printed as it went could not
 /// honour a `.. noqa:` comment appearing anywhere in the document. Which

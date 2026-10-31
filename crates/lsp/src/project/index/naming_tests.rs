@@ -44,7 +44,8 @@ fn test_doc_path_of_keeps_the_first_file_of_a_document() {
 fn test_path_of_finds_a_recorded_documents_own_file() {
     // Given
     let mut project = sphinx("source_suffix = '.txt'\n");
-    let document = rinx_parser::parse("intro.rst", "Text.\n");
+    let document =
+        rinx_parser::parse("intro.rst", "Text.\n", &rinx_parser::ParseCtx::default()).document;
     project.record(
         "intro.rst".to_string(),
         IndexedDocument::of(

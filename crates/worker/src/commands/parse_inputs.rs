@@ -269,7 +269,7 @@ mod tests {
         };
 
         // When
-        let doc = rinx_parser::parse_with_ctx("doc.rst", "|a| and |b|.\n", &inputs.ctx());
+        let doc = rinx_parser::parse("doc.rst", "|a| and |b|.\n", &inputs.ctx()).document;
 
         // Then
         assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);

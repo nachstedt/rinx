@@ -238,7 +238,7 @@ mod tests {
         let input = "Intro\n\n.. glossary::\n\n   API\n   interface\n      A contract.\n\n   ABI\n      A binary one.\n";
 
         // When
-        let doc = crate::parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
 
         // Then — each term at its own line, its column past the body's indent
         let Some(Node::Directive(Directive::Glossary { entries, .. })) = doc.nodes.get(1) else {

@@ -174,7 +174,6 @@ fn is_known_octicon(name: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
     use rinx_ast::Spacing;
     use rinx_ast::{Diagnostic, DiagnosticCode};
     use rinx_ast::{InlineNode, Node, SpacingValue};
@@ -183,7 +182,7 @@ mod tests {
     /// document's diagnostics — the dispatcher is what positions the parse
     /// context, so spans are only meaningful this way.
     fn parse_document(input: &str) -> (Dropdown, Vec<Diagnostic>) {
-        let doc = parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
         let dropdown = doc
             .nodes
             .iter()

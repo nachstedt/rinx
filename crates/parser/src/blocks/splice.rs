@@ -40,7 +40,7 @@ mod tests {
     use rinx_ast::{DiagnosticCode, Document, Domain, InlineNode, Node, Position};
 
     use crate::context::{ParseCtx, SplicedText};
-    use crate::{DefaultRole, LoadedFile, ParseFileLoader, parse_prefix_with_ctx, parse_with_ctx};
+    use crate::{DefaultRole, LoadedFile, ParseFileLoader, parse, parse_prefix};
 
     /// A loader resolving a path to itself.
     struct FakeFiles(HashMap<String, String>);
@@ -77,7 +77,7 @@ mod tests {
                 name: "epilog.rst",
                 text: epilog,
             });
-        parse_with_ctx("guide.rst", rst, &ctx)
+        parse("guide.rst", rst, &ctx).document
     }
 
     fn codes(document: &Document) -> Vec<DiagnosticCode> {
@@ -167,7 +167,7 @@ mod tests {
         });
 
         // When
-        let parsed = parse_prefix_with_ctx("guide.rst", "Document.\n", &ctx);
+        let parsed = parse_prefix("guide.rst", "Document.\n", &ctx);
 
         // Then
         assert_eq!(
@@ -188,7 +188,7 @@ mod tests {
         let text = ".. role:: chem(sub)\n\n.. default-role:: math\n";
 
         // When
-        let parsed = parse_prefix_with_ctx("guide.rst", text, &ctx);
+        let parsed = parse_prefix("guide.rst", text, &ctx);
 
         // Then
         let names: Vec<(&str, &str)> = parsed
@@ -353,11 +353,12 @@ mod tests {
             });
 
         // When
-        let document = parse_with_ctx(
+        let document = parse(
             "guide.rst",
             "Release {{ release }}.\n\n.. nonsense::\n",
             &ctx,
-        );
+        )
+        .document;
 
         // Then
         assert_eq!(

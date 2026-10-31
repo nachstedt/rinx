@@ -184,7 +184,7 @@ mod tests {
     /// multi-node splice is exercised the way the block loop drives it.
     fn parse_document(rst: &str) -> Document {
         let ctx = ParseCtx::with_domain(Domain::Py);
-        crate::parse_with_ctx("guide.rst", rst, &ctx)
+        crate::parse("guide.rst", rst, &ctx).document
     }
 
     fn codes(document: &Document) -> Vec<DiagnosticCode> {

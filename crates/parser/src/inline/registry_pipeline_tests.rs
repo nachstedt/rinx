@@ -7,7 +7,7 @@
 //! and given afresh to each use of a substitution — and a refusal reported
 //! at the role and lowered to its source text.
 
-use crate::parse;
+use crate::parse_document;
 use rinx_ast::{
     DiagnosticCode, Directive, DocutilsPepNumber, DocutilsRfcNumber, InlineNode, Node, Position,
     Registry, RegistryTarget, Span,
@@ -33,7 +33,7 @@ fn test_parse_creates_a_pep_reference_with_its_span_and_anchor() {
     let input = "See :pep:`8` here.";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(
@@ -58,7 +58,7 @@ fn test_parse_numbers_pep_anchors_after_index_directives() {
     let input = ":pep:`8`\n\n.. index:: single: execution\n\n:pep:`20`\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let Node::Directive(Directive::Index { id, .. }) = &doc.nodes[1] else {
@@ -81,7 +81,7 @@ fn test_parse_gives_each_substituted_pep_its_own_anchor() {
     let input = "|style| and |style|\n\n.. |style| replace:: :pep:`8`\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let Node::Paragraph(inlines) = &doc.nodes[0] else {
@@ -103,7 +103,7 @@ fn test_parse_unescapes_the_target_before_reading_the_number() {
     let input = r"See :pep:`\8`.";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(registry_references(&doc.nodes).len(), 1, "{:?}", doc.nodes);
@@ -116,7 +116,7 @@ fn test_parse_reports_an_invalid_pep_number_at_the_role() {
     let input = "See :pep:`eight` here.";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — shown as written, reported where it was written
     assert_eq!(
@@ -141,7 +141,7 @@ fn test_parse_refuses_a_custom_role_named_pep() {
     let input = ".. role:: pep(code)\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert!(
@@ -159,7 +159,7 @@ fn test_parse_creates_a_docutils_pep_reference_with_its_span() {
     let input = "See :pep-reference:`8` here.";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(
@@ -182,7 +182,7 @@ fn test_parse_mints_no_anchor_for_a_pep_reference_role() {
     let input = ":pep:`8` :pep-reference:`8` :pep:`20`";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let ids: Vec<&str> = registry_references(&doc.nodes)
@@ -201,7 +201,7 @@ fn test_parse_reports_an_invalid_pep_reference_number_at_the_role() {
     let input = "See :pep-reference:`8#x` here.";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — shown as written, reported where it was written
     assert_eq!(
@@ -229,7 +229,7 @@ fn test_parse_refuses_a_custom_role_named_pep_reference() {
     let input = ".. role:: pep-reference(code)\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert!(
@@ -247,7 +247,7 @@ fn test_parse_unescapes_a_pep_reference_number_before_reading_it() {
     let input = r"See :pep-reference:`\8`.";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let Node::Paragraph(inlines) = &doc.nodes[0] else {
@@ -268,7 +268,7 @@ fn test_parse_creates_a_reference_for_each_registry() {
     let input = ":rfc:`2324#section-2` :cve:`2024-3094` :cwe:`Overflow <787>`";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — one anchor sequence across all registries
     let found: Vec<(&RegistryTarget, Option<&str>, &str)> = registry_references(&doc.nodes)
@@ -312,7 +312,7 @@ fn test_parse_reports_each_registry_refusal_under_its_own_code() {
     let input = ":rfc:`HTTP` :cve:`CVE-2024-3094` :cwe:`CWE-787`";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — each shown as written
     let codes: Vec<DiagnosticCode> = doc.diagnostics.iter().map(|d| d.code).collect();
@@ -339,7 +339,7 @@ fn test_parse_reports_each_registry_refusal_under_its_own_code() {
 fn test_parse_refuses_custom_roles_named_after_the_registries() {
     // Given / When / Then
     for name in ["rfc", "cve", "cwe", "rfc-reference"] {
-        let doc = parse("test.rst", &format!(".. role:: {name}(code)\n"));
+        let doc = parse_document("test.rst", &format!(".. role:: {name}(code)\n"));
         assert!(
             doc.diagnostics
                 .iter()
@@ -356,7 +356,7 @@ fn test_parse_creates_a_docutils_rfc_reference_without_an_anchor() {
     let input = ":rfc:`1` :rfc-reference:`2822#section-3` :rfc:`2`";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let Node::Paragraph(inlines) = &doc.nodes[0] else {
@@ -385,7 +385,7 @@ fn test_parse_reports_an_invalid_rfc_reference_number_at_the_role() {
     let input = "See :rfc-reference:`0` here.";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(

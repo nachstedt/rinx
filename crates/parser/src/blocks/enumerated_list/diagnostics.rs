@@ -132,13 +132,13 @@ pub(super) fn diagnose_unrecognised_list(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::Domain;
     use rinx_ast::{EnumeratorFormat, EnumeratorSequence};
 
     /// Parses `input` and returns only the "not recognised" diagnostics.
     fn unrecognised_diagnostics(input: &str) -> Vec<String> {
-        parse("test.rst", input)
+        parse_document("test.rst", input)
             .diagnostics
             .into_iter()
             .filter(|d| d.message.starts_with("Enumerated list not recognised"))

@@ -31,7 +31,7 @@ pub fn entity_marked_at(document: &Document, line: u32) -> Option<&EntityBody> {
 mod tests {
     use rinx_ast::Domain;
     use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
-    use rinx_parser::{ParseCtx, RejectParseFiles, parse_with_ctx};
+    use rinx_parser::{ParseCtx, RejectParseFiles, parse};
 
     use super::*;
 
@@ -47,7 +47,7 @@ mod tests {
     fn id_marked_at(text: &str, line: u32) -> Option<String> {
         let schema = schema();
         let ctx = ParseCtx::new(Domain::Py, &RejectParseFiles).with_schema(&schema);
-        let document = parse_with_ctx("index.rst", text, &ctx);
+        let document = parse("index.rst", text, &ctx).document;
         entity_marked_at(&document, line).map(|entity| entity.id.value().to_string())
     }
 

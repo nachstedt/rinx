@@ -59,7 +59,7 @@ away. Every position goes through `ParseCtx::position`, so a nested block, an
 included fragment (its `FileId`) and a Jinja-rendered line are placed exactly
 as a diagnostic is.
 
-### It is never serialized
+### It is never serialized (amended below)
 
 `Document::syntax` is `#[serde(skip)]`, as `include_sites` is: only the
 process that parsed the document reads it, and a `.ast` must not change when a
@@ -121,3 +121,19 @@ documents open, the server holds 7 MB more (403 MB against 396 MB, 1.7%).
   an unknown directive's options, is not coloured.
 - The outline reads a directive's extent from the table too, rather than
   working it out again from the text by indentation.
+
+## Amendment: beside the document, not in it
+
+The table, and the include sites with it, have left `Document` for
+`rinx_ast::SourceMap`, which the parser returns beside the document
+(`rinx_parser::parse`, yielding a `Parsed`). A skipped field
+made the document a build phase read back from a `.ast` differ from the one
+the editor parsed, and nothing but a convention kept build code from reading
+it. A `SourceMap` has no serde impl, so a build phase cannot hold one: code
+reading the table there does not compile, and a `Document` now reads back
+from its `.ast` exactly as it was parsed, which
+`crates/worker/tests/integration/ast_round_trip.rs` checks over `examples/`
+and `docs/`. The reason given above for leaving the table out, that a `.ast`
+must not change when a line moves, does not hold on its own: heading, target
+and inline spans already move it. The reason that does is that no later phase
+reads the table.

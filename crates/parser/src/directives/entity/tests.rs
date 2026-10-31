@@ -2,7 +2,6 @@ use rinx_ast::{AttributeValue, Directive, EntityBody, Node};
 use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
 use crate::context::ParseCtx;
-use crate::parse_with_ctx;
 
 /// The schema every test below parses against.
 fn schema() -> EntitySchema {
@@ -93,7 +92,7 @@ fn schema() -> EntitySchema {
 fn parse(rst: &str) -> rinx_ast::Document {
     let schema = schema();
     let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
-    parse_with_ctx("specs/boot", rst, &ctx)
+    crate::parse("specs/boot", rst, &ctx).document
 }
 
 /// The first entity in `rst`.
@@ -525,7 +524,7 @@ fn test_a_required_relation_with_no_target_is_diagnosed() {
     let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
 
     // When
-    let doc = parse_with_ctx("d", ".. req::\n", &ctx);
+    let doc = crate::parse("d", ".. req::\n", &ctx).document;
 
     // Then
     assert!(
@@ -684,7 +683,7 @@ fn test_an_unknown_directive_is_untouched_without_a_schema() {
     let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
 
     // When
-    let doc = parse_with_ctx("d", ".. req:: Boot\n", &ctx);
+    let doc = crate::parse("d", ".. req:: Boot\n", &ctx).document;
 
     // Then
     assert!(matches!(

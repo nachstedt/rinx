@@ -3,7 +3,7 @@
 //! interact. Kept separate from [`super::dispatch`]'s own unit tests purely
 //! for file size.
 
-use crate::parse;
+use crate::parse_document;
 use rinx_ast::TargetName;
 use rinx_ast::{CodeLanguage, Directive, InlineNode, Node, Position, Span, Written};
 
@@ -12,7 +12,7 @@ fn test_parse_returns_empty_document_for_empty_input() {
     // Given
     let input = "";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 0);
 }
@@ -22,7 +22,7 @@ fn test_parse_creates_paragraph_node() {
     // Given
     let input = "Just some\ntext";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
@@ -36,7 +36,7 @@ fn test_parse_creates_mixed_nodes_for_heading_and_paragraph() {
     // Given
     let input = "Title\n=====\n\nText.";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
@@ -58,7 +58,7 @@ fn test_parse_creates_paragraph_for_shorter_underline() {
     // Given
     let input = "Long Heading\n===";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
@@ -73,7 +73,7 @@ fn test_parse_ignores_trailing_whitespace_for_heading() {
     // docutils, which matches adornments in column 0
     let input = "Heading  \n=======  \n\nNext";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
@@ -95,7 +95,7 @@ fn test_parse_creates_multiple_paragraphs_ignoring_blank_lines() {
     // Given
     let input = "Para 1\n\n\nPara 2\n\nPara 3";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 3);
     assert_eq!(
@@ -117,7 +117,7 @@ fn test_parse_handles_carriage_returns_gracefully() {
     // Given
     let input = "Heading\r\n=======\r\n\r\nPara\r\nline 2";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
@@ -139,7 +139,7 @@ fn test_parse_creates_target_node_for_explicit_target() {
     // Given
     let input = ".. _my-target:\n\nSome text.";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
@@ -161,7 +161,7 @@ fn test_parse_creates_external_target_node() {
     // Given
     let input = ".. _my-link: https://example.com\n\nSome text.";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
@@ -181,7 +181,7 @@ fn test_parse_creates_indented_external_target_node() {
     // Given
     let input = ".. _my-link:\n   https://example.com\n\nSome text.";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
@@ -203,7 +203,7 @@ fn test_parse_paragraph_breaks_at_overline() {
     // (see `headings.rs`) and the overlined form below is the only heading.
     let input = "Para text.\n###\nHi\n###";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
@@ -230,7 +230,7 @@ fn test_parse_keeps_a_literal_block_containing_prompts_literal() {
     let input = "Example::\n\n    >>> 1 + 1\n    2\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — paragraph plus LiteralBlock; no DoctestBlock anywhere.
     assert_eq!(doc.nodes.len(), 2);
@@ -245,7 +245,7 @@ fn test_parse_creates_a_doctest_block_after_a_single_colon() {
     let input = "Use search rather than match:\n\n   >>> import re\n   >>> re.search('a', 'ba')\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 2);
@@ -272,7 +272,7 @@ fn test_parse_creates_a_doctest_block_at_the_left_margin() {
     let input = ">>> 1 + 1\n2\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
@@ -286,7 +286,7 @@ fn test_parse_leaves_a_mid_paragraph_prompt_as_prose() {
     let input = "Some prose.\n>>> f()\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
@@ -299,7 +299,7 @@ fn test_parse_keeps_a_transition_a_transition() {
     let input = "Before.\n\n>>>>\n\nAfter.\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert!(doc.nodes.iter().any(|n| matches!(n, Node::Transition)));
@@ -313,7 +313,7 @@ fn test_parse_finds_a_doctest_block_nested_in_an_admonition() {
     let input = ".. note::\n\n   Try it:\n\n   >>> 1 + 1\n   2\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let mut found = false;
@@ -331,7 +331,7 @@ fn test_parse_separates_two_doctest_blocks_by_a_blank_line() {
     let input = ">>> a = 1\n\n>>> b = 2\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 2);
@@ -343,7 +343,7 @@ fn test_parse_double_colon_paragraph_emits_literal_block() {
     // Given: a paragraph ending with :: followed by an indented block
     let input = "Here is some code::\n\n    def hello():\n        pass\n";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then: two nodes — paragraph (with :: reduced to :) and LiteralBlock
     assert_eq!(doc.nodes.len(), 2);
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -368,7 +368,7 @@ fn test_parse_standalone_double_colon_suppresses_paragraph() {
     // Given: a line of only "::" introduces a literal block with no visible paragraph
     let input = "::\n\n    verbatim content\n";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then: only the LiteralBlock is emitted (no paragraph)
     assert_eq!(doc.nodes.len(), 1);
     if let Node::LiteralBlock { language, content } = &doc.nodes[0] {
@@ -384,7 +384,7 @@ fn test_parse_double_colon_strips_to_single_colon() {
     // Given: text followed by "::" — the "::" becomes ":"
     let input = "Example::\n\n    content\n";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -403,7 +403,7 @@ fn test_parse_literal_block_preserves_internal_blank_lines() {
     // Given: blank lines inside the block must be kept
     let input = "Example::\n\n    line one\n\n    line three\n";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     if let Node::LiteralBlock { content, .. } = &doc.nodes[1] {
@@ -418,7 +418,7 @@ fn test_parse_literal_block_strips_common_indentation() {
     // Given: all lines indented 4 spaces; inner block adds 4 more
     let input = "Example::\n\n    outer\n        inner\n    outer again\n";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then: 4 spaces stripped from all lines; inner keeps its extra 4
     assert_eq!(doc.nodes.len(), 2);
     if let Node::LiteralBlock { content, .. } = &doc.nodes[1] {
@@ -445,7 +445,7 @@ fn test_parse_bodyless_index_directive_inside_glossary_does_not_swallow_followin
       An informal synonym for something.
 ";
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 1);
     let Node::Directive(rinx_ast::Directive::Glossary { entries, .. }) = &doc.nodes[0] else {
@@ -482,7 +482,7 @@ fn test_parse_reads_a_math_directive_with_a_label() {
     let input = ".. math::\n   :label: euler\n\n   e^{i\\pi} + 1 = 0\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let rinx_ast::Node::Directive(rinx_ast::Directive::Math {
@@ -509,7 +509,7 @@ fn test_parse_reads_an_inline_math_role_keeping_its_backslashes() {
     let input = "The angle :math:`\\alpha \\\\ \\beta` matters.\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then the backslashes survive verbatim, as they do in an inline literal
     let Node::Paragraph(nodes) = &doc.nodes[0] else {
@@ -530,7 +530,7 @@ fn test_parse_reads_an_eq_role() {
     let input = "See :eq:`euler` above.\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let Node::Paragraph(nodes) = &doc.nodes[0] else {
@@ -551,7 +551,7 @@ fn test_parse_does_not_recognize_a_math_role_inside_an_inline_literal() {
     let input = "Write ``:math:`x``` to show the markup.\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then it stays literal text, not an equation
     let Node::Paragraph(nodes) = &doc.nodes[0] else {
@@ -571,7 +571,7 @@ fn test_parse_places_a_math_directive_nested_in_an_admonition() {
     let input = ".. note::\n\n   .. math::\n\n      a = b\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then the span points at the nested directive's real line (3), not line 1
     let rinx_ast::Node::Directive(rinx_ast::Directive::Admonition { body, .. }) = &doc.nodes[0]
@@ -596,7 +596,7 @@ fn test_parse_points_a_math_directive_span_past_its_option_lines() {
     let input = "T\n=\n\n.. math::\n   :label: euler\n\n   a = b\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then the span names the equation's line, not the option line above it —
     // a LaTeX error is about the LaTeX
@@ -616,7 +616,7 @@ fn test_parse_points_a_math_directive_span_at_the_first_of_several_equations() {
     let input = ".. math::\n   :label: pair\n\n   a = b\n\n   c = d\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then the span names the first equation's line
     let rinx_ast::Node::Directive(rinx_ast::Directive::Math { span, .. }) = &doc.nodes[0] else {
@@ -638,7 +638,7 @@ fn test_parse_recognizes_a_substitution_definition_and_reference_end_to_end() {
     let input = "Version |release| is current.\n\n.. |release| replace:: 3.13.0\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — the reference is spliced with the definition's resolved
     // content, and the definition itself produces no separate visible node.
@@ -660,7 +660,7 @@ fn test_parse_reports_an_undefined_substitution_reference() {
     let input = "No |such-thing| here.\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(
@@ -672,7 +672,7 @@ fn test_parse_reports_an_undefined_substitution_reference() {
 /// Where the `:name:` and `:label:` values of `input` were written, in
 /// document order: one entry per name-bearing directive.
 fn written_name_spans(input: &str) -> Vec<Option<Span>> {
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
     let mut spans = Vec::new();
     rinx_ast::walk_nodes(&doc.nodes, &mut |node| match node {
         Node::Directive(Directive::Figure(figure)) => {

@@ -21,7 +21,7 @@ fn test_e2e_class_definition_resolves_both_class_and_exc_role_references() {
 Both :exc:`Fault` and :class:`Fault` refer to the same object.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 
@@ -48,7 +48,7 @@ fn test_e2e_exception_definition_resolves_class_role_reference() {
 Use :class:`Fault` to catch it.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 
@@ -84,7 +84,7 @@ fn test_e2e_classmethod_alias_directive_is_indexed_and_resolves() {
 Invalidate the cache via :meth:`ZoneInfo.clear_cache`.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 
@@ -129,7 +129,7 @@ fn test_e2e_decorator_directive_is_indexed_and_resolves() {
 Retrieving a :func:`classmethod` object.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 
@@ -167,7 +167,7 @@ fn test_e2e_decoratormethod_directive_is_indexed_and_resolves() {
 See :meth:`Traits.register` for details.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 
@@ -204,7 +204,7 @@ fn test_e2e_function_definition_does_not_resolve_exc_role_reference() {
 See :exc:`Fault` for details.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 

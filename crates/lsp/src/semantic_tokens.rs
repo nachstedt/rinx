@@ -17,7 +17,7 @@ use lsp_types::{
     Position as LspPosition, Range, SemanticToken, SemanticTokenModifier, SemanticTokenType,
     SemanticTokens, SemanticTokensLegend,
 };
-use rinx_ast::{Document, Position, TokenKind, TokenModifier};
+use rinx_ast::{Position, SyntaxTable, TokenKind, TokenModifier};
 
 use crate::position::{PositionEncoding, to_lsp_position};
 
@@ -53,18 +53,18 @@ pub fn legend() -> SemanticTokensLegend {
     }
 }
 
-/// The tokens of `document`, whose text is `text`, in `encoding` — those
-/// starting within `range` when one is asked for.
+/// The tokens of a document whose text is `text` and whose parse recorded
+/// `syntax`, in `encoding` — those starting within `range` when one is asked
+/// for.
 #[must_use]
 pub fn semantic_tokens(
-    document: &Document,
+    syntax: &SyntaxTable,
     text: &str,
     encoding: PositionEncoding,
     range: Option<Range>,
 ) -> SemanticTokens {
     let lines: Vec<&str> = text.lines().collect();
-    let mut pieces: Vec<Piece> = document
-        .syntax
+    let mut pieces: Vec<Piece> = syntax
         .tokens
         .iter()
         .filter(|token| token.span.file.is_none())
@@ -182,13 +182,20 @@ fn encode(pieces: &[Piece]) -> Vec<SemanticToken> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rinx_ast::{FileId, Span, SyntaxToken, TokenModifiers};
+    use rinx_ast::{Domain, FileId, Span, SyntaxToken, TokenModifiers};
+    use rinx_parser::ParseCtx;
+
+    /// The syntax table parsing `text` records.
+    fn syntax_of(text: &str) -> SyntaxTable {
+        rinx_parser::parse("guide.rst", text, &ParseCtx::with_domain(Domain::Py))
+            .source_map
+            .syntax
+    }
 
     /// The (line, start, length, type name, modifiers) of each token of
     /// `text`, decoded back from the relative encoding.
     fn decoded(text: &str, encoding: PositionEncoding) -> Vec<(u32, u32, u32, String, u32)> {
-        let document = rinx_parser::parse("guide.rst", text);
-        decode(&semantic_tokens(&document, text, encoding, None))
+        decode(&semantic_tokens(&syntax_of(text), text, encoding, None))
     }
 
     fn decode(tokens: &SemanticTokens) -> Vec<(u32, u32, u32, String, u32)> {
@@ -314,13 +321,13 @@ mod tests {
     #[test]
     fn test_a_token_in_another_file_or_past_the_text_is_left_out() {
         // Given
-        let mut document = rinx_parser::parse("guide.rst", "Text.\n");
+        let mut syntax = syntax_of("Text.\n");
         let mut included = token(TokenKind::Role, (1, 1), (1, 3));
         included.span = included.span.with_file(Some(FileId::new(0)));
-        document.syntax.tokens = vec![included, token(TokenKind::Role, (9, 1), (9, 3))];
+        syntax.tokens = vec![included, token(TokenKind::Role, (9, 1), (9, 3))];
 
         // When
-        let tokens = semantic_tokens(&document, "Text.\n", PositionEncoding::Utf16, None);
+        let tokens = semantic_tokens(&syntax, "Text.\n", PositionEncoding::Utf16, None);
 
         // Then
         assert_eq!(tokens.data, Vec::new());
@@ -330,12 +337,12 @@ mod tests {
     fn test_a_range_keeps_only_the_tokens_starting_in_it() {
         // Given
         let text = ":ref:`a`\n:ref:`b`\n";
-        let document = rinx_parser::parse("guide.rst", text);
+        let syntax = syntax_of(text);
         let second_line = Range::new(LspPosition::new(1, 0), LspPosition::new(2, 0));
 
         // When
         let found = decode(&semantic_tokens(
-            &document,
+            &syntax,
             text,
             PositionEncoding::Utf16,
             Some(second_line),

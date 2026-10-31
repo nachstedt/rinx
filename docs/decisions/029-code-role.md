@@ -55,7 +55,7 @@ A `.. role::` changes how the rest of the document parses. The block parser is
 already sequential, and each paragraph's inline scan runs when the paragraph
 is reached. So a table filled in by `.. role::` and read by the inline scan
 gives docutils' semantics directly. That table, `CustomRoles`, is created once
-per document by `parse_with_ctx` and borrowed by `ParseCtx`. Its interior
+per document by `parse` and borrowed by `ParseCtx`. Its interior
 mutability is contained in that one type. Every nested context shares it, so a
 role defined in an `.. include::`d fragment applies after the include, as in
 docutils.
@@ -112,7 +112,7 @@ The stylesheet's light inline-code colours now apply only to `code` without
   `docutils literal notranslate` classes or the `<span class="pre">` around
   each word, matching how this build draws an inline literal.
 - `ParseCtx` now holds one piece of mutable state. Code that builds a context
-  outside `parse_with_ctx` has no table, so a `.. role::` parsed there defines
+  outside `parse` has no table, so a `.. role::` parsed there defines
   nothing. That affects only tests of individual block parsers.
 - `.. default-role::` remains unsupported. It would change how bare
   `` `text` `` parses, which is a separate construct.

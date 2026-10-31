@@ -34,6 +34,8 @@ entry under the heading it belongs to, as a single short sentence.
 - Box a large enum variant's payload into its own struct, since an enum costs its largest variant everywhere it is stored.
 - When a construct's vocabulary is declared by the user, validate it once at the boundary and let every later phase read data already checked, rather than carrying a dynamically-typed value that each use re-inspects.
 - Separate a *value* from a *document* at the type level: something parsed into a node tree and something stored as a typed scalar diverge in every later phase, so one field kind with a "parsed" flag would carry the union of both meanings everywhere.
+- Never leave a field of a serialized type out of its wire form: put what only one reader needs in a separate type with no serde impl, which only that reader can obtain, so a type reads back exactly as it was written.
+- Give an operation one public entry point taking an options struct that implements `Default`, rather than a chain of wrappers each filling in one more setting, and let a caller that wants less of the result discard it visibly at the call site.
 
 ## Module and file organization
 

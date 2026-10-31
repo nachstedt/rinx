@@ -471,13 +471,13 @@ mod tests {
     #[test]
     fn test_parse_records_a_substitution_images_option_names() {
         // When
-        let document = crate::parse(
+        let map = crate::blocks::parse_source_map(
             "test.rst",
             ".. |logo| image:: logo.png\n   :alt: Logo\n\n.. |c| unicode:: U+00A9\n   :trim:\n",
         );
 
         // Then — each option's `:name:`, at its own line and column
-        let options: Vec<(u32, u32, u32)> = document
+        let options: Vec<(u32, u32, u32)> = map
             .syntax
             .tokens
             .iter()

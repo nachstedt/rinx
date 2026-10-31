@@ -142,11 +142,13 @@ mod tests {
     /// `docs/index.rst` parsed as `//docs:root`'s, which declares only
     /// itself and `docs/guide.rst`.
     fn parsed() -> ParsedSource {
-        let document = rinx_parser::parse("docs/index.rst", INDEX);
+        let document =
+            rinx_parser::parse("docs/index.rst", INDEX, &rinx_parser::ParseCtx::default()).document;
         let declared = DeclaredDocuments::from_names(["docs/index", "docs/guide"]);
         ParsedSource {
             undeclared: undeclared_toctree_entries(&document, &declared),
             document,
+            source_map: rinx_ast::SourceMap::default(),
             reads: FileReads::default(),
             text: INDEX.to_string(),
         }

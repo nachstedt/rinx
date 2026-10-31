@@ -3,7 +3,7 @@
 
 use super::test_support::diagnostic_codes;
 use super::*;
-use crate::parse;
+use crate::parse_document;
 use rinx_ast::{InlineNode, Position, Span, TargetSearchOrder};
 
 #[test]
@@ -62,7 +62,7 @@ fn test_parse_creates_heading_node() {
     let input = "Heading\n=======";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
@@ -82,7 +82,7 @@ fn test_parse_creates_heading_from_punctuation_lines() {
     let input = "===\n---";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
@@ -102,7 +102,7 @@ fn test_parse_creates_h1_for_first_adornment_char() {
     let input = "Title\n=====";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
@@ -122,7 +122,7 @@ fn test_parse_creates_h2_for_second_adornment_char() {
     let input = "H1\n==\n\nH2\n--";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 2);
@@ -150,7 +150,7 @@ fn test_parse_reuses_level_for_same_adornment_char() {
     let input = "First\n=====\n\nSecond\n======";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 2);
@@ -178,7 +178,7 @@ fn test_parse_assigns_levels_by_encounter_order() {
     let input = "H1\n==\n\nH2\n--\n\nH3\n~~";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 3);
@@ -214,7 +214,7 @@ fn test_parse_creates_heading_for_alternate_punctuation() {
     let input = "Sub Title\n---------";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
@@ -234,7 +234,7 @@ fn test_parse_creates_heading_with_overline() {
     let input = "#######\nHeading\n#######";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
@@ -254,7 +254,7 @@ fn test_parse_overline_and_underline_distinct_levels() {
     let input = "##########\nOverline\n##########\n\nUnderline\n#########";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 2);
@@ -282,7 +282,12 @@ fn test_parse_heading_resolves_domain_object_role() {
     let input = "The :mod:`greetings` Module\n============================";
 
     // When
-    let doc = crate::parse_with_domain("test.rst", input, rinx_ast::Domain::Py);
+    let doc = crate::parse(
+        "test.rst",
+        input,
+        &crate::ParseCtx::with_domain(rinx_ast::Domain::Py),
+    )
+    .document;
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
@@ -319,7 +324,7 @@ fn test_parse_heading_resolves_strong_emphasis() {
     let input = "A **Bold** Heading\n===================";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
@@ -346,7 +351,7 @@ fn test_parse_heading_measures_an_emoji_title_in_display_columns() {
     let input = "\u{1f50d} Demo details\n===============";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — a heading, and nothing to report: 15 columns under 15 `=`
     assert_eq!(
@@ -366,7 +371,7 @@ fn test_parse_heading_requires_two_columns_per_wide_character() {
     let input = "\u{6f22}\u{5b57}\n====";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — the four-character underline is exactly wide enough
     assert_eq!(
@@ -386,7 +391,7 @@ fn test_parse_heading_measures_an_overlined_emoji_title_in_display_columns() {
     let input = "===============\n\u{1f50d} Demo details\n===============";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(
@@ -407,7 +412,7 @@ fn test_parse_heading_accepts_a_short_underline_and_reports_it() {
     let input = "A Long Title\n=====";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — docutils' behaviour: still a heading, reported rather than
     // silently dropped
@@ -431,7 +436,7 @@ fn test_parse_heading_reports_a_short_overlined_adornment_once() {
     let input = "=====\nA Long Title\n=====";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — one heading and exactly one diagnostic, not one per adornment
     assert_eq!(
@@ -455,7 +460,7 @@ fn test_parse_leaves_a_title_over_a_very_short_adornment_as_text() {
     let input = "A Long Title\n~~~";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — ordinary text, and deliberately no diagnostic: the pattern
     // matches far more prose than it does mis-drawn headings
@@ -474,7 +479,7 @@ fn test_parse_heading_reports_nothing_for_an_over_long_underline() {
     let input = "Short\n==========";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — a heading, with nothing to report
     assert_eq!(

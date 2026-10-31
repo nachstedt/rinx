@@ -107,7 +107,7 @@ mod tests {
 
     /// The single inline node `input` parses to, through the whole pipeline.
     fn only_inline(input: &str) -> InlineNode {
-        let doc = crate::parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
         let rinx_ast::Node::Paragraph(inlines) = &doc.nodes[0] else {
             panic!("expected a paragraph, got {:?}", doc.nodes[0]);
         };
@@ -118,7 +118,7 @@ mod tests {
     #[test]
     fn test_parse_places_an_any_role_at_its_source_position() {
         // Given / When
-        let doc = crate::parse("test.rst", "See :any:`install` here.");
+        let doc = crate::parse_document("test.rst", "See :any:`install` here.");
 
         // Then
         let rinx_ast::Node::Paragraph(inlines) = &doc.nodes[0] else {

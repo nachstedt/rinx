@@ -266,7 +266,7 @@ pub(super) fn try_parse_option_list(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::InlineNode;
 
     #[test]
@@ -288,7 +288,7 @@ mod tests {
         let input = "-h  Show this help message.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -316,7 +316,7 @@ mod tests {
         let input = "-v, --verbose  Increase verbosity.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::OptionList { items } = &doc.nodes[0] {
@@ -334,7 +334,7 @@ mod tests {
         let input = "-o FILE  Write output to FILE.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::OptionList { items } = &doc.nodes[0] {
@@ -355,7 +355,7 @@ mod tests {
         let input = "--output=FILE  Write output to FILE.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::OptionList { items } = &doc.nodes[0] {
@@ -377,7 +377,7 @@ mod tests {
         let input = "-oFILE  Write output to FILE.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::OptionList { items } = &doc.nodes[0] {
@@ -399,7 +399,7 @@ mod tests {
         let input = "-o <value1 value2>  A bracketed placeholder.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::OptionList { items } = &doc.nodes[0] {
@@ -419,7 +419,7 @@ mod tests {
         let input = "/Wall  Enable all warnings.\n+x  Old GNU-style option.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::OptionList { items } = &doc.nodes[0] {
@@ -437,7 +437,7 @@ mod tests {
         let input = "--long\n    A long option whose description starts below.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::OptionList { items } = &doc.nodes[0] {
@@ -462,7 +462,7 @@ mod tests {
         let input = "-o FILE  Write output to FILE,\n         overwriting any existing file.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::OptionList { items } = &doc.nodes[0] {
@@ -488,7 +488,7 @@ mod tests {
         let input = "--long  Para 1.\n\n        Para 2.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::OptionList { items } = &doc.nodes[0] {
@@ -507,7 +507,7 @@ mod tests {
         let input = "-h  Show help.\n-v  Show version.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -526,7 +526,7 @@ mod tests {
         let input = "-h  Show help.\n\nNot part of the list.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
@@ -540,7 +540,7 @@ mod tests {
         let input = "Line one\nLine two";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -553,7 +553,7 @@ mod tests {
         let input = "- Item 1\n- Item 2";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);

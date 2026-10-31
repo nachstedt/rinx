@@ -25,9 +25,9 @@ const NOTES: &str = "Just notes, without a title.\n";
 /// them together and renders the introduction.
 fn render_intro(intro: &str) -> (ast::Document, renderer::RenderOutput) {
     let docs = vec![
-        parser::parse("index.rst", INDEX),
-        parser::parse("notes.rst", NOTES),
-        parser::parse("guide/intro.rst", intro),
+        parser::parse("index.rst", INDEX, &parser::ParseCtx::default()).document,
+        parser::parse("notes.rst", NOTES, &parser::ParseCtx::default()).document,
+        parser::parse("guide/intro.rst", intro, &parser::ParseCtx::default()).document,
     ];
     for doc in &docs {
         assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);

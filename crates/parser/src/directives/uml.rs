@@ -267,14 +267,13 @@ fn report_unusable_scale(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
     use rinx_ast::{Node, TargetName};
 
     /// Parses a whole document and returns its single diagram with the
     /// document's diagnostics — the dispatcher is what positions the parse
     /// context, so spans are only meaningful this way.
     fn parse_document(input: &str) -> (Uml, Vec<Diagnostic>) {
-        let doc = parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
         let uml = doc
             .nodes
             .iter()

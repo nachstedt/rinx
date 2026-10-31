@@ -157,7 +157,7 @@ mod tests {
         let input = "Intro\n\n.. table:: Sizes\n   :name: sizes\n\n   =  =\n   a  b\n   =  =\n";
 
         // When
-        let doc = crate::parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
 
         // Then
         let span = doc.nodes.iter().find_map(|node| match node {
@@ -428,7 +428,7 @@ mod tests {
         .expect("line number fits in u32");
 
         // When
-        let doc = crate::parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
 
         // Then
         let Node::Directive(Directive::Table { body_rows, .. }) = &doc.nodes[0] else {
@@ -463,7 +463,7 @@ mod tests {
 ";
 
         // When
-        let doc = crate::parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);

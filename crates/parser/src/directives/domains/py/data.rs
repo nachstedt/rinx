@@ -76,7 +76,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
 mod tests {
     use super::super::super::body::test_support::read_options;
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{Directive, Node};
 
     #[test]
@@ -133,7 +133,7 @@ mod tests {
         let input = ".. py:data:: DEFAULT_TIMEOUT\n\n   The default timeout in seconds.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -165,7 +165,7 @@ mod tests {
         let input = ".. py:data:: DEFAULT_TIMEOUT\n   :type: int\n   :value: 30\n\n   The default timeout in seconds.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -192,7 +192,7 @@ mod tests {
         let input = ".. py:data:: AF_UNIX\n             AF_INET\n             AF_INET6\n\n   The address families.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -217,7 +217,7 @@ mod tests {
         let input = ".. py:data:: A\n             ASCII\n   :type: int\n\n   The ASCII flag.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::Directive(Directive::DomainObject {
@@ -244,7 +244,7 @@ mod tests {
         let input = ".. py:data:: DEFAULT_TIMEOUT\n   :value: 30\n   :type: int";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::Directive(Directive::DomainObject {

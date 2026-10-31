@@ -4,7 +4,6 @@ use rinx_ast::{
 use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
 use crate::context::ParseCtx;
-use crate::parse_with_ctx;
 
 /// The schema every test below parses against: two types and an enum
 /// attribute, enough vocabulary for every filter a cell needs.
@@ -35,7 +34,7 @@ fn schema() -> EntitySchema {
 fn parse(rst: &str) -> rinx_ast::Document {
     let schema = schema();
     let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
-    parse_with_ctx("specs/report", rst, &ctx)
+    crate::parse("specs/report", rst, &ctx).document
 }
 
 /// The first bar chart in `rst`.

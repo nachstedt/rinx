@@ -163,7 +163,7 @@ pub(in crate::directives) const MACRO_SPEC: DirectiveSpec = DirectiveSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::Domain;
     use rinx_ast::{Directive, Node};
 
@@ -179,7 +179,7 @@ mod tests {
         let input = ".. c:function:: int add(int a, int b)\n   :no-index-entry:\n   :no-contents-entry:\n\n   Adds.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let Some(Node::Directive(Directive::DomainObject { object, .. })) = doc.nodes.first()
@@ -197,7 +197,7 @@ mod tests {
         let input = ".. c:macro:: PY_SSIZE_T_MAX\n   :noindex:\n\n   The maximum.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let Some(Node::Directive(Directive::DomainObject { object, .. })) = doc.nodes.first()
@@ -212,7 +212,7 @@ mod tests {
         let input = ".. c:function:: int add(int a, int b)\n\n   Adds two numbers.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -232,7 +232,7 @@ mod tests {
         let input = ".. c:macro:: PY_SSIZE_T_MAX\n\n   The maximum value of a Py_ssize_t.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -259,7 +259,7 @@ mod tests {
         let input = ".. c:macro:: MAX(a, b)\n\n   Expands to whichever of a or b is greater.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -279,7 +279,8 @@ mod tests {
         let input = ".. macro:: MAX(a, b)\n\n   Expands to whichever of a or b is greater.";
 
         // When
-        let doc = crate::parse_with_domain("test.rst", input, Domain::C);
+        let doc =
+            crate::parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -297,7 +298,8 @@ mod tests {
         let input = ".. function:: greet(name)\n\n   Greets the given name.";
 
         // When
-        let doc = crate::parse_with_domain("test.rst", input, Domain::C);
+        let doc =
+            crate::parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -316,7 +318,7 @@ mod tests {
             ".. c:type:: int (*Py_tracefunc)(PyObject *obj, int what)\n\n   A tracing function.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — the name comes from the declarator, not the return type.
         let Node::Directive(Directive::DomainObject { object, .. }) = &doc.nodes[0] else {
@@ -330,7 +332,7 @@ mod tests {
         let input = ".. c:type:: int (*Py_tracefunc)(PyObject *obj)\n\n   A tracing function.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert!(
@@ -348,7 +350,7 @@ mod tests {
         let input = ".. c:type:: >>> not a declaration <<<\n\n   Body.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — one diagnostic, naming the offending signature.
         let signature_diagnostics: Vec<&Diagnostic> = doc
@@ -372,7 +374,7 @@ mod tests {
         let input = ".. c:type:: int (*Py_tracefunc)(PyObject *obj)\n            >>> nonsense <<<\n\n   Body.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let signature_diagnostics: Vec<&Diagnostic> = doc

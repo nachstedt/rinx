@@ -100,9 +100,14 @@ Two
 /// `numfig` on, returning the pages in `index`, `one`, `two` order.
 fn build(numbered: bool, depth: usize) -> Vec<renderer::RenderOutput> {
     let docs = vec![
-        parser::parse("index.rst", &index_source(numbered)),
-        parser::parse("one.rst", ONE),
-        parser::parse("two.rst", TWO),
+        parser::parse(
+            "index.rst",
+            &index_source(numbered),
+            &parser::ParseCtx::default(),
+        )
+        .document,
+        parser::parse("one.rst", ONE, &parser::ParseCtx::default()).document,
+        parser::parse("two.rst", TWO, &parser::ParseCtx::default()).document,
     ];
     for doc in &docs {
         assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);

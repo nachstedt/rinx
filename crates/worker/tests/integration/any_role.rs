@@ -47,7 +47,12 @@ Installing
 
 /// Parses, indexes and renders `DEFINITIONS` followed by `references`.
 fn render(references: &str) -> renderer::RenderOutput {
-    let ast = parser::parse("index.rst", &format!("{DEFINITIONS}{references}"));
+    let ast = parser::parse(
+        "index.rst",
+        &format!("{DEFINITIONS}{references}"),
+        &parser::ParseCtx::default(),
+    )
+    .document;
     assert!(ast.diagnostics.is_empty(), "{:?}", ast.diagnostics);
     let index = analyzer::analyze(&ast);
     renderer::render(&ast, &index, &ast.path)
@@ -161,7 +166,7 @@ fn test_e2e_any_reports_an_unknown_target_and_takes_a_noqa() {
 ";
 
     // When
-    let ast = parser::parse("index.rst", source);
+    let ast = parser::parse("index.rst", source, &parser::ParseCtx::default()).document;
     let output = renderer::render(&ast, &analyzer::analyze(&ast), &ast.path);
 
     // Then — both are reported by the renderer; the noqa, accepted as a known

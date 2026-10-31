@@ -9,15 +9,14 @@
 //! nothing of it.
 
 use lsp_types::{FoldingRange, FoldingRangeKind};
-use rinx_ast::{BlockKind, Document, SyntaxBlock};
+use rinx_ast::{BlockKind, SyntaxBlock, SyntaxTable};
 
-/// The folding ranges of `document`, whose text is `text`, at most `limit`
-/// of them when the client sets one.
+/// The folding ranges of a document whose text is `text` and whose parse
+/// recorded `syntax`, at most `limit` of them when the client sets one.
 #[must_use]
-pub fn folding_ranges(document: &Document, text: &str, limit: Option<usize>) -> Vec<FoldingRange> {
+pub fn folding_ranges(syntax: &SyntaxTable, text: &str, limit: Option<usize>) -> Vec<FoldingRange> {
     let lines: Vec<&str> = text.lines().collect();
-    let own: Vec<&SyntaxBlock> = document
-        .syntax
+    let own: Vec<&SyntaxBlock> = syntax
         .blocks
         .iter()
         .filter(|block| block.lines.file.is_none())
@@ -121,12 +120,19 @@ fn keep_longest(ranges: &mut Vec<FoldingRange>, limit: usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rinx_ast::{FileId, Position, Span};
+    use rinx_ast::{Domain, FileId, Position, Span};
+    use rinx_parser::ParseCtx;
+
+    /// The syntax table parsing `text` records.
+    fn syntax_of(text: &str) -> SyntaxTable {
+        rinx_parser::parse("guide.rst", text, &ParseCtx::with_domain(Domain::Py))
+            .source_map
+            .syntax
+    }
 
     /// The (start, end, kind) of each range folding `text`.
     fn folds(text: &str) -> Vec<(u32, u32, Option<FoldingRangeKind>)> {
-        let document = rinx_parser::parse("guide.rst", text);
-        folding_ranges(&document, text, None)
+        folding_ranges(&syntax_of(text), text, None)
             .into_iter()
             .map(|range| (range.start_line, range.end_line, range.kind))
             .collect()
@@ -188,15 +194,15 @@ mod tests {
     #[test]
     fn test_a_block_in_another_file_does_not_fold() {
         // Given a document whose only block lies in an included fragment
-        let mut document = rinx_parser::parse("guide.rst", "Text.\n");
-        document.syntax.blocks.push(SyntaxBlock {
+        let mut syntax = syntax_of("Text.\n");
+        syntax.blocks.push(SyntaxBlock {
             kind: BlockKind::Directive,
             lines: Span::new(Position::new(1, 1), Position::new(5, 1))
                 .with_file(Some(FileId::new(0))),
         });
 
         // When
-        let found = folding_ranges(&document, "Text.\n", None);
+        let found = folding_ranges(&syntax, "Text.\n", None);
 
         // Then
         assert_eq!(found, Vec::new());

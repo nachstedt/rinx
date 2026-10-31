@@ -116,7 +116,7 @@ pub(super) fn try_parse_definition_list(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::InlineNode;
 
     #[test]
@@ -125,7 +125,7 @@ mod tests {
         let input = "Term\n   Definition text.";
 
         // When parsed
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then it produces a DefinitionList with one item
         assert_eq!(doc.nodes.len(), 1);
@@ -149,7 +149,7 @@ mod tests {
         let input = "Term1\n   Def1\n\nTerm2\n   Def2";
 
         // When parsed
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then both items are captured in one DefinitionList
         assert_eq!(doc.nodes.len(), 1);
@@ -169,7 +169,7 @@ mod tests {
         let input = "Module :mod:`curses.ascii`\n   Utilities for ASCII characters.\n\n:ref:`curses-howto`\n   Tutorial material.";
 
         // When parsed
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then the domain-object/ref roles in the term are resolved as inline nodes
         assert_eq!(doc.nodes.len(), 1);
@@ -191,7 +191,7 @@ mod tests {
         let input = "Line one\nLine two";
 
         // When parsed
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then it stays a single ordinary Paragraph, not a DefinitionList
         assert_eq!(doc.nodes.len(), 1);
@@ -211,7 +211,7 @@ mod tests {
         let input = "Term\n   Para 1\n\n   Para 2";
 
         // When parsed
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then the single item's definition holds both paragraphs
         if let Node::DefinitionList { items } = &doc.nodes[0] {
@@ -230,7 +230,7 @@ mod tests {
         let input = "Term\n   Def1\n\nNot part of the list";
 
         // When parsed
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then the list ends after its one item and the trailing text is a
         // separate Paragraph node

@@ -19,7 +19,7 @@ fn test_e2e_c_macro_definition_resolves_c_func_role_reference() {
 A typical traverse function calls the :c:func:`Py_VISIT` macro.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 
@@ -48,7 +48,7 @@ fn test_e2e_c_function_definition_resolves_c_macro_role_reference() {
 The reference count is accessible via :c:macro:`Py_REFCNT`.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 
@@ -76,7 +76,7 @@ fn test_e2e_c_macro_definition_does_not_resolve_c_member_role_reference() {
 See :c:member:`add` for details.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 

@@ -2,7 +2,6 @@ use rinx_ast::{Directive, EntitySequence, EntitySequenceSource, ImageAlign, Node
 use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
 use crate::context::ParseCtx;
-use crate::parse_with_ctx;
 
 /// A component sends messages, and a message is sent on to components — the
 /// shape every sequence diagram walks.
@@ -40,7 +39,7 @@ fn schema() -> EntitySchema {
 fn parse(rst: &str) -> rinx_ast::Document {
     let schema = schema();
     let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
-    parse_with_ctx("arch/runtime", rst, &ctx)
+    crate::parse("arch/runtime", rst, &ctx).document
 }
 
 /// The first sequence diagram in `rst`.

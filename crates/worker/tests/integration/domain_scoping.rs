@@ -23,7 +23,7 @@ fn test_e2e_module_qualifies_sibling_function_for_cross_reference() {
 See :py:func:`types.coroutine` for details.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 
@@ -65,7 +65,7 @@ fn test_e2e_module_qualifies_bare_reference_to_sibling_exception() {
 Raising a :exc:`ZipImportError` signals an import failure.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 
@@ -109,7 +109,7 @@ fn test_e2e_class_qualifies_bare_reference_to_nested_method() {
    Use :meth:`find_spec` instead of the deprecated finder methods.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 
@@ -154,7 +154,7 @@ fn test_e2e_bare_reference_inside_class_falls_back_to_module_scope() {
    valid ZIP archive.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 
@@ -198,7 +198,7 @@ fn test_e2e_dotted_method_scopes_bare_reference_in_its_own_body() {
    Return the bytes of the file in the archive.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 
@@ -239,7 +239,7 @@ fn test_e2e_method_repeating_bare_class_name_is_not_double_qualified() {
    Call :meth:`Random.seed` to reseed the generator.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 

@@ -68,7 +68,8 @@ mod tests {
 
     /// The target written by the reference at line `line`, column `column`.
     fn target_at(text: &str, line: u32, column: u32) -> Option<String> {
-        let document = rinx_parser::parse("index.rst", text);
+        let document =
+            rinx_parser::parse("index.rst", text, &rinx_parser::ParseCtx::default()).document;
         reference_at(&document, Position::new(line, column)).map(|inline| match inline {
             InlineNode::Reference { target, .. } | InlineNode::DocReference { target, .. } => {
                 target.clone()
@@ -109,7 +110,8 @@ mod tests {
 
     /// What the toctree entry at line `line`, column `column` names.
     fn entry_at(text: &str, line: u32, column: u32) -> Option<String> {
-        let document = rinx_parser::parse("index.rst", text);
+        let document =
+            rinx_parser::parse("index.rst", text, &rinx_parser::ParseCtx::default()).document;
         toc_entry_at(&document, Position::new(line, column)).map(|entry| match entry {
             TocEntry::Document { docname, .. } => docname.clone(),
             other => format!("{other:?}"),
@@ -146,7 +148,12 @@ mod tests {
     #[test]
     fn test_toc_entry_at_ignores_an_entry_spliced_in_from_another_file() {
         // Given — an entry's span counting lines in an included fragment
-        let mut document = rinx_parser::parse("index.rst", ".. toctree::\n\n   intro\n");
+        let mut document = rinx_parser::parse(
+            "index.rst",
+            ".. toctree::\n\n   intro\n",
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
         let Node::Directive(Directive::Toctree(toctree)) = &mut document.nodes[0] else {
             unreachable!()
         };
@@ -162,7 +169,12 @@ mod tests {
     #[test]
     fn test_reference_at_ignores_a_reference_spliced_in_from_another_file() {
         // Given — a span counting lines in an included fragment
-        let mut document = rinx_parser::parse("index.rst", "See :ref:`install`.\n");
+        let mut document = rinx_parser::parse(
+            "index.rst",
+            "See :ref:`install`.\n",
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
         let rinx_ast::Node::Paragraph(inlines) = &mut document.nodes[0] else {
             unreachable!()
         };

@@ -9,7 +9,7 @@ use rinx_ast::TargetName;
 fn indexed(doc_path: &str, source: &str) -> IndexedDocument {
     IndexedDocument::of(
         Path::new("/work/docs").join(doc_path),
-        &rinx_parser::parse(doc_path, source),
+        &rinx_parser::parse(doc_path, source, &rinx_parser::ParseCtx::default()).document,
         BTreeSet::new(),
     )
 }

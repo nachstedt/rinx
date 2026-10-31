@@ -79,7 +79,7 @@ pub(crate) fn try_parse_simple_table(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{InlineNode, TableCell};
 
     /// Extracts the plain text of a cell whose content is a single paragraph.
@@ -99,7 +99,7 @@ mod tests {
 
     /// Unwraps the single table parsed from `input`.
     fn parse_table(input: &str) -> (Vec<TableRow>, Vec<TableRow>) {
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         match doc.nodes.into_iter().next() {
             Some(Node::Table {
                 header_rows,
@@ -308,7 +308,7 @@ a      *emphasis*
 After the table.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
@@ -327,7 +327,7 @@ After the table.";
    =====  =====";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let Node::Directive(directive) = &doc.nodes[0] else {
@@ -351,7 +351,7 @@ Title
 Body.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — headings win because the two syntaxes are disjoint, not
         // because of dispatch order
@@ -369,7 +369,7 @@ A      B
 =====  =====";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — the table still parses, but the dropped text is reported
         assert!(matches!(doc.nodes[0], Node::Table { .. }));
@@ -390,7 +390,7 @@ A      B
 =====  =====";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert!(matches!(doc.nodes[0], Node::Paragraph(_)));
@@ -412,7 +412,7 @@ a span
 =====  =====";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert!(matches!(doc.nodes[0], Node::Paragraph(_)));

@@ -65,7 +65,7 @@ fn id(written: &str) -> EntityId {
 
 fn parse(doc_path: &str, rst: &str, schema: &EntitySchema) -> ast::Document {
     let ctx = ParseCtx::with_domain(Domain::Py).with_schema(schema);
-    parser::parse_with_ctx(doc_path, rst, &ctx)
+    parser::parse(doc_path, rst, &ctx).document
 }
 
 /// The document declaring the entities and setting `status` to `closed`,

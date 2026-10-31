@@ -67,11 +67,11 @@ pub(super) fn parse_seealso(
 mod tests {
     use super::*;
     use crate::context::ParseCtx;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{Domain, InlineNode, Node};
 
     fn only_seealso(input: &str) -> Vec<Node> {
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         let [Node::Directive(Directive::SeeAlso { body })] = &doc.nodes[..] else {
             panic!("Expected one SeeAlso, got {:?}", doc.nodes);
         };
@@ -257,7 +257,7 @@ mod tests {
         let input = ".. seealso:: First\n\n   .. bogus::\n";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let lines: Vec<u32> = doc

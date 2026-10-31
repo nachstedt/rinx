@@ -14,7 +14,7 @@ use rinx_renderer as renderer;
 
 /// Parses, indexes and renders one document, the way the three subcommands do.
 fn build(input: &str) -> (ast::Document, renderer::RenderOutput) {
-    let doc = parser::parse("guide.rst", input);
+    let doc = parser::parse("guide.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&doc);
     let output = renderer::render(&doc, &index, &doc.path);
     (doc, output)
@@ -72,7 +72,9 @@ Guide
 
    Print it.
 ",
-    );
+        &parser::ParseCtx::default(),
+    )
+    .document;
     let index = analyzer::analyze(&doc);
 
     // Then — nothing from the excluded branch is indexed, so a `:ref:` to it

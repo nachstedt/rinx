@@ -230,7 +230,7 @@ fn parse_program_argument(argument: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::Node;
 
     #[test]
@@ -240,7 +240,7 @@ mod tests {
         let input = ".. currentmodule:: enum";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(
@@ -257,7 +257,7 @@ mod tests {
         let input = ".. py:currentmodule:: enum";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(
@@ -274,7 +274,7 @@ mod tests {
         let input = ".. currentmodule:: None";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(
@@ -290,7 +290,12 @@ mod tests {
         let input = ".. currentmodule:: enum";
 
         // When
-        let doc = crate::parse_with_domain("test.rst", input, rinx_ast::Domain::C);
+        let doc = crate::parse(
+            "test.rst",
+            input,
+            &crate::ParseCtx::with_domain(rinx_ast::Domain::C),
+        )
+        .document;
 
         // Then
         assert!(matches!(
@@ -305,7 +310,7 @@ mod tests {
         let input = ".. c:currentmodule:: enum";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert!(matches!(
@@ -320,7 +325,7 @@ mod tests {
         let input = ".. c:namespace:: A.B";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(
@@ -337,7 +342,12 @@ mod tests {
         let input = ".. namespace:: A.B";
 
         // When
-        let doc = crate::parse_with_domain("test.rst", input, rinx_ast::Domain::C);
+        let doc = crate::parse(
+            "test.rst",
+            input,
+            &crate::ParseCtx::with_domain(rinx_ast::Domain::C),
+        )
+        .document;
 
         // Then
         assert_eq!(
@@ -354,7 +364,7 @@ mod tests {
         let input = ".. c:namespace:: NULL";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(
@@ -369,7 +379,7 @@ mod tests {
         let input = ".. c:namespace:: 0";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(
@@ -384,7 +394,7 @@ mod tests {
         let input = ".. c:namespace-push:: C.D";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — the hyphenated name resolves despite the domain split only
         // ever splitting on ':'.
@@ -402,7 +412,7 @@ mod tests {
         let input = ".. c:namespace-pop::";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes, vec![Node::Directive(Directive::CNamespacePop)]);
@@ -415,7 +425,7 @@ mod tests {
         let input = ".. c:namespace-push::";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert!(matches!(
@@ -436,7 +446,7 @@ mod tests {
         let input = ".. namespace:: A.B";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert!(matches!(
@@ -451,7 +461,7 @@ mod tests {
         let input = ".. program:: dis";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(
@@ -468,7 +478,7 @@ mod tests {
         let input = ".. program:: None";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(
@@ -484,7 +494,12 @@ mod tests {
         let input = ".. program:: dis";
 
         // When
-        let doc = crate::parse_with_domain("test.rst", input, rinx_ast::Domain::C);
+        let doc = crate::parse(
+            "test.rst",
+            input,
+            &crate::ParseCtx::with_domain(rinx_ast::Domain::C),
+        )
+        .document;
 
         // Then
         assert_eq!(
@@ -501,7 +516,7 @@ mod tests {
         let input = ".. program:: python -m py_compile";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(

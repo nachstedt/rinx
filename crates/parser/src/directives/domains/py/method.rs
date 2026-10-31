@@ -202,7 +202,7 @@ pub(in crate::directives) const DECORATOR_METHOD_SPEC: DirectiveSpec = Directive
 mod tests {
     use super::super::super::body::test_support::read_options;
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{Directive, Node};
 
     #[test]
@@ -287,7 +287,7 @@ mod tests {
         let input = ".. py:method:: greet(self, name)\n\n   Greets the given name.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -325,7 +325,7 @@ mod tests {
         let input = ".. py:method:: create(cls)\n   :classmethod:\n   :abstractmethod:\n\n   Creates an instance.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -357,7 +357,7 @@ mod tests {
         let input = ".. py:method:: run()\n   :async:\n   :staticmethod:";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::Directive(Directive::DomainObject {
@@ -391,7 +391,7 @@ mod tests {
             ".. classmethod:: ZoneInfo.clear_cache(*, only_keys=None)\n\n   Clear the cache.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — it parses as a `py:method` with `is_classmethod` forced on
         assert_eq!(doc.nodes.len(), 1);
@@ -432,7 +432,7 @@ mod tests {
         let input = ".. staticmethod:: Greeter.default_name()\n\n   The default name.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — it parses as a `py:method` with `is_staticmethod` forced on
         assert_eq!(doc.nodes.len(), 1);
@@ -472,7 +472,7 @@ mod tests {
         let input = ".. classmethod:: validate(cls, name)\n   :abstractmethod:\n\n   Validate.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — both flags are set
         assert_eq!(doc.nodes.len(), 1);
@@ -504,7 +504,7 @@ mod tests {
             ".. class:: Traits\n\n   .. decoratormethod:: register(cls)\n\n      Registers cls.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::Directive(Directive::DomainObject {
@@ -545,7 +545,7 @@ mod tests {
         let input = ".. py:class:: Greeter\n\n   A greeter.\n\n   .. py:method:: greet(self, name)\n\n      Greets the given name.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::Directive(Directive::DomainObject {
@@ -571,7 +571,7 @@ mod tests {
         let input = ".. py:exception:: GreeterError\n\n   Raised when greeting fails.\n\n   .. py:method:: reason(self)\n\n      Returns the failure reason.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::Directive(Directive::DomainObject {

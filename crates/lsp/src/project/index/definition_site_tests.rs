@@ -9,7 +9,7 @@ use rinx_ast::{Position, TargetName};
 fn indexed(doc_path: &str, source: &str) -> IndexedDocument {
     IndexedDocument::of(
         Path::new("/work/docs").join(doc_path),
-        &rinx_parser::parse(doc_path, source),
+        &rinx_parser::parse(doc_path, source, &rinx_parser::ParseCtx::default()).document,
         BTreeSet::new(),
     )
 }
@@ -131,7 +131,12 @@ fn test_record_moves_a_definition_without_folding_again() {
 /// A project holding `guide.rst`, which defines `own` itself and `setup` in
 /// the fragment `shared/setup.rst`.
 fn with_fragment() -> Project {
-    let mut document = rinx_parser::parse("guide.rst", ".. _own:\n\nText.\n");
+    let mut document = rinx_parser::parse(
+        "guide.rst",
+        ".. _own:\n\nText.\n",
+        &rinx_parser::ParseCtx::default(),
+    )
+    .document;
     let fragment = document.intern_source_file("/work/docs/shared/setup.rst");
     document.nodes.push(rinx_ast::Node::Target {
         name: TargetName::new("setup").into(),

@@ -108,12 +108,11 @@ const fn leads_somewhere(node: &InlineNode) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
     use rinx_ast::{Position, Span, SyntaxToken};
 
     /// The tokens a paragraph of `text` on line 1 records.
     fn tokens(text: &str) -> Vec<(TokenKind, u32, u32)> {
-        parse("test.rst", text)
+        crate::blocks::parse_source_map("test.rst", text)
             .syntax
             .tokens
             .iter()
@@ -199,10 +198,13 @@ mod tests {
     #[test]
     fn test_a_substitution_reference_is_recorded_before_it_is_resolved() {
         // When
-        let document = parse("test.rst", "A |name| here.\n\n.. |name| replace:: text\n");
+        let map = crate::blocks::parse_source_map(
+            "test.rst",
+            "A |name| here.\n\n.. |name| replace:: text\n",
+        );
 
         // Then
-        assert!(document.syntax.tokens.contains(&SyntaxToken {
+        assert!(map.syntax.tokens.contains(&SyntaxToken {
             kind: TokenKind::Substitution,
             modifiers: TokenModifiers::NONE,
             span: Span::new(Position::new(1, 3), Position::new(1, 9)),

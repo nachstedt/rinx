@@ -32,7 +32,7 @@ called from `RSTParser.decorate`):
 
 ### Parsed as segments, not pasted into the text
 
-`parse_with_ctx` parses three line slices in turn: the prolog, the document's
+`parse` parses three line slices in turn: the prolog, the document's
 own lines (after its metadata), and the epilog. All three share the document's
 adornment order, `Diagnostics` and `DocumentRoles` table, and every pass after
 the block parse (index ids, substitutions, refused roles) runs over all of

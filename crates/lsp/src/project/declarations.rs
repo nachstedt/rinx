@@ -99,7 +99,12 @@ mod tests {
     #[test]
     fn test_undeclared_uses_finds_nothing_when_everything_is_declared() {
         // Given
-        let document = rinx_parser::parse("index.rst", USING_EVERYTHING);
+        let document = rinx_parser::parse(
+            "index.rst",
+            USING_EVERYTHING,
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
         let declared = declaring(&["index", "other"], &["logo.png"], true);
 
         // When
@@ -112,7 +117,12 @@ mod tests {
     #[test]
     fn test_undeclared_uses_finds_each_undeclared_use() {
         // Given
-        let document = rinx_parser::parse("index.rst", USING_EVERYTHING);
+        let document = rinx_parser::parse(
+            "index.rst",
+            USING_EVERYTHING,
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
         let declared = declaring(&["index"], &[], false);
 
         // When

@@ -17,7 +17,7 @@
 use lsp_types::{Location, Range, SymbolKind, Uri};
 use rinx_ast::{
     BlockKind, CObjectType, Child, Directive, Document, DomainObjectBody, Node, ObjectType,
-    Position, PyObjectType, Span, StdObjectType, for_each_child, inline_plain_text,
+    Position, PyObjectType, SourceMap, Span, StdObjectType, for_each_child, inline_plain_text,
 };
 use rinx_scope::{DefinitionNames, DocumentScopes};
 use serde::{Deserialize, Serialize};
@@ -71,17 +71,19 @@ pub enum DocumentSymbols {
     Flat(Vec<FlatSymbol>),
 }
 
-/// The outline of `document`, parsed from `text`, with positions in
-/// `encoding`.
+/// The outline of `document`, parsed from `text` with `source_map` beside
+/// it, with positions in `encoding`.
 #[must_use]
 pub fn document_outline(
     document: &Document,
+    source_map: &SourceMap,
     text: &str,
     encoding: PositionEncoding,
 ) -> Vec<OutlineSymbol> {
     let lines: Vec<&str> = text.lines().collect();
     let outline = Outline {
         document,
+        source_map,
         text,
         lines: &lines,
         encoding,
@@ -94,17 +96,19 @@ pub fn document_outline(
     roots
 }
 
-/// The outline of `document`, parsed from `text` and opened at `uri`, in
+/// The outline of `document`, parsed from `text` with `source_map` beside
+/// it and opened at `uri`, in
 /// `shape` and with positions in `encoding`.
 #[must_use]
 pub fn document_symbols(
     document: &Document,
+    source_map: &SourceMap,
     text: &str,
     uri: &Uri,
     shape: OutlineShape,
     encoding: PositionEncoding,
 ) -> DocumentSymbols {
-    let outline = document_outline(document, text, encoding);
+    let outline = document_outline(document, source_map, text, encoding);
     match shape {
         OutlineShape::Nested => DocumentSymbols::Nested(outline),
         OutlineShape::Flat => DocumentSymbols::Flat(flatten(outline, uri)),
@@ -158,6 +162,7 @@ fn contain(symbol: &mut OutlineSymbol) {
 /// What building one document's outline reads.
 struct Outline<'a> {
     document: &'a Document,
+    source_map: &'a SourceMap,
     text: &'a str,
     lines: &'a [&'a str],
     encoding: PositionEncoding,
@@ -290,7 +295,7 @@ impl Outline<'_> {
         let Some(file) = span.file else {
             return Some(span);
         };
-        let sites = &self.document.include_sites;
+        let sites = &self.source_map.include_sites;
         sites
             .iter()
             .filter(|site| {
@@ -309,7 +314,7 @@ impl Outline<'_> {
     /// as the parser read it, up to its last written line — or the marker
     /// alone when the parser recorded no block there.
     fn block_range(&self, marker: Span) -> Range {
-        let block = self.document.syntax.blocks.iter().find(|block| {
+        let block = self.source_map.syntax.blocks.iter().find(|block| {
             block.kind == BlockKind::Directive
                 && block.lines.file == marker.file
                 && block.lines.start.line == marker.start.line
@@ -389,13 +394,17 @@ pub(crate) fn symbol_kind(object_type: ObjectType) -> SymbolKind {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rinx_ast::{EntityBody, EntityId, IncludeSite, InlineNode};
+    use rinx_ast::{Domain, EntityBody, EntityId, IncludeSite, InlineNode};
+    use rinx_parser::{ParseCtx, Parsed};
     use std::collections::BTreeMap;
     use std::str::FromStr;
 
     fn outline_of(text: &str) -> Vec<OutlineSymbol> {
-        let document = rinx_parser::parse("guide.rst", text);
-        document_outline(&document, text, PositionEncoding::Utf16)
+        let Parsed {
+            document,
+            source_map,
+        } = rinx_parser::parse("guide.rst", text, &ParseCtx::with_domain(Domain::Py));
+        document_outline(&document, &source_map, text, PositionEncoding::Utf16)
     }
 
     fn range(start: (u32, u32), end: (u32, u32)) -> Range {
@@ -553,7 +562,7 @@ API
             span: Some(span_at(4, 13)),
             relation_spans: BTreeMap::new(),
         };
-        let mut document = Document::new(
+        let document = Document::new(
             "reqs.rst".to_string(),
             vec![
                 heading(1, "Reqs", Some(span_at(1, 4))),
@@ -561,13 +570,14 @@ API
             ],
         );
         // The directive's block, as the parser records it
-        document.syntax.blocks.push(rinx_ast::SyntaxBlock {
+        let mut source_map = SourceMap::default();
+        source_map.syntax.blocks.push(rinx_ast::SyntaxBlock {
             kind: BlockKind::Directive,
             lines: Span::new(Position::new(4, 1), Position::new(5, 14)),
         });
 
         // When
-        let outline = document_outline(&document, text, PositionEncoding::Utf16);
+        let outline = document_outline(&document, &source_map, text, PositionEncoding::Utf16);
 
         // Then
         let requirement = &outline[0].children[0];
@@ -584,10 +594,13 @@ API
         let text = "Guide\n=====\n\n.. include:: part.rst\n\nAfter\n-----\n";
         let mut document = Document::new("guide.rst".to_string(), Vec::new());
         let part = document.intern_source_file("/work/part.rst");
-        document.include_sites.push(IncludeSite {
-            directive: Some(span_at(4, 21)),
-            file: part,
-        });
+        let source_map = SourceMap {
+            include_sites: vec![IncludeSite {
+                directive: Some(span_at(4, 21)),
+                file: part,
+            }],
+            ..SourceMap::default()
+        };
         document.nodes = vec![
             heading(1, "Guide", Some(span_at(1, 5))),
             heading(2, "Part", Some(span_at(1, 4).with_file(Some(part)))),
@@ -595,7 +608,7 @@ API
         ];
 
         // When
-        let outline = document_outline(&document, text, PositionEncoding::Utf16);
+        let outline = document_outline(&document, &source_map, text, PositionEncoding::Utf16);
 
         // Then
         let placed: Vec<(&str, Range)> = outline[0]
@@ -625,7 +638,15 @@ API
         )];
 
         // When / Then
-        assert!(document_outline(&document, "\n", PositionEncoding::Utf16).is_empty());
+        assert!(
+            document_outline(
+                &document,
+                &SourceMap::default(),
+                "\n",
+                PositionEncoding::Utf16
+            )
+            .is_empty()
+        );
     }
 
     #[test]
@@ -665,7 +686,12 @@ API
         );
 
         // When
-        let outline = document_outline(&document, "x\n.. req:: A\n", PositionEncoding::Utf16);
+        let outline = document_outline(
+            &document,
+            &SourceMap::default(),
+            "x\n.. req:: A\n",
+            PositionEncoding::Utf16,
+        );
 
         // Then
         assert_eq!(tree(&outline), [("REQ_1".to_string(), vec![])]);
@@ -711,20 +737,36 @@ API
     fn test_document_symbols_take_the_shape_asked_for() {
         // Given
         let text = "Guide\n=====\n\nInstall\n-------\n";
-        let document = rinx_parser::parse("guide.rst", text);
+        let Parsed {
+            document,
+            source_map,
+        } = rinx_parser::parse("guide.rst", text, &ParseCtx::with_domain(Domain::Py));
         let uri = Uri::from_str("file:///work/guide.rst").unwrap();
-        let symbols =
-            |shape| document_symbols(&document, text, &uri, shape, PositionEncoding::Utf16);
+        let symbols = |shape| {
+            document_symbols(
+                &document,
+                &source_map,
+                text,
+                &uri,
+                shape,
+                PositionEncoding::Utf16,
+            )
+        };
 
         // When / Then
         assert_eq!(
             symbols(OutlineShape::Nested),
-            DocumentSymbols::Nested(document_outline(&document, text, PositionEncoding::Utf16))
+            DocumentSymbols::Nested(document_outline(
+                &document,
+                &source_map,
+                text,
+                PositionEncoding::Utf16
+            ))
         );
         assert_eq!(
             symbols(OutlineShape::Flat),
             DocumentSymbols::Flat(flatten(
-                document_outline(&document, text, PositionEncoding::Utf16),
+                document_outline(&document, &source_map, text, PositionEncoding::Utf16),
                 &uri
             ))
         );

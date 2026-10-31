@@ -2,7 +2,6 @@ use rinx_ast::{Directive, Node};
 use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
 use crate::context::ParseCtx;
-use crate::parse_with_ctx;
 
 fn schema() -> EntitySchema {
     load_schema(
@@ -21,7 +20,7 @@ fn schema() -> EntitySchema {
 fn parse(rst: &str) -> rinx_ast::Document {
     let schema = schema();
     let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
-    parse_with_ctx("d", rst, &ctx)
+    crate::parse("d", rst, &ctx).document
 }
 
 #[test]
@@ -102,7 +101,7 @@ fn test_a_section_name_is_inert_without_a_schema() {
     let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
 
     // When
-    let doc = parse_with_ctx("d", ".. rationale::\n\n   Because.\n", &ctx);
+    let doc = crate::parse("d", ".. rationale::\n\n   Because.\n", &ctx).document;
 
     // Then
     assert!(matches!(

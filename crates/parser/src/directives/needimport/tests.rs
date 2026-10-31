@@ -138,7 +138,7 @@ fn parse_with(files: &[(&str, &str)], rst: &str) -> Document {
     let schema = schema();
     let loader = FakeFiles::with(files);
     let ctx = ParseCtx::new(Domain::Py, &loader).with_schema(&schema);
-    crate::parse_with_ctx("guide", rst, &ctx)
+    crate::parse("guide", rst, &ctx).document
 }
 
 /// Parses `rst` with `files` available and `keys` declared as the schema's
@@ -153,7 +153,7 @@ fn parse_with_keys(files: &[(&str, &str)], keys: &[(&str, &str)], rst: &str) -> 
     let ctx = ParseCtx::new(Domain::Py, &loader)
         .with_schema(&schema)
         .with_import_keys(&import_keys);
-    crate::parse_with_ctx("guide", rst, &ctx)
+    crate::parse("guide", rst, &ctx).document
 }
 
 /// Parses a document importing `TWO_REQUIREMENTS` with the given option lines.
@@ -937,7 +937,7 @@ fn an_import_key_never_reaches_the_file_loader() {
     let schema = schema();
     let loader = RecordingFiles(std::cell::RefCell::new(Vec::new()));
     let ctx = ParseCtx::new(Domain::Py, &loader).with_schema(&schema);
-    let _ = crate::parse_with_ctx("guide", ".. needimport:: imported_project\n", &ctx);
+    let _ = crate::parse("guide", ".. needimport:: imported_project\n", &ctx).document;
 
     // Then no read was attempted at all. This is what keeps the refusal a
     // warning: the worker fails the build on any *recorded* loader failure,

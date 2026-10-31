@@ -1,5 +1,5 @@
 //! Resolving `|name|` substitution references against `.. |name| directive::`
-//! definitions — the one whole-document pass `parse_with_ctx` runs after
+//! definitions — the one whole-document pass `parse` runs after
 //! [`super::index_ids::assign_index_ids`], for the same reason that one does:
 //! a `.. index::` id and a substitution's content both depend on having seen
 //! the *whole* document first, not just what came before the point they're
@@ -222,7 +222,7 @@ fn resolve_inline_nodes(
 }
 
 /// Resolves every substitution reference anywhere in `nodes`, mutating the
-/// tree in place. Run once, at the end of [`super::parse_with_ctx`], after
+/// tree in place. Run once, at the end of [`super::parse`], after
 /// the whole document is known.
 pub(super) fn resolve_substitutions(nodes: &mut [Node], diagnostics: &mut Diagnostics) {
     let defs = collect_definitions(nodes, diagnostics);

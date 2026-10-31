@@ -38,7 +38,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{Directive, Node};
 
     /// The raw texts of parsed `c`-domain signatures, for asserting on what
@@ -53,7 +53,7 @@ mod tests {
         let input = ".. c:struct:: Data\n\n   A data record.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -83,7 +83,7 @@ mod tests {
         let input = ".. c:struct:: Data\n\n   .. c:member:: int count\n\n      A count.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);

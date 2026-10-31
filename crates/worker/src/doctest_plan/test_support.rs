@@ -3,16 +3,18 @@
 //! unwrapping a [`DocTestCase`] to the variant a test expects.
 
 use super::*;
-use rinx_parser::parse;
+use rinx_parser::{ParseCtx, parse};
 
 /// Parses `rst` and builds its plan, expecting success.
 pub(super) fn plan_of(rst: &str) -> DocTestPlan {
-    build_doctest_plan(&parse("test.rst", rst)).expect("plan should build")
+    build_doctest_plan(&parse("test.rst", rst, &ParseCtx::default()).document)
+        .expect("plan should build")
 }
 
 /// Parses `rst` and builds its plan, expecting failure.
 pub(super) fn problems_of(rst: &str) -> String {
-    build_doctest_plan(&parse("test.rst", rst)).expect_err("plan should fail")
+    build_doctest_plan(&parse("test.rst", rst, &ParseCtx::default()).document)
+        .expect_err("plan should fail")
 }
 
 /// Unwraps a code/output pair, failing the test on any other case.

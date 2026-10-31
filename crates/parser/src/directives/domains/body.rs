@@ -136,7 +136,7 @@ pub(super) mod test_support {
 mod tests {
     use super::test_support::read_options;
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{DescriptionFlag, DiagnosticCode, Directive, DomainObjectBody};
 
     #[test]
@@ -184,7 +184,7 @@ mod tests {
         let input = ".. c:struct:: s\n   :no-index:\n   :no-index-entry:\n\n   .. bar::\n";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — the unknown directive is on line 5, where it was written.
         let unknown = doc
@@ -201,7 +201,7 @@ mod tests {
         let input = ".. c:function:: void f(void)\n   :final:\n\n   Body.\n";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — reported on its own line, and kept out of the content.
         let unknown = doc
