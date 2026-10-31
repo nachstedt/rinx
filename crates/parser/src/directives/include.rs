@@ -390,7 +390,14 @@ mod tests {
     fn parse_document(files: &[(&str, &str)], rst: &str) -> rinx_ast::Document {
         let loader = FakeFiles::with(files);
         let ctx = ParseCtx::new(Domain::Py, &loader);
-        crate::parse_with_ctx("guide.rst", rst, &ctx)
+        crate::parse("guide.rst", rst, &ctx).document
+    }
+
+    /// Where the markup of [`parse_document`]'s document was written.
+    fn parse_source_map(files: &[(&str, &str)], rst: &str) -> rinx_ast::SourceMap {
+        let loader = FakeFiles::with(files);
+        let ctx = ParseCtx::new(Domain::Py, &loader);
+        crate::parse("guide.rst", rst, &ctx).source_map
     }
 
     fn codes(document: &rinx_ast::Document) -> Vec<DiagnosticCode> {
@@ -598,14 +605,14 @@ mod tests {
     #[test]
     fn test_syntax_inside_a_fragment_is_recorded_in_the_fragments_file() {
         // Given a fragment holding a directive
-        let document = parse_document(
+        let map = parse_source_map(
             &[("shared.rst", ".. note::\n\n   Text.\n")],
             "Intro.\n\n.. include:: shared.rst\n",
         );
 
         // Then — the include's own block in the document, the note's in the
         // fragment
-        let files: Vec<(Option<FileId>, u32)> = document
+        let files: Vec<(Option<FileId>, u32)> = map
             .syntax
             .blocks
             .iter()
@@ -617,13 +624,13 @@ mod tests {
     #[test]
     fn test_each_include_of_a_file_records_its_own_site() {
         // Given the same fragment included on lines 1 and 3
-        let document = parse_document(
+        let map = parse_source_map(
             &[("shared.rst", "Text.\n")],
             ".. include:: shared.rst\n\n.. include:: shared.rst\n",
         );
 
         // Then — two sites, one file
-        let lines: Vec<(Option<u32>, FileId)> = document
+        let lines: Vec<(Option<u32>, FileId)> = map
             .include_sites
             .iter()
             .map(|site| (site.directive.map(|span| span.start.line), site.file))
@@ -637,7 +644,7 @@ mod tests {
     #[test]
     fn test_a_nested_include_site_is_written_in_its_fragment() {
         // Given
-        let document = parse_document(
+        let map = parse_source_map(
             &[
                 ("outer.rst", "Text.\n\n.. include:: inner.rst\n"),
                 ("inner.rst", "Inner.\n"),
@@ -646,7 +653,7 @@ mod tests {
         );
 
         // Then — the inner directive is on line 3 of `outer.rst`
-        let inner = document.include_sites[1];
+        let inner = map.include_sites[1];
         let span = inner.directive.expect("a positioned directive");
         assert_eq!((span.file, span.start.line), (Some(FileId::new(0)), 3));
         assert_eq!(inner.file, FileId::new(1));
@@ -655,13 +662,13 @@ mod tests {
     #[test]
     fn test_a_literal_include_records_no_site() {
         // Given / When — nothing in a verbatim include is parsed
-        let document = parse_document(
+        let map = parse_source_map(
             &[("shared.rst", ".. foo::\n")],
             ".. include:: shared.rst\n   :literal:\n",
         );
 
         // Then
-        assert_eq!(document.include_sites, Vec::new());
+        assert_eq!(map.include_sites, Vec::new());
     }
 
     #[test]

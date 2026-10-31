@@ -279,7 +279,7 @@ fn is_grid_item(node: &Node) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::Spacing;
     use rinx_ast::{InlineNode, SpacingValue, Uml, walk_nodes};
 
@@ -287,7 +287,7 @@ mod tests {
     /// document's diagnostics — the dispatcher is what positions the parse
     /// context, so spans are only meaningful this way.
     fn parse_grid_document(input: &str) -> (Grid, Vec<Diagnostic>) {
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         let grid = doc
             .nodes
             .iter()
@@ -301,7 +301,7 @@ mod tests {
 
     /// As [`parse_grid_document`], for the item directive.
     fn parse_item_document(input: &str) -> (GridItem, Vec<Diagnostic>) {
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         let item = find_item(&doc.nodes).expect("document should contain a grid-item directive");
         (item, doc.diagnostics)
     }
@@ -406,7 +406,7 @@ mod tests {
         );
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let uml = find_uml(&doc.nodes).expect("the diagram should have been parsed");
@@ -429,7 +429,7 @@ mod tests {
         );
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — the span points at the directive's own line, which is what a
         // `.. noqa:` and every later diagnostic are matched against

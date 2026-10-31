@@ -293,7 +293,7 @@ mod tests {
 
 #[cfg(test)]
 mod integration_tests {
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{InlineNode, Node, Position, Span};
 
     // --- Transition integration tests ---
@@ -303,7 +303,7 @@ mod integration_tests {
         // Given
         let input = "First paragraph.\n\n----\n\nSecond paragraph.";
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         // Then
         assert_eq!(
             doc.nodes,
@@ -321,7 +321,7 @@ mod integration_tests {
         // Given — a normal underline-only heading, adjacent to the transition dispatch
         let input = "Heading\n=======\n\nSome text.";
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         // Then
         assert_eq!(
             doc.nodes,
@@ -341,7 +341,7 @@ mod integration_tests {
         // Given
         let input = "----\n\nSome text.";
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         // Then
         assert_eq!(doc.nodes[0], Node::Transition);
         assert!(

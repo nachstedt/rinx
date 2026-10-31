@@ -107,7 +107,7 @@ fn build(rst: &str) -> (ast::Document, ProjectIndex, EntitySchema) {
         NEEDS_JSON.to_string(),
     )]));
     let ctx = ParseCtx::new(ast::Domain::Py, &loader).with_schema(&schema);
-    let doc = parser::parse_with_ctx("requirements", rst, &ctx);
+    let doc = parser::parse("requirements", rst, &ctx).document;
     let index = analyzer::build_project_index(std::slice::from_ref(&doc), "requirements", &schema);
     (doc, index, schema)
 }

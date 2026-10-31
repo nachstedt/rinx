@@ -372,7 +372,7 @@ mod tests {
         let input = ".. image:: logo.png\n";
 
         // When
-        let doc = crate::parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
 
         // Then
         let rinx_ast::Node::Directive(directive) = &doc.nodes[0] else {
@@ -394,7 +394,7 @@ mod tests {
 ";
 
         // When
-        let doc = crate::parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -423,7 +423,7 @@ mod tests {
 ";
 
         // When
-        let doc = crate::parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
 
         // Then
         let rinx_ast::Node::Directive(directive) = &doc.nodes[0] else {
@@ -461,7 +461,7 @@ mod tests {
         .expect("line number fits in u32");
 
         // When
-        let doc = crate::parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
 
         // Then
         let diagnostic = doc

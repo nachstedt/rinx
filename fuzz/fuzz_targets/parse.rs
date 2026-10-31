@@ -7,5 +7,5 @@
 use libfuzzer_sys::fuzz_target;
 
 fuzz_target!(|text: &str| {
-    let _ = rinx_parser::parse("fuzz.rst", text);
+    let _ = rinx_parser::parse("fuzz.rst", text, &rinx_parser::ParseCtx::default());
 });

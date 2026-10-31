@@ -239,7 +239,9 @@ mod tests {
         let document = rinx_parser::parse(
             "test.rst",
             ".. py:module:: pkg\n\n.. py:class:: Widget\n\n   .. py:method:: run()\n",
-        );
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let names = primary_names(&document);
@@ -255,7 +257,9 @@ mod tests {
         let document = rinx_parser::parse(
             "test.rst",
             ".. note::\n\n   .. py:module:: pkg\n\n.. py:function:: run()\n",
-        );
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let names = primary_names(&document);
@@ -272,7 +276,9 @@ mod tests {
             ".. py:module:: pkg\n\n\
              .. py:class:: Widget\n\n   Calls :py:meth:`run`.\n\n\
              After :py:meth:`run`.\n",
-        );
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let qualified = qualified_at_references(&document, "f");
@@ -289,7 +295,9 @@ mod tests {
             ".. py:module:: pkg\n\n\
              .. py:function:: run()\n   :module: other\n\n   See :py:func:`helper`.\n\n\
              See :py:func:`helper`.\n",
-        );
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let qualified = qualified_at_references(&document, "f");
@@ -305,7 +313,9 @@ mod tests {
         let document = rinx_parser::parse(
             "test.rst",
             "Intro.\n\n   .. currentmodule:: pkg\n\n   Quoted.\n\n   -- :py:func:`author`\n",
-        );
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let qualified = qualified_at_references(&document, "f");
@@ -320,7 +330,9 @@ mod tests {
         let document = rinx_parser::parse(
             "test.rst",
             ".. program:: tool\n\n.. option:: -v\n\nUse :option:`-v`.\n",
-        );
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
         let scopes = DocumentScopes::of(&document.nodes);
 
         // When
@@ -338,7 +350,9 @@ mod tests {
             "test.rst",
             ".. c:namespace-push:: geometry\n\n.. c:function:: int area(void)\n\n\
              .. c:namespace-pop::\n\n.. c:function:: int volume(void)\n",
-        );
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let names = primary_names(&document);
@@ -353,7 +367,9 @@ mod tests {
         let document = rinx_parser::parse(
             "test.rst",
             ":py:func:`a` and :py:func:`b`.\n\n.. currentmodule:: pkg\n\n:py:func:`c`.\n",
-        );
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let scopes = DocumentScopes::of(&document.nodes);
@@ -443,7 +459,9 @@ term :py:func:`in_term`
 
    :py:func:`in_class_body`
 ",
-        );
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let scopes = DocumentScopes::of(&document.nodes);
@@ -466,8 +484,14 @@ term :py:func:`in_term`
     #[cfg(debug_assertions)]
     fn test_scope_at_rejects_a_reference_from_another_document_in_a_debug_build() {
         // Given
-        let document = rinx_parser::parse("test.rst", "Text.\n");
-        let other = rinx_parser::parse("other.rst", ":py:func:`f`\n");
+        let document =
+            rinx_parser::parse("test.rst", "Text.\n", &rinx_parser::ParseCtx::default()).document;
+        let other = rinx_parser::parse(
+            "other.rst",
+            ":py:func:`f`\n",
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
         let scopes = DocumentScopes::of(&document.nodes);
 
         // When / Then

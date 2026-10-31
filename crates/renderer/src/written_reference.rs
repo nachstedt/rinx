@@ -202,10 +202,12 @@ mod tests {
 
     /// The spans' first lines of every use written in `text`.
     fn use_lines(text: &str) -> Vec<u32> {
-        written_uses(&rinx_parser::parse("index.rst", text))
-            .iter()
-            .map(|written| written.span().start.line)
-            .collect()
+        written_uses(
+            &rinx_parser::parse("index.rst", text, &rinx_parser::ParseCtx::default()).document,
+        )
+        .iter()
+        .map(|written| written.span().start.line)
+        .collect()
     }
 
     #[test]
@@ -232,7 +234,9 @@ mod tests {
         let text = ".. toctree::\n   :maxdepth: 2\n\n   intro\n   Setup <setup>\n";
 
         // When
-        let uses = written_uses(&rinx_parser::parse("index.rst", text));
+        let uses = written_uses(
+            &rinx_parser::parse("index.rst", text, &rinx_parser::ParseCtx::default()).document,
+        );
 
         // Then
         assert!(
@@ -248,7 +252,9 @@ mod tests {
         let text = ".. py:currentmodule:: pkg\n\n:py:func:`run` and :ref:`install`\n";
 
         // When
-        let uses = written_uses(&rinx_parser::parse("index.rst", text));
+        let uses = written_uses(
+            &rinx_parser::parse("index.rst", text, &rinx_parser::ParseCtx::default()).document,
+        );
 
         // Then
         let mut pkg = Scope::default();
@@ -266,7 +272,12 @@ mod tests {
     #[test]
     fn test_written_uses_keeps_the_file_of_a_reference_spliced_in() {
         // Given — a span counting lines in an included fragment
-        let mut document = rinx_parser::parse("index.rst", "See :ref:`install`.\n");
+        let mut document = rinx_parser::parse(
+            "index.rst",
+            "See :ref:`install`.\n",
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
         let Node::Paragraph(inlines) = &mut document.nodes[0] else {
             unreachable!()
         };
@@ -309,7 +320,8 @@ mod tests {
         let text = ".. py:currentmodule:: pkg\n\n:py:func:`run` :ref:`install`\n\n\
                     .. py:currentmodule:: other\n\n:py:func:`run` :doc:`setup` :ref:`ghost`\n\n\
                     .. toctree::\n\n   setup\n";
-        let document = rinx_parser::parse("index.rst", text);
+        let document =
+            rinx_parser::parse("index.rst", text, &rinx_parser::ParseCtx::default()).document;
         let index = index();
         let config = SiteConfig::default();
         let schema = EntitySchema::empty_ref();
@@ -357,7 +369,14 @@ mod tests {
     #[test]
     fn test_span_is_where_the_use_was_written() {
         // Given
-        let uses = written_uses(&rinx_parser::parse("index.rst", "See :ref:`install`.\n"));
+        let uses = written_uses(
+            &rinx_parser::parse(
+                "index.rst",
+                "See :ref:`install`.\n",
+                &rinx_parser::ParseCtx::default(),
+            )
+            .document,
+        );
 
         // When / Then
         assert_eq!(uses[0].span().start, Position::new(1, 5));
@@ -365,19 +384,21 @@ mod tests {
 
     /// The chain of every named reference written in `text`, in order.
     fn named_chains(text: &str) -> Vec<Vec<String>> {
-        written_uses(&rinx_parser::parse("index.rst", text))
-            .into_iter()
-            .filter_map(|written| match written {
-                WrittenUse::NamedReference { chain, .. } => Some(
-                    chain
-                        .as_slice()
-                        .iter()
-                        .map(|name| name.as_str().to_string())
-                        .collect(),
-                ),
-                _ => None,
-            })
-            .collect()
+        written_uses(
+            &rinx_parser::parse("index.rst", text, &rinx_parser::ParseCtx::default()).document,
+        )
+        .into_iter()
+        .filter_map(|written| match written {
+            WrittenUse::NamedReference { chain, .. } => Some(
+                chain
+                    .as_slice()
+                    .iter()
+                    .map(|name| name.as_str().to_string())
+                    .collect(),
+            ),
+            _ => None,
+        })
+        .collect()
     }
 
     #[test]
@@ -422,17 +443,19 @@ mod tests {
     fn named_titles(text: &str, index: &ProjectIndex) -> Vec<Vec<String>> {
         let config = SiteConfig::default();
         let resolver = UseResolver::new("index.rst", index, &config, EntitySchema::empty_ref());
-        written_uses(&rinx_parser::parse("index.rst", text))
-            .iter()
-            .filter(|written| matches!(written, WrittenUse::NamedReference { .. }))
-            .map(|written| {
-                resolver
-                    .targets(written)
-                    .into_iter()
-                    .map(|target| format!("{:?}", target.definition))
-                    .collect()
-            })
-            .collect()
+        written_uses(
+            &rinx_parser::parse("index.rst", text, &rinx_parser::ParseCtx::default()).document,
+        )
+        .iter()
+        .filter(|written| matches!(written, WrittenUse::NamedReference { .. }))
+        .map(|written| {
+            resolver
+                .targets(written)
+                .into_iter()
+                .map(|target| format!("{:?}", target.definition))
+                .collect()
+        })
+        .collect()
     }
 
     #[test]

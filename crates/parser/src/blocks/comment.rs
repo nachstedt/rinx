@@ -232,7 +232,7 @@ mod tests {
 
 #[cfg(test)]
 mod integration_tests {
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{InlineNode, Node, Position, Span};
 
     // --- Comment integration tests ---
@@ -242,7 +242,7 @@ mod integration_tests {
         // Given
         let input = ".. This is a comment";
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         // Then — the document contains exactly one Comment node
         assert_eq!(doc.nodes.len(), 1);
         assert_eq!(doc.nodes[0], Node::Comment);
@@ -253,7 +253,7 @@ mod integration_tests {
         // Given — bare `..` with no following text or body
         let input = "..";
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         // Then
         assert_eq!(doc.nodes.len(), 1);
         assert_eq!(doc.nodes[0], Node::Comment);
@@ -264,7 +264,7 @@ mod integration_tests {
         // Given — bare `..` followed by indented body
         let input = "..\n\n   This is a multi-line\n   comment body.";
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         // Then — still just one Comment node; body is discarded
         assert_eq!(doc.nodes.len(), 1);
         assert_eq!(doc.nodes[0], Node::Comment);
@@ -275,7 +275,7 @@ mod integration_tests {
         // Given
         let input = ".. A comment\n\nA paragraph.";
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         // Then — comment is discarded; only the paragraph survives
         assert_eq!(doc.nodes.len(), 2);
         assert_eq!(doc.nodes[0], Node::Comment);
@@ -290,7 +290,7 @@ mod integration_tests {
         // Given
         let input = "Title\n=====\n\n.. A comment\n\nSome text.";
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         // Then
         assert_eq!(doc.nodes.len(), 3);
         assert_eq!(
@@ -313,7 +313,7 @@ mod integration_tests {
         // Given — the `::` is only in the indented body, not on the `..` intro line
         let input = ".. some text\n   contains:: stuff";
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         // Then — still parsed as a comment (body discarded)
         assert_eq!(doc.nodes.len(), 1);
         assert_eq!(doc.nodes[0], Node::Comment);
@@ -325,7 +325,7 @@ mod integration_tests {
         let input =
             "... install scientific Python packages?\n---------------------------------------";
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         // Then — must be a Heading, not a Comment
         assert_eq!(doc.nodes.len(), 1);
         assert_eq!(
@@ -345,7 +345,7 @@ mod integration_tests {
         // Given — a plain paragraph whose text begins with "..."
         let input = "...continued from above.";
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         // Then — must be a Paragraph, not a Comment
         assert_eq!(doc.nodes.len(), 1);
         assert_eq!(
@@ -361,7 +361,7 @@ mod integration_tests {
         // Given — a real directive must not be swallowed by try_parse_comment
         let input = ".. note::\n\n   Body text.";
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         // Then — directive is parsed, not a Comment
         assert_eq!(doc.nodes.len(), 1);
         assert!(
@@ -376,7 +376,7 @@ mod integration_tests {
         // Given — a named target must not be swallowed by try_parse_comment
         let input = ".. _my-target:";
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         // Then — target is parsed, not a Comment
         assert_eq!(doc.nodes.len(), 1);
         assert!(
@@ -390,12 +390,12 @@ mod integration_tests {
 #[cfg(test)]
 mod noqa_tests {
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{Suppression, SuppressionCodes};
 
     /// The suppressions `input` yields, for the scope-resolution tests.
     fn suppressions(input: &str) -> Vec<Suppression> {
-        parse("test.rst", input).suppressions
+        parse_document("test.rst", input).suppressions
     }
 
     // --- parse_noqa_comment ---
@@ -591,7 +591,7 @@ mod noqa_tests {
     #[test]
     fn test_an_unknown_code_is_reported_at_the_comments_own_line() {
         // Given a typo on the third line
-        let doc = parse("test.rst", "A paragraph.\n\n.. noqa: nope\n\nAnother.\n");
+        let doc = parse_document("test.rst", "A paragraph.\n\n.. noqa: nope\n\nAnother.\n");
 
         // When
         let reported: Vec<_> = doc

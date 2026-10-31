@@ -14,8 +14,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use lsp_types::{CodeDescription, NumberOrString, Range, Uri};
-use rinx_ast::{Diagnostic, DiagnosticCode, Document, Span, retain_reportable, section_slug};
-use rinx_parser::{ParseCtx, PrefixParse, RejectParseFiles, SplicedText};
+use rinx_ast::{
+    Diagnostic, DiagnosticCode, Document, SourceMap, Span, retain_reportable, section_slug,
+};
+use rinx_parser::{ParseCtx, Parsed, PrefixParse, RejectParseFiles, SplicedText};
 
 use crate::documents::DocumentStore;
 use crate::files::{FileReads, WorkspaceFiles};
@@ -51,6 +53,8 @@ pub struct DocumentDiagnosis {
 #[derive(Debug)]
 pub struct ParsedSource {
     pub document: Document,
+    /// Where the document's markup was written, which only this parse knows.
+    pub source_map: SourceMap,
     /// What the build fails on in the document because its library did not
     /// declare it — empty outside a Bazel project. Never subject to
     /// `.. noqa:`: the fault is the build file's, not the document's.
@@ -89,10 +93,15 @@ pub fn parse_source(
     open: &DocumentStore,
 ) -> ParsedSource {
     let text = protocol_line_endings(text).into_owned();
-    let (document, reads) =
-        parse_configured(uri, doc_path, source_root, settings, open, |name, ctx| {
-            rinx_parser::parse_with_ctx(name, &text, ctx)
-        });
+    let (
+        Parsed {
+            document,
+            source_map,
+        },
+        reads,
+    ) = parse_configured(uri, doc_path, source_root, settings, open, |name, ctx| {
+        rinx_parser::parse(name, &text, ctx)
+    });
     let undeclared = settings
         .declarations
         .as_ref()
@@ -100,6 +109,7 @@ pub fn parse_source(
         .unwrap_or_default();
     ParsedSource {
         document,
+        source_map,
         undeclared,
         reads,
         text,
@@ -121,7 +131,7 @@ pub fn parse_prefix(
 ) -> PrefixParse {
     let text = protocol_line_endings(text).into_owned();
     parse_configured(uri, doc_path, source_root, settings, open, |name, ctx| {
-        rinx_parser::parse_prefix_with_ctx(name, &text, ctx)
+        rinx_parser::parse_prefix(name, &text, ctx)
     })
     .0
 }
@@ -264,6 +274,7 @@ pub fn diagnose_source(
 ) -> DocumentDiagnosis {
     let by_uri = to_lsp_diagnostics(
         &parsed.document,
+        &parsed.source_map,
         &parsed.undeclared,
         rendered,
         strictness,
@@ -366,7 +377,8 @@ pub(crate) struct Placed<'a> {
 /// and those rendering it found — by the URI of the file each one is in,
 /// leaving out what its `.. noqa:` comments silence, and adds, on each
 /// `.. include::` that brought problems in, a summary of them (see
-/// [`crate::include_summary`]).
+/// [`crate::include_summary`]) — the includes `source_map`, the parse's,
+/// records.
 ///
 /// The filter is the build's own [`rinx_ast::retain_reportable`], so the
 /// editor and CI cannot disagree about what a comment silences — and since a
@@ -379,6 +391,7 @@ pub(crate) struct Placed<'a> {
 #[must_use]
 pub fn to_lsp_diagnostics(
     document: &Document,
+    source_map: &SourceMap,
     undeclared: &[Diagnostic],
     rendered: &RenderFindings,
     strictness: &Strictness,
@@ -419,7 +432,7 @@ pub fn to_lsp_diagnostics(
                 found.range,
             ));
     }
-    for (uri, summary) in summarize_includes(document, &placed, placement, encoding) {
+    for (uri, summary) in summarize_includes(document, source_map, &placed, placement, encoding) {
         by_uri.entry(uri).or_default().push(summary);
     }
     by_uri
@@ -750,6 +763,7 @@ mod tests {
         let index = uri("file:///docs/index.rst");
         let mut converted = to_lsp_diagnostics(
             &document,
+            &SourceMap::default(),
             &[],
             &RenderFindings::default(),
             strictness,
@@ -786,6 +800,7 @@ mod tests {
         }
         to_lsp_diagnostics(
             &document,
+            &SourceMap::default(),
             &[],
             &RenderFindings {
                 reported: rendered.to_vec(),
@@ -1562,6 +1577,7 @@ mod tests {
         let index = uri("file:///docs/index.rst");
         to_lsp_diagnostics(
             &document,
+            &SourceMap::default(),
             undeclared,
             rendered,
             &Strictness::Rinx,
@@ -1624,6 +1640,7 @@ mod tests {
         let index = uri("file:///docs/index.rst");
         to_lsp_diagnostics(
             &document,
+            &SourceMap::default(),
             &[],
             rendered,
             &Strictness::Rinx,

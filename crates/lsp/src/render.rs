@@ -115,7 +115,8 @@ mod tests {
         let analyses: BTreeMap<String, DocumentAnalysis> = documents
             .iter()
             .map(|(path, text)| {
-                let document = rinx_parser::parse(path, text);
+                let document =
+                    rinx_parser::parse(path, text, &rinx_parser::ParseCtx::default()).document;
                 ((*path).to_string(), DocumentAnalysis::of(&document))
             })
             .collect();
@@ -146,7 +147,9 @@ mod tests {
     #[test]
     fn test_render_diagnostics_reports_a_label_no_document_defines() {
         // Given
-        let document = rinx_parser::parse("index.rst", REFERENCING);
+        let document =
+            rinx_parser::parse("index.rst", REFERENCING, &rinx_parser::ParseCtx::default())
+                .document;
         let index = index_of(&[("index.rst", REFERENCING)]);
 
         // When
@@ -161,7 +164,9 @@ mod tests {
     #[test]
     fn test_render_diagnostics_finds_nothing_once_another_document_defines_it() {
         // Given
-        let document = rinx_parser::parse("index.rst", REFERENCING);
+        let document =
+            rinx_parser::parse("index.rst", REFERENCING, &rinx_parser::ParseCtx::default())
+                .document;
         let index = index_of(&[
             ("index.rst", REFERENCING),
             ("setup.rst", ".. _install:\n\nInstalling\n==========\n"),
@@ -178,7 +183,8 @@ mod tests {
     fn test_render_diagnostics_reads_a_doc_name_relative_to_the_document() {
         // Given — `../setup` from `guide/` names `setup.rst`, which exists
         let text = "See :doc:`../setup` and :doc:`gone`.\n";
-        let document = rinx_parser::parse("guide/intro.rst", text);
+        let document =
+            rinx_parser::parse("guide/intro.rst", text, &rinx_parser::ParseCtx::default()).document;
         let index = index_of(&[("guide/intro.rst", text), ("setup.rst", "Setup\n=====\n")]);
 
         // When
@@ -195,7 +201,9 @@ mod tests {
     #[test]
     fn test_render_diagnostics_fails_on_a_broken_reference_under_strict_links() {
         // Given
-        let document = rinx_parser::parse("index.rst", REFERENCING);
+        let document =
+            rinx_parser::parse("index.rst", REFERENCING, &rinx_parser::ParseCtx::default())
+                .document;
         let index = index_of(&[("index.rst", REFERENCING)]);
         let settings = RenderSettings {
             strict_links: true,
@@ -220,7 +228,8 @@ mod tests {
     #[test]
     fn test_render_diagnostics_finds_an_undeclared_image_unavailable_to_embed() {
         // Given
-        let document = rinx_parser::parse("index.rst", EMBEDDING);
+        let document =
+            rinx_parser::parse("index.rst", EMBEDDING, &rinx_parser::ParseCtx::default()).document;
         let index = index_of(&[("index.rst", EMBEDDING)]);
 
         // When
@@ -238,7 +247,8 @@ mod tests {
     #[test]
     fn test_render_diagnostics_embeds_an_image_the_site_bundles() {
         // Given
-        let document = rinx_parser::parse("index.rst", EMBEDDING);
+        let document =
+            rinx_parser::parse("index.rst", EMBEDDING, &rinx_parser::ParseCtx::default()).document;
         let index = index_of(&[("index.rst", EMBEDDING)]);
         let bundled = BundledFiles {
             images: std::collections::BTreeSet::from([std::path::PathBuf::from("logo.png")]),
@@ -261,7 +271,8 @@ mod tests {
     #[test]
     fn test_render_diagnostics_reports_a_preamble_the_site_does_not_declare() {
         // Given
-        let document = rinx_parser::parse("index.rst", CONFIGURED);
+        let document =
+            rinx_parser::parse("index.rst", CONFIGURED, &rinx_parser::ParseCtx::default()).document;
         let index = index_of(&[("index.rst", CONFIGURED)]);
 
         // When
@@ -275,7 +286,8 @@ mod tests {
     #[test]
     fn test_render_diagnostics_finds_nothing_once_the_site_declares_the_preamble() {
         // Given
-        let document = rinx_parser::parse("index.rst", CONFIGURED);
+        let document =
+            rinx_parser::parse("index.rst", CONFIGURED, &rinx_parser::ParseCtx::default()).document;
         let index = index_of(&[("index.rst", CONFIGURED)]);
         let config = SiteConfig {
             uml_configs: std::collections::BTreeMap::from([(

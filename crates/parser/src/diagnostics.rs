@@ -121,7 +121,7 @@ impl std::ops::Index<usize> for Diagnostics {
 /// a test about where a diagnostic points rather than whether it is raised.
 #[cfg(test)]
 pub(crate) fn lines_reported(input: &str, code: rinx_ast::DiagnosticCode) -> Vec<u32> {
-    crate::parse("index.rst", input)
+    crate::parse_document("index.rst", input)
         .diagnostics
         .iter()
         .filter(|diagnostic| diagnostic.code == code)

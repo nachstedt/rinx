@@ -53,7 +53,7 @@ pub(super) fn process_parse(
     inputs: &ParseInputs<'_>,
     diagrams: DiagramSupport,
 ) -> Result<String> {
-    let mut doc = parser::parse_with_ctx(path, rst_content, &inputs.ctx());
+    let mut doc = parser::parse(path, rst_content, &inputs.ctx()).document;
     // Stamped here rather than inside the parser: it identifies the *build's*
     // schema, and only the worker knows which file that came from. The index
     // phase compares it against its own.
@@ -435,7 +435,7 @@ mod tests {
             import_keys: &BTreeMap::new(),
             splices: &splices,
         };
-        let doc = parser::parse_with_ctx("docs/doc.rst", "Text.\n", &inputs.ctx());
+        let doc = parser::parse("docs/doc.rst", "Text.\n", &inputs.ctx()).document;
 
         // When
         let warning = crate::commands::diagnostics::format_diagnostic(
@@ -454,7 +454,12 @@ mod tests {
     fn test_a_directive_whose_content_is_refused_is_reported_on_its_marker_line() {
         // Given — a `.. table::` on line 3 whose content, after the blank
         // line, is no table
-        let doc = parser::parse("docs/doc.rst", "Intro.\n\n.. table::\n\n   asdgad\n");
+        let doc = parser::parse(
+            "docs/doc.rst",
+            "Intro.\n\n.. table::\n\n   asdgad\n",
+            &parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let warning = crate::commands::diagnostics::format_diagnostic(

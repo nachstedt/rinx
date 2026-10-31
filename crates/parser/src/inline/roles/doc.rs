@@ -114,7 +114,7 @@ mod tests {
 
     /// The single inline node `input` parses to, through the whole pipeline.
     fn only_inline(input: &str) -> InlineNode {
-        let doc = crate::parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
         let rinx_ast::Node::Paragraph(inlines) = &doc.nodes[0] else {
             panic!("expected a paragraph, got {:?}", doc.nodes[0]);
         };
@@ -125,7 +125,7 @@ mod tests {
     #[test]
     fn test_parse_places_a_doc_role_at_its_source_position() {
         // Given / When
-        let doc = crate::parse("test.rst", "See :doc:`intro` here.");
+        let doc = crate::parse_document("test.rst", "See :doc:`intro` here.");
 
         // Then
         let rinx_ast::Node::Paragraph(inlines) = &doc.nodes[0] else {
@@ -196,7 +196,7 @@ mod tests {
         let ctx = crate::context::ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
 
         // When
-        let parsed = crate::parse_with_ctx("test.rst", ":doc:`intro`", &ctx);
+        let parsed = crate::parse("test.rst", ":doc:`intro`", &ctx).document;
 
         // Then
         let rinx_ast::Node::Paragraph(inlines) = &parsed.nodes[0] else {

@@ -4,7 +4,7 @@
 
 use super::test_support::diagnostic_codes;
 use super::*;
-use crate::parse;
+use crate::parse_document;
 use rinx_ast::{InlineNode, Position, Span};
 
 fn headings(doc: &rinx_ast::Document) -> Vec<(u8, Vec<InlineNode>)> {
@@ -27,7 +27,7 @@ fn test_parse_keeps_a_title_whose_underline_is_longer_than_its_overline() {
     let input = "=======\nTitle\n==========\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — one heading, and no stray paragraph holding the overline
     assert_eq!(
@@ -50,7 +50,7 @@ fn test_parse_keeps_a_title_whose_underline_is_another_character() {
     let input = "=======\nTitle\n-------\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(headings(&doc), vec![(1, title("Title"))]);
@@ -67,7 +67,7 @@ fn test_parse_reports_only_the_mismatch_for_a_wide_title() {
     let input = "==========\nA Long Title Here\n=====\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(headings(&doc), vec![(1, title("A Long Title Here"))]);
@@ -83,7 +83,7 @@ fn test_parse_names_both_adornments_in_the_mismatch_message() {
     let input = "=======\nTitle\n----------\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let message = &doc.diagnostics[0].message;
@@ -97,7 +97,7 @@ fn test_parse_spans_all_three_lines_of_a_mismatched_title() {
     let input = "Intro.\n\n=======\nTitle\n==========\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let span = doc.diagnostics[0].span.expect("a positioned diagnostic");
@@ -110,7 +110,7 @@ fn test_parse_gives_a_mismatched_title_its_overline_style() {
     let input = "Top\n===\n\n-------\nFirst\n-------\n\n-------\nSecond\n----------\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(
@@ -126,7 +126,7 @@ fn test_parse_treats_a_short_mismatched_overline_as_text() {
     let input = "===\nTitle\n=====\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(headings(&doc), vec![(1, title("Title"))]);
@@ -139,7 +139,7 @@ fn test_parse_reports_an_overline_without_an_underline() {
     let input = "=======\nTitle\n\nText.\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — the lines stay text
     assert!(headings(&doc).is_empty(), "{:?}", doc.nodes);
@@ -157,7 +157,7 @@ fn test_parse_reports_an_overline_and_title_at_the_end_of_the_input() {
     let input = "Intro.\n\n=======\nTitle";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert!(headings(&doc).is_empty(), "{:?}", doc.nodes);
@@ -173,7 +173,7 @@ fn test_parse_reports_an_overline_directly_above_prose() {
     let input = "Intro.\n\n--------\nSome text.\nMore text.\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert!(headings(&doc).is_empty(), "{:?}", doc.nodes);
@@ -189,7 +189,7 @@ fn test_parse_reports_two_adornments_with_no_title_between_them() {
     let input = "Intro.\n\n=====\n-----\n\nText.\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — no heading titled `=====`
     assert!(headings(&doc).is_empty(), "{:?}", doc.nodes);
@@ -205,7 +205,7 @@ fn test_parse_reports_an_adornment_between_two_others() {
     let input = "Intro.\n\n=====\n-----\n=====\n\nText.\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert!(headings(&doc).is_empty(), "{:?}", doc.nodes);
@@ -221,7 +221,7 @@ fn test_parse_reports_nothing_for_a_transition() {
     let input = "Intro.\n\n-----\n\nMore.\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert!(doc.nodes.contains(&Node::Transition));
@@ -234,7 +234,7 @@ fn test_parse_does_not_underline_with_an_indented_adornment() {
     let input = "Term\n   -----\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert!(headings(&doc).is_empty(), "{:?}", doc.nodes);
@@ -246,7 +246,7 @@ fn test_parse_accepts_an_inset_title_between_column_zero_adornments() {
     let input = "=========\n  Title\n=========\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(headings(&doc), vec![(1, title("Title"))]);

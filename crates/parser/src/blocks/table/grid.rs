@@ -274,7 +274,7 @@ pub(crate) fn try_parse_grid_table(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::InlineNode;
 
     // --- try_parse_grid_table via parse() integration tests ---
@@ -290,7 +290,7 @@ mod tests {
 +------+------+";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -330,7 +330,7 @@ mod tests {
 +------+------+";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let Node::Table {
@@ -356,7 +356,7 @@ mod tests {
 +--------------+----------+-----------+-----------+";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let Node::Table { body_rows, .. } = &doc.nodes[0] else {
@@ -394,7 +394,7 @@ mod tests {
 +--------------+------------+";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let Node::Table { body_rows, .. } = &doc.nodes[0] else {
@@ -441,7 +441,7 @@ mod tests {
         let input = "+------+\n| a    |\n| a    |";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — falls back to a paragraph, with a diagnostic explaining why
         assert!(!matches!(doc.nodes[0], Node::Table { .. }));
@@ -459,7 +459,7 @@ mod tests {
         let input = "+------+------+\n| a    | b     |\n+------+------+";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — falls back to a paragraph, with a diagnostic naming the
         // misaligned line
@@ -489,7 +489,7 @@ mod tests {
 +------------------+-------+----------------+-----------+-------------+------------+";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — no diagnostics, and the header resolves into two logical
         // rows: one with four rowspan-2 cells plus a colspan-2 cell, and one
@@ -531,7 +531,7 @@ mod tests {
 +-----+-----+----+";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);

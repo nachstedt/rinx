@@ -70,7 +70,8 @@ fn test_symbols_list_a_label_two_documents_define_under_both() {
 #[test]
 fn test_symbols_place_an_included_definition_in_its_fragment() {
     // Given — the server's loader names a fragment by its absolute path
-    let mut document = rinx_parser::parse("guide.rst", "Text.\n");
+    let mut document =
+        rinx_parser::parse("guide.rst", "Text.\n", &rinx_parser::ParseCtx::default()).document;
     let fragment = document.intern_source_file("/work/docs/shared/setup.rst");
     document.nodes.push(rinx_ast::Node::Target {
         name: TargetName::new("setup").into(),

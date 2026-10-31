@@ -233,7 +233,7 @@ fn test_e2e_list_table_known_bug_regression_nested_domain_object_resolves() {
 See :attr:`method.__self__` for details.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
 
     // When
@@ -253,7 +253,7 @@ fn test_e2e_enumerated_list_round_trips_from_rst_to_html() {
     let input = "(iv) Fourth\n(v) Fifth\n";
 
     // When running it through the parse, analyze and render pipeline
-    let doc = parser::parse("test.rst", input);
+    let doc = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&doc);
     let html = renderer::render(&doc, &index, &doc.path).html;
 
@@ -281,7 +281,7 @@ fn test_e2e_cross_reference_inside_an_enumerated_item_resolves() {
 ";
 
     // When indexing and rendering it
-    let doc = parser::parse("test.rst", input);
+    let doc = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&doc);
     let output = renderer::render(&doc, &index, &doc.path);
 
@@ -301,7 +301,7 @@ fn test_e2e_doctest_block_nested_in_an_enumerated_item_is_found() {
     let input = "1. Try it:\n\n   >>> 1 + 1\n   2\n";
 
     // When walking the parsed document
-    let doc = parser::parse("test.rst", input);
+    let doc = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let mut found = 0;
     ast::walk_nodes(&doc.nodes, &mut |node| {
         if matches!(node, ast::Node::DoctestBlock(_)) {
@@ -335,7 +335,7 @@ As shown in :eq:`second`.
 ";
 
     // When the real pipeline runs: parse, analyze, render
-    let doc = parser::parse("math.rst", input);
+    let doc = parser::parse("math.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&doc);
     let output = renderer::render(&doc, &index, "math.rst");
 
@@ -393,7 +393,7 @@ fn test_e2e_reports_an_eq_reference_to_an_unlabeled_equation_as_broken() {
     let input = ".. math::\n\n   a = b\n\nSee :eq:`nope`.\n";
 
     // When
-    let doc = parser::parse("math.rst", input);
+    let doc = parser::parse("math.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&doc);
     let output = renderer::render(&doc, &index, "math.rst");
 

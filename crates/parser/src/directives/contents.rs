@@ -106,7 +106,6 @@ pub(super) fn parse_contents(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
     use rinx_ast::{Diagnostic, DiagnosticCode};
     use rinx_ast::{Domain, Node};
 
@@ -133,7 +132,7 @@ mod tests {
     /// Parses a whole document and returns its single `.. contents::`, for
     /// tests that need the real span origin the dispatcher sets up.
     fn parse_document(input: &str) -> (Contents, Vec<Diagnostic>) {
-        let doc = parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
         let contents = doc
             .nodes
             .iter()

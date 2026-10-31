@@ -6,7 +6,7 @@
 //! show lives here: that a role applies from its definition onwards, how the
 //! escape rewrite treats code, and the positions the scan records.
 
-use crate::parse;
+use crate::parse_document;
 use rinx_ast::{DiagnosticCode, InlineNode, Node, Position, ResolvedLanguage, Span};
 
 fn code(text: &str, language: ResolvedLanguage, classes: &[&str], span: Span) -> InlineNode {
@@ -32,7 +32,7 @@ fn test_parse_creates_a_code_node_for_the_code_role() {
     let input = "Write :code:`x = 1` here.";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(
@@ -51,7 +51,7 @@ fn test_parse_treats_backslashes_in_code_as_escapes() {
     let input = r"A :code:`a\*b \\ c` d.";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let Node::Paragraph(inlines) = &doc.nodes[0] else {
@@ -69,7 +69,7 @@ fn test_parse_does_not_apply_smart_typography_inside_code() {
     let input = r#"A :code:`"quoted" -- x` d."#;
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let Node::Paragraph(inlines) = &doc.nodes[0] else {
@@ -92,7 +92,7 @@ Call :py:`print(1)`.
 ";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — the definition leaves no node; the use becomes highlighted code
     assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
@@ -118,7 +118,7 @@ Late :py:`y`.
 ";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(
@@ -148,7 +148,7 @@ Title :py:`t`
 ";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let Node::Heading { text, .. } = &doc.nodes[0] else {
@@ -169,7 +169,7 @@ Use :PY:`x`.
 ";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let Node::Paragraph(inlines) = &doc.nodes[0] else {
@@ -184,10 +184,10 @@ Use :PY:`x`.
 #[test]
 fn test_parse_does_not_carry_a_role_into_another_document() {
     // Given one document defining a role, and another using it
-    let first = parse("a.rst", ".. role:: py(code)\n\nIn :py:`a`.\n");
+    let first = parse_document("a.rst", ".. role:: py(code)\n\nIn :py:`a`.\n");
 
     // When
-    let second = parse("b.rst", "In :py:`b`.\n");
+    let second = parse_document("b.rst", "In :py:`b`.\n");
 
     // Then — Sphinx forgets a role when its document ends
     let rendered = format!("{:?}", first.nodes);
@@ -208,7 +208,7 @@ fn test_parse_reports_a_refused_role_on_its_directive_line() {
     let input = "Intro.\n\n.. role:: red\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.diagnostics.len(), 1);

@@ -7,7 +7,7 @@
 //! competes with every other construct a backquote opens, and that the
 //! default role is state the parse carries from one paragraph to the next.
 
-use crate::parse;
+use crate::parse_document;
 use rinx_ast::{DiagnosticCode, InlineNode, Node, Position, ScriptPosition, Span};
 
 fn text(text: &str) -> InlineNode {
@@ -20,7 +20,7 @@ fn title(text: &str) -> InlineNode {
 
 /// The inline content of every paragraph in the document, in order.
 fn paragraphs(input: &str) -> Vec<Vec<InlineNode>> {
-    parse("test.rst", input)
+    parse_document("test.rst", input)
         .nodes
         .into_iter()
         .filter_map(|node| match node {
@@ -255,7 +255,7 @@ fn test_parse_reports_a_role_before_and_after_the_same_text() {
     let input = "A :sub:`2`:sup: here.";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — shown as written, and reported where it was written
     assert_eq!(
@@ -285,7 +285,7 @@ fn test_parse_reports_a_role_with_a_reference_suffix() {
         ("A `x`:sub:__ here.", "`x`:sub:__"),
     ] {
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(
@@ -364,7 +364,7 @@ fn test_parse_keeps_the_default_role_when_a_directive_names_an_unknown_one() {
     let input = ".. default-role:: sup\n\n.. default-role:: nope\n\n`a`\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert!(
@@ -407,7 +407,12 @@ fn test_parse_resolves_a_bare_domain_default_role_in_the_default_domain() {
     let input = ".. default-role:: func\n\nCall `spam`.\n";
 
     // When
-    let doc = crate::parse_with_domain("test.rst", input, rinx_ast::Domain::C);
+    let doc = crate::parse(
+        "test.rst",
+        input,
+        &crate::ParseCtx::with_domain(rinx_ast::Domain::C),
+    )
+    .document;
 
     // Then
     assert!(
@@ -429,7 +434,7 @@ fn test_parse_reads_bare_text_with_a_role_the_document_defined() {
     let input = ".. role:: py(code)\n   :language: python\n\n.. default-role:: py\n\nCall `f()`.\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
@@ -449,7 +454,7 @@ fn test_parse_refuses_a_default_role_defined_only_later() {
     let input = ".. default-role:: py\n\n.. role:: py(code)\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(
@@ -469,7 +474,7 @@ fn test_parse_reads_bare_text_with_an_entity_role() {
     let ctx = crate::ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
 
     // When
-    let doc = crate::parse_with_ctx("test.rst", ".. default-role:: req\n\nSee `R_1`.\n", &ctx);
+    let doc = crate::parse("test.rst", ".. default-role:: req\n\nSee `R_1`.\n", &ctx).document;
 
     // Then
     assert!(
@@ -490,7 +495,7 @@ fn test_parse_reads_bare_text_with_the_configured_default_role() {
     let ctx = base.with_default_role(&role);
 
     // When
-    let doc = crate::parse_with_ctx("test.rst", "H\\ `2`\\ O\n", &ctx);
+    let doc = crate::parse("test.rst", "H\\ `2`\\ O\n", &ctx).document;
 
     // Then
     assert!(
@@ -508,7 +513,7 @@ fn test_parse_restores_title_reference_rather_than_the_configured_default() {
     let ctx = base.with_default_role(&role);
 
     // When
-    let doc = crate::parse_with_ctx("test.rst", ".. default-role::\n\n`a`\n", &ctx);
+    let doc = crate::parse("test.rst", ".. default-role::\n\n`a`\n", &ctx).document;
 
     // Then
     assert_eq!(doc.nodes, vec![Node::Paragraph(vec![title("a")])]);

@@ -13,7 +13,12 @@ use rinx_renderer as renderer;
 
 /// Parses `body` as `guide/intro.rst`, indexes it and renders it.
 fn render_intro(body: &str) -> renderer::RenderOutput {
-    let doc = parser::parse("guide/intro.rst", &format!("Intro\n=====\n\n{body}"));
+    let doc = parser::parse(
+        "guide/intro.rst",
+        &format!("Intro\n=====\n\n{body}"),
+        &parser::ParseCtx::default(),
+    )
+    .document;
     assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
     let docs = vec![doc];
     let index = analyzer::build_project_index(&docs, "guide/intro", &EntitySchema::empty());

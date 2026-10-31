@@ -87,7 +87,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{Directive, Node};
 
     #[test]
@@ -115,7 +115,7 @@ mod tests {
         let input = ".. option:: -m <module-name>\n\n   Search sys.path.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::Directive(Directive::DomainObject {
@@ -142,7 +142,7 @@ mod tests {
         let input = ".. option:: -c, --compress\n\n   Compress files.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::Directive(Directive::DomainObject {
@@ -161,7 +161,7 @@ mod tests {
         let input = ".. cmdoption:: -h\n                --help\n\n   Show help.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::Directive(Directive::DomainObject {
@@ -181,7 +181,12 @@ mod tests {
         let input = ".. option:: -h";
 
         // When
-        let doc = crate::parse_with_domain("test.rst", input, rinx_ast::Domain::C);
+        let doc = crate::parse(
+            "test.rst",
+            input,
+            &crate::ParseCtx::with_domain(rinx_ast::Domain::C),
+        )
+        .document;
 
         // Then
         assert!(matches!(
@@ -198,7 +203,7 @@ mod tests {
         let input = ".. option:: not-a-flag";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — never lose content, matching `extract_c_object_name`'s
         // fallback convention.

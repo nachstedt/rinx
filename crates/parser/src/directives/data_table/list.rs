@@ -206,7 +206,7 @@ mod tests {
         let input = "Intro\n\n.. list-table:: Sizes\n   :name: sizes\n\n   * - a\n     - b\n";
 
         // When
-        let doc = crate::parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
 
         // Then
         let span = doc.nodes.iter().find_map(|node| match node {
@@ -651,7 +651,7 @@ mod tests {
 ";
 
         // When
-        let doc = crate::parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);

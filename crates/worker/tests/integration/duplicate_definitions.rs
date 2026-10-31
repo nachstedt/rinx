@@ -11,7 +11,7 @@ use rinx_renderer as renderer;
 fn parse_all(sources: &[(&str, &str)]) -> Vec<ast::Document> {
     sources
         .iter()
-        .map(|(path, text)| parser::parse(path, text))
+        .map(|(path, text)| parser::parse(path, text, &parser::ParseCtx::default()).document)
         .collect()
 }
 

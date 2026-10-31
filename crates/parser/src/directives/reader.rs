@@ -575,7 +575,7 @@ mod tests {
         let input = ".. note:: Text\n   :class: wide\n\n   .. bogus::\n";
 
         // When
-        let document = crate::parse("index.rst", input);
+        let document = crate::parse_document("index.rst", input);
 
         // Then — the unsupported option on its line, the unknown directive
         // on its

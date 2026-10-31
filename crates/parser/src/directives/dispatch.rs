@@ -324,7 +324,7 @@ fn try_parse_entity_directive(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::Domain;
     use rinx_ast::{CodeBlockSource, CodeLanguage, Directive, Node};
 
@@ -355,7 +355,7 @@ mod tests {
 ";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(
@@ -367,7 +367,7 @@ mod tests {
     #[test]
     fn test_parse_records_the_whole_marker_line_as_an_objects_span() {
         // When
-        let doc = parse("test.rst", ".. py:function:: greet(name)\n");
+        let doc = parse_document("test.rst", ".. py:function:: greet(name)\n");
 
         // Then
         let Some(Node::Directive(Directive::DomainObject { span, .. })) = doc.nodes.first() else {
@@ -449,7 +449,7 @@ mod tests {
         let input = ".. code-block:: rst\n\n   :ref:`label`\n   :term:`word`\n";
 
         // When
-        let doc = crate::parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
 
         // Then
         assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
@@ -465,7 +465,7 @@ mod tests {
         let input = ".. code-block:: rst\n   :linenos:\n\n   :ref:`label`\n";
 
         // When
-        let doc = crate::parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
 
         // Then
         assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
@@ -557,7 +557,7 @@ mod tests {
         let source = ".. cpp:class:: Widget\n";
 
         // When
-        let document = crate::parse("index.rst", source);
+        let document = crate::parse_document("index.rst", source);
 
         // Then — the prefix is part of the subject, since the name it qualifies
         // is meaningless without it
@@ -631,7 +631,7 @@ mod tests {
         let input = ".. note::\n\n   This is a note.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -653,7 +653,7 @@ mod tests {
         let input = ".. admonition:: My Title\n\n   Custom content.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -671,7 +671,7 @@ mod tests {
         let input = ".. note::\n   :collapsible:\n\n   Content.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -688,7 +688,7 @@ mod tests {
         let input = ".. note::\n   :collapsible: open\n\n   Content.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -705,7 +705,7 @@ mod tests {
         let input = ".. toctree::\n   \n   team_a/index\n   team_b/index\n\nNext Para";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
@@ -732,7 +732,7 @@ mod tests {
             ".. toctree::\n   :maxdepth: 2\n   \n   team_a/index\n   team_b/index\n\nNext Para";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
@@ -761,7 +761,7 @@ mod tests {
         let input = ".. code-block:: rust\n\n   let x = 1;\n   \n   let y = 2;\n\n";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -778,7 +778,7 @@ mod tests {
         let input = ".. index:: single: execution\n\nNext Para";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
@@ -795,7 +795,7 @@ mod tests {
         let input = ".. plantuml::\n\n   A -> B\n   B -> C\n\nNext Para";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
@@ -820,7 +820,7 @@ mod tests {
 ";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -840,7 +840,7 @@ mod tests {
 ";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — an argumentless block inherits rather than naming nothing
         assert_eq!(doc.nodes.len(), 1);

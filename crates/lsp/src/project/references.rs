@@ -371,7 +371,12 @@ mod tests {
     #[test]
     fn test_resolve_uses_leads_each_reference_to_its_definition() {
         // Given
-        let document = rinx_parser::parse("index.rst", "See :ref:`install`.\n");
+        let document = rinx_parser::parse(
+            "index.rst",
+            "See :ref:`install`.\n",
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let uses = resolved(&document, &index());
@@ -394,7 +399,12 @@ mod tests {
     #[test]
     fn test_resolve_uses_drops_a_broken_reference() {
         // Given
-        let document = rinx_parser::parse("index.rst", "See :ref:`ghost`.\n");
+        let document = rinx_parser::parse(
+            "index.rst",
+            "See :ref:`ghost`.\n",
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // When / Then
         assert!(resolved(&document, &index()).is_empty());
@@ -407,7 +417,12 @@ mod tests {
         index
             .document_titles
             .insert("setup.rst".to_string(), "Setup".to_string());
-        let document = rinx_parser::parse("index.rst", ".. toctree::\n\n   setup\n");
+        let document = rinx_parser::parse(
+            "index.rst",
+            ".. toctree::\n\n   setup\n",
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let uses = resolved(&document, &index);
@@ -425,7 +440,12 @@ mod tests {
     #[test]
     fn test_resolve_uses_places_a_use_in_the_fragment_it_was_written_in() {
         // Given — the reference's span counts lines in `part.rst`
-        let mut document = rinx_parser::parse("index.rst", "See :ref:`install`.\n");
+        let mut document = rinx_parser::parse(
+            "index.rst",
+            "See :ref:`install`.\n",
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
         let file = document.intern_source_file("/project/part.rst".to_string());
         let Node::Paragraph(inlines) = &mut document.nodes[0] else {
             unreachable!()

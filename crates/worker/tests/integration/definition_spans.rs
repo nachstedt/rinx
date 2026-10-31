@@ -64,7 +64,7 @@ See :ref:`install` and :py:func:`shapes.Circle.area`.
 /// `source` parsed as the build's parse action would write it, and read back
 /// as its index action does.
 fn parsed(source: &str) -> Document {
-    let doc = rinx_parser::parse("guide.rst", source);
+    let doc = rinx_parser::parse("guide.rst", source, &rinx_parser::ParseCtx::default()).document;
     serde_json::from_str(&serde_json::to_string(&doc).expect("serializes")).expect("deserializes")
 }
 
@@ -124,7 +124,10 @@ fn test_moving_a_name_along_its_line_leaves_the_written_ast_unchanged() {
 
     // When
     let written = |source: &str| {
-        serde_json::to_string(&rinx_parser::parse("guide.rst", source)).expect("serializes")
+        serde_json::to_string(
+            &rinx_parser::parse("guide.rst", source, &rinx_parser::ParseCtx::default()).document,
+        )
+        .expect("serializes")
     };
 
     // Then — a name's span is the editor's alone
@@ -134,7 +137,9 @@ fn test_moving_a_name_along_its_line_leaves_the_written_ast_unchanged() {
 #[test]
 fn test_each_named_definition_s_site_holds_exactly_its_name() {
     // Given — the parse the editor analyses, never read back from a `.ast`
-    let analysis = DocumentAnalysis::of(&rinx_parser::parse("guide.rst", GUIDE));
+    let analysis = DocumentAnalysis::of(
+        &rinx_parser::parse("guide.rst", GUIDE, &rinx_parser::ParseCtx::default()).document,
+    );
     let lines: Vec<&str> = GUIDE.lines().collect();
 
     // When — the text each site's name range covers

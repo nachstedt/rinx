@@ -24,7 +24,7 @@ fn test_e2e_dot_prefixed_reference_prefers_the_enclosing_module() {
 Use :class:`.datetime` to combine both.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 
@@ -54,7 +54,7 @@ fn test_e2e_undotted_reference_prefers_the_unqualified_name() {
 The :mod:`datetime` module supplies classes.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 
@@ -85,7 +85,7 @@ fn test_e2e_dot_prefixed_reference_falls_back_to_a_suffix_match() {
 Call :meth:`.TarFile.close` when done.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 
@@ -121,7 +121,7 @@ fn test_e2e_ambiguous_dot_prefixed_reference_is_left_unresolved() {
 Call :meth:`.close` when done.
 ";
 
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
 

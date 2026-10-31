@@ -176,7 +176,7 @@ pub struct ParseCtx<'a> {
     ///
     /// Needed only by generated entity ids, which hash it so that the first
     /// unnamed `.. req::` of two different documents cannot collide. Set by
-    /// [`crate::parse_with_ctx`] from the path it is already given, so no
+    /// [`crate::parse`] from the path it is already given, so no
     /// caller has to remember to supply it twice.
     pub doc_path: &'a str,
     /// Whether the document's source is rendered as a Jinja template before
@@ -231,18 +231,18 @@ pub struct ParseCtx<'a> {
     /// directives fill it in and the inline scan of every later paragraph
     /// reads it, which is what makes them apply from where they are written
     /// onwards — see [`crate::document_roles`]. Set by
-    /// [`crate::parse_with_ctx`], which owns one table per document; a context
+    /// [`crate::parse`], which owns one table per document; a context
     /// built without it defines no roles and keeps the configured default.
     document_roles: Option<&'a DocumentRoles>,
     /// Where the document's markup is recorded as it is read — the blocks an
     /// editor folds and the names it colours. State like
-    /// [`Self::document_roles`], and set by [`crate::parse_with_ctx`] the same
+    /// [`Self::document_roles`], and set by [`crate::parse`] the same
     /// way; a context built without it records nothing.
     syntax: Option<&'a SyntaxRecorder>,
     /// The text parsed ahead of the document's own, after its leading
     /// metadata: Sphinx's `rst_prolog`.
     ///
-    /// Read once, by [`crate::parse_with_ctx`]; an included fragment's context
+    /// Read once, by [`crate::parse`]; an included fragment's context
     /// has none, as Sphinx adds it to documents only.
     prolog: Option<SplicedText<'a>>,
     /// The text parsed after the document's own: Sphinx's `rst_epilog`.
@@ -291,6 +291,14 @@ pub struct ParseCtx<'a> {
 fn empty_import_keys() -> &'static BTreeMap<String, String> {
     static EMPTY: std::sync::OnceLock<BTreeMap<String, String>> = std::sync::OnceLock::new();
     EMPTY.get_or_init(BTreeMap::new)
+}
+
+impl Default for ParseCtx<'_> {
+    /// A context that resolves bare constructs in the Python domain, as
+    /// Sphinx's default `primary_domain` does, and has no filesystem access.
+    fn default() -> Self {
+        Self::with_domain(Domain::Py)
+    }
 }
 
 impl<'a> ParseCtx<'a> {

@@ -44,7 +44,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{Directive, Node};
 
     /// The raw texts of parsed `c`-domain signatures, for asserting on what
@@ -59,7 +59,7 @@ mod tests {
         let input = ".. c:type:: PyMemAllocatorDomain\n\n   Enumeration of allocator domains.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -87,7 +87,7 @@ mod tests {
         let input = ".. c:type:: unsigned long ulong\n\n   An unsigned long alias.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -107,7 +107,7 @@ mod tests {
         let input = ".. c:type:: Hidden\n   :no-index:\n\n   A hidden type.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -129,7 +129,7 @@ mod tests {
         let input = ".. c:type:: PyMemAllocatorDomain\n\n   .. c:macro:: PYMEM_DOMAIN_RAW\n\n      The raw domain.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);

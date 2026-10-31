@@ -97,7 +97,7 @@ fn name_span(line: &str, name: &str, ctx: &ParseCtx<'_>, i: usize) -> Option<Spa
 
 #[cfg(test)]
 mod tests {
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{Node, Position, Span};
 
     /// The span of every named target in `nodes`, in document order.
@@ -114,11 +114,11 @@ mod tests {
     #[test]
     fn test_parse_records_a_targets_name_as_a_declared_reference() {
         // When
-        let doc = parse("test.rst", "Intro\n\n.. _install:\n\nText.\n");
+        let map = crate::blocks::parse_source_map("test.rst", "Intro\n\n.. _install:\n\nText.\n");
 
         // Then
         assert_eq!(
-            doc.syntax.tokens,
+            map.syntax.tokens,
             vec![rinx_ast::SyntaxToken {
                 kind: rinx_ast::TokenKind::Reference,
                 modifiers: rinx_ast::TokenModifiers::NONE
@@ -131,7 +131,7 @@ mod tests {
     #[test]
     fn test_parse_records_an_internal_targets_line() {
         // When
-        let doc = parse("test.rst", "Intro\n\n.. _install:\n\nText.\n");
+        let doc = parse_document("test.rst", "Intro\n\n.. _install:\n\nText.\n");
 
         // Then
         assert_eq!(
@@ -143,7 +143,7 @@ mod tests {
     #[test]
     fn test_parse_records_a_target_with_its_destination_on_the_next_line_at_its_name() {
         // When
-        let doc = parse("test.rst", ".. _docs:\n   https://example.org\n");
+        let doc = parse_document("test.rst", ".. _docs:\n   https://example.org\n");
 
         // Then
         assert_eq!(
@@ -158,7 +158,7 @@ mod tests {
         let input = ".. note::\n\n   .. _inside:\n\n   Text.\n";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(
@@ -181,7 +181,7 @@ mod tests {
     #[test]
     fn test_parse_records_exactly_a_targets_name() {
         // When
-        let doc = parse("test.rst", "Intro\n\n.. _install:\n\nText.\n");
+        let doc = parse_document("test.rst", "Intro\n\n.. _install:\n\nText.\n");
 
         // Then — `install` takes columns 5 to 11
         assert_eq!(
@@ -193,7 +193,7 @@ mod tests {
     #[test]
     fn test_parse_records_a_name_without_the_blanks_around_it() {
         // When
-        let doc = parse("test.rst", ".. _  Getting Started :\n\nText.\n");
+        let doc = parse_document("test.rst", ".. _  Getting Started :\n\nText.\n");
 
         // Then
         assert_eq!(
@@ -208,7 +208,7 @@ mod tests {
         let input = ".. note::\n\n   .. _inside:\n\n   Text.\n";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(

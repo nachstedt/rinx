@@ -94,7 +94,7 @@ fn join_escaped_line_breaks(
 mod tests {
     use super::*;
     use crate::context::ParseCtx;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::Domain;
     use rinx_ast::{Directive, Node};
 
@@ -296,7 +296,7 @@ mod tests {
         let input = ".. rust:function:: greet(name)\n\n   Body.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -312,7 +312,7 @@ mod tests {
         let input = ".. py:struct:: Greeter\n\n   Body.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -379,7 +379,7 @@ mod tests {
             ".. function:: start_unix_server(cb, \\\n                 path=None)\n\n   Starts.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let Some(Node::Directive(Directive::DomainObject { object, .. })) = doc.nodes.first()

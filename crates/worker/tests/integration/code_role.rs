@@ -10,7 +10,7 @@ use rinx_parser as parser;
 use rinx_renderer as renderer;
 
 fn render_page(source: &str) -> (ast::Document, renderer::RenderOutput) {
-    let doc = parser::parse("index.rst", source);
+    let doc = parser::parse("index.rst", source, &parser::ParseCtx::default()).document;
     let index =
         analyzer::build_project_index(std::slice::from_ref(&doc), "index", &EntitySchema::empty());
     let output = renderer::render(&doc, &index, &doc.path);

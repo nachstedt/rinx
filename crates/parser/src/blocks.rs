@@ -27,5 +27,7 @@ mod transition;
 #[cfg(test)]
 mod pipeline_tests;
 
-pub use dispatch::{PrefixParse, parse, parse_prefix_with_ctx, parse_with_ctx, parse_with_domain};
+pub use dispatch::{Parsed, PrefixParse, parse, parse_prefix};
 pub(crate) use dispatch::{parse_blocks, written_extent};
+#[cfg(test)]
+pub(crate) use dispatch::{parse_document, parse_source_map};

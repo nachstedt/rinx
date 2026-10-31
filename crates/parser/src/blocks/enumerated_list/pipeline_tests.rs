@@ -2,7 +2,7 @@
 //! format, the continuation rules, nesting, and the diagnostics. Kept
 //! separate from [`super::list`]'s own unit tests purely for file size.
 
-use crate::parse;
+use crate::parse_document;
 use rinx_ast::{
     Document, Enumerator, EnumeratorFormat, EnumeratorSequence, ListItem, Node, inline_plain_text,
 };
@@ -40,7 +40,7 @@ fn test_parses_every_sequence_in_every_format() {
             let input = format!("{} one\n{} two\n", marker(first), marker(second));
 
             // When parsing the list
-            let doc = parse("test.rst", &input);
+            let doc = parse_document("test.rst", &input);
 
             // Then the sequence, format and both items are recognised
             let (start, items) = only_list(&doc);
@@ -63,7 +63,7 @@ fn test_parses_an_auto_enumerated_list() {
     let input = "#. one\n#. two\n#. three\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then it becomes an arabic list starting at one, as docutils records it
     let (start, items) = only_list(&doc);
@@ -79,7 +79,7 @@ fn test_parses_an_explicit_first_item_followed_by_auto_enumerators() {
     let input = "1. one\n#. two\n#. three\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then all three items belong to one list
     let (start, items) = only_list(&doc);
@@ -93,7 +93,7 @@ fn test_an_explicit_enumerator_after_an_auto_one_does_not_continue_the_list() {
     let input = "#. one\n2. two\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then no list forms at all: the successor check fails on line one, so
     // both lines stay prose — docutils reaches the same outcome
@@ -106,7 +106,7 @@ fn test_records_a_start_value_other_than_one() {
     let input = "3. three\n4. four\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then the start ordinal is kept and reported, as docutils does
     let (start, items) = only_list(&doc);
@@ -128,7 +128,7 @@ fn test_a_bare_v_starts_a_lower_alpha_list_not_a_roman_one() {
     let input = "v. five?\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then it resolves to lower-alpha, because docutils' resolution order
     // reaches alpha before roman and only seeds roman from `i`/`I`
@@ -143,7 +143,7 @@ fn test_a_bare_i_seeds_a_lower_roman_list() {
     let input = "i. one\nii. two\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then roman is chosen, the one sequence docutils special-cases
     let (start, items) = only_list(&doc);
@@ -157,7 +157,7 @@ fn test_an_established_alpha_list_reads_i_as_a_letter() {
     let input = "A. a\nB. b\nC. c\nD. d\nE. e\nF. f\nG. g\nH. h\nI. i\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then `I` continues the alphabet rather than restarting as roman one —
     // this is what the expected-sequence hint exists for
@@ -173,7 +173,7 @@ fn test_an_arabic_list_followed_by_i_does_not_continue() {
     let input = "1. one\ni. two\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then the successor check fails on item one and both lines stay prose.
     // Note the roman seeds are unreachable here: docutils puts them in an
@@ -187,7 +187,7 @@ fn test_prose_beginning_with_an_initial_is_not_a_list() {
     let input = "A. Einstein said this.\nHe was smart.\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then it stays a paragraph, because the following line neither is
     // blank nor indented nor carries `B. `
@@ -200,7 +200,7 @@ fn test_an_initial_at_end_of_input_really_is_a_one_item_list() {
     let input = "A. Einstein said this.\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then it *is* a list — docutils agrees, which is why the spec tells
     // authors to escape the period. The ambiguity rule only bites when a
@@ -223,7 +223,7 @@ fn test_a_broken_sequence_does_not_continue_the_list() {
 
     for input in inputs {
         // When parsing each
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then no list forms: the successor check rejects line one, and the
         // whole block falls through to a paragraph
@@ -241,7 +241,7 @@ fn test_a_list_interrupted_by_prose_keeps_only_its_finished_items() {
     let input = "1. a\n2. b\nParagraph.\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then only the first item survives as a list and the rest is prose —
     // docutils drops the interrupted item back into the input, so bullet
@@ -270,7 +270,7 @@ fn test_a_list_ending_at_a_blank_line_is_not_reported_as_unindented() {
     let input = "1. a\n\nParagraph.\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then no unindent warning is emitted
     assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
@@ -282,7 +282,7 @@ fn test_parses_a_nested_list_inside_an_item() {
     let input = "1. outer\n\n   a. inner\n   b. inner two\n\n2. next\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then the inner list is a child of the first item
     let (_, items) = only_list(&doc);
@@ -308,7 +308,7 @@ fn test_parses_an_enumerated_list_nested_in_a_bullet_list() {
     let input = "* outer\n\n  1. one\n  2. two\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then the enumerated list is nested inside the bullet item
     match doc.nodes.as_slice() {
@@ -331,7 +331,7 @@ fn test_parses_an_item_spanning_several_paragraphs() {
     let input = "1. first para\n\n   second para\n\n2. next\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then both paragraphs belong to the first item
     let (_, items) = only_list(&doc);
@@ -348,7 +348,7 @@ fn test_parses_an_item_whose_marker_is_alone_on_its_line() {
     let input = "1.\n     body here\n2. next\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then the body indent is taken from the following line, so the text is
     // not left with stray leading spaces
@@ -363,7 +363,7 @@ fn test_parses_a_directive_inside_an_item() {
     let input = "1. intro\n\n   .. note::\n\n      Careful.\n\n2. next\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then the directive is parsed as a child of the item, since item
     // bodies go back through the full block dispatch
@@ -384,7 +384,7 @@ fn test_a_decimal_number_is_not_an_enumerator() {
     let input = "1.5 is a number\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then it stays prose: the marker must be followed by a space or the
     // end of the line
@@ -397,7 +397,7 @@ fn test_a_roman_numeral_beyond_the_representable_range_is_not_an_enumerator() {
     let input = "mmmmm. x\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then it stays prose, matching docutils' `ordinal is None` path
     assert!(matches!(doc.nodes.as_slice(), [Node::Paragraph(_)]));
@@ -409,7 +409,7 @@ fn test_leading_zeros_are_normalised_when_continuing_a_list() {
     let input = "007. a\n8. b\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then the ordinal is decoded numerically, so `8.` continues the list
     let (start, items) = only_list(&doc);
@@ -423,7 +423,7 @@ fn test_a_list_does_not_interrupt_the_paragraph_above_it() {
     let input = "Some text\n1. Item\n";
 
     // When parsing it
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then both lines are one paragraph. docutils behaves identically —
     // its text block reader stops only at blank or indented lines — and
@@ -438,7 +438,7 @@ fn test_bare_enumerator_alone_in_the_input_stays_a_paragraph() {
     let input = "(n)\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then it is prose, not a list whose only item is empty
     assert_eq!(
@@ -457,7 +457,7 @@ fn test_bare_enumerator_followed_by_unindented_prose_stays_a_paragraph() {
     let input = "(n)\n\nSome prose.\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then nothing is swallowed into an empty list item
     assert!(
@@ -477,7 +477,7 @@ fn test_bare_enumerator_with_an_indented_body_still_opens_a_list() {
     let input = "1.\n\n   The body.\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then the list is still recognised
     let (start, items) = only_list(&doc);
@@ -492,7 +492,7 @@ fn test_bare_enumerator_followed_by_a_sibling_item_still_opens_a_list() {
     let input = "1.\n2. Second\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then both items are kept, the first one empty
     let (_, items) = only_list(&doc);

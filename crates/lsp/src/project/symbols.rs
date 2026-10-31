@@ -174,7 +174,8 @@ mod tests {
     use rinx_ast::{EntityBody, EntityId, Span};
 
     fn symbols_of(text: &str) -> Vec<(String, SymbolKind)> {
-        let document = rinx_parser::parse("guide.rst", text);
+        let document =
+            rinx_parser::parse("guide.rst", text, &rinx_parser::ParseCtx::default()).document;
         DocumentSymbols::of(&document, &DocumentAnalysis::of(&document))
             .iter()
             .map(|entry| (entry.name.clone(), entry.kind))
@@ -223,7 +224,12 @@ Guide
     #[test]
     fn test_of_places_each_entry_at_its_site() {
         // Given
-        let document = rinx_parser::parse("guide.rst", "Intro.\n\n.. _install:\n\nText.\n");
+        let document = rinx_parser::parse(
+            "guide.rst",
+            "Intro.\n\n.. _install:\n\nText.\n",
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let symbols = DocumentSymbols::of(&document, &DocumentAnalysis::of(&document));
@@ -283,7 +289,12 @@ Guide
     #[test]
     fn test_section_titles_names_each_section_by_its_anchor() {
         // Given
-        let document = rinx_parser::parse("guide.rst", "Guide\n=====\n\nUsage\n-----\n");
+        let document = rinx_parser::parse(
+            "guide.rst",
+            "Guide\n=====\n\nUsage\n-----\n",
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let titles = section_titles(&document);
@@ -304,7 +315,9 @@ Guide
         let document = rinx_parser::parse(
             "guide.rst",
             ".. note::\n\n   .. glossary::\n\n      Build Step\n         A step.\n",
-        );
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let spellings = term_spellings(&document);

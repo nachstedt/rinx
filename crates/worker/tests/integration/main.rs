@@ -1,6 +1,7 @@
 //! Integration tests for Rinx public API.
 
 mod any_role;
+mod ast_round_trip;
 mod builder_conditionals;
 mod c_domain;
 mod code_role;

@@ -308,7 +308,8 @@ mod tests {
         let analyses = documents
             .iter()
             .map(|(path, text)| {
-                let document = rinx_parser::parse(path, text);
+                let document =
+                    rinx_parser::parse(path, text, &rinx_parser::ParseCtx::default()).document;
                 ((*path).to_string(), DocumentAnalysis::of(&document))
             })
             .collect();
@@ -354,7 +355,7 @@ mod tests {
         resource_root: Option<&str>,
         files: &[(&str, &str)],
     ) -> Result<String, PreviewError> {
-        let document = rinx_parser::parse(path, text);
+        let document = rinx_parser::parse(path, text, &rinx_parser::ParseCtx::default()).document;
         let index = index_of(&[(path, text), ("setup.rst", SETUP)]);
         let folders = [PathBuf::from("/work")];
         let settings = PreviewSettings {
@@ -628,7 +629,8 @@ mod tests {
     #[test]
     fn test_render_preview_alone_draws_a_document_with_the_defaults() {
         // Given — a document whose `:doc:` names one no project holds
-        let document = rinx_parser::parse("notes.rst", DOCUMENT);
+        let document =
+            rinx_parser::parse("notes.rst", DOCUMENT, &rinx_parser::ParseCtx::default()).document;
 
         // When
         let page = render_preview_alone(&document, &disk(&[])).unwrap();

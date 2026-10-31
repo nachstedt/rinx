@@ -207,7 +207,7 @@ mod tests {
         let input = "Intro.\n\n.. code-block:: python\n   :linenos:\n\n   x = 1\n";
 
         // When
-        let document = crate::parse("index.rst", input);
+        let document = crate::parse_document("index.rst", input);
 
         // Then — what a render-time finding about the code points at
         let [

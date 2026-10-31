@@ -90,11 +90,11 @@ fn explanation_and_content<'c>(invocation: &DirectiveInvocation<'_, 'c>) -> Dire
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{InlineNode, Node};
 
     fn only_version_change(input: &str) -> (VersionChangeKind, String, Vec<Node>) {
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         let [
             Node::Directive(Directive::VersionChange {
                 kind,
@@ -156,7 +156,7 @@ mod tests {
         let input = ".. versionchanged::\n\n   Missing version.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.diagnostics.len(), 1);

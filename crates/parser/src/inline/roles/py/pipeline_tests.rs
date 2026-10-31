@@ -3,7 +3,7 @@
 //! `:const:` role alias). Kept separate purely for
 //! `super::inline_domain_roles_py`'s line count.
 
-use crate::{parse, parse_with_domain};
+use crate::{parse, parse_document};
 use rinx_ast::{
     CObjectType, Domain, InlineNode, Node, ObjectType, PyObjectType, TargetSearchOrder,
 };
@@ -27,7 +27,7 @@ fn test_parse_bare_func_role_resolves_via_default_domain() {
     let input = "See :func:`greet` for details.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::C);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -53,7 +53,7 @@ fn test_parse_prefixed_func_role_ignores_default_domain() {
     let input = "See :py:func:`greet` and :c:func:`add`.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::C);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -89,7 +89,7 @@ fn test_parse_bare_mod_role_resolves_via_default_domain() {
     let input = "See :mod:`greetings` for details.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::Py);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -115,7 +115,7 @@ fn test_parse_prefixed_mod_role_ignores_default_domain() {
     let input = "See :py:mod:`greetings`.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::C);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -140,7 +140,7 @@ fn test_parse_mod_role_with_bang_prefix_suppresses_link_end_to_end() {
     let input = "See :mod:`!curses` for details.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::Py);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -165,7 +165,7 @@ fn test_parse_bare_data_role_resolves_via_default_domain() {
     let input = "See :data:`DEFAULT_TIMEOUT` for details.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::Py);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -193,7 +193,7 @@ fn test_parse_prefixed_const_role_ignores_default_domain_and_matches_data_target
     let input = "See :py:const:`DEFAULT_TIMEOUT`.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::C);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -218,7 +218,7 @@ fn test_parse_data_role_with_bang_prefix_suppresses_link_end_to_end() {
     let input = "See :data:`!SECRET_KEY` for details.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::Py);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -243,7 +243,7 @@ fn test_parse_bare_meth_role_resolves_via_default_domain() {
     let input = "See :meth:`greet` for details.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::Py);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -269,7 +269,7 @@ fn test_parse_prefixed_meth_role_ignores_default_domain() {
     let input = "See :py:meth:`greet`.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::C);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -294,7 +294,7 @@ fn test_parse_meth_role_with_bang_prefix_suppresses_link_end_to_end() {
     let input = "See :meth:`!secret_method` for details.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::Py);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -319,7 +319,7 @@ fn test_parse_bare_class_role_resolves_via_default_domain() {
     let input = "See :class:`Greeter` for details.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::Py);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -345,7 +345,7 @@ fn test_parse_prefixed_class_role_ignores_default_domain() {
     let input = "See :py:class:`Greeter`.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::C);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -370,7 +370,7 @@ fn test_parse_bare_attr_role_resolves_via_default_domain() {
     let input = "See :attr:`Greeter.name` for details.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::Py);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -396,7 +396,7 @@ fn test_parse_prefixed_attr_role_ignores_default_domain() {
     let input = "See :py:attr:`Greeter.name`.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::C);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -422,7 +422,7 @@ fn test_parse_bare_attr_role_under_c_default_domain_falls_back_to_text() {
     let input = "See :attr:`Greeter.name` for details.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::C);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -439,7 +439,7 @@ fn test_parse_attr_role_with_bang_prefix_suppresses_link_end_to_end() {
     let input = "See :attr:`!Greeter.secret` for details.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::Py);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -464,7 +464,7 @@ fn test_parse_func_role_with_tilde_prefix_shortens_display_end_to_end() {
     let input = "See :func:`~greetings.shout` for details.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::Py);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -489,7 +489,7 @@ fn test_parse_func_role_with_call_parens_resolves_the_bare_name_end_to_end() {
     let input = "Use :c:func:`Py_TYPE()` to inspect an object's type.";
 
     // When
-    let doc = parse_with_domain("test.rst", input, Domain::C);
+    let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -514,7 +514,7 @@ fn test_parse_mixed_term_and_func_roles_in_one_paragraph() {
     let input = "The :term:`environment` affects :func:`greet`.";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {

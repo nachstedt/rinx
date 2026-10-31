@@ -10,7 +10,7 @@ use rinx_renderer as renderer;
 #[test]
 fn test_parser_step() {
     let input = "Title\n=====\n\nParagraph text here.\nMore text.";
-    let ast = parser::parse("test.rst", input);
+    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     assert_eq!(ast.nodes.len(), 2);
     assert_eq!(
         ast.nodes[0],

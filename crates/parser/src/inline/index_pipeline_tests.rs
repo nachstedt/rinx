@@ -6,7 +6,7 @@
 //! each use of a substitution — escapes, and a malformed entry reported
 //! under the role's own code while its text stays on the page.
 
-use crate::parse;
+use crate::parse_document;
 use rinx_ast::{DiagnosticCode, Directive, IndexEntry, InlineNode, Node, Position, Span};
 
 /// Every `:index:` role in the document's top-level paragraphs.
@@ -38,7 +38,7 @@ fn test_parse_creates_an_index_reference_with_its_span_and_anchor() {
     let input = "The :index:`execution` model.";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(
@@ -67,7 +67,7 @@ fn test_parse_numbers_index_role_anchors_after_index_directives_and_among_regist
     let input = ":index:`a`\n\n.. index:: single: b\n\n:pep:`8` and :index:`c`\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let Node::Directive(Directive::Index { id, .. }) = &doc.nodes[1] else {
@@ -83,7 +83,7 @@ fn test_parse_gives_each_substituted_index_role_its_own_anchor() {
     let input = "|term| and |term|\n\n.. |term| replace:: :index:`execution`\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(index_ids(&doc.nodes), vec!["index-0", "index-1"]);
@@ -95,7 +95,7 @@ fn test_parse_unescapes_the_title_and_the_entry() {
     let input = r"A :index:`\*args` parameter.";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let found = index_references(&doc.nodes);
@@ -119,7 +119,7 @@ fn test_parse_reports_a_malformed_entry_under_the_role_code_and_keeps_the_text()
     let input = "See :index:`loops <pair: loop>` here.";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — the text and anchor stay, with no entries
     assert_eq!(
@@ -148,7 +148,7 @@ fn test_parse_reports_the_directive_family_for_a_malformed_index_directive() {
     let input = ".. index:: pair: loop\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     assert_eq!(doc.diagnostics.len(), 1, "{:?}", doc.diagnostics);
@@ -161,7 +161,7 @@ fn test_parse_suppresses_an_index_role_diagnostic_with_its_own_code() {
     let input = ".. noqa: index-role.invalid-pair\n\nSee :index:`loops <pair: loop>` here.\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then — the suppression is recorded against the role's code
     assert_eq!(doc.diagnostics.len(), 1);
@@ -181,7 +181,7 @@ fn test_parse_leaves_an_index_role_in_a_heading_in_the_heading() {
     let input = "The :index:`loop` statement\n===========================\n";
 
     // When
-    let doc = parse("test.rst", input);
+    let doc = parse_document("test.rst", input);
 
     // Then
     let Node::Heading { text, .. } = &doc.nodes[0] else {

@@ -95,7 +95,7 @@ pub(in crate::directives) const DECORATOR_SPEC: DirectiveSpec = DirectiveSpec {
 mod tests {
     use super::super::super::body::test_support::read_options;
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{Directive, Node};
 
     #[test]
@@ -106,7 +106,7 @@ mod tests {
         let input = ".. decorator:: classmethod\n\n   Transform a method into a class method.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — it parses as a `py:function` with `is_decorator` forced on
         assert_eq!(doc.nodes.len(), 1);
@@ -134,7 +134,7 @@ mod tests {
         let input = ".. py:decorator:: coroutine\n\n   Mark a function as a coroutine.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::Directive(Directive::DomainObject {
@@ -154,7 +154,7 @@ mod tests {
         let input = ".. py:function:: greet(name)\n\n   Greets the given name.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::Directive(Directive::DomainObject {
@@ -205,7 +205,7 @@ mod tests {
             ".. function:: prototype(address)\n   :noindex:\n   :module:\n\n   Returns a function.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let Some(Node::Directive(Directive::DomainObject {
@@ -226,7 +226,7 @@ mod tests {
         let input = ".. py:function:: greet(name)\n\n   Greets the given name.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -255,7 +255,7 @@ mod tests {
         let input = ".. py:function:: spawnl(mode, file, *args)\n                 spawnle(mode, file, *args, env)\n\n   Spawn a process.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::Directive(Directive::DomainObject {
@@ -291,7 +291,7 @@ mod tests {
         let input = ".. py:function:: greet(name)\n\n   :platform: Unix";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         if let Node::Directive(Directive::DomainObject {

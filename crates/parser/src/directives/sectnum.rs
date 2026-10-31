@@ -89,7 +89,6 @@ pub(super) fn parse_sectnum(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
     use rinx_ast::{Diagnostic, DiagnosticCode};
     use rinx_ast::{Domain, Node};
     use std::num::NonZeroUsize;
@@ -125,7 +124,7 @@ mod tests {
     /// Parses a whole document and returns its single `.. sectnum::`, for
     /// tests that need the real span origin the dispatcher sets up.
     fn parse_document(input: &str) -> (SectnumOptions, Vec<Diagnostic>) {
-        let doc = parse("test.rst", input);
+        let doc = crate::parse_document("test.rst", input);
         let options = doc
             .nodes
             .iter()
@@ -141,7 +140,7 @@ mod tests {
     fn test_both_spellings_parse_as_sectnum() {
         // Given / When / Then
         for name in ["sectnum", "section-numbering"] {
-            let doc = crate::parse("index.rst", &format!(".. {name}::\n"));
+            let doc = crate::parse_document("index.rst", &format!(".. {name}::\n"));
             assert!(
                 matches!(doc.nodes[..], [Node::Directive(Directive::Sectnum(_))]),
                 "`{name}` parsed as {:?}",
@@ -364,8 +363,9 @@ mod tests {
     #[test]
     fn test_both_spellings_parse_to_the_same_directive() {
         // Given
-        let sphinx_spelling = parse("test.rst", ".. sectnum::\n   :depth: 1\n");
-        let docutils_spelling = parse("test.rst", ".. section-numbering::\n   :depth: 1\n");
+        let sphinx_spelling = crate::parse_document("test.rst", ".. sectnum::\n   :depth: 1\n");
+        let docutils_spelling =
+            crate::parse_document("test.rst", ".. section-numbering::\n   :depth: 1\n");
 
         // When
         let find = |doc: &rinx_ast::Document| {

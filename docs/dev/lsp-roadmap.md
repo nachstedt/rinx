@@ -939,7 +939,7 @@ parser matches. Role names complete from it (#358): a `:` where a role may
 start lists the built-in roles spelled for the default domain, the schema's
 entity roles, and the roles a `.. role::` defined above the cursor. Those
 come from a *probe*, a parse of the text up to the cursor's line
-(`parse_prefix_with_ctx`).
+(`parse_prefix`).
 
 The step went beyond domain objects: every role the index resolves completes
 its target (#362). That covers `:ref:`, `:doc:`, `:term:`, `:numref:`,

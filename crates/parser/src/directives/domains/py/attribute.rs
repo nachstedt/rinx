@@ -86,7 +86,7 @@ pub(in crate::directives) const SPEC: DirectiveSpec = DirectiveSpec {
 mod tests {
     use super::super::super::body::test_support::read_options;
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{Directive, Node};
 
     #[test]
@@ -134,7 +134,7 @@ mod tests {
         let input = ".. py:attribute:: Greeter.name\n\n   The greeter's name.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -168,7 +168,7 @@ mod tests {
         let input = ".. py:attribute:: Greeter.name\n   :type: str\n   :value: \"anonymous\"\n   :canonical: mymodule.MyClass.name\n\n   The greeter's name.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);

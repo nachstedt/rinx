@@ -205,7 +205,8 @@ mod tests {
 
     /// The first domain object `source` parses to.
     fn object(source: &str) -> DomainObjectBody {
-        let document = rinx_parser::parse("test.rst", source);
+        let document =
+            rinx_parser::parse("test.rst", source, &rinx_parser::ParseCtx::default()).document;
         document
             .nodes
             .into_iter()

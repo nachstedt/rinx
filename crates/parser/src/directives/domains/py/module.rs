@@ -89,7 +89,7 @@ mod tests {
     use super::*;
     use crate::directives::options::OptionLine;
     use crate::directives::options::scan_option_lines;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{DiagnosticCode, Directive, Node};
 
     /// The options `option_lines` read as, and the lines `py:module` does
@@ -114,7 +114,7 @@ mod tests {
 
     /// The single `PyModule` a document parses to.
     fn parse_module(input: &str) -> (String, ModuleOptions, Vec<Node>) {
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         match doc.nodes.first() {
             Some(Node::Directive(Directive::DomainObject {
                 object:
@@ -282,7 +282,7 @@ mod tests {
         let input = ".. py:module:: greetings\n   :bogus: yes\n";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let diagnostic = doc
@@ -302,7 +302,7 @@ mod tests {
         let input = ".. py:module:: greetings\n   :synopsis: Greetings.\n   :deprecated:\n\n   .. contents::\n      :nope: 1\n";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then — the body context was rebased, so the position is the real one
         let span = doc
@@ -322,7 +322,7 @@ mod tests {
         let input = ".. py:module:: greetings\n   A module of greetings.";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         let (name, _, body) = parse_module(input);
 
         // Then — reported, and the module still named

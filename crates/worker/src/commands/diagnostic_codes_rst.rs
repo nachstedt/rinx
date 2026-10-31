@@ -236,7 +236,12 @@ mod tests {
     #[test]
     fn test_the_page_parses_without_a_diagnostic() {
         // Given / When
-        let document = rinx_parser::parse("diagnostics.rst", &process_diagnostic_codes_rst());
+        let document = rinx_parser::parse(
+            "diagnostics.rst",
+            &process_diagnostic_codes_rst(),
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // Then
         assert_eq!(document.diagnostics, Vec::new());
@@ -245,7 +250,12 @@ mod tests {
     #[test]
     fn test_every_code_has_the_section_id_the_server_links_to() {
         // Given
-        let document = rinx_parser::parse("diagnostics.rst", &process_diagnostic_codes_rst());
+        let document = rinx_parser::parse(
+            "diagnostics.rst",
+            &process_diagnostic_codes_rst(),
+            &rinx_parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let ids: Vec<String> = allocate_section_ids(&document.nodes)

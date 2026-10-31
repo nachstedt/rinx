@@ -144,13 +144,13 @@ pub(super) fn try_parse_bullet_list(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::InlineNode;
 
     #[test]
     fn test_parse_bullet_list_simple() {
         let input = "* Item 1\n* Item 2";
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         assert_eq!(doc.nodes.len(), 1);
         if let Node::BulletList { bullet, items } = &doc.nodes[0] {
             assert_eq!(*bullet, '*');
@@ -167,7 +167,7 @@ mod tests {
     #[test]
     fn test_parse_bullet_list_nested() {
         let input = "* Item 1\n\n  * Subitem 1\n\n* Item 2";
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         assert_eq!(doc.nodes.len(), 1);
         if let Node::BulletList { bullet, items } = &doc.nodes[0] {
             assert_eq!(*bullet, '*');
@@ -183,7 +183,7 @@ mod tests {
     #[test]
     fn test_parse_bullet_list_paragraph_continuation() {
         let input = "* Item 1\n  * Subitem 1\n* Item 2";
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         assert_eq!(doc.nodes.len(), 1);
         if let Node::BulletList { bullet, items } = &doc.nodes[0] {
             assert_eq!(*bullet, '*');
@@ -206,7 +206,7 @@ mod tests {
     #[test]
     fn test_parse_bullet_list_diagnostic_adjacent_different_bullets() {
         let input = "* Item 1\n- Item 2";
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         // Should be 2 lists because of different bullets
         assert_eq!(doc.nodes.len(), 2);
         assert!(!doc.diagnostics.is_empty());
@@ -220,7 +220,7 @@ mod tests {
     #[test]
     fn test_parse_bullet_list_multi_line_item() {
         let input = "* Item 1 line 1\n  Item 1 line 2\n* Item 2";
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         assert_eq!(doc.nodes.len(), 1);
         if let Node::BulletList { items, .. } = &doc.nodes[0] {
             assert_eq!(items.len(), 2);
@@ -236,7 +236,7 @@ mod tests {
     #[test]
     fn test_parse_bullet_list_multi_paragraph_item() {
         let input = "* Item 1 Para 1\n\n  Item 1 Para 2\n* Item 2";
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         assert_eq!(doc.nodes.len(), 1);
         if let Node::BulletList { items, .. } = &doc.nodes[0] {
             assert_eq!(items.len(), 2);
@@ -249,7 +249,7 @@ mod tests {
     #[test]
     fn test_parse_bullet_list_different_bullets_same_indent() {
         let input = "* Item 1\n+ Item 2\n- Item 3";
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         // Different bullets should result in separate lists
         assert_eq!(doc.nodes.len(), 3);
         for node in &doc.nodes {
@@ -260,7 +260,7 @@ mod tests {
     #[test]
     fn test_parse_bullet_list_empty_item() {
         let input = "* \n* Item 2";
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         assert_eq!(doc.nodes.len(), 1);
         if let Node::BulletList { items, .. } = &doc.nodes[0] {
             assert_eq!(items.len(), 2);
@@ -272,7 +272,7 @@ mod tests {
     fn test_parse_bullet_list_complex_nesting() {
         let input =
             "* Level 1\n\n  * Level 2\n\n    * Level 3\n\n  * Level 2 again\n\n* Level 1 again";
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         assert_eq!(doc.nodes.len(), 1);
         if let Node::BulletList { items, .. } = &doc.nodes[0] {
             assert_eq!(items.len(), 2);

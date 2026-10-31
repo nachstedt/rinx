@@ -1155,6 +1155,7 @@ impl ServerState {
         let parsed = &self.tracked.get(uri)?.parsed;
         Some(document_symbols(
             &parsed.document,
+            &parsed.source_map,
             &parsed.text,
             uri,
             self.outline_shape,
@@ -1167,7 +1168,7 @@ impl ServerState {
     pub(super) fn folding_ranges(&self, uri: &Uri) -> Option<Vec<FoldingRange>> {
         let parsed = &self.tracked.get(uri)?.parsed;
         Some(folding_ranges(
-            &parsed.document,
+            &parsed.source_map.syntax,
             &parsed.text,
             self.folding_limit,
         ))
@@ -1183,7 +1184,7 @@ impl ServerState {
     ) -> Option<SemanticTokens> {
         let parsed = &self.tracked.get(uri)?.parsed;
         Some(semantic_tokens(
-            &parsed.document,
+            &parsed.source_map.syntax,
             &parsed.text,
             self.encoding,
             range,

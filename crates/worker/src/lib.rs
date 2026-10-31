@@ -10,7 +10,7 @@ pub mod domain_warnings;
 /// and outputs an HTML string.
 #[must_use]
 pub fn process_rst(path: &str, input: &str) -> String {
-    let doc = rinx_parser::parse(path, input);
+    let doc = rinx_parser::parse(path, input, &rinx_parser::ParseCtx::default()).document;
     let index = rinx_analyzer::analyze(&doc);
     rinx_renderer::render(&doc, &index, path).html
 }

@@ -2,11 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 use crate::diagnostic::Diagnostic;
-use crate::include_site::IncludeSite;
 use crate::node::Node;
 use crate::span::{FileId, Span};
 use crate::suppression::Suppression;
-use crate::syntax::SyntaxTable;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Document {
@@ -48,23 +46,6 @@ pub struct Document {
     /// warning can print one without further resolution.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub source_files: Vec<String>,
-    /// Every `.. include::` whose file was parsed in, in the order they were
-    /// met — what an editor needs to point at the line that included a
-    /// problem.
-    ///
-    /// Not serialized: only a process that just parsed the document reads it,
-    /// and leaving it out of the `.ast` keeps a moved `.. include::` from
-    /// changing the bytes every later build step is cached on.
-    #[serde(skip)]
-    pub include_sites: Vec<IncludeSite>,
-    /// Where the markup was written — the blocks an editor folds and the
-    /// names it colours — as the parser read it.
-    ///
-    /// Not serialized, for the reason [`Self::include_sites`] is not: only the
-    /// process that parsed the document reads it, and a moved line must not
-    /// change the `.ast`.
-    #[serde(skip)]
-    pub syntax: SyntaxTable,
     /// The hash of the entity schema this document was parsed against.
     ///
     /// Recorded because the schema reaches the *parse* action, so a library
@@ -90,8 +71,6 @@ impl Document {
             suppressions: Vec::new(),
             metadata: BTreeMap::new(),
             source_files: Vec::new(),
-            include_sites: Vec::new(),
-            syntax: SyntaxTable::new(),
             entity_schema_hash: None,
         }
     }
@@ -250,26 +229,6 @@ mod tests {
 
         // Then — the common case must not grow the `.ast` wire form
         assert!(!json.contains("source_files"), "{json}");
-    }
-
-    #[test]
-    fn test_serialization_leaves_the_syntax_table_out() {
-        // Given a document whose parser recorded a block
-        let mut document = Document::new("guide.rst".to_string(), Vec::new());
-        document.syntax.blocks.push(crate::syntax::SyntaxBlock {
-            kind: crate::syntax::BlockKind::Comment,
-            lines: Span::new(
-                crate::span::Position::new(1, 1),
-                crate::span::Position::new(2, 1),
-            ),
-        });
-
-        // When
-        let json = serde_json::to_string(&document).expect("Failed to serialize");
-
-        // Then — a moved line must not change the `.ast`
-        assert!(!json.contains("syntax"), "{json}");
-        assert!(!json.contains("Comment"), "{json}");
     }
 
     #[test]

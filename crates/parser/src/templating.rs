@@ -199,7 +199,7 @@ mod tests {
 
     use super::*;
     use crate::context::ParseCtx;
-    use crate::{LoadedFile, ParseFileLoader, parse_with_ctx};
+    use crate::{LoadedFile, ParseFileLoader, parse};
 
     /// A loader resolving a source-root-relative path to itself, so these
     /// tests exercise templating rather than the worker's path arithmetic.
@@ -234,7 +234,7 @@ mod tests {
         let loader = FakeFiles::with(files);
         let context = [("release".to_string(), "3.14".to_string())];
         let ctx = ParseCtx::new(Domain::Py, &loader).with_jinja(&context);
-        parse_with_ctx("guide.rst", rst, &ctx)
+        parse("guide.rst", rst, &ctx).document
     }
 
     /// The text of every paragraph in `nodes`.
@@ -264,7 +264,7 @@ mod tests {
         let ctx = ParseCtx::new(Domain::Py, &loader);
 
         // When
-        let document = parse_with_ctx("guide.rst", rst, &ctx);
+        let document = parse("guide.rst", rst, &ctx).document;
 
         // Then it is parsed as the prose it literally is, and nothing is read
         assert_eq!(

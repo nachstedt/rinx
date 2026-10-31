@@ -2,7 +2,6 @@ use rinx_ast::{Diagnostic, DiagnosticCode, Directive, EntityUpdate, FieldMutatio
 use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
 use crate::context::ParseCtx;
-use crate::parse_with_ctx;
 
 /// The schema every test below parses against.
 fn schema() -> EntitySchema {
@@ -44,7 +43,7 @@ fn schema() -> EntitySchema {
 fn parse(rst: &str) -> rinx_ast::Document {
     let schema = schema();
     let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
-    parse_with_ctx("specs/boot", rst, &ctx)
+    crate::parse("specs/boot", rst, &ctx).document
 }
 
 /// The directive's own node, plus the document's diagnostics.

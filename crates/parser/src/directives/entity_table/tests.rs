@@ -2,7 +2,6 @@ use rinx_ast::{Directive, EntityTable, EntityTableSource, Node, TableWidths};
 use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
 use crate::context::ParseCtx;
-use crate::parse_with_ctx;
 
 /// The schema every test below parses against: one attribute, one relation and
 /// one derived back-link, which is every kind of field a column can name.
@@ -39,7 +38,7 @@ fn schema() -> EntitySchema {
 fn parse(rst: &str) -> rinx_ast::Document {
     let schema = schema();
     let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
-    parse_with_ctx("specs/boot", rst, &ctx)
+    crate::parse("specs/boot", rst, &ctx).document
 }
 
 /// The first entity table in `rst`.
@@ -402,7 +401,7 @@ fn test_the_directive_is_unknown_without_a_schema() {
     let rst = ".. entity-table::\n";
 
     // When
-    let doc = crate::parse("specs/boot", rst);
+    let doc = crate::parse_document("specs/boot", rst);
 
     // Then — it still parses as the directive, listing an empty project
     let parsed = doc

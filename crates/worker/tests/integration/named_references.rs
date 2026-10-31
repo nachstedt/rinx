@@ -10,7 +10,7 @@ use rinx_renderer as renderer;
 /// The rendered HTML of `input` as a document of its own, and the targets of
 /// its broken links.
 fn render(input: &str) -> (String, Vec<String>) {
-    let ast = parser::parse("page.rst", input);
+    let ast = parser::parse("page.rst", input, &parser::ParseCtx::default()).document;
     let index = analyzer::analyze(&ast);
     let output = renderer::render(&ast, &index, &ast.path);
     let broken = output

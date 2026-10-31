@@ -21,22 +21,24 @@
 use std::path::Path;
 
 use lsp_types::{DiagnosticRelatedInformation, DiagnosticSeverity, Location, Uri};
-use rinx_ast::{Document, IncludeSite};
+use rinx_ast::{Document, IncludeSite, SourceMap};
 
 use crate::diagnostics::{Placed, Placement, SOURCE};
 use crate::position::PositionEncoding;
 use crate::uri::file_path;
 
-/// A summary for every include site in `document` that brought in one of the
+/// A summary for every include site `source_map` records in `document` that
+/// brought in one of the
 /// diagnostics in `placed`, each with the URI of the file the `.. include::`
 /// is written in.
 pub(crate) fn summarize_includes(
     document: &Document,
+    source_map: &SourceMap,
     placed: &[Placed<'_>],
     placement: &Placement<'_>,
     encoding: PositionEncoding,
 ) -> Vec<(Uri, lsp_types::Diagnostic)> {
-    document
+    source_map
         .include_sites
         .iter()
         .filter_map(|site| {
@@ -44,7 +46,7 @@ pub(crate) fn summarize_includes(
             // A problem reported on the `.. include::` line itself — a file
             // including itself is reported there — is already in plain view.
             let related: Vec<DiagnosticRelatedInformation> =
-                related_problems(site, document, placed)
+                related_problems(site, &source_map.include_sites, placed)
                     .into_iter()
                     .filter(|related| {
                         related.location.uri != uri
@@ -79,10 +81,10 @@ pub(crate) fn summarize_includes(
 /// same mistake twice, at the same place.
 fn related_problems(
     site: &IncludeSite,
-    document: &Document,
+    sites: &[IncludeSite],
     placed: &[Placed<'_>],
 ) -> Vec<DiagnosticRelatedInformation> {
-    let reached = site.reached_files(&document.include_sites);
+    let reached = site.reached_files(sites);
     let mut related: Vec<DiagnosticRelatedInformation> = Vec::new();
     for found in placed {
         if found.judgement.severity != DiagnosticSeverity::WARNING {
@@ -140,6 +142,7 @@ mod tests {
     use crate::files::FileReads;
     use crate::project::Strictness;
     use rinx_ast::{Diagnostic, DiagnosticCode, DiagnosticSubject, FileId, Position, Span};
+    use rinx_parser::Parsed;
 
     fn uri(text: &str) -> Uri {
         text.parse().expect("valid uri")
@@ -149,26 +152,33 @@ mod tests {
         Span::new(Position::new(line, 1), Position::new(line, 2)).with_file(file.map(FileId::new))
     }
 
-    /// A document at `/docs/index.rst` that included `files`, through `sites`
-    /// (directive line, file written in, file brought in), finding `found`.
+    /// A parse of a document at `/docs/index.rst` that included `files`,
+    /// through `sites` (directive line, file written in, file brought in),
+    /// finding `found`.
     fn document(
         files: &[&str],
         sites: &[(u32, Option<u32>, u32)],
         found: Vec<Diagnostic>,
-    ) -> Document {
+    ) -> Parsed {
         let mut document = Document::new("/docs/index.rst".to_string(), Vec::new());
         for file in files {
             document.intern_source_file(*file);
         }
-        document.include_sites = sites
-            .iter()
-            .map(|(line, within, file)| IncludeSite {
-                directive: Some(span(*line, *within)),
-                file: FileId::new(*file),
-            })
-            .collect();
         document.diagnostics = found;
-        document
+        let source_map = SourceMap {
+            include_sites: sites
+                .iter()
+                .map(|(line, within, file)| IncludeSite {
+                    directive: Some(span(*line, *within)),
+                    file: FileId::new(*file),
+                })
+                .collect(),
+            ..SourceMap::default()
+        };
+        Parsed {
+            document,
+            source_map,
+        }
     }
 
     fn unknown(line: u32, file: u32) -> Diagnostic {
@@ -179,16 +189,17 @@ mod tests {
         )
     }
 
-    /// The summaries for `document`, whose fragments all read as `text`.
-    fn summaries(document: &Document) -> Vec<(Uri, lsp_types::Diagnostic)> {
-        summaries_under(document, &Strictness::default())
+    /// The summaries for `parsed`, whose fragments all read as `text`.
+    fn summaries(parsed: &Parsed) -> Vec<(Uri, lsp_types::Diagnostic)> {
+        summaries_under(parsed, &Strictness::default())
     }
 
     /// [`summaries`], for a document of a project with `strictness`.
     fn summaries_under(
-        document: &Document,
+        parsed: &Parsed,
         strictness: &Strictness,
     ) -> Vec<(Uri, lsp_types::Diagnostic)> {
+        let document = &parsed.document;
         let mut reads = FileReads::default();
         for file in &document.source_files {
             reads
@@ -217,7 +228,13 @@ mod tests {
                 }
             })
             .collect();
-        summarize_includes(document, &placed, &placement, PositionEncoding::Utf16)
+        summarize_includes(
+            document,
+            &parsed.source_map,
+            &placed,
+            &placement,
+            PositionEncoding::Utf16,
+        )
     }
 
     #[test]
@@ -273,7 +290,7 @@ mod tests {
     fn test_an_include_bringing_in_nothing_wrong_has_no_summary() {
         // Given a problem in the document itself, and a clean fragment
         let mut document = document(&["/docs/part.rst"], &[(1, None, 0)], Vec::new());
-        document.diagnostics = vec![Diagnostic::new(
+        document.document.diagnostics = vec![Diagnostic::new(
             DiagnosticCode::DirectiveUnknown,
             "own",
             span(4, None),
@@ -364,7 +381,11 @@ mod tests {
 
         // When / Then
         assert_eq!(
-            included_name(&document.include_sites[0], &document, None),
+            included_name(
+                &document.source_map.include_sites[0],
+                &document.document,
+                None
+            ),
             "/elsewhere/part.rst"
         );
     }
@@ -374,12 +395,12 @@ mod tests {
         // Given — the document named by its path within its source root, as a
         // workspace document is, and the fragment by where it is.
         let mut document = document(&["/work/docs/part.rst"], &[(1, None, 0)], Vec::new());
-        document.path = "index.rst".to_string();
+        document.document.path = "index.rst".to_string();
 
         // When
         let name = included_name(
-            &document.include_sites[0],
-            &document,
+            &document.source_map.include_sites[0],
+            &document.document,
             Some(Path::new("/work/docs/index.rst")),
         );
 

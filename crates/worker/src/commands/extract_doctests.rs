@@ -41,7 +41,9 @@ mod tests {
         let doc = parser::parse(
             "test.rst",
             ".. testcode::\n\n   print(1)\n\n.. testoutput::\n\n   1\n",
-        );
+            &parser::ParseCtx::default(),
+        )
+        .document;
         let ast_json = serde_json::to_string(&doc).unwrap();
 
         // When
@@ -57,7 +59,12 @@ mod tests {
     fn test_process_extract_doctests_emits_an_empty_plan_without_doctests() {
         // Given — every document gets a plan, so the Bazel action can be
         // declared unconditionally like the diagram extraction is.
-        let doc = parser::parse("test.rst", "Title\n=====\n\nProse.");
+        let doc = parser::parse(
+            "test.rst",
+            "Title\n=====\n\nProse.",
+            &parser::ParseCtx::default(),
+        )
+        .document;
         let ast_json = serde_json::to_string(&doc).unwrap();
 
         // When
@@ -71,7 +78,12 @@ mod tests {
     #[test]
     fn test_process_extract_doctests_fails_on_an_orphan_testoutput() {
         // Given
-        let doc = parser::parse("test.rst", ".. testoutput::\n\n   42\n");
+        let doc = parser::parse(
+            "test.rst",
+            ".. testoutput::\n\n   42\n",
+            &parser::ParseCtx::default(),
+        )
+        .document;
         let ast_json = serde_json::to_string(&doc).unwrap();
 
         // When
@@ -100,11 +112,15 @@ mod tests {
         let before = parser::parse(
             "test.rst",
             "Title\n=====\n\nOriginal prose.\n\n.. testcode::\n\n   print(1)\n",
-        );
+            &parser::ParseCtx::default(),
+        )
+        .document;
         let after = parser::parse(
             "test.rst",
             "Title\n=====\n\nRewritten, much longer prose.\n\n.. testcode::\n\n   print(1)\n",
-        );
+            &parser::ParseCtx::default(),
+        )
+        .document;
 
         // When
         let left = process_extract_doctests(&serde_json::to_string(&before).unwrap()).unwrap();

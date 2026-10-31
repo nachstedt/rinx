@@ -138,7 +138,7 @@ pub(super) fn parse_admonition(
 mod tests {
     use super::*;
     use crate::context::ParseCtx;
-    use crate::parse;
+    use crate::parse_document;
     use rinx_ast::{DiagnosticCode, Domain, InlineNode, Node, Position};
 
     /// Parses an admonition of `kind` titled `title`, with `body` below its
@@ -158,7 +158,7 @@ mod tests {
     }
 
     fn only_admonition(input: &str) -> (Option<String>, Option<bool>, Vec<Node>) {
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
         let [
             Node::Directive(Directive::Admonition {
                 title,
@@ -245,7 +245,7 @@ mod tests {
         let input = "Intro.\n\n.. admonition::\n\n   Body.\n";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let diagnostic = doc
@@ -263,7 +263,7 @@ mod tests {
         let input = ".. note::\n   :collapsible:\n\n   .. bogus::\n";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let lines: Vec<u32> = doc
@@ -358,7 +358,7 @@ mod tests {
         let input = ".. note:: See :pep:`eight`.\n   And :pep:`nine`.\n";
 
         // When
-        let doc = parse("test.rst", input);
+        let doc = parse_document("test.rst", input);
 
         // Then
         let starts: Vec<Position> = doc
