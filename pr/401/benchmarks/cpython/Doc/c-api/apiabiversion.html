@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API and ABI Versioning — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python&#x2f;C API Reference Manual</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python&#x2f;C API Reference Manual"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stable.html">C API Stability</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="veryhigh.html">The Very High Level Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="refcounting.html">Reference Counting</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Exception Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="extension-modules.html">Defining extension modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="utilities.html">Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="abstract.html">Abstract Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concrete.html">Concrete Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init.html">Initialization, Finalization, and Threads</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init_config.html">Python Initialization Configuration</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="memory.html">Memory Management</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="objimpl.html">Object Implementation Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="apiabiversion.html">API and ABI Versioning</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle API and ABI Versioning"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="apiabiversion.html#build-time-version-constants">Build-time version constants</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="apiabiversion.html#run-time-version">Run-time version</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="apiabiversion.html#bit-packing-macros">Bit-packing macros</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="monitoring.html">Monitoring C API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="gcsupport.html">&larr; Supporting Cyclic Garbage Collection</a>
+        <a class="next" href="monitoring.html">Monitoring C API &rarr;</a>
+      </nav>
+      
+      <a id="apiabiversion"></a>
+<h1 id="api-and-abi-versioning">API and ABI Versioning</h1>
+<h2 id="build-time-version-constants">Build-time version constants</h2>
+<p>CPython exposes its version number in the following macros.
+Note that these correspond to the version code is <strong>built</strong> with.
+See <a class="reference internal" href="apiabiversion.html#c:member:py_version"><code class="xref c member docutils literal">Py_Version</code></a> for the version used at <strong>run time</strong>.</p>
+<p>See <a href="stable.html#stable">C API Stability</a> for a discussion of API and ABI stability across versions.</p>
+<dl class="c macro">
+  <dt id="c:macro:py_major_version"><code class="sig-name">PY_MAJOR_VERSION</code></dt>
+  <dd><p>The <code>3</code> in <code>3.4.1a2</code>.</p>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:py_minor_version"><code class="sig-name">PY_MINOR_VERSION</code></dt>
+  <dd><p>The <code>4</code> in <code>3.4.1a2</code>.</p>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:py_micro_version"><code class="sig-name">PY_MICRO_VERSION</code></dt>
+  <dd><p>The <code>1</code> in <code>3.4.1a2</code>.</p>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:py_release_level"><code class="sig-name">PY_RELEASE_LEVEL</code></dt>
+  <dd><p>The <code>a</code> in <code>3.4.1a2</code>.
+This can be <code>0xA</code> for alpha, <code>0xB</code> for beta, <code>0xC</code> for release
+candidate or <code>0xF</code> for final.</p>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:py_release_serial"><code class="sig-name">PY_RELEASE_SERIAL</code></dt>
+  <dd><p>The <code>2</code> in <code>3.4.1a2</code>. Zero for final releases.</p>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:py_version_hex"><code class="sig-name">PY_VERSION_HEX</code></dt>
+  <dd><p>The Python version number encoded in a single integer.
+See <a class="reference internal" href="apiabiversion.html#c:function:py_pack_full_version"><code class="xref c function docutils literal">Py_PACK_FULL_VERSION</code></a> for the encoding details.</p>
+<p>Use this for numeric comparisons, for example,
+<code>#if PY_VERSION_HEX &gt;= ...</code>.</p>
+</dd>
+</dl>
+<h2 id="run-time-version">Run-time version</h2>
+<dl class="c member">
+  <dt id="c:member:py_version"><code class="sig-name">const unsigned long Py_Version</code></dt>
+  <dd><p>The Python runtime version number encoded in a single constant integer.
+See <a class="reference internal" href="apiabiversion.html#c:function:py_pack_full_version"><code class="xref c function docutils literal">Py_PACK_FULL_VERSION</code></a> for the encoding details.
+This contains the Python version used at run time.</p>
+<p>Use this for numeric comparisons, for example, <code>if (Py_Version &gt;= ...)</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<h2 id="bit-packing-macros">Bit-packing macros</h2>
+<dl class="c function">
+  <dt id="c:function:py_pack_full_version"><code class="sig-name">uint32_t Py_PACK_FULL_VERSION(int major, int minor, int micro, int release_level, int release_serial)</code></dt>
+  <dd><p>Return the given version, encoded as a single 32-bit integer with
+the following structure:</p>
+<table>
+<thead>
+<tr>
+<th rowspan="2"><p>Argument</p>
+</th>
+<th rowspan="2"><p>No.
+of
+bits</p>
+</th>
+<th rowspan="2"><p>Bit mask</p>
+</th>
+<th rowspan="2"><p>Bit shift</p>
+</th>
+<th colspan="2"><p>Example values</p>
+</th>
+</tr>
+<tr>
+<th><p><code>3.4.1a2</code></p>
+</th>
+<th><p><code>3.10.0</code></p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><em>major</em></p>
+</td>
+<td><p>8</p>
+</td>
+<td><p><code>0xFF000000</code></p>
+</td>
+<td><p>24</p>
+</td>
+<td><p><code>0x03</code></p>
+</td>
+<td><p><code>0x03</code></p>
+</td>
+</tr>
+<tr>
+<td><p><em>minor</em></p>
+</td>
+<td><p>8</p>
+</td>
+<td><p><code>0x00FF0000</code></p>
+</td>
+<td><p>16</p>
+</td>
+<td><p><code>0x04</code></p>
+</td>
+<td><p><code>0x0A</code></p>
+</td>
+</tr>
+<tr>
+<td><p><em>micro</em></p>
+</td>
+<td><p>8</p>
+</td>
+<td><p><code>0x0000FF00</code></p>
+</td>
+<td><p>8</p>
+</td>
+<td><p><code>0x01</code></p>
+</td>
+<td><p><code>0x00</code></p>
+</td>
+</tr>
+<tr>
+<td><p><em>release_level</em></p>
+</td>
+<td><p>4</p>
+</td>
+<td><p><code>0x000000F0</code></p>
+</td>
+<td><p>4</p>
+</td>
+<td><p><code>0xA</code></p>
+</td>
+<td><p><code>0xF</code></p>
+</td>
+</tr>
+<tr>
+<td><p><em>release_serial</em></p>
+</td>
+<td><p>4</p>
+</td>
+<td><p><code>0x0000000F</code></p>
+</td>
+<td><p>0</p>
+</td>
+<td><p><code>0x2</code></p>
+</td>
+<td><p><code>0x0</code></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>For example:</p>
+<table>
+<thead>
+<tr>
+<th><p>Version</p>
+</th>
+<th><p><code>Py_PACK_FULL_VERSION</code> arguments</p>
+</th>
+<th><p>Encoded version</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>3.4.1a2</code></p>
+</td>
+<td><p><code>(3, 4, 1, 0xA, 2)</code></p>
+</td>
+<td><p><code>0x030401a2</code></p>
+</td>
+</tr>
+<tr>
+<td><p><code>3.10.0</code></p>
+</td>
+<td><p><code>(3, 10, 0, 0xF, 0)</code></p>
+</td>
+<td><p><code>0x030a00f0</code></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Out-of range bits in the arguments are ignored.
+That is, the macro can be defined as:</p>
+<div class="highlight-c notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-meta hl-preprocessor hl-c"><span class="hl-keyword hl-control hl-import hl-c">#ifndef</span> Py_PACK_FULL_VERSION
+</span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-preprocessor hl-macro hl-c"><span class="hl-keyword hl-control hl-import hl-define hl-c">#define</span></span><span class="hl-meta hl-preprocessor hl-macro hl-c"> <span class="hl-entity hl-name hl-function hl-preprocessor hl-c">Py_PACK_FULL_VERSION</span></span><span class="hl-meta hl-preprocessor hl-macro hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-variable hl-parameter hl-c">X</span><span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-variable hl-parameter hl-c">Y</span><span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-variable hl-parameter hl-c">Z</span><span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-variable hl-parameter hl-c">LEVEL</span><span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-variable hl-parameter hl-c">SERIAL</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-meta hl-preprocessor hl-macro hl-c"> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span> \</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-preprocessor hl-macro hl-c"><span class="hl-meta hl-group hl-c">   <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>X<span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-keyword hl-operator hl-c">&amp;</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-c"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-c">0x</span>ff</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">&lt;&lt;</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">24</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">|</span>                              \</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-preprocessor hl-macro hl-c"><span class="hl-meta hl-group hl-c">   <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>Y<span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-keyword hl-operator hl-c">&amp;</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-c"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-c">0x</span>ff</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">&lt;&lt;</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">16</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">|</span>                              \</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-preprocessor hl-macro hl-c"><span class="hl-meta hl-group hl-c">   <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>Z<span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-keyword hl-operator hl-c">&amp;</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-c"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-c">0x</span>ff</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">&lt;&lt;</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">8</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">|</span>                               \</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-preprocessor hl-macro hl-c"><span class="hl-meta hl-group hl-c">   <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>LEVEL<span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-keyword hl-operator hl-c">&amp;</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-c"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-c">0x</span>f</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">&lt;&lt;</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">4</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">|</span>                            \</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-preprocessor hl-macro hl-c"><span class="hl-meta hl-group hl-c">   <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>SERIAL<span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-keyword hl-operator hl-c">&amp;</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-c"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-c">0x</span>f</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">&lt;&lt;</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">0</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-preprocessor hl-c"><span class="hl-keyword hl-control hl-import hl-c">#endif</span></span></span></pre></div>
+</div>
+<p><code>Py_PACK_FULL_VERSION</code> is primarily a macro, intended for use in
+<code>#if</code> directives, but it is also available as an exported function.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_pack_version"><code class="sig-name">uint32_t Py_PACK_VERSION(int major, int minor)</code></dt>
+  <dd><p>Equivalent to <code>Py_PACK_FULL_VERSION(major, minor, 0, 0, 0)</code>.
+The result does not correspond to any Python release, but is useful
+in numeric comparisons.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="gcsupport.html">&larr; Supporting Cyclic Garbage Collection</a>
+        <a class="next" href="monitoring.html">Monitoring C API &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

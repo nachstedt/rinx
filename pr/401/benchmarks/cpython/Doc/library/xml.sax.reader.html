@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>xml.sax.xmlreader — Interface for XML parsers — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Structured Markup Processing Tools"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="html.html">html — HyperText Markup Language support</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="html.parser.html">html.parser — Simple HTML and XHTML parser</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="html.entities.html">html.entities — Definitions of HTML general entities</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.html">XML Processing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.etree.elementtree.html">xml.etree.ElementTree — The ElementTree XML API</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.dom.html">xml.dom — The Document Object Model API</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.dom.minidom.html">xml.dom.minidom — Minimal DOM implementation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.dom.pulldom.html">xml.dom.pulldom — Support for building partial DOM trees</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.sax.html">xml.sax — Support for SAX2 parsers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.sax.handler.html">xml.sax.handler — Base classes for SAX handlers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.sax.utils.html">xml.sax.saxutils — SAX Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="xml.sax.reader.html">xml.sax.xmlreader — Interface for XML parsers</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle xml.sax.xmlreader — Interface for XML parsers"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="xml.sax.reader.html#xmlreader-objects">XMLReader Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="xml.sax.reader.html#incrementalparser-objects">IncrementalParser Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="xml.sax.reader.html#locator-objects">Locator Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="xml.sax.reader.html#inputsource-objects">InputSource Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="xml.sax.reader.html#the-attributes-interface">The Attributes Interface</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="xml.sax.reader.html#the-attributesns-interface">The AttributesNS Interface</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pyexpat.html">xml.parsers.expat — Fast XML parsing using Expat</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="xml.sax.utils.html">&larr; xml.sax.saxutils — SAX Utilities</a>
+        <a class="next" href="pyexpat.html">xml.parsers.expat — Fast XML parsing using Expat &rarr;</a>
+      </nav>
+      
+      <h1 id="xml-sax-xmlreader-interface-for-xml-parsers"><code class="xref py module docutils literal">xml.sax.xmlreader</code> — Interface for XML parsers</h1>
+<dl class="py module">
+  <dt id="py:module:xml.sax.xmlreader"><code class="sig-name">xml.sax.xmlreader</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'moduleauthor'</p>
+<pre class="directive-error-source">.. moduleauthor:: Lars Marius Garshol &lt;larsga@garshol.priv.no&gt;</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Martin v. Löwis &lt;martin@v.loewis.de&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/xml/sax/xmlreader.py`</p>
+<hr />
+<p>SAX parsers implement the <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.xmlreader"><code class="xref py class docutils literal">XMLReader</code></a> interface. They are implemented in
+a Python module, which must provide a function <a href="#" class="broken-link"><code class="xref py function docutils literal">create_parser</code></a>. This
+function is invoked by  <a class="reference internal" href="xml.sax.html#py:function:xml.sax.make_parser"><code class="xref py function docutils literal">xml.sax.make_parser</code></a> with no arguments to create
+a new  parser object.</p>
+<dl class="py class">
+  <dt id="py:class:xml.sax.xmlreader.xmlreader"><em class="property">class</em> <code class="sig-name">XMLReader()</code></dt>
+  <dd><p>Base class which can be inherited by SAX parsers.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:xml.sax.xmlreader.incrementalparser"><em class="property">class</em> <code class="sig-name">IncrementalParser()</code></dt>
+  <dd><p>In some cases, it is desirable not to parse an input source at once, but to feed
+chunks of the document as they get available. Note that the reader will normally
+not read the entire file, but read it in chunks as well; still <a href="#" class="broken-link"><code class="xref py method docutils literal">parse</code></a>
+won't return until the entire document is processed. So these interfaces should
+be used if the blocking behaviour of <a href="#" class="broken-link"><code class="xref py method docutils literal">parse</code></a> is not desirable.</p>
+<p>When the parser is instantiated it is ready to begin accepting data from the
+feed method immediately. After parsing has been finished with a call to close
+the reset method must be called to make the parser ready to accept new data,
+either from feed or using the parse method.</p>
+<p>Note that these methods must <em>not</em> be called during parsing, that is, after
+parse has been called and before it returns.</p>
+<p>By default, the class also implements the parse method of the XMLReader
+interface using the feed, close and reset methods of the IncrementalParser
+interface as a convenience to SAX 2.0 driver writers.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:xml.sax.xmlreader.locator"><em class="property">class</em> <code class="sig-name">Locator()</code></dt>
+  <dd><p>Interface for associating a SAX event with a document location. A locator object
+will return valid results only during calls to DocumentHandler methods; at any
+other time, the results are unpredictable. If information is not available,
+methods may return <code>None</code>.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:xml.sax.xmlreader.inputsource"><em class="property">class</em> <code class="sig-name">InputSource(system_id=None)</code></dt>
+  <dd><p>Encapsulation of the information needed by the <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.xmlreader"><code class="xref py class docutils literal">XMLReader</code></a> to read
+entities.</p>
+<p>This class may include information about the public identifier, system
+identifier, byte stream (possibly with character encoding information) and/or
+the character stream of an entity.</p>
+<p>Applications will create objects of this class for use in the
+<a class="reference internal" href="xml.sax.reader.html#py:method:xml.sax.xmlreader.xmlreader.parse"><code class="xref py method docutils literal">XMLReader.parse</code></a> method and for returning from
+EntityResolver.resolveEntity.</p>
+<p>An <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.inputsource"><code class="xref py class docutils literal">InputSource</code></a> belongs to the application, the <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.xmlreader"><code class="xref py class docutils literal">XMLReader</code></a> is
+not allowed to modify <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.inputsource"><code class="xref py class docutils literal">InputSource</code></a> objects passed to it from the
+application, although it may make copies and modify those.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:xml.sax.xmlreader.attributesimpl"><em class="property">class</em> <code class="sig-name">AttributesImpl(attrs)</code></dt>
+  <dd><p>This is an implementation of the <a href="#" class="broken-link"><code class="xref py class docutils literal">Attributes</code></a> interface (see section
+<a href="xml.sax.reader.html#attributes-objects">The Attributes Interface</a>).  This is a dictionary-like object which
+represents the element attributes in a <a href="#" class="broken-link"><code class="xref py method docutils literal">startElement</code></a> call. In addition
+to the most useful dictionary operations, it supports a number of other
+methods as described by the interface. Objects of this class should be
+instantiated by readers; <em>attrs</em> must be a dictionary-like object containing
+a mapping from attribute names to attribute values.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:xml.sax.xmlreader.attributesnsimpl"><em class="property">class</em> <code class="sig-name">AttributesNSImpl(attrs, qnames)</code></dt>
+  <dd><p>Namespace-aware variant of <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.attributesimpl"><code class="xref py class docutils literal">AttributesImpl</code></a>, which will be passed to
+<a href="#" class="broken-link"><code class="xref py method docutils literal">startElementNS</code></a>. It is derived from <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.attributesimpl"><code class="xref py class docutils literal">AttributesImpl</code></a>, but
+understands attribute names as two-tuples of <em>namespaceURI</em> and
+<em>localname</em>. In addition, it provides a number of methods expecting qualified
+names as they appear in the original document.  This class implements the
+<a href="#" class="broken-link"><code class="xref py class docutils literal">AttributesNS</code></a> interface (see section <a href="xml.sax.reader.html#attributes-ns-objects">The AttributesNS Interface</a>).</p>
+</dd>
+</dl>
+<a id="xmlreader-objects"></a>
+<h2 id="xmlreader-objects">XMLReader Objects</h2>
+<p>The <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.xmlreader"><code class="xref py class docutils literal">XMLReader</code></a> interface supports the following methods:</p>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.xmlreader.parse"><code class="sig-name">XMLReader.parse(source)</code></dt>
+  <dd><p>Process an input source, producing SAX events. The <em>source</em> object can be a
+system identifier (a string identifying the input source – typically a file
+name or a URL), a <a class="reference internal" href="pathlib.html#py:class:pathlib.path"><code class="xref py class docutils literal">pathlib.Path</code></a> or <a class="reference internal" href="../glossary.html#term-path-like-object"><span class="xref std std-term">path-like</span></a>
+object, or an <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.inputsource"><code class="xref py class docutils literal">InputSource</code></a> object. When
+<a class="reference internal" href="xml.sax.reader.html#py:method:xml.sax.xmlreader.xmlreader.parse"><code class="xref py method docutils literal">parse</code></a> returns, the input is completely processed, and the parser object
+can be discarded or reset.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Added support of character streams.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
+<p>Added support of path-like objects.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.xmlreader.getcontenthandler"><code class="sig-name">XMLReader.getContentHandler()</code></dt>
+  <dd><p>Return the current <a class="reference internal" href="xml.sax.handler.html#py:class:xml.sax.handler.contenthandler"><code class="xref py class docutils literal">ContentHandler</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.xmlreader.setcontenthandler"><code class="sig-name">XMLReader.setContentHandler(handler)</code></dt>
+  <dd><p>Set the current <a class="reference internal" href="xml.sax.handler.html#py:class:xml.sax.handler.contenthandler"><code class="xref py class docutils literal">ContentHandler</code></a>.  If no
+<a class="reference internal" href="xml.sax.handler.html#py:class:xml.sax.handler.contenthandler"><code class="xref py class docutils literal">ContentHandler</code></a> is set, content events will be
+discarded.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.xmlreader.getdtdhandler"><code class="sig-name">XMLReader.getDTDHandler()</code></dt>
+  <dd><p>Return the current <a class="reference internal" href="xml.sax.handler.html#py:class:xml.sax.handler.dtdhandler"><code class="xref py class docutils literal">DTDHandler</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.xmlreader.setdtdhandler"><code class="sig-name">XMLReader.setDTDHandler(handler)</code></dt>
+  <dd><p>Set the current <a class="reference internal" href="xml.sax.handler.html#py:class:xml.sax.handler.dtdhandler"><code class="xref py class docutils literal">DTDHandler</code></a>.  If no
+<a class="reference internal" href="xml.sax.handler.html#py:class:xml.sax.handler.dtdhandler"><code class="xref py class docutils literal">DTDHandler</code></a> is set, DTD
+events will be discarded.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.xmlreader.getentityresolver"><code class="sig-name">XMLReader.getEntityResolver()</code></dt>
+  <dd><p>Return the current <a class="reference internal" href="xml.sax.handler.html#py:class:xml.sax.handler.entityresolver"><code class="xref py class docutils literal">EntityResolver</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.xmlreader.setentityresolver"><code class="sig-name">XMLReader.setEntityResolver(handler)</code></dt>
+  <dd><p>Set the current <a class="reference internal" href="xml.sax.handler.html#py:class:xml.sax.handler.entityresolver"><code class="xref py class docutils literal">EntityResolver</code></a>.  If no
+<a class="reference internal" href="xml.sax.handler.html#py:class:xml.sax.handler.entityresolver"><code class="xref py class docutils literal">EntityResolver</code></a> is set,
+attempts to resolve an external entity will result in opening the system
+identifier for the entity, and fail if it is not available.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.xmlreader.geterrorhandler"><code class="sig-name">XMLReader.getErrorHandler()</code></dt>
+  <dd><p>Return the current <a class="reference internal" href="xml.sax.handler.html#py:class:xml.sax.handler.errorhandler"><code class="xref py class docutils literal">ErrorHandler</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.xmlreader.seterrorhandler"><code class="sig-name">XMLReader.setErrorHandler(handler)</code></dt>
+  <dd><p>Set the current error handler.  If no <a class="reference internal" href="xml.sax.handler.html#py:class:xml.sax.handler.errorhandler"><code class="xref py class docutils literal">ErrorHandler</code></a>
+is set, errors will be raised as exceptions, and warnings will be printed.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.xmlreader.setlocale"><code class="sig-name">XMLReader.setLocale(locale)</code></dt>
+  <dd><p>Allow an application to set the locale for errors and warnings.</p>
+<p>SAX parsers are not required to provide localization for errors and warnings; if
+they cannot support the requested locale, however, they must raise a SAX
+exception.  Applications may request a locale change in the middle of a parse.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.xmlreader.getfeature"><code class="sig-name">XMLReader.getFeature(featurename)</code></dt>
+  <dd><p>Return the current setting for feature <em>featurename</em>.  If the feature is not
+recognized, <a href="#" class="broken-link"><code class="xref py exception docutils literal">SAXNotRecognizedException</code></a> is raised. The well-known
+featurenames are listed in the module <a class="reference internal" href="xml.sax.handler.html#py:module:xml.sax.handler" title="xml.sax.handler: Base classes for SAX event handlers."><code class="xref py module docutils literal">xml.sax.handler</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.xmlreader.setfeature"><code class="sig-name">XMLReader.setFeature(featurename, value)</code></dt>
+  <dd><p>Set the <em>featurename</em> to <em>value</em>. If the feature is not recognized,
+<a href="#" class="broken-link"><code class="xref py exception docutils literal">SAXNotRecognizedException</code></a> is raised. If the feature or its setting is not
+supported by the parser, <em>SAXNotSupportedException</em> is raised.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.xmlreader.getproperty"><code class="sig-name">XMLReader.getProperty(propertyname)</code></dt>
+  <dd><p>Return the current setting for property <em>propertyname</em>. If the property is not
+recognized, a <a href="#" class="broken-link"><code class="xref py exception docutils literal">SAXNotRecognizedException</code></a> is raised. The well-known
+propertynames are listed in the module <a class="reference internal" href="xml.sax.handler.html#py:module:xml.sax.handler" title="xml.sax.handler: Base classes for SAX event handlers."><code class="xref py module docutils literal">xml.sax.handler</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.xmlreader.setproperty"><code class="sig-name">XMLReader.setProperty(propertyname, value)</code></dt>
+  <dd><p>Set the <em>propertyname</em> to <em>value</em>. If the property is not recognized,
+<a href="#" class="broken-link"><code class="xref py exception docutils literal">SAXNotRecognizedException</code></a> is raised. If the property or its setting is
+not supported by the parser, <em>SAXNotSupportedException</em> is raised.</p>
+</dd>
+</dl>
+<a id="incremental-parser-objects"></a>
+<h2 id="incrementalparser-objects">IncrementalParser Objects</h2>
+<p>Instances of <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.incrementalparser"><code class="xref py class docutils literal">IncrementalParser</code></a> offer the following additional methods:</p>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.incrementalparser.feed"><code class="sig-name">IncrementalParser.feed(data)</code></dt>
+  <dd><p>Process a chunk of <em>data</em>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.incrementalparser.close"><code class="sig-name">IncrementalParser.close()</code></dt>
+  <dd><p>Assume the end of the document. That will check well-formedness conditions that
+can be checked only at the end, invoke handlers, and may clean up resources
+allocated during parsing.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.incrementalparser.reset"><code class="sig-name">IncrementalParser.reset()</code></dt>
+  <dd><p>This method is called after close has been called to reset the parser so that it
+is ready to parse new documents. The results of calling parse or feed after
+close without calling reset are undefined.</p>
+</dd>
+</dl>
+<a id="locator-objects"></a>
+<h2 id="locator-objects">Locator Objects</h2>
+<p>Instances of <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.locator"><code class="xref py class docutils literal">Locator</code></a> provide these methods:</p>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.locator.getcolumnnumber"><code class="sig-name">Locator.getColumnNumber()</code></dt>
+  <dd><p>Return the column number where the current event begins.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.locator.getlinenumber"><code class="sig-name">Locator.getLineNumber()</code></dt>
+  <dd><p>Return the line number where the current event begins.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.locator.getpublicid"><code class="sig-name">Locator.getPublicId()</code></dt>
+  <dd><p>Return the public identifier for the current event.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.locator.getsystemid"><code class="sig-name">Locator.getSystemId()</code></dt>
+  <dd><p>Return the system identifier for the current event.</p>
+</dd>
+</dl>
+<a id="input-source-objects"></a>
+<h2 id="inputsource-objects">InputSource Objects</h2>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.inputsource.setpublicid"><code class="sig-name">InputSource.setPublicId(id)</code></dt>
+  <dd><p>Sets the public identifier of this <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.inputsource"><code class="xref py class docutils literal">InputSource</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.inputsource.getpublicid"><code class="sig-name">InputSource.getPublicId()</code></dt>
+  <dd><p>Returns the public identifier of this <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.inputsource"><code class="xref py class docutils literal">InputSource</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.inputsource.setsystemid"><code class="sig-name">InputSource.setSystemId(id)</code></dt>
+  <dd><p>Sets the system identifier of this <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.inputsource"><code class="xref py class docutils literal">InputSource</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.inputsource.getsystemid"><code class="sig-name">InputSource.getSystemId()</code></dt>
+  <dd><p>Returns the system identifier of this <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.inputsource"><code class="xref py class docutils literal">InputSource</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.inputsource.setencoding"><code class="sig-name">InputSource.setEncoding(encoding)</code></dt>
+  <dd><p>Sets the character encoding of this <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.inputsource"><code class="xref py class docutils literal">InputSource</code></a>.</p>
+<p>The encoding must be a string acceptable for an XML encoding declaration (see
+section 4.3.3 of the XML recommendation).</p>
+<p>The encoding attribute of the <a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.inputsource"><code class="xref py class docutils literal">InputSource</code></a> is ignored if the
+<a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.inputsource"><code class="xref py class docutils literal">InputSource</code></a> also contains a character stream.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.inputsource.getencoding"><code class="sig-name">InputSource.getEncoding()</code></dt>
+  <dd><p>Get the character encoding of this InputSource.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.inputsource.setbytestream"><code class="sig-name">InputSource.setByteStream(bytefile)</code></dt>
+  <dd><p>Set the byte stream (a <a class="reference internal" href="../glossary.html#term-binary-file"><span class="xref std std-term">binary file</span></a>) for this input source.</p>
+<p>The SAX parser will ignore this if there is also a character stream specified,
+but it will use a byte stream in preference to opening a URI connection itself.</p>
+<p>If the application knows the character encoding of the byte stream, it should
+set it with the setEncoding method.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.inputsource.getbytestream"><code class="sig-name">InputSource.getByteStream()</code></dt>
+  <dd><p>Get the byte stream for this input source.</p>
+<p>The getEncoding method will return the character encoding for this byte stream,
+or <code>None</code> if unknown.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.inputsource.setcharacterstream"><code class="sig-name">InputSource.setCharacterStream(charfile)</code></dt>
+  <dd><p>Set the character stream (a <a class="reference internal" href="../glossary.html#term-text-file"><span class="xref std std-term">text file</span></a>) for this input source.</p>
+<p>If there is a character stream specified, the SAX parser will ignore any byte
+stream and will not attempt to open a URI connection to the system identifier.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.inputsource.getcharacterstream"><code class="sig-name">InputSource.getCharacterStream()</code></dt>
+  <dd><p>Get the character stream for this input source.</p>
+</dd>
+</dl>
+<a id="attributes-objects"></a>
+<h2 id="the-attributes-interface">The <a href="#" class="broken-link"><code class="xref py class docutils literal">Attributes</code></a> Interface</h2>
+<p><a href="#" class="broken-link"><code class="xref py class docutils literal">Attributes</code></a> objects implement a portion of the <a class="reference internal" href="../glossary.html#term-mapping"><span class="xref std std-term">mapping protocol</span></a>, including the methods <a href="#" class="broken-link"><code class="xref py method docutils literal">copy</code></a>,
+<a href="#" class="broken-link"><code class="xref py method docutils literal">get</code></a>, <a class="reference internal" href="../reference/datamodel.html#py:method:object.__contains__"><code class="xref py method docutils literal">__contains__</code></a>,
+<a href="#" class="broken-link"><code class="xref py method docutils literal">items</code></a>, <a href="#" class="broken-link"><code class="xref py method docutils literal">keys</code></a>,
+and <a href="#" class="broken-link"><code class="xref py method docutils literal">values</code></a>.  The following methods
+are also provided:</p>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.attributes.getlength"><code class="sig-name">Attributes.getLength()</code></dt>
+  <dd><p>Return the number of attributes.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.attributes.getnames"><code class="sig-name">Attributes.getNames()</code></dt>
+  <dd><p>Return the names of the attributes.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.attributes.gettype"><code class="sig-name">Attributes.getType(name)</code></dt>
+  <dd><p>Returns the type of the attribute <em>name</em>, which is normally <code>'CDATA'</code>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.attributes.getvalue"><code class="sig-name">Attributes.getValue(name)</code></dt>
+  <dd><p>Return the value of attribute <em>name</em>.</p>
+</dd>
+</dl>
+<a id="attributes-ns-objects"></a>
+<h2 id="the-attributesns-interface">The <a href="#" class="broken-link"><code class="xref py class docutils literal">AttributesNS</code></a> Interface</h2>
+<p>This interface is a subtype of the <a href="#" class="broken-link"><code class="xref py class docutils literal">Attributes</code></a> interface (see section
+<a href="xml.sax.reader.html#attributes-objects">The Attributes Interface</a>).  All methods supported by that interface are also
+available on <a href="#" class="broken-link"><code class="xref py class docutils literal">AttributesNS</code></a> objects.</p>
+<p>The following methods are also available:</p>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.attributesns.getvaluebyqname"><code class="sig-name">AttributesNS.getValueByQName(name)</code></dt>
+  <dd><p>Return the value for a qualified name.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.attributesns.getnamebyqname"><code class="sig-name">AttributesNS.getNameByQName(name)</code></dt>
+  <dd><p>Return the <code>(namespace, localname)</code> pair for a qualified <em>name</em>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.attributesns.getqnamebyname"><code class="sig-name">AttributesNS.getQNameByName(name)</code></dt>
+  <dd><p>Return the qualified name for a <code>(namespace, localname)</code> pair.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.sax.xmlreader.attributesns.getqnames"><code class="sig-name">AttributesNS.getQNames()</code></dt>
+  <dd><p>Return the qualified names of all attributes.</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="xml.sax.utils.html">&larr; xml.sax.saxutils — SAX Utilities</a>
+        <a class="next" href="pyexpat.html">xml.parsers.expat — Fast XML parsing using Expat &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
