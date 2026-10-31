@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python Development Mode — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="development.html">Development Tools</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Development Tools"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="typing.html">typing — Support for type hints</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pydoc.html">pydoc — Documentation generator and online help system</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="devmode.html">Python Development Mode</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python Development Mode"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="devmode.html#effects-of-the-python-development-mode">Effects of the Python Development Mode</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="devmode.html#resourcewarning-example">ResourceWarning Example</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="devmode.html#bad-file-descriptor-error-example">Bad file descriptor error example</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="doctest.html">doctest — Test interactive Python examples</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="unittest.html">unittest — Unit testing framework</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="unittest.mock.html">unittest.mock — mock object library</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="unittest.mock-examples.html">unittest.mock — getting started</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="test.html">test — Regression tests package for Python</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="pydoc.html">&larr; pydoc — Documentation generator and online help system</a>
+        <a class="next" href="doctest.html">doctest — Test interactive Python examples &rarr;</a>
+      </nav>
+      
+      <a id="devmode"></a>
+<h1 id="python-development-mode">Python Development Mode</h1>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+<p>The Python Development Mode introduces additional runtime checks that are too
+expensive to be enabled by default. It should not be more verbose than the
+default if the code is correct; new warnings are only emitted when an issue is
+detected.</p>
+<p>It can be enabled using the <a class="reference internal" href="../using/cmdline.html#std:cmdoption:-x"><code class="xref std cmdoption docutils literal">-X dev</code></a> command line option or by
+setting the :envvar:`PYTHONDEVMODE` environment variable to <code>1</code>.</p>
+<p>See also <a href="../using/configure.html#debug-build">Python debug build</a>.</p>
+<h2 id="effects-of-the-python-development-mode">Effects of the Python Development Mode</h2>
+<p>Enabling the Python Development Mode is similar to the following command, but
+with additional effects described below:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">PYTHONMALLOC</span></span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">debug</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">PYTHONASYNCIODEBUG</span></span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">python</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">W</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">default</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">X</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">faulthandler</span></span></span></pre></div>
+<p>Effects of the Python Development Mode:</p>
+<ul>
+<li><p>Add <code>default</code> <a href="warnings.html#describing-warning-filters">warning filter</a>. The
+following warnings are shown:</p>
+<ul>
+<li><p><a class="reference internal" href="exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a></p>
+</li>
+<li><p><a class="reference internal" href="exceptions.html#py:exception:importwarning"><code class="xref py exception docutils literal">ImportWarning</code></a></p>
+</li>
+<li><p><a class="reference internal" href="exceptions.html#py:exception:pendingdeprecationwarning"><code class="xref py exception docutils literal">PendingDeprecationWarning</code></a></p>
+</li>
+<li><p><a class="reference internal" href="exceptions.html#py:exception:resourcewarning"><code class="xref py exception docutils literal">ResourceWarning</code></a></p>
+</li>
+</ul>
+<p>Normally, the above warnings are filtered by the default <a href="warnings.html#describing-warning-filters">warning
+filters</a>.</p>
+<p>It behaves as if the <a class="reference internal" href="../using/cmdline.html#std:cmdoption:-w"><code class="xref std cmdoption docutils literal">-W default</code></a> command line option is used.</p>
+<p>Use the <a class="reference internal" href="../using/cmdline.html#std:cmdoption:-w"><code class="xref std cmdoption docutils literal">-W error</code></a> command line option or set the
+:envvar:`PYTHONWARNINGS` environment variable to <code>error</code> to treat warnings
+as errors.</p>
+</li>
+<li><p>Install debug hooks on memory allocators to check for:</p>
+<ul>
+<li><p>Buffer underflow</p>
+</li>
+<li><p>Buffer overflow</p>
+</li>
+<li><p>Memory allocator API violation</p>
+</li>
+<li><p>Unsafe usage of the GIL</p>
+</li>
+</ul>
+<p>See the <a class="reference internal" href="../c-api/memory.html#c:function:pymem_setupdebughooks"><code class="xref c function docutils literal">PyMem_SetupDebugHooks</code></a> C function.</p>
+<p>It behaves as if the :envvar:`PYTHONMALLOC` environment variable is set to
+<code>debug</code>.</p>
+<p>To enable the Python Development Mode without installing debug hooks on
+memory allocators, set the :envvar:`PYTHONMALLOC` environment variable to
+<code>default</code>.</p>
+</li>
+<li><p>Call <a class="reference internal" href="faulthandler.html#py:function:faulthandler.enable"><code class="xref py function docutils literal">faulthandler.enable</code></a> at Python startup to install handlers for
+the <a class="reference internal" href="signal.html#py:data:signal.sigsegv"><code class="xref py data docutils literal">SIGSEGV</code></a>, <a class="reference internal" href="signal.html#py:data:signal.sigfpe"><code class="xref py data docutils literal">SIGFPE</code></a>,
+<a class="reference internal" href="signal.html#py:data:signal.sigabrt"><code class="xref py data docutils literal">SIGABRT</code></a>, <a class="reference internal" href="signal.html#py:data:signal.sigbus"><code class="xref py data docutils literal">SIGBUS</code></a> and
+<a class="reference internal" href="signal.html#py:data:signal.sigill"><code class="xref py data docutils literal">SIGILL</code></a> signals to dump the Python traceback on a crash.</p>
+<p>It behaves as if the <a class="reference internal" href="../using/cmdline.html#std:cmdoption:-x"><code class="xref std cmdoption docutils literal">-X faulthandler</code></a> command line option is
+used or if the :envvar:`PYTHONFAULTHANDLER` environment variable is set to
+<code>1</code>.</p>
+</li>
+<li><p>Enable <a href="asyncio-dev.html#asyncio-debug-mode">asyncio debug mode</a>. For example,
+<a class="reference internal" href="asyncio.html#py:module:asyncio" title="asyncio: Asynchronous I/O."><code class="xref py module docutils literal">asyncio</code></a> checks for coroutines that were not awaited and logs them.</p>
+<p>It behaves as if the :envvar:`PYTHONASYNCIODEBUG` environment variable is set
+to <code>1</code>.</p>
+</li>
+<li><p>Check the <em>encoding</em> and <em>errors</em> arguments for string encoding and decoding
+operations. Examples: <a class="reference internal" href="functions.html#py:function:open"><code class="xref py function docutils literal">open</code></a>, <a class="reference internal" href="stdtypes.html#py:method:str.encode"><code class="xref py method docutils literal">str.encode</code></a> and
+<a class="reference internal" href="stdtypes.html#py:method:bytes.decode"><code class="xref py method docutils literal">bytes.decode</code></a>.</p>
+<p>By default, for best performance, the <em>errors</em> argument is only checked at
+the first encoding/decoding error and the <em>encoding</em> argument is sometimes
+ignored for empty strings.</p>
+</li>
+<li><p>The <a class="reference internal" href="io.html#py:class:io.iobase"><code class="xref py class docutils literal">io.IOBase</code></a> destructor logs <code>close()</code> exceptions.</p>
+</li>
+<li><p>Set the <a class="reference internal" href="sys.html#py:attribute:sys.flags.dev_mode"><code class="xref py attribute docutils literal">dev_mode</code></a> attribute of <a class="reference internal" href="sys.html#py:data:sys.flags"><code class="xref py data docutils literal">sys.flags</code></a> to
+<code>True</code>.</p>
+</li>
+</ul>
+<p>The Python Development Mode does not enable the <a class="reference internal" href="tracemalloc.html#py:module:tracemalloc" title="tracemalloc: Trace memory allocations."><code class="xref py module docutils literal">tracemalloc</code></a> module by
+default, because the overhead cost (to performance and memory) would be too
+large. Enabling the <a class="reference internal" href="tracemalloc.html#py:module:tracemalloc" title="tracemalloc: Trace memory allocations."><code class="xref py module docutils literal">tracemalloc</code></a> module provides additional information
+on the origin of some errors. For example, <a class="reference internal" href="exceptions.html#py:exception:resourcewarning"><code class="xref py exception docutils literal">ResourceWarning</code></a> logs the
+traceback where the resource was allocated, and a buffer overflow error logs
+the traceback where the memory block was allocated.</p>
+<p>The Python Development Mode does not prevent the <a class="reference internal" href="../using/cmdline.html#std:cmdoption:-o"><code class="xref std cmdoption docutils literal">-O</code></a> command line
+option from removing :keyword:`assert` statements nor from setting
+<a class="reference internal" href="constants.html#py:data:__debug__"><code class="xref py data docutils literal">__debug__</code></a> to <code>False</code>.</p>
+<p>The Python Development Mode can only be enabled at the Python startup. Its
+value can be read from <a class="reference internal" href="sys.html#py:data:sys.flags"><code class="xref py data docutils literal">sys.flags.dev_mode</code></a>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
+<p>The <a class="reference internal" href="io.html#py:class:io.iobase"><code class="xref py class docutils literal">io.IOBase</code></a> destructor now logs <code>close()</code> exceptions.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.9:</span></p>
+<p>The <em>encoding</em> and <em>errors</em> arguments are now checked for string encoding
+and decoding operations.</p>
+</div>
+<h2 id="resourcewarning-example">ResourceWarning Example</h2>
+<p>Example of a script counting the number of lines of the text file specified in
+the command line:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fp</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">argv</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">nlines</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">len</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">readlines</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">nlines</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> The file is closed implicitly
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-variable hl-magic hl-python">__name__</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">__main__<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>The script does not close the file explicitly. By default, Python does not emit
+any warning. Example using README.txt, which has 269 lines:</p>
+<div class="highlight-shell-session notranslate">
+<div class="highlight hl-code"><pre>
+$ python script.py README.txt
+269</pre></div>
+</div>
+<p>Enabling the Python Development Mode displays a <a class="reference internal" href="exceptions.html#py:exception:resourcewarning"><code class="xref py exception docutils literal">ResourceWarning</code></a> warning:</p>
+<div class="highlight-shell-session notranslate">
+<div class="highlight hl-code"><pre>
+$ python -X dev script.py README.txt
+269
+script.py:10: ResourceWarning: unclosed file &lt;_io.TextIOWrapper name='README.rst' mode='r' encoding='UTF-8'&gt;
+  main()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback</pre></div>
+</div>
+<p>In addition, enabling <a class="reference internal" href="tracemalloc.html#py:module:tracemalloc" title="tracemalloc: Trace memory allocations."><code class="xref py module docutils literal">tracemalloc</code></a> shows the line where the file was
+opened:</p>
+<div class="highlight-shell-session notranslate">
+<div class="highlight hl-code"><pre>
+$ python -X dev -X tracemalloc=5 script.py README.rst
+269
+script.py:10: ResourceWarning: unclosed file &lt;_io.TextIOWrapper name='README.rst' mode='r' encoding='UTF-8'&gt;
+  main()
+Object allocated at (most recent call last):
+  File "script.py", lineno 10
+    main()
+  File "script.py", lineno 4
+    fp = open(sys.argv[1])</pre></div>
+</div>
+<p>The fix is to close explicitly the file. Example using a context manager:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Close the file explicitly when exiting the with block
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">argv</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">fp</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">nlines</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">len</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">readlines</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">nlines</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>Not closing a resource explicitly can leave a resource open for way longer than
+expected; it can cause severe issues upon exiting Python. It is bad in
+CPython, but it is even worse in PyPy. Closing resources explicitly makes an
+application more deterministic and more reliable.</p>
+<h2 id="bad-file-descriptor-error-example">Bad file descriptor error example</h2>
+<p>Script displaying the first line of itself:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">os</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fp</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-variable hl-magic hl-python">__file__</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">firstline</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">readline</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">firstline</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">rstrip</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">os</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">close</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">fileno</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> The file is closed implicitly
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>By default, Python does not emit any warning:</p>
+<div class="highlight-shell-session notranslate">
+<div class="highlight hl-code"><pre>
+$ python script.py
+import os</pre></div>
+</div>
+<p>The Python Development Mode shows a <a class="reference internal" href="exceptions.html#py:exception:resourcewarning"><code class="xref py exception docutils literal">ResourceWarning</code></a> and logs a "Bad file
+descriptor" error when finalizing the file object:</p>
+<div class="highlight-shell-session notranslate">
+<div class="highlight hl-code"><pre>
+$ python -X dev script.py
+import os
+script.py:10: ResourceWarning: unclosed file &lt;_io.TextIOWrapper name='script.py' mode='r' encoding='UTF-8'&gt;
+  main()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+Exception ignored in: &lt;_io.TextIOWrapper name='script.py' mode='r' encoding='UTF-8'&gt;
+Traceback (most recent call last):
+  File "script.py", line 10, in &lt;module&gt;
+    main()
+OSError: [Errno 9] Bad file descriptor</pre></div>
+</div>
+<p><code>os.close(fp.fileno())</code> closes the file descriptor. When the file object
+finalizer tries to close the file descriptor again, it fails with the <code>Bad
+file descriptor</code> error. A file descriptor must be closed only once. In the
+worst case scenario, closing it twice can lead to a crash (see :issue:`18748`
+for an example).</p>
+<p>The fix is to remove the <code>os.close(fp.fileno())</code> line, or open the file with
+<code>closefd=False</code>.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="pydoc.html">&larr; pydoc — Documentation generator and online help system</a>
+        <a class="next" href="doctest.html">doctest — Test interactive Python examples &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
