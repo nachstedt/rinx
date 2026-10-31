@@ -5,7 +5,7 @@ Other editors
 
 The language server is the ``rinx`` binary itself, run as ``rinx lsp``. It speaks the Language Server Protocol over standard input and output, so any editor with a language client can use it. The :ref:`VS Code extension <vscode>` is one such client. This page configures three others: Neovim, Helix and Emacs.
 
-Each configuration below is a file in the repository, under ``editors/``, and continuous integration runs every one in its editor against the server. Neovim and Emacs are checked for diagnostics, hover, go to definition, find references, rename, the outline, the workspace search, and completion of references, domain objects, directives and role names. Helix, which cannot be scripted, is checked for finding the server and showing its diagnostics.
+Each configuration below is a file in the repository, under ``editors/``, and continuous integration runs every one in its editor against the server. Neovim and Emacs are checked for diagnostics, hover, go to definition, find references, rename, the outline, the workspace search, folding, coloured names, and completion of references, domain objects, directives and role names. Helix, which cannot be scripted, is checked for finding the server and showing its diagnostics.
 
 Installing the server
 ---------------------
@@ -63,6 +63,7 @@ The server behaves the same in every editor. :ref:`vscode-diagnostics` describes
 - Hover, go to definition, find references and rename on references.
 - The document's outline: its sections, with the objects and entities written in them.
 - A search of the workspace's sections, labels, terms, objects and entities (``workspace/symbol``).
+- Folding of sections, directives, comments, literal blocks and tables, and the names the markup writes coloured by kind (semantic tokens). The Neovim snippet above links each kind's highlight group to a standard one; elsewhere, a theme colours ``directive``, ``option``, ``role``, ``reference`` and ``substitution`` tokens as it chooses.
 - Reading a Sphinx project's ``conf.py``, and the extensions it declares (see :ref:`vscode-sphinx-projects`).
 - Inventories that ``intersphinx_mapping`` names as files (see :ref:`vscode-intersphinx`).
 - Watching the workspace for files changed by other programs, when the editor announces that it watches files for a server.

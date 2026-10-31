@@ -26,7 +26,7 @@ use rinx_ast::{Diagnostic, DiagnosticCode};
 
 use super::body::{DirectiveBody, MarkerLine};
 use super::invocation::DirectiveInvocation;
-use super::options::{is_field_marker, scan_option_lines};
+use super::options::{is_field_marker, record_option_names, scan_option_lines};
 use super::spec::{Arguments, DirectiveSpec};
 
 /// The directive written as `name` on `marker`, with `body` below it, read by
@@ -49,6 +49,7 @@ pub(in crate::directives) fn read_directive_block<'a, 'c>(
         .hanging(marker.index, marker.argument.column, indent)
         .without_section_titles();
     let split = split_block(&lines, spec);
+    record_option_names(&split.options, &block_ctx);
     let arguments = read_arguments(
         &lines[split.arguments.clone()].join("\n"),
         spec.arguments,

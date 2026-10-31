@@ -75,6 +75,7 @@ fn read_check_options(mut args: &[String]) -> Result<CheckOptions> {
                 "--references" => bail!("lsp: --references needs <document>:<line>:<column>"),
                 "--rename" => bail!("lsp: --rename needs <document>:<line>:<column>=<name>"),
                 "--symbols" => bail!("lsp: --symbols needs the query to search for"),
+                "--semantic-tokens" => bail!("lsp: --semantic-tokens needs the document to colour"),
                 _ => bail!("lsp: unknown argument '{flag}' after --check"),
             }
         };
@@ -86,6 +87,7 @@ fn read_check_options(mut args: &[String]) -> Result<CheckOptions> {
             "--references" => options.references.push(read_place("--references", value)?),
             "--rename" => options.renames.push(read_rename(value)?),
             "--symbols" => options.symbols.push(value.clone()),
+            "--semantic-tokens" => options.semantic_tokens.push(absolute(Path::new(value))?),
             _ => bail!("lsp: unknown argument '{flag}' after --check"),
         }
         args = rest;
@@ -304,6 +306,34 @@ mod tests {
 
         // Then
         assert_eq!(options.symbols, ["dict", ""]);
+    }
+
+    #[test]
+    fn test_read_lsp_args_reads_each_document_to_colour() {
+        // Given / When
+        let Ok(LspMode::Check { options, .. }) = read_lsp_args(&args(&[
+            "--check",
+            "Doc",
+            "--semantic-tokens",
+            "/doc/a.rst",
+        ])) else {
+            panic!("a check");
+        };
+
+        // Then
+        assert_eq!(options.semantic_tokens, [PathBuf::from("/doc/a.rst")]);
+    }
+
+    #[test]
+    fn test_read_lsp_args_refuses_colouring_without_a_document() {
+        // Given / When
+        let error = read_lsp_args(&args(&["--check", "Doc", "--semantic-tokens"])).unwrap_err();
+
+        // Then
+        assert!(
+            error.to_string().contains("--semantic-tokens needs"),
+            "{error}"
+        );
     }
 
     #[test]

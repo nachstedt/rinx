@@ -596,6 +596,25 @@ mod tests {
     }
 
     #[test]
+    fn test_syntax_inside_a_fragment_is_recorded_in_the_fragments_file() {
+        // Given a fragment holding a directive
+        let document = parse_document(
+            &[("shared.rst", ".. note::\n\n   Text.\n")],
+            "Intro.\n\n.. include:: shared.rst\n",
+        );
+
+        // Then — the include's own block in the document, the note's in the
+        // fragment
+        let files: Vec<(Option<FileId>, u32)> = document
+            .syntax
+            .blocks
+            .iter()
+            .map(|block| (block.lines.file, block.lines.start.line))
+            .collect();
+        assert_eq!(files, vec![(None, 3), (Some(FileId::new(0)), 1)]);
+    }
+
+    #[test]
     fn test_each_include_of_a_file_records_its_own_site() {
         // Given the same fragment included on lines 1 and 3
         let document = parse_document(

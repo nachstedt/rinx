@@ -16,7 +16,7 @@
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rinx_ast::{Diagnostic, DiagnosticCode, Span};
+use rinx_ast::{Diagnostic, DiagnosticCode, Span, TokenKind, TokenModifiers};
 
 use super::spec::{OptionSet, OptionSpec, OptionSupport, OptionValue};
 
@@ -36,6 +36,17 @@ pub(in crate::directives) struct OptionLine {
 }
 
 impl OptionLine {
+    /// Exactly the characters of the option's `:name:` — up to the end of
+    /// the line for one whose closing colon is missing — or `None` when it
+    /// was read from no source line.
+    pub(in crate::directives) fn name_span(&self, ctx: &ParseCtx<'_>) -> Option<Span> {
+        let end = (self.name.chars().count() + 2).min(self.raw.chars().count());
+        Some(
+            ctx.position(self.line_index, 0)?
+                .to(ctx.position(self.line_index, end)?),
+        )
+    }
+
     /// Exactly the characters of the value — `None` for an empty one, one
     /// continued onto the lines below, or one read from no source line.
     pub(in crate::directives) fn value_span(&self, ctx: &ParseCtx<'_>) -> Option<Span> {
@@ -56,6 +67,18 @@ impl OptionLine {
             ctx.position(self.line_index, start)?
                 .to(ctx.position(self.line_index, end)?),
         )
+    }
+}
+
+/// Records each of `options`' `:name:` for an editor colouring it — see
+/// [`rinx_ast::SyntaxTable`].
+pub(in crate::directives) fn record_option_names(options: &[OptionLine], ctx: &ParseCtx<'_>) {
+    for option in options {
+        ctx.record_token(
+            TokenKind::Option,
+            TokenModifiers::NONE,
+            option.name_span(ctx),
+        );
     }
 }
 
@@ -928,6 +951,36 @@ mod tests {
         // When / Then
         assert_eq!(first_value_span(&[":name:"]), None);
         assert_eq!(first_value_span(&[":name: first", "   second"]), None);
+    }
+
+    /// The span `name_span` gives the first option of `body`.
+    fn first_name_span(body: &[&str]) -> Option<Span> {
+        let (options, _) = scan_option_lines(&lines(body));
+        options[0].name_span(&ParseCtx::with_domain(Domain::Py))
+    }
+
+    #[test]
+    fn test_name_span_is_the_name_and_its_colons() {
+        // When
+        let span = first_name_span(&[":name:  install"]);
+
+        // Then
+        assert_eq!(
+            span,
+            Some(Span::new(
+                rinx_ast::Position::new(1, 1),
+                rinx_ast::Position::new(1, 7)
+            ))
+        );
+    }
+
+    #[test]
+    fn test_name_span_stops_at_the_line_end_without_a_closing_colon() {
+        // When
+        let span = first_name_span(&[":oops"]);
+
+        // Then
+        assert_eq!(span.map(|span| span.end.column), Some(6));
     }
 
     #[test]

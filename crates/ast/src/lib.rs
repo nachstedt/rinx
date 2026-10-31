@@ -94,6 +94,7 @@ mod spacing;
 mod span;
 mod substitution;
 mod suppression;
+mod syntax;
 mod table;
 mod target_name;
 mod target_search_order;
@@ -183,6 +184,9 @@ pub use spacing::{InvalidSpacing, Spacing, SpacingKind, SpacingValue};
 pub use span::{FileId, Position, Span};
 pub use substitution::{SubstitutionDefinition, SubstitutionKind, TrimSides};
 pub use suppression::{Reported, Suppression, SuppressionCodes, is_suppressed, retain_reportable};
+pub use syntax::{
+    BlockKind, SyntaxBlock, SyntaxTable, SyntaxToken, TokenKind, TokenModifier, TokenModifiers,
+};
 pub use table::{TableAlign, TableCell, TableRow, TableSource, TableWidths};
 pub use target_name::TargetName;
 pub use target_search_order::TargetSearchOrder;

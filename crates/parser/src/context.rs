@@ -17,11 +17,12 @@
 
 use std::collections::BTreeMap;
 
-use rinx_ast::{Domain, EntityId, FileId, Position, Span};
+use rinx_ast::{BlockKind, Domain, EntityId, FileId, Position, Span, TokenKind, TokenModifiers};
 use rinx_entity::{EntitySchema, EntityType};
 
 use crate::default_role::DefaultRole;
 use crate::document_roles::DocumentRoles;
+use crate::syntax_recorder::SyntaxRecorder;
 use crate::templating::TemplateMap;
 
 /// A file read at parse time, and the identity the parser knows it by.
@@ -233,6 +234,11 @@ pub struct ParseCtx<'a> {
     /// [`crate::parse_with_ctx`], which owns one table per document; a context
     /// built without it defines no roles and keeps the configured default.
     document_roles: Option<&'a DocumentRoles>,
+    /// Where the document's markup is recorded as it is read — the blocks an
+    /// editor folds and the names it colours. State like
+    /// [`Self::document_roles`], and set by [`crate::parse_with_ctx`] the same
+    /// way; a context built without it records nothing.
+    syntax: Option<&'a SyntaxRecorder>,
     /// The text parsed ahead of the document's own, after its leading
     /// metadata: Sphinx's `rst_prolog`.
     ///
@@ -311,6 +317,7 @@ impl<'a> ParseCtx<'a> {
             import_keys: empty_import_keys(),
             configured_default_role: &DefaultRole::TITLE_REFERENCE,
             document_roles: None,
+            syntax: None,
             prolog: None,
             epilog: None,
             origin: Some(Origin::START),
@@ -339,6 +346,39 @@ impl<'a> ParseCtx<'a> {
         ParseCtx {
             document_roles: Some(roles),
             ..*self
+        }
+    }
+
+    /// The same context, recording the document's markup into `syntax`.
+    ///
+    /// Borrows for a possibly shorter lifetime than `'a`, as
+    /// [`Self::with_document_roles`] does.
+    #[must_use]
+    pub(crate) fn with_syntax_recorder<'b>(&'b self, syntax: &'b SyntaxRecorder) -> ParseCtx<'b> {
+        ParseCtx {
+            syntax: Some(syntax),
+            ..*self
+        }
+    }
+
+    /// Records a block of `kind` over `lines`, when this parse records its
+    /// syntax and the lines came from the source.
+    pub(crate) fn record_block(&self, kind: BlockKind, lines: Option<Span>) {
+        if let (Some(syntax), Some(lines)) = (self.syntax, lines) {
+            syntax.block(kind, lines);
+        }
+    }
+
+    /// Records a token of `kind`, with `modifiers`, at `span`, when this parse
+    /// records its syntax and the token came from the source.
+    pub(crate) fn record_token(
+        &self,
+        kind: TokenKind,
+        modifiers: TokenModifiers,
+        span: Option<Span>,
+    ) {
+        if let (Some(syntax), Some(span)) = (self.syntax, span) {
+            syntax.token(kind, modifiers, span);
         }
     }
 
@@ -647,6 +687,7 @@ impl<'a> ParseCtx<'a> {
             import_keys: self.import_keys,
             configured_default_role: self.configured_default_role,
             document_roles: self.document_roles,
+            syntax: self.syntax,
             // A fragment is text of the document that includes it, which was
             // decorated once already.
             prolog: None,

@@ -10,8 +10,9 @@
 //! It also times the preview of the documents it is asked to, each right
 //! after an edit, which is how the preview's latency is measured — and the
 //! references at the places it is asked to, which is how finding them is,
-//! the renames it is asked for, each with the edit it would apply, and the
-//! workspace searches it is asked for.
+//! the renames it is asked for, each with the edit it would apply, the
+//! workspace searches it is asked for, and the coloured names of the
+//! documents it is asked to colour.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -62,6 +63,21 @@ pub struct FolderCheck {
     /// order.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub symbols: Vec<SymbolsTiming>,
+    /// How each document [`CheckOptions::semantic_tokens`] names was
+    /// coloured, in that order.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub semantic_tokens: Vec<SemanticTokensTiming>,
+}
+
+/// How long colouring one document's names took: from its latest parse, and
+/// right after an edit to it, which parses it again first.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct SemanticTokensTiming {
+    pub uri: Uri,
+    /// How many tokens were sent.
+    pub tokens: usize,
+    pub milliseconds: f64,
+    pub after_edit_milliseconds: f64,
 }
 
 /// How long one rename took — first, and again with every document's uses
@@ -137,6 +153,8 @@ pub struct CheckOptions {
     pub renames: Vec<(ReferencesAt, String)>,
     /// The queries whose workspace search is timed.
     pub symbols: Vec<String>,
+    /// The documents whose semantic tokens are timed, absolute.
+    pub semantic_tokens: Vec<PathBuf>,
 }
 
 /// A place in a document, its path absolute and its line and column 1-based,
@@ -223,6 +241,11 @@ pub fn check_folder(root: &Path, options: &CheckOptions) -> FolderCheck {
         .iter()
         .map(|query| time_symbols(&state, query))
         .collect();
+    let semantic_tokens = options
+        .semantic_tokens
+        .iter()
+        .filter_map(|path| time_semantic_tokens(&mut state, path))
+        .collect();
     FolderCheck {
         documents: documents.len(),
         published: last_published(&messages),
@@ -231,7 +254,33 @@ pub fn check_folder(root: &Path, options: &CheckOptions) -> FolderCheck {
         references,
         renames,
         symbols,
+        semantic_tokens,
     }
+}
+
+/// How long colouring the document at `path` takes, from its latest parse
+/// and right after an edit to it — `None` when it cannot be read.
+fn time_semantic_tokens(state: &mut ServerState, path: &Path) -> Option<SemanticTokensTiming> {
+    let uri = file_uri(path)?;
+    let text = std::fs::read_to_string(path).ok()?;
+    let timed = |state: &ServerState| {
+        let started = Instant::now();
+        let tokens = state
+            .semantic_tokens(&uri, None)
+            .map_or(0, |tokens| tokens.data.len());
+        (started.elapsed().as_secs_f64() * 1000.0, tokens)
+    };
+    let (milliseconds, tokens) = timed(state);
+    let started = Instant::now();
+    handle_notification(state, did_change(uri.clone(), text));
+    timed(state);
+    let after_edit_milliseconds = started.elapsed().as_secs_f64() * 1000.0;
+    Some(SemanticTokensTiming {
+        uri: uri.clone(),
+        tokens,
+        milliseconds,
+        after_edit_milliseconds,
+    })
 }
 
 /// How long searching the workspace's definitions for `query` takes.
@@ -574,6 +623,26 @@ mod tests {
         };
         assert_eq!((timing.query.as_str(), timing.symbols), ("install", 2));
         assert!(timing.milliseconds > 0.0);
+    }
+
+    #[test]
+    fn test_check_folder_times_each_document_it_colours() {
+        // Given
+        let workspace = Workspace::new("check_folder_tokens", &[("setup.rst", "See :ref:`a`.\n")]);
+        let options = CheckOptions {
+            semantic_tokens: vec![workspace.root.join("setup.rst")],
+            ..CheckOptions::default()
+        };
+
+        // When
+        let check = check_folder(&workspace.root, &options);
+
+        // Then — the role and its target
+        let [timing] = check.semantic_tokens.as_slice() else {
+            panic!("one timing: {:?}", check.semantic_tokens);
+        };
+        assert_eq!(timing.tokens, 2);
+        assert!(timing.after_edit_milliseconds > 0.0);
     }
 
     #[test]

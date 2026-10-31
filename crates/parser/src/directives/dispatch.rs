@@ -9,7 +9,7 @@ use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::indent_width;
 
-use super::body::{MarkerLine, MarkerText, body_indent, collect_directive_body};
+use super::body::{DirectiveBody, MarkerLine, MarkerText, body_indent, collect_directive_body};
 use super::domains::object_type::{object_spec, resolve_domain_object_type};
 use super::domains::parse_domain_object;
 use super::entity::{EntityDirective, parse_entity};
@@ -17,6 +17,7 @@ use super::entity_section::{EntitySectionSite, try_parse_entity_section};
 use super::entity_spec::EntitySpec;
 use super::error_node::unknown_directive;
 use super::invocation::ParseState;
+use super::marker_syntax::record_marker_syntax;
 use super::reader::read_directive_block;
 use super::scope::{parse_scope_directive, resolve_scope_directive};
 use super::spec::registered_directive;
@@ -41,12 +42,13 @@ pub(crate) fn try_parse_directive(
     let argument = arg_part.trim().to_string();
 
     let min_indent = indent_width(line);
+    let body = collect_directive_body(lines, i + 1, min_indent);
+    record_marker_syntax(line, i, &body, ctx);
 
     let site = DirectiveSite {
-        lines,
         index: i,
         line,
-        min_indent,
+        body: &body,
     };
 
     // A domain object is a *vocabulary* lookup: whether a name is one depends
@@ -69,7 +71,6 @@ pub(crate) fn try_parse_directive(
         return Some(result);
     }
 
-    let body = collect_directive_body(lines, i + 1, min_indent);
     // The directive's *own* line is reported against by any directive whose
     // content can still fail after parsing (an image whose bytes never reach
     // the renderer), and a bare `.. image:: logo.png` has no body line to
@@ -220,14 +221,12 @@ fn try_parse_substitution_definition(
 /// only to answer the same question — how far this directive's body reaches
 /// and where its diagnostics point.
 struct DirectiveSite<'a> {
-    /// The whole line slice being parsed.
-    lines: &'a [&'a str],
-    /// The marker's index within it.
+    /// The marker's index within the line slice being parsed.
     index: usize,
     /// The marker line itself.
     line: &'a str,
-    /// The indent the body must exceed.
-    min_indent: usize,
+    /// The lines below it the directive claims.
+    body: &'a DirectiveBody<'a>,
 }
 
 /// Parses `.. <object type>::` when `name` resolves to a domain object under
@@ -244,12 +243,10 @@ fn try_parse_domain_object_directive(
 ) -> Option<(usize, Vec<Node>)> {
     let object_type = resolve_domain_object_type(name, ctx.default_domain)?;
     let &DirectiveSite {
-        lines,
         index: i,
         line,
-        min_indent,
+        body,
     } = site;
-    let body = collect_directive_body(lines, i + 1, min_indent);
     let (body_lines, _) = body.for_directive();
     let marker = MarkerLine {
         index: i,
@@ -260,7 +257,7 @@ fn try_parse_domain_object_directive(
         name,
         object_spec(object_type),
         &marker,
-        &body,
+        body,
         &body_lines,
         diagnostics,
         ctx,
@@ -289,12 +286,10 @@ fn try_parse_entity_directive(
 ) -> Option<(usize, Vec<Node>)> {
     let entity_type = ctx.schema.entity_type(name)?;
     let &DirectiveSite {
-        lines,
         index: i,
         line,
-        min_indent,
+        body,
     } = site;
-    let body = collect_directive_body(lines, i + 1, min_indent);
     let (body_lines, _) = body.for_directive();
     let marker = MarkerLine {
         index: i,
@@ -307,7 +302,7 @@ fn try_parse_entity_directive(
         name,
         &EntitySpec::new(entity_type).spec(),
         &marker,
-        &body,
+        body,
         &body_lines,
         diagnostics,
         ctx,

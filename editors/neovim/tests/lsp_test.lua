@@ -162,6 +162,24 @@ local found_label = vim.iter(found):any(function(symbol)
 end)
 check('a workspace search finds the label in target.rst', found_label, found)
 
+-- The title's section and the toctree fold.
+local folds = request_until_answered('textDocument/foldingRange', { textDocument = { uri = uri } }) or {}
+local toctree_folds = vim.iter(folds):any(function(range)
+  return range.startLine == 3 and range.endLine == 5
+end)
+check('the toctree folds', toctree_folds, folds)
+
+-- The toctree's name is the first name coloured, as a directive, and the
+-- snippet links its group.
+local tokens = request_until_answered('textDocument/semanticTokens/full', { textDocument = { uri = uri } }) or {}
+local first = vim.list_slice(tokens.data or {}, 1, 5)
+check('the toctree is coloured as a directive', vim.deep_equal(first, { 3, 3, 9, 0, 0 }), tokens)
+check(
+  'the directive group is linked',
+  vim.api.nvim_get_hl(0, { name = '@lsp.type.directive' }).link == '@keyword',
+  vim.api.nvim_get_hl(0, { name = '@lsp.type.directive' })
+)
+
 if failures > 0 then
   -- `vim.lsp.log.get_filename` since 0.11; `vim.lsp.get_log_path` before.
   local path = (vim.lsp.log.get_filename or vim.lsp.get_log_path)()

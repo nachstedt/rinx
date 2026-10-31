@@ -26,6 +26,7 @@ mod punctuation;
 mod regexes;
 mod roles;
 mod source_map;
+mod syntax;
 mod text;
 mod typography;
 

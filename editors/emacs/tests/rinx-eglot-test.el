@@ -190,4 +190,16 @@ The workspace scan may still be running when it is first asked."
                                                 (plist-get (plist-get symbol :location) :uri))))
                         found)))))
 
+;; The toctree folds, and its name is the first name coloured, as a directive.
+(ert-deftest rinx-eglot-folds-and-colours-the-document ()
+  (rinx-test--with-index
+    (let* ((document `(:textDocument (:uri ,(concat "file://" (expand-file-name buffer-file-name)))))
+           (folds (rinx-test--request :textDocument/foldingRange document))
+           (tokens (rinx-test--request :textDocument/semanticTokens/full document)))
+      (should (seq-some (lambda (range)
+                          (and (equal (plist-get range :startLine) 3)
+                               (equal (plist-get range :endLine) 5)))
+                        folds))
+      (should (equal (seq-take (plist-get tokens :data) 5) [3 3 9 0 0])))))
+
 ;;; rinx-eglot-test.el ends here
