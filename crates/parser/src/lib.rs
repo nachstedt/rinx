@@ -15,9 +15,9 @@ pub(crate) mod syntax_recorder;
 pub(crate) mod templating;
 pub(crate) mod width;
 
-#[cfg(test)]
-pub(crate) use blocks::parse_document;
 pub use blocks::{Parsed, PrefixParse, parse, parse_prefix};
+#[cfg(test)]
+pub(crate) use blocks::{parse_document, parse_placed, placed_heading};
 pub use context::{LoadedFile, ParseCtx, ParseFileLoader, RejectParseFiles, SplicedText};
 pub use default_role::{DefaultRole, UnknownRole};
 pub use directives::{

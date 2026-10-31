@@ -201,7 +201,7 @@ mod tests {
                 is_decorator: false,
                 body: vec![index_directive()],
             },
-            span: None,
+            block: None,
         })];
         let mut counter = 0;
 

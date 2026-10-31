@@ -246,7 +246,7 @@ mod tests {
             Node::Heading {
                 level: 1,
                 text: text("title"),
-                span: None,
+                block: None,
             },
             Node::DefinitionList {
                 items: vec![DefinitionListItem {

@@ -57,6 +57,36 @@ pub(crate) fn parse_document(path: &str, input: &str) -> Document {
     parse(path, input, &ParseCtx::default()).document
 }
 
+/// The document [`parse`] reads from `input` under the default context, and
+/// the source map beside it — what a test of where a construct was written
+/// reads.
+#[cfg(test)]
+pub(crate) fn parse_placed(path: &str, input: &str) -> (Document, rinx_ast::SourceMap) {
+    let parsed = parse(path, input, &ParseCtx::default());
+    (parsed.document, parsed.source_map)
+}
+
+/// The heading `node` is: its level, its title and the lines `source_map`
+/// records for it.
+///
+/// # Panics
+///
+/// When `node` is no heading.
+#[cfg(test)]
+pub(crate) fn placed_heading(
+    node: &Node,
+    source_map: &rinx_ast::SourceMap,
+) -> (u8, Vec<rinx_ast::InlineNode>, Option<Span>) {
+    let Node::Heading { level, text, block } = node else {
+        panic!("expected a heading, found {node:?}");
+    };
+    (
+        *level,
+        text.clone(),
+        block.and_then(|id| source_map.block_lines(id)),
+    )
+}
+
 /// The source map [`parse`] leaves beside the document of `input` under the
 /// default context — what the tests of each construct's recording read.
 #[cfg(test)]

@@ -70,15 +70,19 @@ fn test_symbols_list_a_label_two_documents_define_under_both() {
 #[test]
 fn test_symbols_place_an_included_definition_in_its_fragment() {
     // Given — the server's loader names a fragment by its absolute path
-    let mut document =
-        rinx_parser::parse("guide.rst", "Text.\n", &rinx_parser::ParseCtx::default()).document;
+    let rinx_parser::Parsed {
+        mut document,
+        mut source_map,
+    } = rinx_parser::parse("guide.rst", "Text.\n", &rinx_parser::ParseCtx::default());
     let fragment = document.intern_source_file("/work/docs/shared/setup.rst");
     document.nodes.push(rinx_ast::Node::Target {
         name: TargetName::new("setup").into(),
         destination: None,
-        span: Some(
-            rinx_ast::Span::new(Position::new(2, 1), Position::new(2, 11))
-                .with_file(Some(fragment)),
+        block: Some(
+            source_map.record_block_lines(
+                rinx_ast::Span::new(Position::new(2, 1), Position::new(2, 11))
+                    .with_file(Some(fragment)),
+            ),
         ),
     });
     let mut folder = folder();
@@ -87,7 +91,7 @@ fn test_symbols_place_an_included_definition_in_its_fragment() {
         IndexedDocument::of(
             PathBuf::from("/work/docs/guide.rst"),
             &document,
-            &rinx_ast::SourceMap::default(),
+            &source_map,
             BTreeSet::new(),
         ),
     );

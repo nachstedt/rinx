@@ -443,12 +443,12 @@ mod tests {
                 Node::Heading {
                     level: 1,
                     text: vec![InlineNode::Text(path.to_string())],
-                    span: None,
+                    block: None,
                 },
                 Node::Target {
                     name: TargetName::new(name).into(),
                     destination: None,
-                    span: None,
+                    block: None,
                 },
                 Node::Directive(Directive::Glossary {
                     entries: vec![GlossaryEntry {
@@ -465,7 +465,7 @@ mod tests {
                         is_final: false,
                         body: Vec::new(),
                     },
-                    span: None,
+                    block: None,
                 }),
             ],
         )

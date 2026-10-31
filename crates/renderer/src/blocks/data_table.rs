@@ -146,7 +146,7 @@ mod tests {
                 classes: vec![],
                 name: None,
                 rows: vec![table_row(&["Fruit", "Colour"])],
-                span: None,
+                block: None,
             })],
         )
     }
@@ -191,7 +191,7 @@ mod tests {
                 classes: vec!["compact".to_string()],
                 name: None,
                 rows: vec![table_row(&["Fruit"])],
-                span: None,
+                block: None,
             })],
         );
 
@@ -221,7 +221,7 @@ mod tests {
                     table_row(&["Fruit", "Colour"]),
                     table_row(&["Apple", "Red"]),
                 ],
-                span: None,
+                block: None,
             })],
         );
 
@@ -253,7 +253,7 @@ mod tests {
                     table_row(&["Fruit", "Colour"]),
                     table_row(&["Apple", "Red"]),
                 ],
-                span: None,
+                block: None,
             })],
         );
 
@@ -281,7 +281,7 @@ mod tests {
                 classes: vec![],
                 name: None,
                 rows: vec![table_row(&["Stub", "Cell"])],
-                span: None,
+                block: None,
             })],
         );
 
@@ -308,7 +308,7 @@ mod tests {
                 classes: vec![],
                 name: None,
                 rows: vec![table_row(&["Cell"])],
-                span: None,
+                block: None,
             })],
         );
 
@@ -334,7 +334,7 @@ mod tests {
                 classes: vec![],
                 name: None,
                 rows: vec![table_row(&["A", "B"])],
-                span: None,
+                block: None,
             })],
         );
 
@@ -362,7 +362,7 @@ mod tests {
                 classes: vec![],
                 name: None,
                 rows: vec![table_row(&["Cell"])],
-                span: None,
+                block: None,
             })],
         );
 
@@ -388,7 +388,7 @@ mod tests {
                 classes: vec![],
                 name: None,
                 rows: vec![table_row(&["Cell"])],
-                span: None,
+                block: None,
             })],
         );
 
@@ -414,7 +414,7 @@ mod tests {
                 classes: vec!["custom".to_string()],
                 name: None,
                 rows: vec![table_row(&["Cell"])],
-                span: None,
+                block: None,
             })],
         );
 
@@ -440,7 +440,7 @@ mod tests {
                 classes: vec![],
                 name: Some(TargetName::new("fruit-table").into()),
                 rows: vec![table_row(&["Cell"])],
-                span: None,
+                block: None,
             })],
         );
 

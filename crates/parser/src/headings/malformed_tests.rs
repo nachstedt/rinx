@@ -27,16 +27,17 @@ fn test_parse_keeps_a_title_whose_underline_is_longer_than_its_overline() {
     let input = "=======\nTitle\n==========\n";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then — one heading, and no stray paragraph holding the overline
+    assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
-        doc.nodes,
-        vec![Node::Heading {
-            level: 1,
-            text: title("Title"),
-            span: Some(Span::new(Position::new(2, 1), Position::new(2, 6)))
-        }]
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            title("Title"),
+            Some(Span::new(Position::new(2, 1), Position::new(2, 6)))
+        )
     );
     assert_eq!(
         diagnostic_codes(&doc),

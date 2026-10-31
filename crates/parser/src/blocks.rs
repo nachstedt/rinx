@@ -30,4 +30,4 @@ mod pipeline_tests;
 pub use dispatch::{Parsed, PrefixParse, parse, parse_prefix};
 pub(crate) use dispatch::{parse_blocks, written_extent};
 #[cfg(test)]
-pub(crate) use dispatch::{parse_document, parse_source_map};
+pub(crate) use dispatch::{parse_document, parse_placed, parse_source_map, placed_heading};

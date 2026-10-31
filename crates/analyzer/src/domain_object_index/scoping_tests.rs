@@ -46,10 +46,10 @@ fn test_analyze_qualifies_method_nested_in_class() {
                         is_async: false,
                         body: vec![],
                     },
-                    span: None,
+                    block: None,
                 })],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -85,10 +85,10 @@ fn test_analyze_qualifies_method_nested_in_exception() {
                         is_async: false,
                         body: vec![],
                     },
-                    span: None,
+                    block: None,
                 })],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -129,13 +129,13 @@ fn test_analyze_qualifies_nested_classes_two_levels_deep() {
                                 is_async: false,
                                 body: vec![],
                             },
-                            span: None,
+                            block: None,
                         })],
                     },
-                    span: None,
+                    block: None,
                 })],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -166,10 +166,10 @@ fn test_analyze_qualifies_non_method_object_nested_in_class() {
                         value: None,
                         body: vec![],
                     },
-                    span: None,
+                    block: None,
                 })],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -198,10 +198,10 @@ fn test_analyze_qualifies_object_nested_in_module_domain_object() {
                         signatures: NonEmptyVector::single("greet(name)".to_string()),
                         body: vec![],
                     },
-                    span: None,
+                    block: None,
                 })],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -227,7 +227,7 @@ fn test_analyze_qualifies_sibling_object_after_module_domain_object() {
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyFunction {
@@ -238,7 +238,7 @@ fn test_analyze_qualifies_sibling_object_after_module_domain_object() {
                     signatures: NonEmptyVector::single("coroutine(gen_func)".to_string()),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -267,7 +267,7 @@ fn test_analyze_does_not_dedup_module_prefix_in_flat_sibling_signature() {
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyMethod {
@@ -283,7 +283,7 @@ fn test_analyze_does_not_dedup_module_prefix_in_flat_sibling_signature() {
                     is_async: false,
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -313,7 +313,7 @@ fn test_analyze_qualifies_object_after_current_module_directive() {
                     is_final: false,
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -337,7 +337,7 @@ fn test_analyze_current_module_none_resets_qualification_to_module_free() {
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::PyCurrentModule { module: None }),
             Node::Directive(Directive::DomainObject {
@@ -349,7 +349,7 @@ fn test_analyze_current_module_none_resets_qualification_to_module_free() {
                     signatures: NonEmptyVector::single("example()".to_string()),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -375,7 +375,7 @@ fn test_analyze_switches_current_module_on_second_module_directive() {
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
@@ -383,7 +383,7 @@ fn test_analyze_switches_current_module_on_second_module_directive() {
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyClass {
@@ -393,7 +393,7 @@ fn test_analyze_switches_current_module_on_second_module_directive() {
                     is_final: false,
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -419,7 +419,7 @@ fn test_analyze_dedups_class_name_repeated_in_flat_nested_signature() {
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyClass {
@@ -441,10 +441,10 @@ fn test_analyze_dedups_class_name_repeated_in_flat_nested_signature() {
                             is_async: false,
                             body: vec![],
                         },
-                        span: None,
+                        block: None,
                     })],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -479,10 +479,10 @@ fn test_analyze_qualifies_genindex_entry_for_method_nested_in_class() {
                         is_async: false,
                         body: vec![],
                     },
-                    span: None,
+                    block: None,
                 })],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -518,7 +518,7 @@ fn test_analyze_module_option_overrides_the_enclosing_module() {
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyClass {
@@ -528,7 +528,7 @@ fn test_analyze_module_option_overrides_the_enclosing_module() {
                     is_final: false,
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -568,7 +568,7 @@ fn test_analyze_module_option_propagates_into_nested_body() {
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyClass {
@@ -588,10 +588,10 @@ fn test_analyze_module_option_propagates_into_nested_body() {
                             is_async: false,
                             body: vec![],
                         },
-                        span: None,
+                        block: None,
                     })],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -623,7 +623,7 @@ fn test_analyze_module_option_is_restored_after_the_object_and_its_body() {
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyClass {
@@ -633,7 +633,7 @@ fn test_analyze_module_option_is_restored_after_the_object_and_its_body() {
                     is_final: false,
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyFunction {
@@ -644,7 +644,7 @@ fn test_analyze_module_option_is_restored_after_the_object_and_its_body() {
                     signatures: NonEmptyVector::single("track(size)".to_string()),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -672,7 +672,7 @@ fn test_analyze_module_option_with_empty_value_leaves_object_unqualified() {
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyFunction {
@@ -683,7 +683,7 @@ fn test_analyze_module_option_with_empty_value_leaves_object_unqualified() {
                     signatures: NonEmptyVector::single("standalone()".to_string()),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );

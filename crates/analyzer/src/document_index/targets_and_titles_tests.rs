@@ -25,7 +25,7 @@ fn test_analyze_returns_default_index_for_populated_document() {
         vec![Node::Heading {
             level: 1,
             text: vec![InlineNode::Text("Title".to_string())],
-            span: None,
+            block: None,
         }],
     );
 
@@ -46,7 +46,7 @@ fn test_analyze_populates_targets_for_target_nodes() {
             Node::Target {
                 name: TargetName::new("section-1").into(),
                 destination: None,
-                span: None,
+                block: None,
             },
             Node::Paragraph(vec![InlineNode::Text("some text".to_string())]),
         ],
@@ -73,12 +73,12 @@ fn test_analyze_extracts_h1_title() {
             Node::Heading {
                 level: 1,
                 text: vec![InlineNode::Text("My Title".to_string())],
-                span: None,
+                block: None,
             },
             Node::Heading {
                 level: 1,
                 text: vec![InlineNode::Text("Ignored Second H1".to_string())],
-                span: None,
+                block: None,
             },
         ],
     );
@@ -132,7 +132,7 @@ fn test_analyze_extracts_h1_title_as_plain_text_when_heading_has_domain_object_r
                 },
                 InlineNode::Text(" Module".to_string()),
             ],
-            span: None,
+            block: None,
         }],
     );
 
@@ -219,7 +219,7 @@ fn test_analyze_registers_target_nested_in_table_cell() {
                     content: vec![Node::Target {
                         name: TargetName::new("nested-target").into(),
                         destination: None,
-                        span: None,
+                        block: None,
                     }],
                 }],
             }],
@@ -252,7 +252,7 @@ fn test_analyze_registers_list_table_name_as_target() {
             classes: vec![],
             name: Some(TargetName::new("fruit-table").into()),
             rows: vec![],
-            span: None,
+            block: None,
         })],
     );
 
@@ -282,7 +282,7 @@ fn test_analyze_list_table_without_name_registers_no_target() {
             classes: vec![],
             name: None,
             rows: vec![],
-            span: None,
+            block: None,
         })],
     );
 
@@ -307,7 +307,7 @@ fn test_analyze_registers_table_directive_name_as_target() {
             name: Some(TargetName::new("wrapped-table").into()),
             header_rows: vec![],
             body_rows: vec![],
-            span: None,
+            block: None,
         })],
     );
 
@@ -340,7 +340,7 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
                     content: vec![Node::Target {
                         name: TargetName::new("in-header").into(),
                         destination: None,
-                        span: None,
+                        block: None,
                     }],
                 }],
             }],
@@ -351,11 +351,11 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
                     content: vec![Node::Target {
                         name: TargetName::new("in-body").into(),
                         destination: None,
-                        span: None,
+                        block: None,
                     }],
                 }],
             }],
-            span: None,
+            block: None,
         })],
     );
 
@@ -493,7 +493,7 @@ fn test_analyze_indexes_targets_inside_a_figure_legend() {
             vec![Node::Target {
                 name: TargetName::new("in-legend").into(),
                 destination: None,
-                span: None,
+                block: None,
             }],
         )],
     );
@@ -646,7 +646,7 @@ fn test_analyze_indexes_targets_inside_a_dropdown_body() {
             vec![Node::Target {
                 name: TargetName::new("in-dropdown").into(),
                 destination: None,
-                span: None,
+                block: None,
             }],
         )],
     );
@@ -854,7 +854,7 @@ fn label(name: &str) -> Node {
     Node::Target {
         name: TargetName::new(name).into(),
         destination: None,
-        span: None,
+        block: None,
     }
 }
 
@@ -862,7 +862,7 @@ fn heading(title: &str) -> Node {
     Node::Heading {
         level: 2,
         text: vec![InlineNode::Text(title.to_string())],
-        span: None,
+        block: None,
     }
 }
 
@@ -951,7 +951,7 @@ fn test_analyze_records_no_title_for_an_external_hyperlink_target() {
                 destination: Some(rinx_ast::LinkDestination::Uri(
                     "https://python.org".to_string(),
                 )),
-                span: None,
+                block: None,
             },
             heading("Installing"),
         ],
@@ -976,7 +976,7 @@ fn test_analyze_leaves_an_external_hyperlink_target_out_of_the_index() {
                 destination: Some(rinx_ast::LinkDestination::Uri(
                     "https://python.org".to_string(),
                 )),
-                span: None,
+                block: None,
             },
             label("installing"),
         ],
@@ -1091,7 +1091,7 @@ fn test_analyze_records_a_table_title_for_its_label_and_name() {
                 name: Some(TargetName::new("sizes-table").into()),
                 header_rows: vec![],
                 body_rows: vec![],
-                span: None,
+                block: None,
             }),
         ],
     );

@@ -271,7 +271,7 @@ mod tests {
         Node::Heading {
             level,
             text: vec![InlineNode::Text(title.to_string())],
-            span: None,
+            block: None,
         }
     }
 

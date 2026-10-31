@@ -27,12 +27,9 @@ fn site_at(line: u32, columns: u32) -> DefinitionSite {
     }
 }
 
-fn sites_of(nodes: Vec<Node>) -> DefinitionSites {
-    sites_with_names(nodes, &SourceMap::default())
-}
-
-/// The sites of `nodes`, finding their names' characters in `source_map`.
-fn sites_with_names(nodes: Vec<Node>, source_map: &SourceMap) -> DefinitionSites {
+/// The sites of `nodes`, finding their names' characters and blocks' lines
+/// in `source_map`.
+fn sites_of(nodes: Vec<Node>, source_map: &SourceMap) -> DefinitionSites {
     analyze_with_sites(
         &Document::new("guide.rst".to_string(), nodes),
         Some(source_map),
@@ -40,29 +37,37 @@ fn sites_with_names(nodes: Vec<Node>, source_map: &SourceMap) -> DefinitionSites
     .1
 }
 
-fn heading(level: u8, title: &str, span: Option<Span>) -> Node {
+/// A heading titled `title`, its line `span` recorded in `map`.
+fn heading(map: &mut SourceMap, level: u8, title: &str, span: Option<Span>) -> Node {
     Node::Heading {
         level,
         text: vec![InlineNode::Text(title.to_string())],
-        span,
+        block: span.map(|span| map.record_block_lines(span)),
     }
 }
 
-fn label(name: &str, span: Option<Span>) -> Node {
+/// The internal target `name`, its line `span` recorded in `map`.
+fn label(map: &mut SourceMap, name: &str, span: Option<Span>) -> Node {
     Node::Target {
         name: TargetName::new(name).into(),
         destination: None,
-        span,
+        block: span.map(|span| map.record_block_lines(span)),
     }
 }
 
 #[test]
 fn test_analyze_with_sites_records_every_section_by_its_anchor() {
+    // Given
+    let mut map = SourceMap::default();
+
     // When
-    let sites = sites_of(vec![
-        heading(1, "Guide", Some(span_at(1, 5))),
-        heading(2, "Getting Started", Some(span_at(4, 15))),
-    ]);
+    let sites = sites_of(
+        vec![
+            heading(&mut map, 1, "Guide", Some(span_at(1, 5))),
+            heading(&mut map, 2, "Getting Started", Some(span_at(4, 15))),
+        ],
+        &map,
+    );
 
     // Then
     assert_eq!(
@@ -79,15 +84,21 @@ fn test_analyze_with_sites_records_every_section_by_its_anchor() {
 
 #[test]
 fn test_analyze_with_sites_records_an_internal_target_but_not_an_external_one() {
+    // Given
+    let mut map = SourceMap::default();
+
     // When
-    let sites = sites_of(vec![
-        label("install", Some(span_at(3, 13))),
-        Node::Target {
-            name: TargetName::new("home").into(),
-            destination: Some(LinkDestination::Uri("https://example.org".to_string())),
-            span: Some(span_at(5, 30)),
-        },
-    ]);
+    let sites = sites_of(
+        vec![
+            label(&mut map, "install", Some(span_at(3, 13))),
+            Node::Target {
+                name: TargetName::new("home").into(),
+                destination: Some(LinkDestination::Uri("https://example.org".to_string())),
+                block: Some(map.record_block_lines(span_at(5, 30))),
+            },
+        ],
+        &map,
+    );
 
     // Then — the external target names a URL, which the index leaves out
     assert_eq!(
@@ -102,13 +113,19 @@ fn test_analyze_with_sites_records_an_internal_target_but_not_an_external_one() 
 
 #[test]
 fn test_analyze_with_sites_records_a_target_nested_in_a_directive_body() {
+    // Given
+    let mut map = SourceMap::default();
+
     // When
-    let sites = sites_of(vec![Node::Directive(Directive::Admonition {
-        kind: AdmonitionKind::Note,
-        title: None,
-        collapsible: None,
-        body: vec![label("inside", Some(span_at(3, 14)))],
-    })]);
+    let sites = sites_of(
+        vec![Node::Directive(Directive::Admonition {
+            kind: AdmonitionKind::Note,
+            title: None,
+            collapsible: None,
+            body: vec![label(&mut map, "inside", Some(span_at(3, 14)))],
+        })],
+        &map,
+    );
 
     // Then
     assert_eq!(
@@ -119,23 +136,29 @@ fn test_analyze_with_sites_records_a_target_nested_in_a_directive_body() {
 
 #[test]
 fn test_analyze_with_sites_records_each_glossary_term() {
+    // Given
+    let mut map = SourceMap::default();
+
     // When
-    let sites = sites_of(vec![Node::Directive(Directive::Glossary {
-        entries: vec![GlossaryEntry {
-            terms: vec![
-                GlossaryTerm {
-                    text: "API".to_string(),
-                    span: Some(span_at(3, 6)),
-                },
-                GlossaryTerm {
-                    text: "Interface".to_string(),
-                    span: Some(span_at(4, 12)),
-                },
-            ],
-            definition: vec![],
-        }],
-        sorted: false,
-    })]);
+    let sites = sites_of(
+        vec![Node::Directive(Directive::Glossary {
+            entries: vec![GlossaryEntry {
+                terms: vec![
+                    GlossaryTerm {
+                        text: "API".to_string(),
+                        block: Some(map.record_block_lines(span_at(3, 6))),
+                    },
+                    GlossaryTerm {
+                        text: "Interface".to_string(),
+                        block: Some(map.record_block_lines(span_at(4, 12))),
+                    },
+                ],
+                definition: vec![],
+            }],
+            sorted: false,
+        })],
+        &map,
+    );
 
     // Then — by the normalized name the index keys a term by
     assert_eq!(
@@ -151,6 +174,7 @@ fn test_analyze_with_sites_records_each_glossary_term() {
 #[test]
 fn test_analyze_with_sites_records_every_signature_of_a_domain_object_qualified_by_its_scope() {
     // Given — a module, then a function with two signatures inside it
+    let mut map = SourceMap::default();
     let module = DomainObjectBody::PyModule {
         name: "shapes".to_string(),
         options: ModuleOptions::default(),
@@ -166,16 +190,19 @@ fn test_analyze_with_sites_records_every_signature_of_a_domain_object_qualified_
     };
 
     // When
-    let sites = sites_of(vec![
-        Node::Directive(Directive::DomainObject {
-            object: module,
-            span: Some(span_at(1, 20)),
-        }),
-        Node::Directive(Directive::DomainObject {
-            object: function,
-            span: Some(span_at(3, 25)),
-        }),
-    ]);
+    let sites = sites_of(
+        vec![
+            Node::Directive(Directive::DomainObject {
+                object: module,
+                block: Some(map.record_block_lines(span_at(1, 20))),
+            }),
+            Node::Directive(Directive::DomainObject {
+                object: function,
+                block: Some(map.record_block_lines(span_at(3, 25))),
+            }),
+        ],
+        &map,
+    );
 
     // Then
     let function_type = ObjectType::Py(PyObjectType::Function);
@@ -198,6 +225,7 @@ fn test_analyze_with_sites_records_every_signature_of_a_domain_object_qualified_
 #[test]
 fn test_analyze_with_sites_records_no_domain_object_that_asked_not_to_be_indexed() {
     // Given
+    let mut map = SourceMap::default();
     let function = DomainObjectBody::PyFunction {
         signatures: NonEmptyVector::new("area()".to_string(), vec![]),
         is_decorator: false,
@@ -208,10 +236,13 @@ fn test_analyze_with_sites_records_no_domain_object_that_asked_not_to_be_indexed
     };
 
     // When
-    let sites = sites_of(vec![Node::Directive(Directive::DomainObject {
-        object: function,
-        span: Some(span_at(1, 25)),
-    })]);
+    let sites = sites_of(
+        vec![Node::Directive(Directive::DomainObject {
+            object: function,
+            block: Some(map.record_block_lines(span_at(1, 25))),
+        })],
+        &map,
+    );
 
     // Then
     assert!(sites.is_empty(), "{sites:?}");
@@ -219,20 +250,26 @@ fn test_analyze_with_sites_records_no_domain_object_that_asked_not_to_be_indexed
 
 #[test]
 fn test_analyze_with_sites_records_a_tables_name_as_a_label() {
+    // Given
+    let mut map = SourceMap::default();
+
     // When
-    let sites = sites_of(vec![Node::Directive(Directive::DataTable {
-        source: TableSource::List,
-        title: None,
-        header_rows: 0,
-        stub_columns: 0,
-        widths: None,
-        width: None,
-        align: None,
-        classes: vec![],
-        name: Some(TargetName::new("sizes").into()),
-        rows: vec![],
-        span: Some(span_at(2, 18)),
-    })]);
+    let sites = sites_of(
+        vec![Node::Directive(Directive::DataTable {
+            source: TableSource::List,
+            title: None,
+            header_rows: 0,
+            stub_columns: 0,
+            widths: None,
+            width: None,
+            align: None,
+            classes: vec![],
+            name: Some(TargetName::new("sizes").into()),
+            rows: vec![],
+            block: Some(map.record_block_lines(span_at(2, 18))),
+        })],
+        &map,
+    );
 
     // Then
     assert_eq!(
@@ -244,6 +281,7 @@ fn test_analyze_with_sites_records_a_tables_name_as_a_label() {
 #[test]
 fn test_analyze_with_sites_records_an_entity_by_its_id_and_as_a_label() {
     // Given
+    let map = SourceMap::default();
     let entity = EntityBody {
         type_name: "req".to_string(),
         id: EntityId::new("REQ_001").unwrap().into(),
@@ -258,7 +296,10 @@ fn test_analyze_with_sites_records_an_entity_by_its_id_and_as_a_label() {
     };
 
     // When
-    let sites = sites_of(vec![Node::Directive(Directive::Entity(Box::new(entity)))]);
+    let sites = sites_of(
+        vec![Node::Directive(Directive::Entity(Box::new(entity)))],
+        &map,
+    );
 
     // Then
     let id = EntityId::new("REQ_001").unwrap();
@@ -271,14 +312,20 @@ fn test_analyze_with_sites_records_an_entity_by_its_id_and_as_a_label() {
 
 #[test]
 fn test_analyze_with_sites_records_an_equations_label() {
+    // Given
+    let map = SourceMap::default();
+
     // When
-    let sites = sites_of(vec![Node::Directive(Directive::Math {
-        parts: vec!["e = mc^2".to_string()],
-        label: Some(TargetName::new("energy").into()),
-        nowrap: false,
-        classes: vec![],
-        span: Some(span_at(4, 9)),
-    })]);
+    let sites = sites_of(
+        vec![Node::Directive(Directive::Math {
+            parts: vec!["e = mc^2".to_string()],
+            label: Some(TargetName::new("energy").into()),
+            nowrap: false,
+            classes: vec![],
+            span: Some(span_at(4, 9)),
+        })],
+        &map,
+    );
 
     // Then
     assert_eq!(
@@ -290,15 +337,17 @@ fn test_analyze_with_sites_records_an_equations_label() {
 #[test]
 fn test_analyze_with_sites_names_the_fragment_a_definition_was_included_from() {
     // Given — a label whose span counts in an included fragment
+    let mut map = SourceMap::default();
     let mut doc = Document::new("guide.rst".to_string(), vec![]);
     let fragment = doc.intern_source_file("shared/install.rst");
     doc.nodes.push(label(
+        &mut map,
         "install",
         Some(Span::new(Position::new(2, 1), Position::new(2, 13)).with_file(Some(fragment))),
     ));
 
     // When
-    let (_, sites) = analyze_with_sites(&doc, None);
+    let (_, sites) = analyze_with_sites(&doc, Some(&map));
 
     // Then
     assert_eq!(
@@ -333,11 +382,11 @@ fn test_analyze_with_sites_records_where_a_labels_name_was_written() {
     let target = Node::Target {
         name: written_at(&mut map, "install", 3, 5, 12),
         destination: None,
-        span: Some(span_at(3, 12)),
+        block: Some(map.record_block_lines(span_at(3, 12))),
     };
 
     // When
-    let sites = sites_with_names(vec![target], &map);
+    let sites = sites_of(vec![target], &map);
 
     // Then
     assert_eq!(
@@ -363,7 +412,7 @@ fn test_analyze_with_sites_places_a_name_no_directive_span_holds_at_the_name() {
     contents.options.name = Some(written_at(&mut map, "toc", 6, 11, 14));
 
     // When
-    let sites = sites_with_names(
+    let sites = sites_of(
         vec![
             Node::Directive(Directive::Toctree(toctree)),
             Node::Directive(Directive::Contents(contents)),
@@ -407,7 +456,7 @@ fn test_analyze_with_sites_records_where_a_written_entity_id_stands() {
     };
 
     // When
-    let sites = sites_with_names(
+    let sites = sites_of(
         vec![Node::Directive(Directive::Entity(Box::new(entity)))],
         &map,
     );
@@ -434,8 +483,11 @@ fn test_analyze_with_sites_records_where_a_written_entity_id_stands() {
 
 #[test]
 fn test_analyze_with_sites_records_nothing_for_a_definition_without_a_span() {
+    // Given
+    let mut map = SourceMap::default();
+
     // When
-    let sites = sites_of(vec![label("install", None)]);
+    let sites = sites_of(vec![label(&mut map, "install", None)], &map);
 
     // Then
     assert!(sites.is_empty());
@@ -444,11 +496,12 @@ fn test_analyze_with_sites_records_nothing_for_a_definition_without_a_span() {
 #[test]
 fn test_analyze_with_sites_returns_the_index_analyze_returns() {
     // Given
+    let mut map = SourceMap::default();
     let doc = Document::new(
         "guide.rst".to_string(),
         vec![
-            heading(1, "Guide", Some(span_at(1, 5))),
-            label("install", Some(span_at(3, 13))),
+            heading(&mut map, 1, "Guide", Some(span_at(1, 5))),
+            label(&mut map, "install", Some(span_at(3, 13))),
         ],
     );
 

@@ -36,16 +36,16 @@ fn test_parse_creates_mixed_nodes_for_heading_and_paragraph() {
     // Given
     let input = "Title\n=====\n\nText.";
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
-        doc.nodes[0],
-        Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("Title".to_string())],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 6)))
-        }
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("Title".to_string())],
+            Some(Span::new(Position::new(1, 1), Position::new(1, 6)))
+        )
     );
     assert_eq!(
         doc.nodes[1],
@@ -73,16 +73,16 @@ fn test_parse_ignores_trailing_whitespace_for_heading() {
     // docutils, which matches adornments in column 0
     let input = "Heading  \n=======  \n\nNext";
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
-        doc.nodes[0],
-        Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("Heading".to_string())],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 10)))
-        }
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("Heading".to_string())],
+            Some(Span::new(Position::new(1, 1), Position::new(1, 10)))
+        )
     );
     assert_eq!(
         doc.nodes[1],
@@ -117,16 +117,16 @@ fn test_parse_handles_carriage_returns_gracefully() {
     // Given
     let input = "Heading\r\n=======\r\n\r\nPara\r\nline 2";
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
-        doc.nodes[0],
-        Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("Heading".to_string())],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 8)))
-        }
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("Heading".to_string())],
+            Some(Span::new(Position::new(1, 1), Position::new(1, 8)))
+        )
     );
     assert_eq!(
         doc.nodes[1],
@@ -139,13 +139,13 @@ fn test_parse_creates_target_node_for_explicit_target() {
     // Given
     let input = ".. _my-target:\n\nSome text.";
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     let Node::Target {
         name,
         destination,
-        span,
+        block,
     } = &doc.nodes[0]
     else {
         panic!("expected a target, found {:?}", doc.nodes[0]);
@@ -153,7 +153,7 @@ fn test_parse_creates_target_node_for_explicit_target() {
     assert_eq!(name.value(), &TargetName::new("my-target"));
     assert_eq!(*destination, None);
     assert_eq!(
-        *span,
+        block.and_then(|id| map.block_lines(id)),
         Some(Span::new(Position::new(1, 1), Position::new(1, 15)))
     );
     assert_eq!(
@@ -167,13 +167,13 @@ fn test_parse_creates_external_target_node() {
     // Given
     let input = ".. _my-link: https://example.com\n\nSome text.";
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     let Node::Target {
         name,
         destination,
-        span,
+        block,
     } = &doc.nodes[0]
     else {
         panic!("expected a target, found {:?}", doc.nodes[0]);
@@ -186,7 +186,7 @@ fn test_parse_creates_external_target_node() {
         ))
     );
     assert_eq!(
-        *span,
+        block.and_then(|id| map.block_lines(id)),
         Some(Span::new(Position::new(1, 1), Position::new(1, 33)))
     );
 }
@@ -196,13 +196,13 @@ fn test_parse_creates_indented_external_target_node() {
     // Given
     let input = ".. _my-link:\n   https://example.com\n\nSome text.";
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     let Node::Target {
         name,
         destination,
-        span,
+        block,
     } = &doc.nodes[0]
     else {
         panic!("expected a target, found {:?}", doc.nodes[0]);
@@ -215,7 +215,7 @@ fn test_parse_creates_indented_external_target_node() {
         ))
     );
     assert_eq!(
-        *span,
+        block.and_then(|id| map.block_lines(id)),
         Some(Span::new(Position::new(1, 1), Position::new(1, 13)))
     );
 }
@@ -227,7 +227,7 @@ fn test_parse_paragraph_breaks_at_overline() {
     // (see `headings.rs`) and the overlined form below is the only heading.
     let input = "Para text.\n###\nHi\n###";
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
@@ -235,12 +235,12 @@ fn test_parse_paragraph_breaks_at_overline() {
         Node::Paragraph(vec![InlineNode::Text("Para text.".to_string())])
     );
     assert_eq!(
-        doc.nodes[1],
-        Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("Hi".to_string())],
-            span: Some(Span::new(Position::new(3, 1), Position::new(3, 3)))
-        }
+        crate::placed_heading(&doc.nodes[1], &map),
+        (
+            1,
+            vec![InlineNode::Text("Hi".to_string())],
+            Some(Span::new(Position::new(3, 1), Position::new(3, 3)))
+        )
     );
 }
 

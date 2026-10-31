@@ -408,12 +408,12 @@ mod tests {
                 Node::Heading {
                     level: 1,
                     text: vec![InlineNode::Text("Guide".to_string())],
-                    span: None,
+                    block: None,
                 },
                 Node::Heading {
                     level: 2,
                     text: vec![InlineNode::Text("Install".to_string())],
-                    span: None,
+                    block: None,
                 },
             ],
         );
@@ -450,7 +450,7 @@ mod tests {
             vec![Node::Heading {
                 level: 2,
                 text: vec![InlineNode::Text("Install".to_string())],
-                span: None,
+                block: None,
             }],
         );
         let mut numbers = rinx_index::DocumentNumbers::default();
@@ -481,7 +481,7 @@ mod tests {
             vec![Node::Heading {
                 level: 1,
                 text: vec![InlineNode::Text("Guide".to_string())],
-                span: None,
+                block: None,
             }],
         );
         let index = ProjectIndex::default();
@@ -514,13 +514,13 @@ mod tests {
                 Node::Heading {
                     level: 1,
                     text: vec![InlineNode::Text("Title".to_string())],
-                    span: None,
+                    block: None,
                 },
                 Node::Paragraph(vec![rinx_ast::InlineNode::Text("Paragraph".to_string())]),
                 Node::Heading {
                     level: 1,
                     text: vec![InlineNode::Text("Another Heading".to_string())],
-                    span: None,
+                    block: None,
                 },
             ],
         );
@@ -555,7 +555,7 @@ mod tests {
                     },
                     InlineNode::Text(" Module".to_string()),
                 ],
-                span: None,
+                block: None,
             }],
         );
         let mut index = ProjectIndex::default();
@@ -585,7 +585,7 @@ mod tests {
                 Node::Heading {
                     level: 1,
                     text: vec![InlineNode::Text("Title <script>".to_string())],
-                    span: None,
+                    block: None,
                 },
                 Node::Paragraph(vec![rinx_ast::InlineNode::Text("A & B > C".to_string())]),
             ],
@@ -609,7 +609,7 @@ mod tests {
             vec![Node::Heading {
                 level: 1,
                 text: vec![InlineNode::Text("Top".to_string())],
-                span: None,
+                block: None,
             }],
         );
         let index = ProjectIndex::default();
@@ -628,7 +628,7 @@ mod tests {
             vec![Node::Heading {
                 level: 2,
                 text: vec![InlineNode::Text("Sub".to_string())],
-                span: None,
+                block: None,
             }],
         );
         let index = ProjectIndex::default();
@@ -647,7 +647,7 @@ mod tests {
             vec![Node::Heading {
                 level: 6,
                 text: vec![InlineNode::Text("Deep".to_string())],
-                span: None,
+                block: None,
             }],
         );
         let index = ProjectIndex::default();
@@ -666,7 +666,7 @@ mod tests {
             vec![Node::Heading {
                 level: 7,
                 text: vec![InlineNode::Text("VeryDeep".to_string())],
-                span: None,
+                block: None,
             }],
         );
         let index = ProjectIndex::default();
@@ -707,7 +707,7 @@ mod tests {
             vec![Node::Target {
                 name: TargetName::new("section-1").into(),
                 destination: None,
-                span: None,
+                block: None,
             }],
         );
         let index = ProjectIndex::default();
@@ -740,7 +740,7 @@ mod tests {
                 destination: Some(rinx_ast::LinkDestination::Uri(
                     "https://google.com".to_string(),
                 )),
-                span: None,
+                block: None,
             }],
         );
         let index = ProjectIndex::default();
@@ -888,7 +888,7 @@ mod tests {
                     destination: Some(rinx_ast::LinkDestination::Uri(
                         "https://python.org".to_string(),
                     )),
-                    span: None,
+                    block: None,
                 },
             ],
         );
@@ -917,7 +917,7 @@ mod tests {
                     Node::Target {
                         name: TargetName::new("Python Packaging User Guide").into(),
                         destination: Some(rinx_ast::LinkDestination::Uri(url.to_string())),
-                        span: None,
+                        block: None,
                     },
                 ],
             )

@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::admonition_kind::AdmonitionKind;
+use crate::block_id::BlockId;
 use crate::button_link::ButtonLink;
 use crate::code_block::CodeBlock;
 use crate::code_language::ResolvedLanguage;
@@ -253,9 +254,10 @@ pub enum Directive {
         name: Option<Named<TargetName>>,
         rows: Vec<TableRow>,
         /// Where the directive was written, which its `:name:`'s definition
-        /// is (`docs/decisions/045-definition-spans.md`).
+        /// is, as the parse's source map records it
+        /// (`docs/decisions/045-definition-spans.md`).
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        span: Option<Span>,
+        block: Option<BlockId>,
     },
     /// `.. table::` — wraps an existing grid or simple table (given as the
     /// directive's own content) with a title/caption and the layout options
@@ -289,7 +291,7 @@ pub enum Directive {
         body_rows: Vec<TableRow>,
         /// Where the directive was written — see [`Self::DataTable`]'s.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        span: Option<Span>,
+        block: Option<BlockId>,
     },
     /// `.. math::` — one or more display equations written in LaTeX.
     ///
@@ -362,10 +364,10 @@ pub enum Directive {
         object: DomainObjectBody,
         /// The directive's marker line, which the object's definition is —
         /// whatever its kind, so it is kept here once rather than in each
-        /// variant of `object`. Never read by the index
+        /// variant of `object` — as the parse's source map records it
         /// (`docs/decisions/045-definition-spans.md`).
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        span: Option<Span>,
+        block: Option<BlockId>,
     },
     /// One block of the `sphinx.ext.doctest` family (`doctest`, `testcode`,
     /// `testoutput`, `testsetup`, `testcleanup`).
@@ -508,7 +510,7 @@ mod tests {
                     "Adds two numbers.".to_string(),
                 )])],
             },
-            span: None,
+            block: None,
         };
 
         // When
@@ -536,7 +538,7 @@ mod tests {
                 },
                 body: vec![],
             },
-            span: None,
+            block: None,
         };
 
         // When
@@ -559,7 +561,7 @@ mod tests {
                 value: Some("30".to_string()),
                 body: vec![],
             },
-            span: None,
+            block: None,
         };
 
         // When
@@ -722,7 +724,7 @@ mod tests {
                     content: vec![Node::Paragraph(vec![InlineNode::Text("Fruit".to_string())])],
                 }],
             }],
-            span: None,
+            block: None,
         };
 
         // When
@@ -753,7 +755,7 @@ mod tests {
                 }],
             }],
             body_rows: vec![],
-            span: None,
+            block: None,
         };
 
         // When
