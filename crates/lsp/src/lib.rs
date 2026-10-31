@@ -37,6 +37,7 @@ mod documents;
 mod entity_at;
 mod entity_hover;
 mod files;
+mod folding_range;
 mod hover;
 mod include_summary;
 mod includes;
@@ -49,6 +50,7 @@ mod reference_at;
 mod references;
 mod rename;
 mod render;
+mod semantic_tokens;
 mod server;
 #[cfg(all(test, unix))]
 mod test_scripts;

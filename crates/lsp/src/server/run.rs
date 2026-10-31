@@ -56,6 +56,7 @@ pub fn run(connection: &Connection) -> Result<()> {
         .with_definition_links(supports_definition_links(&params.capabilities))
         .with_edit_shape(edit_shape(&params.capabilities))
         .with_outline_shape(outline_shape(&params.capabilities))
+        .with_folding_limit(folding_limit(&params.capabilities))
         .with_completion_format(completion_format(&params.capabilities))
         .with_completion_reopening(reopens_completion(&params))
         .with_watched_files(supports_watched_files(&params.capabilities))
@@ -260,6 +261,17 @@ fn outline_shape(capabilities: &ClientCapabilities) -> OutlineShape {
     } else {
         OutlineShape::Flat
     }
+}
+
+/// The most folding ranges the client takes for one document, when it sets
+/// a limit.
+fn folding_limit(capabilities: &ClientCapabilities) -> Option<usize> {
+    capabilities
+        .text_document
+        .as_ref()
+        .and_then(|text_document| text_document.folding_range.as_ref())
+        .and_then(|folding| folding.range_limit)
+        .and_then(|limit| usize::try_from(limit).ok())
 }
 
 /// How the client takes a completion item's text: as a snippet when it

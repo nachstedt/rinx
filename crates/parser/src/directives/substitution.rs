@@ -26,7 +26,7 @@ use crate::indent::unindent_body_lines;
 use crate::inline::{SourceMap, parse_inline_text_mapped};
 
 use super::image::{ImageContext, parse_common_image_options, report_option_conflicts};
-use super::options::{OptionLine, report_unknown_options, scan_option_lines};
+use super::options::{OptionLine, record_option_names, report_unknown_options, scan_option_lines};
 
 /// Splits a directive marker's name into a substitution name and the inner
 /// directive it embeds, for `name`s of the form `|substitution text| inner`.
@@ -122,6 +122,7 @@ fn parse_unicode_kind(
 ) -> SubstitutionKind {
     let unindented = unindent_body_lines(body_lines);
     let (option_lines, _) = scan_option_lines(&unindented);
+    record_option_names(&option_lines, ctx);
     let mut trim = TrimSides::default();
     let mut unrecognized = Vec::new();
     for line in &option_lines {
@@ -203,6 +204,7 @@ fn parse_image_kind(
 ) -> Option<SubstitutionKind> {
     let unindented_lines = unindent_body_lines(body_lines);
     let (option_lines, _) = scan_option_lines(&unindented_lines);
+    record_option_names(&option_lines, ctx);
     let refs: Vec<&OptionLine> = option_lines.iter().collect();
     let (common, unrecognized) = parse_common_image_options(
         &refs,
@@ -464,6 +466,31 @@ mod tests {
         };
         assert_eq!(options.uri, AssetUri::new("biohazard.png"));
         assert!(diagnostics.entries().is_empty());
+    }
+
+    #[test]
+    fn test_parse_records_a_substitution_images_option_names() {
+        // When
+        let document = crate::parse(
+            "test.rst",
+            ".. |logo| image:: logo.png\n   :alt: Logo\n\n.. |c| unicode:: U+00A9\n   :trim:\n",
+        );
+
+        // Then — each option's `:name:`, at its own line and column
+        let options: Vec<(u32, u32, u32)> = document
+            .syntax
+            .tokens
+            .iter()
+            .filter(|token| token.kind == rinx_ast::TokenKind::Option)
+            .map(|token| {
+                (
+                    token.span.start.line,
+                    token.span.start.column,
+                    token.span.end.column,
+                )
+            })
+            .collect();
+        assert_eq!(options, vec![(2, 4, 9), (5, 4, 10)]);
     }
 
     #[test]

@@ -43,8 +43,8 @@ use lsp_server::{Message, Request, RequestId, Response};
 use lsp_types::request::{RegisterCapability, Request as _};
 use lsp_types::{
     CodeAction, CompletionList, CompletionResponse, DidChangeWatchedFilesRegistrationOptions,
-    FileChangeType, FileEvent, FileSystemWatcher, GlobPattern, GotoDefinitionResponse, Hover,
-    Range, Registration, RegistrationParams, Uri,
+    FileChangeType, FileEvent, FileSystemWatcher, FoldingRange, GlobPattern,
+    GotoDefinitionResponse, Hover, Range, Registration, RegistrationParams, SemanticTokens, Uri,
 };
 use rinx_ast::{EntityId, TargetName};
 use rinx_index::DefinitionKey;
@@ -79,6 +79,7 @@ use crate::document_symbol::{DocumentSymbols, FlatSymbol, OutlineShape, document
 use crate::documents::DocumentStore;
 use crate::entity_at::entity_marked_at;
 use crate::entity_hover::{declared_entity_markdown, indexed_entity_markdown};
+use crate::folding_range::folding_ranges;
 use crate::hover::{location_markdown, markdown_hover, reference_hover, targets_hover};
 use crate::includes::IncludeGraph;
 use crate::position::{PositionEncoding, char_index_of, to_lsp_position, to_lsp_range};
@@ -94,6 +95,7 @@ use crate::project::{
 use crate::reference_at::{reference_at, toc_entry_at};
 use crate::references::{ordered_locations, use_location};
 use crate::render::{RenderFindings, RenderSettings, render_diagnostics};
+use crate::semantic_tokens::semantic_tokens;
 use crate::uri::{file_path, file_uri};
 use crate::workspace_symbol::{best_matches, workspace_symbol};
 
@@ -138,6 +140,9 @@ pub struct ServerState {
     pub(super) edit_shape: EditShape,
     /// How the client takes a document's outline.
     outline_shape: OutlineShape,
+    /// The most folding ranges the client takes for one document, when it
+    /// sets a limit.
+    folding_limit: Option<usize>,
     /// How the client takes a completion item: its text's format, and
     /// whether it reopens completion when an item says to.
     completion: ItemStyle,
@@ -230,6 +235,7 @@ impl ServerState {
             definition_links: false,
             edit_shape: EditShape::ByUri,
             outline_shape: OutlineShape::Flat,
+            folding_limit: None,
             completion: ItemStyle {
                 format: TextFormat::Plain,
                 reopens: false,
@@ -278,6 +284,14 @@ impl ServerState {
     #[must_use]
     pub fn with_outline_shape(mut self, outline_shape: OutlineShape) -> Self {
         self.outline_shape = outline_shape;
+        self
+    }
+
+    /// This server, answering at most `folding_limit` folding ranges for one
+    /// document when the client sets a limit.
+    #[must_use]
+    pub fn with_folding_limit(mut self, folding_limit: Option<usize>) -> Self {
+        self.folding_limit = folding_limit;
         self
     }
 
@@ -1145,6 +1159,34 @@ impl ServerState {
             uri,
             self.outline_shape,
             self.encoding,
+        ))
+    }
+
+    /// What of the open document `uri` folds, from its latest parse —
+    /// `None` when it is not open.
+    pub(super) fn folding_ranges(&self, uri: &Uri) -> Option<Vec<FoldingRange>> {
+        let parsed = &self.tracked.get(uri)?.parsed;
+        Some(folding_ranges(
+            &parsed.document,
+            &parsed.text,
+            self.folding_limit,
+        ))
+    }
+
+    /// The names the open document `uri` writes, coloured by kind — those in
+    /// `range` when one is asked for — from its latest parse; `None` when it
+    /// is not open.
+    pub(super) fn semantic_tokens(
+        &self,
+        uri: &Uri,
+        range: Option<Range>,
+    ) -> Option<SemanticTokens> {
+        let parsed = &self.tracked.get(uri)?.parsed;
+        Some(semantic_tokens(
+            &parsed.document,
+            &parsed.text,
+            self.encoding,
+            range,
         ))
     }
 

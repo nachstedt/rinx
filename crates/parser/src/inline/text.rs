@@ -10,6 +10,7 @@ use super::interpreted::{handle_interpreted_text, prefix_role_trailer, refused};
 use super::markup::{InlineMarkup, find_inline_markup};
 use super::regexes::scan_patterns;
 use super::source_map::SourceMap;
+use super::syntax::record_inline_syntax;
 use super::typography::apply_smart_typography;
 use crate::context::ParseCtx;
 
@@ -84,6 +85,13 @@ pub(crate) fn parse_inline_text_mapped(
                     )
                 }
             };
+            record_inline_syntax(
+                &remaining[start..end],
+                &node,
+                last_match_end + start,
+                map,
+                ctx,
+            );
             let span = map.span(last_match_end + start, last_match_end + end, ctx);
             inlines.push(unescape_node(node).with_span(span));
             last_match_end += end;

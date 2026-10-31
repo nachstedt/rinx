@@ -3,7 +3,7 @@
 //! destination on the following indented line instead of inline. A
 //! destination is a URI, or another target's name (`.. _a: b_`).
 
-use rinx_ast::{Node, Span, TargetName, Written};
+use rinx_ast::{Node, Span, TargetName, TokenKind, TokenModifier, TokenModifiers, Written};
 
 use crate::context::ParseCtx;
 use crate::inline::read_target_destination;
@@ -67,6 +67,11 @@ pub(super) fn try_parse_target(
         let destination = (!uri.is_empty()).then(|| read_target_destination(&uri));
 
         let name_span = name_span(lines[i], name_str, ctx, i);
+        ctx.record_token(
+            TokenKind::Reference,
+            TokenModifiers::NONE.with(TokenModifier::Declaration),
+            name_span,
+        );
         return Some((
             consumed,
             Node::Target {
@@ -104,6 +109,23 @@ mod tests {
             }
         });
         spans
+    }
+
+    #[test]
+    fn test_parse_records_a_targets_name_as_a_declared_reference() {
+        // When
+        let doc = parse("test.rst", "Intro\n\n.. _install:\n\nText.\n");
+
+        // Then
+        assert_eq!(
+            doc.syntax.tokens,
+            vec![rinx_ast::SyntaxToken {
+                kind: rinx_ast::TokenKind::Reference,
+                modifiers: rinx_ast::TokenModifiers::NONE
+                    .with(rinx_ast::TokenModifier::Declaration),
+                span: Span::new(Position::new(3, 5), Position::new(3, 12)),
+            }]
+        );
     }
 
     #[test]

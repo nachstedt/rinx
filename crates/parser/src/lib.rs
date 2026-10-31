@@ -11,6 +11,7 @@ pub(crate) mod explicit_title;
 pub(crate) mod headings;
 pub(crate) mod indent;
 pub(crate) mod inline;
+pub(crate) mod syntax_recorder;
 pub(crate) mod templating;
 pub(crate) mod width;
 

@@ -108,6 +108,60 @@
           "description": "When to update the preview"
         }
       }
+    },
+    "semanticTokenTypes": [
+      {
+        "id": "directive",
+        "superType": "macro",
+        "description": "A directive's name and its `::`."
+      },
+      {
+        "id": "option",
+        "superType": "property",
+        "description": "A directive option's `:name:`."
+      },
+      {
+        "id": "role",
+        "superType": "function",
+        "description": "A role's `:name:`."
+      },
+      {
+        "id": "reference",
+        "superType": "string",
+        "description": "What a reference leads to: a role's target, a hyperlink's name or address, a label."
+      },
+      {
+        "id": "substitution",
+        "superType": "variable",
+        "description": "A `|substitution|`, used or defined."
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "language": "restructuredtext",
+        "scopes": {
+          "directive": [
+            "keyword.control.directive.restructuredtext"
+          ],
+          "option": [
+            "variable.parameter.option.restructuredtext"
+          ],
+          "role": [
+            "entity.name.function.role.restructuredtext"
+          ],
+          "reference": [
+            "markup.underline.link.restructuredtext"
+          ],
+          "substitution": [
+            "variable.other.substitution.restructuredtext"
+          ]
+        }
+      }
+    ],
+    "configurationDefaults": {
+      "[restructuredtext]": {
+        "editor.semanticHighlighting.enabled": true
+      }
     }
   },
   "scripts": {

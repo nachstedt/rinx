@@ -16,8 +16,8 @@
 
 use lsp_types::{Location, Range, SymbolKind, Uri};
 use rinx_ast::{
-    CObjectType, Child, Directive, Document, DomainObjectBody, Node, ObjectType, Position,
-    PyObjectType, Span, StdObjectType, for_each_child, inline_plain_text,
+    BlockKind, CObjectType, Child, Directive, Document, DomainObjectBody, Node, ObjectType,
+    Position, PyObjectType, Span, StdObjectType, for_each_child, inline_plain_text,
 };
 use rinx_scope::{DefinitionNames, DocumentScopes};
 use serde::{Deserialize, Serialize};
@@ -305,26 +305,22 @@ impl Outline<'_> {
         to_lsp_range(span, self.text, self.encoding)
     }
 
-    /// The range of the directive whose marker is `marker`: its marker line
-    /// and every line below indented deeper than it, blank lines between
-    /// them included — docutils' rule for where a directive's block ends.
+    /// The range of the directive whose marker is `marker`: its whole block,
+    /// as the parser read it, up to its last written line — or the marker
+    /// alone when the parser recorded no block there.
     fn block_range(&self, marker: Span) -> Range {
-        let first = marker.start.line.saturating_sub(1) as usize;
-        let Some(marker_line) = self.lines.get(first) else {
-            return self.range_of(marker);
-        };
-        let indent = indentation(marker_line);
-        let mut last = first;
-        for (at, line) in self.lines.iter().enumerate().skip(first + 1) {
-            if line.trim().is_empty() {
-                continue;
-            }
-            if indentation(line) <= indent {
-                break;
-            }
-            last = at;
+        let block = self.document.syntax.blocks.iter().find(|block| {
+            block.kind == BlockKind::Directive
+                && block.lines.file == marker.file
+                && block.lines.start.line == marker.start.line
+        });
+        match block {
+            Some(block) => Range::new(
+                self.range_of(marker).start,
+                self.line_end(block.lines.end.line.saturating_sub(1) as usize),
+            ),
+            None => self.range_of(marker),
         }
-        Range::new(self.range_of(marker).start, self.line_end(last))
     }
 
     /// Just past the last character of the line at index `at`.
@@ -359,11 +355,6 @@ fn close(
         Some((_, parent)) => parent.children.push(section),
         None => roots.push(section),
     }
-}
-
-/// How many leading whitespace characters `line` has.
-fn indentation(line: &str) -> usize {
-    line.chars().take_while(|c| c.is_whitespace()).count()
 }
 
 /// `name`, or `fallback` when it is empty: a client refuses a symbol with no
@@ -562,13 +553,18 @@ API
             span: Some(span_at(4, 13)),
             relation_spans: BTreeMap::new(),
         };
-        let document = Document::new(
+        let mut document = Document::new(
             "reqs.rst".to_string(),
             vec![
                 heading(1, "Reqs", Some(span_at(1, 4))),
                 Node::Directive(Directive::Entity(Box::new(entity))),
             ],
         );
+        // The directive's block, as the parser records it
+        document.syntax.blocks.push(rinx_ast::SyntaxBlock {
+            kind: BlockKind::Directive,
+            lines: Span::new(Position::new(4, 1), Position::new(5, 14)),
+        });
 
         // When
         let outline = document_outline(&document, text, PositionEncoding::Utf16);
@@ -760,12 +756,5 @@ API
             symbol_kind(ObjectType::Py(PyObjectType::Data)),
             SymbolKind::VARIABLE
         );
-    }
-
-    #[test]
-    fn test_indentation_counts_leading_whitespace() {
-        // When / Then
-        assert_eq!(indentation("   .. note::"), 3);
-        assert_eq!(indentation("text"), 0);
     }
 }

@@ -7,14 +7,17 @@ use lsp_types::notification::{
     Notification as _, PublishDiagnostics, ShowMessage,
 };
 use lsp_types::request::{
-    CodeActionRequest, Completion, DocumentSymbolRequest, GotoDefinition, HoverRequest,
-    PrepareRenameRequest, References, Rename, Request as _, WorkspaceSymbolRequest,
+    CodeActionRequest, Completion, DocumentSymbolRequest, FoldingRangeRequest, GotoDefinition,
+    HoverRequest, PrepareRenameRequest, References, Rename, Request as _,
+    SemanticTokensFullRequest, SemanticTokensRangeRequest, WorkspaceSymbolRequest,
 };
 use lsp_types::{
     ClientCapabilities, CodeActionKind, CodeActionOptions, CodeActionOrCommand, CodeActionParams,
     CodeActionProviderCapability, CompletionOptions, CompletionParams, DocumentSymbolParams,
-    GotoDefinitionParams, HoverParams, HoverProviderCapability, InitializeResult, MessageType,
-    OneOf, PublishDiagnosticsParams, ReferenceParams, RenameOptions, RenameParams,
+    FoldingRangeParams, FoldingRangeProviderCapability, GotoDefinitionParams, HoverParams,
+    HoverProviderCapability, InitializeResult, MessageType, OneOf, PublishDiagnosticsParams,
+    ReferenceParams, RenameOptions, RenameParams, SemanticTokensFullOptions, SemanticTokensOptions,
+    SemanticTokensParams, SemanticTokensRangeParams, SemanticTokensServerCapabilities,
     ServerCapabilities, ServerInfo, ShowMessageParams, TextDocumentPositionParams,
     TextDocumentSyncCapability, TextDocumentSyncKind, Uri, WorkDoneProgressOptions,
     WorkspaceSymbolParams,
@@ -27,6 +30,7 @@ use super::state::ServerState;
 use crate::position::PositionEncoding;
 use crate::preview::{PREVIEW_METHOD, PreviewParams, PreviewRefusal, PreviewResult};
 use crate::preview_link::{PREVIEW_LINK_METHOD, PreviewLinkParams};
+use crate::semantic_tokens::legend;
 
 /// The answer to `initialize` for a client announcing `capabilities`, and the
 /// position encoding the two have thereby agreed on.
@@ -53,6 +57,17 @@ pub fn initialize_result(
             rename_provider: Some(rename_provider(capabilities)),
             document_symbol_provider: Some(OneOf::Left(true)),
             workspace_symbol_provider: Some(OneOf::Left(true)),
+            folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
+            // The whole document's tokens or a range's, never a delta: a
+            // document's tokens are a few kilobytes, sent once per edit.
+            semantic_tokens_provider: Some(
+                SemanticTokensServerCapabilities::SemanticTokensOptions(SemanticTokensOptions {
+                    legend: legend(),
+                    range: Some(true),
+                    full: Some(SemanticTokensFullOptions::Bool(true)),
+                    work_done_progress_options: WorkDoneProgressOptions::default(),
+                }),
+            ),
             code_action_provider: Some(CodeActionProviderCapability::Options(CodeActionOptions {
                 code_action_kinds: Some(vec![CodeActionKind::QUICKFIX]),
                 ..CodeActionOptions::default()
@@ -132,9 +147,10 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
 
 /// The response to a request other than `shutdown`, which the loop answers
 /// itself: a completion, a hover, a definition, the uses of a definition, a
-/// rename, a document's outline, a search of the workspace's definitions, the quick
-/// fixes, or a preview or where one of its links leads — or the refusal of a
-/// method rinx does not support or of parameters that do not parse.
+/// rename, a document's outline, folding ranges or coloured names, a search
+/// of the workspace's definitions, the quick fixes, or a preview or where one
+/// of its links leads — or the refusal of a method rinx does not support or
+/// of parameters that do not parse.
 pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
     let Request { id, method, params } = request;
     match method.as_str() {
@@ -169,11 +185,10 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
             let items = state.complete(&position.text_document.uri, position.position, trigger);
             Response::new_ok(id, items)
         }),
-        DocumentSymbolRequest::METHOD => {
-            answer(id, &method, params, |id, params: DocumentSymbolParams| {
-                Response::new_ok(id, state.document_symbols(&params.text_document.uri))
-            })
-        }
+        DocumentSymbolRequest::METHOD
+        | FoldingRangeRequest::METHOD
+        | SemanticTokensFullRequest::METHOD
+        | SemanticTokensRangeRequest::METHOD => answer_document_view(state, id, &method, params),
         WorkspaceSymbolRequest::METHOD => {
             answer(id, &method, params, |id, params: WorkspaceSymbolParams| {
                 Response::new_ok(id, state.workspace_symbols(&params.query))
@@ -254,6 +269,45 @@ fn answer_rename(
             Err(refusal) => refused(id, &refusal),
         }
     })
+}
+
+/// The response to the `method` request `id` asking for a view of a whole
+/// open document — its outline, its folding ranges or its coloured names —
+/// each read from the document's latest parse.
+fn answer_document_view(
+    state: &ServerState,
+    id: RequestId,
+    method: &str,
+    params: serde_json::Value,
+) -> Response {
+    match method {
+        DocumentSymbolRequest::METHOD => {
+            answer(id, method, params, |id, params: DocumentSymbolParams| {
+                Response::new_ok(id, state.document_symbols(&params.text_document.uri))
+            })
+        }
+        FoldingRangeRequest::METHOD => {
+            answer(id, method, params, |id, params: FoldingRangeParams| {
+                Response::new_ok(id, state.folding_ranges(&params.text_document.uri))
+            })
+        }
+        SemanticTokensFullRequest::METHOD => {
+            answer(id, method, params, |id, params: SemanticTokensParams| {
+                Response::new_ok(id, state.semantic_tokens(&params.text_document.uri, None))
+            })
+        }
+        _ => answer(
+            id,
+            method,
+            params,
+            |id, params: SemanticTokensRangeParams| {
+                Response::new_ok(
+                    id,
+                    state.semantic_tokens(&params.text_document.uri, Some(params.range)),
+                )
+            },
+        ),
+    }
 }
 
 /// How the server announces renaming to a client with `capabilities`: with

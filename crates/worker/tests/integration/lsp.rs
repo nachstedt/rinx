@@ -1010,6 +1010,70 @@ fn test_lsp_outlines_an_open_document_nested_for_a_client_taking_it() {
 }
 
 #[test]
+fn test_lsp_folds_and_colours_an_open_document() {
+    // Given — a document open in a workspace folder
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_folding_and_tokens");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    let guide = format!("file://{}", root.join("guide.rst").display());
+    let mut server = Server::spawn();
+    let initialized = server.initialize_with(json!({
+        "capabilities": {},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+    while !matches!(
+        server.receive(),
+        Message::Notification(notification)
+            if notification.method == "rinx/status" && notification.params["state"] == "ready"
+    ) {}
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": guide, "languageId": "restructuredtext", "version": 1,
+            "text": "Guide\n=====\n\n.. note::\n\n   See :ref:`install`.\n",
+        }}),
+    );
+    server.published_until(&guide);
+
+    // When
+    server.request(
+        2,
+        "textDocument/foldingRange",
+        json!({ "textDocument": { "uri": guide } }),
+    );
+    server.request(
+        3,
+        "textDocument/semanticTokens/full",
+        json!({ "textDocument": { "uri": guide } }),
+    );
+    let mut answers =
+        std::iter::from_fn(|| Some(server.receive())).filter_map(|message| match message {
+            Message::Response(response) => Some(response),
+            _ => None,
+        });
+    let folded = answers.next().expect("the folding ranges");
+    let coloured = answers.next().expect("the tokens");
+
+    // Then — the section and the note fold; the directive, the role and its
+    // target are coloured, as the legend lists them
+    let capabilities = &initialized.response_result.expect("initialized")["capabilities"];
+    assert_eq!(capabilities["foldingRangeProvider"], true);
+    let legend = &capabilities["semanticTokensProvider"]["legend"]["tokenTypes"];
+    assert_eq!(legend[0], "directive");
+    assert_eq!(
+        folded.response_result.expect("ranges"),
+        json!([
+            { "startLine": 0, "endLine": 5 },
+            { "startLine": 3, "endLine": 5 },
+        ])
+    );
+    assert_eq!(
+        coloured.response_result.expect("tokens")["data"],
+        json!([3, 3, 6, 0, 0, 2, 7, 5, 2, 0, 0, 6, 7, 3, 0])
+    );
+}
+
+#[test]
 fn test_lsp_underlines_a_reference_to_a_label_no_document_defines() {
     // Given — a workspace folder whose document references a missing label
     let root = std::env::temp_dir().join("rinx_lsp_stdio_broken_reference");

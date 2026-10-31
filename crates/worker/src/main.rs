@@ -15,7 +15,7 @@
 //! rinx inventory --index <project.index> --output <objects.inv> --config <config.toml>
 //! rinx extract_doctests --input <file.ast> --output <file.doctests.json>
 //! rinx embed_assets --input <file.ast> --output <file.embeds.json>
-//! rinx lsp [--stdio | --check <folder> [--python <exe>] [--manifest <file>]... [--preview <document>]...]
+//! rinx lsp [--stdio | --check <folder> [--python <exe>] [--manifest <file>]... [--preview <document>]... [--references <document>:<line>:<column>]... [--rename <document>:<line>:<column>=<name>]... [--symbols <query>]... [--semantic-tokens <document>]...]
 //! rinx needs_schema --ubproject <ubproject.toml> [--schemas <schemas.json>] --output <entities.toml>
 //! rinx validate_assets [--image-dir <dir>] [--download-dir <dir>] [--diagram-dirs <puml_dir>...] --inputs <a.ast> [<b.ast> ...]
 //! ```
@@ -90,7 +90,7 @@ fn run(args: &[String]) -> Result<()> {
                    {program} genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html>\n\
                    {program} modindex --index <project.index> --output <py-modindex.html> --config <config.toml> --template <template.html>\n\
                    {program} inventory --index <project.index> --output <objects.inv> --config <config.toml>\n\
-                   {program} lsp [--stdio | --check <folder> [--python <exe>] [--manifest <file>]... [--preview <document>]...]\n\
+                   {program} lsp [--stdio | --check <folder> [--python <exe>] [--manifest <file>]... [--preview <document>]... [--references <document>:<line>:<column>]... [--rename <document>:<line>:<column>=<name>]... [--symbols <query>]... [--semantic-tokens <document>]...]\n\
                    {program} needs_schema --ubproject <ubproject.toml> [--schemas <schemas.json>] --output <entities.toml>\n\
                    {program} validate_assets [--image-dir <dir>] [--download-dir <dir>] [--diagram-dirs <puml_dir>...] --inputs <a.ast> [<b.ast> ...]"
             );

@@ -40,8 +40,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   #40 (PR #335), #24 (PR #340) and #25 (PR #355, prepared by #343, #345,
   #348, #351 and #353), #26 (PRs #358 and #362, prepared by #357) and
   #27 (PR #365, prepared by #363), #28 (PR #374), #29 (PR #378), #30 (PR #386),
-  #31 (PR #393, prepared by #387 and #390) and #32 (PR #395).
-- **Next: #33, folding and semantic tokens.**
+  #31 (PR #393, prepared by #387 and #390), #32 (PR #395) and #33.
+- **Next: #34, preview scroll sync.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -1246,7 +1246,7 @@ Not done here:
   answer.
 - Labels and terms are no outline entries yet (#28).
 
-### 33. Folding + semantic tokens
+### 33. Folding + semantic tokens ✅
 
 **You experience:** sections and directives fold, and roles and references are
 coloured by kind.
@@ -1255,6 +1255,42 @@ coloured by kind.
 - Token legend (role, reference, directive, option, substitution)
 - Tokens emitted from spans plus light lexing
 - Tests
+
+No lexing was needed (ADR-047). The parser records a `rinx_ast::SyntaxTable`
+beside the nodes, never serialized: each heading with its adornment lines,
+each directive's block, comment, literal or doctest block and table, from its
+first line to its last written one, and each name the markup writes: a
+directive's name, an option's `:name:`, a role's `:name:`, what a reference
+leads to and a `|substitution|`, recorded before substitutions are resolved
+away. Each is recorded where the parser reads the construct, so a directive
+the build does not know folds too, and an inline literal holding `:ref:` is
+not coloured. A MyST reader will fill the same table.
+
+`textDocument/foldingRange` folds each section from its title to its last
+written line before the next title at its level or above, each directive,
+literal block and table over its lines, and each comment as a comment;
+`rangeLimit` keeps the longest. `textDocument/semanticTokens/full` and
+`…/range` colour the names, one token per line, under rinx's own type names
+with `declaration` on a label or substitution being defined. The VS Code
+extension gives each type a standard `superType` and scope and turns semantic
+highlighting on for reStructuredText; the Neovim snippet links each
+`@lsp.type.*` group. Both read the open document's latest parse, and only its
+own lines: a fragment folds and is coloured when opened itself. The outline
+now reads a directive's extent from the same table. `rinx lsp --check
+<folder> --semantic-tokens <document>` times colouring a document from its
+latest parse and after an edit.
+
+Measured on CPython's 556 documents with a release build: colouring
+`builtins/stdtypes.rst` (2595 tokens) takes 0.4 ms from its latest parse and
+`library/os.rst` (3730 tokens) 0.8 ms; after an edit, 84 ms and 115 ms, the
+parse's time. So no delta is announced.
+
+Not done here:
+- A role written in a `replace` substitution's text has no position, so it
+  is not coloured, nor hovered or followed (issue #396).
+- An unknown directive's options are not coloured, since the parser does not
+  know it takes any. Lists, block quotes and paragraphs do not fold, by
+  choice.
 
 ### 34. Preview scroll sync
 

@@ -45,6 +45,8 @@ mod document_symbol_tests;
 #[cfg(test)]
 mod entity_tests;
 #[cfg(test)]
+mod folding_range_tests;
+#[cfg(test)]
 mod hover_tests;
 #[cfg(test)]
 mod inventory_tests;
@@ -66,6 +68,8 @@ mod references_tests;
 mod rename_tests;
 #[cfg(test)]
 mod render_tests;
+#[cfg(test)]
+mod semantic_tokens_tests;
 #[cfg(test)]
 mod session_tests;
 #[cfg(test)]

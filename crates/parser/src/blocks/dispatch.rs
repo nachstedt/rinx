@@ -8,8 +8,10 @@ use crate::directives::try_parse_directive;
 use crate::document_roles::{DocumentRoles, RolesInForce};
 use crate::headings::{Adornment, detect_adornment, try_parse_heading};
 use crate::inline::{SourceMap, parse_inline_text_mapped};
+use crate::syntax_recorder::SyntaxRecorder;
 use rinx_ast::{
-    CodeLanguage, Diagnostic, DiagnosticCode, Document, Domain, Node, Suppression, SuppressionCodes,
+    BlockKind, CodeLanguage, Diagnostic, DiagnosticCode, Document, Domain, Node, Span, Suppression,
+    SuppressionCodes,
 };
 
 use super::block_quote::try_parse_block_quote;
@@ -125,7 +127,9 @@ fn parse_document(path: &str, input: &str, ctx: &ParseCtx<'_>, epilog: Epilog) -
     // ends, and it applies only from its definition onwards, which the
     // sequential block parse below gives for free.
     let document_roles = DocumentRoles::default();
-    let ctx = &document_ctx.with_document_roles(&document_roles);
+    let syntax = SyntaxRecorder::default();
+    let roles_ctx = document_ctx.with_document_roles(&document_roles);
+    let ctx = &roles_ctx.with_syntax_recorder(&syntax);
 
     let mut adornment_order: Vec<Adornment> = Vec::new();
 
@@ -166,6 +170,7 @@ fn parse_document(path: &str, input: &str, ctx: &ParseCtx<'_>, epilog: Epilog) -
     let (entries, suppressions, source_files) = diagnostics.into_parts();
     let mut doc = Document::new(path.to_string(), nodes);
     doc.include_sites = include_sites;
+    doc.syntax = syntax.into_table();
     doc.diagnostics = entries;
     doc.suppressions = suppressions;
     doc.metadata = metadata;
@@ -217,6 +222,7 @@ pub(crate) fn parse_blocks(
         // suppressions: whatever sits between a `.. noqa:` and its block —
         // including a second `.. noqa:` — is not the thing being suppressed.
         if let Some((consumed, node)) = try_parse_comment(lines, i) {
+            ctx.record_block(BlockKind::Comment, written_extent(lines, i, consumed, ctx));
             nodes.push(node);
             i += consumed;
             continue;
@@ -226,6 +232,7 @@ pub(crate) fn parse_blocks(
             try_parse_construct(lines, i, &nodes, adornment_order, diagnostics, ctx)
                 .unwrap_or_else(|| parse_paragraph(lines, i, ctx));
         attach_pending_noqa(&mut pending_noqa, diagnostics, ctx, i, consumed);
+        record_block_syntax(&new_nodes, lines, i, consumed, ctx);
         nodes.extend(new_nodes);
         i += consumed;
     }
@@ -379,8 +386,6 @@ fn parse_paragraph(lines: &[&str], i: usize, ctx: &ParseCtx<'_>) -> (usize, Vec<
         }
     }
 
-    let inlines = parse_inline_text_mapped(&paragraph_text, ctx.default_domain, &map, ctx);
-
     // Detect trailing "::" to introduce a literal block
     let trailing_double_colon = paragraph_text.trim_end().ends_with("::");
     if trailing_double_colon {
@@ -390,6 +395,11 @@ fn parse_paragraph(lines: &[&str], i: usize, ctx: &ParseCtx<'_>) -> (usize, Vec<
         let lit_start = current_pos_line;
         let (lit_consumed, content) = collect_literal_block_body(lines, lit_start);
         let total_consumed = current_pos_line - i + lit_consumed;
+        // Folded from the `::` line, as a directive is from its marker.
+        ctx.record_block(
+            BlockKind::LiteralBlock,
+            written_extent(lines, lit_start - 1, lit_consumed + 1, ctx),
+        );
         let literal_node = Node::LiteralBlock {
             language: CodeLanguage::Inherit,
             content,
@@ -404,7 +414,41 @@ fn parse_paragraph(lines: &[&str], i: usize, ctx: &ParseCtx<'_>) -> (usize, Vec<
         return (total_consumed, vec![Node::Paragraph(inlines), literal_node]);
     }
 
+    let inlines = parse_inline_text_mapped(&paragraph_text, ctx.default_domain, &map, ctx);
     (current_pos_line - i, vec![Node::Paragraph(inlines)])
+}
+
+/// The span of the `consumed` lines from `first`, up to the last one that is
+/// not blank — where a block ends for an editor folding it — or `None` when
+/// all of them are blank or the lines came from no source.
+pub(crate) fn written_extent(
+    lines: &[&str],
+    first: usize,
+    consumed: usize,
+    ctx: &ParseCtx<'_>,
+) -> Option<Span> {
+    let end = (first + consumed).min(lines.len());
+    let last = (first..end)
+        .rev()
+        .find(|at| !lines[*at].trim().is_empty())?;
+    ctx.lines_span(first, last, lines[last].trim_end())
+}
+
+/// Records `nodes`, read from the `consumed` lines from `first`, as a block
+/// an editor folds, when they are one table or doctest block.
+fn record_block_syntax(
+    nodes: &[Node],
+    lines: &[&str],
+    first: usize,
+    consumed: usize,
+    ctx: &ParseCtx<'_>,
+) {
+    let kind = match nodes {
+        [Node::Table { .. }] => BlockKind::Table,
+        [Node::DoctestBlock(_)] => BlockKind::LiteralBlock,
+        _ => return,
+    };
+    ctx.record_block(kind, written_extent(lines, first, consumed, ctx));
 }
 
 #[cfg(test)]

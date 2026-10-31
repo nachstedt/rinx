@@ -79,6 +79,7 @@ mod image;
 mod include;
 pub(crate) mod index_directive;
 mod invocation;
+mod marker_syntax;
 mod math;
 mod needimport;
 mod needservice;

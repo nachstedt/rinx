@@ -1,8 +1,9 @@
 use super::inline::{SourceMap, parse_inline_text_mapped};
+use crate::blocks::written_extent;
 use crate::context::{ParseCtx, SectionTitles};
 use crate::diagnostics::Diagnostics;
 use crate::width::column_width;
-use rinx_ast::{Diagnostic, DiagnosticCode, Node};
+use rinx_ast::{BlockKind, Diagnostic, DiagnosticCode, Node};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum AdornmentStyle {
@@ -361,6 +362,11 @@ pub(super) fn try_parse_heading(
         ctx.section_titles(),
     ))
     .unwrap_or(u8::MAX);
+
+    ctx.record_block(
+        BlockKind::Heading { level },
+        written_extent(lines, i, consumed, ctx),
+    );
 
     let text = parse_inline_text_mapped(
         &text,
