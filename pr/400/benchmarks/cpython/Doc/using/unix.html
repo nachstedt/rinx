@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Using Python on Unix platforms — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python Setup and Usage</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python Setup and Usage"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="cmdline.html"><span class="section-number">1. </span>Command line and environment</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="unix.html"><span class="section-number">2. </span>Using Python on Unix platforms</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Using Python on Unix platforms"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="unix.html#getting-and-installing-the-latest-version-of-python"><span class="section-number">2.1. </span>Getting and installing the latest version of Python</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="unix.html#building-python"><span class="section-number">2.2. </span>Building Python</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="unix.html#python-related-paths-and-files"><span class="section-number">2.3. </span>Python-related paths and files</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="unix.html#miscellaneous"><span class="section-number">2.4. </span>Miscellaneous</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="unix.html#custom-openssl"><span class="section-number">2.5. </span>Custom OpenSSL</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="configure.html"><span class="section-number">3. </span>Configure Python</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html"><span class="section-number">4. </span>Using Python on Windows</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mac.html"><span class="section-number">5. </span>Using Python on macOS</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="android.html"><span class="section-number">6. </span>Using Python on Android</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ios.html"><span class="section-number">7. </span>Using Python on iOS</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="editors.html"><span class="section-number">8. </span>Editors and IDEs</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="cmdline.html">&larr; Command line and environment</a>
+        <a class="next" href="configure.html">Configure Python &rarr;</a>
+      </nav>
+      
+      <a id="using-on-unix"></a>
+<h1 id="using-python-on-unix-platforms"><span class="section-number">2. </span>Using Python on Unix platforms</h1>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Shriphani Palakodety</pre>
+</div>
+<h2 id="getting-and-installing-the-latest-version-of-python"><span class="section-number">2.1. </span>Getting and installing the latest version of Python</h2>
+<h3 id="on-linux"><span class="section-number">2.1.1. </span>On Linux</h3>
+<p>Python comes preinstalled on most Linux distributions, and is available as a
+package on all others.  However there are certain features you might want to use
+that are not available on your distro's package.  You can compile the
+latest version of Python from source.</p>
+<p>In the event that the latest version of Python doesn't come preinstalled and isn't
+in the repositories as well, you can make packages for your own distro.  Have a
+look at the following links:</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>https://www.debian.org/doc/manuals/maint-guide/first.en.html</dt>
+<dd><p>for Debian users</p>
+</dd>
+<dt>https://en.opensuse.org/Portal:Packaging</dt>
+<dd><p>for OpenSuse users</p>
+</dd>
+<dt>https://docs.fedoraproject.org/en-US/package-maintainers/Packaging_Tutorial_GNU_Hello/</dt>
+<dd><p>for Fedora users</p>
+</dd>
+<dt>https://slackbook.org/html/package-management-making-packages.html</dt>
+<dd><p>for Slackware users</p>
+</dd>
+</dl>
+</div>
+<a id="installing_idle_on_linux"></a>
+<h4 id="installing-idle"><span class="section-number">2.1.1.1. </span>Installing IDLE</h4>
+<p>In some cases, IDLE might not be included in your Python installation.</p>
+<ul>
+<li><p>For Debian and Ubuntu users:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">sudo</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> apt update</span></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">sudo</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> apt install idle</span></span></pre></div>
+</li>
+<li><p>For Fedora, RHEL, and CentOS users:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">sudo</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> dnf install python3-idle</span></span></pre></div>
+</li>
+<li><p>For SUSE and OpenSUSE users:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">sudo</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> zypper install python3-idle</span></span></pre></div>
+</li>
+<li><p>For Alpine Linux users:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">sudo</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> apk add python3-idle</span></span></pre></div>
+</li>
+</ul>
+<h3 id="on-freebsd-and-openbsd"><span class="section-number">2.1.2. </span>On FreeBSD and OpenBSD</h3>
+<ul>
+<li><p>FreeBSD users, to add the package use:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">pkg</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> install python3</span></span></pre></div>
+</li>
+<li><p>OpenBSD users, to add the package use:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">pkg_add</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"><span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>r</span> python</span></span>
+<span class="hl-source hl-shell hl-bash"></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">pkg_add</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> ftp://ftp.openbsd.org/pub/OpenBSD/4.2/packages/<span class="hl-keyword hl-operator hl-assignment hl-redirection hl-shell">&lt;</span>insert your architecture here<span class="hl-keyword hl-operator hl-assignment hl-redirection hl-shell">&gt;</span>/python-<span class="hl-keyword hl-operator hl-assignment hl-redirection hl-shell">&lt;</span>version<span class="hl-keyword hl-operator hl-assignment hl-redirection hl-shell">&gt;</span>.tgz</span></span></pre></div>
+<p>For example i386 users get the 2.5.1 version of Python using:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">pkg_add</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> ftp://ftp.openbsd.org/pub/OpenBSD/4.2/packages/i386/python-2.5.1p2.tgz</span></span></pre></div>
+</li>
+</ul>
+<a id="building-python-on-unix"></a>
+<h2 id="building-python"><span class="section-number">2.2. </span>Building Python</h2>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p>If you want to contribute to CPython, refer to the
+<a href="https://devguide.python.org/getting-started/setup-building/">devguide</a>,
+which includes build instructions and other tips on setting up environment.</p>
+</div>
+<p>If you want to compile CPython yourself, first thing you should do is get the
+<a href="https://www.python.org/downloads/source/">source</a>. You can download either the
+latest release's source or grab a fresh <a href="https://devguide.python.org/setup/#get-the-source-code">clone</a>.
+You will also need to install the <a href="configure.html#build-requirements">build requirements</a>.</p>
+<p>The build process consists of the usual commands:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">./configure</span></span></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">make</span></span></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">make</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> install</span></span></pre></div>
+<p><a href="configure.html#configure-options">Configuration options</a> and caveats for specific Unix
+platforms are extensively documented in the :source:`README.rst` file in the
+root of the Python source tree.</p>
+<div class="admonition warning">
+  <p class="admonition-title">Warning</p>
+<p><code>make install</code> can overwrite or masquerade the :file:`python3` binary.
+<code>make altinstall</code> is therefore recommended instead of <code>make install</code>
+since it only installs :file:`{exec_prefix}/bin/python{version}`.</p>
+</div>
+<h2 id="python-related-paths-and-files"><span class="section-number">2.3. </span>Python-related paths and files</h2>
+<p>These are subject to difference depending on local installation conventions;
+<a class="reference internal" href="configure.html#std:cmdoption:--prefix"><code class="xref std cmdoption docutils literal">prefix</code></a> and <a class="reference internal" href="configure.html#std:cmdoption:--exec-prefix"><code class="xref std cmdoption docutils literal">exec_prefix</code></a>
+are installation-dependent and should be interpreted as for GNU software; they
+may be the same.</p>
+<p>For example, on most Linux systems, the default for both is :file:`/usr`.</p>
+<table>
+<thead>
+<tr>
+<th><p>File/directory</p>
+</th>
+<th><p>Meaning</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>:file:`{exec_prefix}/bin/python3`</p>
+</td>
+<td><p>Recommended location of the interpreter.</p>
+</td>
+</tr>
+<tr>
+<td><p>:file:`{prefix}/lib/python{version}`,
+:file:`{exec_prefix}/lib/python{version}`</p>
+</td>
+<td><p>Recommended locations of the directories
+containing the standard modules.</p>
+</td>
+</tr>
+<tr>
+<td><p>:file:`{prefix}/include/python{version}`,
+:file:`{exec_prefix}/include/python{version}`</p>
+</td>
+<td><p>Recommended locations of the directories
+containing the include files needed for
+developing Python extensions and
+embedding the interpreter.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="miscellaneous"><span class="section-number">2.4. </span>Miscellaneous</h2>
+<p>To easily use Python scripts on Unix, you need to make them executable,
+e.g. with</p>
+<div class="highlight-shell-session notranslate">
+<div class="highlight hl-code"><pre>
+$ chmod +x script</pre></div>
+</div>
+<p>and put an appropriate Shebang line at the top of the script.  A good choice is
+usually :</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-comment hl-line hl-number-sign hl-shell"><span class="hl-punctuation hl-definition hl-comment hl-begin hl-shell">#</span></span><span class="hl-comment hl-line hl-number-sign hl-shell">!/usr/bin/env python3</span></span></pre></div>
+<p>which searches for the Python interpreter in the whole :envvar:`PATH`.  However,
+some Unices may not have the <strong class="program">env</strong> command, so you may need to hardcode
+<code>/usr/bin/python3</code> as the interpreter path.</p>
+<p>To use shell commands in your Python scripts, look at the <a class="reference internal" href="../library/subprocess.html#py:module:subprocess" title="subprocess: Subprocess management."><code class="xref py module docutils literal">subprocess</code></a> module.</p>
+<a id="unix_custom_openssl"></a>
+<h2 id="custom-openssl"><span class="section-number">2.5. </span>Custom OpenSSL</h2>
+<ol class="arabic period">
+<li><p>To use your vendor's OpenSSL configuration and system trust store, locate
+the directory with <code>openssl.cnf</code> file or symlink in <code>/etc</code>. On most
+distribution the file is either in <code>/etc/ssl</code> or <code>/etc/pki/tls</code>. The
+directory should also contain a <code>cert.pem</code> file and/or a <code>certs</code>
+directory.</p>
+<div class="highlight-shell-session notranslate">
+<div class="highlight hl-code"><pre>
+$ find /etc/ -name openssl.cnf -printf "%h\n"
+/etc/ssl</pre></div>
+</div>
+</li>
+<li><p>Download, build, and install OpenSSL. Make sure you use <code>install_sw</code> and
+not <code>install</code>. The <code>install_sw</code> target does not override
+<code>openssl.cnf</code>.</p>
+<div class="highlight-shell-session notranslate">
+<div class="highlight hl-code"><pre>
+$ curl -O https://www.openssl.org/source/openssl-VERSION.tar.gz
+$ tar xzf openssl-VERSION
+$ pushd openssl-VERSION
+$ ./config \
+    --prefix=/usr/local/custom-openssl \
+    --libdir=lib \
+    --openssldir=/etc/ssl
+$ make -j1 depend
+$ make -j8
+$ make install_sw
+$ popd</pre></div>
+</div>
+</li>
+<li><p>Build Python with custom OpenSSL
+(see the configure <code>--with-openssl</code> and <code>--with-openssl-rpath</code> options)</p>
+<div class="highlight-shell-session notranslate">
+<div class="highlight hl-code"><pre>
+$ pushd python-3.x.x
+$ ./configure -C \
+    --with-openssl=/usr/local/custom-openssl \
+    --with-openssl-rpath=auto \
+    --prefix=/usr/local/python-3.x.x
+$ make -j8
+$ make altinstall</pre></div>
+</div>
+</li>
+</ol>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Patch releases of OpenSSL have a backwards compatible ABI. You don't need
+to recompile Python to update OpenSSL. It's sufficient to replace the
+custom OpenSSL installation with a newer version.</p>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="cmdline.html">&larr; Command line and environment</a>
+        <a class="next" href="configure.html">Configure Python &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

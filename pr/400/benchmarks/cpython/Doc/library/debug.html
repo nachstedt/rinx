@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Debugging and Profiling — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Debugging and Profiling"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="audit_events.html">Audit events table</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="bdb.html">bdb — Debugger framework</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="faulthandler.html">faulthandler — Dump the Python traceback</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pdb.html">pdb — The Python Debugger</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="profile.html">The Python Profilers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="timeit.html">timeit — Measure execution time of small code snippets</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="trace.html">trace — Trace or track Python statement execution</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tracemalloc.html">tracemalloc — Trace memory allocations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="test.html">&larr; test — Regression tests package for Python</a>
+        <a class="next" href="audit_events.html">Audit events table &rarr;</a>
+      </nav>
+      
+      <h1 id="debugging-and-profiling">Debugging and Profiling</h1>
+<p>These libraries help you with Python development: the debugger enables you to
+step through code, analyze stack frames and set breakpoints etc., and the
+profilers run code and give you a detailed breakdown of execution times,
+allowing you to identify bottlenecks in your programs. Auditing events
+provide visibility into runtime behaviors that would otherwise require
+intrusive debugging or patching.</p>
+<ul>
+  <li><a href="audit_events.html">Audit events table</a></li>
+  <li><a href="bdb.html">bdb — Debugger framework</a></li>
+  <li><a href="faulthandler.html">faulthandler — Dump the Python traceback</a>
+<ul>
+  <li><a href="faulthandler.html#dumping-the-traceback">Dumping the traceback</a></li>
+  <li><a href="faulthandler.html#dumping-the-c-stack">Dumping the C stack</a>
+<ul>
+  <li><a href="faulthandler.html#c-stack-compatibility">C Stack Compatibility</a></li>
+</ul>
+  </li>
+  <li><a href="faulthandler.html#fault-handler-state">Fault handler state</a></li>
+  <li><a href="faulthandler.html#dumping-the-tracebacks-after-a-timeout">Dumping the tracebacks after a timeout</a></li>
+  <li><a href="faulthandler.html#dumping-the-traceback-on-a-user-signal">Dumping the traceback on a user signal</a></li>
+  <li><a href="faulthandler.html#issue-with-file-descriptors">Issue with file descriptors</a></li>
+  <li><a href="faulthandler.html#example">Example</a></li>
+</ul>
+  </li>
+  <li><a href="pdb.html">pdb — The Python Debugger</a>
+<ul>
+  <li><a href="pdb.html#command-line-interface">Command-line interface</a></li>
+  <li><a href="pdb.html#debugger-commands">Debugger commands</a></li>
+</ul>
+  </li>
+  <li><a href="profile.html">The Python Profilers</a>
+<ul>
+  <li><a href="profile.html#introduction-to-the-profilers">Introduction to the profilers</a></li>
+  <li><a href="profile.html#instant-user-s-manual">Instant User's Manual</a></li>
+  <li><a href="profile.html#profile-and-cprofile-module-reference">profile and cProfile Module Reference</a></li>
+  <li><a href="profile.html#the-stats-class">The Stats Class</a></li>
+  <li><a href="profile.html#what-is-deterministic-profiling">What Is Deterministic Profiling?</a></li>
+  <li><a href="profile.html#limitations">Limitations</a></li>
+  <li><a href="profile.html#calibration">Calibration</a></li>
+  <li><a href="profile.html#using-a-custom-timer">Using a custom timer</a></li>
+</ul>
+  </li>
+  <li><a href="timeit.html">timeit — Measure execution time of small code snippets</a>
+<ul>
+  <li><a href="timeit.html#basic-examples">Basic Examples</a></li>
+  <li><a href="timeit.html#python-interface">Python Interface</a></li>
+  <li><a href="timeit.html#command-line-interface">Command-Line Interface</a></li>
+  <li><a href="timeit.html#examples">Examples</a></li>
+</ul>
+  </li>
+  <li><a href="trace.html">trace — Trace or track Python statement execution</a>
+<ul>
+  <li><a href="trace.html#command-line-usage">Command-Line Usage</a>
+<ul>
+  <li><a href="trace.html#main-options">Main options</a></li>
+  <li><a href="trace.html#modifiers">Modifiers</a></li>
+  <li><a href="trace.html#filters">Filters</a></li>
+</ul>
+  </li>
+  <li><a href="trace.html#programmatic-interface">Programmatic Interface</a></li>
+</ul>
+  </li>
+  <li><a href="tracemalloc.html">tracemalloc — Trace memory allocations</a>
+<ul>
+  <li><a href="tracemalloc.html#examples">Examples</a>
+<ul>
+  <li><a href="tracemalloc.html#display-the-top-10">Display the top 10</a></li>
+  <li><a href="tracemalloc.html#compute-differences">Compute differences</a></li>
+  <li><a href="tracemalloc.html#get-the-traceback-of-a-memory-block">Get the traceback of a memory block</a></li>
+  <li><a href="tracemalloc.html#pretty-top">Pretty top</a>
+<ul>
+  <li><a href="tracemalloc.html#record-the-current-and-peak-size-of-all-traced-memory-blocks">Record the current and peak size of all traced memory blocks</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li><a href="tracemalloc.html#api">API</a>
+<ul>
+  <li><a href="tracemalloc.html#functions">Functions</a></li>
+  <li><a href="tracemalloc.html#domainfilter">DomainFilter</a></li>
+  <li><a href="tracemalloc.html#filter">Filter</a></li>
+  <li><a href="tracemalloc.html#frame">Frame</a></li>
+  <li><a href="tracemalloc.html#snapshot">Snapshot</a></li>
+  <li><a href="tracemalloc.html#statistic">Statistic</a></li>
+  <li><a href="tracemalloc.html#statisticdiff">StatisticDiff</a></li>
+  <li><a href="tracemalloc.html#trace">Trace</a></li>
+  <li><a href="tracemalloc.html#traceback">Traceback</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="test.html">&larr; test — Regression tests package for Python</a>
+        <a class="next" href="audit_events.html">Audit events table &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>token — Constants used with Python parse trees — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="language.html">Python Language Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python Language Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="ast.html">ast — Abstract syntax trees</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="symtable.html">symtable — Access to the compiler&#x27;s symbol tables</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current">
+            <a href="token.html">token — Constants used with Python parse trees</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="keyword.html">keyword — Testing for Python keywords</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tokenize.html">tokenize — Tokenizer for Python source</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tabnanny.html">tabnanny — Detection of ambiguous indentation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pyclbr.html">pyclbr — Python module browser support</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="py_compile.html">py_compile — Compile Python source files</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="compileall.html">compileall — Byte-compile Python libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="dis.html">dis — Disassembler for Python bytecode</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pickletools.html">pickletools — Tools for pickle developers</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="symtable.html">&larr; symtable — Access to the compiler&#x27;s symbol tables</a>
+        <a class="next" href="keyword.html">keyword — Testing for Python keywords &rarr;</a>
+      </nav>
+      
+      <h1 id="token-constants-used-with-python-parse-trees"><code class="xref py module docutils literal">token</code> — Constants used with Python parse trees</h1>
+<dl class="py module">
+  <dt id="py:module:token"><code class="sig-name">token</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Fred L. Drake, Jr. &lt;fdrake@acm.org&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/token.py`</p>
+<hr />
+<p>This module provides constants which represent the numeric values of leaf nodes
+of the parse tree (terminal tokens).  Refer to the file :file:`Grammar/Tokens`
+in the Python distribution for the definitions of the names in the context of
+the language grammar.  The specific numeric values which the names map to may
+change between Python versions.</p>
+<p>The module also provides a mapping from numeric codes to names and some
+functions.  The functions mirror definitions in the Python C header files.</p>
+<p>Note that a token's value may depend on tokenizer options. For example, a
+<code>"+"</code> token may be reported as either <a class="reference internal" href="token.html#py:data:token.plus"><code class="xref py data docutils literal">PLUS</code></a> or <a class="reference internal" href="token.html#py:data:token.op"><code class="xref py data docutils literal">OP</code></a>, or
+a <code>"match"</code> token may be either <a class="reference internal" href="token.html#py:data:token.name"><code class="xref py data docutils literal">NAME</code></a> or <a class="reference internal" href="token.html#py:data:token.soft_keyword"><code class="xref py data docutils literal">SOFT_KEYWORD</code></a>.</p>
+<dl class="py data">
+  <dt id="py:data:token.tok_name"><code class="sig-name">tok_name</code></dt>
+  <dd><p>Dictionary mapping the numeric values of the constants defined in this module
+back to name strings, allowing more human-readable representation of parse trees
+to be generated.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:token.isterminal"><code class="sig-name">ISTERMINAL(x)</code></dt>
+  <dd><p>Return <code>True</code> for terminal token values.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:token.isnonterminal"><code class="sig-name">ISNONTERMINAL(x)</code></dt>
+  <dd><p>Return <code>True</code> for non-terminal token values.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:token.iseof"><code class="sig-name">ISEOF(x)</code></dt>
+  <dd><p>Return <code>True</code> if <em>x</em> is the marker indicating the end of input.</p>
+</dd>
+</dl>
+<p>The token constants are:</p>
+<dl class="py data">
+  <dt id="py:data:token.name"><code class="sig-name">NAME</code></dt>
+  <dd><p>Token value that indicates an <a href="../reference/lexical_analysis.html#identifiers">identifier</a>.
+Note that keywords are also initially tokenized as <code>NAME</code> tokens.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.number"><code class="sig-name">NUMBER</code></dt>
+  <dd><p>Token value that indicates a <a href="../reference/lexical_analysis.html#numbers">numeric literal</a></p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.string"><code class="sig-name">STRING</code></dt>
+  <dd><p>Token value that indicates a <a href="../reference/lexical_analysis.html#strings">string or byte literal</a>,
+excluding <a href="../reference/lexical_analysis.html#f-strings">formatted string literals</a>.
+The token string is not interpreted:
+it includes the surrounding quotation marks and the prefix (if given);
+backslashes are included literally, without processing escape sequences.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.op"><code class="sig-name">OP</code></dt>
+  <dd><p>A generic token value that indicates an
+<a href="../reference/lexical_analysis.html#operators">operator</a> or <a href="../reference/lexical_analysis.html#delimiters">delimiter</a>.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+
+   This value is only reported by the :mod:`tokenize` module.
+   Internally, the tokenizer uses
+   :ref:`exact token types &lt;token_operators_delimiters&gt;` instead.</pre>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.comment"><code class="sig-name">COMMENT</code></dt>
+  <dd><p>Token value used to indicate a comment.
+The parser ignores <code class="xref py data docutils literal">COMMENT</code> tokens.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.newline"><code class="sig-name">NEWLINE</code></dt>
+  <dd><p>Token value that indicates the end of a <a href="../reference/lexical_analysis.html#logical-lines">logical line</a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.nl"><code class="sig-name">NL</code></dt>
+  <dd><p>Token value used to indicate a non-terminating newline.
+<code class="xref py data docutils literal">NL</code> tokens are generated when a logical line of code is continued
+over multiple physical lines. The parser ignores <code class="xref py data docutils literal">NL</code> tokens.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.indent"><code class="sig-name">INDENT</code></dt>
+  <dd><p>Token value used at the beginning of a <a href="../reference/lexical_analysis.html#logical-lines">logical line</a>
+to indicate the start of an <a href="../reference/lexical_analysis.html#indentation">indented block</a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.dedent"><code class="sig-name">DEDENT</code></dt>
+  <dd><p>Token value used at the beginning of a <a href="../reference/lexical_analysis.html#logical-lines">logical line</a>
+to indicate the end of an <a href="../reference/lexical_analysis.html#indentation">indented block</a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.fstring_start"><code class="sig-name">FSTRING_START</code></dt>
+  <dd><p>Token value used to indicate the beginning of an
+<a href="../reference/lexical_analysis.html#f-strings">f-string literal</a>.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+
+   The token string includes the prefix and the opening quote(s), but none
+   of the contents of the literal.</pre>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.fstring_middle"><code class="sig-name">FSTRING_MIDDLE</code></dt>
+  <dd><p>Token value used for literal text inside an <a href="../reference/lexical_analysis.html#f-strings">f-string literal</a>,
+including format specifications.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+
+   Replacement fields (that is, the non-literal parts of f-strings) use
+   the same tokens as other expressions, and are delimited by
+   :data:`LBRACE`, :data:`RBRACE`, :data:`EXCLAMATION` and :data:`COLON`
+   tokens.</pre>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.fstring_end"><code class="sig-name">FSTRING_END</code></dt>
+  <dd><p>Token value used to indicate the end of a <a href="../reference/lexical_analysis.html#f-strings">f-string</a>.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+
+   The token string contains the closing quote(s).</pre>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.tstring_start"><code class="sig-name">TSTRING_START</code></dt>
+  <dd><p>Token value used to indicate the beginning of a template string literal.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+
+   The token string includes the prefix and the opening quote(s), but none
+   of the contents of the literal.</pre>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.tstring_middle"><code class="sig-name">TSTRING_MIDDLE</code></dt>
+  <dd><p>Token value used for literal text inside a template string literal
+including format specifications.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+
+   Replacement fields (that is, the non-literal parts of t-strings) use
+   the same tokens as other expressions, and are delimited by
+   :data:`LBRACE`, :data:`RBRACE`, :data:`EXCLAMATION` and :data:`COLON`
+   tokens.</pre>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.tstring_end"><code class="sig-name">TSTRING_END</code></dt>
+  <dd><p>Token value used to indicate the end of a template string literal.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+
+   The token string contains the closing quote(s).</pre>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.endmarker"><code class="sig-name">ENDMARKER</code></dt>
+  <dd><p>Token value that indicates the end of input.
+Used in <a href="../reference/toplevel_components.html#top-level">top-level grammar rules</a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.encoding"><code class="sig-name">ENCODING</code></dt>
+  <dd><p>Token value that indicates the encoding used to decode the source bytes
+into text. The first token returned by <a class="reference internal" href="tokenize.html#py:function:tokenize.tokenize"><code class="xref py function docutils literal">tokenize.tokenize</code></a> will
+always be an <code>ENCODING</code> token.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+
+   This token type isn't used by the C tokenizer but is needed for
+   the :mod:`tokenize` module.</pre>
+</div>
+</dd>
+</dl>
+<p>The following token types are not produced by the <a class="reference internal" href="tokenize.html#py:module:tokenize" title="tokenize: Lexical scanner for Python source code."><code class="xref py module docutils literal">tokenize</code></a> module,
+and are defined for special uses in the tokenizer or parser:</p>
+<dl class="py data">
+  <dt id="py:data:token.type_ignore"><code class="sig-name">TYPE_IGNORE</code></dt>
+  <dd><p>Token value indicating that a <code>type: ignore</code> comment was recognized.
+Such tokens are produced instead of regular <a class="reference internal" href="token.html#py:data:token.comment"><code class="xref py data docutils literal">COMMENT</code></a> tokens only
+with the <a class="reference internal" href="ast.html#py:data:ast.pycf_type_comments"><code class="xref py data docutils literal">PyCF_TYPE_COMMENTS</code></a> flag.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.type_comment"><code class="sig-name">TYPE_COMMENT</code></dt>
+  <dd><p>Token value indicating that a type comment was recognized.
+Such tokens are produced instead of regular <a class="reference internal" href="token.html#py:data:token.comment"><code class="xref py data docutils literal">COMMENT</code></a> tokens only
+with the <a class="reference internal" href="ast.html#py:data:ast.pycf_type_comments"><code class="xref py data docutils literal">PyCF_TYPE_COMMENTS</code></a> flag.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.soft_keyword"><code class="sig-name">SOFT_KEYWORD</code></dt>
+  <dd><p>Token value indicating a <a href="../reference/lexical_analysis.html#soft-keywords">soft keyword</a>.</p>
+<p>The tokenizer never produces this value.
+To check for a soft keyword, pass a <a class="reference internal" href="token.html#py:data:token.name"><code class="xref py data docutils literal">NAME</code></a> token's string to
+<a class="reference internal" href="keyword.html#py:function:keyword.issoftkeyword"><code class="xref py function docutils literal">keyword.issoftkeyword</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.errortoken"><code class="sig-name">ERRORTOKEN</code></dt>
+  <dd><p>Token value used to indicate wrong input.</p>
+<p>The <a class="reference internal" href="tokenize.html#py:module:tokenize" title="tokenize: Lexical scanner for Python source code."><code class="xref py module docutils literal">tokenize</code></a> module generally indicates errors by
+raising exceptions instead of emitting this token.
+It can also emit tokens such as <a class="reference internal" href="token.html#py:data:token.op"><code class="xref py data docutils literal">OP</code></a> or <a class="reference internal" href="token.html#py:data:token.name"><code class="xref py data docutils literal">NAME</code></a> with strings that
+are later rejected by the parser.</p>
+</dd>
+</dl>
+<a id="token_operators_delimiters"></a>
+<p>The remaining tokens represent specific <a href="../reference/lexical_analysis.html#operators">operators</a> and
+<a href="../reference/lexical_analysis.html#delimiters">delimiters</a>.
+(The <a class="reference internal" href="tokenize.html#py:module:tokenize" title="tokenize: Lexical scanner for Python source code."><code class="xref py module docutils literal">tokenize</code></a> module reports these as <a class="reference internal" href="token.html#py:data:token.op"><code class="xref py data docutils literal">OP</code></a>; see <code>exact_type</code>
+in the <a class="reference internal" href="tokenize.html#py:module:tokenize" title="tokenize: Lexical scanner for Python source code."><code class="xref py module docutils literal">tokenize</code></a> documentation for details.)</p>
+<table class="list-table align-left">
+<thead>
+<tr>
+<th><p>Token</p>
+</th>
+<th><p>Value</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.lpar"><code class="sig-name">LPAR</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"("</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.rpar"><code class="sig-name">RPAR</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>")"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.lsqb"><code class="sig-name">LSQB</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"["</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.rsqb"><code class="sig-name">RSQB</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"]"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.colon"><code class="sig-name">COLON</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>":"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.comma"><code class="sig-name">COMMA</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>","</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.semi"><code class="sig-name">SEMI</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>";"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.plus"><code class="sig-name">PLUS</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"+"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.minus"><code class="sig-name">MINUS</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"-"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.star"><code class="sig-name">STAR</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"*"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.slash"><code class="sig-name">SLASH</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"/"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.vbar"><code class="sig-name">VBAR</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"|"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.amper"><code class="sig-name">AMPER</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"&amp;"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.less"><code class="sig-name">LESS</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"&lt;"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.greater"><code class="sig-name">GREATER</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"&gt;"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.equal"><code class="sig-name">EQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.dot"><code class="sig-name">DOT</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"."</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.percent"><code class="sig-name">PERCENT</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"%"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.lbrace"><code class="sig-name">LBRACE</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"{"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.rbrace"><code class="sig-name">RBRACE</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"}"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.eqequal"><code class="sig-name">EQEQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"=="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.notequal"><code class="sig-name">NOTEQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"!="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.lessequal"><code class="sig-name">LESSEQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"&lt;="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.greaterequal"><code class="sig-name">GREATEREQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"&gt;="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.tilde"><code class="sig-name">TILDE</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"~"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.circumflex"><code class="sig-name">CIRCUMFLEX</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"^"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.leftshift"><code class="sig-name">LEFTSHIFT</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"&lt;&lt;"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.rightshift"><code class="sig-name">RIGHTSHIFT</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"&gt;&gt;"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.doublestar"><code class="sig-name">DOUBLESTAR</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"**"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.plusequal"><code class="sig-name">PLUSEQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"+="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.minequal"><code class="sig-name">MINEQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"-="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.starequal"><code class="sig-name">STAREQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"*="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.slashequal"><code class="sig-name">SLASHEQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"/="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.percentequal"><code class="sig-name">PERCENTEQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"%="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.amperequal"><code class="sig-name">AMPEREQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"&amp;="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.vbarequal"><code class="sig-name">VBAREQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"|="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.circumflexequal"><code class="sig-name">CIRCUMFLEXEQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"^="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.leftshiftequal"><code class="sig-name">LEFTSHIFTEQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"&lt;&lt;="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.rightshiftequal"><code class="sig-name">RIGHTSHIFTEQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"&gt;&gt;="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.doublestarequal"><code class="sig-name">DOUBLESTAREQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"**="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.doubleslash"><code class="sig-name">DOUBLESLASH</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"//"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.doubleslashequal"><code class="sig-name">DOUBLESLASHEQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"//="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.at"><code class="sig-name">AT</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"@"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.atequal"><code class="sig-name">ATEQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"@="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.rarrow"><code class="sig-name">RARROW</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"-&gt;"</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.ellipsis"><code class="sig-name">ELLIPSIS</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"..."</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.colonequal"><code class="sig-name">COLONEQUAL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>":="</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:token.exclamation"><code class="sig-name">EXCLAMATION</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>"!"</code></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The following non-token constants are provided:</p>
+<dl class="py data">
+  <dt id="py:data:token.n_tokens"><code class="sig-name">N_TOKENS</code></dt>
+  <dd><p>The number of token types defined in this module.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:token.exact_token_types"><code class="sig-name">EXACT_TOKEN_TYPES</code></dt>
+  <dd><p>A dictionary mapping the string representation of a token to its numeric code.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.8:</span></p>
+</div>
+</dd>
+</dl>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Added <code class="xref py data docutils literal">AWAIT</code> and <code class="xref py data docutils literal">ASYNC</code> tokens.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>Added <a class="reference internal" href="token.html#py:data:token.comment"><code class="xref py data docutils literal">COMMENT</code></a>, <a class="reference internal" href="token.html#py:data:token.nl"><code class="xref py data docutils literal">NL</code></a> and <a class="reference internal" href="token.html#py:data:token.encoding"><code class="xref py data docutils literal">ENCODING</code></a> tokens.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>Removed <code class="xref py data docutils literal">AWAIT</code> and <code class="xref py data docutils literal">ASYNC</code> tokens. "async" and "await" are
+now tokenized as <a class="reference internal" href="token.html#py:data:token.name"><code class="xref py data docutils literal">NAME</code></a> tokens.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
+<p>Added <a class="reference internal" href="token.html#py:data:token.type_comment"><code class="xref py data docutils literal">TYPE_COMMENT</code></a>, <a class="reference internal" href="token.html#py:data:token.type_ignore"><code class="xref py data docutils literal">TYPE_IGNORE</code></a>, <a class="reference internal" href="token.html#py:data:token.colonequal"><code class="xref py data docutils literal">COLONEQUAL</code></a>.
+Added <code class="xref py data docutils literal">AWAIT</code> and <code class="xref py data docutils literal">ASYNC</code> tokens back (they're needed
+to support parsing older Python versions for <a class="reference internal" href="ast.html#py:function:ast.parse"><code class="xref py function docutils literal">ast.parse</code></a> with
+<code>feature_version</code> set to 6 or lower).</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p>Added <a class="reference internal" href="token.html#py:data:token.exclamation"><code class="xref py data docutils literal">EXCLAMATION</code></a>.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Removed <code class="xref py data docutils literal">AWAIT</code> and <code class="xref py data docutils literal">ASYNC</code> tokens again.</p>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="symtable.html">&larr; symtable — Access to the compiler&#x27;s symbol tables</a>
+        <a class="next" href="keyword.html">keyword — Testing for Python keywords &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
