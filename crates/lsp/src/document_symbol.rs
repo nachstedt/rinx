@@ -594,13 +594,11 @@ API
         let text = "Guide\n=====\n\n.. include:: part.rst\n\nAfter\n-----\n";
         let mut document = Document::new("guide.rst".to_string(), Vec::new());
         let part = document.intern_source_file("/work/part.rst");
-        let source_map = SourceMap {
-            include_sites: vec![IncludeSite {
-                directive: Some(span_at(4, 21)),
-                file: part,
-            }],
-            ..SourceMap::default()
-        };
+        let mut source_map = SourceMap::default();
+        source_map.include_sites = vec![IncludeSite {
+            directive: Some(span_at(4, 21)),
+            file: part,
+        }];
         document.nodes = vec![
             heading(1, "Guide", Some(span_at(1, 5))),
             heading(2, "Part", Some(span_at(1, 4).with_file(Some(part)))),

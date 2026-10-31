@@ -8,7 +8,7 @@
 
 use std::num::NonZeroU32;
 
-use rinx_ast::{CodeBlockSource, CodeLanguage, TargetName, Written};
+use rinx_ast::{CodeBlockSource, CodeLanguage, Named, TargetName};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -23,7 +23,7 @@ use super::dedent::Dedent;
 /// The options recognized on a code block, before validation against the body.
 pub(super) struct CodeBlockOptions {
     pub(super) caption: Option<String>,
-    pub(super) name: Option<Written<TargetName>>,
+    pub(super) name: Option<Named<TargetName>>,
     pub(super) classes: Vec<String>,
     pub(super) linenos: bool,
     pub(super) lineno_start: Option<NonZeroU32>,
@@ -51,7 +51,7 @@ directive_options! {
     /// The options every code block directive takes.
     pub(super) enum CommonCodeOption {
         /// `:name:`.
-        Name(Written<TargetName>) => (["name"], "A label to reference the block by."),
+        Name(Named<TargetName>) => (["name"], "A label to reference the block by."),
         /// `:class:`.
         Class(Classes) => (["class"], "Classes for the block."),
         /// `:caption:`.

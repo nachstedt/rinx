@@ -1158,7 +1158,9 @@ Not done here:
 - Tests
 
 Two preparatory pull requests gave the server what a rewrite needs. In #387
-the parser records where each name was written, as `rinx_ast::Written<T>`: a
+the parser records where each name was written, as `rinx_ast::Written<T>`
+(now `Named<T>`, whose `NameId` finds the characters in the parse's
+`SourceMap`): a
 label after `.. _`, every `:name:`, a `.. math::` `:label:`, an entity's
 `:id:`. The span is never serialized, so the `.ast` and `.index` are unchanged,
 and an entity id has one only when written as `:id:`. A toctree's or a

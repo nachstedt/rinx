@@ -3,7 +3,7 @@
 //! destination on the following indented line instead of inline. A
 //! destination is a URI, or another target's name (`.. _a: b_`).
 
-use rinx_ast::{Node, Span, TargetName, TokenKind, TokenModifier, TokenModifiers, Written};
+use rinx_ast::{Named, Node, Span, TargetName, TokenKind, TokenModifier, TokenModifiers};
 
 use crate::context::ParseCtx;
 use crate::inline::read_target_destination;
@@ -75,7 +75,7 @@ pub(super) fn try_parse_target(
         return Some((
             consumed,
             Node::Target {
-                name: Written::new(TargetName::new(name_str), name_span),
+                name: Named::new(TargetName::new(name_str), ctx.record_name(name_span)),
                 destination,
                 span: ctx.line_span(i, lines[i].trim_end()),
             },
@@ -167,12 +167,17 @@ mod tests {
         );
     }
 
-    /// The span of every named target's name in `nodes`, in document order.
-    fn name_spans(nodes: &[Node]) -> Vec<Option<Span>> {
+    /// `input` parsed under the default context, with its source map.
+    fn parse_with_map(path: &str, input: &str) -> crate::Parsed {
+        crate::parse(path, input, &crate::ParseCtx::default())
+    }
+
+    /// The span of every named target's name in `parsed`, in document order.
+    fn name_spans(parsed: &crate::Parsed) -> Vec<Option<Span>> {
         let mut spans = Vec::new();
-        rinx_ast::walk_nodes(nodes, &mut |node| {
+        rinx_ast::walk_nodes(&parsed.document.nodes, &mut |node| {
             if let Node::Target { name, .. } = node {
-                spans.push(name.span());
+                spans.push(name.id().and_then(|id| parsed.source_map.name_span(id)));
             }
         });
         spans
@@ -181,11 +186,11 @@ mod tests {
     #[test]
     fn test_parse_records_exactly_a_targets_name() {
         // When
-        let doc = parse_document("test.rst", "Intro\n\n.. _install:\n\nText.\n");
+        let parsed = parse_with_map("test.rst", "Intro\n\n.. _install:\n\nText.\n");
 
         // Then — `install` takes columns 5 to 11
         assert_eq!(
-            name_spans(&doc.nodes),
+            name_spans(&parsed),
             vec![Some(Span::new(Position::new(3, 5), Position::new(3, 12)))]
         );
     }
@@ -193,11 +198,11 @@ mod tests {
     #[test]
     fn test_parse_records_a_name_without_the_blanks_around_it() {
         // When
-        let doc = parse_document("test.rst", ".. _  Getting Started :\n\nText.\n");
+        let parsed = parse_with_map("test.rst", ".. _  Getting Started :\n\nText.\n");
 
         // Then
         assert_eq!(
-            name_spans(&doc.nodes),
+            name_spans(&parsed),
             vec![Some(Span::new(Position::new(1, 7), Position::new(1, 22)))]
         );
     }
@@ -208,11 +213,11 @@ mod tests {
         let input = ".. note::\n\n   .. _inside:\n\n   Text.\n";
 
         // When
-        let doc = parse_document("test.rst", input);
+        let parsed = parse_with_map("test.rst", input);
 
         // Then
         assert_eq!(
-            name_spans(&doc.nodes),
+            name_spans(&parsed),
             vec![Some(Span::new(Position::new(3, 8), Position::new(3, 14)))]
         );
     }

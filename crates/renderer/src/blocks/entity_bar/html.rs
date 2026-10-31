@@ -1,7 +1,7 @@
 //! Rendering a bar chart into the page: counting, drawing, and placing it in
 //! the figure every chart shares ([`crate::blocks::chart_figure`]).
 
-use rinx_ast::Written;
+use rinx_ast::Named;
 use rinx_ast::{EntityBar, LabelRotation};
 
 use crate::RenderCtx;
@@ -52,7 +52,7 @@ pub(in crate::blocks) fn render_entity_bar(
             caption: bar.caption.as_deref(),
             align: bar.align,
             classes: &bar.classes,
-            name: bar.name.as_ref().map(Written::value),
+            name: bar.name.as_ref().map(Named::value),
             width: bar.rendered_width(),
         },
         &svg,

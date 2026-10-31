@@ -16,7 +16,7 @@ use crate::directives::option_value::OptionValueType;
 use crate::directives::spec::OptionValue;
 use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
-    Animation, Chevron, Directive, Dropdown, OcticonName, SemanticColor, TargetName, Written,
+    Animation, Chevron, Directive, Dropdown, Named, OcticonName, SemanticColor, TargetName,
 };
 
 use crate::context::ParseCtx;
@@ -100,7 +100,7 @@ directive_options! {
         /// `:margin:`.
         Margin(Margin) => (["margin"], DropdownInvalidMargin, "The margin around the dropdown, by spacing level."),
         /// `:name:`.
-        Name(Written<TargetName>) => (["name"], "A label to reference the dropdown by."),
+        Name(Named<TargetName>) => (["name"], "A label to reference the dropdown by."),
         /// `:class-container:`.
         ClassContainer(Classes) => (["class-container"], "Classes for the whole dropdown."),
         /// `:class-title:`.

@@ -7,9 +7,11 @@ use rinx_ast::{Position, TargetName};
 
 /// The analysis of `source`, the document named `doc_path` at `/work/docs`.
 fn indexed(doc_path: &str, source: &str) -> IndexedDocument {
+    let parsed = rinx_parser::parse(doc_path, source, &rinx_parser::ParseCtx::default());
     IndexedDocument::of(
         Path::new("/work/docs").join(doc_path),
-        &rinx_parser::parse(doc_path, source, &rinx_parser::ParseCtx::default()).document,
+        &parsed.document,
+        &parsed.source_map,
         BTreeSet::new(),
     )
 }
@@ -152,6 +154,7 @@ fn with_fragment() -> Project {
         IndexedDocument::of(
             PathBuf::from("/work/docs/guide.rst"),
             &document,
+            &rinx_ast::SourceMap::default(),
             BTreeSet::new(),
         ),
     );

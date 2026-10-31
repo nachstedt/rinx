@@ -3,7 +3,7 @@ use crate::directives::spec::{Arguments, DirectiveSpec};
 use std::num::NonZeroUsize;
 
 use rinx_ast::{
-    Directive, NumberedDepth, TargetName, TocEntry, Toctree, ToctreeFlag, ToctreeOptions, Written,
+    Directive, Named, NumberedDepth, TargetName, TocEntry, Toctree, ToctreeFlag, ToctreeOptions,
 };
 
 use crate::context::ParseCtx;
@@ -37,7 +37,7 @@ directive_options! {
         /// `:caption:`.
         Caption(String) => (["caption"], "A caption shown above the tree."),
         /// `:name:`.
-        Name(Written<TargetName>) => (["name"], "A label to reference the tree by."),
+        Name(Named<TargetName>) => (["name"], "A label to reference the tree by."),
         /// `:titlesonly:`.
         TitlesOnly => (["titlesonly"], Flag, "Lists each document's title only, not its sections."),
         /// `:reversed:`.

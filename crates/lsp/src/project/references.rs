@@ -16,7 +16,8 @@
 use std::path::{Path, PathBuf};
 
 use rinx_ast::{
-    Directive, Document, EntityId, FieldMutationMode, Node, Position, Span, TargetName, walk_nodes,
+    Directive, Document, EntityId, FieldMutationMode, Node, Position, SourceMap, Span, TargetName,
+    walk_nodes,
 };
 use rinx_entity::EntitySchema;
 use rinx_index::{DefinitionKey, ProjectIndex};
@@ -55,13 +56,14 @@ struct RelationUse {
 }
 
 impl DocumentUses {
-    /// What `document` wrote.
+    /// What `document` wrote, its names' characters found in the
+    /// `source_map` its parse left beside it.
     #[must_use]
-    pub fn of(document: &Document) -> Self {
+    pub fn of(document: &Document, source_map: &SourceMap) -> Self {
         Self {
             written: written_uses(document),
             relations: relation_uses(document),
-            updated: updated_ids(document),
+            updated: updated_ids(document, source_map),
             files: document.source_files.clone(),
         }
     }
@@ -106,13 +108,13 @@ fn relation_uses(document: &Document) -> Vec<RelationUse> {
 }
 
 /// Every `.. entity-update::` argument written in `document` that reads as
-/// an id, where its characters are known.
-fn updated_ids(document: &Document) -> Vec<(EntityId, Span)> {
+/// an id, where `source_map` knows its characters.
+fn updated_ids(document: &Document, source_map: &SourceMap) -> Vec<(EntityId, Span)> {
     let mut updated = Vec::new();
     walk_nodes(&document.nodes, &mut |node| {
         if let Node::Directive(Directive::EntityUpdate(update)) = node
             && let Some(id) = &update.target.candidate_id
-            && let Some(span) = id.span()
+            && let Some(span) = id.id().and_then(|name| source_map.name_span(name))
         {
             updated.push((id.value().clone(), span));
         }
@@ -363,7 +365,7 @@ mod tests {
         resolve_uses(
             "index.rst",
             Path::new("/project/index.rst"),
-            &DocumentUses::of(document),
+            &DocumentUses::of(document, &SourceMap::default()),
             &resolution,
         )
     }
@@ -525,6 +527,8 @@ mod tests {
         // Given — an id argument placed by the parser, one built unplaced,
         // and a filter, which names no id
         let span = Span::new(Position::new(1, 20), Position::new(1, 23));
+        let mut map = SourceMap::default();
+        let written = map.record_name(span);
         let update = |target: rinx_ast::UpdateTarget| {
             Node::Directive(Directive::EntityUpdate(Box::new(
                 rinx_ast::EntityUpdate::new(rinx_ast::EntityUpdateSource::EntityUpdate, target),
@@ -534,14 +538,14 @@ mod tests {
         let document = Document::new(
             "index.rst".to_string(),
             vec![
-                update(read("S_1").written_at(Some(span))),
+                update(read("S_1").named_as(Some(written))),
                 update(read("S_2")),
-                update(read("status == 'open'").written_at(Some(span))),
+                update(read("status == 'open'").named_as(Some(written))),
             ],
         );
 
         // When / Then
-        assert_eq!(updated_ids(&document), vec![(id("S_1"), span)]);
+        assert_eq!(updated_ids(&document, &map), vec![(id("S_1"), span)]);
     }
 
     #[test]

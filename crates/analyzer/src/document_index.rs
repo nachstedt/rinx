@@ -1,6 +1,6 @@
 use rinx_ast::{
-    Directive, Document, IndexEntry, InlineNode, Node, Span, TableRow, TargetName, Written,
-    allocate_section_ids, for_each_inline_list,
+    Directive, Document, IndexEntry, InlineNode, Named, Node, SourceMap, Span, TableRow,
+    TargetName, allocate_section_ids, for_each_inline_list,
 };
 use rinx_index::{
     DefinitionKey, DefinitionSites, EntityUpdateRecord, EquationLocation, GenIndexEntry,
@@ -21,16 +21,21 @@ use super::outline::build_document_outline;
 /// populated here — it is built globally by [`build_project_index()`].
 #[must_use]
 pub fn analyze(doc: &Document) -> ProjectIndex {
-    analyze_with_sites(doc).0
+    analyze_with_sites(doc, None).0
 }
 
 /// [`analyze`]'s index together with where each definition it names was
 /// written — kept apart because a Bazel build writes the index, and a
-/// position in it would re-render every page whenever a line moved.
+/// position in it would re-render every page whenever a line moved. A name's
+/// own characters are found in `source_map`, which only the process that
+/// parsed `doc` has.
 #[must_use]
-pub(crate) fn analyze_with_sites(doc: &Document) -> (ProjectIndex, DefinitionSites) {
+pub(crate) fn analyze_with_sites(
+    doc: &Document,
+    source_map: Option<&SourceMap>,
+) -> (ProjectIndex, DefinitionSites) {
     let mut index = ProjectIndex::default();
-    let mut spans = DefinitionSpans::default();
+    let mut spans = DefinitionSpans::new(source_map);
     index.documents.insert(doc.path.clone());
     let mut found_title = false;
     for node in &doc.nodes {
@@ -98,7 +103,7 @@ pub(crate) fn analyze_with_sites(doc: &Document) -> (ProjectIndex, DefinitionSit
 /// Records where each section's title stands, by the id its anchor is —
 /// from [`allocate_section_ids`], the call the outline and the renderer's
 /// headings make, so the three cannot name a section differently.
-fn record_section_spans(nodes: &[Node], spans: &mut DefinitionSpans) {
+fn record_section_spans(nodes: &[Node], spans: &mut DefinitionSpans<'_>) {
     for (position, id) in allocate_section_ids(nodes) {
         if let Some(Node::Heading { span, .. }) = nodes.get(position) {
             spans.record(DefinitionKey::Section(id), *span);
@@ -186,7 +191,7 @@ fn index_entity_update(
     update: &rinx_ast::EntityUpdate,
     doc_path: &str,
     index: &mut ProjectIndex,
-    spans: &mut DefinitionSpans,
+    spans: &mut DefinitionSpans<'_>,
     scopes: &DocumentScopes,
 ) {
     index.entity_updates.push(EntityUpdateRecord {
@@ -201,7 +206,7 @@ fn index_entity_and_its_sections(
     entity: &rinx_ast::EntityBody,
     doc_path: &str,
     index: &mut ProjectIndex,
-    spans: &mut DefinitionSpans,
+    spans: &mut DefinitionSpans<'_>,
     scopes: &DocumentScopes,
 ) {
     super::entity_index::index_entity(entity, doc_path, index);
@@ -243,7 +248,7 @@ pub(super) fn index_nodes(
     nodes: &[Node],
     doc_path: &str,
     index: &mut ProjectIndex,
-    spans: &mut DefinitionSpans,
+    spans: &mut DefinitionSpans<'_>,
     scopes: &DocumentScopes,
 ) {
     record_target_titles(nodes, index);
@@ -368,7 +373,7 @@ fn index_glossary(
     entries: &[rinx_ast::GlossaryEntry],
     doc_path: &str,
     index: &mut ProjectIndex,
-    spans: &mut DefinitionSpans,
+    spans: &mut DefinitionSpans<'_>,
 ) {
     for term in entries.iter().flat_map(|entry| &entry.terms) {
         let name = TargetName::new(&term.text);
@@ -419,16 +424,15 @@ fn element_title(node: &Node) -> (Option<&TargetName>, Option<String>) {
     match node {
         Node::Heading { text, .. } => (None, Some(rinx_ast::inline_plain_text(text))),
         Node::Directive(Directive::Figure(figure)) => (
-            figure.image.name.as_ref().map(Written::value),
+            figure.image.name.as_ref().map(Named::value),
             figure.caption.as_deref().map(rinx_ast::inline_plain_text),
         ),
         Node::Directive(
             Directive::Table { title, name, .. } | Directive::DataTable { title, name, .. },
-        ) => (name.as_ref().map(Written::value), title.clone()),
-        Node::Directive(Directive::CodeBlock(block)) => (
-            block.name.as_ref().map(Written::value),
-            block.caption.clone(),
-        ),
+        ) => (name.as_ref().map(Named::value), title.clone()),
+        Node::Directive(Directive::CodeBlock(block)) => {
+            (block.name.as_ref().map(Named::value), block.caption.clone())
+        }
         _ => (None, None),
     }
 }
@@ -446,7 +450,7 @@ fn index_body_only_directive(
     directive: &Directive,
     doc_path: &str,
     index: &mut ProjectIndex,
-    spans: &mut DefinitionSpans,
+    spans: &mut DefinitionSpans<'_>,
     scopes: &DocumentScopes,
 ) {
     let body = match directive {
@@ -482,7 +486,7 @@ fn index_name_bearing_directive(
     directive: &Directive,
     doc_path: &str,
     index: &mut ProjectIndex,
-    spans: &mut DefinitionSpans,
+    spans: &mut DefinitionSpans<'_>,
     scopes: &DocumentScopes,
 ) {
     match directive {
@@ -588,22 +592,19 @@ fn index_sectnum(options: &rinx_ast::SectnumOptions, doc_path: &str, index: &mut
 /// — or, for a directive the parser gave no span of its own (`.. contents::`,
 /// `.. toctree::`), where the name is.
 fn register_directive_name(
-    name: Option<&Written<TargetName>>,
+    name: Option<&Named<TargetName>>,
     span: Option<Span>,
     doc_path: &str,
     index: &mut ProjectIndex,
-    spans: &mut DefinitionSpans,
+    spans: &mut DefinitionSpans<'_>,
 ) {
     if let Some(name) = name {
         let target_name = name.value();
         index
             .targets
             .insert(target_name.clone(), doc_path.to_string());
-        spans.record_named(
-            DefinitionKey::Label(target_name.clone()),
-            span.or(name.span()),
-            name,
-        );
+        let span = span.or_else(|| spans.name_span(name));
+        spans.record_named(DefinitionKey::Label(target_name.clone()), span, name);
     }
 }
 
@@ -615,7 +616,7 @@ fn index_table_rows<'a>(
     rows: impl IntoIterator<Item = &'a TableRow>,
     doc_path: &str,
     index: &mut ProjectIndex,
-    spans: &mut DefinitionSpans,
+    spans: &mut DefinitionSpans<'_>,
     scopes: &DocumentScopes,
 ) {
     for row in rows {

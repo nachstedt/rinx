@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 
 use rinx_ast::{
     AttributeValue, Diagnostic, DiagnosticCode, Directive, EntityBody, EntityId, EntitySection,
-    Node, Span, Written,
+    Named, Node, Span,
 };
 use rinx_entity::{EntityType, ID_OPTION, IdContext};
 
@@ -97,9 +97,11 @@ pub(in crate::directives) fn parse_entity(
     report_id_pattern(entity_type, &id, id_span, diagnostics);
     // Only an id written as the `:id:` value has characters of its own; one
     // the line failed to give is composed or generated, as the others are.
-    let written_id_span = id_line
-        .filter(|line| line.value == id.as_str())
-        .and_then(|line| line.value_span(ctx));
+    let written_id = ctx.record_name(
+        id_line
+            .filter(|line| line.value == id.as_str())
+            .and_then(|line| line.value_span(ctx)),
+    );
 
     let content = invocation.content();
     let sections = parse_sections(
@@ -117,7 +119,7 @@ pub(in crate::directives) fn parse_entity(
 
     Directive::Entity(Box::new(EntityBody {
         type_name: entity_type.name.clone(),
-        id: Written::new(id, written_id_span),
+        id: Named::new(id, written_id),
         attributes,
         relations,
         sections,

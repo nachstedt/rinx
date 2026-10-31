@@ -51,6 +51,7 @@ fn test_path_of_finds_a_recorded_documents_own_file() {
         IndexedDocument::of(
             PathBuf::from("/work/docs/intro.txt"),
             &document,
+            &rinx_ast::SourceMap::default(),
             BTreeSet::new(),
         ),
     );

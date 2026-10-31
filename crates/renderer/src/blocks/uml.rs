@@ -13,7 +13,7 @@
 //! with its own idea of the text would emit an `<img>` pointing at a file
 //! nothing compiled.
 
-use rinx_ast::Written;
+use rinx_ast::Named;
 use rinx_ast::{HashedContent, Position, Span, Uml};
 use rinx_uml::{UmlContext, UmlError, expand};
 
@@ -99,7 +99,7 @@ pub(super) fn render_uml_directive(html: &mut String, uml: &Uml, ctx: &mut Rende
             align: uml.align,
             width: uml.rendered_width(),
             caption: uml.caption.as_deref(),
-            name: uml.name.as_ref().map(Written::value),
+            name: uml.name.as_ref().map(Named::value),
             debug: uml.debug,
         },
         ctx,

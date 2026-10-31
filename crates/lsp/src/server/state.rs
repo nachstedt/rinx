@@ -1533,7 +1533,12 @@ impl ServerState {
         if let (Some((id, doc_path)), Some(path)) = (located, path)
             && let Some(project) = self.projects.get_mut(&id)
         {
-            let indexed = IndexedDocument::of(path, &parsed.document, parsed.reads.paths.clone());
+            let indexed = IndexedDocument::of(
+                path,
+                &parsed.document,
+                &parsed.source_map,
+                parsed.reads.paths.clone(),
+            );
             project.record(doc_path, indexed);
         }
         let reads_open = parsed

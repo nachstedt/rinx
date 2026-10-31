@@ -109,7 +109,7 @@ mod tests {
         let ctx = base.with_syntax_recorder(&recorder);
         let body = super::super::body::collect_directive_body(lines, 1, 0);
         record_marker_syntax(lines[0], 0, &body, &ctx);
-        recorder.into_table()
+        recorder.into_source_map().syntax
     }
 
     #[test]

@@ -5,9 +5,9 @@ use serde::{Deserialize, Serialize};
 use crate::entity::attribute_value::AttributeValue;
 use crate::entity::id::EntityId;
 use crate::entity::section::EntitySection;
+use crate::named::Named;
 use crate::node::Node;
 use crate::span::Span;
-use crate::written::Written;
 
 /// One entity as written in a document.
 ///
@@ -26,7 +26,7 @@ pub struct EntityBody {
     pub type_name: String,
     /// The determined id — explicit, derived or generated. Only an explicit
     /// `:id:` has a span, which is how an editor tells it from the others.
-    pub id: Written<EntityId>,
+    pub id: Named<EntityId>,
     /// Parsed attribute values, including any filled from the directive's
     /// argument and any supplied by a schema default.
     pub attributes: BTreeMap<String, AttributeValue>,

@@ -11,6 +11,8 @@
 //! needs it there does not compile.
 
 use crate::include_site::IncludeSite;
+use crate::named::NameId;
+use crate::span::Span;
 use crate::syntax::SyntaxTable;
 
 /// What the parser recorded about where a document's markup was written,
@@ -24,11 +26,37 @@ pub struct SourceMap {
     /// met — what an editor needs to point at the line that included a
     /// problem.
     pub include_sites: Vec<IncludeSite>,
+    /// Exactly the characters of each name the document was written with, by
+    /// the [`NameId`] its [`Named`](crate::Named) value carries.
+    names: Vec<Span>,
+}
+
+impl SourceMap {
+    /// Records that a name was written as exactly the characters of `span`,
+    /// yielding the id its value carries — the one way an id is made.
+    ///
+    /// # Panics
+    ///
+    /// When a document records more than `u32::MAX` names.
+    pub fn record_name(&mut self, span: Span) -> NameId {
+        let index = u32::try_from(self.names.len()).expect("fewer than 2^32 names");
+        self.names.push(span);
+        NameId::new(index)
+    }
+
+    /// Exactly the characters the name recorded under `id` was written as —
+    /// `None` when `id` came from a different parse, whose map holds fewer
+    /// names.
+    #[must_use]
+    pub fn name_span(&self, id: NameId) -> Option<Span> {
+        self.names.get(id.index()).copied()
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::span::Position;
     use std::path::Path;
 
     #[test]
@@ -39,6 +67,24 @@ mod tests {
         // Then
         assert_eq!(map.syntax, SyntaxTable::new());
         assert!(map.include_sites.is_empty());
+        assert_eq!(map.name_span(NameId::new(0)), None);
+    }
+
+    #[test]
+    fn test_a_recorded_name_is_found_by_its_id() {
+        // Given
+        let mut map = SourceMap::default();
+        let first = Span::new(Position::new(4, 5), Position::new(4, 12));
+        let second = Span::new(Position::new(9, 8), Position::new(9, 13));
+
+        // When
+        let first_id = map.record_name(first);
+        let second_id = map.record_name(second);
+
+        // Then
+        assert_ne!(first_id, second_id);
+        assert_eq!(map.name_span(first_id), Some(first));
+        assert_eq!(map.name_span(second_id), Some(second));
     }
 
     /// Every `.rs` file under `dir`, recursively.
@@ -65,7 +111,6 @@ mod tests {
         // When
         let skipping: Vec<String> = rust_files(&src)
             .into_iter()
-            .filter(|path| !path.ends_with("written.rs"))
             .filter(|path| {
                 std::fs::read_to_string(path)
                     .expect("reads a source file")

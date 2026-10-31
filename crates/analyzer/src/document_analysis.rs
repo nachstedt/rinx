@@ -14,7 +14,7 @@
 //! language server keeps no closed document's AST, so this is the one place
 //! a definition's line survives for it.
 
-use rinx_ast::Document;
+use rinx_ast::{Document, SourceMap};
 use rinx_index::{DefinitionSites, ProjectIndex};
 
 use super::document_index::analyze_with_sites;
@@ -37,10 +37,13 @@ pub struct DocumentAnalysis {
 }
 
 impl DocumentAnalysis {
-    /// The analysis of `doc`.
+    /// The analysis of `doc`. Its definition sites name each definition's
+    /// own characters only when given the `source_map` of the parse — which
+    /// a build, holding a document read from a `.ast`, does not have, and
+    /// does not need: no build phase reads a site.
     #[must_use]
-    pub fn of(doc: &Document) -> Self {
-        let (index, sites) = analyze_with_sites(doc);
+    pub fn of(doc: &Document, source_map: Option<&SourceMap>) -> Self {
+        let (index, sites) = analyze_with_sites(doc, source_map);
         Self {
             index,
             orphan: doc.metadata.contains_key(ORPHAN_FIELD),
@@ -96,7 +99,7 @@ mod tests {
         doc.metadata.insert(ORPHAN_FIELD.to_string(), String::new());
 
         // When
-        let analysis = DocumentAnalysis::of(&doc);
+        let analysis = DocumentAnalysis::of(&doc, None);
 
         // Then
         assert!(analysis.orphan);
@@ -117,7 +120,7 @@ mod tests {
         );
 
         // When
-        let analysis = DocumentAnalysis::of(&doc);
+        let analysis = DocumentAnalysis::of(&doc, None);
 
         // Then
         let site = analysis
@@ -132,7 +135,7 @@ mod tests {
         let doc = noted(1);
 
         // When
-        let analysis = DocumentAnalysis::of(&doc);
+        let analysis = DocumentAnalysis::of(&doc, None);
 
         // Then
         assert_eq!(analysis.index_fragment(), &analyze(&doc));
@@ -153,8 +156,8 @@ mod tests {
     fn test_folds_like_ignores_where_the_definitions_were_written() {
         // Given
         let (original, moved) = (
-            DocumentAnalysis::of(&noted(1)),
-            DocumentAnalysis::of(&noted(4)),
+            DocumentAnalysis::of(&noted(1), None),
+            DocumentAnalysis::of(&noted(4), None),
         );
 
         // When / Then
@@ -177,11 +180,11 @@ mod tests {
                 span: None,
             }],
         );
-        let original = DocumentAnalysis::of(&noted(1));
+        let original = DocumentAnalysis::of(&noted(1), None);
 
         // When / Then
-        assert!(!original.folds_like(&DocumentAnalysis::of(&orphan)));
-        assert!(!original.folds_like(&DocumentAnalysis::of(&retitled)));
+        assert!(!original.folds_like(&DocumentAnalysis::of(&orphan, None)));
+        assert!(!original.folds_like(&DocumentAnalysis::of(&retitled, None)));
     }
 
     #[test]
@@ -190,6 +193,6 @@ mod tests {
         let doc = Document::new("index.rst".to_string(), Vec::new());
 
         // When / Then
-        assert!(!DocumentAnalysis::of(&doc).orphan);
+        assert!(!DocumentAnalysis::of(&doc, None).orphan);
     }
 }

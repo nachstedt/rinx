@@ -17,9 +17,9 @@
 use serde::{Deserialize, Serialize};
 
 use crate::code_language::CodeLanguage;
+use crate::named::Named;
 use crate::span::Span;
 use crate::target_name::TargetName;
-use crate::written::Written;
 
 /// Which directive produced a [`CodeBlock`].
 ///
@@ -77,7 +77,7 @@ pub struct CodeBlock {
     /// `DataTable`'s `title` already does for table captions.
     pub caption: Option<String>,
     /// `:name:` — makes the block a `:ref:` target.
-    pub name: Option<Written<TargetName>>,
+    pub name: Option<Named<TargetName>>,
     /// `:class:` — space-separated class names, already split.
     pub classes: Vec<String>,
     /// `:linenos:`, or `.. code::`'s `:number-lines:`.

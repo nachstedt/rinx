@@ -78,6 +78,7 @@ mod line_block;
 mod link_destination;
 mod list_item;
 mod module_options;
+mod named;
 mod node;
 mod non_empty_vector;
 mod number_format;
@@ -103,7 +104,6 @@ mod toctree;
 mod uml;
 mod version_change_kind;
 mod visit;
-mod written;
 
 pub use admonition_kind::AdmonitionKind;
 pub use asset_uri::AssetUri;
@@ -162,6 +162,7 @@ pub use line_block::LineBlockItem;
 pub use link_destination::{HyperlinkTarget, LinkDestination};
 pub use list_item::ListItem;
 pub use module_options::{ModuleFlag, ModuleOptions};
+pub use named::{NameId, Named};
 pub use node::Node;
 pub use non_empty_vector::NonEmptyVector;
 pub use number_format::{InvalidNumberFormat, NumberFormat};
@@ -196,4 +197,3 @@ pub use toctree::{NumberedDepth, TocEntry, Toctree, ToctreeFlag, ToctreeOptions}
 pub use uml::{Uml, UmlSource};
 pub use version_change_kind::VersionChangeKind;
 pub use visit::{Child, for_each_child, walk_nodes, walk_nodes_with_siblings};
-pub use written::Written;

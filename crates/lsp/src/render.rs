@@ -117,7 +117,7 @@ mod tests {
             .map(|(path, text)| {
                 let document =
                     rinx_parser::parse(path, text, &rinx_parser::ParseCtx::default()).document;
-                ((*path).to_string(), DocumentAnalysis::of(&document))
+                ((*path).to_string(), DocumentAnalysis::of(&document, None))
             })
             .collect();
         build_project_index_from_analyses(

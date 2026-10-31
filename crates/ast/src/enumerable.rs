@@ -19,10 +19,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::directive::Directive;
 use crate::inline_node::inline_plain_text;
+use crate::named::Named;
 use crate::node::Node;
 use crate::target_name::TargetName;
 use crate::visit::walk_nodes_with_siblings;
-use crate::written::Written;
 
 /// What kind of thing a `:numref:` points at, which picks the format its
 /// number is shown in.
@@ -130,7 +130,7 @@ fn captioned(directive: &Directive) -> Option<(EnumerableKind, Option<&TargetNam
         Directive::Figure(figure) => figure.caption.as_ref().map(|caption| {
             (
                 EnumerableKind::Figure,
-                figure.image.name.as_ref().map(Written::value),
+                figure.image.name.as_ref().map(Named::value),
                 inline_plain_text(caption),
             )
         }),
@@ -138,7 +138,7 @@ fn captioned(directive: &Directive) -> Option<(EnumerableKind, Option<&TargetNam
             title.as_ref().map(|title| {
                 (
                     EnumerableKind::Table,
-                    name.as_ref().map(Written::value),
+                    name.as_ref().map(Named::value),
                     title.clone(),
                 )
             })
@@ -146,7 +146,7 @@ fn captioned(directive: &Directive) -> Option<(EnumerableKind, Option<&TargetNam
         Directive::CodeBlock(block) => block.caption.as_ref().map(|caption| {
             (
                 EnumerableKind::CodeBlock,
-                block.name.as_ref().map(Written::value),
+                block.name.as_ref().map(Named::value),
                 caption.clone(),
             )
         }),

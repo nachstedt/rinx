@@ -126,7 +126,7 @@ pub(super) fn parse_entity_update(
         );
     };
 
-    let target = target.written_at(argument_span(invocation));
+    let target = target.named_as(ctx.record_name(argument_span(invocation)));
     let mut update = EntityUpdate::new(source, target);
     for line in option_lines {
         match UpdateOption::read(line, directive, diagnostics, ctx) {

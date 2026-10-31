@@ -1,6 +1,6 @@
 use crate::directives::invocation::{DirectiveInvocation, ParseState, single};
 use crate::directives::spec::{Arguments, DirectiveSpec};
-use rinx_ast::{Contents, ContentsBacklinks, ContentsOptions, Directive, TargetName, Written};
+use rinx_ast::{Contents, ContentsBacklinks, ContentsOptions, Directive, Named, TargetName};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -22,7 +22,7 @@ directive_options! {
         /// `:class:`.
         Class(Classes) => (["class"], "Classes for the table."),
         /// `:name:`.
-        Name(Written<TargetName>) => (["name"], "A label to reference the table by."),
+        Name(Named<TargetName>) => (["name"], "A label to reference the table by."),
     }
 }
 

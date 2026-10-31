@@ -12,7 +12,7 @@
 
 use rinx_ast::{
     AssetUri, Diagnostic, DiagnosticCode, ImageAlign, ImageLoading, ImageOptions, ImageTarget,
-    Length, LengthOrPercentage, TargetName, Written, is_vertical_name,
+    Length, LengthOrPercentage, Named, TargetName, is_vertical_name,
 };
 
 use crate::context::ParseCtx;
@@ -51,7 +51,7 @@ pub(in crate::directives) struct CommonImageOptions {
     pub align: Option<ImageAlign>,
     pub target: Option<ImageTarget>,
     pub classes: Vec<String>,
-    pub name: Option<Written<TargetName>>,
+    pub name: Option<Named<TargetName>>,
     pub loading: ImageLoading,
 }
 
@@ -106,7 +106,7 @@ directive_options! {
         /// `:class:`.
         Class(Classes) => (["class"], "Classes for the picture."),
         /// `:name:`.
-        Name(Written<TargetName>) => (["name"], "A label to reference the picture by."),
+        Name(Named<TargetName>) => (["name"], "A label to reference the picture by."),
         /// `:loading:`.
         Loading(ImageLoading) => (["loading"], ImageInvalidLoading, "How the page loads the picture."),
     }

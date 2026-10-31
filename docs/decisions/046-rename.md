@@ -33,7 +33,9 @@ Three things stood between the uses #30 lists and a safe rewrite:
 Two preparatory pull requests (#387, #390) record what the server would
 otherwise have to find again with a second reader of the grammar:
 
-- `rinx_ast::Written<T>` is a value with the span of exactly its characters:
+- `rinx_ast::Written<T>` (since replaced by `Named<T>`, a handle into the
+  parse's `SourceMap`; see ADR-045's second amendment) is a value with the
+  span of exactly its characters:
   a label after `.. _`, every directive's `:name:`, a `.. math::` `:label:`,
   an entity's `:id:` and an `.. entity-update::`'s id argument. The span is
   never serialized and equality ignores it, so the `.ast` and the `.index`

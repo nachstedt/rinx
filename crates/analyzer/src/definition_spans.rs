@@ -9,21 +9,41 @@
 
 use std::collections::BTreeMap;
 
-use rinx_ast::{Document, Span, Written};
+use rinx_ast::{Document, Named, SourceMap, Span};
 use rinx_index::{DefinitionKey, DefinitionSite, DefinitionSites, NameRange};
 
 /// The spans met so far, by what the index names each definition: its own,
-/// and its name's when it has one.
+/// and its name's when it has one — looked up in the source map of the
+/// parse, which a build, holding a document read from a `.ast`, does not
+/// have.
 #[derive(Debug, Default)]
-pub(crate) struct DefinitionSpans(BTreeMap<DefinitionKey, (Span, Option<Span>)>);
+pub(crate) struct DefinitionSpans<'m> {
+    source_map: Option<&'m SourceMap>,
+    spans: BTreeMap<DefinitionKey, (Span, Option<Span>)>,
+}
 
-impl DefinitionSpans {
+impl<'m> DefinitionSpans<'m> {
+    /// No spans yet, finding names' characters in `source_map` when there is
+    /// one.
+    pub(crate) fn new(source_map: Option<&'m SourceMap>) -> Self {
+        Self {
+            source_map,
+            spans: BTreeMap::new(),
+        }
+    }
+
+    /// Exactly the characters `name` was written as, when the parse recorded
+    /// them and its source map is at hand.
+    pub(crate) fn name_span<T>(&self, name: &Named<T>) -> Option<Span> {
+        self.source_map?.name_span(name.id()?)
+    }
+
     /// Records where `key` was defined. A definition the parser gave no span
     /// records nothing, and a later one under the same key wins, as a later
     /// insertion into the index's own maps does.
     pub(crate) fn record(&mut self, key: DefinitionKey, span: Option<Span>) {
         if let Some(span) = span {
-            self.0.insert(key, (span, None));
+            self.spans.insert(key, (span, None));
         }
     }
 
@@ -33,10 +53,11 @@ impl DefinitionSpans {
         &mut self,
         key: DefinitionKey,
         span: Option<Span>,
-        name: &Written<T>,
+        name: &Named<T>,
     ) {
         if let Some(span) = span {
-            self.0.insert(key, (span, name.span()));
+            let name = self.name_span(name);
+            self.spans.insert(key, (span, name));
         }
     }
 
@@ -46,7 +67,7 @@ impl DefinitionSpans {
     /// dropped: there would be nowhere to lead.
     pub(crate) fn into_sites(self, doc: &Document) -> DefinitionSites {
         let mut sites = DefinitionSites::default();
-        for (key, (span, name)) in self.0 {
+        for (key, (span, name)) in self.spans {
             let file = match span.file {
                 None => None,
                 Some(_) => match doc.span_path(Some(span)) {
@@ -90,7 +111,7 @@ mod tests {
     #[test]
     fn test_record_ignores_a_definition_without_a_span() {
         // Given
-        let mut spans = DefinitionSpans::default();
+        let mut spans = DefinitionSpans::new(None);
 
         // When
         spans.record(label("install"), None);
@@ -103,7 +124,7 @@ mod tests {
     #[test]
     fn test_record_keeps_the_later_span_of_a_key_recorded_twice() {
         // Given
-        let mut spans = DefinitionSpans::default();
+        let mut spans = DefinitionSpans::new(None);
 
         // When
         spans.record(label("install"), Some(span(2)));
@@ -123,7 +144,7 @@ mod tests {
         // Given
         let mut doc = Document::new("guide.rst".to_string(), vec![]);
         let fragment = doc.intern_source_file("shared/install.rst");
-        let mut spans = DefinitionSpans::default();
+        let mut spans = DefinitionSpans::new(None);
         spans.record(label("own"), Some(span(1)));
         spans.record(label("included"), Some(span(4).with_file(Some(fragment))));
 
@@ -151,14 +172,15 @@ mod tests {
     #[test]
     fn test_record_named_keeps_where_the_name_was_written() {
         // Given — `.. _install:` with its name in columns 5 to 12
-        let mut spans = DefinitionSpans::default();
-        let name = Span::new(Position::new(2, 5), Position::new(2, 12));
+        let mut map = SourceMap::default();
+        let name = map.record_name(Span::new(Position::new(2, 5), Position::new(2, 12)));
+        let mut spans = DefinitionSpans::new(Some(&map));
 
         // When
         spans.record_named(
             label("install"),
             Some(span(2)),
-            &Written::new(TargetName::new("install"), Some(name)),
+            &Named::new(TargetName::new("install"), Some(name)),
         );
 
         // Then
@@ -176,15 +198,37 @@ mod tests {
     }
 
     #[test]
-    fn test_record_named_records_no_name_the_parser_did_not_place() {
-        // Given
-        let mut spans = DefinitionSpans::default();
+    fn test_record_named_records_no_name_without_a_source_map() {
+        // Given — a name the parse recorded, but no map to find it in, as in
+        // a build reading its document from a `.ast`
+        let mut map = SourceMap::default();
+        let name = map.record_name(Span::new(Position::new(2, 5), Position::new(2, 12)));
+        let mut spans = DefinitionSpans::new(None);
 
         // When
         spans.record_named(
             label("install"),
             Some(span(2)),
-            &Written::unplaced(TargetName::new("install")),
+            &Named::new(TargetName::new("install"), Some(name)),
+        );
+
+        // Then
+        let doc = Document::new("guide.rst".to_string(), vec![]);
+        let sites = spans.into_sites(&doc);
+        let site = sites.get(&label("install")).expect("a site");
+        assert_eq!((site.start.line, site.name), (2, None));
+    }
+
+    #[test]
+    fn test_record_named_records_no_name_the_parser_did_not_place() {
+        // Given
+        let mut spans = DefinitionSpans::new(None);
+
+        // When
+        spans.record_named(
+            label("install"),
+            Some(span(2)),
+            &Named::unplaced(TargetName::new("install")),
         );
 
         // Then
@@ -197,13 +241,13 @@ mod tests {
     #[test]
     fn test_record_named_ignores_a_definition_without_a_span() {
         // Given
-        let mut spans = DefinitionSpans::default();
+        let mut spans = DefinitionSpans::new(None);
 
         // When
         spans.record_named(
             label("install"),
             None,
-            &Written::unplaced(TargetName::new("install")),
+            &Named::unplaced(TargetName::new("install")),
         );
 
         // Then
@@ -215,7 +259,7 @@ mod tests {
     fn test_into_sites_drops_a_span_naming_a_file_the_document_does_not_list() {
         // Given
         let doc = Document::new("guide.rst".to_string(), vec![]);
-        let mut spans = DefinitionSpans::default();
+        let mut spans = DefinitionSpans::new(None);
         spans.record(label("lost"), Some(span(1).with_file(Some(FileId::new(3)))));
 
         // When / Then

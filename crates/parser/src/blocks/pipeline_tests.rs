@@ -5,7 +5,7 @@
 
 use crate::parse_document;
 use rinx_ast::TargetName;
-use rinx_ast::{CodeLanguage, Directive, InlineNode, Node, Position, Span, Written};
+use rinx_ast::{CodeLanguage, Directive, InlineNode, Named, Node, Position, Span};
 
 #[test]
 fn test_parse_returns_empty_document_for_empty_input() {
@@ -142,13 +142,19 @@ fn test_parse_creates_target_node_for_explicit_target() {
     let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
+    let Node::Target {
+        name,
+        destination,
+        span,
+    } = &doc.nodes[0]
+    else {
+        panic!("expected a target, found {:?}", doc.nodes[0]);
+    };
+    assert_eq!(name.value(), &TargetName::new("my-target"));
+    assert_eq!(*destination, None);
     assert_eq!(
-        doc.nodes[0],
-        Node::Target {
-            name: TargetName::new("my-target").into(),
-            destination: None,
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 15)))
-        }
+        *span,
+        Some(Span::new(Position::new(1, 1), Position::new(1, 15)))
     );
     assert_eq!(
         doc.nodes[1],
@@ -164,15 +170,24 @@ fn test_parse_creates_external_target_node() {
     let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
+    let Node::Target {
+        name,
+        destination,
+        span,
+    } = &doc.nodes[0]
+    else {
+        panic!("expected a target, found {:?}", doc.nodes[0]);
+    };
+    assert_eq!(name.value(), &TargetName::new("my-link"));
     assert_eq!(
-        doc.nodes[0],
-        Node::Target {
-            name: TargetName::new("my-link").into(),
-            destination: Some(rinx_ast::LinkDestination::Uri(
-                "https://example.com".to_string()
-            )),
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 33)))
-        }
+        *destination,
+        Some(rinx_ast::LinkDestination::Uri(
+            "https://example.com".to_string()
+        ))
+    );
+    assert_eq!(
+        *span,
+        Some(Span::new(Position::new(1, 1), Position::new(1, 33)))
     );
 }
 
@@ -184,15 +199,24 @@ fn test_parse_creates_indented_external_target_node() {
     let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
+    let Node::Target {
+        name,
+        destination,
+        span,
+    } = &doc.nodes[0]
+    else {
+        panic!("expected a target, found {:?}", doc.nodes[0]);
+    };
+    assert_eq!(name.value(), &TargetName::new("my-link"));
     assert_eq!(
-        doc.nodes[0],
-        Node::Target {
-            name: TargetName::new("my-link").into(),
-            destination: Some(rinx_ast::LinkDestination::Uri(
-                "https://example.com".to_string()
-            )),
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 13)))
-        }
+        *destination,
+        Some(rinx_ast::LinkDestination::Uri(
+            "https://example.com".to_string()
+        ))
+    );
+    assert_eq!(
+        *span,
+        Some(Span::new(Position::new(1, 1), Position::new(1, 13)))
     );
 }
 
@@ -496,7 +520,7 @@ fn test_parse_reads_a_math_directive_with_a_label() {
     };
     assert_eq!(parts, &vec!["e^{i\\pi} + 1 = 0".to_string()]);
     assert_eq!(
-        label.as_ref().map(rinx_ast::Written::value),
+        label.as_ref().map(rinx_ast::Named::value),
         Some(&TargetName::new("euler"))
     );
     assert!(!nowrap);
@@ -672,23 +696,28 @@ fn test_parse_reports_an_undefined_substitution_reference() {
 /// Where the `:name:` and `:label:` values of `input` were written, in
 /// document order: one entry per name-bearing directive.
 fn written_name_spans(input: &str) -> Vec<Option<Span>> {
-    let doc = parse_document("test.rst", input);
+    let crate::Parsed {
+        document: doc,
+        source_map,
+    } = crate::parse("test.rst", input, &crate::ParseCtx::default());
+    let span =
+        |name: &Named<rinx_ast::TargetName>| name.id().and_then(|id| source_map.name_span(id));
     let mut spans = Vec::new();
     rinx_ast::walk_nodes(&doc.nodes, &mut |node| match node {
         Node::Directive(Directive::Figure(figure)) => {
-            spans.push(figure.image.name.as_ref().and_then(Written::span));
+            spans.push(figure.image.name.as_ref().and_then(span));
         }
         Node::Directive(Directive::CodeBlock(block)) => {
-            spans.push(block.name.as_ref().and_then(Written::span));
+            spans.push(block.name.as_ref().and_then(span));
         }
         Node::Directive(Directive::DataTable { name, .. } | Directive::Table { name, .. }) => {
-            spans.push(name.as_ref().and_then(Written::span));
+            spans.push(name.as_ref().and_then(span));
         }
         Node::Directive(Directive::Toctree(toctree)) => {
-            spans.push(toctree.options.name.as_ref().and_then(Written::span));
+            spans.push(toctree.options.name.as_ref().and_then(span));
         }
         Node::Directive(Directive::Math { label, .. }) => {
-            spans.push(label.as_ref().and_then(Written::span));
+            spans.push(label.as_ref().and_then(span));
         }
         _ => {}
     });

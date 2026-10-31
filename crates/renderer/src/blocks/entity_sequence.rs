@@ -12,7 +12,7 @@
 //! sphinx-needs does the same — while the build log carries the matching
 //! `entity-sequence.truncated` warning for whoever never opens the page.
 
-use rinx_ast::Written;
+use rinx_ast::Named;
 use std::fmt::Write;
 
 use rinx_ast::EntitySequence;
@@ -75,7 +75,7 @@ pub(super) fn render_entity_sequence(
             align: sequence.align,
             width: sequence.rendered_width(),
             caption: sequence.caption.as_deref(),
-            name: sequence.name.as_ref().map(Written::value),
+            name: sequence.name.as_ref().map(Named::value),
             debug: sequence.debug,
         },
         ctx,
