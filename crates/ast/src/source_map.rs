@@ -10,6 +10,7 @@
 //! holds nothing but what it read from a `.ast`, cannot have one: code that
 //! needs it there does not compile.
 
+use crate::block_id::BlockId;
 use crate::include_site::IncludeSite;
 use crate::named::NameId;
 use crate::span::Span;
@@ -29,6 +30,9 @@ pub struct SourceMap {
     /// Exactly the characters of each name the document was written with, by
     /// the [`NameId`] its [`Named`](crate::Named) value carries.
     names: Vec<Span>,
+    /// The lines of each block a definition was written as, by the
+    /// [`BlockId`] its node carries.
+    block_lines: Vec<Span>,
 }
 
 impl SourceMap {
@@ -51,6 +55,25 @@ impl SourceMap {
     pub fn name_span(&self, id: NameId) -> Option<Span> {
         self.names.get(id.index()).copied()
     }
+
+    /// Records that a block was written over `lines`, yielding the id its node
+    /// carries — the one way an id is made.
+    ///
+    /// # Panics
+    ///
+    /// When a document records more than `u32::MAX` blocks.
+    pub fn record_block_lines(&mut self, lines: Span) -> BlockId {
+        let index = u32::try_from(self.block_lines.len()).expect("fewer than 2^32 blocks");
+        self.block_lines.push(lines);
+        BlockId::new(index)
+    }
+
+    /// The lines the block recorded under `id` was written over — `None` when
+    /// `id` came from a different parse, whose map holds fewer blocks.
+    #[must_use]
+    pub fn block_lines(&self, id: BlockId) -> Option<Span> {
+        self.block_lines.get(id.index()).copied()
+    }
 }
 
 #[cfg(test)]
@@ -68,6 +91,38 @@ mod tests {
         assert_eq!(map.syntax, SyntaxTable::new());
         assert!(map.include_sites.is_empty());
         assert_eq!(map.name_span(NameId::new(0)), None);
+        assert_eq!(map.block_lines(BlockId::new(0)), None);
+    }
+
+    #[test]
+    fn test_recorded_block_lines_are_found_by_their_id() {
+        // Given
+        let mut map = SourceMap::default();
+        let title = Span::new(Position::new(1, 1), Position::new(1, 13));
+        let marker = Span::new(Position::new(4, 1), Position::new(4, 21));
+
+        // When
+        let title_id = map.record_block_lines(title);
+        let marker_id = map.record_block_lines(marker);
+
+        // Then
+        assert_ne!(title_id, marker_id);
+        assert_eq!(map.block_lines(title_id), Some(title));
+        assert_eq!(map.block_lines(marker_id), Some(marker));
+    }
+
+    #[test]
+    fn test_names_and_blocks_are_counted_apart() {
+        // Given
+        let mut map = SourceMap::default();
+        let line = Span::new(Position::new(2, 1), Position::new(2, 9));
+
+        // When — a name recorded first does not offset the first block's id
+        map.record_name(line);
+        let block = map.record_block_lines(line);
+
+        // Then
+        assert_eq!(block, BlockId::new(0));
     }
 
     #[test]

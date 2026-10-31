@@ -105,8 +105,9 @@ pub(crate) fn analyze_with_sites(
 /// headings make, so the three cannot name a section differently.
 fn record_section_spans(nodes: &[Node], spans: &mut DefinitionSpans<'_>) {
     for (position, id) in allocate_section_ids(nodes) {
-        if let Some(Node::Heading { span, .. }) = nodes.get(position) {
-            spans.record(DefinitionKey::Section(id), *span);
+        if let Some(Node::Heading { block, .. }) = nodes.get(position) {
+            let lines = spans.block_lines(*block);
+            spans.record(DefinitionKey::Section(id), lines);
         }
     }
 }
@@ -260,12 +261,13 @@ pub(super) fn index_nodes(
             Node::Target {
                 name,
                 destination: None,
-                span,
+                block,
             } => {
                 index
                     .targets
                     .insert(name.value().clone(), doc_path.to_string());
-                spans.record_named(DefinitionKey::Label(name.value().clone()), *span, name);
+                let key = DefinitionKey::Label(name.value().clone());
+                spans.record_named(key, spans.block_lines(*block), name);
             }
             Node::Directive(Directive::Toctree(toctree)) => {
                 // `:name:` makes the toctree itself a `:ref:` target. Recorded
@@ -293,8 +295,8 @@ pub(super) fn index_nodes(
             Node::Directive(Directive::Index { entries, id }) => {
                 index_genindex_entries(entries, id, doc_path, index);
             }
-            Node::Directive(Directive::DomainObject { object, span }) => {
-                index_domain_object(object, *span, doc_path, index, spans, scopes);
+            Node::Directive(Directive::DomainObject { object, block }) => {
+                index_domain_object(object, spans.block_lines(*block), doc_path, index, spans, scopes);
             }
             Node::Directive(
                 directive @ (Directive::Admonition { .. }
@@ -326,19 +328,19 @@ pub(super) fn index_nodes(
                 index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, spans, scopes);
             }
             Node::Directive(Directive::DataTable {
-                rows, name, span, ..
+                rows, name, block, ..
             }) => {
-                register_directive_name(name.as_ref(), *span, doc_path, index, spans);
+                register_directive_name(name.as_ref(), spans.block_lines(*block), doc_path, index, spans);
                 index_table_rows(rows, doc_path, index, spans, scopes);
             }
             Node::Directive(Directive::Table {
                 header_rows,
                 body_rows,
                 name,
-                span,
+                block,
                 ..
             }) => {
-                register_directive_name(name.as_ref(), *span, doc_path, index, spans);
+                register_directive_name(name.as_ref(), spans.block_lines(*block), doc_path, index, spans);
                 index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, spans, scopes);
             }
             Node::Directive(
@@ -380,7 +382,8 @@ fn index_glossary(
         index
             .glossary_terms
             .insert(name.clone(), doc_path.to_string());
-        spans.record(DefinitionKey::Term(name), term.span);
+        let lines = spans.block_lines(term.block);
+        spans.record(DefinitionKey::Term(name), lines);
     }
 }
 

@@ -16,8 +16,9 @@
 
 use lsp_types::{Location, Range, SymbolKind, Uri};
 use rinx_ast::{
-    BlockKind, CObjectType, Child, Directive, Document, DomainObjectBody, Node, ObjectType,
-    Position, PyObjectType, SourceMap, Span, StdObjectType, for_each_child, inline_plain_text,
+    BlockId, BlockKind, CObjectType, Child, Directive, Document, DomainObjectBody, Node,
+    ObjectType, Position, PyObjectType, SourceMap, Span, StdObjectType, for_each_child,
+    inline_plain_text,
 };
 use rinx_scope::{DefinitionNames, DocumentScopes};
 use serde::{Deserialize, Serialize};
@@ -178,8 +179,8 @@ impl Outline<'_> {
         let mut open: Vec<(u8, OutlineSymbol)> = Vec::new();
         let mut roots: Vec<OutlineSymbol> = Vec::new();
         for node in &self.document.nodes {
-            if let Node::Heading { level, text, span } = node {
-                let Some(title) = self.placed(*span) else {
+            if let Node::Heading { level, text, block } = node {
+                let Some(title) = self.placed(self.block_lines(*block)) else {
                     continue;
                 };
                 let selection = self.range_of(title);
@@ -216,12 +217,12 @@ impl Outline<'_> {
     /// Appends to `out` the symbols `node` defines, nested as they are.
     fn symbols_of(&self, node: &Node, out: &mut Vec<OutlineSymbol>) {
         match node {
-            Node::Directive(Directive::DomainObject { object, span }) => {
+            Node::Directive(Directive::DomainObject { object, block }) => {
                 let mut children = Vec::new();
                 for child in object.body() {
                     self.symbols_of(child, &mut children);
                 }
-                match self.object_symbol(object, *span, children) {
+                match self.object_symbol(object, self.block_lines(*block), children) {
                     Ok(symbol) => out.push(symbol),
                     // An object with no position still holds what it holds.
                     Err(children) => out.extend(children),
@@ -285,6 +286,12 @@ impl Outline<'_> {
             selection_range: self.range_of(marker),
             children,
         })
+    }
+
+    /// The lines the block `block` was written over, as the parse recorded
+    /// them.
+    fn block_lines(&self, block: Option<BlockId>) -> Option<Span> {
+        self.source_map.block_lines(block?)
     }
 
     /// Where `span` lies in the document: the span itself, or the
@@ -447,11 +454,12 @@ mod tests {
         }
     }
 
-    fn heading(level: u8, title: &str, span: Option<Span>) -> Node {
+    /// A heading titled `title`, its line `span` recorded in `source_map`.
+    fn heading(source_map: &mut SourceMap, level: u8, title: &str, span: Option<Span>) -> Node {
         Node::Heading {
             level,
             text: vec![InlineNode::Text(title.to_string())],
-            span,
+            block: span.map(|span| source_map.record_block_lines(span)),
         }
     }
 
@@ -562,15 +570,15 @@ API
             span: Some(span_at(4, 13)),
             relation_spans: BTreeMap::new(),
         };
+        let mut source_map = SourceMap::default();
         let document = Document::new(
             "reqs.rst".to_string(),
             vec![
-                heading(1, "Reqs", Some(span_at(1, 4))),
+                heading(&mut source_map, 1, "Reqs", Some(span_at(1, 4))),
                 Node::Directive(Directive::Entity(Box::new(entity))),
             ],
         );
         // The directive's block, as the parser records it
-        let mut source_map = SourceMap::default();
         source_map.syntax.blocks.push(rinx_ast::SyntaxBlock {
             kind: BlockKind::Directive,
             lines: Span::new(Position::new(4, 1), Position::new(5, 14)),
@@ -600,9 +608,14 @@ API
             file: part,
         }];
         document.nodes = vec![
-            heading(1, "Guide", Some(span_at(1, 5))),
-            heading(2, "Part", Some(span_at(1, 4).with_file(Some(part)))),
-            heading(2, "After", Some(span_at(6, 5))),
+            heading(&mut source_map, 1, "Guide", Some(span_at(1, 5))),
+            heading(
+                &mut source_map,
+                2,
+                "Part",
+                Some(span_at(1, 4).with_file(Some(part))),
+            ),
+            heading(&mut source_map, 2, "After", Some(span_at(6, 5))),
         ];
 
         // When
@@ -629,22 +642,16 @@ API
         // Given — a heading in a file no include site names
         let mut document = Document::new("guide.rst".to_string(), Vec::new());
         let stray = document.intern_source_file("/work/stray.rst");
+        let mut source_map = SourceMap::default();
         document.nodes = vec![heading(
+            &mut source_map,
             1,
             "Stray",
             Some(span_at(1, 5).with_file(Some(stray))),
         )];
 
         // When / Then
-        assert!(
-            document_outline(
-                &document,
-                &SourceMap::default(),
-                "\n",
-                PositionEncoding::Utf16
-            )
-            .is_empty()
-        );
+        assert!(document_outline(&document, &source_map, "\n", PositionEncoding::Utf16).is_empty());
     }
 
     #[test]
@@ -679,7 +686,7 @@ API
             "api.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject {
                 object: class,
-                span: None,
+                block: None,
             })],
         );
 

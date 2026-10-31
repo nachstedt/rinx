@@ -499,7 +499,7 @@ mod tests {
             classes: Vec::new(),
             name: None,
             rows: vec![row_with(vec![diagram("in-list-table")])],
-            span: None,
+            block: None,
         })];
 
         // When
@@ -521,7 +521,7 @@ mod tests {
             name: None,
             header_rows: vec![row_with(vec![diagram("in-header")])],
             body_rows: vec![row_with(vec![diagram("in-body")])],
-            span: None,
+            block: None,
         })];
 
         // When
@@ -558,7 +558,7 @@ mod tests {
                 signatures: NonEmptyVector::single("int add(int a, int b)".into()),
                 body: vec![diagram("nested-in-domain-object")],
             },
-            span: None,
+            block: None,
         })];
 
         // When
@@ -729,7 +729,7 @@ mod tests {
                 options: crate::module_options::ModuleOptions::default(),
                 body: vec![Node::Transition],
             },
-            span: None,
+            block: None,
         });
 
         // When / Then

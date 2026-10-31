@@ -93,7 +93,7 @@ mod tests {
             vec![Node::Heading {
                 level: 1,
                 text: vec![InlineNode::Text("Notes".to_string())],
-                span: None,
+                block: None,
             }],
         );
         doc.metadata.insert(ORPHAN_FIELD.to_string(), String::new());
@@ -110,17 +110,10 @@ mod tests {
     #[test]
     fn test_of_carries_where_each_definition_was_written() {
         // Given
-        let doc = Document::new(
-            "notes.rst".to_string(),
-            vec![Node::Heading {
-                level: 1,
-                text: vec![InlineNode::Text("Notes".to_string())],
-                span: Some(Span::new(Position::new(1, 1), Position::new(1, 6))),
-            }],
-        );
+        let (doc, map) = noted(1);
 
         // When
-        let analysis = DocumentAnalysis::of(&doc, None);
+        let analysis = DocumentAnalysis::of(&doc, Some(&map));
 
         // Then
         let site = analysis
@@ -132,7 +125,7 @@ mod tests {
     #[test]
     fn test_index_fragment_is_the_documents_own_index() {
         // Given
-        let doc = noted(1);
+        let (doc, _) = noted(1);
 
         // When
         let analysis = DocumentAnalysis::of(&doc, None);
@@ -141,24 +134,33 @@ mod tests {
         assert_eq!(analysis.index_fragment(), &analyze(&doc));
     }
 
-    fn noted(line: u32) -> Document {
-        Document::new(
+    /// A document titled `Notes`, and the source map recording the title on
+    /// `line`.
+    fn noted(line: u32) -> (Document, SourceMap) {
+        let mut map = SourceMap::default();
+        let title =
+            map.record_block_lines(Span::new(Position::new(line, 1), Position::new(line, 6)));
+        let doc = Document::new(
             "notes.rst".to_string(),
             vec![Node::Heading {
                 level: 1,
                 text: vec![InlineNode::Text("Notes".to_string())],
-                span: Some(Span::new(Position::new(line, 1), Position::new(line, 6))),
+                block: Some(title),
             }],
-        )
+        );
+        (doc, map)
+    }
+
+    /// The analysis of [`noted`]'s document, with its source map.
+    fn noted_analysis(line: u32) -> DocumentAnalysis {
+        let (doc, map) = noted(line);
+        DocumentAnalysis::of(&doc, Some(&map))
     }
 
     #[test]
     fn test_folds_like_ignores_where_the_definitions_were_written() {
         // Given
-        let (original, moved) = (
-            DocumentAnalysis::of(&noted(1), None),
-            DocumentAnalysis::of(&noted(4), None),
-        );
+        let (original, moved) = (noted_analysis(1), noted_analysis(4));
 
         // When / Then
         assert_ne!(original, moved);
@@ -168,7 +170,7 @@ mod tests {
     #[test]
     fn test_folds_like_tells_apart_what_a_fold_reads() {
         // Given
-        let mut orphan = noted(1);
+        let (mut orphan, _) = noted(1);
         orphan
             .metadata
             .insert(ORPHAN_FIELD.to_string(), String::new());
@@ -177,10 +179,10 @@ mod tests {
             vec![Node::Heading {
                 level: 1,
                 text: vec![InlineNode::Text("Diary".to_string())],
-                span: None,
+                block: None,
             }],
         );
-        let original = DocumentAnalysis::of(&noted(1), None);
+        let original = noted_analysis(1);
 
         // When / Then
         assert!(!original.folds_like(&DocumentAnalysis::of(&orphan, None)));

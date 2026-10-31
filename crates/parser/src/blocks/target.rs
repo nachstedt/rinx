@@ -77,7 +77,7 @@ pub(super) fn try_parse_target(
             Node::Target {
                 name: Named::new(TargetName::new(name_str), ctx.record_name(name_span)),
                 destination,
-                span: ctx.line_span(i, lines[i].trim_end()),
+                block: ctx.record_block_lines(ctx.line_span(i, lines[i].trim_end())),
             },
         ));
     }
@@ -97,15 +97,15 @@ fn name_span(line: &str, name: &str, ctx: &ParseCtx<'_>, i: usize) -> Option<Spa
 
 #[cfg(test)]
 mod tests {
-    use crate::parse_document;
     use rinx_ast::{Node, Position, Span};
 
-    /// The span of every named target in `nodes`, in document order.
-    fn target_spans(nodes: &[Node]) -> Vec<Option<Span>> {
+    /// The lines `map` records for every named target in `nodes`, in
+    /// document order.
+    fn target_spans(nodes: &[Node], map: &rinx_ast::SourceMap) -> Vec<Option<Span>> {
         let mut spans = Vec::new();
         rinx_ast::walk_nodes(nodes, &mut |node| {
-            if let Node::Target { span, .. } = node {
-                spans.push(*span);
+            if let Node::Target { block, .. } = node {
+                spans.push(block.and_then(|id| map.block_lines(id)));
             }
         });
         spans
@@ -131,11 +131,11 @@ mod tests {
     #[test]
     fn test_parse_records_an_internal_targets_line() {
         // When
-        let doc = parse_document("test.rst", "Intro\n\n.. _install:\n\nText.\n");
+        let (doc, map) = crate::parse_placed("test.rst", "Intro\n\n.. _install:\n\nText.\n");
 
         // Then
         assert_eq!(
-            target_spans(&doc.nodes),
+            target_spans(&doc.nodes, &map),
             vec![Some(Span::new(Position::new(3, 1), Position::new(3, 13)))]
         );
     }
@@ -143,11 +143,11 @@ mod tests {
     #[test]
     fn test_parse_records_a_target_with_its_destination_on_the_next_line_at_its_name() {
         // When
-        let doc = parse_document("test.rst", ".. _docs:\n   https://example.org\n");
+        let (doc, map) = crate::parse_placed("test.rst", ".. _docs:\n   https://example.org\n");
 
         // Then
         assert_eq!(
-            target_spans(&doc.nodes),
+            target_spans(&doc.nodes, &map),
             vec![Some(Span::new(Position::new(1, 1), Position::new(1, 10)))]
         );
     }
@@ -158,11 +158,11 @@ mod tests {
         let input = ".. note::\n\n   .. _inside:\n\n   Text.\n";
 
         // When
-        let doc = parse_document("test.rst", input);
+        let (doc, map) = crate::parse_placed("test.rst", input);
 
         // Then
         assert_eq!(
-            target_spans(&doc.nodes),
+            target_spans(&doc.nodes, &map),
             vec![Some(Span::new(Position::new(3, 4), Position::new(3, 15)))]
         );
     }

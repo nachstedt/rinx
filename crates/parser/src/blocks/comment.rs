@@ -290,16 +290,16 @@ mod integration_tests {
         // Given
         let input = "Title\n=====\n\n.. A comment\n\nSome text.";
         // When
-        let doc = parse_document("test.rst", input);
+        let (doc, map) = crate::parse_placed("test.rst", input);
         // Then
         assert_eq!(doc.nodes.len(), 3);
         assert_eq!(
-            doc.nodes[0],
-            Node::Heading {
-                level: 1,
-                text: vec![InlineNode::Text("Title".to_string())],
-                span: Some(Span::new(Position::new(1, 1), Position::new(1, 6)))
-            }
+            crate::placed_heading(&doc.nodes[0], &map),
+            (
+                1,
+                vec![InlineNode::Text("Title".to_string())],
+                Some(Span::new(Position::new(1, 1), Position::new(1, 6)))
+            )
         );
         assert_eq!(doc.nodes[1], Node::Comment);
         assert_eq!(
@@ -325,18 +325,18 @@ mod integration_tests {
         let input =
             "... install scientific Python packages?\n---------------------------------------";
         // When
-        let doc = parse_document("test.rst", input);
+        let (doc, map) = crate::parse_placed("test.rst", input);
         // Then — must be a Heading, not a Comment
         assert_eq!(doc.nodes.len(), 1);
         assert_eq!(
-            doc.nodes[0],
-            Node::Heading {
-                level: 1,
-                text: vec![InlineNode::Text(
+            crate::placed_heading(&doc.nodes[0], &map),
+            (
+                1,
+                vec![InlineNode::Text(
                     "\u{2026} install scientific Python packages?".to_string()
                 )],
-                span: Some(Span::new(Position::new(1, 1), Position::new(1, 40)))
-            }
+                Some(Span::new(Position::new(1, 1), Position::new(1, 40)))
+            )
         );
     }
 

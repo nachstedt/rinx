@@ -18,7 +18,7 @@
 use std::collections::BTreeMap;
 
 use rinx_ast::{
-    BlockKind, Domain, EntityId, FileId, NameId, Position, Span, TokenKind, TokenModifiers,
+    BlockId, BlockKind, Domain, EntityId, FileId, NameId, Position, Span, TokenKind, TokenModifiers,
 };
 use rinx_entity::{EntitySchema, EntityType};
 
@@ -397,6 +397,13 @@ impl<'a> ParseCtx<'a> {
     /// records no source map or the name came from no source line.
     pub(crate) fn record_name(&self, span: Option<Span>) -> Option<NameId> {
         Some(self.syntax?.name(span?))
+    }
+
+    /// Records a definition's block written over `lines`, yielding the id
+    /// its node carries — `None` when this parse records no source map or
+    /// the block came from no source line.
+    pub(crate) fn record_block_lines(&self, lines: Option<Span>) -> Option<BlockId> {
+        Some(self.syntax?.block_lines(lines?))
     }
 
     /// The roles the document has defined so far, or `None` when this parse

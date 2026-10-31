@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::block_id::BlockId;
 use crate::node::Node;
-use crate::span::Span;
 
 /// A single entry in a `.. glossary::` directive.
 ///
@@ -20,10 +20,10 @@ pub struct GlossaryEntry {
 pub struct GlossaryTerm {
     /// The term as written, classifier and index key already stripped.
     pub text: String,
-    /// The term's line, which a `:term:` reference's definition is. Never
-    /// read by the index (`docs/decisions/045-definition-spans.md`).
+    /// The term's line, which a `:term:` reference's definition is, as the
+    /// parse's source map records it (`docs/decisions/045-definition-spans.md`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub span: Option<Span>,
+    pub block: Option<BlockId>,
 }
 
 impl GlossaryTerm {
@@ -33,7 +33,7 @@ impl GlossaryTerm {
     pub fn unplaced(text: impl Into<String>) -> Self {
         Self {
             text: text.into(),
-            span: None,
+            block: None,
         }
     }
 }

@@ -169,7 +169,7 @@ mod tests {
         Node::Heading {
             level,
             text: vec![InlineNode::Text(title.to_string())],
-            span: None,
+            block: None,
         }
     }
 
@@ -424,7 +424,7 @@ mod tests {
                     InlineNode::Emphasis("fast".to_string()),
                     InlineNode::Text(" path".to_string()),
                 ],
-                span: None,
+                block: None,
             },
         ];
 
@@ -446,7 +446,7 @@ mod tests {
                     InlineNode::Text("Reading ".to_string()),
                     InlineNode::TitleReference("Dune".to_string()),
                 ],
-                span: None,
+                block: None,
             },
         ];
 
@@ -473,7 +473,7 @@ mod tests {
                     },
                     InlineNode::Text(" levels".to_string()),
                 ],
-                span: None,
+                block: None,
             },
         ];
 

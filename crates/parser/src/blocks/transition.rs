@@ -321,18 +321,20 @@ mod integration_tests {
         // Given — a normal underline-only heading, adjacent to the transition dispatch
         let input = "Heading\n=======\n\nSome text.";
         // When
-        let doc = parse_document("test.rst", input);
+        let (doc, map) = crate::parse_placed("test.rst", input);
         // Then
+        assert_eq!(doc.nodes.len(), 2);
         assert_eq!(
-            doc.nodes,
-            vec![
-                Node::Heading {
-                    level: 1,
-                    text: vec![InlineNode::Text("Heading".to_string())],
-                    span: Some(Span::new(Position::new(1, 1), Position::new(1, 8)))
-                },
-                Node::Paragraph(vec![InlineNode::Text("Some text.".to_string())]),
-            ]
+            crate::placed_heading(&doc.nodes[0], &map),
+            (
+                1,
+                vec![InlineNode::Text("Heading".to_string())],
+                Some(Span::new(Position::new(1, 1), Position::new(1, 8)))
+            )
+        );
+        assert_eq!(
+            doc.nodes[1],
+            Node::Paragraph(vec![InlineNode::Text("Some text.".to_string())])
         );
     }
 

@@ -1,6 +1,8 @@
 //! A definition's line is the editor's to know, never the index's: moving
 //! lines must leave the `.index` a Bazel build writes byte for byte as it
 //! was, or every page would re-render (`docs/decisions/045-definition-spans.md`).
+//! Nor the `.ast`'s: a definition holds a `BlockId` into the parse's source
+//! map, so lines moving above definitions leave the written document as it was.
 //!
 //! Toctree entries and entity relations and updates are left out of the
 //! fixture: the index already carries their lines, as the ADR records.
@@ -90,11 +92,18 @@ fn test_moving_lines_leaves_the_written_index_unchanged() {
     assert_eq!(original, moved);
 }
 
+/// `source` analysed as the editor analyses its own parse, with the source
+/// map beside it.
+fn analysed(source: &str) -> DocumentAnalysis {
+    let parsed = rinx_parser::parse("guide.rst", source, &rinx_parser::ParseCtx::default());
+    DocumentAnalysis::of(&parsed.document, Some(&parsed.source_map))
+}
+
 #[test]
 fn test_moving_lines_moves_every_definition_site() {
     // Given
-    let original = DocumentAnalysis::of(&parsed(GUIDE), None);
-    let moved = DocumentAnalysis::of(&parsed(&shifted()), None);
+    let original = analysed(GUIDE);
+    let moved = analysed(&shifted());
 
     // When
     let lines = |analysis: &DocumentAnalysis| {
@@ -113,6 +122,48 @@ fn test_moving_lines_moves_every_definition_site() {
         assert_eq!(key, moved_key);
         assert!(new > old, "{key:?} stayed at line {old}");
     }
+}
+
+#[test]
+fn test_moving_lines_above_definitions_leaves_the_written_ast_unchanged() {
+    // Given — every definition kind that holds a `BlockId`, and nothing a
+    // build phase reports at (no reference, entity, equation or code block)
+    let definitions = "\
+Guide
+=====
+
+.. _install:
+
+Installing
+----------
+
+.. py:module:: shapes
+
+.. py:class:: Circle
+
+.. glossary::
+
+   API
+      A contract.
+
+.. list-table:: Sizes
+   :name: sizes
+
+   * - small
+     - 1
+";
+    let moved = format!("\n\n\n{}", definitions.replace("\n\n", "\n\n\n"));
+
+    // When
+    let written = |source: &str| {
+        serde_json::to_string(
+            &rinx_parser::parse("guide.rst", source, &rinx_parser::ParseCtx::default()).document,
+        )
+        .expect("serializes")
+    };
+
+    // Then — where each was written is the source map's alone
+    assert_eq!(written(definitions), written(&moved));
 }
 
 #[test]

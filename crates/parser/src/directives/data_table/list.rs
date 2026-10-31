@@ -117,7 +117,7 @@ fn build_list_table(
         classes: options.classes,
         name: options.name,
         rows,
-        span,
+        block: ctx.record_block_lines(span),
     }
 }
 
@@ -206,11 +206,13 @@ mod tests {
         let input = "Intro\n\n.. list-table:: Sizes\n   :name: sizes\n\n   * - a\n     - b\n";
 
         // When
-        let doc = crate::parse_document("test.rst", input);
+        let (doc, map) = crate::parse_placed("test.rst", input);
 
         // Then
         let span = doc.nodes.iter().find_map(|node| match node {
-            Node::Directive(Directive::DataTable { span, .. }) => Some(*span),
+            Node::Directive(Directive::DataTable { block, .. }) => {
+                Some(block.and_then(|id| map.block_lines(id)))
+            }
             _ => None,
         });
         assert_eq!(

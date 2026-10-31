@@ -62,17 +62,17 @@ fn test_parse_creates_heading_node() {
     let input = "Heading\n=======";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
-        doc.nodes[0],
-        Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("Heading".to_string())],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 8)))
-        }
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("Heading".to_string())],
+            Some(Span::new(Position::new(1, 1), Position::new(1, 8)))
+        )
     );
 }
 
@@ -82,17 +82,17 @@ fn test_parse_creates_heading_from_punctuation_lines() {
     let input = "===\n---";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
-        doc.nodes[0],
-        Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("===".to_string())],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 4)))
-        }
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("===".to_string())],
+            Some(Span::new(Position::new(1, 1), Position::new(1, 4)))
+        )
     );
 }
 
@@ -102,17 +102,17 @@ fn test_parse_creates_h1_for_first_adornment_char() {
     let input = "Title\n=====";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
-        doc.nodes[0],
-        Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("Title".to_string())],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 6)))
-        }
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("Title".to_string())],
+            Some(Span::new(Position::new(1, 1), Position::new(1, 6)))
+        )
     );
 }
 
@@ -122,25 +122,25 @@ fn test_parse_creates_h2_for_second_adornment_char() {
     let input = "H1\n==\n\nH2\n--";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
-        doc.nodes[0],
-        Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("H1".to_string())],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 3)))
-        }
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("H1".to_string())],
+            Some(Span::new(Position::new(1, 1), Position::new(1, 3)))
+        )
     );
     assert_eq!(
-        doc.nodes[1],
-        Node::Heading {
-            level: 2,
-            text: vec![InlineNode::Text("H2".to_string())],
-            span: Some(Span::new(Position::new(4, 1), Position::new(4, 3)))
-        }
+        crate::placed_heading(&doc.nodes[1], &map),
+        (
+            2,
+            vec![InlineNode::Text("H2".to_string())],
+            Some(Span::new(Position::new(4, 1), Position::new(4, 3)))
+        )
     );
 }
 
@@ -150,25 +150,25 @@ fn test_parse_reuses_level_for_same_adornment_char() {
     let input = "First\n=====\n\nSecond\n======";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
-        doc.nodes[0],
-        Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("First".to_string())],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 6)))
-        }
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("First".to_string())],
+            Some(Span::new(Position::new(1, 1), Position::new(1, 6)))
+        )
     );
     assert_eq!(
-        doc.nodes[1],
-        Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("Second".to_string())],
-            span: Some(Span::new(Position::new(4, 1), Position::new(4, 7)))
-        }
+        crate::placed_heading(&doc.nodes[1], &map),
+        (
+            1,
+            vec![InlineNode::Text("Second".to_string())],
+            Some(Span::new(Position::new(4, 1), Position::new(4, 7)))
+        )
     );
 }
 
@@ -178,33 +178,33 @@ fn test_parse_assigns_levels_by_encounter_order() {
     let input = "H1\n==\n\nH2\n--\n\nH3\n~~";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 3);
     assert_eq!(
-        doc.nodes[0],
-        Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("H1".to_string())],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 3)))
-        }
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("H1".to_string())],
+            Some(Span::new(Position::new(1, 1), Position::new(1, 3)))
+        )
     );
     assert_eq!(
-        doc.nodes[1],
-        Node::Heading {
-            level: 2,
-            text: vec![InlineNode::Text("H2".to_string())],
-            span: Some(Span::new(Position::new(4, 1), Position::new(4, 3)))
-        }
+        crate::placed_heading(&doc.nodes[1], &map),
+        (
+            2,
+            vec![InlineNode::Text("H2".to_string())],
+            Some(Span::new(Position::new(4, 1), Position::new(4, 3)))
+        )
     );
     assert_eq!(
-        doc.nodes[2],
-        Node::Heading {
-            level: 3,
-            text: vec![InlineNode::Text("H3".to_string())],
-            span: Some(Span::new(Position::new(7, 1), Position::new(7, 3)))
-        }
+        crate::placed_heading(&doc.nodes[2], &map),
+        (
+            3,
+            vec![InlineNode::Text("H3".to_string())],
+            Some(Span::new(Position::new(7, 1), Position::new(7, 3)))
+        )
     );
 }
 
@@ -214,17 +214,17 @@ fn test_parse_creates_heading_for_alternate_punctuation() {
     let input = "Sub Title\n---------";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
-        doc.nodes[0],
-        Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("Sub Title".to_string())],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 10)))
-        }
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("Sub Title".to_string())],
+            Some(Span::new(Position::new(1, 1), Position::new(1, 10)))
+        )
     );
 }
 
@@ -234,17 +234,17 @@ fn test_parse_creates_heading_with_overline() {
     let input = "#######\nHeading\n#######";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
-        doc.nodes[0],
-        Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("Heading".to_string())],
-            span: Some(Span::new(Position::new(2, 1), Position::new(2, 8)))
-        }
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("Heading".to_string())],
+            Some(Span::new(Position::new(2, 1), Position::new(2, 8)))
+        )
     );
 }
 
@@ -254,25 +254,25 @@ fn test_parse_overline_and_underline_distinct_levels() {
     let input = "##########\nOverline\n##########\n\nUnderline\n#########";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
-        doc.nodes[0],
-        Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("Overline".to_string())],
-            span: Some(Span::new(Position::new(2, 1), Position::new(2, 9)))
-        }
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("Overline".to_string())],
+            Some(Span::new(Position::new(2, 1), Position::new(2, 9)))
+        )
     );
     assert_eq!(
-        doc.nodes[1],
-        Node::Heading {
-            level: 2,
-            text: vec![InlineNode::Text("Underline".to_string())],
-            span: Some(Span::new(Position::new(5, 1), Position::new(5, 10)))
-        }
+        crate::placed_heading(&doc.nodes[1], &map),
+        (
+            2,
+            vec![InlineNode::Text("Underline".to_string())],
+            Some(Span::new(Position::new(5, 1), Position::new(5, 10)))
+        )
     );
 }
 
@@ -282,20 +282,15 @@ fn test_parse_heading_resolves_domain_object_role() {
     let input = "The :mod:`greetings` Module\n============================";
 
     // When
-    let doc = crate::parse(
-        "test.rst",
-        input,
-        &crate::ParseCtx::with_domain(rinx_ast::Domain::Py),
-    )
-    .document;
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
-        doc.nodes[0],
-        Node::Heading {
-            level: 1,
-            text: vec![
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![
                 InlineNode::Text("The ".to_string()),
                 InlineNode::DomainObjectReference {
                     object_type: rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Module),
@@ -313,8 +308,8 @@ fn test_parse_heading_resolves_domain_object_role() {
                 },
                 InlineNode::Text(" Module".to_string()),
             ],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 28)))
-        }
+            Some(Span::new(Position::new(1, 1), Position::new(1, 28)))
+        )
     );
 }
 
@@ -324,21 +319,21 @@ fn test_parse_heading_resolves_strong_emphasis() {
     let input = "A **Bold** Heading\n===================";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
-        doc.nodes[0],
-        Node::Heading {
-            level: 1,
-            text: vec![
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![
                 InlineNode::Text("A ".to_string()),
                 InlineNode::Strong("Bold".to_string()),
                 InlineNode::Text(" Heading".to_string()),
             ],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 19)))
-        }
+            Some(Span::new(Position::new(1, 1), Position::new(1, 19)))
+        )
     );
 }
 
@@ -351,16 +346,17 @@ fn test_parse_heading_measures_an_emoji_title_in_display_columns() {
     let input = "\u{1f50d} Demo details\n===============";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then — a heading, and nothing to report: 15 columns under 15 `=`
+    assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
-        doc.nodes,
-        vec![Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("\u{1f50d} Demo details".to_string())],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 15)))
-        }]
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("\u{1f50d} Demo details".to_string())],
+            Some(Span::new(Position::new(1, 1), Position::new(1, 15)))
+        )
     );
     assert!(diagnostic_codes(&doc).is_empty());
 }
@@ -371,16 +367,17 @@ fn test_parse_heading_requires_two_columns_per_wide_character() {
     let input = "\u{6f22}\u{5b57}\n====";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then — the four-character underline is exactly wide enough
+    assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
-        doc.nodes,
-        vec![Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("\u{6f22}\u{5b57}".to_string())],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 3)))
-        }]
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("\u{6f22}\u{5b57}".to_string())],
+            Some(Span::new(Position::new(1, 1), Position::new(1, 3)))
+        )
     );
     assert!(diagnostic_codes(&doc).is_empty());
 }
@@ -391,16 +388,17 @@ fn test_parse_heading_measures_an_overlined_emoji_title_in_display_columns() {
     let input = "===============\n\u{1f50d} Demo details\n===============";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then
+    assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
-        doc.nodes,
-        vec![Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("\u{1f50d} Demo details".to_string())],
-            span: Some(Span::new(Position::new(2, 1), Position::new(2, 15)))
-        }]
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("\u{1f50d} Demo details".to_string())],
+            Some(Span::new(Position::new(2, 1), Position::new(2, 15)))
+        )
     );
     assert!(diagnostic_codes(&doc).is_empty());
 }
@@ -412,17 +410,18 @@ fn test_parse_heading_accepts_a_short_underline_and_reports_it() {
     let input = "A Long Title\n=====";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then — docutils' behaviour: still a heading, reported rather than
     // silently dropped
+    assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
-        doc.nodes,
-        vec![Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("A Long Title".to_string())],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 13)))
-        }]
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("A Long Title".to_string())],
+            Some(Span::new(Position::new(1, 1), Position::new(1, 13)))
+        )
     );
     assert_eq!(
         diagnostic_codes(&doc),
@@ -436,16 +435,17 @@ fn test_parse_heading_reports_a_short_overlined_adornment_once() {
     let input = "=====\nA Long Title\n=====";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then — one heading and exactly one diagnostic, not one per adornment
+    assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
-        doc.nodes,
-        vec![Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("A Long Title".to_string())],
-            span: Some(Span::new(Position::new(2, 1), Position::new(2, 13)))
-        }]
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("A Long Title".to_string())],
+            Some(Span::new(Position::new(2, 1), Position::new(2, 13)))
+        )
     );
     assert_eq!(
         diagnostic_codes(&doc),
@@ -479,16 +479,17 @@ fn test_parse_heading_reports_nothing_for_an_over_long_underline() {
     let input = "Short\n==========";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then — a heading, with nothing to report
+    assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
-        doc.nodes,
-        vec![Node::Heading {
-            level: 1,
-            text: vec![InlineNode::Text("Short".to_string())],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 6)))
-        }]
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![InlineNode::Text("Short".to_string())],
+            Some(Span::new(Position::new(1, 1), Position::new(1, 6)))
+        )
     );
     assert!(diagnostic_codes(&doc).is_empty());
 }

@@ -11,7 +11,8 @@
 use std::cell::RefCell;
 
 use rinx_ast::{
-    BlockKind, NameId, SourceMap, Span, SyntaxBlock, SyntaxToken, TokenKind, TokenModifiers,
+    BlockId, BlockKind, NameId, SourceMap, Span, SyntaxBlock, SyntaxToken, TokenKind,
+    TokenModifiers,
 };
 
 /// One document's source map, as it fills.
@@ -45,6 +46,12 @@ impl SyntaxRecorder {
         self.map.borrow_mut().record_name(span)
     }
 
+    /// Records a definition's block written over `lines`, yielding the id
+    /// its node is to carry.
+    pub(crate) fn block_lines(&self, lines: Span) -> BlockId {
+        self.map.borrow_mut().record_block_lines(lines)
+    }
+
     /// What was recorded.
     pub(crate) fn into_source_map(self) -> SourceMap {
         self.map.into_inner()
@@ -69,6 +76,21 @@ mod tests {
         let map = recorder.into_source_map();
         assert_eq!(map.name_span(first), Some(span(2)));
         assert_eq!(map.name_span(second), Some(span(7)));
+    }
+
+    #[test]
+    fn test_recorder_hands_each_block_the_id_its_lines_are_found_by() {
+        // Given
+        let recorder = SyntaxRecorder::default();
+
+        // When
+        let first = recorder.block_lines(span(1));
+        let second = recorder.block_lines(span(4));
+
+        // Then
+        let map = recorder.into_source_map();
+        assert_eq!(map.block_lines(first), Some(span(1)));
+        assert_eq!(map.block_lines(second), Some(span(4)));
     }
 
     fn span(line: u32) -> Span {

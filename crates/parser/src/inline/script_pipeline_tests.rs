@@ -108,20 +108,20 @@ fn test_parse_keeps_a_script_in_a_heading() {
     let input = "CO\\ :sub:`2` levels\n==================\n";
 
     // When
-    let doc = parse_document("test.rst", input);
+    let (doc, map) = crate::parse_placed("test.rst", input);
 
     // Then
     assert_eq!(
-        doc.nodes[0],
-        Node::Heading {
-            level: 1,
-            text: vec![
+        crate::placed_heading(&doc.nodes[0], &map),
+        (
+            1,
+            vec![
                 text("CO"),
                 script(ScriptPosition::Subscript, "2", &[]),
                 text(" levels"),
             ],
-            span: Some(Span::new(Position::new(1, 1), Position::new(1, 20)))
-        }
+            Some(Span::new(Position::new(1, 1), Position::new(1, 20)))
+        )
     );
 }
 

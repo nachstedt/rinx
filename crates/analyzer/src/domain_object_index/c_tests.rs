@@ -29,7 +29,7 @@ fn c_member(signature: &str) -> Node {
             flags: rinx_ast::DescriptionFlags::default(),
             body: vec![],
         },
-        span: None,
+        block: None,
     })
 }
 
@@ -40,7 +40,7 @@ fn c_macro(signature: &str) -> Node {
             signatures: NonEmptyVector::single(signature.into()),
             body: vec![],
         },
-        span: None,
+        block: None,
     })
 }
 
@@ -55,7 +55,7 @@ fn test_analyze_qualifies_bare_c_member_nested_under_c_struct() {
                 flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![c_member("int count")],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -81,7 +81,7 @@ fn test_analyze_qualifies_bare_c_member_nested_under_c_union() {
                 flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![c_member("int as_int")],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -135,10 +135,10 @@ fn test_analyze_c_function_nested_in_c_struct_is_qualified_by_it() {
                         signatures: NonEmptyVector::single("int helper(void)".into()),
                         body: vec![],
                     },
-                    span: None,
+                    block: None,
                 })],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -164,7 +164,7 @@ fn test_analyze_qualifies_c_macro_nested_under_c_type() {
                 flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![c_macro("PYMEM_DOMAIN_RAW")],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -195,7 +195,7 @@ fn test_analyze_c_namespace_null_inside_c_type_body_unqualifies_nested_macro() {
                     c_macro("PYMEM_DOMAIN_RAW"),
                 ],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -227,7 +227,7 @@ fn test_analyze_c_type_body_restores_scope_after_an_inner_namespace_reset() {
                     flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![Node::Directive(Directive::CNamespace { namespace: None })],
                 },
-                span: None,
+                block: None,
             }),
             c_macro("AFTER"),
         ],
@@ -309,7 +309,7 @@ fn test_analyze_c_function_nested_in_py_class_is_not_qualified_by_it() {
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyClass {
@@ -323,10 +323,10 @@ fn test_analyze_c_function_nested_in_py_class_is_not_qualified_by_it() {
                             signatures: NonEmptyVector::single("int helper(void)".into()),
                             body: vec![],
                         },
-                        span: None,
+                        block: None,
                     })],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -351,7 +351,7 @@ fn test_analyze_qualifies_bare_c_member_nested_under_c_type() {
                 flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![c_member("int count")],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -375,7 +375,7 @@ fn test_analyze_registers_bare_c_type_without_nesting() {
                 flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -403,7 +403,7 @@ fn test_analyze_registers_a_function_pointer_typedef_under_its_declared_name() {
                     ),
                     flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
-                }, span: None })],
+                }, block: None })],
         );
 
     // When
@@ -429,7 +429,7 @@ fn test_analyze_registers_slot_typedefs_with_pointer_return_types() {
                     flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: DomainObjectBody::CType {
@@ -439,7 +439,7 @@ fn test_analyze_registers_slot_typedefs_with_pointer_return_types() {
                     flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -468,7 +468,7 @@ fn test_analyze_no_index_suppresses_target_and_genindex_entry_for_c_type() {
                 flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 

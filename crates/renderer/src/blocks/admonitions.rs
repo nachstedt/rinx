@@ -363,7 +363,7 @@ mod tests {
                     },
                     body: vec![],
                 },
-                span: None,
+                block: None,
             })],
         );
 

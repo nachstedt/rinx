@@ -9,7 +9,7 @@
 
 use std::collections::BTreeMap;
 
-use rinx_ast::{Document, Named, SourceMap, Span};
+use rinx_ast::{BlockId, Document, Named, SourceMap, Span};
 use rinx_index::{DefinitionKey, DefinitionSite, DefinitionSites, NameRange};
 
 /// The spans met so far, by what the index names each definition: its own,
@@ -36,6 +36,12 @@ impl<'m> DefinitionSpans<'m> {
     /// them and its source map is at hand.
     pub(crate) fn name_span<T>(&self, name: &Named<T>) -> Option<Span> {
         self.source_map?.name_span(name.id()?)
+    }
+
+    /// The lines the block `block` was written over, when the parse recorded
+    /// them and its source map is at hand.
+    pub(crate) fn block_lines(&self, block: Option<BlockId>) -> Option<Span> {
+        self.source_map?.block_lines(block?)
     }
 
     /// Records where `key` was defined. A definition the parser gave no span
