@@ -84,7 +84,7 @@ mod tests {
     fn table_directive() -> Document {
         Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::Table {
+            vec![Node::directive(Directive::Table {
                 title: None,
                 widths: None,
                 width: None,
@@ -93,7 +93,6 @@ mod tests {
                 name: None,
                 header_rows: vec![table_row(&["Fruit", "Colour"])],
                 body_rows: vec![table_row(&["Apple", "Red"])],
-                block: None,
             })],
         )
     }
@@ -122,7 +121,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::Table {
+            vec![Node::directive(Directive::Table {
                 title: None,
                 widths: None,
                 width: None,
@@ -131,7 +130,6 @@ mod tests {
                 name: None,
                 header_rows: vec![],
                 body_rows: vec![table_row(&["only"])],
-                block: None,
             })],
         );
 
@@ -147,7 +145,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::Table {
+            vec![Node::directive(Directive::Table {
                 title: Some("Truth table for \"not\"".to_string()),
                 widths: None,
                 width: None,
@@ -156,7 +154,6 @@ mod tests {
                 name: None,
                 header_rows: vec![],
                 body_rows: vec![table_row(&["Cell"])],
-                block: None,
             })],
         );
 
@@ -172,7 +169,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::Table {
+            vec![Node::directive(Directive::Table {
                 title: None,
                 widths: None,
                 width: None,
@@ -181,7 +178,6 @@ mod tests {
                 name: None,
                 header_rows: vec![],
                 body_rows: vec![table_row(&["Cell"])],
-                block: None,
             })],
         );
 
@@ -197,7 +193,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::Table {
+            vec![Node::directive(Directive::Table {
                 title: None,
                 widths: None,
                 width: None,
@@ -206,7 +202,6 @@ mod tests {
                 name: None,
                 header_rows: vec![],
                 body_rows: vec![table_row(&["Cell"])],
-                block: None,
             })],
         );
 
@@ -225,7 +220,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::Table {
+            vec![Node::directive(Directive::Table {
                 title: None,
                 widths: None,
                 width: Some("50%".to_string()),
@@ -234,7 +229,6 @@ mod tests {
                 name: None,
                 header_rows: vec![],
                 body_rows: vec![table_row(&["Cell"])],
-                block: None,
             })],
         );
 
@@ -250,7 +244,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::Table {
+            vec![Node::directive(Directive::Table {
                 title: None,
                 widths: Some(TableWidths::Explicit(vec![30, 70])),
                 width: None,
@@ -259,7 +253,6 @@ mod tests {
                 name: None,
                 header_rows: vec![],
                 body_rows: vec![table_row(&["A", "B"])],
-                block: None,
             })],
         );
 
@@ -277,7 +270,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::Table {
+            vec![Node::directive(Directive::Table {
                 title: None,
                 widths: None,
                 width: None,
@@ -286,7 +279,6 @@ mod tests {
                 name: Some(TargetName::new("wrapped-table").into()),
                 header_rows: vec![],
                 body_rows: vec![table_row(&["Cell"])],
-                block: None,
             })],
         );
 

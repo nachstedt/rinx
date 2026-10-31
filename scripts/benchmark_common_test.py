@@ -320,6 +320,20 @@ class TestJsonObjects:
         assert list(benchmark_common.json_objects("text")) == []
 
 
+class TestWrittenDirective:
+    def test_a_directive_node_yields_its_directive(self) -> None:
+        # Given a directive node as a `.ast` file holds it
+        node = {"Directive": {"directive": {"Unknown": {"name": "x"}}, "block": 3}}
+
+        # When / Then
+        assert benchmark_common.written_directive(node) == {"Unknown": {"name": "x"}}
+
+    def test_any_other_node_yields_none(self) -> None:
+        # Given / When / Then
+        assert benchmark_common.written_directive({"Paragraph": {"content": []}}) is None
+        assert benchmark_common.written_directive({"Directive": "malformed"}) is None
+
+
 class TestWhyUntrustworthy:
     def test_a_failed_build_cannot_justify_pruning(self) -> None:
         # Given / When / Then

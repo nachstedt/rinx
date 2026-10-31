@@ -177,7 +177,7 @@ mod tests {
         // Given
         let mut figure = figure("logo.png");
         figure.caption = Some(text("The logo."));
-        figure.legend = vec![Node::Paragraph(text("Drawn in 2019."))];
+        figure.legend = vec![Node::paragraph(text("Drawn in 2019."))];
 
         // When
         let html = render(figure);
@@ -196,7 +196,7 @@ mod tests {
     fn test_renders_a_legend_without_a_caption() {
         // Given — what an author writes with a leading empty comment
         let mut figure = figure("logo.png");
-        figure.legend = vec![Node::Paragraph(text("All legend."))];
+        figure.legend = vec![Node::paragraph(text("All legend."))];
 
         // When
         let html = render(figure);

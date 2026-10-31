@@ -146,12 +146,20 @@ class TestAstTally:
         # the way a document holds them
         tree = {
             "nodes": [
-                {"Directive": {"Unknown": {"name": "automodule"}}},
-                {"Section": {"children": [{"Directive": {"Malformed": {"name": "csv-table"}}}]}},
+                {"Directive": {"directive": {"Unknown": {"name": "automodule"}}}},
+                {
+                    "Section": {
+                        "children": [
+                            {"Directive": {"directive": {"Malformed": {"name": "csv-table"}}}}
+                        ]
+                    }
+                },
                 {
                     "Directive": {
-                        "Toctree": {
-                            "options": {"maxdepth": 2, "caption": None, "flags": ["TitlesOnly"]}
+                        "directive": {
+                            "Toctree": {
+                                "options": {"maxdepth": 2, "caption": None, "flags": ["TitlesOnly"]}
+                            }
                         }
                     }
                 },

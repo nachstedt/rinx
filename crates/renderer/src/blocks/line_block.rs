@@ -54,9 +54,12 @@ mod tests {
         // Given
         let doc = Document::new(
             "guide.rst".to_string(),
-            vec![Node::LineBlock(vec![LineBlockItem::Line(vec![
-                InlineNode::Text("One line.".to_string()),
-            ])])],
+            vec![Node::LineBlock {
+                items: vec![LineBlockItem::Line(vec![InlineNode::Text(
+                    "One line.".to_string(),
+                )])],
+                block: None,
+            }],
         );
 
         // When
@@ -75,7 +78,10 @@ mod tests {
         // Given
         let doc = Document::new(
             "guide.rst".to_string(),
-            vec![Node::LineBlock(vec![LineBlockItem::Line(vec![])])],
+            vec![Node::LineBlock {
+                items: vec![LineBlockItem::Line(vec![])],
+                block: None,
+            }],
         );
 
         // When
@@ -90,9 +96,12 @@ mod tests {
         // Given
         let doc = Document::new(
             "guide.rst".to_string(),
-            vec![Node::LineBlock(vec![LineBlockItem::Nested(vec![
-                LineBlockItem::Line(vec![InlineNode::Text("Nested.".to_string())]),
-            ])])],
+            vec![Node::LineBlock {
+                items: vec![LineBlockItem::Nested(vec![LineBlockItem::Line(vec![
+                    InlineNode::Text("Nested.".to_string()),
+                ])])],
+                block: None,
+            }],
         );
 
         // When
@@ -109,9 +118,12 @@ mod tests {
         // Given
         let doc = Document::new(
             "guide.rst".to_string(),
-            vec![Node::LineBlock(vec![LineBlockItem::Line(vec![
-                InlineNode::Emphasis("stressed".to_string()),
-            ])])],
+            vec![Node::LineBlock {
+                items: vec![LineBlockItem::Line(vec![InlineNode::Emphasis(
+                    "stressed".to_string(),
+                )])],
+                block: None,
+            }],
         );
 
         // When

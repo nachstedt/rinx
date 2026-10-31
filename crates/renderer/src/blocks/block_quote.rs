@@ -46,10 +46,11 @@ mod tests {
         let doc = Document::new(
             "guide.rst".to_string(),
             vec![Node::BlockQuote {
-                content: vec![Node::Paragraph(vec![InlineNode::Text(
+                content: vec![Node::paragraph(vec![InlineNode::Text(
                     "Quoted text.".to_string(),
                 )])],
                 attribution: None,
+                block: None,
             }],
         );
 
@@ -67,10 +68,11 @@ mod tests {
         let doc = Document::new(
             "guide.rst".to_string(),
             vec![Node::BlockQuote {
-                content: vec![Node::Paragraph(vec![InlineNode::Text(
+                content: vec![Node::paragraph(vec![InlineNode::Text(
                     "Quoted text.".to_string(),
                 )])],
                 attribution: Some(vec![InlineNode::Text("Sherlock Holmes".to_string())]),
+                block: None,
             }],
         );
 
@@ -88,12 +90,14 @@ mod tests {
             "guide.rst".to_string(),
             vec![Node::BlockQuote {
                 content: vec![Node::BlockQuote {
-                    content: vec![Node::Paragraph(vec![InlineNode::Text(
+                    content: vec![Node::paragraph(vec![InlineNode::Text(
                         "Inner.".to_string(),
                     )])],
                     attribution: None,
+                    block: None,
                 }],
                 attribution: None,
+                block: None,
             }],
         );
 

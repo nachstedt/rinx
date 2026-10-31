@@ -105,13 +105,22 @@ fn collect_embed_paths(doc: &ast::Document) -> Vec<PathBuf> {
         }
     };
     ast::walk_nodes(&doc.nodes, &mut |node| match node {
-        ast::Node::Directive(ast::Directive::Image(options)) => record(options),
-        ast::Node::Directive(ast::Directive::Figure(figure)) => record(&figure.image),
+        ast::Node::Directive {
+            directive: ast::Directive::Image(options),
+            ..
+        } => record(options),
+        ast::Node::Directive {
+            directive: ast::Directive::Figure(figure),
+            ..
+        } => record(&figure.image),
         // A `.. |name| image::` substitution definition is a real image too —
         // every reference to it is spliced with these same `options` by the
         // parser's `resolve_substitutions` pass, so it needs the same asset
         // handling a standalone `.. image::` gets.
-        ast::Node::Directive(ast::Directive::SubstitutionDefinition(definition)) => {
+        ast::Node::Directive {
+            directive: ast::Directive::SubstitutionDefinition(definition),
+            ..
+        } => {
             if let ast::SubstitutionKind::Image(options) = &definition.kind {
                 record(options);
             }
@@ -164,7 +173,7 @@ mod tests {
     fn document_with(doc_path: &str, options: ImageOptions) -> ast::Document {
         ast::Document::new(
             doc_path.to_string(),
-            vec![Node::Directive(Directive::Image(Box::new(options)))],
+            vec![Node::directive(Directive::Image(Box::new(options)))],
         )
     }
 
@@ -304,7 +313,7 @@ mod tests {
         let figure = Figure::new(embedding("logo.svg"));
         let doc = ast::Document::new(
             "index.rst".to_string(),
-            vec![Node::Directive(Directive::Figure(Box::new(figure)))],
+            vec![Node::directive(Directive::Figure(Box::new(figure)))],
         );
 
         // When
@@ -320,7 +329,7 @@ mod tests {
         // subject to the same asset handling a standalone `.. image::` gets.
         let doc = ast::Document::new(
             "index.rst".to_string(),
-            vec![Node::Directive(Directive::SubstitutionDefinition(
+            vec![Node::directive(Directive::SubstitutionDefinition(
                 rinx_ast::SubstitutionDefinition {
                     name: "logo".to_string(),
                     kind: rinx_ast::SubstitutionKind::Image(Box::new(embedding("logo.svg"))),
@@ -341,11 +350,11 @@ mod tests {
         // Given — inside an admonition body, which only a full walk reaches
         let doc = ast::Document::new(
             "index.rst".to_string(),
-            vec![Node::Directive(Directive::Admonition {
+            vec![Node::directive(Directive::Admonition {
                 kind: rinx_ast::AdmonitionKind::Note,
                 title: None,
                 collapsible: None,
-                body: vec![Node::Directive(Directive::Image(Box::new(embedding(
+                body: vec![Node::directive(Directive::Image(Box::new(embedding(
                     "logo.svg",
                 ))))],
             })],
@@ -364,8 +373,8 @@ mod tests {
         let doc = ast::Document::new(
             "index.rst".to_string(),
             vec![
-                Node::Directive(Directive::Image(Box::new(embedding("logo.svg")))),
-                Node::Directive(Directive::Image(Box::new(embedding("./logo.svg")))),
+                Node::directive(Directive::Image(Box::new(embedding("logo.svg")))),
+                Node::directive(Directive::Image(Box::new(embedding("./logo.svg")))),
             ],
         );
 

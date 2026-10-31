@@ -187,11 +187,14 @@ mod tests {
         reference: rinx_ast::InlineNode,
     ) -> Option<ReferenceTarget> {
         let mut nodes = before;
-        nodes.push(Node::Paragraph(vec![reference]));
+        nodes.push(Node::paragraph(vec![reference]));
         let doc = Document::new("guide/intro.rst".to_string(), nodes);
         let config = SiteConfig::default();
         let resolver = ReferenceResolver::new(&doc, index, &config, EntitySchema::empty_ref());
-        let Some(Node::Paragraph(inlines)) = doc.nodes.last() else {
+        let Some(Node::Paragraph {
+            content: inlines, ..
+        }) = doc.nodes.last()
+        else {
             unreachable!()
         };
         resolver.resolve(&inlines[0])
@@ -433,7 +436,7 @@ mod tests {
         let function = ObjectType::Py(PyObjectType::Function);
         let mut index = ProjectIndex::default();
         index.insert_domain_object(function, "pkg.run", "api.rst");
-        let current_module = Node::Directive(Directive::PyCurrentModule {
+        let current_module = Node::directive(Directive::PyCurrentModule {
             module: Some("pkg".to_string()),
         });
         let reference = rinx_ast::InlineNode::DomainObjectReference {
@@ -466,7 +469,7 @@ mod tests {
         let option = ObjectType::Std(StdObjectType::Cmdoption);
         let mut index = ProjectIndex::default();
         index.insert_domain_object(option, "tool.-v", "cli.rst");
-        let program = Node::Directive(Directive::StdProgram {
+        let program = Node::directive(Directive::StdProgram {
             name: Some("tool".to_string()),
         });
         let reference = rinx_ast::InlineNode::OptionReference {

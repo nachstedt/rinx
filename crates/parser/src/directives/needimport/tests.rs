@@ -167,7 +167,10 @@ fn entities(document: &Document) -> Vec<EntityBody> {
         .nodes
         .iter()
         .filter_map(|node| match node {
-            Node::Directive(Directive::Entity(entity)) => Some((**entity).clone()),
+            Node::Directive {
+                directive: Directive::Entity(entity),
+                ..
+            } => Some((**entity).clone()),
             _ => None,
         })
         .collect()
@@ -258,8 +261,11 @@ fn the_imported_entities_are_spliced_into_the_enclosing_block() {
         .nodes
         .iter()
         .map(|node| match node {
-            Node::Paragraph(_) => "paragraph",
-            Node::Directive(Directive::Entity(_)) => "entity",
+            Node::Paragraph { .. } => "paragraph",
+            Node::Directive {
+                directive: Directive::Entity(_),
+                ..
+            } => "entity",
             _ => "other",
         })
         .collect();
@@ -805,7 +811,10 @@ fn reports_an_import_with_no_path() {
     assert_eq!(codes(&document), [DiagnosticCode::DirectiveMissingArgument]);
     assert!(matches!(
         document.nodes.first(),
-        Some(Node::Directive(Directive::Malformed { .. }))
+        Some(Node::Directive {
+            directive: Directive::Malformed { .. },
+            ..
+        })
     ));
 }
 
@@ -1039,7 +1048,7 @@ fn parses_content_as_restructuredtext() {
     // Then it becomes real nodes rather than a literal string
     let content = entities(&document)[0].content().to_vec();
     assert_eq!(content.len(), 2);
-    assert!(matches!(content[0], Node::Paragraph(_)));
+    assert!(matches!(content[0], Node::Paragraph { .. }));
 }
 
 #[test]

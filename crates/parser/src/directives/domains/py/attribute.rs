@@ -138,20 +138,24 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object:
-                DomainObjectBody::PyAttribute {
-                    flags: _,
-                    signatures,
-                    type_,
-                    value,
-                    canonical,
-                    module: _,
-                    body,
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        DomainObjectBody::PyAttribute {
+                            flags: _,
+                            signatures,
+                            type_,
+                            value,
+                            canonical,
+                            module: _,
+                            body,
+                            ..
+                        },
                     ..
                 },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["Greeter.name"]);
             assert_eq!(type_, &None);
@@ -172,23 +176,27 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object:
-                DomainObjectBody::PyAttribute {
-                    type_,
-                    value,
-                    canonical,
-                    body,
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        DomainObjectBody::PyAttribute {
+                            type_,
+                            value,
+                            canonical,
+                            body,
+                            ..
+                        },
                     ..
                 },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert_eq!(type_.as_deref(), Some("str"));
             assert_eq!(value.as_deref(), Some("\"anonymous\""));
             assert_eq!(canonical.as_deref(), Some("mymodule.MyClass.name"));
             assert_eq!(body.len(), 1);
-            assert!(matches!(body[0], Node::Paragraph(_)));
+            assert!(matches!(body[0], Node::Paragraph { .. }));
         } else {
             panic!("Expected PyAttribute, got {:?}", doc.nodes[0]);
         }

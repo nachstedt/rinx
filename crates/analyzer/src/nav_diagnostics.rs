@@ -147,7 +147,7 @@ mod tests {
         if glob {
             options.set(ToctreeFlag::Glob);
         }
-        Node::Directive(Directive::Toctree(Toctree { entries, options }))
+        Node::directive(Directive::Toctree(Toctree { entries, options }))
     }
 
     fn document(docname: &str) -> TocEntry {

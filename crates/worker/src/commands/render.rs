@@ -378,7 +378,7 @@ mod tests {
     #[test]
     fn test_process_render_reports_broken_reference() {
         // Given
-        let doc = r#"{"path":"test.rst","nodes":[{"Paragraph":[{"Reference":{"display":"missing","target":"missing"}}]}]}"#;
+        let doc = r#"{"path":"test.rst","nodes":[{"Paragraph":{"content":[{"Reference":{"display":"missing","target":"missing"}}]}}]}"#;
         let index = r#"{"targets":{},"document_titles":{},"nav_tree":[]}"#;
         let config = config::SiteConfig::default();
         let template = "{{ body }}";
@@ -408,8 +408,8 @@ mod tests {
         // Given — mirrors CPython's `xmlrpc.client.rst`: `Fault` is defined
         // via `.. class::` but referenced via `:exc:`.
         let doc = r#"{"path":"test.rst","nodes":[
-            {"Directive":{"DomainObject":{"object":{"PyClass":{"signatures":["Fault"],"is_final":false,"body":[]}}}}},
-            {"Paragraph":[{"DomainObjectReference":{"object_type":"py:exception","name":"Fault","display":"Fault","link":true}}]}
+            {"Directive":{"directive":{"DomainObject":{"object":{"PyClass":{"signatures":["Fault"],"is_final":false,"body":[]}}}}}},
+            {"Paragraph":{"content":[{"DomainObjectReference":{"object_type":"py:exception","name":"Fault","display":"Fault","link":true}}]}}
         ]}"#;
         let index = r#"{"targets":{},"document_titles":{},"nav_tree":[],"glossary_terms":{},"domain_objects":{"fault":{"py:class":"test.rst"}},"genindex_entries":[]}"#;
         let config = config::SiteConfig::default();

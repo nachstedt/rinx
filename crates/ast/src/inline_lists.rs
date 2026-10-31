@@ -37,10 +37,10 @@ macro_rules! inline_list_walker {
             for node in nodes {
                 match node {
                     Node::Heading { text, .. } => visit(text),
-                    Node::Paragraph(inlines) => visit(inlines),
+                    Node::Paragraph { content: inlines, .. } => visit(inlines),
                     Node::BlockQuote {
                         content,
-                        attribution,
+                        attribution, ..
                     } => {
                         $walk(content, visit);
                         if let Some(attribution) = attribution {
@@ -65,7 +65,7 @@ macro_rules! inline_list_walker {
                     }
                     Node::Table {
                         header_rows,
-                        body_rows,
+                        body_rows, ..
                     } => {
                         for row in header_rows.$iter().chain(body_rows.$iter()) {
                             for cell in & $($m)? row.cells {
@@ -73,10 +73,10 @@ macro_rules! inline_list_walker {
                             }
                         }
                     }
-                    Node::LineBlock(items) => {
+                    Node::LineBlock { items, .. } => {
                         $line_block(items, visit);
                     }
-                    Node::Directive(directive) => {
+                    Node::Directive { directive, .. } => {
                         $directive(directive, visit);
                     }
                     // Leaves with no `InlineNode`/`Node` content of their own:
@@ -85,9 +85,9 @@ macro_rules! inline_list_walker {
                     Node::Target { .. }
                     | Node::AnonymousTarget { .. }
                     | Node::LiteralBlock { .. }
-                    | Node::DoctestBlock(_)
+                    | Node::DoctestBlock { .. }
                     | Node::Comment
-                    | Node::Transition => {}
+                    | Node::Transition { .. } => {}
                 }
             }
         }
@@ -241,7 +241,7 @@ mod tests {
         inner.caption = Some(text("inner caption"));
         let mut outer = Figure::new(ImageOptions::new(AssetUri::new("a.png")));
         outer.caption = Some(text("outer caption"));
-        outer.legend = vec![Node::Directive(Directive::Figure(Box::new(inner)))];
+        outer.legend = vec![Node::directive(Directive::Figure(Box::new(inner)))];
         vec![
             Node::Heading {
                 level: 1,
@@ -251,13 +251,17 @@ mod tests {
             Node::DefinitionList {
                 items: vec![DefinitionListItem {
                     term: text("term"),
-                    definition: vec![Node::Paragraph(text("definition"))],
+                    definition: vec![Node::paragraph(text("definition"))],
+                    block: None,
                 }],
             },
-            Node::LineBlock(vec![LineBlockItem::Nested(vec![LineBlockItem::Line(
-                text("line"),
-            )])]),
-            Node::Directive(Directive::Figure(Box::new(outer))),
+            Node::LineBlock {
+                items: vec![LineBlockItem::Nested(vec![LineBlockItem::Line(text(
+                    "line",
+                ))])],
+                block: None,
+            },
+            Node::directive(Directive::Figure(Box::new(outer))),
         ]
     }
 

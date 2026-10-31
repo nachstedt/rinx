@@ -72,7 +72,13 @@ mod tests {
 
     fn only_seealso(input: &str) -> Vec<Node> {
         let doc = parse_document("test.rst", input);
-        let [Node::Directive(Directive::SeeAlso { body })] = &doc.nodes[..] else {
+        let [
+            Node::Directive {
+                directive: Directive::SeeAlso { body },
+                ..
+            },
+        ] = &doc.nodes[..]
+        else {
             panic!("Expected one SeeAlso, got {:?}", doc.nodes);
         };
         body.clone()
@@ -100,7 +106,7 @@ mod tests {
         let Directive::SeeAlso { body } = directive else {
             panic!("Expected SeeAlso directive");
         };
-        assert!(matches!(body[..], [Node::Paragraph(_)]));
+        assert!(matches!(body[..], [Node::Paragraph { .. }]));
         assert!(diagnostics.is_empty());
     }
 
@@ -115,7 +121,7 @@ mod tests {
         // Then
         assert_eq!(
             body,
-            [Node::Paragraph(vec![InlineNode::Text(
+            [Node::paragraph(vec![InlineNode::Text(
                 "Related.".to_string()
             )])]
         );
@@ -130,7 +136,7 @@ mod tests {
         let body = only_seealso(input);
 
         // Then
-        assert!(matches!(body[..], [Node::Paragraph(_)]));
+        assert!(matches!(body[..], [Node::Paragraph { .. }]));
     }
 
     #[test]
@@ -201,7 +207,7 @@ mod tests {
         // Then
         assert_eq!(
             body,
-            [Node::Paragraph(vec![InlineNode::Text(
+            [Node::paragraph(vec![InlineNode::Text(
                 "Plain text here".to_string()
             )])]
         );
@@ -216,7 +222,12 @@ mod tests {
         let body = only_seealso(input);
 
         // Then
-        let [Node::Paragraph(inlines)] = &body[..] else {
+        let [
+            Node::Paragraph {
+                content: inlines, ..
+            },
+        ] = &body[..]
+        else {
             panic!("Expected one paragraph, got {body:?}");
         };
         assert!(matches!(inlines[0], InlineNode::RegistryReference { .. }));
@@ -233,7 +244,7 @@ mod tests {
         // Then
         assert_eq!(
             body,
-            [Node::Paragraph(vec![InlineNode::Text(
+            [Node::paragraph(vec![InlineNode::Text(
                 "First line\ncontinued here".to_string()
             )])]
         );

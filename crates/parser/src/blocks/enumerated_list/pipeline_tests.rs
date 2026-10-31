@@ -18,7 +18,11 @@ fn only_list(doc: &Document) -> (&Enumerator, &[ListItem]) {
 /// Returns the plain text of an item that holds exactly one paragraph.
 fn item_text(item: &ListItem) -> String {
     match item.nodes.as_slice() {
-        [Node::Paragraph(inlines)] => inline_plain_text(inlines),
+        [
+            Node::Paragraph {
+                content: inlines, ..
+            },
+        ] => inline_plain_text(inlines),
         other => panic!("Expected a single paragraph, got {other:?}"),
     }
 }
@@ -97,7 +101,7 @@ fn test_an_explicit_enumerator_after_an_auto_one_does_not_continue_the_list() {
 
     // Then no list forms at all: the successor check fails on line one, so
     // both lines stay prose — docutils reaches the same outcome
-    assert!(matches!(doc.nodes.as_slice(), [Node::Paragraph(_)]));
+    assert!(matches!(doc.nodes.as_slice(), [Node::Paragraph { .. }]));
 }
 
 #[test]
@@ -178,7 +182,7 @@ fn test_an_arabic_list_followed_by_i_does_not_continue() {
     // Then the successor check fails on item one and both lines stay prose.
     // Note the roman seeds are unreachable here: docutils puts them in an
     // `elif` after the expected-sequence branch.
-    assert!(matches!(doc.nodes.as_slice(), [Node::Paragraph(_)]));
+    assert!(matches!(doc.nodes.as_slice(), [Node::Paragraph { .. }]));
 }
 
 #[test]
@@ -191,7 +195,7 @@ fn test_prose_beginning_with_an_initial_is_not_a_list() {
 
     // Then it stays a paragraph, because the following line neither is
     // blank nor indented nor carries `B. `
-    assert!(matches!(doc.nodes.as_slice(), [Node::Paragraph(_)]));
+    assert!(matches!(doc.nodes.as_slice(), [Node::Paragraph { .. }]));
 }
 
 #[test]
@@ -228,7 +232,7 @@ fn test_a_broken_sequence_does_not_continue_the_list() {
         // Then no list forms: the successor check rejects line one, and the
         // whole block falls through to a paragraph
         assert!(
-            matches!(doc.nodes.as_slice(), [Node::Paragraph(_)]),
+            matches!(doc.nodes.as_slice(), [Node::Paragraph { .. }]),
             "{input:?} produced {:?}",
             doc.nodes
         );
@@ -247,7 +251,12 @@ fn test_a_list_interrupted_by_prose_keeps_only_its_finished_items() {
     // docutils drops the interrupted item back into the input, so bullet
     // lists and enumerated lists genuinely differ on this shape
     match doc.nodes.as_slice() {
-        [Node::EnumeratedList { items, .. }, Node::Paragraph(inlines)] => {
+        [
+            Node::EnumeratedList { items, .. },
+            Node::Paragraph {
+                content: inlines, ..
+            },
+        ] => {
             assert_eq!(items.len(), 1);
             assert_eq!(inline_plain_text(inlines), "2. b\nParagraph.");
         }
@@ -289,7 +298,7 @@ fn test_parses_a_nested_list_inside_an_item() {
     assert_eq!(items.len(), 2);
     match items[0].nodes.as_slice() {
         [
-            Node::Paragraph(_),
+            Node::Paragraph { .. },
             Node::EnumeratedList {
                 start,
                 items: inner,
@@ -314,7 +323,7 @@ fn test_parses_an_enumerated_list_nested_in_a_bullet_list() {
     match doc.nodes.as_slice() {
         [Node::BulletList { items, .. }] => match items[0].nodes.as_slice() {
             [
-                Node::Paragraph(_),
+                Node::Paragraph { .. },
                 Node::EnumeratedList { items: inner, .. },
             ] => {
                 assert_eq!(inner.len(), 2);
@@ -337,8 +346,8 @@ fn test_parses_an_item_spanning_several_paragraphs() {
     let (_, items) = only_list(&doc);
     assert_eq!(items.len(), 2);
     assert_eq!(items[0].nodes.len(), 2);
-    assert!(matches!(items[0].nodes[0], Node::Paragraph(_)));
-    assert!(matches!(items[0].nodes[1], Node::Paragraph(_)));
+    assert!(matches!(items[0].nodes[0], Node::Paragraph { .. }));
+    assert!(matches!(items[0].nodes[1], Node::Paragraph { .. }));
 }
 
 #[test]
@@ -372,7 +381,7 @@ fn test_parses_a_directive_inside_an_item() {
         items[0]
             .nodes
             .iter()
-            .any(|n| matches!(n, Node::Directive(_))),
+            .any(|n| matches!(n, Node::Directive { .. })),
         "{:?}",
         items[0].nodes
     );
@@ -388,7 +397,7 @@ fn test_a_decimal_number_is_not_an_enumerator() {
 
     // Then it stays prose: the marker must be followed by a space or the
     // end of the line
-    assert!(matches!(doc.nodes.as_slice(), [Node::Paragraph(_)]));
+    assert!(matches!(doc.nodes.as_slice(), [Node::Paragraph { .. }]));
 }
 
 #[test]
@@ -400,7 +409,7 @@ fn test_a_roman_numeral_beyond_the_representable_range_is_not_an_enumerator() {
     let doc = parse_document("test.rst", input);
 
     // Then it stays prose, matching docutils' `ordinal is None` path
-    assert!(matches!(doc.nodes.as_slice(), [Node::Paragraph(_)]));
+    assert!(matches!(doc.nodes.as_slice(), [Node::Paragraph { .. }]));
 }
 
 #[test]
@@ -428,7 +437,7 @@ fn test_a_list_does_not_interrupt_the_paragraph_above_it() {
     // Then both lines are one paragraph. docutils behaves identically —
     // its text block reader stops only at blank or indented lines — and
     // bullet lists already work this way, so this is not a bug to "fix"
-    assert!(matches!(doc.nodes.as_slice(), [Node::Paragraph(_)]));
+    assert!(matches!(doc.nodes.as_slice(), [Node::Paragraph { .. }]));
 }
 
 #[test]
@@ -443,7 +452,11 @@ fn test_bare_enumerator_alone_in_the_input_stays_a_paragraph() {
     // Then it is prose, not a list whose only item is empty
     assert_eq!(
         inline_plain_text(match doc.nodes.as_slice() {
-            [Node::Paragraph(inlines)] => inlines,
+            [
+                Node::Paragraph {
+                    content: inlines, ..
+                },
+            ] => inlines,
             other => panic!("Expected a paragraph, got {other:?}"),
         }),
         "(n)"
@@ -463,7 +476,7 @@ fn test_bare_enumerator_followed_by_unindented_prose_stays_a_paragraph() {
     assert!(
         matches!(
             doc.nodes.as_slice(),
-            [Node::Paragraph(_), Node::Paragraph(_)]
+            [Node::Paragraph { .. }, Node::Paragraph { .. }]
         ),
         "Expected two paragraphs, got {:?}",
         doc.nodes

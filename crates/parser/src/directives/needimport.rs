@@ -213,7 +213,7 @@ pub(in crate::directives) fn parse_needimport(
         .filter_map(|(key, need)| {
             build_entity(key, need, &import, adornment_order, diagnostics, ctx)
         })
-        .map(|entity| Node::Directive(Directive::Entity(Box::new(entity))))
+        .map(|entity| Node::directive(Directive::Entity(Box::new(entity))))
         .collect()
 }
 
@@ -284,7 +284,7 @@ fn resolve_argument<'a>(
     };
     if path.is_empty() {
         // The reader has reported the missing argument.
-        return Err(Box::new(Node::Directive(malformed_node(
+        return Err(Box::new(Node::directive(malformed_node(
             DIRECTIVE,
             argument,
             body_lines,
@@ -359,7 +359,7 @@ fn refuse(
     span: Option<Span>,
     diagnostics: &mut Diagnostics,
 ) -> Node {
-    Node::Directive(malformed_directive(
+    Node::directive(malformed_directive(
         DIRECTIVE,
         argument,
         body_lines,

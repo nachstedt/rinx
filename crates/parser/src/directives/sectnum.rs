@@ -129,7 +129,10 @@ mod tests {
             .nodes
             .iter()
             .find_map(|node| match node {
-                Node::Directive(Directive::Sectnum(options)) => Some(options.clone()),
+                Node::Directive {
+                    directive: Directive::Sectnum(options),
+                    ..
+                } => Some(options.clone()),
                 _ => None,
             })
             .expect("document should contain a sectnum directive");
@@ -142,7 +145,13 @@ mod tests {
         for name in ["sectnum", "section-numbering"] {
             let doc = crate::parse_document("index.rst", &format!(".. {name}::\n"));
             assert!(
-                matches!(doc.nodes[..], [Node::Directive(Directive::Sectnum(_))]),
+                matches!(
+                    doc.nodes[..],
+                    [Node::Directive {
+                        directive: Directive::Sectnum(_),
+                        ..
+                    }]
+                ),
                 "`{name}` parsed as {:?}",
                 doc.nodes
             );
@@ -372,7 +381,10 @@ mod tests {
             doc.nodes
                 .iter()
                 .find_map(|node| match node {
-                    Node::Directive(directive @ Directive::Sectnum(_)) => Some(directive.clone()),
+                    Node::Directive {
+                        directive: directive @ Directive::Sectnum(_),
+                        ..
+                    } => Some(directive.clone()),
                     _ => None,
                 })
                 .expect("should contain a sectnum directive")

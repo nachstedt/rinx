@@ -73,7 +73,10 @@ impl DocumentUses {
 fn relation_uses(document: &Document) -> Vec<RelationUse> {
     let mut uses = Vec::new();
     walk_nodes(&document.nodes, &mut |node| match node {
-        Node::Directive(Directive::Entity(entity)) => {
+        Node::Directive {
+            directive: Directive::Entity(entity),
+            ..
+        } => {
             uses.extend(entity.relations.iter().filter_map(|(field, ids)| {
                 Some(RelationUse {
                     field: field.clone(),
@@ -83,7 +86,10 @@ fn relation_uses(document: &Document) -> Vec<RelationUse> {
                 })
             }));
         }
-        Node::Directive(Directive::EntityUpdate(update)) => {
+        Node::Directive {
+            directive: Directive::EntityUpdate(update),
+            ..
+        } => {
             uses.extend(update.fields.iter().filter_map(|mutation| {
                 let (FieldMutationMode::Set(value)
                 | FieldMutationMode::Append(value)
@@ -112,7 +118,10 @@ fn relation_uses(document: &Document) -> Vec<RelationUse> {
 fn updated_ids(document: &Document, source_map: &SourceMap) -> Vec<(EntityId, Span)> {
     let mut updated = Vec::new();
     walk_nodes(&document.nodes, &mut |node| {
-        if let Node::Directive(Directive::EntityUpdate(update)) = node
+        if let Node::Directive {
+            directive: Directive::EntityUpdate(update),
+            ..
+        } = node
             && let Some(id) = &update.target.candidate_id
             && let Some(span) = id.id().and_then(|name| source_map.name_span(name))
         {
@@ -449,7 +458,10 @@ mod tests {
         )
         .document;
         let file = document.intern_source_file("/project/part.rst".to_string());
-        let Node::Paragraph(inlines) = &mut document.nodes[0] else {
+        let Node::Paragraph {
+            content: inlines, ..
+        } = &mut document.nodes[0]
+        else {
             unreachable!()
         };
         let span = inlines[1].span().unwrap();
@@ -504,7 +516,7 @@ mod tests {
         );
         let document = Document::new(
             "index.rst".to_string(),
-            vec![Node::Directive(Directive::Entity(Box::new(entity)))],
+            vec![Node::directive(Directive::Entity(Box::new(entity)))],
         );
 
         // When
@@ -530,7 +542,7 @@ mod tests {
         let mut map = SourceMap::default();
         let written = map.record_name(span);
         let update = |target: rinx_ast::UpdateTarget| {
-            Node::Directive(Directive::EntityUpdate(Box::new(
+            Node::directive(Directive::EntityUpdate(Box::new(
                 rinx_ast::EntityUpdate::new(rinx_ast::EntityUpdateSource::EntityUpdate, target),
             )))
         };
@@ -574,7 +586,7 @@ mod tests {
         ];
         let document = Document::new(
             "index.rst".to_string(),
-            vec![Node::Directive(Directive::EntityUpdate(Box::new(update)))],
+            vec![Node::directive(Directive::EntityUpdate(Box::new(update)))],
         );
 
         // When

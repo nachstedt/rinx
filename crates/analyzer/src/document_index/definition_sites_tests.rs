@@ -118,7 +118,7 @@ fn test_analyze_with_sites_records_a_target_nested_in_a_directive_body() {
 
     // When
     let sites = sites_of(
-        vec![Node::Directive(Directive::Admonition {
+        vec![Node::directive(Directive::Admonition {
             kind: AdmonitionKind::Note,
             title: None,
             collapsible: None,
@@ -141,7 +141,7 @@ fn test_analyze_with_sites_records_each_glossary_term() {
 
     // When
     let sites = sites_of(
-        vec![Node::Directive(Directive::Glossary {
+        vec![Node::directive(Directive::Glossary {
             entries: vec![GlossaryEntry {
                 terms: vec![
                     GlossaryTerm {
@@ -192,14 +192,14 @@ fn test_analyze_with_sites_records_every_signature_of_a_domain_object_qualified_
     // When
     let sites = sites_of(
         vec![
-            Node::Directive(Directive::DomainObject {
-                object: module,
+            Node::Directive {
+                directive: Directive::DomainObject { object: module },
                 block: Some(map.record_block_lines(span_at(1, 20))),
-            }),
-            Node::Directive(Directive::DomainObject {
-                object: function,
+            },
+            Node::Directive {
+                directive: Directive::DomainObject { object: function },
                 block: Some(map.record_block_lines(span_at(3, 25))),
-            }),
+            },
         ],
         &map,
     );
@@ -237,10 +237,10 @@ fn test_analyze_with_sites_records_no_domain_object_that_asked_not_to_be_indexed
 
     // When
     let sites = sites_of(
-        vec![Node::Directive(Directive::DomainObject {
-            object: function,
+        vec![Node::Directive {
+            directive: Directive::DomainObject { object: function },
             block: Some(map.record_block_lines(span_at(1, 25))),
-        })],
+        }],
         &map,
     );
 
@@ -255,19 +255,21 @@ fn test_analyze_with_sites_records_a_tables_name_as_a_label() {
 
     // When
     let sites = sites_of(
-        vec![Node::Directive(Directive::DataTable {
-            source: TableSource::List,
-            title: None,
-            header_rows: 0,
-            stub_columns: 0,
-            widths: None,
-            width: None,
-            align: None,
-            classes: vec![],
-            name: Some(TargetName::new("sizes").into()),
-            rows: vec![],
+        vec![Node::Directive {
+            directive: Directive::DataTable {
+                source: TableSource::List,
+                title: None,
+                header_rows: 0,
+                stub_columns: 0,
+                widths: None,
+                width: None,
+                align: None,
+                classes: vec![],
+                name: Some(TargetName::new("sizes").into()),
+                rows: vec![],
+            },
             block: Some(map.record_block_lines(span_at(2, 18))),
-        })],
+        }],
         &map,
     );
 
@@ -297,7 +299,7 @@ fn test_analyze_with_sites_records_an_entity_by_its_id_and_as_a_label() {
 
     // When
     let sites = sites_of(
-        vec![Node::Directive(Directive::Entity(Box::new(entity)))],
+        vec![Node::directive(Directive::Entity(Box::new(entity)))],
         &map,
     );
 
@@ -317,7 +319,7 @@ fn test_analyze_with_sites_records_an_equations_label() {
 
     // When
     let sites = sites_of(
-        vec![Node::Directive(Directive::Math {
+        vec![Node::directive(Directive::Math {
             parts: vec!["e = mc^2".to_string()],
             label: Some(TargetName::new("energy").into()),
             nowrap: false,
@@ -414,8 +416,8 @@ fn test_analyze_with_sites_places_a_name_no_directive_span_holds_at_the_name() {
     // When
     let sites = sites_of(
         vec![
-            Node::Directive(Directive::Toctree(toctree)),
-            Node::Directive(Directive::Contents(contents)),
+            Node::directive(Directive::Toctree(toctree)),
+            Node::directive(Directive::Contents(contents)),
         ],
         &map,
     );
@@ -457,7 +459,7 @@ fn test_analyze_with_sites_records_where_a_written_entity_id_stands() {
 
     // When
     let sites = sites_of(
-        vec![Node::Directive(Directive::Entity(Box::new(entity)))],
+        vec![Node::directive(Directive::Entity(Box::new(entity)))],
         &map,
     );
 

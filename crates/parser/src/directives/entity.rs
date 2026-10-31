@@ -314,7 +314,10 @@ fn partition_sections(nodes: Vec<Node>) -> Vec<EntitySection> {
 
     for node in nodes {
         match node {
-            Node::Directive(Directive::EntitySection { name, body, span }) => {
+            Node::Directive {
+                directive: Directive::EntitySection { name, body, span },
+                ..
+            } => {
                 sections.push(EntitySection::named(name, body, span));
             }
             // Body content appearing *after* a section directive joins the

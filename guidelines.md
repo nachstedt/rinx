@@ -232,6 +232,7 @@ entry under the heading it belongs to, as a single short sentence.
 ## Editor features
 
 - A rename rewrites the name everywhere it is written, even where it doubles as visible text, rather than adding an alias that keeps the old wording.
+- When an editor feature has a counterpart VS Code already ships for another language (such as the Markdown preview's scroll sync), mirror that counterpart's behaviour and settings rather than designing our own.
 
 ## Scope of a guideline
 

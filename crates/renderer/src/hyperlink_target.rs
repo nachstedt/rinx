@@ -303,7 +303,7 @@ mod tests {
     }
 
     fn embedded(text: &str, destination: LinkDestination) -> Node {
-        Node::Paragraph(vec![InlineNode::Hyperlink {
+        Node::paragraph(vec![InlineNode::Hyperlink {
             text: text.to_string(),
             target: HyperlinkTarget::Embedded(destination),
             span: None,
@@ -337,6 +337,7 @@ mod tests {
             bullet: '-',
             items: vec![ListItem {
                 nodes: vec![external("Python", "https://python.org")],
+                block: None,
             }],
         }];
 
@@ -469,7 +470,7 @@ mod tests {
         // Given
         let nodes = vec![
             external("guide", "https://a.org"),
-            Node::Directive(Directive::SeeAlso {
+            Node::directive(Directive::SeeAlso {
                 body: vec![external("guide", "https://a.org")],
             }),
         ];

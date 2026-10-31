@@ -45,7 +45,10 @@ pub fn reference_at(document: &Document, position: Position) -> Option<&InlineNo
 pub fn toc_entry_at(document: &Document, position: Position) -> Option<&TocEntry> {
     let mut found = None;
     walk_nodes(&document.nodes, &mut |node| {
-        if let Node::Directive(Directive::Toctree(toctree)) = node
+        if let Node::Directive {
+            directive: Directive::Toctree(toctree),
+            ..
+        } = node
             && found.is_none()
         {
             found = toctree
@@ -154,7 +157,11 @@ mod tests {
             &rinx_parser::ParseCtx::default(),
         )
         .document;
-        let Node::Directive(Directive::Toctree(toctree)) = &mut document.nodes[0] else {
+        let Node::Directive {
+            directive: Directive::Toctree(toctree),
+            ..
+        } = &mut document.nodes[0]
+        else {
             unreachable!()
         };
         let TocEntry::Document { span, .. } = &mut toctree.entries[0] else {
@@ -175,7 +182,10 @@ mod tests {
             &rinx_parser::ParseCtx::default(),
         )
         .document;
-        let rinx_ast::Node::Paragraph(inlines) = &mut document.nodes[0] else {
+        let rinx_ast::Node::Paragraph {
+            content: inlines, ..
+        } = &mut document.nodes[0]
+        else {
             unreachable!()
         };
         let span = inlines[1].span().unwrap();

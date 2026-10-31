@@ -99,11 +99,11 @@ mod tests {
     fn figure(caption: Option<&str>) -> Node {
         let mut figure = Figure::new(ImageOptions::new(AssetUri::new("a.png")));
         figure.caption = caption.map(|text| vec![InlineNode::Text(text.to_string())]);
-        Node::Directive(Directive::Figure(Box::new(figure)))
+        Node::directive(Directive::Figure(Box::new(figure)))
     }
 
     fn directive(node: &Node) -> &Directive {
-        let Node::Directive(directive) = node else {
+        let Node::Directive { directive, .. } = node else {
             unreachable!()
         };
         directive
@@ -195,7 +195,7 @@ mod tests {
     fn test_a_rendered_page_numbers_each_kind_of_caption() {
         // Given a figure, a list-table and a code block, each captioned and
         // numbered 1 by the index
-        let table = Node::Directive(Directive::DataTable {
+        let table = Node::directive(Directive::DataTable {
             source: rinx_ast::TableSource::List,
             title: Some("A table".to_string()),
             header_rows: 0,
@@ -206,9 +206,8 @@ mod tests {
             classes: Vec::new(),
             name: None,
             rows: Vec::new(),
-            block: None,
         });
-        let code = Node::Directive(Directive::CodeBlock(rinx_ast::CodeBlock {
+        let code = Node::directive(Directive::CodeBlock(rinx_ast::CodeBlock {
             source: rinx_ast::CodeBlockSource::CodeBlock,
             language: rinx_ast::CodeLanguage::Inherit,
             content: "x".to_string(),

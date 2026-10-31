@@ -624,7 +624,7 @@ mod tests {
     fn render_paragraph(inlines: Vec<rinx_ast::InlineNode>) -> String {
         let doc = rinx_ast::Document::new(
             "guide.rst".to_string(),
-            vec![rinx_ast::Node::Paragraph(inlines)],
+            vec![rinx_ast::Node::paragraph(inlines)],
         );
         crate::render(&doc, &rinx_index::ProjectIndex::default(), &doc.path).html
     }

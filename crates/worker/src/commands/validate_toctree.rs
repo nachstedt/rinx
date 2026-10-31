@@ -55,7 +55,7 @@ mod tests {
     fn index_listing_team_a() -> String {
         let doc = ast::Document::new(
             "docs/index.rst".to_string(),
-            vec![ast::Node::Directive(ast::Directive::Toctree(
+            vec![ast::Node::directive(ast::Directive::Toctree(
                 ast::Toctree {
                     entries: vec![ast::TocEntry::Document {
                         title: None,

@@ -516,7 +516,7 @@ mod tests {
                     text: vec![InlineNode::Text("Title".to_string())],
                     block: None,
                 },
-                Node::Paragraph(vec![rinx_ast::InlineNode::Text("Paragraph".to_string())]),
+                Node::paragraph(vec![rinx_ast::InlineNode::Text("Paragraph".to_string())]),
                 Node::Heading {
                     level: 1,
                     text: vec![InlineNode::Text("Another Heading".to_string())],
@@ -587,7 +587,7 @@ mod tests {
                     text: vec![InlineNode::Text("Title <script>".to_string())],
                     block: None,
                 },
-                Node::Paragraph(vec![rinx_ast::InlineNode::Text("A & B > C".to_string())]),
+                Node::paragraph(vec![rinx_ast::InlineNode::Text("A & B > C".to_string())]),
             ],
         );
         let index = ProjectIndex::default();
@@ -682,7 +682,7 @@ mod tests {
         // Given a document with an unknown directive
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::Unknown {
+            vec![Node::directive(Directive::Unknown {
                 name: "some-unknown".to_string(),
                 argument: "arg".to_string(),
                 body: "body".to_string(),
@@ -721,7 +721,10 @@ mod tests {
     #[test]
     fn test_render_formats_transition_node_as_horizontal_rule() {
         // Given
-        let doc = Document::new("test.rst".to_string(), vec![Node::Transition]);
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Transition { block: None }],
+        );
         let index = ProjectIndex::default();
 
         // When
@@ -756,7 +759,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Paragraph(vec![rinx_ast::InlineNode::Reference {
+            vec![Node::paragraph(vec![rinx_ast::InlineNode::Reference {
                 display: None,
                 target: "other-section".to_string(),
                 span: None,
@@ -783,7 +786,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Paragraph(vec![rinx_ast::InlineNode::Reference {
+            vec![Node::paragraph(vec![rinx_ast::InlineNode::Reference {
                 display: None,
                 target: "other-section".to_string(),
                 span: None,
@@ -807,7 +810,7 @@ mod tests {
         // Given a document with a broken :ref: and a broken :term:
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Paragraph(vec![
+            vec![Node::paragraph(vec![
                 rinx_ast::InlineNode::Reference {
                     display: None,
                     target: "missing-ref".to_string(),
@@ -849,7 +852,7 @@ mod tests {
         // Given a document in a subdirectory
         let doc = Document::new(
             "examples/team_b/index.rst".to_string(),
-            vec![Node::Paragraph(vec![rinx_ast::InlineNode::Reference {
+            vec![Node::paragraph(vec![rinx_ast::InlineNode::Reference {
                 display: None,
                 target: "target-in-a".to_string(),
                 span: None,
@@ -878,7 +881,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![
-                Node::Paragraph(vec![rinx_ast::InlineNode::Hyperlink {
+                Node::paragraph(vec![rinx_ast::InlineNode::Hyperlink {
                     text: "Python".to_string(),
                     target: rinx_ast::HyperlinkTarget::Reference(TargetName::new("Python")),
                     span: None,
@@ -907,7 +910,7 @@ mod tests {
             Document::new(
                 path.to_string(),
                 vec![
-                    Node::Paragraph(vec![rinx_ast::InlineNode::Hyperlink {
+                    Node::paragraph(vec![rinx_ast::InlineNode::Hyperlink {
                         text: "guide".to_string(),
                         target: rinx_ast::HyperlinkTarget::Reference(TargetName::new(
                             "Python Packaging User Guide",
@@ -939,7 +942,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Paragraph(vec![rinx_ast::InlineNode::Hyperlink {
+            vec![Node::paragraph(vec![rinx_ast::InlineNode::Hyperlink {
                 text: "Google".to_string(),
                 target: rinx_ast::HyperlinkTarget::Embedded(rinx_ast::LinkDestination::Uri(
                     "https://google.com".to_string(),
@@ -972,7 +975,7 @@ mod tests {
         .to_string();
         let doc = Document::new(
             "examples/team_b/index.rst".to_string(),
-            vec![Node::Directive(Directive::Uml(Box::new(uml)))],
+            vec![Node::directive(Directive::Uml(Box::new(uml)))],
         );
 
         let index = ProjectIndex::default();
@@ -1001,9 +1004,10 @@ mod tests {
                                 "https://example.com/".to_string(),
                             ),
                         }],
+                        block: None,
                     }],
                 },
-                Node::Paragraph(vec![InlineNode::AnonymousReference {
+                Node::paragraph(vec![InlineNode::AnonymousReference {
                     text: "here".to_string(),
                     span: None,
                 }]),
@@ -1024,7 +1028,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![
-                Node::Paragraph(vec![
+                Node::paragraph(vec![
                     InlineNode::AnonymousReference {
                         text: "First".to_string(),
                         span: None,
@@ -1058,7 +1062,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![
-                Node::Paragraph(vec![
+                Node::paragraph(vec![
                     InlineNode::AnonymousHyperlink {
                         text: "Embedded".to_string(),
                         target: rinx_ast::LinkDestination::Uri("https://embedded.com".to_string()),

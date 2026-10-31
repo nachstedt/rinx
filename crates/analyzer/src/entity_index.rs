@@ -46,7 +46,11 @@ fn collect_entity_umls(entity: &EntityBody) -> BTreeMap<String, String> {
     let mut umls = BTreeMap::new();
     for section in &entity.sections {
         walk_nodes(&section.body, &mut |node| {
-            if let Node::Directive(Directive::Uml(uml)) = node {
+            if let Node::Directive {
+                directive: Directive::Uml(uml),
+                ..
+            } = node
+            {
                 umls.insert(uml.key.clone().unwrap_or_default(), uml.template.clone());
             }
         });

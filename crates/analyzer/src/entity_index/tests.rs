@@ -105,7 +105,7 @@ fn test_index_entity_keeps_no_section_prose() {
         relations: BTreeMap::new(),
         sections: vec![EntitySection::named(
             "rationale".to_string(),
-            vec![rinx_ast::Node::Paragraph(vec![rinx_ast::InlineNode::Text(
+            vec![rinx_ast::Node::paragraph(vec![rinx_ast::InlineNode::Text(
                 "prose".to_string(),
             )])],
             None,

@@ -118,7 +118,7 @@ pub(in crate::directives) struct ParseState<'s> {
 
 /// The nodes of a directive yielding exactly one.
 pub(in crate::directives) fn single(directive: Directive) -> Vec<Node> {
-    vec![Node::Directive(directive)]
+    vec![Node::directive(directive)]
 }
 
 /// The nodes of a directive whose name is no spelling its parser reads back:

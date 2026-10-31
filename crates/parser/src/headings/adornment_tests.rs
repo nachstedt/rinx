@@ -466,7 +466,7 @@ fn test_parse_leaves_a_title_over_a_very_short_adornment_as_text() {
     // matches far more prose than it does mis-drawn headings
     assert_eq!(
         doc.nodes,
-        vec![Node::Paragraph(vec![InlineNode::Text(
+        vec![Node::paragraph(vec![InlineNode::Text(
             "A Long Title\n~~~".to_string()
         )])]
     );

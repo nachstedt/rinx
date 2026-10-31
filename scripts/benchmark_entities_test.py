@@ -382,9 +382,9 @@ class TestTallyAst:
             json.dumps(
                 {
                     "nodes": [
-                        {"Directive": {"Entity": {"type_name": "req", "id": "R_1"}}},
-                        {"Directive": {"Entity": {"type_name": "req", "id": "R_2"}}},
-                        {"Directive": {"Unknown": {"name": "needtable"}}},
+                        {"Directive": {"directive": {"Entity": {"type_name": "req", "id": "R_1"}}}},
+                        {"Directive": {"directive": {"Entity": {"type_name": "req", "id": "R_2"}}}},
+                        {"Directive": {"directive": {"Unknown": {"name": "needtable"}}}},
                     ]
                 }
             )

@@ -61,7 +61,10 @@ pub(crate) fn analyze_with_sites(
         .nodes
         .iter()
         .filter_map(|node| match node {
-            Node::Directive(Directive::Toctree(toctree)) => Some(toctree.clone()),
+            Node::Directive {
+                directive: Directive::Toctree(toctree),
+                ..
+            } => Some(toctree.clone()),
             _ => None,
         })
         .zip(
@@ -269,7 +272,7 @@ pub(super) fn index_nodes(
                 let key = DefinitionKey::Label(name.value().clone());
                 spans.record_named(key, spans.block_lines(*block), name);
             }
-            Node::Directive(Directive::Toctree(toctree)) => {
+            Node::Directive { directive: Directive::Toctree(toctree), .. } => {
                 // `:name:` makes the toctree itself a `:ref:` target. Recorded
                 // here with every other per-document target so it merges the
                 // same way — and registered even for a `:hidden:` toctree,
@@ -283,22 +286,22 @@ pub(super) fn index_nodes(
                     spans,
                 );
             }
-            Node::Directive(Directive::Entity(entity)) => {
+            Node::Directive { directive: Directive::Entity(entity), .. } => {
                 index_entity_and_its_sections(entity, doc_path, index, spans, scopes);
             }
-            Node::Directive(Directive::EntityUpdate(update)) => {
+            Node::Directive { directive: Directive::EntityUpdate(update), .. } => {
                 index_entity_update(update, doc_path, index, spans, scopes);
             }
-            Node::Directive(Directive::Glossary { entries, .. }) => {
+            Node::Directive { directive: Directive::Glossary { entries, .. }, .. } => {
                 index_glossary(entries, doc_path, index, spans);
             }
-            Node::Directive(Directive::Index { entries, id }) => {
+            Node::Directive { directive: Directive::Index { entries, id }, .. } => {
                 index_genindex_entries(entries, id, doc_path, index);
             }
-            Node::Directive(Directive::DomainObject { object, block }) => {
+            Node::Directive { directive: Directive::DomainObject { object }, block } => {
                 index_domain_object(object, spans.block_lines(*block), doc_path, index, spans, scopes);
             }
-            Node::Directive(
+            Node::Directive { directive:
                 directive @ (Directive::Admonition { .. }
                 | Directive::VersionChange { .. }
                 | Directive::EntitySection { .. }
@@ -309,8 +312,7 @@ pub(super) fn index_nodes(
                 // section or entity written in a cell belongs to the
                 // document exactly as if it had been written outside one.
                 | Directive::Grid(_)
-                | Directive::GridItem(_)),
-            ) => index_body_only_directive(directive, doc_path, index, spans, scopes),
+                | Directive::GridItem(_)), .. } => index_body_only_directive(directive, doc_path, index, spans, scopes),
             Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
                 for item in items {
                     index_nodes(&item.nodes, doc_path, index, spans, scopes);
@@ -323,27 +325,26 @@ pub(super) fn index_nodes(
             }
             Node::Table {
                 header_rows,
-                body_rows,
+                body_rows, ..
             } => {
                 index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, spans, scopes);
             }
-            Node::Directive(Directive::DataTable {
-                rows, name, block, ..
-            }) => {
+            Node::Directive { directive: Directive::DataTable {
+                rows, name, ..
+            }, block } => {
                 register_directive_name(name.as_ref(), spans.block_lines(*block), doc_path, index, spans);
                 index_table_rows(rows, doc_path, index, spans, scopes);
             }
-            Node::Directive(Directive::Table {
+            Node::Directive { directive: Directive::Table {
                 header_rows,
                 body_rows,
                 name,
-                block,
                 ..
-            }) => {
+            }, block } => {
                 register_directive_name(name.as_ref(), spans.block_lines(*block), doc_path, index, spans);
                 index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, spans, scopes);
             }
-            Node::Directive(
+            Node::Directive { directive:
                 directive @ (Directive::CodeBlock(_)
                 | Directive::Image(_)
                 | Directive::Figure(_)
@@ -354,17 +355,16 @@ pub(super) fn index_nodes(
                 | Directive::EntitySequence(_)
                 | Directive::EntityPie(_)
                 | Directive::EntityBar(_)
-                | Directive::Uml(_)),
-            ) => index_name_bearing_directive(directive, doc_path, index, spans, scopes),
-            Node::Directive(Directive::Sectnum(options)) => index_sectnum(options, doc_path, index),
+                | Directive::Uml(_)), .. } => index_name_bearing_directive(directive, doc_path, index, spans, scopes),
+            Node::Directive { directive: Directive::Sectnum(options), .. } => index_sectnum(options, doc_path, index),
             // The equation itself is numbered by its own document-order pass
             // (`number_equations`); only where its label stands is recorded
             // here, with every other definition's.
-            Node::Directive(Directive::Math {
+            Node::Directive { directive: Directive::Math {
                 label: Some(label),
                 span,
                 ..
-            }) => spans.record_named(DefinitionKey::Equation(label.value().clone()), *span, label),
+            }, .. } => spans.record_named(DefinitionKey::Equation(label.value().clone()), *span, label),
             _ => {}
         }
     }
@@ -426,16 +426,22 @@ fn record_target_titles(nodes: &[Node], index: &mut ProjectIndex) {
 fn element_title(node: &Node) -> (Option<&TargetName>, Option<String>) {
     match node {
         Node::Heading { text, .. } => (None, Some(rinx_ast::inline_plain_text(text))),
-        Node::Directive(Directive::Figure(figure)) => (
+        Node::Directive {
+            directive: Directive::Figure(figure),
+            ..
+        } => (
             figure.image.name.as_ref().map(Named::value),
             figure.caption.as_deref().map(rinx_ast::inline_plain_text),
         ),
-        Node::Directive(
-            Directive::Table { title, name, .. } | Directive::DataTable { title, name, .. },
-        ) => (name.as_ref().map(Named::value), title.clone()),
-        Node::Directive(Directive::CodeBlock(block)) => {
-            (block.name.as_ref().map(Named::value), block.caption.clone())
-        }
+        Node::Directive {
+            directive:
+                Directive::Table { title, name, .. } | Directive::DataTable { title, name, .. },
+            ..
+        } => (name.as_ref().map(Named::value), title.clone()),
+        Node::Directive {
+            directive: Directive::CodeBlock(block),
+            ..
+        } => (block.name.as_ref().map(Named::value), block.caption.clone()),
         _ => (None, None),
     }
 }

@@ -28,7 +28,9 @@ fn paragraph(input: &str) -> Vec<InlineNode> {
         .nodes
         .into_iter()
         .filter_map(|node| match node {
-            Node::Paragraph(inlines) => Some(inlines),
+            Node::Paragraph {
+                content: inlines, ..
+            } => Some(inlines),
             _ => None,
         })
         .collect();
@@ -157,7 +159,7 @@ fn test_parse_builds_a_role_derived_from_sub() {
     assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
     assert_eq!(
         doc.nodes,
-        vec![Node::Paragraph(vec![
+        vec![Node::paragraph(vec![
             text("H"),
             script(ScriptPosition::Subscript, "2", &["chem"]),
             text("O"),
@@ -196,7 +198,7 @@ fn test_parse_refuses_a_role_named_like_a_script_role() {
     assert_eq!(codes, vec![DiagnosticCode::RoleBuiltinName]);
     assert_eq!(
         doc.nodes,
-        vec![Node::Paragraph(vec![
+        vec![Node::paragraph(vec![
             text("x "),
             script(ScriptPosition::Superscript, "2", &[]),
         ])]

@@ -83,9 +83,10 @@ mod tests {
             vec![Node::OptionList {
                 items: vec![OptionListItem {
                     options: vec![option("-h", None)],
-                    description: vec![Node::Paragraph(vec![InlineNode::Text(
+                    description: vec![Node::paragraph(vec![InlineNode::Text(
                         "Show this help message.".to_string(),
                     )])],
+                    block: None,
                 }],
             }],
         );
@@ -109,6 +110,7 @@ mod tests {
                 items: vec![OptionListItem {
                     options: vec![option("-v", None), option("--verbose", None)],
                     description: vec![],
+                    block: None,
                 }],
             }],
         );
@@ -137,6 +139,7 @@ mod tests {
                         }),
                     )],
                     description: vec![],
+                    block: None,
                 }],
             }],
         );
@@ -163,6 +166,7 @@ mod tests {
                         }),
                     )],
                     description: vec![],
+                    block: None,
                 }],
             }],
         );
@@ -189,6 +193,7 @@ mod tests {
                         }),
                     )],
                     description: vec![],
+                    block: None,
                 }],
             }],
         );
@@ -215,6 +220,7 @@ mod tests {
                         }),
                     )],
                     description: vec![],
+                    block: None,
                 }],
             }],
         );
@@ -238,10 +244,12 @@ mod tests {
                     OptionListItem {
                         options: vec![option("-h", None)],
                         description: vec![],
+                        block: None,
                     },
                     OptionListItem {
                         options: vec![option("-v", None)],
                         description: vec![],
+                        block: None,
                     },
                 ],
             }],

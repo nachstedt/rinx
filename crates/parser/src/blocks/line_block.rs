@@ -85,7 +85,7 @@ pub(super) fn try_parse_line_block(
     }
 
     let items = nest_line_block_items(resolve_indents(raw_items));
-    Some((i - start_i, Node::LineBlock(items)))
+    Some((i - start_i, Node::LineBlock { items, block: None }))
 }
 
 /// Collects one logical item starting at the marker line `lines[i]`
@@ -245,9 +245,12 @@ mod tests {
         assert_eq!(consumed, 1);
         assert_eq!(
             node,
-            Node::LineBlock(vec![LineBlockItem::Line(vec![InlineNode::Text(
-                "One line.".to_string()
-            )])])
+            Node::LineBlock {
+                items: vec![LineBlockItem::Line(vec![InlineNode::Text(
+                    "One line.".to_string()
+                )])],
+                block: None
+            }
         );
         assert!(diagnostics.is_empty());
     }
@@ -264,10 +267,13 @@ mod tests {
         assert_eq!(consumed, 2);
         assert_eq!(
             node,
-            Node::LineBlock(vec![
-                LineBlockItem::Line(vec![InlineNode::Text("Line one.".to_string())]),
-                LineBlockItem::Line(vec![InlineNode::Text("Line two.".to_string())]),
-            ])
+            Node::LineBlock {
+                items: vec![
+                    LineBlockItem::Line(vec![InlineNode::Text("Line one.".to_string())]),
+                    LineBlockItem::Line(vec![InlineNode::Text("Line two.".to_string())]),
+                ],
+                block: None
+            }
         );
     }
 
@@ -282,11 +288,14 @@ mod tests {
         // Then
         assert_eq!(
             node,
-            Node::LineBlock(vec![
-                LineBlockItem::Line(vec![InlineNode::Text("Line one.".to_string())]),
-                LineBlockItem::Line(vec![]),
-                LineBlockItem::Line(vec![InlineNode::Text("Line three.".to_string())]),
-            ])
+            Node::LineBlock {
+                items: vec![
+                    LineBlockItem::Line(vec![InlineNode::Text("Line one.".to_string())]),
+                    LineBlockItem::Line(vec![]),
+                    LineBlockItem::Line(vec![InlineNode::Text("Line three.".to_string())]),
+                ],
+                block: None
+            }
         );
     }
 
@@ -302,13 +311,16 @@ mod tests {
         // Then
         assert_eq!(
             node,
-            Node::LineBlock(vec![
-                LineBlockItem::Line(vec![InlineNode::Text("Line one.".to_string())]),
-                LineBlockItem::Nested(vec![LineBlockItem::Line(vec![InlineNode::Text(
-                    "Indented line two.".to_string()
-                )])]),
-                LineBlockItem::Line(vec![InlineNode::Text("Line three.".to_string())]),
-            ])
+            Node::LineBlock {
+                items: vec![
+                    LineBlockItem::Line(vec![InlineNode::Text("Line one.".to_string())]),
+                    LineBlockItem::Nested(vec![LineBlockItem::Line(vec![InlineNode::Text(
+                        "Indented line two.".to_string()
+                    )])]),
+                    LineBlockItem::Line(vec![InlineNode::Text("Line three.".to_string())]),
+                ],
+                block: None
+            }
         );
     }
 
@@ -324,15 +336,18 @@ mod tests {
         // Then
         assert_eq!(
             node,
-            Node::LineBlock(vec![
-                LineBlockItem::Line(vec![InlineNode::Text("Level 0.".to_string())]),
-                LineBlockItem::Nested(vec![
-                    LineBlockItem::Line(vec![InlineNode::Text("Level 1.".to_string())]),
-                    LineBlockItem::Nested(vec![LineBlockItem::Line(vec![InlineNode::Text(
-                        "Level 2.".to_string()
-                    )])]),
-                ]),
-            ])
+            Node::LineBlock {
+                items: vec![
+                    LineBlockItem::Line(vec![InlineNode::Text("Level 0.".to_string())]),
+                    LineBlockItem::Nested(vec![
+                        LineBlockItem::Line(vec![InlineNode::Text("Level 1.".to_string())]),
+                        LineBlockItem::Nested(vec![LineBlockItem::Line(vec![InlineNode::Text(
+                            "Level 2.".to_string()
+                        )])]),
+                    ]),
+                ],
+                block: None
+            }
         );
     }
 
@@ -350,9 +365,12 @@ mod tests {
         assert_eq!(consumed, 2);
         assert_eq!(
             node,
-            Node::LineBlock(vec![LineBlockItem::Line(vec![InlineNode::Text(
-                "A long verse line\nthat wraps onto a second row.".to_string()
-            )])])
+            Node::LineBlock {
+                items: vec![LineBlockItem::Line(vec![InlineNode::Text(
+                    "A long verse line\nthat wraps onto a second row.".to_string()
+                )])],
+                block: None
+            }
         );
     }
 
@@ -384,9 +402,12 @@ mod tests {
         assert_eq!(consumed, 2);
         assert_eq!(
             node,
-            Node::LineBlock(vec![LineBlockItem::Line(vec![InlineNode::Text(
-                "First block.".to_string()
-            )])])
+            Node::LineBlock {
+                items: vec![LineBlockItem::Line(vec![InlineNode::Text(
+                    "First block.".to_string()
+                )])],
+                block: None
+            }
         );
     }
 
@@ -430,10 +451,13 @@ mod tests {
         // Then
         assert_eq!(
             node,
-            Node::LineBlock(vec![LineBlockItem::Line(vec![
-                InlineNode::Emphasis("Emphasis".to_string()),
-                InlineNode::Text(" in a line.".to_string()),
-            ])])
+            Node::LineBlock {
+                items: vec![LineBlockItem::Line(vec![
+                    InlineNode::Emphasis("Emphasis".to_string()),
+                    InlineNode::Text(" in a line.".to_string()),
+                ])],
+                block: None
+            }
         );
     }
 

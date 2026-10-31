@@ -24,7 +24,40 @@ use super::spec::registered_directive;
 use super::substitution::{parse_substitution_definition, split_substitution_marker};
 use rinx_ast::{Directive, Node};
 
+/// Parses the directive whose marker is `lines[i]`, returning the lines it
+/// consumed and the nodes it yields, each directive among them placed at the
+/// marker; `None` when the line is no directive marker.
 pub(crate) fn try_parse_directive(
+    lines: &[&str],
+    i: usize,
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Option<(usize, Vec<Node>)> {
+    let (consumed, mut nodes) = read_directive(lines, i, adornment_order, diagnostics, ctx)?;
+    place_at_marker(&mut nodes, ctx.line_span(i, lines[i].trim_end()), ctx);
+    Some((consumed, nodes))
+}
+
+/// Records `marker` as where each directive among `nodes` was written —
+/// its definition's lines, and where an editor's preview places it. A node a
+/// nested parse already placed keeps its own lines: a splicing directive's
+/// content was written where it stands, not on the splicing marker.
+fn place_at_marker(nodes: &mut [Node], marker: Option<rinx_ast::Span>, ctx: &ParseCtx<'_>) {
+    let mut id = None;
+    for node in nodes {
+        if let Node::Directive {
+            block: slot @ None, ..
+        } = node
+        {
+            *slot = *id.get_or_insert_with(|| ctx.record_block_lines(marker));
+        }
+    }
+}
+
+/// Reads the directive whose marker is `lines[i]`, unplaced: see
+/// [`try_parse_directive`].
+fn read_directive(
     lines: &[&str],
     i: usize,
     adornment_order: &mut Vec<Adornment>,
@@ -107,7 +140,7 @@ pub(crate) fn try_parse_directive(
             state.diagnostics,
             ctx,
         );
-        vec![Node::Directive(parse_scope_directive(scope, &invocation))]
+        vec![Node::directive(parse_scope_directive(scope, &invocation))]
     } else {
         // The names whose meaning depends on more than the name still read
         // their own body, under a context positioned at its first line and
@@ -189,7 +222,7 @@ fn parse_vocabulary_directive(
         span,
         state.diagnostics,
     );
-    Node::Directive(directive)
+    Node::directive(directive)
 }
 
 /// Recognizes and parses a substitution definition's marker, `.. |name|
@@ -212,7 +245,7 @@ fn try_parse_substitution_definition(
         diagnostics,
         ctx,
     )?;
-    Some(Node::Directive(directive))
+    Some(Node::directive(directive))
 }
 
 /// Where in the source a directive marker sits, and the lines it may claim.
@@ -265,9 +298,8 @@ fn try_parse_domain_object_directive(
     let domain_object = parse_domain_object(object_type, &invocation, adornment_order, diagnostics);
     Some((
         1 + body.consumed,
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: domain_object,
-            block: invocation.ctx.record_block_lines(invocation.span),
         })],
     ))
 }
@@ -318,7 +350,7 @@ fn try_parse_entity_directive(
         adornment_order,
         diagnostics,
     );
-    Some((1 + body.consumed, vec![Node::Directive(directive)]))
+    Some((1 + body.consumed, vec![Node::directive(directive)]))
 }
 
 #[cfg(test)]
@@ -328,12 +360,70 @@ mod tests {
     use rinx_ast::Domain;
     use rinx_ast::{CodeBlockSource, CodeLanguage, Directive, Node};
 
+    #[test]
+    fn test_place_at_marker_places_every_unplaced_directive_at_one_recorded_marker() {
+        // Given — two directives from no source line, and a paragraph
+        let recorder = crate::syntax_recorder::SyntaxRecorder::default();
+        let base = ParseCtx::with_domain(Domain::Py);
+        let ctx = base.with_syntax_recorder(&recorder);
+        let marker = rinx_ast::Span::new(
+            rinx_ast::Position::new(4, 1),
+            rinx_ast::Position::new(4, 20),
+        );
+        let namespace = || Node::directive(Directive::CNamespace { namespace: None });
+        let mut nodes = vec![namespace(), Node::paragraph(Vec::new()), namespace()];
+
+        // When
+        place_at_marker(&mut nodes, Some(marker), &ctx);
+
+        // Then — one row, shared by both directives; the paragraph is left
+        let map = recorder.into_source_map();
+        let id = nodes[0].block().expect("the first directive is placed");
+        assert_eq!(nodes[2].block(), Some(id));
+        assert_eq!(map.block_lines(id), Some(marker));
+        assert_eq!(nodes[1].block(), None);
+    }
+
+    #[test]
+    fn test_place_at_marker_keeps_a_directive_placed_by_a_nested_parse() {
+        // Given — a directive already placed, as a spliced fragment's is
+        let recorder = crate::syntax_recorder::SyntaxRecorder::default();
+        let base = ParseCtx::with_domain(Domain::Py);
+        let ctx = base.with_syntax_recorder(&recorder);
+        let own = rinx_ast::Span::new(
+            rinx_ast::Position::new(9, 1),
+            rinx_ast::Position::new(9, 12),
+        );
+        let placed = ctx.record_block_lines(Some(own));
+        let mut nodes = vec![Node::Directive {
+            directive: Directive::CNamespace { namespace: None },
+            block: placed,
+        }];
+
+        let marker = rinx_ast::Span::new(
+            rinx_ast::Position::new(2, 1),
+            rinx_ast::Position::new(2, 20),
+        );
+
+        // When
+        place_at_marker(&mut nodes, Some(marker), &ctx);
+
+        // Then
+        let map = recorder.into_source_map();
+        assert_eq!(nodes[0].block(), placed);
+        assert_eq!(map.block_lines(placed.expect("placed")), Some(own));
+    }
+
     /// The line `map` records for every domain object in `nodes`, in
     /// document order.
     fn object_lines(nodes: &[Node], map: &rinx_ast::SourceMap) -> Vec<Option<u32>> {
         let mut lines = Vec::new();
         rinx_ast::walk_nodes(nodes, &mut |node| {
-            if let Node::Directive(Directive::DomainObject { block, .. }) = node {
+            if let Node::Directive {
+                directive: Directive::DomainObject { .. },
+                block,
+            } = node
+            {
                 lines.push(
                     block
                         .and_then(|id| map.block_lines(id))
@@ -375,7 +465,11 @@ mod tests {
         let (doc, map) = crate::parse_placed("test.rst", ".. py:function:: greet(name)\n");
 
         // Then
-        let Some(Node::Directive(Directive::DomainObject { block, .. })) = doc.nodes.first() else {
+        let Some(Node::Directive {
+            directive: Directive::DomainObject { .. },
+            block,
+        }) = doc.nodes.first()
+        else {
             panic!("expected a domain object, got {:?}", doc.nodes);
         };
         assert_eq!(
@@ -438,9 +532,13 @@ mod tests {
             for name in spec.names {
                 let (nodes, _) = dispatch_all(name, "x", &["   content"]);
                 assert!(
-                    !nodes
-                        .iter()
-                        .any(|node| matches!(node, Node::Directive(Directive::Unknown { .. }))),
+                    !nodes.iter().any(|node| matches!(
+                        node,
+                        Node::Directive {
+                            directive: Directive::Unknown { .. },
+                            ..
+                        }
+                    )),
                     "`{name}` fell through to an unknown directive: {nodes:?}"
                 );
             }
@@ -458,7 +556,13 @@ mod tests {
 
         // Then
         assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
-        let [Node::Directive(Directive::CodeBlock(block))] = doc.nodes.as_slice() else {
+        let [
+            Node::Directive {
+                directive: Directive::CodeBlock(block),
+                ..
+            },
+        ] = doc.nodes.as_slice()
+        else {
             panic!("Expected one code block, got {:?}", doc.nodes);
         };
         assert_eq!(block.content, ":ref:`label`\n:term:`word`");
@@ -474,7 +578,13 @@ mod tests {
 
         // Then
         assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
-        let [Node::Directive(Directive::CodeBlock(block))] = doc.nodes.as_slice() else {
+        let [
+            Node::Directive {
+                directive: Directive::CodeBlock(block),
+                ..
+            },
+        ] = doc.nodes.as_slice()
+        else {
             panic!("Expected one code block, got {:?}", doc.nodes);
         };
         assert!(block.linenos);
@@ -490,7 +600,13 @@ mod tests {
         let (node, _) = dispatch("glossary", "", &body);
 
         // Then
-        assert!(matches!(node, Node::Directive(Directive::Glossary { .. })));
+        assert!(matches!(
+            node,
+            Node::Directive {
+                directive: Directive::Glossary { .. },
+                ..
+            }
+        ));
     }
 
     #[test]
@@ -502,7 +618,13 @@ mod tests {
         let (node, _) = dispatch("doctest", "", &body);
 
         // Then
-        assert!(matches!(node, Node::Directive(Directive::DocTest(_))));
+        assert!(matches!(
+            node,
+            Node::Directive {
+                directive: Directive::DocTest(_),
+                ..
+            }
+        ));
     }
 
     #[test]
@@ -515,10 +637,18 @@ mod tests {
         let (docutils_spelling, _) = dispatch("code", "python", &body);
 
         // Then — both reach the same variant, tagged with who wrote them
-        let Node::Directive(Directive::CodeBlock(sphinx)) = sphinx_spelling else {
+        let Node::Directive {
+            directive: Directive::CodeBlock(sphinx),
+            ..
+        } = sphinx_spelling
+        else {
             panic!("Expected CodeBlock, got {sphinx_spelling:?}");
         };
-        let Node::Directive(Directive::CodeBlock(docutils)) = docutils_spelling else {
+        let Node::Directive {
+            directive: Directive::CodeBlock(docutils),
+            ..
+        } = docutils_spelling
+        else {
             panic!("Expected CodeBlock, got {docutils_spelling:?}");
         };
         assert_eq!(sphinx.source, CodeBlockSource::CodeBlock);
@@ -536,11 +666,15 @@ mod tests {
         // Then — the name and body are kept for the visible error block the
         // renderer draws, and the fall-through is reported rather than silent
         match node {
-            Node::Directive(Directive::Unknown {
-                name,
-                argument,
-                body,
-            }) => {
+            Node::Directive {
+                directive:
+                    Directive::Unknown {
+                        name,
+                        argument,
+                        body,
+                    },
+                ..
+            } => {
                 assert_eq!(name, "not-a-real-directive");
                 assert_eq!(argument, "arg");
                 assert_eq!(body, "content");
@@ -608,7 +742,7 @@ mod tests {
         // Then
         assert!(matches!(
             node,
-            Node::Directive(Directive::Malformed { ref name, .. }) if name == "needservice"
+            Node::Directive { directive: Directive::Malformed { ref name, .. }, .. } if name == "needservice"
         ));
         let (found, _, _) = diagnostics.into_parts();
         assert_eq!(found.len(), 1);
@@ -640,9 +774,12 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::Admonition {
-            kind, title, body, ..
-        }) = &doc.nodes[0]
+        if let Node::Directive {
+            directive: Directive::Admonition {
+                kind, title, body, ..
+            },
+            ..
+        } = &doc.nodes[0]
         {
             assert_eq!(kind, &rinx_ast::AdmonitionKind::Note);
             assert_eq!(title, &None);
@@ -662,7 +799,11 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::Admonition { kind, title, .. }) = &doc.nodes[0] {
+        if let Node::Directive {
+            directive: Directive::Admonition { kind, title, .. },
+            ..
+        } = &doc.nodes[0]
+        {
             assert_eq!(kind, &rinx_ast::AdmonitionKind::Admonition);
             assert_eq!(title, &Some("My Title".to_string()));
         } else {
@@ -680,7 +821,11 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::Admonition { collapsible, .. }) = &doc.nodes[0] {
+        if let Node::Directive {
+            directive: Directive::Admonition { collapsible, .. },
+            ..
+        } = &doc.nodes[0]
+        {
             assert_eq!(collapsible, &Some(false));
         } else {
             panic!("Expected Admonition directive");
@@ -697,7 +842,11 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::Admonition { collapsible, .. }) = &doc.nodes[0] {
+        if let Node::Directive {
+            directive: Directive::Admonition { collapsible, .. },
+            ..
+        } = &doc.nodes[0]
+        {
             assert_eq!(collapsible, &Some(true));
         } else {
             panic!("Expected Admonition directive");
@@ -716,7 +865,7 @@ mod tests {
         assert_eq!(doc.nodes.len(), 2);
         assert_eq!(
             doc.nodes[0],
-            Node::Directive(Directive::Toctree(rinx_ast::Toctree {
+            Node::directive(Directive::Toctree(rinx_ast::Toctree {
                 entries: vec![
                     toc_document_entry("team_a/index", 3),
                     toc_document_entry("team_b/index", 4),
@@ -726,7 +875,7 @@ mod tests {
         );
         assert_eq!(
             doc.nodes[1],
-            Node::Paragraph(vec![rinx_ast::InlineNode::Text("Next Para".to_string())])
+            Node::paragraph(vec![rinx_ast::InlineNode::Text("Next Para".to_string())])
         );
     }
 
@@ -743,7 +892,7 @@ mod tests {
         assert_eq!(doc.nodes.len(), 2);
         assert_eq!(
             doc.nodes[0],
-            Node::Directive(Directive::Toctree(rinx_ast::Toctree {
+            Node::directive(Directive::Toctree(rinx_ast::Toctree {
                 entries: vec![
                     toc_document_entry("team_a/index", 4),
                     toc_document_entry("team_b/index", 5),
@@ -756,7 +905,7 @@ mod tests {
         );
         assert_eq!(
             doc.nodes[1],
-            Node::Paragraph(vec![rinx_ast::InlineNode::Text("Next Para".to_string())])
+            Node::paragraph(vec![rinx_ast::InlineNode::Text("Next Para".to_string())])
         );
     }
 
@@ -770,7 +919,11 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        let Node::Directive(Directive::CodeBlock(block)) = &doc.nodes[0] else {
+        let Node::Directive {
+            directive: Directive::CodeBlock(block),
+            ..
+        } = &doc.nodes[0]
+        else {
             panic!("Expected CodeBlock, got {:?}", doc.nodes[0]);
         };
         assert_eq!(block.language, CodeLanguage::parse("rust"));
@@ -787,7 +940,11 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
-        if let Node::Directive(Directive::Index { entries, .. }) = &doc.nodes[0] {
+        if let Node::Directive {
+            directive: Directive::Index { entries, .. },
+            ..
+        } = &doc.nodes[0]
+        {
             assert_eq!(entries.len(), 1);
         } else {
             panic!("Expected Index directive, got {:?}", doc.nodes[0]);
@@ -805,14 +962,18 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 2);
 
-        let Node::Directive(Directive::Uml(uml)) = &doc.nodes[0] else {
+        let Node::Directive {
+            directive: Directive::Uml(uml),
+            ..
+        } = &doc.nodes[0]
+        else {
             panic!("expected a diagram, found {:?}", doc.nodes[0]);
         };
         assert_eq!(uml.source, rinx_ast::UmlSource::PlantUml);
         assert_eq!(uml.template, "A -> B\nB -> C");
         assert_eq!(
             doc.nodes[1],
-            Node::Paragraph(vec![rinx_ast::InlineNode::Text("Next Para".to_string())])
+            Node::paragraph(vec![rinx_ast::InlineNode::Text("Next Para".to_string())])
         );
     }
 
@@ -829,7 +990,11 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        let Node::Directive(Directive::CodeBlock(block)) = &doc.nodes[0] else {
+        let Node::Directive {
+            directive: Directive::CodeBlock(block),
+            ..
+        } = &doc.nodes[0]
+        else {
             panic!("Expected CodeBlock, got {:?}", doc.nodes[0]);
         };
         assert_eq!(block.language, CodeLanguage::parse("python"));
@@ -849,7 +1014,11 @@ mod tests {
 
         // Then — an argumentless block inherits rather than naming nothing
         assert_eq!(doc.nodes.len(), 1);
-        let Node::Directive(Directive::CodeBlock(block)) = &doc.nodes[0] else {
+        let Node::Directive {
+            directive: Directive::CodeBlock(block),
+            ..
+        } = &doc.nodes[0]
+        else {
             panic!("Expected CodeBlock, got {:?}", doc.nodes[0]);
         };
         assert_eq!(block.language, CodeLanguage::Inherit);

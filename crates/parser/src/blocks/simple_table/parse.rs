@@ -72,6 +72,7 @@ pub(crate) fn try_parse_simple_table(
         Node::Table {
             header_rows: all_rows,
             body_rows,
+            block: None,
         },
     ))
 }
@@ -85,7 +86,11 @@ mod tests {
     /// Extracts the plain text of a cell whose content is a single paragraph.
     fn cell_text(cell: &TableCell) -> String {
         match &cell.content[..] {
-            [Node::Paragraph(inlines)] => inlines
+            [
+                Node::Paragraph {
+                    content: inlines, ..
+                },
+            ] => inlines
                 .iter()
                 .map(|inline| match inline {
                     InlineNode::Text(text) => text.clone(),
@@ -104,6 +109,7 @@ mod tests {
             Some(Node::Table {
                 header_rows,
                 body_rows,
+                ..
             }) => (header_rows, body_rows),
             other => panic!("Expected Table, got {other:?}"),
         }
@@ -275,7 +281,10 @@ a      *emphasis*
         let (_, body_rows) = parse_table(input);
 
         // Then
-        let Node::Paragraph(inlines) = &body_rows[0].cells[1].content[0] else {
+        let Node::Paragraph {
+            content: inlines, ..
+        } = &body_rows[0].cells[1].content[0]
+        else {
             panic!("Expected Paragraph");
         };
         assert_eq!(inlines[0], InlineNode::Emphasis("emphasis".to_string()));
@@ -313,7 +322,7 @@ After the table.";
         // Then
         assert_eq!(doc.nodes.len(), 2);
         assert!(matches!(doc.nodes[0], Node::Table { .. }));
-        assert!(matches!(doc.nodes[1], Node::Paragraph(_)));
+        assert!(matches!(doc.nodes[1], Node::Paragraph { .. }));
     }
 
     #[test]
@@ -330,7 +339,7 @@ After the table.";
         let doc = parse_document("test.rst", input);
 
         // Then
-        let Node::Directive(directive) = &doc.nodes[0] else {
+        let Node::Directive { directive, .. } = &doc.nodes[0] else {
             panic!("Expected Directive, got {:?}", doc.nodes[0]);
         };
         let body = match directive {
@@ -393,7 +402,7 @@ A      B
         let doc = parse_document("test.rst", input);
 
         // Then
-        assert!(matches!(doc.nodes[0], Node::Paragraph(_)));
+        assert!(matches!(doc.nodes[0], Node::Paragraph { .. }));
         assert!(
             doc.diagnostics[0]
                 .message
@@ -415,7 +424,7 @@ a span
         let doc = parse_document("test.rst", input);
 
         // Then
-        assert!(matches!(doc.nodes[0], Node::Paragraph(_)));
+        assert!(matches!(doc.nodes[0], Node::Paragraph { .. }));
         assert!(
             doc.diagnostics[0]
                 .message

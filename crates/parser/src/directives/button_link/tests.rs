@@ -13,7 +13,11 @@ fn parse_document(input: &str) -> (ButtonLink, Vec<Diagnostic>) {
     let doc = crate::parse_document("test.rst", input);
     let mut found = None;
     walk_nodes(&doc.nodes, &mut |node| {
-        if let Node::Directive(Directive::ButtonLink(button)) = node {
+        if let Node::Directive {
+            directive: Directive::ButtonLink(button),
+            ..
+        } = node
+        {
             found = Some((**button).clone());
         }
     });
@@ -199,7 +203,10 @@ fn test_a_missing_argument_becomes_a_malformed_directive() {
     // swallowed as an unknown directive
     assert!(matches!(
         doc.nodes.first(),
-        Some(Node::Directive(Directive::Malformed { .. }))
+        Some(Node::Directive {
+            directive: Directive::Malformed { .. },
+            ..
+        })
     ));
     assert_eq!(
         codes(&doc.diagnostics),

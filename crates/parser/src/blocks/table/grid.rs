@@ -267,6 +267,7 @@ pub(crate) fn try_parse_grid_table(
         Node::Table {
             header_rows,
             body_rows,
+            block: None,
         },
     ))
 }
@@ -297,6 +298,7 @@ mod tests {
         let Node::Table {
             header_rows,
             body_rows,
+            ..
         } = &doc.nodes[0]
         else {
             panic!("Expected Table, got {:?}", doc.nodes[0]);
@@ -307,12 +309,18 @@ mod tests {
         assert_eq!(body_rows[0].cells.len(), 2);
         assert_eq!(header_rows[0].cells[0].colspan, 1);
         assert_eq!(header_rows[0].cells[0].rowspan, 1);
-        if let Node::Paragraph(inlines) = &header_rows[0].cells[0].content[0] {
+        if let Node::Paragraph {
+            content: inlines, ..
+        } = &header_rows[0].cells[0].content[0]
+        {
             assert_eq!(inlines[0], InlineNode::Text("A".to_string()));
         } else {
             panic!("Expected Paragraph cell content");
         }
-        if let Node::Paragraph(inlines) = &body_rows[0].cells[1].content[0] {
+        if let Node::Paragraph {
+            content: inlines, ..
+        } = &body_rows[0].cells[1].content[0]
+        {
             assert_eq!(inlines[0], InlineNode::Text("b1".to_string()));
         } else {
             panic!("Expected Paragraph cell content");
@@ -336,6 +344,7 @@ mod tests {
         let Node::Table {
             header_rows,
             body_rows,
+            ..
         } = &doc.nodes[0]
         else {
             panic!("Expected Table, got {:?}", doc.nodes[0]);
@@ -368,7 +377,10 @@ mod tests {
         assert_eq!(spanning_row.cells[0].colspan, 1);
         assert_eq!(spanning_row.cells[1].colspan, 3);
         assert_eq!(spanning_row.cells[1].rowspan, 1);
-        if let Node::Paragraph(inlines) = &spanning_row.cells[1].content[0] {
+        if let Node::Paragraph {
+            content: inlines, ..
+        } = &spanning_row.cells[1].content[0]
+        {
             assert_eq!(
                 inlines[0],
                 InlineNode::Text("Cells may span columns.".to_string())
@@ -406,14 +418,20 @@ mod tests {
         // Second row-block: column 0 has its own "row 2" cell (rowspan 1)...
         assert_eq!(body_rows[1].cells.len(), 2);
         assert_eq!(body_rows[1].cells[0].rowspan, 1);
-        if let Node::Paragraph(inlines) = &body_rows[1].cells[0].content[0] {
+        if let Node::Paragraph {
+            content: inlines, ..
+        } = &body_rows[1].cells[0].content[0]
+        {
             assert_eq!(inlines[0], InlineNode::Text("row 2".to_string()));
         } else {
             panic!("Expected Paragraph cell content");
         }
         // ...while column 1's cell spans both logical rows.
         assert_eq!(body_rows[1].cells[1].rowspan, 2);
-        if let Node::Paragraph(inlines) = &body_rows[1].cells[1].content[0] {
+        if let Node::Paragraph {
+            content: inlines, ..
+        } = &body_rows[1].cells[1].content[0]
+        {
             assert_eq!(
                 inlines[0],
                 InlineNode::Text("Cells span\ntwo rows.".to_string())
@@ -425,7 +443,10 @@ mod tests {
         // The third logical row only contributes column 0's cell — column 1
         // is already covered by the row-spanning cell above.
         assert_eq!(body_rows[2].cells.len(), 1);
-        if let Node::Paragraph(inlines) = &body_rows[2].cells[0].content[0] {
+        if let Node::Paragraph {
+            content: inlines, ..
+        } = &body_rows[2].cells[0].content[0]
+        {
             assert_eq!(inlines[0], InlineNode::Text("row 3".to_string()));
         } else {
             panic!("Expected Paragraph cell content");
@@ -498,6 +519,7 @@ mod tests {
         let Node::Table {
             header_rows,
             body_rows,
+            ..
         } = &doc.nodes[0]
         else {
             panic!("Expected Table, got {:?}", doc.nodes[0]);

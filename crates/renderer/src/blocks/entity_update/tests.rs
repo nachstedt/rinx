@@ -106,7 +106,7 @@ fn test_renders_the_justification_body() {
     // Given
     let mut update =
         rinx_ast::EntityUpdate::new(EntityUpdateSource::EntityUpdate, target("REQ_001"));
-    update.body = vec![Node::Paragraph(vec![InlineNode::Text(
+    update.body = vec![Node::paragraph(vec![InlineNode::Text(
         "Closed after review.".to_string(),
     )])];
 

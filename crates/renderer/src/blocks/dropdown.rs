@@ -424,7 +424,7 @@ mod tests {
     fn test_direct_child_paragraphs_are_card_text() {
         // Given
         let dropdown = Dropdown {
-            body: vec![Node::Paragraph(vec![InlineNode::Text("Body".to_string())])],
+            body: vec![Node::paragraph(vec![InlineNode::Text("Body".to_string())])],
             ..titled("Details")
         };
 
@@ -442,7 +442,8 @@ mod tests {
             body: vec![Node::BulletList {
                 bullet: '*',
                 items: vec![rinx_ast::ListItem {
-                    nodes: vec![Node::Paragraph(vec![InlineNode::Text("Item".to_string())])],
+                    nodes: vec![Node::paragraph(vec![InlineNode::Text("Item".to_string())])],
+                    block: None,
                 }],
             }],
             ..titled("Details")

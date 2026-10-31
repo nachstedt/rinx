@@ -16,7 +16,10 @@ use rinx_ast::{Directive, Document, EntityBody, Node, walk_nodes};
 pub fn entity_marked_at(document: &Document, line: u32) -> Option<&EntityBody> {
     let mut found = None;
     walk_nodes(&document.nodes, &mut |node| {
-        if let Node::Directive(Directive::Entity(entity)) = node
+        if let Node::Directive {
+            directive: Directive::Entity(entity),
+            ..
+        } = node
             && entity
                 .span
                 .is_some_and(|span| span.file.is_none() && span.start.line == line)

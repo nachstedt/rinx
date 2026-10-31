@@ -381,10 +381,10 @@ mod pipeline_tests {
         let doc = Document::new(
             "dis.rst".to_string(),
             vec![
-                Node::Directive(Directive::StdProgram {
+                Node::directive(Directive::StdProgram {
                     name: Some("dis".to_string()),
                 }),
-                Node::Paragraph(vec![InlineNode::OptionReference {
+                Node::paragraph(vec![InlineNode::OptionReference {
                     display: "-O".to_string(),
                     target: "-O".to_string(),
                     span: None,
@@ -413,7 +413,7 @@ mod pipeline_tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Paragraph(vec![InlineNode::OptionReference {
+            vec![Node::paragraph(vec![InlineNode::OptionReference {
                 display: "-Z".to_string(),
                 target: "-Z".to_string(),
                 span: None,

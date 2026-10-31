@@ -32,7 +32,11 @@ fn test_a_declared_section_is_recognised_inside_its_entity() {
     let doc = parse(rst);
 
     // Then
-    let Some(Node::Directive(Directive::Entity(entity))) = doc.nodes.first() else {
+    let Some(Node::Directive {
+        directive: Directive::Entity(entity),
+        ..
+    }) = doc.nodes.first()
+    else {
         panic!("expected an entity");
     };
     assert_eq!(entity.named_sections("rationale").len(), 1);
@@ -49,7 +53,10 @@ fn test_a_section_outside_an_entity_is_reported_and_kept() {
     // Then
     assert!(matches!(
         doc.nodes.first(),
-        Some(Node::Directive(Directive::EntitySection { .. }))
+        Some(Node::Directive {
+            directive: Directive::EntitySection { .. },
+            ..
+        })
     ));
     assert_eq!(
         doc.diagnostics[0].code,
@@ -68,7 +75,10 @@ fn test_a_name_no_type_declares_is_left_to_the_ordinary_chain() {
     // Then
     assert!(matches!(
         doc.nodes.first(),
-        Some(Node::Directive(Directive::Unknown { .. }))
+        Some(Node::Directive {
+            directive: Directive::Unknown { .. },
+            ..
+        })
     ));
     assert_eq!(
         doc.diagnostics
@@ -106,7 +116,10 @@ fn test_a_section_name_is_inert_without_a_schema() {
     // Then
     assert!(matches!(
         doc.nodes.first(),
-        Some(Node::Directive(Directive::Unknown { .. }))
+        Some(Node::Directive {
+            directive: Directive::Unknown { .. },
+            ..
+        })
     ));
     assert_eq!(
         doc.diagnostics

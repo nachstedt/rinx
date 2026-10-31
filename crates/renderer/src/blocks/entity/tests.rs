@@ -65,7 +65,7 @@ fn schema() -> EntitySchema {
 }
 
 fn paragraph(text: &str) -> Node {
-    Node::Paragraph(vec![InlineNode::Text(text.to_string())])
+    Node::paragraph(vec![InlineNode::Text(text.to_string())])
 }
 
 fn requirement() -> EntityBody {
@@ -183,7 +183,7 @@ fn render_through(
 ) -> String {
     let doc = Document::new(
         "specs/boot".to_string(),
-        vec![Node::Directive(Directive::Entity(Box::new(entity)))],
+        vec![Node::directive(Directive::Entity(Box::new(entity)))],
     );
     crate::render_with_assets(
         &doc,
@@ -202,7 +202,7 @@ fn render_through(
 fn render_with(entity: EntityBody, index: &ProjectIndex, schema: &EntitySchema) -> String {
     let doc = Document::new(
         "specs/boot".to_string(),
-        vec![Node::Directive(Directive::Entity(Box::new(entity)))],
+        vec![Node::directive(Directive::Entity(Box::new(entity)))],
     );
     crate::render_with_assets(
         &doc,
@@ -533,7 +533,7 @@ fn test_a_section_body_is_real_rendered_content_not_text() {
     let mut entity = requirement();
     entity.sections = vec![EntitySection::named(
         "verification-criteria".to_string(),
-        vec![Node::Directive(Directive::Admonition {
+        vec![Node::directive(Directive::Admonition {
             kind: rinx_ast::AdmonitionKind::Note,
             title: None,
             collapsible: None,
@@ -697,7 +697,7 @@ fn test_a_template_reads_declared_labels_rather_than_copying_them() {
     // When
     let doc = Document::new(
         "specs/boot".to_string(),
-        vec![Node::Directive(Directive::Entity(Box::new(requirement())))],
+        vec![Node::directive(Directive::Entity(Box::new(requirement())))],
     );
     let html = crate::render_with_assets(
         &doc,
@@ -1033,7 +1033,7 @@ fn test_the_flat_rendering_can_be_asked_for() {
     // When
     let doc = Document::new(
         "specs/boot".to_string(),
-        vec![Node::Directive(Directive::Entity(Box::new(requirement())))],
+        vec![Node::directive(Directive::Entity(Box::new(requirement())))],
     );
     let html = crate::render_with_assets(
         &doc,

@@ -54,7 +54,10 @@ pub(super) fn try_parse_doctest_block(lines: &[&str], i: usize) -> Option<(usize
     let content = strip_common_indent(&lines[i..end]);
     Some((
         end - i,
-        Node::DoctestBlock(rinx_ast::HashedContent::new(content)),
+        Node::DoctestBlock {
+            content: rinx_ast::HashedContent::new(content),
+            block: None,
+        },
     ))
 }
 
@@ -112,7 +115,7 @@ mod tests {
         // Then
         assert_eq!(consumed, 3);
         match node {
-            Node::DoctestBlock(content) => {
+            Node::DoctestBlock { content, .. } => {
                 assert_eq!(content.body(), ">>> f()\n... more\nresult");
             }
             other => panic!("expected a doctest block, got {other:?}"),
@@ -129,7 +132,7 @@ mod tests {
 
         // Then
         match node {
-            Node::DoctestBlock(content) => {
+            Node::DoctestBlock { content, .. } => {
                 assert_eq!(content.body(), ">>> import re\n>>> re.escape('x')");
             }
             other => panic!("expected a doctest block, got {other:?}"),
@@ -146,7 +149,7 @@ mod tests {
 
         // Then
         match node {
-            Node::DoctestBlock(content) => {
+            Node::DoctestBlock { content, .. } => {
                 assert_eq!(content.body(), ">>> def f():\n...     return 1");
             }
             other => panic!("expected a doctest block, got {other:?}"),

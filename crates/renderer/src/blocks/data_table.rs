@@ -135,7 +135,7 @@ mod tests {
     fn data_table(source: TableSource) -> Document {
         Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DataTable {
+            vec![Node::directive(Directive::DataTable {
                 source,
                 title: None,
                 header_rows: 0,
@@ -146,7 +146,6 @@ mod tests {
                 classes: vec![],
                 name: None,
                 rows: vec![table_row(&["Fruit", "Colour"])],
-                block: None,
             })],
         )
     }
@@ -180,7 +179,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DataTable {
+            vec![Node::directive(Directive::DataTable {
                 source: TableSource::Csv,
                 title: None,
                 header_rows: 0,
@@ -191,7 +190,6 @@ mod tests {
                 classes: vec!["compact".to_string()],
                 name: None,
                 rows: vec![table_row(&["Fruit"])],
-                block: None,
             })],
         );
 
@@ -207,7 +205,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DataTable {
+            vec![Node::directive(Directive::DataTable {
                 source: TableSource::List,
                 title: None,
                 header_rows: 0,
@@ -221,7 +219,6 @@ mod tests {
                     table_row(&["Fruit", "Colour"]),
                     table_row(&["Apple", "Red"]),
                 ],
-                block: None,
             })],
         );
 
@@ -239,7 +236,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DataTable {
+            vec![Node::directive(Directive::DataTable {
                 source: TableSource::List,
                 title: None,
                 header_rows: 1,
@@ -253,7 +250,6 @@ mod tests {
                     table_row(&["Fruit", "Colour"]),
                     table_row(&["Apple", "Red"]),
                 ],
-                block: None,
             })],
         );
 
@@ -270,7 +266,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DataTable {
+            vec![Node::directive(Directive::DataTable {
                 source: TableSource::List,
                 title: None,
                 header_rows: 0,
@@ -281,7 +277,6 @@ mod tests {
                 classes: vec![],
                 name: None,
                 rows: vec![table_row(&["Stub", "Cell"])],
-                block: None,
             })],
         );
 
@@ -297,7 +292,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DataTable {
+            vec![Node::directive(Directive::DataTable {
                 source: TableSource::List,
                 title: Some("Fruit".to_string()),
                 header_rows: 0,
@@ -308,7 +303,6 @@ mod tests {
                 classes: vec![],
                 name: None,
                 rows: vec![table_row(&["Cell"])],
-                block: None,
             })],
         );
 
@@ -323,7 +317,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DataTable {
+            vec![Node::directive(Directive::DataTable {
                 source: TableSource::List,
                 title: None,
                 header_rows: 0,
@@ -334,7 +328,6 @@ mod tests {
                 classes: vec![],
                 name: None,
                 rows: vec![table_row(&["A", "B"])],
-                block: None,
             })],
         );
 
@@ -351,7 +344,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DataTable {
+            vec![Node::directive(Directive::DataTable {
                 source: TableSource::List,
                 title: None,
                 header_rows: 0,
@@ -362,7 +355,6 @@ mod tests {
                 classes: vec![],
                 name: None,
                 rows: vec![table_row(&["Cell"])],
-                block: None,
             })],
         );
 
@@ -377,7 +369,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DataTable {
+            vec![Node::directive(Directive::DataTable {
                 source: TableSource::List,
                 title: None,
                 header_rows: 0,
@@ -388,7 +380,6 @@ mod tests {
                 classes: vec![],
                 name: None,
                 rows: vec![table_row(&["Cell"])],
-                block: None,
             })],
         );
 
@@ -403,7 +394,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DataTable {
+            vec![Node::directive(Directive::DataTable {
                 source: TableSource::List,
                 title: None,
                 header_rows: 0,
@@ -414,7 +405,6 @@ mod tests {
                 classes: vec!["custom".to_string()],
                 name: None,
                 rows: vec![table_row(&["Cell"])],
-                block: None,
             })],
         );
 
@@ -429,7 +419,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DataTable {
+            vec![Node::directive(Directive::DataTable {
                 source: TableSource::List,
                 title: None,
                 header_rows: 0,
@@ -440,7 +430,6 @@ mod tests {
                 classes: vec![],
                 name: Some(TargetName::new("fruit-table").into()),
                 rows: vec![table_row(&["Cell"])],
-                block: None,
             })],
         );
 
@@ -460,6 +449,7 @@ mod tests {
             vec![Node::Table {
                 header_rows: vec![table_row(&["Fruit", "Colour"])],
                 body_rows: vec![table_row(&["Apple", "Red"])],
+                block: None,
             }],
         );
 

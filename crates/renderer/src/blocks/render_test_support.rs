@@ -142,7 +142,7 @@ pub(super) fn render_directive_with_assets(
     doc_path: &str,
     embedded_assets: &EmbeddedAssets,
 ) -> String {
-    let nodes = vec![Node::Directive(directive.clone())];
+    let nodes = vec![Node::directive(directive.clone())];
     with_ctx_over(
         &nodes,
         index,

@@ -139,7 +139,7 @@ mod tests {
             assert_eq!(signatures.as_slice(), [signature]);
             assert!(!is_decorator);
             assert_eq!(body.len(), 1);
-            assert!(matches!(body[0], Node::Paragraph(_)));
+            assert!(matches!(body[0], Node::Paragraph { .. }));
         } else {
             panic!("Expected PyFunction, got {domain_object:?}");
         }
@@ -242,7 +242,10 @@ mod tests {
 
         // Then
         if let DomainObjectBody::PyFunction { body, .. } = domain_object {
-            if let Node::Paragraph(inlines) = &body[0] {
+            if let Node::Paragraph {
+                content: inlines, ..
+            } = &body[0]
+            {
                 assert_eq!(
                     inlines[0],
                     rinx_ast::InlineNode::Text("Indented more than needed.".to_string())
@@ -301,7 +304,13 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         assert!(
-            matches!(&doc.nodes[0], Node::Directive(Directive::Unknown { .. })),
+            matches!(
+                &doc.nodes[0],
+                Node::Directive {
+                    directive: Directive::Unknown { .. },
+                    ..
+                }
+            ),
             "Expected Unknown directive, got {:?}",
             doc.nodes[0]
         );
@@ -317,7 +326,13 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         assert!(
-            matches!(&doc.nodes[0], Node::Directive(Directive::Unknown { .. })),
+            matches!(
+                &doc.nodes[0],
+                Node::Directive {
+                    directive: Directive::Unknown { .. },
+                    ..
+                }
+            ),
             "Expected Unknown directive, got {:?}",
             doc.nodes[0]
         );
@@ -382,7 +397,10 @@ mod tests {
         let doc = parse_document("test.rst", input);
 
         // Then
-        let Some(Node::Directive(Directive::DomainObject { object, .. })) = doc.nodes.first()
+        let Some(Node::Directive {
+            directive: Directive::DomainObject { object, .. },
+            ..
+        }) = doc.nodes.first()
         else {
             panic!("Expected a domain object, got {:?}", doc.nodes);
         };

@@ -70,7 +70,11 @@ pub(super) fn collect_numbering(doc: &Document) -> DocumentNumbering {
                 sections: sections[index].clone(),
             });
         }
-        if let Node::Directive(Directive::Toctree(_)) = node {
+        if let Node::Directive {
+            directive: Directive::Toctree(_),
+            ..
+        } = node
+        {
             steps.push(NumberingStep::Toctree {
                 position: toctree_position,
                 sections: sections[index].clone(),
@@ -124,7 +128,7 @@ mod tests {
     fn figure(caption: &str) -> Node {
         let mut figure = Figure::new(ImageOptions::new(AssetUri::new("a.png")));
         figure.caption = Some(vec![InlineNode::Text(caption.to_string())]);
-        Node::Directive(Directive::Figure(Box::new(figure)))
+        Node::directive(Directive::Figure(Box::new(figure)))
     }
 
     fn target(name: &str) -> Node {
@@ -136,7 +140,7 @@ mod tests {
     }
 
     fn toctree() -> Node {
-        Node::Directive(Directive::Toctree(Toctree::default()))
+        Node::directive(Directive::Toctree(Toctree::default()))
     }
 
     fn id(title: &str) -> SectionId {
@@ -188,7 +192,7 @@ mod tests {
             vec![
                 heading(1, "Guide"),
                 heading(2, "Usage"),
-                Node::Directive(Directive::SeeAlso {
+                Node::directive(Directive::SeeAlso {
                     body: vec![figure("Nested")],
                 }),
             ],

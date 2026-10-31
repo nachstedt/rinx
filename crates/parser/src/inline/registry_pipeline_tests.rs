@@ -16,7 +16,10 @@ use rinx_ast::{
 fn registry_references(nodes: &[Node]) -> Vec<&InlineNode> {
     let mut found = Vec::new();
     for node in nodes {
-        if let Node::Paragraph(inlines) = node {
+        if let Node::Paragraph {
+            content: inlines, ..
+        } = node
+        {
             found.extend(
                 inlines
                     .iter()
@@ -38,7 +41,7 @@ fn test_parse_creates_a_pep_reference_with_its_span_and_anchor() {
     // Then
     assert_eq!(
         doc.nodes,
-        vec![Node::Paragraph(vec![
+        vec![Node::paragraph(vec![
             InlineNode::Text("See ".to_string()),
             InlineNode::RegistryReference {
                 target: RegistryTarget::parse(Registry::Pep, "8").unwrap(),
@@ -61,7 +64,11 @@ fn test_parse_numbers_pep_anchors_after_index_directives() {
     let doc = parse_document("test.rst", input);
 
     // Then
-    let Node::Directive(Directive::Index { id, .. }) = &doc.nodes[1] else {
+    let Node::Directive {
+        directive: Directive::Index { id, .. },
+        ..
+    } = &doc.nodes[1]
+    else {
         panic!("expected an index directive, got {:?}", doc.nodes[1]);
     };
     assert_eq!(id, "index-0");
@@ -84,7 +91,10 @@ fn test_parse_gives_each_substituted_pep_its_own_anchor() {
     let doc = parse_document("test.rst", input);
 
     // Then
-    let Node::Paragraph(inlines) = &doc.nodes[0] else {
+    let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    else {
         panic!("expected a paragraph");
     };
     let ids: Vec<&str> = inlines
@@ -121,7 +131,7 @@ fn test_parse_reports_an_invalid_pep_number_at_the_role() {
     // Then — shown as written, reported where it was written
     assert_eq!(
         doc.nodes,
-        vec![Node::Paragraph(vec![
+        vec![Node::paragraph(vec![
             InlineNode::Text("See ".to_string()),
             InlineNode::Text(":pep:`eight`".to_string()),
             InlineNode::Text(" here.".to_string()),
@@ -164,7 +174,7 @@ fn test_parse_creates_a_docutils_pep_reference_with_its_span() {
     // Then
     assert_eq!(
         doc.nodes,
-        vec![Node::Paragraph(vec![
+        vec![Node::paragraph(vec![
             InlineNode::Text("See ".to_string()),
             InlineNode::DocutilsPepReference {
                 number: DocutilsPepNumber::parse("8").unwrap(),
@@ -206,7 +216,7 @@ fn test_parse_reports_an_invalid_pep_reference_number_at_the_role() {
     // Then — shown as written, reported where it was written
     assert_eq!(
         doc.nodes,
-        vec![Node::Paragraph(vec![
+        vec![Node::paragraph(vec![
             InlineNode::Text("See ".to_string()),
             InlineNode::Text(":pep-reference:`8#x`".to_string()),
             InlineNode::Text(" here.".to_string()),
@@ -250,7 +260,10 @@ fn test_parse_unescapes_a_pep_reference_number_before_reading_it() {
     let doc = parse_document("test.rst", input);
 
     // Then
-    let Node::Paragraph(inlines) = &doc.nodes[0] else {
+    let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    else {
         panic!("expected a paragraph");
     };
     assert!(
@@ -359,7 +372,10 @@ fn test_parse_creates_a_docutils_rfc_reference_without_an_anchor() {
     let doc = parse_document("test.rst", input);
 
     // Then
-    let Node::Paragraph(inlines) = &doc.nodes[0] else {
+    let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    else {
         panic!("expected a paragraph");
     };
     assert_eq!(
@@ -390,7 +406,7 @@ fn test_parse_reports_an_invalid_rfc_reference_number_at_the_role() {
     // Then
     assert_eq!(
         doc.nodes,
-        vec![Node::Paragraph(vec![
+        vec![Node::paragraph(vec![
             InlineNode::Text("See ".to_string()),
             InlineNode::Text(":rfc-reference:`0`".to_string()),
             InlineNode::Text(" here.".to_string()),

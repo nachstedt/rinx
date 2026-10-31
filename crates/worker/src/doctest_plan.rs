@@ -190,10 +190,13 @@ enum PlanSource<'a> {
 fn collect_doctest_blocks(doc: &ast::Document) -> Vec<PlanSource<'_>> {
     let mut blocks = Vec::new();
     ast::walk_nodes(&doc.nodes, &mut |node| match node {
-        ast::Node::Directive(ast::Directive::DocTest(block)) => {
+        ast::Node::Directive {
+            directive: ast::Directive::DocTest(block),
+            ..
+        } => {
             blocks.push(PlanSource::Directive(block));
         }
-        ast::Node::DoctestBlock(content) => blocks.push(PlanSource::BareBlock(content)),
+        ast::Node::DoctestBlock { content, .. } => blocks.push(PlanSource::BareBlock(content)),
         _ => {}
     });
     blocks

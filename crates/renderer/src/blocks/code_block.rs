@@ -601,6 +601,7 @@ mod tests {
             vec![Node::LiteralBlock {
                 language: CodeLanguage::Inherit,
                 content: "def hello():\n    pass".to_string(),
+                block: None,
             }],
         );
 
@@ -620,6 +621,7 @@ mod tests {
             vec![Node::LiteralBlock {
                 language: CodeLanguage::None,
                 content: "a < b && b > c".to_string(),
+                block: None,
             }],
         );
 
@@ -638,6 +640,7 @@ mod tests {
             vec![Node::LiteralBlock {
                 language: CodeLanguage::None,
                 content: "x = 1".to_string(),
+                block: None,
             }],
         );
 

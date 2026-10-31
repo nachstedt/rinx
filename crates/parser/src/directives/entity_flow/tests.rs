@@ -52,7 +52,10 @@ fn parse_flow(rst: &str) -> EntityFlow {
     doc.nodes
         .iter()
         .find_map(|node| match node {
-            Node::Directive(Directive::EntityFlow(flow)) => Some((**flow).clone()),
+            Node::Directive {
+                directive: Directive::EntityFlow(flow),
+                ..
+            } => Some((**flow).clone()),
             _ => None,
         })
         .unwrap_or_else(|| panic!("no flowchart parsed from:\n{rst}"))

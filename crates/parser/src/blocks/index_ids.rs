@@ -24,30 +24,47 @@ use rinx_ast::{Directive, InlineNode, Node, for_each_inline_list_mut};
 pub(super) fn assign_index_ids(nodes: &mut [Node], counter: &mut usize) {
     for node in nodes {
         match node {
-            Node::Directive(Directive::Index { id, .. }) => {
+            Node::Directive {
+                directive: Directive::Index { id, .. },
+                ..
+            } => {
                 *id = format!("index-{counter}");
                 *counter += 1;
             }
-            Node::Directive(
-                Directive::Admonition { body, .. }
-                | Directive::VersionChange { body, .. }
-                | Directive::SeeAlso { body },
-            ) => {
+            Node::Directive {
+                directive:
+                    Directive::Admonition { body, .. }
+                    | Directive::VersionChange { body, .. }
+                    | Directive::SeeAlso { body },
+                ..
+            } => {
                 assign_index_ids(body, counter);
             }
             // The three sphinx-design containers. Their bodies are ordinary
             // content, so an `.. index::` written in one needs an id like any
             // other — and without these arms it would silently get none.
-            Node::Directive(Directive::Dropdown(dropdown)) => {
+            Node::Directive {
+                directive: Directive::Dropdown(dropdown),
+                ..
+            } => {
                 assign_index_ids(&mut dropdown.body, counter);
             }
-            Node::Directive(Directive::Grid(grid)) => {
+            Node::Directive {
+                directive: Directive::Grid(grid),
+                ..
+            } => {
                 assign_index_ids(&mut grid.body, counter);
             }
-            Node::Directive(Directive::GridItem(item)) => {
+            Node::Directive {
+                directive: Directive::GridItem(item),
+                ..
+            } => {
                 assign_index_ids(&mut item.body, counter);
             }
-            Node::Directive(Directive::DomainObject { object: obj, .. }) => {
+            Node::Directive {
+                directive: Directive::DomainObject { object: obj, .. },
+                ..
+            } => {
                 assign_index_ids(obj.body_mut(), counter);
             }
             Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
@@ -63,6 +80,7 @@ pub(super) fn assign_index_ids(nodes: &mut [Node], counter: &mut usize) {
             Node::Table {
                 header_rows,
                 body_rows,
+                ..
             } => {
                 for row in header_rows.iter_mut().chain(body_rows.iter_mut()) {
                     for cell in &mut row.cells {
@@ -112,7 +130,7 @@ mod tests {
     };
 
     fn index_directive() -> Node {
-        Node::Directive(Directive::Index {
+        Node::directive(Directive::Index {
             entries: vec![IndexEntry::Term {
                 primary: "x".to_string(),
                 subentry: None,
@@ -123,7 +141,11 @@ mod tests {
     }
 
     fn id_of(node: &Node) -> &str {
-        if let Node::Directive(Directive::Index { id, .. }) = node {
+        if let Node::Directive {
+            directive: Directive::Index { id, .. },
+            ..
+        } = node
+        {
             id
         } else {
             panic!("Expected Index directive");
@@ -152,6 +174,7 @@ mod tests {
             bullet: '-',
             items: vec![ListItem {
                 nodes: vec![index_directive()],
+                block: None,
             }],
         }];
         let mut counter = 0;
@@ -170,7 +193,7 @@ mod tests {
     #[test]
     fn test_assign_index_ids_recurses_into_admonition_body() {
         // Given
-        let mut nodes = vec![Node::Directive(Directive::Admonition {
+        let mut nodes = vec![Node::directive(Directive::Admonition {
             kind: AdmonitionKind::Note,
             title: None,
             collapsible: None,
@@ -182,7 +205,11 @@ mod tests {
         assign_index_ids(&mut nodes, &mut counter);
 
         // Then
-        if let Node::Directive(Directive::Admonition { body, .. }) = &nodes[0] {
+        if let Node::Directive {
+            directive: Directive::Admonition { body, .. },
+            ..
+        } = &nodes[0]
+        {
             assert_eq!(id_of(&body[0]), "index-0");
         } else {
             panic!("Expected Admonition");
@@ -192,7 +219,7 @@ mod tests {
     #[test]
     fn test_assign_index_ids_recurses_into_domain_object_body() {
         // Given
-        let mut nodes = vec![Node::Directive(Directive::DomainObject {
+        let mut nodes = vec![Node::directive(Directive::DomainObject {
             object: DomainObjectBody::PyFunction {
                 is_async: false,
                 flags: rinx_ast::DescriptionFlags::default(),
@@ -201,7 +228,6 @@ mod tests {
                 is_decorator: false,
                 body: vec![index_directive()],
             },
-            block: None,
         })];
         let mut counter = 0;
 
@@ -209,7 +235,11 @@ mod tests {
         assign_index_ids(&mut nodes, &mut counter);
 
         // Then
-        if let Node::Directive(Directive::DomainObject { object: obj, .. }) = &nodes[0] {
+        if let Node::Directive {
+            directive: Directive::DomainObject { object: obj, .. },
+            ..
+        } = &nodes[0]
+        {
             assert_eq!(id_of(&obj.body()[0]), "index-0");
         } else {
             panic!("Expected DomainObject");
@@ -228,6 +258,7 @@ mod tests {
                     content: vec![index_directive()],
                 }],
             }],
+            block: None,
         }];
         let mut counter = 0;
 
@@ -251,6 +282,7 @@ mod tests {
                 bullet: '-',
                 items: vec![ListItem {
                     nodes: vec![index_directive()],
+                    block: None,
                 }],
             },
         ];
@@ -269,7 +301,7 @@ mod tests {
     }
 
     fn pep_paragraph() -> Node {
-        Node::Paragraph(vec![InlineNode::RegistryReference {
+        Node::paragraph(vec![InlineNode::RegistryReference {
             target: rinx_ast::RegistryTarget::parse(rinx_ast::Registry::Pep, "8").unwrap(),
             display: None,
             index_id: String::new(),
@@ -278,7 +310,10 @@ mod tests {
     }
 
     fn pep_id_of(node: &Node) -> &str {
-        let Node::Paragraph(inlines) = node else {
+        let Node::Paragraph {
+            content: inlines, ..
+        } = node
+        else {
             panic!("Expected Paragraph")
         };
         let InlineNode::RegistryReference { index_id, .. } = &inlines[0] else {
@@ -306,7 +341,7 @@ mod tests {
     #[test]
     fn test_assign_inline_index_ids_reaches_a_glossary_definition() {
         // Given a role where `assign_index_ids` does not look
-        let mut nodes = vec![Node::Directive(Directive::Glossary {
+        let mut nodes = vec![Node::directive(Directive::Glossary {
             entries: vec![rinx_ast::GlossaryEntry {
                 terms: vec![rinx_ast::GlossaryTerm::unplaced("term")],
                 definition: vec![pep_paragraph()],
@@ -319,7 +354,11 @@ mod tests {
         assign_inline_index_ids(&mut nodes, &mut counter);
 
         // Then
-        let Node::Directive(Directive::Glossary { entries, .. }) = &nodes[0] else {
+        let Node::Directive {
+            directive: Directive::Glossary { entries, .. },
+            ..
+        } = &nodes[0]
+        else {
             unreachable!()
         };
         assert_eq!(pep_id_of(&entries[0].definition[0]), "index-0");
@@ -334,19 +373,22 @@ mod tests {
             index_id: String::new(),
             span: None,
         }];
-        let Node::Paragraph(pep) = pep_paragraph() else {
+        let Node::Paragraph { content: pep, .. } = pep_paragraph() else {
             unreachable!()
         };
         inlines.insert(0, pep[0].clone());
         inlines.push(pep[0].clone());
-        let mut nodes = vec![Node::Paragraph(inlines)];
+        let mut nodes = vec![Node::paragraph(inlines)];
         let mut counter = 3;
 
         // When
         assign_inline_index_ids(&mut nodes, &mut counter);
 
         // Then — document order, continuing the counter
-        let Node::Paragraph(inlines) = &nodes[0] else {
+        let Node::Paragraph {
+            content: inlines, ..
+        } = &nodes[0]
+        else {
             unreachable!()
         };
         let ids: Vec<&str> = inlines

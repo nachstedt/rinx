@@ -399,9 +399,9 @@ impl<'a> ParseCtx<'a> {
         Some(self.syntax?.name(span?))
     }
 
-    /// Records a definition's block written over `lines`, yielding the id
-    /// its node carries — `None` when this parse records no source map or
-    /// the block came from no source line.
+    /// Records a block written over `lines`, yielding the id its node
+    /// carries — `None` when this parse records no source map or the block
+    /// came from no source line.
     pub(crate) fn record_block_lines(&self, lines: Option<Span>) -> Option<BlockId> {
         Some(self.syntax?.block_lines(lines?))
     }

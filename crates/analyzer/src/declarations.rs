@@ -81,11 +81,20 @@ fn image_paths(doc: &Document) -> Vec<(PathBuf, Option<Span>)> {
         }
     };
     walk_nodes(&doc.nodes, &mut |node| match node {
-        Node::Directive(Directive::Image(options)) => record(options, None),
-        Node::Directive(Directive::Figure(figure)) => record(&figure.image, None),
+        Node::Directive {
+            directive: Directive::Image(options),
+            ..
+        } => record(options, None),
+        Node::Directive {
+            directive: Directive::Figure(figure),
+            ..
+        } => record(&figure.image, None),
         // A `.. |name| image::` definition names a real image too, subject to
         // the same `images` attribute requirement, used or not.
-        Node::Directive(Directive::SubstitutionDefinition(definition)) => {
+        Node::Directive {
+            directive: Directive::SubstitutionDefinition(definition),
+            ..
+        } => {
             if let SubstitutionKind::Image(options) = &definition.kind {
                 record(options, definition.span);
             }
@@ -121,7 +130,10 @@ fn download_paths(doc: &Document) -> Vec<(PathBuf, Option<Span>)> {
     // roles are written there: reported even when unused, as an image
     // definition is.
     walk_nodes(&doc.nodes, &mut |node| {
-        if let Node::Directive(Directive::SubstitutionDefinition(definition)) = node
+        if let Node::Directive {
+            directive: Directive::SubstitutionDefinition(definition),
+            ..
+        } = node
             && let SubstitutionKind::Replace(inlines) = &definition.kind
         {
             record(inlines);
@@ -138,7 +150,10 @@ pub fn disabled_diagrams(doc: &Document) -> Vec<Diagnostic> {
     let mut found = Vec::new();
     walk_nodes(&doc.nodes, &mut |node| {
         let (directive, code, span) = match node {
-            Node::Directive(Directive::Uml(uml)) => (
+            Node::Directive {
+                directive: Directive::Uml(uml),
+                ..
+            } => (
                 uml.source.as_str(),
                 DiagnosticCode::UmlDiagramsDisabled,
                 uml.span,
@@ -146,14 +161,20 @@ pub fn disabled_diagrams(doc: &Document) -> Vec<Diagnostic> {
             // A flowchart draws no less of a picture for having generated it,
             // so it needs the same opt-in — under its own code, because a code
             // names the construct.
-            Node::Directive(Directive::EntityFlow(flow)) => (
+            Node::Directive {
+                directive: Directive::EntityFlow(flow),
+                ..
+            } => (
                 flow.source.as_str(),
                 DiagnosticCode::EntityFlowDiagramsDisabled,
                 flow.span,
             ),
             // A sequence diagram is generated like a flowchart, and needs the
             // opt-in for the flowchart's reason.
-            Node::Directive(Directive::EntitySequence(sequence)) => (
+            Node::Directive {
+                directive: Directive::EntitySequence(sequence),
+                ..
+            } => (
                 sequence.source.as_str(),
                 DiagnosticCode::EntitySequenceDiagramsDisabled,
                 sequence.span,
@@ -246,7 +267,7 @@ mod tests {
         // Given
         let doc = document(
             "guide/intro.rst",
-            vec![Node::Directive(Directive::Image(Box::new(image(
+            vec![Node::directive(Directive::Image(Box::new(image(
                 "images/logo.png",
                 2,
             ))))],
@@ -267,7 +288,7 @@ mod tests {
         // Given — nothing bundles it, so its absence is not a build failure
         let doc = document(
             "index.rst",
-            vec![Node::Directive(Directive::Image(Box::new(image(
+            vec![Node::directive(Directive::Image(Box::new(image(
                 "https://example.com/logo.png",
                 1,
             ))))],
@@ -283,10 +304,10 @@ mod tests {
         let doc = document(
             "index.rst",
             vec![
-                Node::Directive(Directive::Figure(Box::new(Figure::new(image(
+                Node::directive(Directive::Figure(Box::new(Figure::new(image(
                     "logo.png", 1,
                 ))))),
-                Node::Directive(Directive::SubstitutionDefinition(SubstitutionDefinition {
+                Node::directive(Directive::SubstitutionDefinition(SubstitutionDefinition {
                     name: "biohazard".to_string(),
                     kind: SubstitutionKind::Image(Box::new(ImageOptions::new(AssetUri::new(
                         "biohazard.png",
@@ -317,7 +338,8 @@ mod tests {
             vec![Node::BulletList {
                 bullet: '-',
                 items: vec![ListItem {
-                    nodes: vec![Node::Paragraph(vec![download("../data/a.csv", 3)])],
+                    nodes: vec![Node::paragraph(vec![download("../data/a.csv", 3)])],
+                    block: None,
                 }],
             }],
         );
@@ -340,7 +362,7 @@ mod tests {
         };
         let doc = document(
             "index.rst",
-            vec![Node::Paragraph(vec![
+            vec![Node::paragraph(vec![
                 download("https://example.com/tool.zip", 1),
                 unlinked,
             ])],
@@ -357,13 +379,13 @@ mod tests {
         let doc = document(
             "index.rst",
             vec![
-                Node::Directive(Directive::SubstitutionDefinition(SubstitutionDefinition {
+                Node::directive(Directive::SubstitutionDefinition(SubstitutionDefinition {
                     name: "data".to_string(),
                     kind: SubstitutionKind::Replace(vec![download("a.csv", 1)]),
                     span: Some(span_on(1)),
                 })),
-                Node::Paragraph(vec![download("a.csv", 1)]),
-                Node::Paragraph(vec![download("a.csv", 1)]),
+                Node::paragraph(vec![download("a.csv", 1)]),
+                Node::paragraph(vec![download("a.csv", 1)]),
             ],
         );
 
@@ -380,8 +402,8 @@ mod tests {
         let doc = document(
             "index.rst",
             vec![
-                Node::Directive(Directive::Image(Box::new(image("logo.png", 1)))),
-                Node::Paragraph(vec![download("a.csv", 2)]),
+                Node::directive(Directive::Image(Box::new(image("logo.png", 1)))),
+                Node::paragraph(vec![download("a.csv", 2)]),
             ],
         );
         let bundled = Bundled {
@@ -399,8 +421,8 @@ mod tests {
         let doc = document(
             "guide/intro.rst",
             vec![
-                Node::Directive(Directive::Image(Box::new(image("logo.png", 1)))),
-                Node::Paragraph(vec![download("a.csv", 3)]),
+                Node::directive(Directive::Image(Box::new(image("logo.png", 1)))),
+                Node::paragraph(vec![download("a.csv", 3)]),
             ],
         );
 
@@ -430,7 +452,7 @@ mod tests {
         // Given — the same file, bundled only as a picture
         let doc = document(
             "index.rst",
-            vec![Node::Paragraph(vec![download("a.png", 1)])],
+            vec![Node::paragraph(vec![download("a.png", 1)])],
         );
         let bundled = Bundled {
             images: vec!["a.png"],
@@ -450,13 +472,13 @@ mod tests {
         let uml = |source, line| {
             let mut uml = Uml::new(source, "A -> B".to_string());
             uml.span = Some(span_on(line));
-            Node::Directive(Directive::Uml(Box::new(uml)))
+            Node::directive(Directive::Uml(Box::new(uml)))
         };
         let doc = document(
             "index.rst",
             vec![
                 uml(UmlSource::PlantUml, 1),
-                Node::Directive(Directive::Admonition {
+                Node::directive(Directive::Admonition {
                     kind: AdmonitionKind::Note,
                     title: None,
                     collapsible: None,
@@ -492,10 +514,10 @@ mod tests {
         let doc = document(
             "index.rst",
             vec![
-                Node::Directive(Directive::EntityFlow(Box::new(EntityFlow::new(
+                Node::directive(Directive::EntityFlow(Box::new(EntityFlow::new(
                     EntityFlowSource::EntityFlow,
                 )))),
-                Node::Directive(Directive::EntitySequence(Box::new(sequence))),
+                Node::directive(Directive::EntitySequence(Box::new(sequence))),
             ],
         );
 
@@ -516,7 +538,7 @@ mod tests {
     #[test]
     fn test_disabled_diagrams_finds_nothing_in_a_document_without_one() {
         // Given
-        let doc = document("index.rst", vec![Node::Paragraph(Vec::new())]);
+        let doc = document("index.rst", vec![Node::paragraph(Vec::new())]);
 
         // When / Then
         assert!(disabled_diagrams(&doc).is_empty());

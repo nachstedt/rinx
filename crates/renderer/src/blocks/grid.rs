@@ -171,7 +171,7 @@ mod tests {
     /// A one-paragraph body, so a test can tell "content rendered" from
     /// "content dropped".
     fn paragraph(text: &str) -> Node {
-        Node::Paragraph(vec![InlineNode::Text(text.to_string())])
+        Node::paragraph(vec![InlineNode::Text(text.to_string())])
     }
 
     /// The class list of the *n*-th `<div>` the renderer wrote, so a test can
@@ -385,7 +385,7 @@ mod tests {
         // Given
         let grid = Grid {
             columns: Some(ColumnSpec::parse("2").expect("a valid column spec")),
-            body: vec![Node::Directive(Directive::GridItem(Box::new(GridItem {
+            body: vec![Node::directive(Directive::GridItem(Box::new(GridItem {
                 body: vec![paragraph("Hello")],
                 ..GridItem::new()
             })))],

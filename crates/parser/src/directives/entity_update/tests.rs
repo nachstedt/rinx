@@ -41,7 +41,7 @@ fn schema() -> EntitySchema {
 
 /// Parses `rst` against the test schema, returning the whole document.
 fn parse(rst: &str) -> rinx_ast::Document {
-    parse_with_map(rst).document
+    crate::unplaced(&parse_with_map(rst).document)
 }
 
 /// Parses `rst` as [`parse`] does, keeping the source map beside it.
@@ -58,7 +58,10 @@ fn parse_update(rst: &str) -> (Directive, Vec<Diagnostic>) {
         .nodes
         .iter()
         .find_map(|node| match node {
-            Node::Directive(d @ Directive::EntityUpdate(_)) => Some(d.clone()),
+            Node::Directive {
+                directive: d @ Directive::EntityUpdate(_),
+                ..
+            } => Some(d.clone()),
             _ => None,
         })
         .unwrap_or_else(|| panic!("no entity-update parsed from:\n{rst}"));
@@ -111,7 +114,10 @@ fn test_a_bare_id_target_records_where_it_was_written() {
         .nodes
         .iter()
         .find_map(|node| match node {
-            Node::Directive(directive @ Directive::EntityUpdate(_)) => Some(directive),
+            Node::Directive {
+                directive: directive @ Directive::EntityUpdate(_),
+                ..
+            } => Some(directive),
             _ => None,
         })
         .expect("an entity-update");
@@ -156,7 +162,10 @@ fn test_an_empty_argument_becomes_malformed() {
     // Then
     assert!(matches!(
         doc.nodes.first(),
-        Some(Node::Directive(Directive::Malformed { .. }))
+        Some(Node::Directive {
+            directive: Directive::Malformed { .. },
+            ..
+        })
     ));
 }
 
@@ -358,7 +367,7 @@ fn test_the_body_parses_as_ordinary_block_content() {
     let update = update_of(&directive);
     assert_eq!(
         update.body,
-        vec![Node::Paragraph(vec![rinx_ast::InlineNode::Text(
+        vec![Node::paragraph(vec![rinx_ast::InlineNode::Text(
             "Closed after review.".to_string()
         )])]
     );

@@ -30,7 +30,10 @@ fn test_parse_bare_func_role_resolves_via_default_domain() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(
             inlines[1].clone().with_span(None),
             InlineNode::DomainObjectReference {
@@ -56,7 +59,10 @@ fn test_parse_prefixed_func_role_ignores_default_domain() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(
             without_spans(inlines).contains(&InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Function),
@@ -92,7 +98,10 @@ fn test_parse_bare_mod_role_resolves_via_default_domain() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(
             inlines[1].clone().with_span(None),
             InlineNode::DomainObjectReference {
@@ -118,7 +127,10 @@ fn test_parse_prefixed_mod_role_ignores_default_domain() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(
             without_spans(inlines).contains(&InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Module),
@@ -143,7 +155,10 @@ fn test_parse_mod_role_with_bang_prefix_suppresses_link_end_to_end() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(
             without_spans(inlines).contains(&InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Module),
@@ -168,7 +183,10 @@ fn test_parse_bare_data_role_resolves_via_default_domain() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(
             inlines[1].clone().with_span(None),
             InlineNode::DomainObjectReference {
@@ -196,7 +214,10 @@ fn test_parse_prefixed_const_role_ignores_default_domain_and_matches_data_target
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(
             without_spans(inlines).contains(&InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Data),
@@ -221,7 +242,10 @@ fn test_parse_data_role_with_bang_prefix_suppresses_link_end_to_end() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(
             without_spans(inlines).contains(&InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Data),
@@ -246,7 +270,10 @@ fn test_parse_bare_meth_role_resolves_via_default_domain() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(
             inlines[1].clone().with_span(None),
             InlineNode::DomainObjectReference {
@@ -272,7 +299,10 @@ fn test_parse_prefixed_meth_role_ignores_default_domain() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(
             without_spans(inlines).contains(&InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Method),
@@ -297,7 +327,10 @@ fn test_parse_meth_role_with_bang_prefix_suppresses_link_end_to_end() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(
             without_spans(inlines).contains(&InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Method),
@@ -322,7 +355,10 @@ fn test_parse_bare_class_role_resolves_via_default_domain() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(
             inlines[1].clone().with_span(None),
             InlineNode::DomainObjectReference {
@@ -348,7 +384,10 @@ fn test_parse_prefixed_class_role_ignores_default_domain() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(
             without_spans(inlines).contains(&InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Class),
@@ -373,7 +412,10 @@ fn test_parse_bare_attr_role_resolves_via_default_domain() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(
             inlines[1].clone().with_span(None),
             InlineNode::DomainObjectReference {
@@ -399,7 +441,10 @@ fn test_parse_prefixed_attr_role_ignores_default_domain() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(
             without_spans(inlines).contains(&InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Attribute),
@@ -425,7 +470,10 @@ fn test_parse_bare_attr_role_under_c_default_domain_falls_back_to_text() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(
             without_spans(inlines).contains(&InlineNode::Text(":attr:`Greeter.name`".to_string()))
         );
@@ -442,7 +490,10 @@ fn test_parse_attr_role_with_bang_prefix_suppresses_link_end_to_end() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(
             without_spans(inlines).contains(&InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Attribute),
@@ -467,7 +518,10 @@ fn test_parse_func_role_with_tilde_prefix_shortens_display_end_to_end() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::Py)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(
             without_spans(inlines).contains(&InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Function),
@@ -492,7 +546,10 @@ fn test_parse_func_role_with_call_parens_resolves_the_bare_name_end_to_end() {
     let doc = parse("test.rst", input, &crate::ParseCtx::with_domain(Domain::C)).document;
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(
             without_spans(inlines).contains(&InlineNode::DomainObjectReference {
                 object_type: ObjectType::C(rinx_ast::CObjectType::Function),
@@ -517,7 +574,10 @@ fn test_parse_mixed_term_and_func_roles_in_one_paragraph() {
     let doc = parse_document("test.rst", input);
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(
             inlines
                 .iter()

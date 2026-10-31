@@ -47,7 +47,10 @@ fn parse_table(rst: &str) -> EntityTable {
     doc.nodes
         .iter()
         .find_map(|node| match node {
-            Node::Directive(Directive::EntityTable(table)) => Some((**table).clone()),
+            Node::Directive {
+                directive: Directive::EntityTable(table),
+                ..
+            } => Some((**table).clone()),
             _ => None,
         })
         .unwrap_or_else(|| panic!("no entity table parsed from:\n{rst}"))
@@ -404,10 +407,15 @@ fn test_the_directive_is_unknown_without_a_schema() {
     let doc = crate::parse_document("specs/boot", rst);
 
     // Then — it still parses as the directive, listing an empty project
-    let parsed = doc
-        .nodes
-        .iter()
-        .any(|node| matches!(node, Node::Directive(Directive::EntityTable(_))));
+    let parsed = doc.nodes.iter().any(|node| {
+        matches!(
+            node,
+            Node::Directive {
+                directive: Directive::EntityTable(_),
+                ..
+            }
+        )
+    });
     assert!(parsed);
 }
 

@@ -1,7 +1,7 @@
 //! The enumerated-list item loop: recognizing each item, collecting its
 //! body, and deciding when the list ends.
 
-use crate::blocks::parse_blocks;
+use crate::blocks::{parse_blocks, written_extent};
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
@@ -104,7 +104,8 @@ pub(crate) fn try_parse_enumerated_list(
         let body_refs: Vec<&str> = body_lines.iter().map(String::as_str).collect();
         let item_ctx = ctx.nested(item_start, body_indent).without_section_titles();
         let nodes = parse_blocks(&body_refs, adornment_order, diagnostics, &item_ctx);
-        items.push(ListItem { nodes });
+        let block = ctx.record_block_lines(written_extent(lines, item_start, consumed, ctx));
+        items.push(ListItem { nodes, block });
 
         state = Some(match state {
             None => ListState {

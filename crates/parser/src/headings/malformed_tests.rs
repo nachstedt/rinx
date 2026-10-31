@@ -225,7 +225,7 @@ fn test_parse_reports_nothing_for_a_transition() {
     let doc = parse_document("test.rst", input);
 
     // Then
-    assert!(doc.nodes.contains(&Node::Transition));
+    assert!(doc.nodes.contains(&Node::Transition { block: None }));
     assert_eq!(diagnostic_codes(&doc), Vec::new());
 }
 

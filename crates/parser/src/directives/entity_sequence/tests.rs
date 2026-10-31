@@ -48,7 +48,10 @@ fn parse_sequence(rst: &str) -> EntitySequence {
         .nodes
         .iter()
         .find_map(|node| match node {
-            Node::Directive(Directive::EntitySequence(sequence)) => Some((**sequence).clone()),
+            Node::Directive {
+                directive: Directive::EntitySequence(sequence),
+                ..
+            } => Some((**sequence).clone()),
             _ => None,
         })
         .unwrap_or_else(|| panic!("no sequence diagram parsed from:\n{rst}"))
@@ -66,7 +69,7 @@ fn codes(rst: &str) -> Vec<String> {
 /// Whether `rst` degraded to an error block quoting `name`.
 fn is_malformed(rst: &str, name: &str) -> bool {
     parse(rst).nodes.iter().any(|node| {
-        matches!(node, Node::Directive(Directive::Malformed { name: written, .. }) if written == name)
+        matches!(node, Node::Directive { directive: Directive::Malformed { name: written, .. }, .. } if written == name)
     })
 }
 

@@ -116,16 +116,20 @@ mod tests {
     fn parse_module(input: &str) -> (String, ModuleOptions, Vec<Node>) {
         let doc = parse_document("test.rst", input);
         match doc.nodes.first() {
-            Some(Node::Directive(Directive::DomainObject {
-                object:
-                    DomainObjectBody::PyModule {
-                        name,
-                        options,
-                        body,
+            Some(Node::Directive {
+                directive:
+                    Directive::DomainObject {
+                        object:
+                            DomainObjectBody::PyModule {
+                                name,
+                                options,
+                                body,
+                                ..
+                            },
                         ..
                     },
                 ..
-            })) => (name.clone(), options.clone(), body.clone()),
+            }) => (name.clone(), options.clone(), body.clone()),
             other => panic!("Expected PyModule, got {other:?}"),
         }
     }
@@ -223,7 +227,7 @@ mod tests {
         assert_eq!(options.synopsis.as_deref(), Some("Greeting utilities."));
         assert!(options.has(ModuleFlag::Deprecated));
         assert_eq!(body.len(), 1);
-        assert!(matches!(body[0], Node::Paragraph(_)));
+        assert!(matches!(body[0], Node::Paragraph { .. }));
     }
 
     #[test]

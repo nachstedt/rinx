@@ -245,7 +245,7 @@ mod tests {
         // Then
         assert_eq!(
             doc.nodes,
-            vec![Node::Directive(Directive::PyCurrentModule {
+            vec![Node::directive(Directive::PyCurrentModule {
                 module: Some("enum".to_string())
             })]
         );
@@ -262,7 +262,7 @@ mod tests {
         // Then
         assert_eq!(
             doc.nodes,
-            vec![Node::Directive(Directive::PyCurrentModule {
+            vec![Node::directive(Directive::PyCurrentModule {
                 module: Some("enum".to_string())
             })]
         );
@@ -279,7 +279,7 @@ mod tests {
         // Then
         assert_eq!(
             doc.nodes,
-            vec![Node::Directive(Directive::PyCurrentModule { module: None })]
+            vec![Node::directive(Directive::PyCurrentModule { module: None })]
         );
     }
 
@@ -300,7 +300,7 @@ mod tests {
         // Then
         assert!(matches!(
             &doc.nodes[0],
-            Node::Directive(Directive::Unknown { name, .. }) if name == "currentmodule"
+            Node::Directive { directive: Directive::Unknown { name, .. }, .. } if name == "currentmodule"
         ));
     }
 
@@ -315,7 +315,7 @@ mod tests {
         // Then
         assert!(matches!(
             &doc.nodes[0],
-            Node::Directive(Directive::Unknown { name, .. }) if name == "c:currentmodule"
+            Node::Directive { directive: Directive::Unknown { name, .. }, .. } if name == "c:currentmodule"
         ));
     }
 
@@ -330,7 +330,7 @@ mod tests {
         // Then
         assert_eq!(
             doc.nodes,
-            vec![Node::Directive(Directive::CNamespace {
+            vec![Node::directive(Directive::CNamespace {
                 namespace: Some("A.B".to_string())
             })]
         );
@@ -351,8 +351,8 @@ mod tests {
 
         // Then
         assert_eq!(
-            doc.nodes,
-            vec![Node::Directive(Directive::CNamespace {
+            crate::unplaced(&doc).nodes,
+            vec![Node::directive(Directive::CNamespace {
                 namespace: Some("A.B".to_string())
             })]
         );
@@ -369,7 +369,7 @@ mod tests {
         // Then
         assert_eq!(
             doc.nodes,
-            vec![Node::Directive(Directive::CNamespace { namespace: None })]
+            vec![Node::directive(Directive::CNamespace { namespace: None })]
         );
     }
 
@@ -384,7 +384,7 @@ mod tests {
         // Then
         assert_eq!(
             doc.nodes,
-            vec![Node::Directive(Directive::CNamespace { namespace: None })]
+            vec![Node::directive(Directive::CNamespace { namespace: None })]
         );
     }
 
@@ -400,7 +400,7 @@ mod tests {
         // ever splitting on ':'.
         assert_eq!(
             doc.nodes,
-            vec![Node::Directive(Directive::CNamespacePush {
+            vec![Node::directive(Directive::CNamespacePush {
                 namespace: "C.D".to_string()
             })]
         );
@@ -415,7 +415,7 @@ mod tests {
         let doc = parse_document("test.rst", input);
 
         // Then
-        assert_eq!(doc.nodes, vec![Node::Directive(Directive::CNamespacePop)]);
+        assert_eq!(doc.nodes, vec![Node::directive(Directive::CNamespacePop)]);
     }
 
     #[test]
@@ -430,7 +430,7 @@ mod tests {
         // Then
         assert!(matches!(
             &doc.nodes[0],
-            Node::Directive(Directive::Malformed { name, .. }) if name == "c:namespace-push"
+            Node::Directive { directive: Directive::Malformed { name, .. }, .. } if name == "c:namespace-push"
         ));
         assert!(
             doc.diagnostics
@@ -451,7 +451,7 @@ mod tests {
         // Then
         assert!(matches!(
             &doc.nodes[0],
-            Node::Directive(Directive::Unknown { name, .. }) if name == "namespace"
+            Node::Directive { directive: Directive::Unknown { name, .. }, .. } if name == "namespace"
         ));
     }
 
@@ -466,7 +466,7 @@ mod tests {
         // Then
         assert_eq!(
             doc.nodes,
-            vec![Node::Directive(Directive::StdProgram {
+            vec![Node::directive(Directive::StdProgram {
                 name: Some("dis".to_string())
             })]
         );
@@ -483,7 +483,7 @@ mod tests {
         // Then
         assert_eq!(
             doc.nodes,
-            vec![Node::Directive(Directive::StdProgram { name: None })]
+            vec![Node::directive(Directive::StdProgram { name: None })]
         );
     }
 
@@ -503,8 +503,8 @@ mod tests {
 
         // Then
         assert_eq!(
-            doc.nodes,
-            vec![Node::Directive(Directive::StdProgram {
+            crate::unplaced(&doc).nodes,
+            vec![Node::directive(Directive::StdProgram {
                 name: Some("dis".to_string())
             })]
         );
@@ -521,7 +521,7 @@ mod tests {
         // Then
         assert_eq!(
             doc.nodes,
-            vec![Node::Directive(Directive::StdProgram {
+            vec![Node::directive(Directive::StdProgram {
                 name: Some("python--m-py_compile".to_string())
             })]
         );

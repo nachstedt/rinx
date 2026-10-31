@@ -137,7 +137,10 @@ mod tests {
             .nodes
             .iter()
             .find_map(|node| match node {
-                Node::Directive(Directive::Contents(contents)) => Some(contents.clone()),
+                Node::Directive {
+                    directive: Directive::Contents(contents),
+                    ..
+                } => Some(contents.clone()),
                 _ => None,
             })
             .expect("document should contain a contents directive");

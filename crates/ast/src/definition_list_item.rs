@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::block_id::BlockId;
 use crate::inline_node::InlineNode;
 use crate::node::Node;
 
@@ -14,4 +15,8 @@ use crate::node::Node;
 pub struct DefinitionListItem {
     pub term: Vec<InlineNode>,
     pub definition: Vec<Node>,
+    /// The term's and definition's lines, as the parse's source map
+    /// records them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub block: Option<BlockId>,
 }

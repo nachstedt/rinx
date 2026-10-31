@@ -375,7 +375,7 @@ mod tests {
         let doc = crate::parse_document("test.rst", input);
 
         // Then
-        let rinx_ast::Node::Directive(directive) = &doc.nodes[0] else {
+        let rinx_ast::Node::Directive { directive, .. } = &doc.nodes[0] else {
             panic!("expected a directive, got {:?}", doc.nodes[0]);
         };
         let span = image_of(directive)
@@ -398,7 +398,7 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        let rinx_ast::Node::Directive(directive) = &doc.nodes[0] else {
+        let rinx_ast::Node::Directive { directive, .. } = &doc.nodes[0] else {
             panic!("expected a directive, got {:?}", doc.nodes[0]);
         };
         let options = image_of(directive);
@@ -426,7 +426,7 @@ mod tests {
         let doc = crate::parse_document("test.rst", input);
 
         // Then
-        let rinx_ast::Node::Directive(directive) = &doc.nodes[0] else {
+        let rinx_ast::Node::Directive { directive, .. } = &doc.nodes[0] else {
             panic!("expected a directive, got {:?}", doc.nodes[0]);
         };
         assert_eq!(

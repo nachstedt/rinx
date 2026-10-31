@@ -285,6 +285,20 @@ def json_objects(node: object) -> Iterator[dict[str, Any]]:
             yield from json_objects(item)
 
 
+def written_directive(node: dict[str, Any]) -> dict[str, Any] | None:
+    """The directive `node` is, when it is a `Directive` node of a `.ast` tree.
+
+    The node holds the directive beside the lines it was written over
+    (`{"Directive": {"directive": {...}, "block": 3}}`), so the directive's
+    kind is the one key of the inner object.
+    """
+    written = node.get("Directive")
+    if not isinstance(written, dict):
+        return None
+    directive = written.get("directive")
+    return directive if isinstance(directive, dict) else None
+
+
 # ── Warning whitelist helpers (pure, unit-tested) ─────────────────────────────
 
 

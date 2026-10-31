@@ -89,7 +89,7 @@ fn table(columns: &[&str]) -> EntityTable {
 fn render(table: &EntityTable, doc_path: &str) -> RenderOutput {
     let doc = Document::new(
         doc_path.to_string(),
-        vec![Node::Directive(Directive::EntityTable(Box::new(
+        vec![Node::directive(Directive::EntityTable(Box::new(
             table.clone(),
         )))],
     );
@@ -243,7 +243,7 @@ fn test_a_text_cell_is_escaped() {
         );
     let doc = Document::new(
         "specs/boot".to_string(),
-        vec![Node::Directive(Directive::EntityTable(Box::new(table(&[
+        vec![Node::directive(Directive::EntityTable(Box::new(table(&[
             "status",
         ]))))],
     );

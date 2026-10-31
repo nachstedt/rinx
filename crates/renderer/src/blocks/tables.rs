@@ -93,12 +93,12 @@ mod tests {
                         rinx_ast::TableCell {
                             colspan: 1,
                             rowspan: 1,
-                            content: vec![Node::Paragraph(vec![InlineNode::Text("A".to_string())])],
+                            content: vec![Node::paragraph(vec![InlineNode::Text("A".to_string())])],
                         },
                         rinx_ast::TableCell {
                             colspan: 1,
                             rowspan: 1,
-                            content: vec![Node::Paragraph(vec![InlineNode::Text("B".to_string())])],
+                            content: vec![Node::paragraph(vec![InlineNode::Text("B".to_string())])],
                         },
                     ],
                 }],
@@ -107,19 +107,20 @@ mod tests {
                         rinx_ast::TableCell {
                             colspan: 1,
                             rowspan: 1,
-                            content: vec![Node::Paragraph(vec![InlineNode::Text(
+                            content: vec![Node::paragraph(vec![InlineNode::Text(
                                 "a1".to_string(),
                             )])],
                         },
                         rinx_ast::TableCell {
                             colspan: 1,
                             rowspan: 1,
-                            content: vec![Node::Paragraph(vec![InlineNode::Text(
+                            content: vec![Node::paragraph(vec![InlineNode::Text(
                                 "b1".to_string(),
                             )])],
                         },
                     ],
                 }],
+                block: None,
             }],
         );
         let index = ProjectIndex::default();
@@ -147,9 +148,10 @@ mod tests {
                     cells: vec![rinx_ast::TableCell {
                         colspan: 1,
                         rowspan: 1,
-                        content: vec![Node::Paragraph(vec![InlineNode::Text("only".to_string())])],
+                        content: vec![Node::paragraph(vec![InlineNode::Text("only".to_string())])],
                     }],
                 }],
+                block: None,
             }],
         );
         let index = ProjectIndex::default();
@@ -175,11 +177,12 @@ mod tests {
                     cells: vec![rinx_ast::TableCell {
                         colspan: 2,
                         rowspan: 3,
-                        content: vec![Node::Paragraph(vec![InlineNode::Text(
+                        content: vec![Node::paragraph(vec![InlineNode::Text(
                             "spanning".to_string(),
                         )])],
                     }],
                 }],
+                block: None,
             }],
         );
         let index = ProjectIndex::default();

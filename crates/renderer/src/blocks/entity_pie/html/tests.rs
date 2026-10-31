@@ -86,7 +86,7 @@ fn pie(filters: &[&str]) -> EntityPie {
 fn render(pie: &EntityPie) -> RenderOutput {
     let doc = Document::new(
         "specs/boot".to_string(),
-        vec![Node::Directive(Directive::EntityPie(Box::new(pie.clone())))],
+        vec![Node::directive(Directive::EntityPie(Box::new(pie.clone())))],
     );
     crate::render_with_assets(
         &doc,

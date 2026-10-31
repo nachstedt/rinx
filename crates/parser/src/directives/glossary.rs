@@ -241,7 +241,11 @@ mod tests {
         let (doc, map) = crate::parse_placed("test.rst", input);
 
         // Then — each term at its own line, its column past the body's indent
-        let Some(Node::Directive(Directive::Glossary { entries, .. })) = doc.nodes.get(1) else {
+        let Some(Node::Directive {
+            directive: Directive::Glossary { entries, .. },
+            ..
+        }) = doc.nodes.get(1)
+        else {
             panic!("expected a glossary, got {:?}", doc.nodes);
         };
         let spans: Vec<(&str, Option<rinx_ast::Span>)> = entries

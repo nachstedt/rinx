@@ -226,7 +226,7 @@ mod tests {
 
     /// A document at `doc_path` whose one paragraph holds `inlines`.
     fn document_with_inlines(doc_path: &str, inlines: Vec<ast::InlineNode>) -> ast::Document {
-        ast::Document::new(doc_path.to_string(), vec![ast::Node::Paragraph(inlines)])
+        ast::Document::new(doc_path.to_string(), vec![ast::Node::paragraph(inlines)])
     }
 
     /// A linked `:download:` of `target`, written on line 3.
@@ -246,7 +246,7 @@ mod tests {
     fn document_with_image(doc_path: &str, uri: &str) -> ast::Document {
         ast::Document::new(
             doc_path.to_string(),
-            vec![ast::Node::Directive(ast::Directive::Image(Box::new(
+            vec![ast::Node::directive(ast::Directive::Image(Box::new(
                 ast::ImageOptions::new(ast::AssetUri::new(uri)),
             )))],
         )

@@ -10,7 +10,7 @@ fn test_analyze_registers_genindex_entry_for_index_directive_single() {
     // Given
     let doc = Document::new(
         "guide.rst".to_string(),
-        vec![Node::Directive(Directive::Index {
+        vec![Node::directive(Directive::Index {
             entries: vec![rinx_ast::IndexEntry::Term {
                 primary: "execution".to_string(),
                 subentry: None,
@@ -36,7 +36,7 @@ fn test_analyze_registers_genindex_entry_with_subentry_and_main_flag() {
     // Given
     let doc = Document::new(
         "guide.rst".to_string(),
-        vec![Node::Directive(Directive::Index {
+        vec![Node::directive(Directive::Index {
             entries: vec![rinx_ast::IndexEntry::Term {
                 primary: "Python".to_string(),
                 subentry: Some("interpreter".to_string()),
@@ -60,7 +60,7 @@ fn test_analyze_records_see_and_seealso_index_entries_as_redirects() {
     // Given
     let doc = Document::new(
         "guide.rst".to_string(),
-        vec![Node::Directive(Directive::Index {
+        vec![Node::directive(Directive::Index {
             entries: vec![
                 rinx_ast::IndexEntry::See {
                     entry: "foo".to_string(),
@@ -105,7 +105,7 @@ fn test_analyze_registers_genindex_entry_for_index_directive_nested_in_bullet_li
         vec![Node::BulletList {
             bullet: '-',
             items: vec![rinx_ast::ListItem {
-                nodes: vec![Node::Directive(Directive::Index {
+                nodes: vec![Node::directive(Directive::Index {
                     entries: vec![rinx_ast::IndexEntry::Term {
                         primary: "execution".to_string(),
                         subentry: None,
@@ -113,6 +113,7 @@ fn test_analyze_registers_genindex_entry_for_index_directive_nested_in_bullet_li
                     }],
                     id: "index-0".to_string(),
                 })],
+                block: None,
             }],
         }],
     );
@@ -129,11 +130,11 @@ fn test_analyze_registers_genindex_entry_for_index_directive_nested_in_admonitio
     // Given
     let doc = Document::new(
         "guide.rst".to_string(),
-        vec![Node::Directive(Directive::Admonition {
+        vec![Node::directive(Directive::Admonition {
             kind: rinx_ast::AdmonitionKind::Note,
             title: None,
             collapsible: None,
-            body: vec![Node::Directive(Directive::Index {
+            body: vec![Node::directive(Directive::Index {
                 entries: vec![rinx_ast::IndexEntry::Term {
                     primary: "execution".to_string(),
                     subentry: None,
@@ -169,7 +170,7 @@ fn test_analyze_registers_a_genindex_entry_for_a_pep_role() {
     // Given
     let doc = Document::new(
         "guide.rst".to_string(),
-        vec![Node::Paragraph(vec![pep("8#naming", "index-3")])],
+        vec![Node::paragraph(vec![pep("8#naming", "index-3")])],
     );
 
     // When
@@ -193,10 +194,10 @@ fn test_analyze_finds_a_pep_role_in_a_dropdown_title() {
     // Given inline content no block-level indexing walks
     let mut dropdown = rinx_ast::Dropdown::new();
     dropdown.title = vec![pep("20", "index-0")];
-    dropdown.body = vec![Node::Paragraph(vec![pep("8", "index-1")])];
+    dropdown.body = vec![Node::paragraph(vec![pep("8", "index-1")])];
     let doc = Document::new(
         "guide.rst".to_string(),
-        vec![Node::Directive(Directive::Dropdown(Box::new(dropdown)))],
+        vec![Node::directive(Directive::Dropdown(Box::new(dropdown)))],
     );
 
     // When
@@ -216,7 +217,7 @@ fn test_analyze_files_each_registry_under_its_own_group() {
     // Given
     let doc = Document::new(
         "guide.rst".to_string(),
-        vec![Node::Paragraph(vec![
+        vec![Node::paragraph(vec![
             registry_reference(rinx_ast::Registry::Rfc, "2324#section-2.3", "index-0"),
             registry_reference(rinx_ast::Registry::Cve, "2024-3094", "index-1"),
             registry_reference(rinx_ast::Registry::Cwe, "787", "index-2"),
@@ -250,7 +251,7 @@ fn test_analyze_registers_no_genindex_entry_for_an_rfc_reference_role() {
     // Given — docutils' role makes no index entry, unlike Sphinx's `:rfc:`
     let doc = Document::new(
         "guide.rst".to_string(),
-        vec![Node::Paragraph(vec![InlineNode::DocutilsRfcReference {
+        vec![Node::paragraph(vec![InlineNode::DocutilsRfcReference {
             number: rinx_ast::DocutilsRfcNumber::parse("2822").unwrap(),
             span: None,
         }])],
@@ -268,7 +269,7 @@ fn test_analyze_registers_no_genindex_entry_for_a_pep_reference_role() {
     // Given — docutils' role makes no index entry, unlike Sphinx's `:pep:`
     let doc = Document::new(
         "guide.rst".to_string(),
-        vec![Node::Paragraph(vec![InlineNode::DocutilsPepReference {
+        vec![Node::paragraph(vec![InlineNode::DocutilsPepReference {
             number: rinx_ast::DocutilsPepNumber::parse("8").unwrap(),
             span: None,
         }])],
@@ -299,7 +300,7 @@ fn test_analyze_registers_an_index_role_entries_at_its_anchor() {
     // Given
     let doc = Document::new(
         "guide.rst".to_string(),
-        vec![Node::Paragraph(vec![index_role(
+        vec![Node::paragraph(vec![index_role(
             vec![
                 rinx_ast::IndexEntry::Term {
                     primary: "loop".to_string(),
@@ -349,10 +350,10 @@ fn test_analyze_finds_an_index_role_in_a_glossary_definition() {
     };
     let doc = Document::new(
         "guide.rst".to_string(),
-        vec![Node::Directive(Directive::Glossary {
+        vec![Node::directive(Directive::Glossary {
             entries: vec![rinx_ast::GlossaryEntry {
                 terms: vec![rinx_ast::GlossaryTerm::unplaced("term")],
-                definition: vec![Node::Paragraph(vec![index_role(vec![term], "index-0")])],
+                definition: vec![Node::paragraph(vec![index_role(vec![term], "index-0")])],
             }],
             sorted: false,
         })],
@@ -371,7 +372,7 @@ fn test_analyze_registers_nothing_for_an_index_role_whose_entry_was_refused() {
     // Given — a refused entry leaves the text and anchor, no entries
     let doc = Document::new(
         "guide.rst".to_string(),
-        vec![Node::Paragraph(vec![index_role(Vec::new(), "index-0")])],
+        vec![Node::paragraph(vec![index_role(Vec::new(), "index-0")])],
     );
 
     // When

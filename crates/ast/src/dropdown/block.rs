@@ -189,7 +189,7 @@ mod tests {
             class_container: vec!["a".to_string()],
             class_title: vec!["b".to_string()],
             class_body: vec!["c".to_string()],
-            body: vec![Node::Paragraph(vec![InlineNode::Text("hi".to_string())])],
+            body: vec![Node::paragraph(vec![InlineNode::Text("hi".to_string())])],
             span: None,
         };
 

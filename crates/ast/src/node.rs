@@ -26,8 +26,21 @@ pub enum Node {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         block: Option<BlockId>,
     },
-    Paragraph(Vec<InlineNode>),
-    Directive(Directive),
+    Paragraph {
+        content: Vec<InlineNode>,
+        /// The lines the block was written over, as the parse's source map
+        /// records them.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        block: Option<BlockId>,
+    },
+    Directive {
+        directive: Directive,
+        /// The marker's lines, where an editor's outline and a definition
+        /// lead, as the parse's source map records them
+        /// (`docs/decisions/045-definition-spans.md`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        block: Option<BlockId>,
+    },
     /// `.. _name:` — an internal target, labelling what follows — or
     /// `.. _name: destination`, which is a URI or another target's name.
     Target {
@@ -74,6 +87,10 @@ pub enum Node {
     Table {
         header_rows: Vec<TableRow>,
         body_rows: Vec<TableRow>,
+        /// The lines the block was written over, as the parse's source map
+        /// records them.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        block: Option<BlockId>,
     },
     /// A literal block introduced by a `::` paragraph ending or a standalone
     /// `::`. The option-bearing directive forms live in
@@ -86,6 +103,10 @@ pub enum Node {
         language: CodeLanguage,
         /// Verbatim content with common leading indentation stripped.
         content: String,
+        /// The lines from the `::` to the block's last, as the parse's
+        /// source map records them.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        block: Option<BlockId>,
     },
     /// A docutils *doctest block*: a text block beginning with `>>> ` and
     /// ending at a blank line, with no directive introducing it.
@@ -97,13 +118,24 @@ pub enum Node {
     /// namespace with any `.. doctest::` directives in the same document.
     /// Expressing that as a boolean on one variant would make the two
     /// confusable; separate variants make a mix-up a type error.
-    DoctestBlock(HashedContent),
+    DoctestBlock {
+        content: HashedContent,
+        /// The lines the block was written over, as the parse's source map
+        /// records them.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        block: Option<BlockId>,
+    },
     /// An RST comment (`.. text` or `..` followed by an indented body).
     /// Comments produce no output and are discarded during rendering.
     Comment,
     /// A transition (horizontal rule): 4+ repeated punctuation characters on their own
     /// line, blank-line-delimited. Renders as `<hr />`.
-    Transition,
+    Transition {
+        /// The lines the block was written over, as the parse's source map
+        /// records them.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        block: Option<BlockId>,
+    },
     /// A block quote: a text block indented relative to its surrounding
     /// context with no preceding directive/list marker — indentation is the
     /// sole markup indicator. May end with an attribution (`-- Author`),
@@ -112,6 +144,10 @@ pub enum Node {
     BlockQuote {
         content: Vec<Node>,
         attribution: Option<Vec<InlineNode>>,
+        /// The lines the block was written over, as the parse's source map
+        /// records them.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        block: Option<BlockId>,
     },
     /// A line block (`| text`): a sequence of lines rendered without
     /// paragraph reflow, for poetry and addresses. Nesting is expressed
@@ -120,7 +156,83 @@ pub enum Node {
     /// run rather than a sibling [`LineBlockItem::Line`], grouped once here
     /// at parse time (docutils' `nest_line_block_segment`) rather than on
     /// every render.
-    LineBlock(Vec<LineBlockItem>),
+    LineBlock {
+        items: Vec<LineBlockItem>,
+        /// The lines the block was written over, as the parse's source map
+        /// records them.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        block: Option<BlockId>,
+    },
+}
+
+impl Node {
+    /// A paragraph of `content`, recorded at no lines yet — the parser's
+    /// block loop records them once the paragraph's extent is known.
+    #[must_use]
+    pub fn paragraph(content: Vec<InlineNode>) -> Self {
+        Self::Paragraph {
+            content,
+            block: None,
+        }
+    }
+
+    /// A node of `directive`, recorded at no lines yet — the directive
+    /// parser records its marker's once the directive is read.
+    #[must_use]
+    pub fn directive(directive: Directive) -> Self {
+        Self::Directive {
+            directive,
+            block: None,
+        }
+    }
+
+    /// The lines this node was written over, when the parse recorded them:
+    /// its handle into the [`SourceMap`](crate::SourceMap).
+    #[must_use]
+    pub fn block(&self) -> Option<BlockId> {
+        match self {
+            Self::Heading { block, .. }
+            | Self::Paragraph { block, .. }
+            | Self::Directive { block, .. }
+            | Self::Target { block, .. }
+            | Self::Table { block, .. }
+            | Self::LiteralBlock { block, .. }
+            | Self::DoctestBlock { block, .. }
+            | Self::Transition { block }
+            | Self::BlockQuote { block, .. }
+            | Self::LineBlock { block, .. } => *block,
+            Self::AnonymousTarget { .. }
+            | Self::BulletList { .. }
+            | Self::EnumeratedList { .. }
+            | Self::DefinitionList { .. }
+            | Self::OptionList { .. }
+            | Self::Comment => None,
+        }
+    }
+
+    /// Where this node's [`Self::block`] is kept, for the parser to record
+    /// it — `None` for a node that is never placed: a list, whose items are,
+    /// and the nodes that render nothing.
+    pub fn block_mut(&mut self) -> Option<&mut Option<BlockId>> {
+        match self {
+            Self::Heading { block, .. }
+            | Self::Paragraph { block, .. }
+            | Self::Directive { block, .. }
+            | Self::Target { block, .. }
+            | Self::Table { block, .. }
+            | Self::LiteralBlock { block, .. }
+            | Self::DoctestBlock { block, .. }
+            | Self::Transition { block }
+            | Self::BlockQuote { block, .. }
+            | Self::LineBlock { block, .. } => Some(block),
+            Self::AnonymousTarget { .. }
+            | Self::BulletList { .. }
+            | Self::EnumeratedList { .. }
+            | Self::DefinitionList { .. }
+            | Self::OptionList { .. }
+            | Self::Comment => None,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -136,7 +248,7 @@ mod tests {
                 cells: vec![TableCell {
                     colspan: 1,
                     rowspan: 1,
-                    content: vec![Node::Paragraph(vec![InlineNode::Text(
+                    content: vec![Node::paragraph(vec![InlineNode::Text(
                         "Header".to_string(),
                     )])],
                 }],
@@ -145,9 +257,10 @@ mod tests {
                 cells: vec![TableCell {
                     colspan: 2,
                     rowspan: 3,
-                    content: vec![Node::Paragraph(vec![InlineNode::Text("Body".to_string())])],
+                    content: vec![Node::paragraph(vec![InlineNode::Text("Body".to_string())])],
                 }],
             }],
+            block: None,
         };
 
         // When
@@ -162,10 +275,11 @@ mod tests {
     fn test_block_quote_node_serialization_roundtrip() {
         // Given
         let node = Node::BlockQuote {
-            content: vec![Node::Paragraph(vec![InlineNode::Text(
+            content: vec![Node::paragraph(vec![InlineNode::Text(
                 "Quoted.".to_string(),
             )])],
             attribution: Some(vec![InlineNode::Text("Sherlock Holmes".to_string())]),
+            block: None,
         };
 
         // When
@@ -179,13 +293,16 @@ mod tests {
     #[test]
     fn test_line_block_node_serialization_roundtrip() {
         // Given
-        let node = Node::LineBlock(vec![
-            LineBlockItem::Line(vec![InlineNode::Text("First line.".to_string())]),
-            LineBlockItem::Nested(vec![LineBlockItem::Line(vec![InlineNode::Text(
-                "Nested line.".to_string(),
-            )])]),
-            LineBlockItem::Line(vec![]),
-        ]);
+        let node = Node::LineBlock {
+            items: vec![
+                LineBlockItem::Line(vec![InlineNode::Text("First line.".to_string())]),
+                LineBlockItem::Nested(vec![LineBlockItem::Line(vec![InlineNode::Text(
+                    "Nested line.".to_string(),
+                )])]),
+                LineBlockItem::Line(vec![]),
+            ],
+            block: None,
+        };
 
         // When
         let json = serde_json::to_string(&node).expect("Failed to serialize");
@@ -193,5 +310,71 @@ mod tests {
 
         // Then
         assert_eq!(node, deserialized);
+    }
+
+    #[test]
+    fn test_paragraph_and_directive_build_unplaced_nodes() {
+        // Given / When
+        let paragraph = Node::paragraph(vec![InlineNode::Text("A.".to_string())]);
+        let directive = Node::directive(Directive::CNamespace { namespace: None });
+
+        // Then
+        assert_eq!(
+            paragraph,
+            Node::Paragraph {
+                content: vec![InlineNode::Text("A.".to_string())],
+                block: None,
+            }
+        );
+        assert_eq!(
+            directive,
+            Node::Directive {
+                directive: Directive::CNamespace { namespace: None },
+                block: None,
+            }
+        );
+    }
+
+    #[test]
+    fn test_block_reads_back_what_block_mut_records() {
+        // Given
+        let mut map = crate::SourceMap::default();
+        let id = map.record_block_lines(crate::Span::new(
+            crate::Position::new(1, 1),
+            crate::Position::new(1, 5),
+        ));
+        let mut node = Node::paragraph(Vec::new());
+
+        // When
+        *node.block_mut().expect("a paragraph is placed") = Some(id);
+
+        // Then
+        assert_eq!(node.block(), Some(id));
+    }
+
+    #[test]
+    fn test_a_list_and_a_comment_take_no_lines() {
+        // Given
+        let mut list = Node::BulletList {
+            bullet: '-',
+            items: vec![],
+        };
+
+        // When / Then — a list's items are placed, not the list
+        assert_eq!(list.block_mut(), None);
+        assert_eq!(list.block(), None);
+        assert_eq!(Node::Comment.block(), None);
+    }
+
+    #[test]
+    fn test_an_unplaced_block_is_left_out_of_the_ast_file() {
+        // Given
+        let node = Node::Transition { block: None };
+
+        // When
+        let json = serde_json::to_string(&node).expect("serializes");
+
+        // Then
+        assert_eq!(json, r#"{"Transition":{}}"#);
     }
 }

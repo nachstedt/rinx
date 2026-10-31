@@ -245,7 +245,7 @@ mod tests {
         let docs = vec![
             Document::new(
                 "start.rst".to_string(),
-                vec![Node::Directive(Directive::Toctree(toctree_of(&["child"])))],
+                vec![Node::directive(Directive::Toctree(toctree_of(&["child"])))],
             ),
             Document::new("child.rst".to_string(), vec![]),
         ];
@@ -269,7 +269,7 @@ mod tests {
         let docs = vec![
             Document::new(
                 "start.rst".to_string(),
-                vec![Node::Directive(Directive::Toctree(toctree))],
+                vec![Node::directive(Directive::Toctree(toctree))],
             ),
             Document::new("child.rst".to_string(), vec![]),
         ];
@@ -287,7 +287,7 @@ mod tests {
         // Given
         let docs = vec![Document::new(
             "index.rst".to_string(),
-            vec![Node::Directive(Directive::Toctree(toctree_of(&["child"])))],
+            vec![Node::directive(Directive::Toctree(toctree_of(&["child"])))],
         )];
 
         // When
@@ -306,7 +306,7 @@ mod tests {
         let docs = vec![
             Document::new(
                 "index.rst".to_string(),
-                vec![Node::Directive(Directive::Toctree(toctree))],
+                vec![Node::directive(Directive::Toctree(toctree))],
             ),
             Document::new("child.rst".to_string(), vec![]),
         ];
@@ -351,11 +351,11 @@ mod tests {
         let docs = vec![
             Document::new(
                 "index.rst".to_string(),
-                vec![Node::Directive(Directive::Toctree(toctree_of(&["guide"])))],
+                vec![Node::directive(Directive::Toctree(toctree_of(&["guide"])))],
             ),
             Document::new(
                 "guide.rst".to_string(),
-                vec![Node::Directive(Directive::Toctree(toctree_of(&["setup"])))],
+                vec![Node::directive(Directive::Toctree(toctree_of(&["setup"])))],
             ),
             Document::new("setup.rst".to_string(), vec![]),
         ];
@@ -381,7 +381,7 @@ mod tests {
         let docs = vec![
             Document::new(
                 "index.rst".to_string(),
-                vec![Node::Directive(Directive::Toctree(toctree))],
+                vec![Node::directive(Directive::Toctree(toctree))],
             ),
             Document::new("guide.rst".to_string(), vec![]),
         ];
@@ -402,7 +402,7 @@ mod tests {
         let docs = vec![
             Document::new(
                 "index.rst".to_string(),
-                vec![Node::Directive(Directive::Toctree(toctree_of(&["guide"])))],
+                vec![Node::directive(Directive::Toctree(toctree_of(&["guide"])))],
             ),
             Document::new("guide.rst".to_string(), vec![]),
             Document::new("orphan.rst".to_string(), vec![]),
@@ -450,14 +450,14 @@ mod tests {
                     destination: None,
                     block: None,
                 },
-                Node::Directive(Directive::Glossary {
+                Node::directive(Directive::Glossary {
                     entries: vec![GlossaryEntry {
                         terms: vec![GlossaryTerm::unplaced(name)],
                         definition: Vec::new(),
                     }],
                     sorted: false,
                 }),
-                Node::Directive(Directive::DomainObject {
+                Node::directive(Directive::DomainObject {
                     object: DomainObjectBody::PyClass {
                         flags: DescriptionFlags::default(),
                         module: None,
@@ -465,7 +465,6 @@ mod tests {
                         is_final: false,
                         body: Vec::new(),
                     },
-                    block: None,
                 }),
             ],
         )
