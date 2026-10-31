@@ -7,11 +7,11 @@ use crate::dropdown::chevron::Chevron;
 use crate::dropdown::color::SemanticColor;
 use crate::dropdown::octicon::OcticonName;
 use crate::inline_node::InlineNode;
+use crate::named::Named;
 use crate::node::Node;
 use crate::spacing::Spacing;
 use crate::span::Span;
 use crate::target_name::TargetName;
-use crate::written::Written;
 
 /// A collapsible container — sphinx-design's `.. dropdown::`.
 ///
@@ -45,7 +45,7 @@ pub struct Dropdown {
     /// `:name:` — reuses [`TargetName`] like the image, table and math
     /// directives do, so it registers in `ProjectIndex::targets` with no
     /// conversion.
-    pub name: Option<Written<TargetName>>,
+    pub name: Option<Named<TargetName>>,
     /// `:class-container:` — extra classes for the `<details>`.
     pub class_container: Vec<String>,
     /// `:class-title:` — extra classes for the `<summary>`.

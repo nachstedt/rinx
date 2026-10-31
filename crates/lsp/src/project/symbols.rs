@@ -176,7 +176,7 @@ mod tests {
     fn symbols_of(text: &str) -> Vec<(String, SymbolKind)> {
         let document =
             rinx_parser::parse("guide.rst", text, &rinx_parser::ParseCtx::default()).document;
-        DocumentSymbols::of(&document, &DocumentAnalysis::of(&document))
+        DocumentSymbols::of(&document, &DocumentAnalysis::of(&document, None))
             .iter()
             .map(|entry| (entry.name.clone(), entry.kind))
             .collect()
@@ -232,7 +232,7 @@ Guide
         .document;
 
         // When
-        let symbols = DocumentSymbols::of(&document, &DocumentAnalysis::of(&document));
+        let symbols = DocumentSymbols::of(&document, &DocumentAnalysis::of(&document, None));
 
         // Then
         let entry = symbols.iter().next().expect("the label");
@@ -257,7 +257,7 @@ Guide
         );
 
         // When
-        let symbols = DocumentSymbols::of(&document, &DocumentAnalysis::of(&document));
+        let symbols = DocumentSymbols::of(&document, &DocumentAnalysis::of(&document, None));
 
         // Then
         let listed: Vec<(&str, SymbolKind)> = symbols
@@ -274,13 +274,13 @@ Guide
         let prolog = document.intern_source_file(RST_PROLOG);
         let span = Span::new(Position::new(1, 1), Position::new(1, 12)).with_file(Some(prolog));
         document.nodes = vec![Node::Target {
-            name: rinx_ast::Written::new(TargetName::new("top"), Some(span)),
+            name: TargetName::new("top").into(),
             destination: None,
             span: Some(span),
         }];
 
         // When
-        let symbols = DocumentSymbols::of(&document, &DocumentAnalysis::of(&document));
+        let symbols = DocumentSymbols::of(&document, &DocumentAnalysis::of(&document, None));
 
         // Then
         assert_eq!(symbols.iter().count(), 0, "{symbols:?}");

@@ -125,3 +125,24 @@ it as `name`.
 The alternative, the server finding the name again on the site's line, would
 be a second reader of every name's grammar: a label after `.. _`, an option
 value after blanks, an id the `:id:` line failed to give.
+
+## Amendment: names by handle
+
+`Written<T>` kept a span in a serialized type and skipped it on the way out,
+so a name read back from a `.ast` was not the name the editor parsed, and
+equality had to ignore the span to hide it. It is replaced by
+`rinx_ast::Named<T>`: the value and the `Option<NameId>` under which the
+parser recorded the name's characters in the `SourceMap` beside the document
+(ADR-047's amendment). Both are serialized and equality is derived.
+
+- **The `.ast` still does not move with a line.** An id is a counter of the
+  names one parse met, so a line moving changes no id — the test pushing every
+  `:name:` and `:label:` right still compares the written `.ast` — and only a
+  name added before another shifts it, which changes the document anyway.
+- **Only the parse knows where a name stands.** `SourceMap::record_name` is
+  the one way an id is made, and `DocumentAnalysis::of` takes an
+  `Option<&SourceMap>`: the language server passes its parse's, the build has
+  none to pass, so a site's `name` cannot be filled in the build — which reads
+  no site.
+- **What a name has no characters for has no id**, as before: a composed,
+  generated or imported entity id is `Named::unplaced`.

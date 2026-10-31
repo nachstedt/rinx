@@ -17,7 +17,9 @@
 
 use std::collections::BTreeMap;
 
-use rinx_ast::{BlockKind, Domain, EntityId, FileId, Position, Span, TokenKind, TokenModifiers};
+use rinx_ast::{
+    BlockKind, Domain, EntityId, FileId, NameId, Position, Span, TokenKind, TokenModifiers,
+};
 use rinx_entity::{EntitySchema, EntityType};
 
 use crate::default_role::DefaultRole;
@@ -388,6 +390,13 @@ impl<'a> ParseCtx<'a> {
         if let (Some(syntax), Some(span)) = (self.syntax, span) {
             syntax.token(kind, modifiers, span);
         }
+    }
+
+    /// Records a name written as exactly the characters of `span`, yielding
+    /// the id its [`rinx_ast::Named`] value carries — `None` when this parse
+    /// records no source map or the name came from no source line.
+    pub(crate) fn record_name(&self, span: Option<Span>) -> Option<NameId> {
+        Some(self.syntax?.name(span?))
     }
 
     /// The roles the document has defined so far, or `None` when this parse

@@ -258,7 +258,7 @@ pub fn render_preview_alone(
     document: &Document,
     read: &dyn Fn(&Path) -> io::Result<String>,
 ) -> Result<String, PreviewError> {
-    let analyses = BTreeMap::from([(document.path.clone(), DocumentAnalysis::of(document))]);
+    let analyses = BTreeMap::from([(document.path.clone(), DocumentAnalysis::of(document, None))]);
     let schema = EntitySchema::empty();
     let index = build_project_index_from_analyses(
         &analyses,
@@ -310,7 +310,7 @@ mod tests {
             .map(|(path, text)| {
                 let document =
                     rinx_parser::parse(path, text, &rinx_parser::ParseCtx::default()).document;
-                ((*path).to_string(), DocumentAnalysis::of(&document))
+                ((*path).to_string(), DocumentAnalysis::of(&document, None))
             })
             .collect();
         build_project_index_from_analyses(

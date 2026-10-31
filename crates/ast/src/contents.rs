@@ -3,7 +3,7 @@ use std::num::NonZeroUsize;
 use serde::{Deserialize, Serialize};
 
 use crate::TargetName;
-use crate::written::Written;
+use crate::named::Named;
 
 /// How a heading covered by a `.. contents::` links back to it, from
 /// `:backlinks:`.
@@ -72,7 +72,7 @@ pub struct ContentsOptions {
     pub classes: Vec<String>,
     /// `:name:` — a label making this table of contents a `:ref:` target.
     #[serde(default)]
-    pub name: Option<Written<TargetName>>,
+    pub name: Option<Named<TargetName>>,
 }
 
 /// A `.. contents::` directive: a local table of contents built from the

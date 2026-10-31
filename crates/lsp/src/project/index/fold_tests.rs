@@ -181,10 +181,11 @@ fn test_includers_of_lists_the_documents_that_read_a_file() {
 
 /// The analysis of a document named `doc_path` whose text is `text`.
 fn written(doc_path: &str, text: &str) -> IndexedDocument {
-    let document = rinx_parser::parse(doc_path, text, &rinx_parser::ParseCtx::default()).document;
+    let parsed = rinx_parser::parse(doc_path, text, &rinx_parser::ParseCtx::default());
     IndexedDocument::of(
         Path::new("/work/docs").join(doc_path),
-        &document,
+        &parsed.document,
+        &parsed.source_map,
         BTreeSet::new(),
     )
 }

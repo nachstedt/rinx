@@ -1,6 +1,6 @@
 //! The table markup, over the same shell every other table directive uses.
 
-use rinx_ast::Written;
+use rinx_ast::Named;
 use std::fmt::Write as _;
 
 use rinx_ast::EntityTable;
@@ -33,7 +33,7 @@ pub(in crate::blocks) fn render_entity_table(
             .push(EmptyListingError::table(table.source.as_str(), table.span));
     }
 
-    render_table_name_anchor(html, table.name.as_ref().map(Written::value));
+    render_table_name_anchor(html, table.name.as_ref().map(Named::value));
 
     let mut classes = vec![TABLE_CLASS.to_string()];
     classes.extend(table.classes.iter().cloned());

@@ -186,13 +186,12 @@ fn read_document(path: &str, input: &str, ctx: &ParseCtx<'_>, epilog: Epilog) ->
     doc.suppressions = suppressions;
     doc.metadata = metadata;
     doc.source_files = source_files;
+    let mut source_map = syntax.into_source_map();
+    source_map.include_sites = include_sites;
     DocumentParse {
         parsed: Parsed {
             document: doc,
-            source_map: rinx_ast::SourceMap {
-                syntax: syntax.into_table(),
-                include_sites,
-            },
+            source_map,
         },
         roles: document_roles.in_force(),
     }

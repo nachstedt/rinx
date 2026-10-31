@@ -6,9 +6,9 @@ use serde::{Deserialize, Serialize};
 use crate::entity_flow::direction::FlowDirection;
 use crate::entity_flow::source::EntityFlowSource;
 use crate::image::{ImageAlign, LengthOrPercentage, scaled_width};
+use crate::named::Named;
 use crate::span::Span;
 use crate::target_name::TargetName;
-use crate::written::Written;
 
 /// A picture of the entities matching a filter and the relations between them
 /// — `.. entity-flow::`, and its sphinx-needs spelling `.. needflow::`.
@@ -78,7 +78,7 @@ pub struct EntityFlow {
     /// `:name:` — reuses [`TargetName`] like every other directive that takes
     /// one, so it registers in `ProjectIndex::targets` with no conversion.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<Written<TargetName>>,
+    pub name: Option<Named<TargetName>>,
     /// Where the directive was written, so the renderer — which is where the
     /// picture is actually generated — has a position to report against.
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -2,7 +2,7 @@
 //! lists, and the directive dispatcher — everything [`render_nodes`] reaches
 //! while walking a document's node tree.
 
-use rinx_ast::Written;
+use rinx_ast::Named;
 use rinx_ast::{
     Directive, Enumerator, InlineNode, LinkDestination, ListItem, Node, Toctree, ToctreeFlag,
 };
@@ -464,7 +464,7 @@ fn render_wrapped_table_directive(
             width: width.as_deref(),
             align: *align,
             classes,
-            name: name.as_ref().map(Written::value),
+            name: name.as_ref().map(Named::value),
             number: ctx.numbering.caption_number(directive),
             header_rows,
             body_rows,
@@ -505,7 +505,7 @@ fn render_data_table_directive(html: &mut String, directive: &Directive, ctx: &m
             width: width.as_deref(),
             align: *align,
             classes,
-            name: name.as_ref().map(Written::value),
+            name: name.as_ref().map(Named::value),
             number: ctx.numbering.caption_number(directive),
             rows,
         },
@@ -587,7 +587,7 @@ fn render_directive(
         } => render_math(
             html,
             parts,
-            label.as_ref().map(Written::value),
+            label.as_ref().map(Named::value),
             *nowrap,
             classes,
             *span,

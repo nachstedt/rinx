@@ -21,8 +21,8 @@ use crate::directives::invocation::{DirectiveInvocation, ParseState, single, unk
 use crate::directives::option_value::{Classes, NonEmptyText, Percentage};
 use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
-    Diagnostic, DiagnosticCode, Directive, ImageAlign, LengthOrPercentage, TargetName, Uml,
-    UmlSource, Written,
+    Diagnostic, DiagnosticCode, Directive, ImageAlign, LengthOrPercentage, Named, TargetName, Uml,
+    UmlSource,
 };
 
 use crate::context::ParseCtx;
@@ -68,7 +68,7 @@ directive_options! {
         /// `:class:`.
         Class(Classes) => (["class"], "Classes for the diagram."),
         /// `:name:`.
-        Name(Written<TargetName>) => (["name"], "A label to reference the diagram by."),
+        Name(Named<TargetName>) => (["name"], "A label to reference the diagram by."),
         /// `:config:`.
         Config(NonEmptyText) => (["config"], "PlantUML configuration written before the diagram."),
         /// `:debug:`.
@@ -267,7 +267,7 @@ fn report_unusable_scale(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rinx_ast::{Node, TargetName};
+    use rinx_ast::{Named, Node, TargetName};
 
     /// Parses a whole document and returns its single diagram with the
     /// document's diagnostics — the dispatcher is what positions the parse
@@ -359,7 +359,10 @@ mod tests {
         );
         assert_eq!(uml.scale, Some(50));
         assert_eq!(uml.classes, ["wide", "framed"]);
-        assert_eq!(uml.name, Some(TargetName::new("my-diagram").into()));
+        assert_eq!(
+            uml.name.as_ref().map(Named::value),
+            Some(&TargetName::new("my-diagram"))
+        );
         assert_eq!(codes(&diagnostics), []);
     }
 

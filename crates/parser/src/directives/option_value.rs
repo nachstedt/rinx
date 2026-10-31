@@ -17,8 +17,8 @@
 use std::num::{NonZeroU32, NonZeroUsize};
 
 use rinx_ast::{
-    AttributeValue, Diagnostic, DiagnosticCode, ImageAlign, LengthOrPercentage, Spacing,
-    SpacingKind, Span, TableAlign, TargetName, Written,
+    AttributeValue, Diagnostic, DiagnosticCode, ImageAlign, LengthOrPercentage, Named, Spacing,
+    SpacingKind, Span, TableAlign, TargetName,
 };
 use rinx_entity::{AttributeType, parse_attribute_value};
 
@@ -160,12 +160,16 @@ impl OptionValueType for DepthLimit {
 
 /// A label to reference the directive by, which must not be empty, with the
 /// span of its characters.
-impl OptionValueType for Written<TargetName> {
+impl OptionValueType for Named<TargetName> {
     const VALUE: OptionValue<'static> = OptionValue::Text;
 
     fn read(line: &OptionLine, ctx: &ParseCtx<'_>) -> Result<Self, String> {
-        NonEmptyText::read(line, ctx)
-            .map(|text| Written::new(TargetName::new(&text.0), line.value_span(ctx)))
+        NonEmptyText::read(line, ctx).map(|text| {
+            Named::new(
+                TargetName::new(&text.0),
+                ctx.record_name(line.value_span(ctx)),
+            )
+        })
     }
 }
 
@@ -466,10 +470,10 @@ mod tests {
         assert_eq!(read::<NonEmptyText>("x"), Ok(NonEmptyText("x".to_string())));
         assert!(read::<NonEmptyText>("").is_err());
         assert_eq!(
-            read::<Written<TargetName>>("label").map(Written::into_value),
+            read::<Named<TargetName>>("label").map(Named::into_value),
             Ok(TargetName::new("label"))
         );
-        assert!(read::<Written<TargetName>>("").is_err());
+        assert!(read::<Named<TargetName>>("").is_err());
     }
 
     #[test]

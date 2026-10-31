@@ -35,7 +35,7 @@ use std::path::{Path, PathBuf};
 
 use rayon::prelude::*;
 use rinx_analyzer::{DocumentAnalysis, build_project_index_from_analyses};
-use rinx_ast::{Diagnostic, Document, Position};
+use rinx_ast::{Diagnostic, Document, Position, SourceMap};
 use rinx_index::{DefinitionKey, ExternalInventory, NameRange, ProjectIndex};
 use rinx_renderer::config::SiteConfig;
 
@@ -68,16 +68,21 @@ pub struct IndexedDocument {
 
 impl IndexedDocument {
     /// What the project records for `document`, the file at `path`, whose
-    /// parse read `reads`.
+    /// parse left `source_map` beside it and read `reads`.
     #[must_use]
-    pub fn of(path: PathBuf, document: &Document, reads: BTreeSet<PathBuf>) -> Self {
-        let analysis = DocumentAnalysis::of(document);
+    pub fn of(
+        path: PathBuf,
+        document: &Document,
+        source_map: &SourceMap,
+        reads: BTreeSet<PathBuf>,
+    ) -> Self {
+        let analysis = DocumentAnalysis::of(document, Some(source_map));
         Self {
             path,
             symbols: DocumentSymbols::of(document, &analysis),
             analysis,
             reads,
-            uses: DocumentUses::of(document),
+            uses: DocumentUses::of(document, source_map),
         }
     }
 }

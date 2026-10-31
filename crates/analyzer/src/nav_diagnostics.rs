@@ -164,7 +164,7 @@ mod tests {
             super::super::build_project_index(docs, "index", &rinx_entity::EntitySchema::empty());
         let analyses = docs
             .iter()
-            .map(|doc| (doc.path.clone(), DocumentAnalysis::of(doc)))
+            .map(|doc| (doc.path.clone(), DocumentAnalysis::of(doc, None)))
             .collect();
         collect_nav_diagnostics(&analyses, &index)
     }

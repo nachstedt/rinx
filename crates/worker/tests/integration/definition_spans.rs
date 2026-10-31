@@ -93,8 +93,8 @@ fn test_moving_lines_leaves_the_written_index_unchanged() {
 #[test]
 fn test_moving_lines_moves_every_definition_site() {
     // Given
-    let original = DocumentAnalysis::of(&parsed(GUIDE));
-    let moved = DocumentAnalysis::of(&parsed(&shifted()));
+    let original = DocumentAnalysis::of(&parsed(GUIDE), None);
+    let moved = DocumentAnalysis::of(&parsed(&shifted()), None);
 
     // When
     let lines = |analysis: &DocumentAnalysis| {
@@ -130,16 +130,15 @@ fn test_moving_a_name_along_its_line_leaves_the_written_ast_unchanged() {
         .expect("serializes")
     };
 
-    // Then — a name's span is the editor's alone
+    // Then — a name's characters are the source map's alone
     assert_eq!(written(GUIDE), written(&pushed));
 }
 
 #[test]
 fn test_each_named_definition_s_site_holds_exactly_its_name() {
     // Given — the parse the editor analyses, never read back from a `.ast`
-    let analysis = DocumentAnalysis::of(
-        &rinx_parser::parse("guide.rst", GUIDE, &rinx_parser::ParseCtx::default()).document,
-    );
+    let parsed = rinx_parser::parse("guide.rst", GUIDE, &rinx_parser::ParseCtx::default());
+    let analysis = DocumentAnalysis::of(&parsed.document, Some(&parsed.source_map));
     let lines: Vec<&str> = GUIDE.lines().collect();
 
     // When — the text each site's name range covers

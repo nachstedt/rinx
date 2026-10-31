@@ -41,9 +41,14 @@ fn schema() -> EntitySchema {
 
 /// Parses `rst` against the test schema, returning the whole document.
 fn parse(rst: &str) -> rinx_ast::Document {
+    parse_with_map(rst).document
+}
+
+/// Parses `rst` as [`parse`] does, keeping the source map beside it.
+fn parse_with_map(rst: &str) -> crate::Parsed {
     let schema = schema();
     let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
-    crate::parse("specs/boot", rst, &ctx).document
+    crate::parse("specs/boot", rst, &ctx)
 }
 
 /// The directive's own node, plus the document's diagnostics.
@@ -98,14 +103,24 @@ fn test_a_bare_id_target_records_where_it_was_written() {
     let input = ".. entity-update::  REQ_001\n   :status: closed\n";
 
     // When
-    let (directive, _) = parse_update(input);
+    let parsed = parse_with_map(input);
 
     // Then
-    let span = update_of(&directive)
+    let directive = parsed
+        .document
+        .nodes
+        .iter()
+        .find_map(|node| match node {
+            Node::Directive(directive @ Directive::EntityUpdate(_)) => Some(directive),
+            _ => None,
+        })
+        .expect("an entity-update");
+    let span = update_of(directive)
         .target
         .candidate_id
         .as_ref()
-        .and_then(rinx_ast::Written::span);
+        .and_then(rinx_ast::Named::id)
+        .and_then(|id| parsed.source_map.name_span(id));
     assert_eq!(
         span,
         Some(rinx_ast::Span::new(

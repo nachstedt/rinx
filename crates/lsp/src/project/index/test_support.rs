@@ -9,15 +9,15 @@ pub(super) fn folder() -> Project {
 
 /// The analysis of a document named `doc_path` defining the label `label`.
 pub(super) fn labelled(doc_path: &str, label: &str) -> IndexedDocument {
-    let document = rinx_parser::parse(
+    let parsed = rinx_parser::parse(
         doc_path,
         &format!(".. _{label}:\n\nText.\n"),
         &rinx_parser::ParseCtx::default(),
-    )
-    .document;
+    );
     IndexedDocument::of(
         Path::new("/work/docs").join(doc_path),
-        &document,
+        &parsed.document,
+        &parsed.source_map,
         BTreeSet::new(),
     )
 }

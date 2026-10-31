@@ -22,8 +22,8 @@ use crate::directives::invocation::{DirectiveInvocation, ParseState};
 use crate::directives::option_value::Classes;
 use crate::directives::spec::{Arguments, DirectiveSpec};
 use rinx_ast::{
-    CodeBlock, CodeBlockSource, CodeLanguage, DiagnosticCode, Directive, IncludeSite, Node, Span,
-    TargetName, Written,
+    CodeBlock, CodeBlockSource, CodeLanguage, DiagnosticCode, Directive, IncludeSite, Named, Node,
+    Span, TargetName,
 };
 
 use crate::blocks::parse_blocks;
@@ -58,7 +58,7 @@ struct IncludeOptions {
     code: Option<String>,
     number_lines: bool,
     classes: Vec<String>,
-    name: Option<Written<TargetName>>,
+    name: Option<Named<TargetName>>,
     selection: Selection,
 }
 
@@ -272,7 +272,7 @@ directive_options! {
         /// `:class:`.
         Class(Classes) => (["class"], "Classes for a literal or code block."),
         /// `:name:`.
-        Name(Written<TargetName>) => (["name"], "A label to reference a literal or code block by."),
+        Name(Named<TargetName>) => (["name"], "A label to reference a literal or code block by."),
         /// `:start-after:`.
         StartAfter(String) => (["start-after"], "Includes the file from below the first line holding this text."),
         /// `:end-before:`.

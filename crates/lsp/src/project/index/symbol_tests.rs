@@ -87,6 +87,7 @@ fn test_symbols_place_an_included_definition_in_its_fragment() {
         IndexedDocument::of(
             PathBuf::from("/work/docs/guide.rst"),
             &document,
+            &rinx_ast::SourceMap::default(),
             BTreeSet::new(),
         ),
     );

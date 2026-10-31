@@ -7,10 +7,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::entity::EntityId;
 use crate::image::{ImageAlign, LengthOrPercentage, scaled_width};
+use crate::named::Named;
 use crate::span::Span;
 use crate::target_name::TargetName;
 use crate::uml::source::UmlSource;
-use crate::written::Written;
 
 /// A `PlantUML` diagram — `.. plantuml::`, `.. entity-diagram::`/`.. needuml::`
 /// and `.. entity-arch::`/`.. needarch::` alike.
@@ -81,7 +81,7 @@ pub struct Uml {
     /// `:name:` — reuses [`TargetName`] like the image and table directives
     /// do, so it registers in `ProjectIndex::targets` with no conversion.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<Written<TargetName>>,
+    pub name: Option<Named<TargetName>>,
     /// The entity this diagram was written inside, when it was.
     ///
     /// Recorded while parsing, where the enclosing entity is already in hand,

@@ -75,6 +75,7 @@ pub fn scan_projects(
                             IndexedDocument::of(
                                 path.to_path_buf(),
                                 &parsed.document,
+                                &parsed.source_map,
                                 parsed.reads.paths,
                             ),
                         )

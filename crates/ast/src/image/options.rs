@@ -7,9 +7,9 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::named::Named;
 use crate::span::Span;
 use crate::target_name::TargetName;
-use crate::written::Written;
 
 use super::align::ImageAlign;
 use super::length::{Length, LengthOrPercentage, scaled_width};
@@ -91,7 +91,7 @@ pub struct ImageOptions {
     pub classes: Vec<String>,
     /// `:name:` — reuses [`TargetName`] like the table and math directives do,
     /// so it registers in `ProjectIndex::targets` with no conversion.
-    pub name: Option<Written<TargetName>>,
+    pub name: Option<Named<TargetName>>,
     /// `:loading:` — how the bytes reach the page.
     pub loading: ImageLoading,
     /// Where the directive was written.

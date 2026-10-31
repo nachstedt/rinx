@@ -1,4 +1,5 @@
-//! Collects a document's [`SyntaxTable`] while it is parsed.
+//! Collects a document's [`SourceMap`] while it is parsed: its
+//! [`SyntaxTable`], and the characters of each name it was written with.
 //!
 //! Reached from all three parsing trees — `blocks/` records comments, literal
 //! blocks, tables and headings, `directives/` each directive's block, name
@@ -9,42 +10,66 @@
 
 use std::cell::RefCell;
 
-use rinx_ast::{BlockKind, Span, SyntaxBlock, SyntaxTable, SyntaxToken, TokenKind, TokenModifiers};
+use rinx_ast::{
+    BlockKind, NameId, SourceMap, Span, SyntaxBlock, SyntaxToken, TokenKind, TokenModifiers,
+};
 
-/// One document's syntax table, as it fills.
+/// One document's source map, as it fills.
 #[derive(Debug, Default)]
 pub(crate) struct SyntaxRecorder {
-    table: RefCell<SyntaxTable>,
+    map: RefCell<SourceMap>,
 }
 
 impl SyntaxRecorder {
     /// Records a block of `kind` written over `lines`.
     pub(crate) fn block(&self, kind: BlockKind, lines: Span) {
-        self.table
+        self.map
             .borrow_mut()
+            .syntax
             .blocks
             .push(SyntaxBlock { kind, lines });
     }
 
     /// Records a token of `kind`, with `modifiers`, written at `span`.
     pub(crate) fn token(&self, kind: TokenKind, modifiers: TokenModifiers, span: Span) {
-        self.table.borrow_mut().tokens.push(SyntaxToken {
+        self.map.borrow_mut().syntax.tokens.push(SyntaxToken {
             kind,
             modifiers,
             span,
         });
     }
 
+    /// Records a name written as exactly the characters of `span`, yielding
+    /// the id its value is to carry.
+    pub(crate) fn name(&self, span: Span) -> NameId {
+        self.map.borrow_mut().record_name(span)
+    }
+
     /// What was recorded.
-    pub(crate) fn into_table(self) -> SyntaxTable {
-        self.table.into_inner()
+    pub(crate) fn into_source_map(self) -> SourceMap {
+        self.map.into_inner()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rinx_ast::{Position, TokenModifier};
+    use rinx_ast::{Position, SyntaxTable, TokenModifier};
+
+    #[test]
+    fn test_recorder_hands_each_name_the_id_its_span_is_found_by() {
+        // Given
+        let recorder = SyntaxRecorder::default();
+
+        // When
+        let first = recorder.name(span(2));
+        let second = recorder.name(span(7));
+
+        // Then
+        let map = recorder.into_source_map();
+        assert_eq!(map.name_span(first), Some(span(2)));
+        assert_eq!(map.name_span(second), Some(span(7)));
+    }
 
     fn span(line: u32) -> Span {
         Span::new(Position::new(line, 1), Position::new(line, 5))
@@ -63,7 +88,7 @@ mod tests {
         recorder.token(TokenKind::Reference, declared, span(1));
 
         // Then
-        let table = recorder.into_table();
+        let table = recorder.into_source_map().syntax;
         assert_eq!(
             table.blocks,
             vec![
@@ -202,7 +227,7 @@ mod tests {
     #[test]
     fn test_a_new_recorder_holds_nothing() {
         // Given / When
-        let table = SyntaxRecorder::default().into_table();
+        let table = SyntaxRecorder::default().into_source_map().syntax;
 
         // Then
         assert_eq!(table, SyntaxTable::new());

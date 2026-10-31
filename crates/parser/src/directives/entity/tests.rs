@@ -90,9 +90,21 @@ fn schema() -> EntitySchema {
 
 /// Parses `rst` against the test schema, returning the whole document.
 fn parse(rst: &str) -> rinx_ast::Document {
+    parse_with_map(rst).document
+}
+
+/// Parses `rst` as [`parse`] does, keeping the source map beside it.
+fn parse_with_map(rst: &str) -> crate::Parsed {
     let schema = schema();
     let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
-    crate::parse("specs/boot", rst, &ctx).document
+    crate::parse("specs/boot", rst, &ctx)
+}
+
+/// The first entity in `rst`, and where its id was written.
+fn entity_id_span(rst: &str) -> Option<rinx_ast::Span> {
+    let parsed = parse_with_map(rst);
+    let entity = first_entity(&parsed.document.nodes).expect("an entity");
+    parsed.source_map.name_span(entity.id.id()?)
 }
 
 /// The first entity in `rst`.
@@ -226,11 +238,11 @@ fn test_a_written_id_records_where_its_value_stands() {
     let rst = ".. req:: Boot\n   :id:   REQ_001\n";
 
     // When
-    let entity = parse_entity_of(rst);
+    let span = entity_id_span(rst);
 
     // Then — the value alone, past the blanks after `:id:`
     assert_eq!(
-        entity.id.span(),
+        span,
         Some(rinx_ast::Span::new(
             rinx_ast::Position::new(2, 11),
             rinx_ast::Position::new(2, 18)
@@ -241,12 +253,12 @@ fn test_a_written_id_records_where_its_value_stands() {
 #[test]
 fn test_a_derived_or_generated_id_has_no_span() {
     // Given — one composed from the argument, one generated
-    let derived = parse_entity_of(".. audit-event:: os.system, command, 3.8\n");
-    let generated = parse_entity_of(".. req:: Boot\n   :owner: platform\n");
+    let derived = ".. audit-event:: os.system, command, 3.8\n";
+    let generated = ".. req:: Boot\n   :owner: platform\n";
 
     // When / Then
-    assert_eq!(derived.id.span(), None);
-    assert_eq!(generated.id.span(), None);
+    assert_eq!(entity_id_span(derived), None);
+    assert_eq!(entity_id_span(generated), None);
 }
 
 #[test]

@@ -9,11 +9,11 @@ use crate::inline_node::InlineNode;
 use crate::line_block::LineBlockItem;
 use crate::link_destination::LinkDestination;
 use crate::list_item::ListItem;
+use crate::named::Named;
 use crate::option_list_item::OptionListItem;
 use crate::span::Span;
 use crate::table::TableRow;
 use crate::target_name::TargetName;
-use crate::written::Written;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Node {
@@ -32,7 +32,7 @@ pub enum Node {
     /// `.. _name: destination`, which is a URI or another target's name.
     Target {
         /// The label, with the span of its characters.
-        name: Written<TargetName>,
+        name: Named<TargetName>,
         destination: Option<LinkDestination>,
         /// Where the target was written, which the label's definition is.
         #[serde(default, skip_serializing_if = "Option::is_none")]

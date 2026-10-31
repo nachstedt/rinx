@@ -13,7 +13,7 @@ pub(super) fn index_domain_object(
     span: Option<Span>,
     doc_path: &str,
     index: &mut ProjectIndex,
-    spans: &mut DefinitionSpans,
+    spans: &mut DefinitionSpans<'_>,
     scopes: &DocumentScopes,
 ) {
     // `:no-index:` drops the target and the index entry but keeps the body.
@@ -47,7 +47,7 @@ fn index_name(
     span: Option<Span>,
     doc_path: &str,
     index: &mut ProjectIndex,
-    spans: &mut DefinitionSpans,
+    spans: &mut DefinitionSpans<'_>,
 ) {
     index.insert_domain_object(obj.object_type(), qualified_name, doc_path);
     spans.record(

@@ -81,7 +81,7 @@ pub fn build_project_index_reporting(
 /// Each of `docs`' analysis, by document path.
 fn analyze_documents(docs: &[Document]) -> BTreeMap<String, DocumentAnalysis> {
     docs.iter()
-        .map(|doc| (doc.path.clone(), DocumentAnalysis::of(doc)))
+        .map(|doc| (doc.path.clone(), DocumentAnalysis::of(doc, None)))
         .collect()
 }
 

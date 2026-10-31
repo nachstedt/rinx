@@ -2,7 +2,7 @@
 //! the figure every chart shares ([`crate::blocks::chart_figure`]).
 
 use rinx_ast::EntityPie;
-use rinx_ast::Written;
+use rinx_ast::Named;
 
 use crate::RenderCtx;
 use crate::blocks::chart_figure::{ChartFigure, write_chart_figure};
@@ -45,7 +45,7 @@ pub(in crate::blocks) fn render_entity_pie(
             caption: pie.caption.as_deref(),
             align: pie.align,
             classes: &pie.classes,
-            name: pie.name.as_ref().map(Written::value),
+            name: pie.name.as_ref().map(Named::value),
             width: pie.rendered_width(),
         },
         &svg,

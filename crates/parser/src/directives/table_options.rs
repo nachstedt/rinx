@@ -20,7 +20,7 @@ use super::option_value::{Classes, Located};
 use super::options::{OptionLine, directive_options};
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rinx_ast::{TableAlign, TableWidths, TargetName, Written};
+use rinx_ast::{Named, TableAlign, TableWidths, TargetName};
 
 /// The five presentation options every option-bearing table directive shares:
 /// `.. list-table::`, `.. csv-table::` and `.. table::` alike.
@@ -33,7 +33,7 @@ pub(in crate::directives) struct CommonTableOptions {
     pub width: Option<String>,
     pub align: Option<TableAlign>,
     pub classes: Vec<String>,
-    pub name: Option<Written<TargetName>>,
+    pub name: Option<Named<TargetName>>,
 }
 
 impl CommonTableOptions {
@@ -61,7 +61,7 @@ directive_options! {
         /// `:class:`.
         Class(Classes) => (["class"], "Classes for the table."),
         /// `:name:`.
-        Name(Written<TargetName>) => (["name"], "A label to reference the table by."),
+        Name(Named<TargetName>) => (["name"], "A label to reference the table by."),
     }
 }
 

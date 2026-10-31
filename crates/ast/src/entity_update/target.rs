@@ -2,8 +2,7 @@ use rinx_filter::Expr;
 use serde::{Deserialize, Serialize};
 
 use crate::entity::EntityId;
-use crate::span::Span;
-use crate::written::Written;
+use crate::named::{NameId, Named};
 
 /// What `.. entity-update::`'s argument resolves to, once the whole project's
 /// entities are known — never here, since one document's parser never sees
@@ -21,7 +20,7 @@ pub struct UpdateTarget {
     /// the project is merged. Placed at the argument's characters when the
     /// parser knew them, so an editor can rename the entity it names.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub candidate_id: Option<Written<EntityId>>,
+    pub candidate_id: Option<Named<EntityId>>,
     /// `Some` when the argument parsed as a filter expression.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub filter: Option<Expr>,
@@ -40,7 +39,7 @@ impl UpdateTarget {
         if raw.is_empty() {
             return None;
         }
-        let candidate_id = EntityId::new(raw).ok().map(Written::unplaced);
+        let candidate_id = EntityId::new(raw).ok().map(Named::unplaced);
         let filter = rinx_filter::parse_filter(raw).ok();
         if candidate_id.is_none() && filter.is_none() {
             return None;
@@ -52,13 +51,13 @@ impl UpdateTarget {
         })
     }
 
-    /// This target, its id reading written at `span`: exactly the
+    /// This target, its id reading recorded as the name `id`: exactly the
     /// characters of the trimmed argument.
     #[must_use]
-    pub fn written_at(mut self, span: Option<Span>) -> Self {
+    pub fn named_as(mut self, id: Option<NameId>) -> Self {
         self.candidate_id = self
             .candidate_id
-            .map(|id| Written::new(id.into_value(), span));
+            .map(|candidate| Named::new(candidate.into_value(), id));
         self
     }
 }
@@ -66,20 +65,22 @@ impl UpdateTarget {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::span::Position;
+    use crate::source_map::SourceMap;
+    use crate::span::{Position, Span};
 
     #[test]
-    fn test_written_at_places_the_id_reading_alone() {
+    fn test_named_as_places_the_id_reading_alone() {
         // Given
-        let span = Span::new(Position::new(1, 20), Position::new(1, 27));
+        let mut map = SourceMap::default();
+        let name = map.record_name(Span::new(Position::new(1, 20), Position::new(1, 27)));
         let id = UpdateTarget::read("REQ_001").expect("a target");
         let filter = UpdateTarget::read("status == 'open'").expect("a target");
 
         // When
-        let (id, filter) = (id.written_at(Some(span)), filter.written_at(Some(span)));
+        let (id, filter) = (id.named_as(Some(name)), filter.named_as(Some(name)));
 
         // Then — a filter has no id to place
-        assert_eq!(id.candidate_id.and_then(|id| id.span()), Some(span));
+        assert_eq!(id.candidate_id.and_then(|id| id.id()), Some(name));
         assert_eq!(filter.candidate_id, None);
     }
 
@@ -91,7 +92,7 @@ mod tests {
         // Then
         assert_eq!(
             target.candidate_id,
-            EntityId::new("REQ_001").ok().map(Written::unplaced)
+            EntityId::new("REQ_001").ok().map(Named::unplaced)
         );
         assert!(target.filter.is_some());
         assert_eq!(target.raw, "REQ_001");

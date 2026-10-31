@@ -28,7 +28,16 @@ fn site_at(line: u32, columns: u32) -> DefinitionSite {
 }
 
 fn sites_of(nodes: Vec<Node>) -> DefinitionSites {
-    analyze_with_sites(&Document::new("guide.rst".to_string(), nodes)).1
+    sites_with_names(nodes, &SourceMap::default())
+}
+
+/// The sites of `nodes`, finding their names' characters in `source_map`.
+fn sites_with_names(nodes: Vec<Node>, source_map: &SourceMap) -> DefinitionSites {
+    analyze_with_sites(
+        &Document::new("guide.rst".to_string(), nodes),
+        Some(source_map),
+    )
+    .1
 }
 
 fn heading(level: u8, title: &str, span: Option<Span>) -> Node {
@@ -289,7 +298,7 @@ fn test_analyze_with_sites_names_the_fragment_a_definition_was_included_from() {
     ));
 
     // When
-    let (_, sites) = analyze_with_sites(&doc);
+    let (_, sites) = analyze_with_sites(&doc, None);
 
     // Then
     assert_eq!(
@@ -301,28 +310,34 @@ fn test_analyze_with_sites_names_the_fragment_a_definition_was_included_from() {
     );
 }
 
-/// `name` written at columns `start` to `end` of `line`.
-fn written_at(name: &str, line: u32, start: u32, end: u32) -> Written<TargetName> {
-    Written::new(
-        TargetName::new(name),
-        Some(Span::new(
-            Position::new(line, start),
-            Position::new(line, end),
-        )),
-    )
+/// `name` written at columns `start` to `end` of `line`, as `source_map`
+/// records it.
+fn written_at(
+    source_map: &mut SourceMap,
+    name: &str,
+    line: u32,
+    start: u32,
+    end: u32,
+) -> Named<TargetName> {
+    let id = source_map.record_name(Span::new(
+        Position::new(line, start),
+        Position::new(line, end),
+    ));
+    Named::new(TargetName::new(name), Some(id))
 }
 
 #[test]
 fn test_analyze_with_sites_records_where_a_labels_name_was_written() {
     // Given — `.. _install:`, the name in columns 5 to 11
+    let mut map = SourceMap::default();
     let target = Node::Target {
-        name: written_at("install", 3, 5, 12),
+        name: written_at(&mut map, "install", 3, 5, 12),
         destination: None,
         span: Some(span_at(3, 12)),
     };
 
     // When
-    let sites = sites_of(vec![target]);
+    let sites = sites_with_names(vec![target], &map);
 
     // Then
     assert_eq!(
@@ -341,16 +356,20 @@ fn test_analyze_with_sites_records_where_a_labels_name_was_written() {
 fn test_analyze_with_sites_places_a_name_no_directive_span_holds_at_the_name() {
     // Given — a toctree's and a table of contents' `:name:`, the parser
     // giving neither directive a span of its own
+    let mut map = SourceMap::default();
     let mut toctree = rinx_ast::Toctree::default();
-    toctree.options.name = Some(written_at("tree", 2, 11, 15));
+    toctree.options.name = Some(written_at(&mut map, "tree", 2, 11, 15));
     let mut contents = rinx_ast::Contents::default();
-    contents.options.name = Some(written_at("toc", 6, 11, 14));
+    contents.options.name = Some(written_at(&mut map, "toc", 6, 11, 14));
 
     // When
-    let sites = sites_of(vec![
-        Node::Directive(Directive::Toctree(toctree)),
-        Node::Directive(Directive::Contents(contents)),
-    ]);
+    let sites = sites_with_names(
+        vec![
+            Node::Directive(Directive::Toctree(toctree)),
+            Node::Directive(Directive::Contents(contents)),
+        ],
+        &map,
+    );
 
     // Then
     let at_name = |line, start, end| DefinitionSite {
@@ -375,12 +394,11 @@ fn test_analyze_with_sites_places_a_name_no_directive_span_holds_at_the_name() {
 #[test]
 fn test_analyze_with_sites_records_where_a_written_entity_id_stands() {
     // Given — `:id: REQ_001` on the entity's second line
+    let mut map = SourceMap::default();
+    let written = map.record_name(Span::new(Position::new(8, 9), Position::new(8, 16)));
     let entity = EntityBody {
         type_name: "req".to_string(),
-        id: Written::new(
-            EntityId::new("REQ_001").unwrap(),
-            Some(Span::new(Position::new(8, 9), Position::new(8, 16))),
-        ),
+        id: Named::new(EntityId::new("REQ_001").unwrap(), Some(written)),
         attributes: BTreeMap::new(),
         relations: BTreeMap::new(),
         sections: vec![],
@@ -389,7 +407,10 @@ fn test_analyze_with_sites_records_where_a_written_entity_id_stands() {
     };
 
     // When
-    let sites = sites_of(vec![Node::Directive(Directive::Entity(Box::new(entity)))]);
+    let sites = sites_with_names(
+        vec![Node::Directive(Directive::Entity(Box::new(entity)))],
+        &map,
+    );
 
     // Then — as the entity and as its label
     let name = Some(NameRange {
@@ -432,7 +453,7 @@ fn test_analyze_with_sites_returns_the_index_analyze_returns() {
     );
 
     // When
-    let (index, _) = analyze_with_sites(&doc);
+    let (index, _) = analyze_with_sites(&doc, None);
 
     // Then
     assert_eq!(index, analyze(&doc));

@@ -165,16 +165,14 @@ mod tests {
             document.intern_source_file(*file);
         }
         document.diagnostics = found;
-        let source_map = SourceMap {
-            include_sites: sites
-                .iter()
-                .map(|(line, within, file)| IncludeSite {
-                    directive: Some(span(*line, *within)),
-                    file: FileId::new(*file),
-                })
-                .collect(),
-            ..SourceMap::default()
-        };
+        let mut source_map = SourceMap::default();
+        source_map.include_sites = sites
+            .iter()
+            .map(|(line, within, file)| IncludeSite {
+                directive: Some(span(*line, *within)),
+                file: FileId::new(*file),
+            })
+            .collect();
         Parsed {
             document,
             source_map,

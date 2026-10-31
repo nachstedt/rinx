@@ -19,6 +19,7 @@ use crate::glossary_entry::GlossaryEntry;
 use crate::grid::{Grid, GridItem};
 use crate::image::{Figure, ImageOptions};
 use crate::index_entry::IndexEntry;
+use crate::named::Named;
 use crate::node::Node;
 use crate::sectnum::SectnumOptions;
 use crate::span::Span;
@@ -31,7 +32,6 @@ use crate::target_name::TargetName;
 use crate::toctree::Toctree;
 use crate::uml::Uml;
 use crate::version_change_kind::VersionChangeKind;
-use crate::written::Written;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Directive {
@@ -250,7 +250,7 @@ pub enum Directive {
         /// `:name:` — reuses [`TargetName`] (the same type explicit
         /// hyperlink targets use) so it can be registered in
         /// `ProjectIndex::targets` with no extra conversion.
-        name: Option<Written<TargetName>>,
+        name: Option<Named<TargetName>>,
         rows: Vec<TableRow>,
         /// Where the directive was written, which its `:name:`'s definition
         /// is (`docs/decisions/045-definition-spans.md`).
@@ -284,7 +284,7 @@ pub enum Directive {
         /// `:name:` — reuses [`TargetName`] (the same type explicit
         /// hyperlink targets use) so it can be registered in
         /// `ProjectIndex::targets` with no extra conversion.
-        name: Option<Written<TargetName>>,
+        name: Option<Named<TargetName>>,
         header_rows: Vec<TableRow>,
         body_rows: Vec<TableRow>,
         /// Where the directive was written — see [`Self::DataTable`]'s.
@@ -306,7 +306,7 @@ pub enum Directive {
         /// `:label:` (or its `:name:` spelling) — reuses [`TargetName`] like
         /// the table directives do, so an `:eq:` reference resolves against it
         /// with no extra conversion.
-        label: Option<Written<TargetName>>,
+        label: Option<Named<TargetName>>,
         /// `:nowrap:` — the author supplies their own LaTeX environment, so
         /// nothing may be wrapped around the body. Suppresses equation
         /// numbering too, matching Sphinx.
