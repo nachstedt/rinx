@@ -106,7 +106,7 @@ pub(in crate::directives) fn parse_include(
     let path = argument.trim();
     if path.is_empty() {
         // The reader has reported the missing argument.
-        return vec![Node::Directive(malformed_node(
+        return vec![Node::directive(malformed_node(
             DIRECTIVE,
             argument,
             body_lines,
@@ -166,7 +166,7 @@ pub(in crate::directives) fn parse_include(
     };
 
     if options.literal || options.code.is_some() {
-        return vec![Node::Directive(as_code_block(&options, &text, span))];
+        return vec![Node::directive(as_code_block(&options, &text, span))];
     }
 
     // The included text is parsed under a context that starts again at line 1
@@ -325,7 +325,7 @@ fn malformed(
     span: Option<Span>,
     diagnostics: &mut Diagnostics,
 ) -> Node {
-    Node::Directive(malformed_directive(
+    Node::directive(malformed_directive(
         DIRECTIVE,
         argument,
         body_lines,
@@ -340,7 +340,7 @@ fn malformed(
 /// (`check_encoding`, `select`) has already reported — see
 /// [`malformed_node`]'s own doc comment for why this second spelling exists.
 fn contributed_nothing(argument: &str, body_lines: &[&str]) -> Node {
-    Node::Directive(malformed_node(
+    Node::directive(malformed_node(
         DIRECTIVE,
         argument,
         body_lines,
@@ -409,7 +409,9 @@ mod tests {
         nodes
             .iter()
             .filter_map(|node| match node {
-                Node::Paragraph(inline) => Some(
+                Node::Paragraph {
+                    content: inline, ..
+                } => Some(
                     inline
                         .iter()
                         .map(|part| match part {
@@ -444,6 +446,25 @@ mod tests {
     }
 
     #[test]
+    fn test_an_included_block_keeps_the_lines_it_was_written_on_in_its_file() {
+        // Given
+        let loader = FakeFiles::with(&[("shared.rst", "\n\nFrom the fragment.\n")]);
+        let ctx = ParseCtx::new(Domain::Py, &loader);
+
+        // When
+        let parsed = crate::parse("guide.rst", "Before.\n\n.. include:: shared.rst\n", &ctx);
+
+        // Then — its own line of its own file, not the include's marker
+        let spliced = &parsed.document.nodes[1];
+        let lines = spliced
+            .block()
+            .and_then(|id| parsed.source_map.block_lines(id))
+            .expect("the spliced paragraph is placed");
+        assert_eq!(lines.start.line, 3);
+        assert!(lines.file.is_some(), "{lines:?}");
+    }
+
+    #[test]
     fn test_a_role_defined_in_a_fragment_applies_after_the_include() {
         // Given a fragment defining a role, as docutils would apply it
         let document = parse_document(
@@ -457,7 +478,10 @@ mod tests {
             "{:?}",
             document.diagnostics
         );
-        let Node::Paragraph(inline) = &document.nodes[0] else {
+        let Node::Paragraph {
+            content: inline, ..
+        } = &document.nodes[0]
+        else {
             panic!("expected a paragraph, got {:?}", document.nodes);
         };
         assert!(
@@ -506,7 +530,10 @@ mod tests {
             "{:?}",
             document.diagnostics
         );
-        let Node::Paragraph(inline) = &document.nodes[0] else {
+        let Node::Paragraph {
+            content: inline, ..
+        } = &document.nodes[0]
+        else {
             panic!("expected a paragraph, got {:?}", document.nodes);
         };
         assert!(
@@ -712,7 +739,10 @@ mod tests {
         );
         assert!(matches!(
             document.nodes.first(),
-            Some(Node::Directive(Directive::Malformed { .. }))
+            Some(Node::Directive {
+                directive: Directive::Malformed { .. },
+                ..
+            })
         ));
     }
 
@@ -876,7 +906,11 @@ mod tests {
         );
 
         // Then — one code block, not a parsed paragraph
-        let Some(Node::Directive(Directive::CodeBlock(block))) = document.nodes.first() else {
+        let Some(Node::Directive {
+            directive: Directive::CodeBlock(block),
+            ..
+        }) = document.nodes.first()
+        else {
             panic!("expected a code block, got {:?}", document.nodes);
         };
         assert_eq!(block.content, "*not emphasis*");
@@ -891,7 +925,11 @@ mod tests {
         );
 
         // Then
-        let Some(Node::Directive(Directive::CodeBlock(block))) = document.nodes.first() else {
+        let Some(Node::Directive {
+            directive: Directive::CodeBlock(block),
+            ..
+        }) = document.nodes.first()
+        else {
             panic!("expected a code block, got {:?}", document.nodes);
         };
         assert_eq!(block.language, CodeLanguage::parse("python"));
@@ -906,7 +944,11 @@ mod tests {
         );
 
         // Then
-        let Some(Node::Directive(Directive::CodeBlock(block))) = document.nodes.first() else {
+        let Some(Node::Directive {
+            directive: Directive::CodeBlock(block),
+            ..
+        }) = document.nodes.first()
+        else {
             panic!("expected a code block, got {:?}", document.nodes);
         };
         assert!(block.linenos);

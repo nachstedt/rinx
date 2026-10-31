@@ -281,7 +281,7 @@ mod tests {
     /// carries a `toc-entry-N` id that would otherwise have to be repeated in
     /// every unrelated assertion.
     fn contents_without_backlinks(options: ContentsOptions) -> Node {
-        Node::Directive(Directive::Contents(Contents {
+        Node::directive(Directive::Contents(Contents {
             title: None,
             options: ContentsOptions {
                 backlinks: ContentsBacklinks::Off,
@@ -333,7 +333,7 @@ mod tests {
     fn test_render_contents_defaults_the_title_to_contents() {
         // Given
         let nodes = vec![
-            Node::Directive(Directive::Contents(Contents::default())),
+            Node::directive(Directive::Contents(Contents::default())),
             heading(1, "Overview"),
         ];
         let outline = DocumentOutline {
@@ -354,7 +354,7 @@ mod tests {
     fn test_render_contents_uses_an_explicit_title() {
         // Given
         let nodes = vec![
-            Node::Directive(Directive::Contents(Contents {
+            Node::directive(Directive::Contents(Contents {
                 title: Some("Table of Contents".to_string()),
                 options: ContentsOptions::default(),
             })),
@@ -377,7 +377,7 @@ mod tests {
     #[test]
     fn test_render_contents_renders_nothing_for_an_empty_document() {
         // Given
-        let nodes = vec![Node::Directive(Directive::Contents(Contents::default()))];
+        let nodes = vec![Node::directive(Directive::Contents(Contents::default()))];
         let outline = DocumentOutline::default();
 
         // When
@@ -490,7 +490,7 @@ mod tests {
         // Given
         let nodes = vec![
             heading(1, "Advanced"),
-            Node::Directive(Directive::Contents(Contents {
+            Node::directive(Directive::Contents(Contents {
                 title: Some("In this section".to_string()),
                 options: ContentsOptions {
                     local: true,
@@ -541,7 +541,7 @@ mod tests {
     fn test_render_contents_renders_no_entry_ids_when_backlinks_is_off() {
         // Given
         let nodes = vec![
-            Node::Directive(Directive::Contents(Contents {
+            Node::directive(Directive::Contents(Contents {
                 title: None,
                 options: ContentsOptions {
                     backlinks: ContentsBacklinks::Off,
@@ -570,8 +570,8 @@ mod tests {
         // later block must win — a heading it also lists should end up with
         // no backlink at all, not the first block's stale one.
         let nodes = vec![
-            Node::Directive(Directive::Contents(Contents::default())),
-            Node::Directive(Directive::Contents(Contents {
+            Node::directive(Directive::Contents(Contents::default())),
+            Node::directive(Directive::Contents(Contents {
                 title: None,
                 options: ContentsOptions {
                     backlinks: ContentsBacklinks::Off,
@@ -595,7 +595,7 @@ mod tests {
     fn test_render_contents_backlinks_entry_links_the_heading_back_to_its_own_entry() {
         // Given
         let nodes = vec![
-            Node::Directive(Directive::Contents(Contents::default())),
+            Node::directive(Directive::Contents(Contents::default())),
             heading(1, "Overview"),
         ];
         let outline = DocumentOutline {
@@ -621,7 +621,7 @@ mod tests {
     fn test_render_contents_backlinks_top_links_every_heading_back_to_the_block() {
         // Given
         let nodes = vec![
-            Node::Directive(Directive::Contents(Contents {
+            Node::directive(Directive::Contents(Contents {
                 title: None,
                 options: ContentsOptions {
                     backlinks: ContentsBacklinks::Top,
@@ -648,7 +648,7 @@ mod tests {
     fn test_render_contents_uses_the_explicit_name_as_its_own_anchor() {
         // Given
         let nodes = vec![
-            Node::Directive(Directive::Contents(Contents {
+            Node::directive(Directive::Contents(Contents {
                 title: None,
                 options: ContentsOptions {
                     name: Some(TargetName::new("main-toc").into()),
@@ -672,7 +672,7 @@ mod tests {
     fn test_render_contents_adds_extra_classes() {
         // Given
         let nodes = vec![
-            Node::Directive(Directive::Contents(Contents {
+            Node::directive(Directive::Contents(Contents {
                 title: None,
                 options: ContentsOptions {
                     classes: vec!["wide".to_string()],

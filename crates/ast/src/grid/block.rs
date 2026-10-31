@@ -155,7 +155,7 @@ mod tests {
     /// A one-paragraph body, so a test can tell "content kept" from "content
     /// dropped" without building a whole document.
     fn paragraph(text: &str) -> Node {
-        Node::Paragraph(vec![InlineNode::Text(text.to_string())])
+        Node::paragraph(vec![InlineNode::Text(text.to_string())])
     }
 
     #[test]
@@ -200,7 +200,7 @@ mod tests {
         let mut grid = Grid::new();
         grid.body = vec![
             paragraph("stray"),
-            Node::Directive(Directive::GridItem(Box::default())),
+            Node::directive(Directive::GridItem(Box::default())),
         ];
 
         // When / Then — both survive, which is the whole point of the type
@@ -218,7 +218,7 @@ mod tests {
         item.columns = Some(ColumnSpec::parse("auto").expect("a valid column spec"));
         item.child_align = Some(ChildAlign::Center);
         item.body = vec![paragraph("cell")];
-        grid.body = vec![Node::Directive(Directive::GridItem(Box::new(item)))];
+        grid.body = vec![Node::directive(Directive::GridItem(Box::new(item)))];
 
         // When
         let json = serde_json::to_string(&grid).expect("serializable");

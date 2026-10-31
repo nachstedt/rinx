@@ -16,18 +16,17 @@ fn test_render_formats_py_function_domain_object() {
     // Given
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyFunction {
                 flags: rinx_ast::DescriptionFlags::default(),
                 is_async: false,
                 module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::single("greet(name)".to_string()),
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                body: vec![Node::paragraph(vec![InlineNode::Text(
                     "Greets the given name.".to_string(),
                 )])],
             },
-            block: None,
         })],
     );
 
@@ -47,7 +46,7 @@ fn test_render_prefixes_decorator_signature_with_at_sign() {
     // (`desc_addname('@', '@')`) directly before the signature name.
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyFunction {
                 flags: rinx_ast::DescriptionFlags::default(),
                 is_async: false,
@@ -56,7 +55,6 @@ fn test_render_prefixes_decorator_signature_with_at_sign() {
                 signatures: NonEmptyVector::single("classmethod".to_string()),
                 body: vec![],
             },
-            block: None,
         })],
     );
 
@@ -74,7 +72,7 @@ fn test_render_prefixes_decoratormethod_signature_with_at_sign() {
     // Given — the `py:method` counterpart.
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyMethod {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
@@ -86,7 +84,6 @@ fn test_render_prefixes_decoratormethod_signature_with_at_sign() {
                 is_decorator: true,
                 body: vec![],
             },
-            block: None,
         })],
     );
 
@@ -102,13 +99,12 @@ fn test_render_omits_id_attribute_when_no_index_is_set() {
     // Given
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::CMember {
                 signatures: NonEmptyVector::single("int count".into()),
                 flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
                 body: vec![],
             },
-            block: None,
         })],
     );
 
@@ -125,7 +121,7 @@ fn test_render_omits_id_attribute_for_a_no_index_python_class() {
     // Given — `functions.rst`'s second description of `bytearray`.
     let doc = Document::new(
         "functions.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyClass {
                 flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
                 module: None,
@@ -133,7 +129,6 @@ fn test_render_omits_id_attribute_for_a_no_index_python_class() {
                 is_final: false,
                 body: vec![],
             },
-            block: None,
         })],
     );
 
@@ -152,15 +147,14 @@ fn test_render_formats_py_module_domain_object() {
     // Given
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyModule {
                 name: "greetings".to_string(),
                 options: rinx_ast::ModuleOptions::default(),
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                body: vec![Node::paragraph(vec![InlineNode::Text(
                     "A module of greetings.".to_string(),
                 )])],
             },
-            block: None,
         })],
     );
 
@@ -177,7 +171,7 @@ fn test_render_formats_py_method_domain_object() {
     // Given
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyMethod {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
@@ -187,11 +181,10 @@ fn test_render_formats_py_method_domain_object() {
                 is_staticmethod: false,
                 is_abstractmethod: false,
                 is_async: false,
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                body: vec![Node::paragraph(vec![InlineNode::Text(
                     "Greets the given name.".to_string(),
                 )])],
             },
-            block: None,
         })],
     );
 
@@ -209,7 +202,7 @@ fn test_render_py_method_modifier_prefixes_in_canonical_order() {
     // Given — options written out of canonical order
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyMethod {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
@@ -221,7 +214,6 @@ fn test_render_py_method_modifier_prefixes_in_canonical_order() {
                 is_async: false,
                 body: vec![],
             },
-            block: None,
         })],
     );
 
@@ -243,17 +235,16 @@ fn test_render_formats_py_class_domain_object() {
     // Given
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyClass {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("greeter".to_string()),
                 is_final: false,
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                body: vec![Node::paragraph(vec![InlineNode::Text(
                     "A greeter.".to_string(),
                 )])],
             },
-            block: None,
         })],
     );
 
@@ -272,7 +263,7 @@ fn test_render_py_class_final_prefix_precedes_class_prefix() {
     // Given
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyClass {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
@@ -280,7 +271,6 @@ fn test_render_py_class_final_prefix_precedes_class_prefix() {
                 is_final: true,
                 body: vec![],
             },
-            block: None,
         })],
     );
 
@@ -298,17 +288,16 @@ fn test_render_formats_py_exception_domain_object() {
     // Given
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyException {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("greetererror".to_string()),
                 is_final: false,
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                body: vec![Node::paragraph(vec![InlineNode::Text(
                     "Raised when greeting fails.".to_string(),
                 )])],
             },
-            block: None,
         })],
     );
 
@@ -327,7 +316,7 @@ fn test_render_py_exception_final_prefix_precedes_exception_prefix() {
     // Given
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyException {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
@@ -335,7 +324,6 @@ fn test_render_py_exception_final_prefix_precedes_exception_prefix() {
                 is_final: true,
                 body: vec![],
             },
-            block: None,
         })],
     );
 
@@ -353,18 +341,17 @@ fn test_render_formats_py_data_domain_object() {
     // Given
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyData {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
                 type_: None,
                 value: None,
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                body: vec![Node::paragraph(vec![InlineNode::Text(
                     "The default timeout in seconds.".to_string(),
                 )])],
             },
-            block: None,
         })],
     );
 
@@ -381,7 +368,7 @@ fn test_render_formats_py_data_type_and_value() {
     // Given
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyData {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
@@ -390,7 +377,6 @@ fn test_render_formats_py_data_type_and_value() {
                 value: Some("30".to_string()),
                 body: vec![],
             },
-            block: None,
         })],
     );
 
@@ -406,7 +392,7 @@ fn test_render_formats_py_attribute_domain_object() {
     // Given
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyAttribute {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
@@ -414,11 +400,10 @@ fn test_render_formats_py_attribute_domain_object() {
                 type_: None,
                 value: None,
                 canonical: None,
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                body: vec![Node::paragraph(vec![InlineNode::Text(
                     "The greeter's name.".to_string(),
                 )])],
             },
-            block: None,
         })],
     );
 
@@ -435,7 +420,7 @@ fn test_render_formats_py_attribute_type_value_and_canonical() {
     // Given
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyAttribute {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
@@ -445,7 +430,6 @@ fn test_render_formats_py_attribute_type_value_and_canonical() {
                 canonical: Some("mymodule.MyClass.name".to_string()),
                 body: vec![],
             },
-            block: None,
         })],
     );
 
@@ -464,19 +448,18 @@ fn test_render_domain_object_resolves_nested_anonymous_hyperlink_in_body() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyFunction {
                     flags: rinx_ast::DescriptionFlags::default(),
                     is_async: false,
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("greet(name)".to_string()),
-                    body: vec![Node::Paragraph(vec![InlineNode::AnonymousReference {
+                    body: vec![Node::paragraph(vec![InlineNode::AnonymousReference {
                         text: "See more".to_string(),
                         span: None,
                     }])],
                 },
-                block: None,
             }),
             Node::AnonymousTarget {
                 destination: rinx_ast::LinkDestination::Uri("https://example.com".to_string()),

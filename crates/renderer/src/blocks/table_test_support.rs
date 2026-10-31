@@ -22,7 +22,7 @@ pub(super) fn table_row(cells: &[&str]) -> TableRow {
             .map(|text| TableCell {
                 colspan: 1,
                 rowspan: 1,
-                content: vec![Node::Paragraph(vec![InlineNode::Text((*text).to_string())])],
+                content: vec![Node::paragraph(vec![InlineNode::Text((*text).to_string())])],
             })
             .collect(),
     }

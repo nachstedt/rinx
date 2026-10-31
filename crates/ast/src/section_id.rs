@@ -281,7 +281,7 @@ mod tests {
         // simply 0 and 1.
         let nodes = vec![
             heading(1, "Guide"),
-            Node::Paragraph(vec![InlineNode::Text("Intro".to_string())]),
+            Node::paragraph(vec![InlineNode::Text("Intro".to_string())]),
             heading(2, "Getting Started"),
         ];
 
@@ -310,7 +310,7 @@ mod tests {
     #[test]
     fn test_allocate_section_ids_ignores_non_headings() {
         // Given
-        let nodes = vec![Node::Paragraph(vec![InlineNode::Text("Hi".to_string())])];
+        let nodes = vec![Node::paragraph(vec![InlineNode::Text("Hi".to_string())])];
 
         // When
         let ids = allocate_section_ids(&nodes);

@@ -271,7 +271,7 @@ mod tests {
     /// A toctree naming one document, its entry spanning source line 3.
     fn toctree_json(docname: &str) -> String {
         format!(
-            r#"{{"Directive":{{"Toctree":{{"entries":[{{"Document":{{"title":null,"docname":"{docname}","span":{{"start":{{"line":3,"column":4}},"end":{{"line":3,"column":9}}}}}}}}],"options":{{}}}}}}}}"#
+            r#"{{"Directive":{{"directive":{{"Toctree":{{"entries":[{{"Document":{{"title":null,"docname":"{docname}","span":{{"start":{{"line":3,"column":4}},"end":{{"line":3,"column":9}}}}}}}}],"options":{{}}}}}}}}}}"#
         )
     }
 
@@ -537,14 +537,14 @@ mod tests {
         // serializes it
         let doc = r#"{"path":"a.rst","nodes":[
             {"BulletList":{"bullet":"*","items":[{"nodes":[
-                {"Paragraph":[{"Reference":{"target":"python:tut-intro"}}]}]}]}},
-            {"Paragraph":[
+                {"Paragraph":{"content":[{"Reference":{"target":"python:tut-intro"}}]}}]}]}},
+            {"Paragraph":{"content":[
                 {"TermReference":{"display":"b","term":"bytecode"}},
                 {"OptionReference":{"display":"-O","target":"-O"}},
                 {"DomainObjectReference":{"object_type":"py:class","name":"dict","display":"dict","link":true}},
                 {"AnyReference":{"target":"list","link":true}},
                 {"DocReference":{"target":"tutorial/index","link":true}}
-            ]}]}"#;
+            ]}}]}"#;
 
         // When
         let written = written_reference_targets(&[doc.to_string()]).unwrap();

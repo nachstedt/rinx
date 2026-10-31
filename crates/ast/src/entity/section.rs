@@ -77,7 +77,7 @@ mod tests {
     use crate::inline_node::InlineNode;
 
     fn paragraph(text: &str) -> Vec<Node> {
-        vec![Node::Paragraph(vec![InlineNode::Text(text.to_string())])]
+        vec![Node::paragraph(vec![InlineNode::Text(text.to_string())])]
     }
 
     #[test]
@@ -131,7 +131,7 @@ mod tests {
 
         // Then
         assert_eq!(body.len(), 1);
-        assert!(matches!(body[0], Node::Paragraph(_)));
+        assert!(matches!(body[0], Node::Paragraph { .. }));
     }
 
     #[test]

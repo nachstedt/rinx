@@ -369,7 +369,10 @@ mod tests {
             assert!(
                 matches!(
                     document.nodes[..],
-                    [rinx_ast::Node::Directive(rinx_ast::Directive::DocTest(_))]
+                    [rinx_ast::Node::Directive {
+                        directive: rinx_ast::Directive::DocTest(_),
+                        ..
+                    }]
                 ),
                 "`{name}` is no doctest directive"
             );

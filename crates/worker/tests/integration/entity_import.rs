@@ -259,7 +259,7 @@ Prose after the import.
     assert!(
         doc.nodes
             .iter()
-            .any(|node| matches!(node, ast::Node::Paragraph(_))),
+            .any(|node| matches!(node, ast::Node::Paragraph { .. })),
         "the prose after the failed import should survive"
     );
 }

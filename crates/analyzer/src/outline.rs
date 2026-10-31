@@ -68,7 +68,10 @@ pub(super) fn build_document_outline(nodes: &[Node]) -> DocumentAnalysis {
             // splices them into the document's own section tree. Recording the
             // enclosing section here is what lets the renderer reproduce that
             // without a second traversal.
-            Node::Directive(rinx_ast::Directive::Toctree(_)) => {
+            Node::Directive {
+                directive: rinx_ast::Directive::Toctree(_),
+                ..
+            } => {
                 toctree_sections.push(stack.last().map(|(_, section)| section.id.clone()));
             }
             _ => {}
@@ -174,7 +177,7 @@ mod tests {
     }
 
     fn paragraph(text: &str) -> Node {
-        Node::Paragraph(vec![InlineNode::Text(text.to_string())])
+        Node::paragraph(vec![InlineNode::Text(text.to_string())])
     }
 
     /// The titles of `sections`, with each one's children in parentheses, as a
@@ -194,7 +197,7 @@ mod tests {
     }
 
     fn toctree_node() -> Node {
-        Node::Directive(rinx_ast::Directive::Toctree(rinx_ast::Toctree::default()))
+        Node::directive(rinx_ast::Directive::Toctree(rinx_ast::Toctree::default()))
     }
 
     #[test]
@@ -491,7 +494,7 @@ mod tests {
         let nodes = vec![
             heading(1, "Guide"),
             heading(2, "Install"),
-            Node::Directive(rinx_ast::Directive::SeeAlso {
+            Node::directive(rinx_ast::Directive::SeeAlso {
                 body: vec![heading(2, "Not A Section")],
             }),
         ];

@@ -23,24 +23,22 @@ fn lookup_domain_object<'a>(index: &'a ProjectIndex, flat_key: &str) -> Option<&
 }
 
 fn c_member(signature: &str) -> Node {
-    Node::Directive(Directive::DomainObject {
+    Node::directive(Directive::DomainObject {
         object: DomainObjectBody::CMember {
             signatures: NonEmptyVector::single(signature.into()),
             flags: rinx_ast::DescriptionFlags::default(),
             body: vec![],
         },
-        block: None,
     })
 }
 
 fn c_macro(signature: &str) -> Node {
-    Node::Directive(Directive::DomainObject {
+    Node::directive(Directive::DomainObject {
         object: DomainObjectBody::CMacro {
             flags: rinx_ast::DescriptionFlags::default(),
             signatures: NonEmptyVector::single(signature.into()),
             body: vec![],
         },
-        block: None,
     })
 }
 
@@ -49,13 +47,12 @@ fn test_analyze_qualifies_bare_c_member_nested_under_c_struct() {
     // Given — `.. c:member:: int count` nested inside `.. c:struct:: Data`.
     let doc = Document::new(
         "api.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: DomainObjectBody::CStruct {
                 signatures: NonEmptyVector::single("Data".into()),
                 flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![c_member("int count")],
             },
-            block: None,
         })],
     );
 
@@ -75,13 +72,12 @@ fn test_analyze_qualifies_bare_c_member_nested_under_c_union() {
     // Given
     let doc = Document::new(
         "api.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: DomainObjectBody::CUnion {
                 signatures: NonEmptyVector::single("Number".into()),
                 flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![c_member("int as_int")],
             },
-            block: None,
         })],
     );
 
@@ -125,20 +121,18 @@ fn test_analyze_c_function_nested_in_c_struct_is_qualified_by_it() {
     // trade-off — see `docs/dev/known_bugs.md`'s entry for it.
     let doc = Document::new(
         "api.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: DomainObjectBody::CStruct {
                 signatures: NonEmptyVector::single("Data".into()),
                 flags: rinx_ast::DescriptionFlags::default(),
-                body: vec![Node::Directive(Directive::DomainObject {
+                body: vec![Node::directive(Directive::DomainObject {
                     object: DomainObjectBody::CFunction {
                         flags: rinx_ast::DescriptionFlags::default(),
                         signatures: NonEmptyVector::single("int helper(void)".into()),
                         body: vec![],
                     },
-                    block: None,
                 })],
             },
-            block: None,
         })],
     );
 
@@ -158,13 +152,12 @@ fn test_analyze_qualifies_c_macro_nested_under_c_type() {
     // `test_analyze_c_namespace_null_inside_c_type_body_unqualifies_nested_macro`.)
     let doc = Document::new(
         "api.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: DomainObjectBody::CType {
                 signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
                 flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![c_macro("PYMEM_DOMAIN_RAW")],
             },
-            block: None,
         })],
     );
 
@@ -186,16 +179,15 @@ fn test_analyze_c_namespace_null_inside_c_type_body_unqualifies_nested_macro() {
     // body would otherwise apply.
     let doc = Document::new(
         "api.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: DomainObjectBody::CType {
                 signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
                 flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![
-                    Node::Directive(Directive::CNamespace { namespace: None }),
+                    Node::directive(Directive::CNamespace { namespace: None }),
                     c_macro("PYMEM_DOMAIN_RAW"),
                 ],
             },
-            block: None,
         })],
     );
 
@@ -218,16 +210,15 @@ fn test_analyze_c_type_body_restores_scope_after_an_inner_namespace_reset() {
     let doc = Document::new(
         "api.rst".to_string(),
         vec![
-            Node::Directive(Directive::CNamespacePush {
+            Node::directive(Directive::CNamespacePush {
                 namespace: "Outer".to_string(),
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: DomainObjectBody::CType {
                     signatures: NonEmptyVector::single("Inner".into()),
                     flags: rinx_ast::DescriptionFlags::default(),
-                    body: vec![Node::Directive(Directive::CNamespace { namespace: None })],
+                    body: vec![Node::directive(Directive::CNamespace { namespace: None })],
                 },
-                block: None,
             }),
             c_macro("AFTER"),
         ],
@@ -249,7 +240,7 @@ fn test_analyze_qualifies_declaration_after_c_namespace_directive() {
     let doc = Document::new(
         "api.rst".to_string(),
         vec![
-            Node::Directive(Directive::CNamespace {
+            Node::directive(Directive::CNamespace {
                 namespace: Some("A.B".to_string()),
             }),
             c_macro("CONSTANT"),
@@ -272,14 +263,14 @@ fn test_analyze_c_namespace_pop_undoes_a_whole_multi_segment_push() {
     let doc = Document::new(
         "api.rst".to_string(),
         vec![
-            Node::Directive(Directive::CNamespace {
+            Node::directive(Directive::CNamespace {
                 namespace: Some("A.B".to_string()),
             }),
-            Node::Directive(Directive::CNamespacePush {
+            Node::directive(Directive::CNamespacePush {
                 namespace: "C.D".to_string(),
             }),
             c_macro("INNER"),
-            Node::Directive(Directive::CNamespacePop),
+            Node::directive(Directive::CNamespacePop),
             c_macro("OUTER"),
         ],
     );
@@ -303,30 +294,27 @@ fn test_analyze_c_function_nested_in_py_class_is_not_qualified_by_it() {
     let doc = Document::new(
         "api.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
                     name: "greeter_module".to_string(),
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyClass {
                     flags: rinx_ast::DescriptionFlags::default(),
                     module: None,
                     signatures: NonEmptyVector::single("Greeter".to_string()),
                     is_final: false,
-                    body: vec![Node::Directive(Directive::DomainObject {
+                    body: vec![Node::directive(Directive::DomainObject {
                         object: DomainObjectBody::CFunction {
                             flags: rinx_ast::DescriptionFlags::default(),
                             signatures: NonEmptyVector::single("int helper(void)".into()),
                             body: vec![],
                         },
-                        block: None,
                     })],
                 },
-                block: None,
             }),
         ],
     );
@@ -345,13 +333,12 @@ fn test_analyze_qualifies_bare_c_member_nested_under_c_type() {
     // enclosing type's name.
     let doc = Document::new(
         "api.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: DomainObjectBody::CType {
                 signatures: NonEmptyVector::single("Data".into()),
                 flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![c_member("int count")],
             },
-            block: None,
         })],
     );
 
@@ -369,13 +356,12 @@ fn test_analyze_registers_bare_c_type_without_nesting() {
     // Given
     let doc = Document::new(
         "api.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: DomainObjectBody::CType {
                 signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
                 flags: rinx_ast::DescriptionFlags::default(),
                 body: vec![],
             },
-            block: None,
         })],
     );
 
@@ -396,14 +382,14 @@ fn test_analyze_registers_a_function_pointer_typedef_under_its_declared_name() {
     // `Doc/c-api/profiling.rst` unresolvable.
     let doc = Document::new(
             "api.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject { object: DomainObjectBody::CType {
+            vec![Node::directive(Directive::DomainObject { object: DomainObjectBody::CType {
                     signatures: NonEmptyVector::single(
                         "int (*Py_tracefunc)(PyObject *obj, PyFrameObject *frame, int what, PyObject *arg)"
                             .into(),
                     ),
                     flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
-                }, block: None })],
+                },})],
         );
 
     // When
@@ -423,15 +409,14 @@ fn test_analyze_registers_slot_typedefs_with_pointer_return_types() {
     let doc = Document::new(
         "typeobj.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: DomainObjectBody::CType {
                     signatures: NonEmptyVector::single("PyObject *(*unaryfunc)(PyObject *)".into()),
                     flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: DomainObjectBody::CType {
                     signatures: NonEmptyVector::single(
                         "int (*visitproc)(PyObject *object, void *arg)".into(),
@@ -439,7 +424,6 @@ fn test_analyze_registers_slot_typedefs_with_pointer_return_types() {
                     flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
-                block: None,
             }),
         ],
     );
@@ -462,13 +446,12 @@ fn test_analyze_no_index_suppresses_target_and_genindex_entry_for_c_type() {
     // Given
     let doc = Document::new(
         "api.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: DomainObjectBody::CType {
                 signatures: NonEmptyVector::single("Hidden".into()),
                 flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
                 body: vec![],
             },
-            block: None,
         })],
     );
 

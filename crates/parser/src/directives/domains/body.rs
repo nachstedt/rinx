@@ -215,10 +215,14 @@ mod tests {
             "{}",
             unknown.message
         );
-        let Some(Node::Directive(Directive::DomainObject {
-            object: DomainObjectBody::CFunction { body, .. },
+        let Some(Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object: DomainObjectBody::CFunction { body, .. },
+                    ..
+                },
             ..
-        })) = doc.nodes.first()
+        }) = doc.nodes.first()
         else {
             panic!("Expected CFunction, got {:?}", doc.nodes);
         };

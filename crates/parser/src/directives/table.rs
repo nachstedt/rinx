@@ -78,6 +78,7 @@ pub(in crate::directives) fn parse_table_directive(
         Node::Table {
             header_rows,
             body_rows,
+            ..
         },
     ] = body_nodes.as_slice()
     else {
@@ -101,7 +102,6 @@ pub(in crate::directives) fn parse_table_directive(
         name: options.name,
         header_rows: header_rows.clone(),
         body_rows: body_rows.clone(),
-        block: ctx.record_block_lines(span),
     }
 }
 
@@ -161,9 +161,10 @@ mod tests {
 
         // Then
         let span = doc.nodes.iter().find_map(|node| match node {
-            Node::Directive(Directive::Table { block, .. }) => {
-                Some(block.and_then(|id| map.block_lines(id)))
-            }
+            Node::Directive {
+                directive: Directive::Table { .. },
+                block,
+            } => Some(block.and_then(|id| map.block_lines(id))),
             _ => None,
         });
         assert_eq!(
@@ -433,10 +434,19 @@ mod tests {
         let doc = crate::parse_document("test.rst", input);
 
         // Then
-        let Node::Directive(Directive::Table { body_rows, .. }) = &doc.nodes[0] else {
+        let Node::Directive {
+            directive: Directive::Table { body_rows, .. },
+            ..
+        } = &doc.nodes[0]
+        else {
             panic!("Expected Table directive, got {:?}", doc.nodes[0]);
         };
-        let [Node::Paragraph(inlines)] = body_rows[0].cells[0].content.as_slice() else {
+        let [
+            Node::Paragraph {
+                content: inlines, ..
+            },
+        ] = body_rows[0].cells[0].content.as_slice()
+        else {
             panic!(
                 "Expected a single paragraph cell, got {:?}",
                 body_rows[0].cells[0].content
@@ -471,7 +481,7 @@ mod tests {
         assert_eq!(doc.nodes.len(), 1);
         assert!(matches!(
             &doc.nodes[0],
-            Node::Directive(Directive::Table { title, widths, header_rows, body_rows, .. })
+            Node::Directive { directive: Directive::Table { title, widths, header_rows, body_rows, .. }, .. }
                 if title.as_deref() == Some("Truth table for \"not\"")
                     && *widths == Some(TableWidths::Auto)
                     && header_rows.len() == 1

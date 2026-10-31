@@ -39,7 +39,7 @@ pub(super) fn try_parse_transition(
             "transition (horizontal rule) may not begin the document",
             span,
         ));
-    } else if matches!(nodes.last(), Some(Node::Transition)) {
+    } else if matches!(nodes.last(), Some(Node::Transition { .. })) {
         diagnostics.push(Diagnostic::at(
             DiagnosticCode::TransitionAdjacent,
             "transition (horizontal rule) may not immediately follow another transition",
@@ -54,7 +54,7 @@ pub(super) fn try_parse_transition(
         ));
     }
 
-    Some((1, Node::Transition))
+    Some((1, Node::Transition { block: None }))
 }
 
 #[cfg(test)]
@@ -77,7 +77,7 @@ mod tests {
             &ParseCtx::with_domain(Domain::Py),
         );
         // Then
-        assert_eq!(result, Some((1, Node::Transition)));
+        assert_eq!(result, Some((1, Node::Transition { block: None })));
     }
 
     #[test]
@@ -95,7 +95,7 @@ mod tests {
             &ParseCtx::with_domain(Domain::Py),
         );
         // Then
-        assert_eq!(result, Some((1, Node::Transition)));
+        assert_eq!(result, Some((1, Node::Transition { block: None })));
     }
 
     #[test]
@@ -185,7 +185,7 @@ mod tests {
             &ParseCtx::with_domain(Domain::Py),
         );
         // Then
-        assert_eq!(result, Some((1, Node::Transition)));
+        assert_eq!(result, Some((1, Node::Transition { block: None })));
     }
 
     #[test]
@@ -203,7 +203,7 @@ mod tests {
             &ParseCtx::with_domain(Domain::Py),
         );
         // Then
-        assert_eq!(result, Some((1, Node::Transition)));
+        assert_eq!(result, Some((1, Node::Transition { block: None })));
     }
 
     #[test]
@@ -232,7 +232,7 @@ mod tests {
     fn test_try_parse_transition_emits_diagnostic_when_ending_document() {
         // Given — only blank lines remain afterwards
         let lines = vec!["Some text", "", "----", "", "  "];
-        let nodes = vec![Node::Paragraph(vec![])];
+        let nodes = vec![Node::paragraph(vec![])];
         let mut diagnostics = Diagnostics::default();
         // When
         try_parse_transition(
@@ -254,7 +254,7 @@ mod tests {
     fn test_try_parse_transition_emits_diagnostic_when_immediately_adjacent() {
         // Given — the previously parsed node is also a transition
         let lines = vec!["", "----", "", "Some text"];
-        let nodes = vec![Node::Transition];
+        let nodes = vec![Node::Transition { block: None }];
         let mut diagnostics = Diagnostics::default();
         // When
         try_parse_transition(
@@ -276,7 +276,7 @@ mod tests {
     fn test_try_parse_transition_no_diagnostic_for_well_formed_transition() {
         // Given — a transition with content both before and after
         let lines = vec!["Some text", "", "----", "", "More text"];
-        let nodes = vec![Node::Paragraph(vec![])];
+        let nodes = vec![Node::paragraph(vec![])];
         let mut diagnostics = Diagnostics::default();
         // When
         try_parse_transition(
@@ -308,9 +308,9 @@ mod integration_tests {
         assert_eq!(
             doc.nodes,
             vec![
-                Node::Paragraph(vec![InlineNode::Text("First paragraph.".to_string())]),
-                Node::Transition,
-                Node::Paragraph(vec![InlineNode::Text("Second paragraph.".to_string())]),
+                Node::paragraph(vec![InlineNode::Text("First paragraph.".to_string())]),
+                Node::Transition { block: None },
+                Node::paragraph(vec![InlineNode::Text("Second paragraph.".to_string())]),
             ]
         );
         assert!(doc.diagnostics.is_empty());
@@ -333,8 +333,8 @@ mod integration_tests {
             )
         );
         assert_eq!(
-            doc.nodes[1],
-            Node::Paragraph(vec![InlineNode::Text("Some text.".to_string())])
+            crate::unplaced_node(&doc.nodes[1]),
+            Node::paragraph(vec![InlineNode::Text("Some text.".to_string())])
         );
     }
 
@@ -345,7 +345,7 @@ mod integration_tests {
         // When
         let doc = parse_document("test.rst", input);
         // Then
-        assert_eq!(doc.nodes[0], Node::Transition);
+        assert_eq!(doc.nodes[0], Node::Transition { block: None });
         assert!(
             doc.diagnostics
                 .iter()

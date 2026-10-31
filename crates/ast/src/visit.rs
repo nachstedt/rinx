@@ -44,6 +44,7 @@ use crate::node::Node;
 ///     bullet: '-',
 ///     items: vec![ListItem {
 ///         nodes: vec![Node::Comment],
+///         block: None,
 ///     }],
 /// }];
 ///
@@ -58,7 +59,7 @@ use crate::node::Node;
 /// ```
 /// use rinx_ast::{walk_nodes, Node};
 ///
-/// let nodes = vec![Node::Transition, Node::Comment];
+/// let nodes = vec![Node::Transition { block: None }, Node::Comment];
 /// let mut collected: Vec<&Node> = Vec::new();
 /// walk_nodes(&nodes, &mut |node| collected.push(node));
 /// assert_eq!(collected.len(), 2);
@@ -106,8 +107,10 @@ pub enum Child<'a> {
 pub fn for_each_child<'a>(node: &'a Node, visit: &mut impl FnMut(Child<'a>)) {
     match node {
         Node::Heading { text, .. } => visit(Child::Inline(text)),
-        Node::Paragraph(inlines) => visit(Child::Inline(inlines)),
-        Node::Directive(directive) => for_each_directive_child(directive, visit),
+        Node::Paragraph {
+            content: inlines, ..
+        } => visit(Child::Inline(inlines)),
+        Node::Directive { directive, .. } => for_each_directive_child(directive, visit),
         Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
             for item in items {
                 visit(Child::Nodes(&item.nodes));
@@ -127,6 +130,7 @@ pub fn for_each_child<'a>(node: &'a Node, visit: &mut impl FnMut(Child<'a>)) {
         Node::Table {
             header_rows,
             body_rows,
+            ..
         } => {
             for row in header_rows.iter().chain(body_rows) {
                 for cell in &row.cells {
@@ -137,6 +141,7 @@ pub fn for_each_child<'a>(node: &'a Node, visit: &mut impl FnMut(Child<'a>)) {
         Node::BlockQuote {
             content,
             attribution,
+            ..
         } => {
             visit(Child::Nodes(content));
             if let Some(attribution) = attribution {
@@ -145,15 +150,15 @@ pub fn for_each_child<'a>(node: &'a Node, visit: &mut impl FnMut(Child<'a>)) {
         }
         // A line block's nesting is expressed through `LineBlockItem`, not
         // `Node`: each line is one inline list.
-        Node::LineBlock(items) => for_each_line(items, visit),
+        Node::LineBlock { items, .. } => for_each_line(items, visit),
         // Leaf nodes: a target's URI, a literal/doctest block's verbatim
         // text, and a comment/transition hold no list at all.
         Node::Target { .. }
         | Node::AnonymousTarget { .. }
         | Node::LiteralBlock { .. }
-        | Node::DoctestBlock(_)
+        | Node::DoctestBlock { .. }
         | Node::Comment
-        | Node::Transition => {}
+        | Node::Transition { .. } => {}
     }
 }
 
@@ -287,7 +292,7 @@ mod tests {
 
     /// A `.. plantuml::` node whose body identifies it in assertions.
     fn diagram(body: &str) -> Node {
-        Node::Directive(Directive::Uml(Box::new(Uml::new(
+        Node::directive(Directive::Uml(Box::new(Uml::new(
             UmlSource::PlantUml,
             body.to_string(),
         ))))
@@ -297,7 +302,11 @@ mod tests {
     fn walk_diagram_bodies(nodes: &[Node]) -> Vec<String> {
         let mut bodies = Vec::new();
         walk_nodes(nodes, &mut |node| {
-            if let Node::Directive(Directive::Uml(uml)) = node {
+            if let Node::Directive {
+                directive: Directive::Uml(uml),
+                ..
+            } = node
+            {
                 bodies.push(uml.template.clone());
             }
         });
@@ -318,7 +327,11 @@ mod tests {
     #[test]
     fn test_walk_nodes_visits_top_level_nodes_in_document_order() {
         // Given
-        let nodes = vec![diagram("first"), Node::Transition, diagram("second")];
+        let nodes = vec![
+            diagram("first"),
+            Node::Transition { block: None },
+            diagram("second"),
+        ];
 
         // When
         let bodies = walk_diagram_bodies(&nodes);
@@ -333,7 +346,8 @@ mod tests {
         let nodes = vec![Node::BulletList {
             bullet: '-',
             items: vec![ListItem {
-                nodes: vec![Node::Transition],
+                nodes: vec![Node::Transition { block: None }],
+                block: None,
             }],
         }];
 
@@ -344,13 +358,13 @@ mod tests {
         // Then — pre-order: the list, then its child.
         assert_eq!(visited.len(), 2);
         assert!(matches!(visited[0], Node::BulletList { .. }));
-        assert_eq!(visited[1], Node::Transition);
+        assert_eq!(visited[1], Node::Transition { block: None });
     }
 
     #[test]
     fn test_walk_nodes_descends_into_admonition_bodies() {
         // Given — the case that the top-level-only scan used to miss.
-        let nodes = vec![Node::Directive(Directive::Admonition {
+        let nodes = vec![Node::directive(Directive::Admonition {
             kind: AdmonitionKind::Note,
             title: None,
             collapsible: None,
@@ -368,7 +382,7 @@ mod tests {
     fn test_walk_nodes_descends_into_version_change_bodies() {
         // Given
         use crate::version_change_kind::VersionChangeKind;
-        let nodes = vec![Node::Directive(Directive::VersionChange {
+        let nodes = vec![Node::directive(Directive::VersionChange {
             kind: VersionChangeKind::Added,
             version: "1.0".to_string(),
             body: vec![diagram("nested-in-versionadded")],
@@ -384,7 +398,7 @@ mod tests {
     #[test]
     fn test_walk_nodes_descends_into_seealso_bodies() {
         // Given
-        let nodes = vec![Node::Directive(Directive::SeeAlso {
+        let nodes = vec![Node::directive(Directive::SeeAlso {
             body: vec![diagram("nested-in-seealso")],
         })];
 
@@ -403,9 +417,11 @@ mod tests {
             items: vec![
                 ListItem {
                     nodes: vec![diagram("item-one")],
+                    block: None,
                 },
                 ListItem {
                     nodes: vec![diagram("item-two")],
+                    block: None,
                 },
             ],
         }];
@@ -424,6 +440,7 @@ mod tests {
             items: vec![DefinitionListItem {
                 term: vec![InlineNode::Text("term".to_string())],
                 definition: vec![diagram("nested-in-definition")],
+                block: None,
             }],
         }];
 
@@ -445,6 +462,7 @@ mod tests {
                     argument: None,
                 }],
                 description: vec![diagram("nested-in-option-description")],
+                block: None,
             }],
         }];
 
@@ -461,6 +479,7 @@ mod tests {
         let nodes = vec![Node::BlockQuote {
             content: vec![diagram("nested-in-block-quote")],
             attribution: None,
+            block: None,
         }];
 
         // When
@@ -476,6 +495,7 @@ mod tests {
         let nodes = vec![Node::Table {
             header_rows: vec![row_with(vec![diagram("in-header")])],
             body_rows: vec![row_with(vec![diagram("in-body")])],
+            block: None,
         }];
 
         // When
@@ -488,7 +508,7 @@ mod tests {
     #[test]
     fn test_walk_nodes_descends_into_data_table_cells() {
         // Given
-        let nodes = vec![Node::Directive(Directive::DataTable {
+        let nodes = vec![Node::directive(Directive::DataTable {
             source: crate::TableSource::List,
             title: None,
             header_rows: 0,
@@ -499,7 +519,6 @@ mod tests {
             classes: Vec::new(),
             name: None,
             rows: vec![row_with(vec![diagram("in-list-table")])],
-            block: None,
         })];
 
         // When
@@ -512,7 +531,7 @@ mod tests {
     #[test]
     fn test_walk_nodes_descends_into_table_directive_header_and_body_rows() {
         // Given
-        let nodes = vec![Node::Directive(Directive::Table {
+        let nodes = vec![Node::directive(Directive::Table {
             title: None,
             widths: None,
             width: None,
@@ -521,7 +540,6 @@ mod tests {
             name: None,
             header_rows: vec![row_with(vec![diagram("in-header")])],
             body_rows: vec![row_with(vec![diagram("in-body")])],
-            block: None,
         })];
 
         // When
@@ -534,7 +552,7 @@ mod tests {
     #[test]
     fn test_walk_nodes_descends_into_glossary_definitions() {
         // Given
-        let nodes = vec![Node::Directive(Directive::Glossary {
+        let nodes = vec![Node::directive(Directive::Glossary {
             entries: vec![GlossaryEntry {
                 terms: vec![GlossaryTerm::unplaced("term")],
                 definition: vec![diagram("nested-in-glossary")],
@@ -552,13 +570,12 @@ mod tests {
     #[test]
     fn test_walk_nodes_descends_into_domain_object_bodies() {
         // Given
-        let nodes = vec![Node::Directive(Directive::DomainObject {
+        let nodes = vec![Node::directive(Directive::DomainObject {
             object: DomainObjectBody::CFunction {
                 flags: crate::DescriptionFlags::default(),
                 signatures: NonEmptyVector::single("int add(int a, int b)".into()),
                 body: vec![diagram("nested-in-domain-object")],
             },
-            block: None,
         })];
 
         // When
@@ -571,16 +588,17 @@ mod tests {
     #[test]
     fn test_walk_nodes_descends_through_several_levels_of_nesting() {
         // Given — a diagram buried three containers deep.
-        let nodes = vec![Node::Directive(Directive::SeeAlso {
+        let nodes = vec![Node::directive(Directive::SeeAlso {
             body: vec![Node::BulletList {
                 bullet: '-',
                 items: vec![ListItem {
-                    nodes: vec![Node::Directive(Directive::Admonition {
+                    nodes: vec![Node::directive(Directive::Admonition {
                         kind: AdmonitionKind::Warning,
                         title: None,
                         collapsible: None,
                         body: vec![diagram("deeply-nested")],
                     })],
+                    block: None,
                 }],
             }],
         })];
@@ -609,11 +627,11 @@ mod tests {
     fn test_walk_nodes_does_not_descend_into_leaf_directives() {
         // Given — a directive family that carries no block-level children.
         let nodes = vec![
-            Node::Directive(Directive::CNamespacePop),
-            Node::Directive(Directive::StdProgram {
+            Node::directive(Directive::CNamespacePop),
+            Node::directive(Directive::StdProgram {
                 name: Some("dis".to_string()),
             }),
-            Node::Directive(Directive::Unknown {
+            Node::directive(Directive::Unknown {
                 name: "doctest".to_string(),
                 argument: String::new(),
                 body: "unparsed body".to_string(),
@@ -633,8 +651,8 @@ mod tests {
         // Given a top-level comment, then an admonition holding a transition
         let nodes = vec![
             Node::Comment,
-            Node::Directive(Directive::SeeAlso {
-                body: vec![Node::Transition],
+            Node::directive(Directive::SeeAlso {
+                body: vec![Node::Transition { block: None }],
             }),
         ];
 
@@ -667,8 +685,9 @@ mod tests {
     fn test_for_each_child_passes_a_block_quote_content_before_its_attribution() {
         // Given
         let node = Node::BlockQuote {
-            content: vec![Node::Transition, Node::Comment],
+            content: vec![Node::Transition { block: None }, Node::Comment],
             attribution: Some(text("author")),
+            block: None,
         };
 
         // When / Then — in the order a reader meets them
@@ -682,11 +701,13 @@ mod tests {
             items: vec![
                 DefinitionListItem {
                     term: text("first"),
-                    definition: vec![Node::Transition],
+                    definition: vec![Node::Transition { block: None }],
+                    block: None,
                 },
                 DefinitionListItem {
                     term: text("second"),
                     definition: vec![],
+                    block: None,
                 },
             ],
         };
@@ -701,10 +722,13 @@ mod tests {
     #[test]
     fn test_for_each_child_passes_every_line_of_a_nested_line_block() {
         // Given
-        let node = Node::LineBlock(vec![
-            LineBlockItem::Line(text("outer")),
-            LineBlockItem::Nested(vec![LineBlockItem::Line(text("inner"))]),
-        ]);
+        let node = Node::LineBlock {
+            items: vec![
+                LineBlockItem::Line(text("outer")),
+                LineBlockItem::Nested(vec![LineBlockItem::Line(text("inner"))]),
+            ],
+            block: None,
+        };
 
         // When / Then
         assert_eq!(children_of(&node), ["outer", "inner"]);
@@ -713,23 +737,22 @@ mod tests {
     #[test]
     fn test_for_each_child_passes_a_paragraph_and_nothing_for_a_leaf() {
         // Given
-        let paragraph = Node::Paragraph(text("prose"));
+        let paragraph = Node::paragraph(text("prose"));
 
         // When / Then
         assert_eq!(children_of(&paragraph), ["prose"]);
-        assert!(children_of(&Node::Transition).is_empty());
+        assert!(children_of(&Node::Transition { block: None }).is_empty());
     }
 
     #[test]
     fn test_for_each_child_passes_a_domain_object_body() {
         // Given
-        let node = Node::Directive(Directive::DomainObject {
+        let node = Node::directive(Directive::DomainObject {
             object: DomainObjectBody::PyModule {
                 name: "pkg".to_string(),
                 options: crate::module_options::ModuleOptions::default(),
-                body: vec![Node::Transition],
+                body: vec![Node::Transition { block: None }],
             },
-            block: None,
         });
 
         // When / Then

@@ -158,13 +158,13 @@ mod tests {
         let document = rinx_ast::Document::new(
             "index.rst".to_string(),
             vec![
-                rinx_ast::Node::Paragraph(vec![rinx_ast::InlineNode::Reference {
+                rinx_ast::Node::paragraph(vec![rinx_ast::InlineNode::Reference {
                     display: None,
                     target: "missing".to_string(),
                     span: on_line(3),
                     inventory: rinx_ast::InventorySelector::Any,
                 }]),
-                rinx_ast::Node::Paragraph(vec![rinx_ast::InlineNode::Math {
+                rinx_ast::Node::paragraph(vec![rinx_ast::InlineNode::Math {
                     latex: "\\frac{".to_string(),
                     span: on_line(1),
                 }]),

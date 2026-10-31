@@ -45,6 +45,7 @@ from benchmark_common import (
     add_output_arguments,
     count_row,
     json_objects,
+    written_directive,
     whitelist_rows,
     write_frequency_summary,
 )
@@ -565,8 +566,8 @@ def tally_ast(ast_files: Iterable[Path]) -> tuple[Counter[str], Counter[str]]:
             print(f"Failed to parse {ast_file}: {e}")
             continue
         for node in json_objects(tree):
-            directive = node.get("Directive")
-            if not isinstance(directive, dict):
+            directive = written_directive(node)
+            if directive is None:
                 continue
             if "Unknown" in directive:
                 unknown_directives[directive["Unknown"].get("name", "unnamed")] += 1

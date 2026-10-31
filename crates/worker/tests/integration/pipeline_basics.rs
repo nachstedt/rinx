@@ -27,11 +27,21 @@ fn test_parser_step() {
             ast::Position::new(1, 6)
         ))
     );
+    let ast::Node::Paragraph { content, block } = &ast.nodes[1] else {
+        panic!("expected a paragraph, found {:?}", ast.nodes[1]);
+    };
     assert_eq!(
-        ast.nodes[1],
-        ast::Node::Paragraph(vec![ast::InlineNode::Text(
+        *content,
+        vec![ast::InlineNode::Text(
             "Paragraph text here.\nMore text.".to_string()
-        )])
+        )]
+    );
+    assert_eq!(
+        block.and_then(|id| source_map.block_lines(id)),
+        Some(ast::Span::new(
+            ast::Position::new(4, 1),
+            ast::Position::new(5, 11)
+        ))
     );
 }
 
@@ -45,7 +55,7 @@ fn test_renderer_step() {
                 text: vec![ast::InlineNode::Text("Section".to_string())],
                 block: None,
             },
-            ast::Node::Paragraph(vec![ast::InlineNode::Text("A line of text.".to_string())]),
+            ast::Node::paragraph(vec![ast::InlineNode::Text("A line of text.".to_string())]),
         ],
     );
     let index = analyzer::analyze(&doc);

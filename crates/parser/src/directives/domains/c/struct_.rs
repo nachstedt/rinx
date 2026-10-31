@@ -57,16 +57,20 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object:
-                DomainObjectBody::CStruct {
-                    signatures,
-                    flags,
-                    body,
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        DomainObjectBody::CStruct {
+                            signatures,
+                            flags,
+                            body,
+                            ..
+                        },
                     ..
                 },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert_eq!(signature_texts(signatures), ["Data"]);
             assert_eq!(flags, &rinx_ast::DescriptionFlags::default());
@@ -87,18 +91,25 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object: DomainObjectBody::CStruct { body, .. },
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object: DomainObjectBody::CStruct { body, .. },
+                    ..
+                },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert_eq!(body.len(), 1);
             assert!(matches!(
                 &body[0],
-                Node::Directive(Directive::DomainObject {
-                    object: DomainObjectBody::CMember { .. },
+                Node::Directive {
+                    directive: Directive::DomainObject {
+                        object: DomainObjectBody::CMember { .. },
+                        ..
+                    },
                     ..
-                })
+                }
             ));
         } else {
             panic!("Expected CStruct, got {:?}", doc.nodes[0]);

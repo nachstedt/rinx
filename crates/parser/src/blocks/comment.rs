@@ -281,7 +281,7 @@ mod integration_tests {
         assert_eq!(doc.nodes[0], Node::Comment);
         assert_eq!(
             doc.nodes[1],
-            Node::Paragraph(vec![InlineNode::Text("A paragraph.".to_string())])
+            Node::paragraph(vec![InlineNode::Text("A paragraph.".to_string())])
         );
     }
 
@@ -303,8 +303,8 @@ mod integration_tests {
         );
         assert_eq!(doc.nodes[1], Node::Comment);
         assert_eq!(
-            doc.nodes[2],
-            Node::Paragraph(vec![InlineNode::Text("Some text.".to_string())])
+            crate::unplaced_node(&doc.nodes[2]),
+            Node::paragraph(vec![InlineNode::Text("Some text.".to_string())])
         );
     }
 
@@ -350,7 +350,7 @@ mod integration_tests {
         assert_eq!(doc.nodes.len(), 1);
         assert_eq!(
             doc.nodes[0],
-            Node::Paragraph(vec![InlineNode::Text(
+            Node::paragraph(vec![InlineNode::Text(
                 "\u{2026}continued from above.".to_string()
             )])
         );
@@ -365,7 +365,7 @@ mod integration_tests {
         // Then — directive is parsed, not a Comment
         assert_eq!(doc.nodes.len(), 1);
         assert!(
-            matches!(&doc.nodes[0], Node::Directive(_)),
+            matches!(&doc.nodes[0], Node::Directive { .. }),
             "Expected Directive, got {:?}",
             doc.nodes[0]
         );

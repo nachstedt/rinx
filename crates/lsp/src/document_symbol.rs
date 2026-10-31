@@ -217,7 +217,10 @@ impl Outline<'_> {
     /// Appends to `out` the symbols `node` defines, nested as they are.
     fn symbols_of(&self, node: &Node, out: &mut Vec<OutlineSymbol>) {
         match node {
-            Node::Directive(Directive::DomainObject { object, block }) => {
+            Node::Directive {
+                directive: Directive::DomainObject { object },
+                block,
+            } => {
                 let mut children = Vec::new();
                 for child in object.body() {
                     self.symbols_of(child, &mut children);
@@ -228,7 +231,10 @@ impl Outline<'_> {
                     Err(children) => out.extend(children),
                 }
             }
-            Node::Directive(Directive::Entity(entity)) => {
+            Node::Directive {
+                directive: Directive::Entity(entity),
+                ..
+            } => {
                 let mut children = Vec::new();
                 for section in &entity.sections {
                     for child in &section.body {
@@ -575,7 +581,7 @@ API
             "reqs.rst".to_string(),
             vec![
                 heading(&mut source_map, 1, "Reqs", Some(span_at(1, 4))),
-                Node::Directive(Directive::Entity(Box::new(entity))),
+                Node::directive(Directive::Entity(Box::new(entity))),
             ],
         );
         // The directive's block, as the parser records it
@@ -680,14 +686,11 @@ API
             is_final: false,
             module: None,
             flags: rinx_ast::DescriptionFlags::default(),
-            body: vec![Node::Directive(Directive::Entity(Box::new(entity)))],
+            body: vec![Node::directive(Directive::Entity(Box::new(entity)))],
         };
         let document = Document::new(
             "api.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject {
-                object: class,
-                block: None,
-            })],
+            vec![Node::directive(Directive::DomainObject { object: class })],
         );
 
         // When

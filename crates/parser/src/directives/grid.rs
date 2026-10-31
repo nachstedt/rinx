@@ -273,7 +273,13 @@ fn report_unexpected_children(
 
 /// Whether a node is a `.. grid-item::`.
 fn is_grid_item(node: &Node) -> bool {
-    matches!(node, Node::Directive(Directive::GridItem(_)))
+    matches!(
+        node,
+        Node::Directive {
+            directive: Directive::GridItem(_),
+            ..
+        }
+    )
 }
 
 #[cfg(test)]
@@ -292,7 +298,10 @@ mod tests {
             .nodes
             .iter()
             .find_map(|node| match node {
-                Node::Directive(Directive::Grid(grid)) => Some((**grid).clone()),
+                Node::Directive {
+                    directive: Directive::Grid(grid),
+                    ..
+                } => Some((**grid).clone()),
                 _ => None,
             })
             .expect("document should contain a grid directive");
@@ -311,7 +320,10 @@ mod tests {
         let mut found = None;
         walk_nodes(nodes, &mut |node| {
             if found.is_none()
-                && let Node::Directive(Directive::GridItem(item)) = node
+                && let Node::Directive {
+                    directive: Directive::GridItem(item),
+                    ..
+                } = node
             {
                 found = Some((**item).clone());
             }
@@ -324,7 +336,10 @@ mod tests {
         let mut found = None;
         walk_nodes(nodes, &mut |node| {
             if found.is_none()
-                && let Node::Directive(Directive::Uml(uml)) = node
+                && let Node::Directive {
+                    directive: Directive::Uml(uml),
+                    ..
+                } = node
             {
                 found = Some((**uml).clone());
             }
@@ -354,7 +369,10 @@ mod tests {
         assert_eq!(grid.body.len(), 1);
         assert!(matches!(
             grid.body[0],
-            Node::Directive(Directive::GridItem(_))
+            Node::Directive {
+                directive: Directive::GridItem(_),
+                ..
+            }
         ));
         assert!(diagnostics.is_empty(), "got: {diagnostics:?}");
     }
@@ -671,7 +689,7 @@ mod tests {
         );
         assert_eq!(
             grid.body,
-            vec![Node::Paragraph(vec![InlineNode::Text(
+            vec![Node::paragraph(vec![InlineNode::Text(
                 "Stray prose.".to_string()
             )])]
         );
@@ -744,8 +762,8 @@ mod tests {
     #[test]
     fn test_is_grid_item_distinguishes_an_item_from_other_content() {
         // Given
-        let item = Node::Directive(Directive::GridItem(Box::new(GridItem::new())));
-        let prose = Node::Paragraph(vec![InlineNode::Text("x".to_string())]);
+        let item = Node::directive(Directive::GridItem(Box::new(GridItem::new())));
+        let prose = Node::paragraph(vec![InlineNode::Text("x".to_string())]);
 
         // When / Then
         assert!(is_grid_item(&item));

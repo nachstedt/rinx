@@ -28,13 +28,13 @@ fn test_analyze_qualifies_method_nested_in_class() {
     // Given — a `py:method` nested inside a `py:class` body
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyClass {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("Greeter".to_string()),
                 is_final: false,
-                body: vec![Node::Directive(Directive::DomainObject {
+                body: vec![Node::directive(Directive::DomainObject {
                     object: rinx_ast::DomainObjectBody::PyMethod {
                         flags: rinx_ast::DescriptionFlags::default(),
                         module: None,
@@ -46,10 +46,8 @@ fn test_analyze_qualifies_method_nested_in_class() {
                         is_async: false,
                         body: vec![],
                     },
-                    block: None,
                 })],
             },
-            block: None,
         })],
     );
 
@@ -67,13 +65,13 @@ fn test_analyze_qualifies_method_nested_in_exception() {
     // like the `py:class` nesting case, since exceptions are classes.
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyException {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("GreeterError".to_string()),
                 is_final: false,
-                body: vec![Node::Directive(Directive::DomainObject {
+                body: vec![Node::directive(Directive::DomainObject {
                     object: rinx_ast::DomainObjectBody::PyMethod {
                         flags: rinx_ast::DescriptionFlags::default(),
                         module: None,
@@ -85,10 +83,8 @@ fn test_analyze_qualifies_method_nested_in_exception() {
                         is_async: false,
                         body: vec![],
                     },
-                    block: None,
                 })],
             },
-            block: None,
         })],
     );
 
@@ -105,19 +101,19 @@ fn test_analyze_qualifies_nested_classes_two_levels_deep() {
     // Given — a class nested inside another class, both containing a method
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyClass {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("Outer".to_string()),
                 is_final: false,
-                body: vec![Node::Directive(Directive::DomainObject {
+                body: vec![Node::directive(Directive::DomainObject {
                     object: rinx_ast::DomainObjectBody::PyClass {
                         flags: rinx_ast::DescriptionFlags::default(),
                         module: None,
                         signatures: NonEmptyVector::single("Inner".to_string()),
                         is_final: false,
-                        body: vec![Node::Directive(Directive::DomainObject {
+                        body: vec![Node::directive(Directive::DomainObject {
                             object: rinx_ast::DomainObjectBody::PyMethod {
                                 flags: rinx_ast::DescriptionFlags::default(),
                                 module: None,
@@ -129,13 +125,10 @@ fn test_analyze_qualifies_nested_classes_two_levels_deep() {
                                 is_async: false,
                                 body: vec![],
                             },
-                            block: None,
                         })],
                     },
-                    block: None,
                 })],
             },
-            block: None,
         })],
     );
 
@@ -151,13 +144,13 @@ fn test_analyze_qualifies_non_method_object_nested_in_class() {
     // Given — a `py:data` (class attribute) nested inside a `py:class`
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyClass {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("Greeter".to_string()),
                 is_final: false,
-                body: vec![Node::Directive(Directive::DomainObject {
+                body: vec![Node::directive(Directive::DomainObject {
                     object: rinx_ast::DomainObjectBody::PyData {
                         flags: rinx_ast::DescriptionFlags::default(),
                         module: None,
@@ -166,10 +159,8 @@ fn test_analyze_qualifies_non_method_object_nested_in_class() {
                         value: None,
                         body: vec![],
                     },
-                    block: None,
                 })],
             },
-            block: None,
         })],
     );
 
@@ -185,11 +176,11 @@ fn test_analyze_qualifies_object_nested_in_module_domain_object() {
     // the module's name, matching real Sphinx.
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyModule {
                 name: "greetings".to_string(),
                 options: rinx_ast::ModuleOptions::default(),
-                body: vec![Node::Directive(Directive::DomainObject {
+                body: vec![Node::directive(Directive::DomainObject {
                     object: rinx_ast::DomainObjectBody::PyFunction {
                         flags: rinx_ast::DescriptionFlags::default(),
                         is_async: false,
@@ -198,10 +189,8 @@ fn test_analyze_qualifies_object_nested_in_module_domain_object() {
                         signatures: NonEmptyVector::single("greet(name)".to_string()),
                         body: vec![],
                     },
-                    block: None,
                 })],
             },
-            block: None,
         })],
     );
 
@@ -221,15 +210,14 @@ fn test_analyze_qualifies_sibling_object_after_module_domain_object() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
                     name: "types".to_string(),
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyFunction {
                     flags: rinx_ast::DescriptionFlags::default(),
                     is_async: false,
@@ -238,7 +226,6 @@ fn test_analyze_qualifies_sibling_object_after_module_domain_object() {
                     signatures: NonEmptyVector::single("coroutine(gen_func)".to_string()),
                     body: vec![],
                 },
-                block: None,
             }),
         ],
     );
@@ -261,15 +248,14 @@ fn test_analyze_does_not_dedup_module_prefix_in_flat_sibling_signature() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
                     name: "datetime".to_string(),
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyMethod {
                     flags: rinx_ast::DescriptionFlags::default(),
                     module: None,
@@ -283,7 +269,6 @@ fn test_analyze_does_not_dedup_module_prefix_in_flat_sibling_signature() {
                     is_async: false,
                     body: vec![],
                 },
-                block: None,
             }),
         ],
     );
@@ -302,10 +287,10 @@ fn test_analyze_qualifies_object_after_current_module_directive() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::PyCurrentModule {
+            Node::directive(Directive::PyCurrentModule {
                 module: Some("enum".to_string()),
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyClass {
                     flags: rinx_ast::DescriptionFlags::default(),
                     module: None,
@@ -313,7 +298,6 @@ fn test_analyze_qualifies_object_after_current_module_directive() {
                     is_final: false,
                     body: vec![],
                 },
-                block: None,
             }),
         ],
     );
@@ -331,16 +315,15 @@ fn test_analyze_current_module_none_resets_qualification_to_module_free() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
                     name: "pickle".to_string(),
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::PyCurrentModule { module: None }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::PyCurrentModule { module: None }),
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyFunction {
                     flags: rinx_ast::DescriptionFlags::default(),
                     is_async: false,
@@ -349,7 +332,6 @@ fn test_analyze_current_module_none_resets_qualification_to_module_free() {
                     signatures: NonEmptyVector::single("example()".to_string()),
                     body: vec![],
                 },
-                block: None,
             }),
         ],
     );
@@ -369,23 +351,21 @@ fn test_analyze_switches_current_module_on_second_module_directive() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
                     name: "email.mime".to_string(),
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
                     name: "email.mime.text".to_string(),
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyClass {
                     flags: rinx_ast::DescriptionFlags::default(),
                     module: None,
@@ -393,7 +373,6 @@ fn test_analyze_switches_current_module_on_second_module_directive() {
                     is_final: false,
                     body: vec![],
                 },
-                block: None,
             }),
         ],
     );
@@ -413,21 +392,20 @@ fn test_analyze_dedups_class_name_repeated_in_flat_nested_signature() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
                     name: "random".to_string(),
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyClass {
                     flags: rinx_ast::DescriptionFlags::default(),
                     module: None,
                     signatures: NonEmptyVector::single("Random([seed])".to_string()),
                     is_final: false,
-                    body: vec![Node::Directive(Directive::DomainObject {
+                    body: vec![Node::directive(Directive::DomainObject {
                         object: rinx_ast::DomainObjectBody::PyMethod {
                             flags: rinx_ast::DescriptionFlags::default(),
                             module: None,
@@ -441,10 +419,8 @@ fn test_analyze_dedups_class_name_repeated_in_flat_nested_signature() {
                             is_async: false,
                             body: vec![],
                         },
-                        block: None,
                     })],
                 },
-                block: None,
             }),
         ],
     );
@@ -461,13 +437,13 @@ fn test_analyze_qualifies_genindex_entry_for_method_nested_in_class() {
     // Given
     let doc = Document::new(
         "api.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyClass {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
                 signatures: NonEmptyVector::single("Greeter".to_string()),
                 is_final: false,
-                body: vec![Node::Directive(Directive::DomainObject {
+                body: vec![Node::directive(Directive::DomainObject {
                     object: rinx_ast::DomainObjectBody::PyMethod {
                         flags: rinx_ast::DescriptionFlags::default(),
                         module: None,
@@ -479,10 +455,8 @@ fn test_analyze_qualifies_genindex_entry_for_method_nested_in_class() {
                         is_async: false,
                         body: vec![],
                     },
-                    block: None,
                 })],
             },
-            block: None,
         })],
     );
 
@@ -512,15 +486,14 @@ fn test_analyze_module_option_overrides_the_enclosing_module() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
                     name: "multiprocessing.shared_memory".to_string(),
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyClass {
                     flags: rinx_ast::DescriptionFlags::default(),
                     module: Some("multiprocessing.managers".to_string()),
@@ -528,7 +501,6 @@ fn test_analyze_module_option_overrides_the_enclosing_module() {
                     is_final: false,
                     body: vec![],
                 },
-                block: None,
             }),
         ],
     );
@@ -562,21 +534,20 @@ fn test_analyze_module_option_propagates_into_nested_body() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
                     name: "multiprocessing.shared_memory".to_string(),
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyClass {
                     flags: rinx_ast::DescriptionFlags::default(),
                     module: Some("multiprocessing.managers".to_string()),
                     signatures: NonEmptyVector::single("SharedMemoryManager".to_string()),
                     is_final: false,
-                    body: vec![Node::Directive(Directive::DomainObject {
+                    body: vec![Node::directive(Directive::DomainObject {
                         object: rinx_ast::DomainObjectBody::PyMethod {
                             flags: rinx_ast::DescriptionFlags::default(),
                             module: None,
@@ -588,10 +559,8 @@ fn test_analyze_module_option_propagates_into_nested_body() {
                             is_async: false,
                             body: vec![],
                         },
-                        block: None,
                     })],
                 },
-                block: None,
             }),
         ],
     );
@@ -617,15 +586,14 @@ fn test_analyze_module_option_is_restored_after_the_object_and_its_body() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
                     name: "multiprocessing.shared_memory".to_string(),
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyClass {
                     flags: rinx_ast::DescriptionFlags::default(),
                     module: Some("multiprocessing.managers".to_string()),
@@ -633,9 +601,8 @@ fn test_analyze_module_option_is_restored_after_the_object_and_its_body() {
                     is_final: false,
                     body: vec![],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyFunction {
                     flags: rinx_ast::DescriptionFlags::default(),
                     is_async: false,
@@ -644,7 +611,6 @@ fn test_analyze_module_option_is_restored_after_the_object_and_its_body() {
                     signatures: NonEmptyVector::single("track(size)".to_string()),
                     body: vec![],
                 },
-                block: None,
             }),
         ],
     );
@@ -666,15 +632,14 @@ fn test_analyze_module_option_with_empty_value_leaves_object_unqualified() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
                     name: "ctypes".to_string(),
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyFunction {
                     flags: rinx_ast::DescriptionFlags::default(),
                     is_async: false,
@@ -683,7 +648,6 @@ fn test_analyze_module_option_with_empty_value_leaves_object_unqualified() {
                     signatures: NonEmptyVector::single("standalone()".to_string()),
                     body: vec![],
                 },
-                block: None,
             }),
         ],
     );

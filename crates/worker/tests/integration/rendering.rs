@@ -304,7 +304,7 @@ fn test_e2e_doctest_block_nested_in_an_enumerated_item_is_found() {
     let doc = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
     let mut found = 0;
     ast::walk_nodes(&doc.nodes, &mut |node| {
-        if matches!(node, ast::Node::DoctestBlock(_)) {
+        if matches!(node, ast::Node::DoctestBlock { .. }) {
             found += 1;
         }
     });

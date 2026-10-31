@@ -229,7 +229,7 @@ mod render_tests {
     use rinx_index::{EquationLocation, ProjectIndex};
 
     fn math_node(label: Option<&str>, nowrap: bool, classes: Vec<String>, parts: &[&str]) -> Node {
-        Node::Directive(Directive::Math {
+        Node::directive(Directive::Math {
             parts: parts.iter().map(|p| (*p).to_string()).collect(),
             label: label.map(|text| TargetName::new(text).into()),
             nowrap,

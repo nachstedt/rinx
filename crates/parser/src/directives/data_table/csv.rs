@@ -171,7 +171,6 @@ pub(in crate::directives) fn parse_csv_table(
             title,
             options,
             header_option_rows: header_rows,
-            marker: invocation.span,
         },
         rows,
         adornment_order,
@@ -342,8 +341,6 @@ struct CsvTableSpec {
     /// Rows contributed by the `:header:` option, over and above
     /// `options.header_rows`.
     header_option_rows: usize,
-    /// The directive's marker line, which the node records as its span.
-    marker: Option<Span>,
 }
 
 fn build_csv_table(
@@ -358,7 +355,6 @@ fn build_csv_table(
         title,
         options,
         header_option_rows,
-        marker,
     } = spec;
     let ncols = field_rows.first().map_or(0, Vec::len);
     let header_rows = header_option_rows + options.header_rows;
@@ -415,7 +411,6 @@ fn build_csv_table(
         classes: options.classes,
         name: options.name,
         rows,
-        block: ctx.record_block_lines(marker),
     })
 }
 
@@ -471,9 +466,10 @@ mod tests {
 
         // Then
         let span = doc.nodes.iter().find_map(|node| match node {
-            Node::Directive(Directive::DataTable { block, .. }) => {
-                Some(block.and_then(|id| map.block_lines(id)))
-            }
+            Node::Directive {
+                directive: Directive::DataTable { .. },
+                block,
+            } => Some(block.and_then(|id| map.block_lines(id))),
             _ => None,
         });
         assert_eq!(
@@ -540,7 +536,11 @@ mod tests {
                 row.cells
                     .iter()
                     .map(|cell| match cell.content.as_slice() {
-                        [Node::Paragraph(inlines)] => inlines
+                        [
+                            Node::Paragraph {
+                                content: inlines, ..
+                            },
+                        ] => inlines
                             .iter()
                             .map(|inline| match inline {
                                 InlineNode::Text(text) => text.clone(),
@@ -770,8 +770,9 @@ mod tests {
         assert_eq!(
             rows[0].cells[1].content,
             vec![Node::BlockQuote {
-                content: vec![Node::Paragraph(vec![InlineNode::Text("Red".to_string())])],
+                content: vec![Node::paragraph(vec![InlineNode::Text("Red".to_string())])],
                 attribution: None,
+                block: None,
             }]
         );
     }
@@ -792,7 +793,7 @@ mod tests {
         assert!(
             matches!(
                 rows[0].cells[0].content.as_slice(),
-                [Node::Paragraph(inlines)] if matches!(inlines.as_slice(), [InlineNode::Emphasis(_)])
+                [Node::Paragraph { content: inlines, .. }] if matches!(inlines.as_slice(), [InlineNode::Emphasis(_)])
             ),
             "expected emphasis, got {:?}",
             rows[0].cells[0].content
@@ -1075,7 +1076,7 @@ mod tests {
         assert_eq!(doc.nodes.len(), 1);
         assert!(matches!(
             &doc.nodes[0],
-            Node::Directive(Directive::DataTable { source, title, header_rows, rows, .. })
+            Node::Directive { directive: Directive::DataTable { source, title, header_rows, rows, .. }, .. }
                 if *source == TableSource::Csv
                     && title.as_deref() == Some("Fruit")
                     && *header_rows == 1

@@ -211,7 +211,10 @@ mod tests {
             .nodes
             .into_iter()
             .find_map(|node| match node {
-                rinx_ast::Node::Directive(Directive::DomainObject { object: obj, .. }) => Some(obj),
+                rinx_ast::Node::Directive {
+                    directive: Directive::DomainObject { object: obj, .. },
+                    ..
+                } => Some(obj),
                 _ => None,
             })
             .expect("a domain object")

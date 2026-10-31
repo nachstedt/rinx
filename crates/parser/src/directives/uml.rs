@@ -278,7 +278,10 @@ mod tests {
             .nodes
             .iter()
             .find_map(|node| match node {
-                Node::Directive(Directive::Uml(uml)) => Some((**uml).clone()),
+                Node::Directive {
+                    directive: Directive::Uml(uml),
+                    ..
+                } => Some((**uml).clone()),
                 _ => None,
             })
             .expect("document should contain a diagram directive");

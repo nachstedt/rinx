@@ -125,7 +125,7 @@ mod tests {
                 text: vec![InlineNode::Text("Title".to_string())],
                 block: None,
             },
-            Node::Paragraph(vec![InlineNode::Text("Body".to_string())]),
+            Node::paragraph(vec![InlineNode::Text("Body".to_string())]),
         ];
 
         // When

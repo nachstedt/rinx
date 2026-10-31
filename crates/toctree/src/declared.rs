@@ -60,7 +60,11 @@ impl DeclaredDocuments {
 pub fn undeclared_toctree_entries(doc: &Document, declared: &DeclaredDocuments) -> Vec<Diagnostic> {
     let mut found = Vec::new();
     for node in &doc.nodes {
-        let Node::Directive(Directive::Toctree(toctree)) = node else {
+        let Node::Directive {
+            directive: Directive::Toctree(toctree),
+            ..
+        } = node
+        else {
             continue;
         };
         let (_, unmatched) = expand_toctree(toctree, &doc.path, &declared.0);
@@ -111,7 +115,7 @@ mod tests {
     fn index_with(toctree: Toctree) -> Document {
         Document::new(
             "docs/index.rst".to_string(),
-            vec![Node::Directive(Directive::Toctree(toctree))],
+            vec![Node::directive(Directive::Toctree(toctree))],
         )
     }
 

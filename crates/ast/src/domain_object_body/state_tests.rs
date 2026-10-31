@@ -4,7 +4,7 @@ use crate::inline_node::InlineNode;
 #[test]
 fn test_domain_object_body_body_returns_shared_body_for_every_variant() {
     // Given
-    let paragraph = Node::Paragraph(vec![InlineNode::Text("hello".to_string())]);
+    let paragraph = Node::paragraph(vec![InlineNode::Text("hello".to_string())]);
     let function = DomainObjectBody::PyFunction {
         is_async: false,
         flags: crate::DescriptionFlags::default(),
@@ -237,7 +237,7 @@ fn test_deduce_local_scope_returns_empty_for_c_member() {
 #[test]
 fn test_domain_object_body_body_returns_shared_body_for_c_struct_union_member() {
     // Given
-    let paragraph = Node::Paragraph(vec![InlineNode::Text("hello".to_string())]);
+    let paragraph = Node::paragraph(vec![InlineNode::Text("hello".to_string())]);
     let struct_ = DomainObjectBody::CStruct {
         signatures: NonEmptyVector::single("Data".into()),
         flags: crate::DescriptionFlags::default(),
@@ -366,7 +366,7 @@ fn test_deduce_local_scope_lends_all_new_segments_for_c_type() {
 #[test]
 fn test_domain_object_body_body_returns_shared_body_for_c_type() {
     // Given
-    let paragraph = Node::Paragraph(vec![InlineNode::Text("hello".to_string())]);
+    let paragraph = Node::paragraph(vec![InlineNode::Text("hello".to_string())]);
     let type_ = DomainObjectBody::CType {
         signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
         flags: crate::DescriptionFlags::default(),

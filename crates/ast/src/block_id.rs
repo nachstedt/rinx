@@ -2,10 +2,10 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Which written block of one parse a node is — a section's title, a
-/// `.. _label:`, a domain object's or a table directive's marker, a glossary
-/// term: the row of its [`SourceMap`](crate::SourceMap) holding the block's
-/// lines, where an editor's outline and a definition lead.
+/// Which written block of one parse a node is — a paragraph, a list item, a
+/// section's title, a directive's marker, a glossary term: the row of its
+/// [`SourceMap`](crate::SourceMap) holding the block's lines, where an
+/// editor's outline, a definition and a preview's scroll position lead.
 ///
 /// Only [`SourceMap::record_block_lines`](crate::SourceMap::record_block_lines)
 /// makes one, so an id always has a row in the map it was recorded in. It is

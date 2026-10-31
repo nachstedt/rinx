@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 use crate::admonition_kind::AdmonitionKind;
-use crate::block_id::BlockId;
 use crate::button_link::ButtonLink;
 use crate::code_block::CodeBlock;
 use crate::code_language::ResolvedLanguage;
@@ -253,11 +252,6 @@ pub enum Directive {
         /// `ProjectIndex::targets` with no extra conversion.
         name: Option<Named<TargetName>>,
         rows: Vec<TableRow>,
-        /// Where the directive was written, which its `:name:`'s definition
-        /// is, as the parse's source map records it
-        /// (`docs/decisions/045-definition-spans.md`).
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        block: Option<BlockId>,
     },
     /// `.. table::` — wraps an existing grid or simple table (given as the
     /// directive's own content) with a title/caption and the layout options
@@ -289,9 +283,6 @@ pub enum Directive {
         name: Option<Named<TargetName>>,
         header_rows: Vec<TableRow>,
         body_rows: Vec<TableRow>,
-        /// Where the directive was written — see [`Self::DataTable`]'s.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        block: Option<BlockId>,
     },
     /// `.. math::` — one or more display equations written in LaTeX.
     ///
@@ -362,12 +353,6 @@ pub enum Directive {
     DomainObject {
         /// The object, one variant per kind, each with its own options.
         object: DomainObjectBody,
-        /// The directive's marker line, which the object's definition is —
-        /// whatever its kind, so it is kept here once rather than in each
-        /// variant of `object` — as the parse's source map records it
-        /// (`docs/decisions/045-definition-spans.md`).
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        block: Option<BlockId>,
     },
     /// One block of the `sphinx.ext.doctest` family (`doctest`, `testcode`,
     /// `testoutput`, `testsetup`, `testcleanup`).
@@ -506,11 +491,10 @@ mod tests {
             object: DomainObjectBody::CFunction {
                 flags: crate::DescriptionFlags::default(),
                 signatures: NonEmptyVector::single("int add(int a, int b)".into()),
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                body: vec![Node::paragraph(vec![InlineNode::Text(
                     "Adds two numbers.".to_string(),
                 )])],
             },
-            block: None,
         };
 
         // When
@@ -538,7 +522,6 @@ mod tests {
                 },
                 body: vec![],
             },
-            block: None,
         };
 
         // When
@@ -561,7 +544,6 @@ mod tests {
                 value: Some("30".to_string()),
                 body: vec![],
             },
-            block: None,
         };
 
         // When
@@ -721,10 +703,9 @@ mod tests {
                 cells: vec![TableCell {
                     colspan: 1,
                     rowspan: 1,
-                    content: vec![Node::Paragraph(vec![InlineNode::Text("Fruit".to_string())])],
+                    content: vec![Node::paragraph(vec![InlineNode::Text("Fruit".to_string())])],
                 }],
             }],
-            block: None,
         };
 
         // When
@@ -751,11 +732,10 @@ mod tests {
                 cells: vec![TableCell {
                     colspan: 1,
                     rowspan: 1,
-                    content: vec![Node::Paragraph(vec![InlineNode::Text("Fruit".to_string())])],
+                    content: vec![Node::paragraph(vec![InlineNode::Text("Fruit".to_string())])],
                 }],
             }],
             body_rows: vec![],
-            block: None,
         };
 
         // When

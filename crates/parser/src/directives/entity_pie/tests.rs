@@ -47,7 +47,10 @@ fn parse_pie(rst: &str) -> EntityPie {
     doc.nodes
         .iter()
         .find_map(|node| match node {
-            Node::Directive(Directive::EntityPie(pie)) => Some((**pie).clone()),
+            Node::Directive {
+                directive: Directive::EntityPie(pie),
+                ..
+            } => Some((**pie).clone()),
             _ => None,
         })
         .unwrap_or_else(|| panic!("no pie chart parsed from:\n{rst}"))

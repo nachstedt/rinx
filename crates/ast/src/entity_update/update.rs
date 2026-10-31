@@ -92,7 +92,7 @@ mod tests {
             span: None,
         });
         update.strict = false;
-        update.body = vec![crate::node::Node::Paragraph(vec![
+        update.body = vec![crate::node::Node::paragraph(vec![
             crate::inline_node::InlineNode::Text("Closed after review.".to_string()),
         ])];
 

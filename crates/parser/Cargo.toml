@@ -20,5 +20,8 @@ octicons-pack = { version = "19.33", default-features = false }
 regex = "1.10"
 unicode-width = "0.2"
 
+[dev-dependencies]
+serde_json = "1"
+
 [lints]
 workspace = true

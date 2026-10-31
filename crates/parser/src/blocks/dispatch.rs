@@ -50,11 +50,38 @@ pub fn parse(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Parsed {
     read_document(path, input, ctx, Epilog::Appended).parsed
 }
 
-/// The document [`parse`] reads from `input` under the default context —
-/// what the tests of each construct's parsing read.
+/// The document [`parse`] reads from `input` under the default context,
+/// with no block placed — what the tests of each construct's *structure*
+/// compare, where it was written being tested through [`parse_placed`].
 #[cfg(test)]
 pub(crate) fn parse_document(path: &str, input: &str) -> Document {
-    parse(path, input, &ParseCtx::default()).document
+    unplaced(&parse(path, input, &ParseCtx::default()).document)
+}
+
+/// `node` with every [`rinx_ast::BlockId`] in it dropped — see [`unplaced`].
+#[cfg(test)]
+pub(crate) fn unplaced_node(node: &Node) -> Node {
+    let document = Document::new(String::new(), vec![node.clone()]);
+    unplaced(&document).nodes.remove(0)
+}
+
+/// `document` with every [`rinx_ast::BlockId`] dropped, through its
+/// serialized form: every one is a `block` field, left out when unset.
+#[cfg(test)]
+pub(crate) fn unplaced(document: &Document) -> Document {
+    fn drop_blocks(value: &mut serde_json::Value) {
+        match value {
+            serde_json::Value::Object(fields) => {
+                fields.remove("block");
+                fields.values_mut().for_each(drop_blocks);
+            }
+            serde_json::Value::Array(items) => items.iter_mut().for_each(drop_blocks),
+            _ => {}
+        }
+    }
+    let mut value = serde_json::to_value(document).expect("a document serializes");
+    drop_blocks(&mut value);
+    serde_json::from_value(value).expect("a document reads back")
 }
 
 /// The document [`parse`] reads from `input` under the default context, and
@@ -274,11 +301,12 @@ pub(crate) fn parse_blocks(
             continue;
         }
 
-        let (consumed, new_nodes) =
+        let (consumed, mut new_nodes) =
             try_parse_construct(lines, i, &nodes, adornment_order, diagnostics, ctx)
                 .unwrap_or_else(|| parse_paragraph(lines, i, ctx));
         attach_pending_noqa(&mut pending_noqa, diagnostics, ctx, i, consumed);
         record_block_syntax(&new_nodes, lines, i, consumed, ctx);
+        record_block_lines(&mut new_nodes, lines, i, consumed, ctx);
         nodes.extend(new_nodes);
         i += consumed;
     }
@@ -442,13 +470,12 @@ fn parse_paragraph(lines: &[&str], i: usize, ctx: &ParseCtx<'_>) -> (usize, Vec<
         let (lit_consumed, content) = collect_literal_block_body(lines, lit_start);
         let total_consumed = current_pos_line - i + lit_consumed;
         // Folded from the `::` line, as a directive is from its marker.
-        ctx.record_block(
-            BlockKind::LiteralBlock,
-            written_extent(lines, lit_start - 1, lit_consumed + 1, ctx),
-        );
+        let literal_lines = written_extent(lines, lit_start - 1, lit_consumed + 1, ctx);
+        ctx.record_block(BlockKind::LiteralBlock, literal_lines);
         let literal_node = Node::LiteralBlock {
             language: CodeLanguage::Inherit,
             content,
+            block: ctx.record_block_lines(literal_lines),
         };
         if only_colon {
             // The "::" line itself is suppressed; emit only the literal block
@@ -457,11 +484,15 @@ fn parse_paragraph(lines: &[&str], i: usize, ctx: &ParseCtx<'_>) -> (usize, Vec<
         // Strip trailing "::" → ":" and emit paragraph + literal block
         let stripped = trimmed[..trimmed.len() - 1].trim_end().to_string();
         let inlines = parse_inline_text_mapped(&stripped, ctx.default_domain, &map, ctx);
-        return (total_consumed, vec![Node::Paragraph(inlines), literal_node]);
+        let paragraph = Node::Paragraph {
+            content: inlines,
+            block: ctx.record_block_lines(written_extent(lines, i, current_pos_line - i, ctx)),
+        };
+        return (total_consumed, vec![paragraph, literal_node]);
     }
 
     let inlines = parse_inline_text_mapped(&paragraph_text, ctx.default_domain, &map, ctx);
-    (current_pos_line - i, vec![Node::Paragraph(inlines)])
+    (current_pos_line - i, vec![Node::paragraph(inlines)])
 }
 
 /// The span of the `consumed` lines from `first`, up to the last one that is
@@ -480,6 +511,24 @@ pub(crate) fn written_extent(
     ctx.lines_span(first, last, lines[last].trim_end())
 }
 
+/// Records the `consumed` lines from `first` as where `nodes` was written,
+/// when they are one node the construct that read it did not already place —
+/// several nodes from one construct (a paragraph and the literal block its
+/// `::` introduces, a splicing directive's) are placed by that construct.
+fn record_block_lines(
+    nodes: &mut [Node],
+    lines: &[&str],
+    first: usize,
+    consumed: usize,
+    ctx: &ParseCtx<'_>,
+) {
+    if let [node] = nodes
+        && let Some(slot @ None) = node.block_mut()
+    {
+        *slot = ctx.record_block_lines(written_extent(lines, first, consumed, ctx));
+    }
+}
+
 /// Records `nodes`, read from the `consumed` lines from `first`, as a block
 /// an editor folds, when they are one table or doctest block.
 fn record_block_syntax(
@@ -491,7 +540,7 @@ fn record_block_syntax(
 ) {
     let kind = match nodes {
         [Node::Table { .. }] => BlockKind::Table,
-        [Node::DoctestBlock(_)] => BlockKind::LiteralBlock,
+        [Node::DoctestBlock { .. }] => BlockKind::LiteralBlock,
         _ => return,
     };
     ctx.record_block(kind, written_extent(lines, first, consumed, ctx));
@@ -502,6 +551,62 @@ mod tests {
 
     use super::*;
     use rinx_ast::InlineNode;
+
+    /// The lines `nodes` were placed at by [`record_block_lines`], reading
+    /// `lines` from the source, one row per placed node.
+    fn placed_by_loop(nodes: &mut [Node], lines: &[&str]) -> Vec<Option<Span>> {
+        let recorder = SyntaxRecorder::default();
+        let base = ParseCtx::default();
+        let ctx = base.with_syntax_recorder(&recorder);
+        record_block_lines(nodes, lines, 0, lines.len(), &ctx);
+        let map = recorder.into_source_map();
+        nodes
+            .iter()
+            .map(|node| node.block().and_then(|id| map.block_lines(id)))
+            .collect()
+    }
+
+    #[test]
+    fn test_record_block_lines_places_one_unplaced_node_over_its_written_lines() {
+        // Given
+        let mut nodes = vec![Node::paragraph(Vec::new())];
+
+        // When
+        let placed = placed_by_loop(&mut nodes, &["One", "two.", ""]);
+
+        // Then — up to its last written line
+        assert_eq!(
+            placed,
+            [Some(Span::new(
+                rinx_ast::Position::new(1, 1),
+                rinx_ast::Position::new(2, 5)
+            ))]
+        );
+    }
+
+    #[test]
+    fn test_record_block_lines_leaves_several_nodes_to_the_construct_that_read_them() {
+        // Given
+        let mut nodes = vec![Node::paragraph(Vec::new()), Node::paragraph(Vec::new())];
+
+        // When
+        let placed = placed_by_loop(&mut nodes, &["One", "two."]);
+
+        // Then
+        assert_eq!(placed, [None, None]);
+    }
+
+    #[test]
+    fn test_record_block_lines_leaves_a_node_that_takes_no_lines() {
+        // Given
+        let mut nodes = vec![Node::Comment];
+
+        // When
+        let placed = placed_by_loop(&mut nodes, &[".. note"]);
+
+        // Then
+        assert_eq!(placed, [None]);
+    }
 
     #[test]
     fn test_parse_blocks_empty_input() {
@@ -529,7 +634,9 @@ mod tests {
         );
         assert_eq!(nodes.len(), 1);
         match &nodes[0] {
-            Node::Paragraph(inlines) => {
+            Node::Paragraph {
+                content: inlines, ..
+            } => {
                 assert_eq!(inlines.len(), 1);
                 assert_eq!(inlines[0], InlineNode::Text("Hello world".to_string()));
             }

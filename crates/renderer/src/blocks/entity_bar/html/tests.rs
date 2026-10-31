@@ -25,7 +25,7 @@ fn bar(filters: &[&str]) -> EntityBar {
 fn render(bar: &EntityBar) -> RenderOutput {
     let doc = Document::new(
         "specs/boot".to_string(),
-        vec![Node::Directive(Directive::EntityBar(Box::new(bar.clone())))],
+        vec![Node::directive(Directive::EntityBar(Box::new(bar.clone())))],
     );
     crate::render_with_assets(
         &doc,

@@ -242,7 +242,9 @@ mod tests {
         nodes
             .iter()
             .filter_map(|node| match node {
-                Node::Paragraph(inline) => Some(
+                Node::Paragraph {
+                    content: inline, ..
+                } => Some(
                     inline
                         .iter()
                         .filter_map(|part| match part {

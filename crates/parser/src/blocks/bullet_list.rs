@@ -1,4 +1,4 @@
-use crate::blocks::parse_blocks;
+use crate::blocks::{parse_blocks, written_extent};
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
@@ -122,7 +122,15 @@ pub(super) fn try_parse_bullet_list(
             let item_ctx = ctx.nested(item_start, body_indent).without_section_titles();
             let body_nodes = parse_blocks(&body_refs, adornment_order, diagnostics, &item_ctx);
 
-            items.push(rinx_ast::ListItem { nodes: body_nodes });
+            items.push(rinx_ast::ListItem {
+                nodes: body_nodes,
+                block: ctx.record_block_lines(written_extent(
+                    lines,
+                    item_start,
+                    i - item_start,
+                    ctx,
+                )),
+            });
         } else {
             break;
         }
@@ -156,7 +164,10 @@ mod tests {
             assert_eq!(*bullet, '*');
             assert_eq!(items.len(), 2);
             assert_eq!(items[0].nodes.len(), 1);
-            if let Node::Paragraph(inlines) = &items[0].nodes[0] {
+            if let Node::Paragraph {
+                content: inlines, ..
+            } = &items[0].nodes[0]
+            {
                 assert_eq!(inlines[0], InlineNode::Text("Item 1".to_string()));
             }
         } else {
@@ -190,7 +201,10 @@ mod tests {
             assert_eq!(items.len(), 2);
             // Item 1 should have 1 node: Paragraph "Item 1\n* Subitem 1"
             assert_eq!(items[0].nodes.len(), 1);
-            if let Node::Paragraph(inlines) = &items[0].nodes[0] {
+            if let Node::Paragraph {
+                content: inlines, ..
+            } = &items[0].nodes[0]
+            {
                 assert_eq!(
                     inlines[0],
                     InlineNode::Text("Item 1\n* Subitem 1".to_string())
@@ -224,7 +238,10 @@ mod tests {
         assert_eq!(doc.nodes.len(), 1);
         if let Node::BulletList { items, .. } = &doc.nodes[0] {
             assert_eq!(items.len(), 2);
-            if let Node::Paragraph(inlines) = &items[0].nodes[0] {
+            if let Node::Paragraph {
+                content: inlines, ..
+            } = &items[0].nodes[0]
+            {
                 assert_eq!(
                     inlines[0],
                     InlineNode::Text("Item 1 line 1\nItem 1 line 2".to_string())
@@ -241,8 +258,8 @@ mod tests {
         if let Node::BulletList { items, .. } = &doc.nodes[0] {
             assert_eq!(items.len(), 2);
             assert_eq!(items[0].nodes.len(), 2);
-            assert!(matches!(items[0].nodes[0], Node::Paragraph(_)));
-            assert!(matches!(items[0].nodes[1], Node::Paragraph(_)));
+            assert!(matches!(items[0].nodes[0], Node::Paragraph { .. }));
+            assert!(matches!(items[0].nodes[1], Node::Paragraph { .. }));
         }
     }
 

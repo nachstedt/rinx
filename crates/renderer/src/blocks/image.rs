@@ -441,7 +441,7 @@ mod tests {
         options.target = Some(ImageTarget::new("some-section_"));
         let doc = rinx_ast::Document::new(
             "index.rst".to_string(),
-            vec![rinx_ast::Node::Directive(Directive::Image(Box::new(
+            vec![rinx_ast::Node::directive(Directive::Image(Box::new(
                 options,
             )))],
         );
@@ -469,7 +469,7 @@ mod tests {
         options.target = Some(ImageTarget::new("some-section_"));
         let doc = rinx_ast::Document::new(
             "index.rst".to_string(),
-            vec![rinx_ast::Node::Directive(Directive::Image(Box::new(
+            vec![rinx_ast::Node::directive(Directive::Image(Box::new(
                 options,
             )))],
         );
@@ -494,7 +494,7 @@ mod tests {
         let doc = rinx_ast::Document::new(
             "index.rst".to_string(),
             vec![
-                rinx_ast::Node::Directive(Directive::Image(Box::new(options))),
+                rinx_ast::Node::directive(Directive::Image(Box::new(options))),
                 rinx_ast::Node::Target {
                     name: TargetName::new("python").into(),
                     destination: Some(rinx_ast::LinkDestination::Uri(
@@ -554,7 +554,7 @@ mod tests {
     ) -> crate::RenderOutput {
         let doc = rinx_ast::Document::new(
             "index.rst".to_string(),
-            vec![rinx_ast::Node::Directive(Directive::Image(Box::new(
+            vec![rinx_ast::Node::directive(Directive::Image(Box::new(
                 options,
             )))],
         );
@@ -647,7 +647,7 @@ mod tests {
         );
         let doc = rinx_ast::Document::new(
             "guide/intro.rst".to_string(),
-            vec![rinx_ast::Node::Directive(Directive::Image(Box::new(
+            vec![rinx_ast::Node::directive(Directive::Image(Box::new(
                 options,
             )))],
         );
@@ -708,7 +708,7 @@ mod tests {
     }
 
     fn image_node(options: ImageOptions) -> rinx_ast::Node {
-        rinx_ast::Node::Directive(Directive::Image(Box::new(options)))
+        rinx_ast::Node::directive(Directive::Image(Box::new(options)))
     }
 
     #[test]
@@ -801,7 +801,7 @@ mod tests {
     fn test_locates_a_figures_image() {
         // Given
         let figure = rinx_ast::Figure::new(image("chart.png"));
-        let nodes = vec![rinx_ast::Node::Directive(Directive::Figure(Box::new(
+        let nodes = vec![rinx_ast::Node::directive(Directive::Figure(Box::new(
             figure,
         )))];
 
@@ -818,7 +818,7 @@ mod tests {
     #[test]
     fn test_locates_an_inline_image() {
         // Given — what a substitution defined by `.. image::` becomes
-        let nodes = vec![rinx_ast::Node::Paragraph(vec![
+        let nodes = vec![rinx_ast::Node::paragraph(vec![
             rinx_ast::InlineNode::InlineImage(Box::new(image("icon.png"))),
         ])];
 

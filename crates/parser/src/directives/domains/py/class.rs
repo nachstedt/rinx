@@ -172,13 +172,17 @@ mod tests {
         let doc = parse_document("test.rst", input);
 
         // Then
-        let Some(Node::Directive(Directive::DomainObject {
-            object:
-                object @ DomainObjectBody::PyClass {
-                    signatures, body, ..
+        let Some(Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        object @ DomainObjectBody::PyClass {
+                            signatures, body, ..
+                        },
+                    ..
                 },
             ..
-        })) = doc.nodes.first()
+        }) = doc.nodes.first()
         else {
             panic!("Expected PyClass, got {:?}", doc.nodes);
         };
@@ -186,7 +190,7 @@ mod tests {
         assert_eq!(signatures.as_slice().len(), 2);
         assert_eq!(
             body,
-            &[Node::Paragraph(vec![rinx_ast::InlineNode::Text(
+            &[Node::paragraph(vec![rinx_ast::InlineNode::Text(
                 "Return a new array of bytes.".to_string()
             )])]
         );
@@ -201,16 +205,20 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object:
-                DomainObjectBody::PyClass {
-                    signatures,
-                    is_final,
-                    body,
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        DomainObjectBody::PyClass {
+                            signatures,
+                            is_final,
+                            body,
+                            ..
+                        },
                     ..
                 },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["Greeter"]);
             assert!(!is_final);
@@ -229,16 +237,20 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object:
-                DomainObjectBody::PyClass {
-                    signatures,
-                    is_final,
-                    body,
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        DomainObjectBody::PyClass {
+                            signatures,
+                            is_final,
+                            body,
+                            ..
+                        },
                     ..
                 },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["Greeter(Base)"]);
             assert!(*is_final);
@@ -260,18 +272,22 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object:
-                DomainObjectBody::PyClass {
-                    flags: _,
-                    signatures,
-                    is_final,
-                    module,
-                    body,
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        DomainObjectBody::PyClass {
+                            flags: _,
+                            signatures,
+                            is_final,
+                            module,
+                            body,
+                            ..
+                        },
                     ..
                 },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert_eq!(
                 signatures.as_slice(),
@@ -284,7 +300,7 @@ mod tests {
             // docstring's first paragraph.
             assert_eq!(
                 body,
-                &[Node::Paragraph(vec![rinx_ast::InlineNode::Text(
+                &[Node::paragraph(vec![rinx_ast::InlineNode::Text(
                     "A subclass of BaseManager.".to_string()
                 )])]
             );
@@ -301,10 +317,14 @@ mod tests {
         let doc = parse_document("test.rst", input);
 
         // Then
-        if let Node::Directive(Directive::DomainObject {
-            object: DomainObjectBody::PyClass { is_final, body, .. },
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object: DomainObjectBody::PyClass { is_final, body, .. },
+                    ..
+                },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert!(!is_final);
             assert!(body.is_empty());
@@ -322,16 +342,20 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object:
-                DomainObjectBody::PyException {
-                    signatures,
-                    is_final,
-                    body,
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        DomainObjectBody::PyException {
+                            signatures,
+                            is_final,
+                            body,
+                            ..
+                        },
                     ..
                 },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["GreeterError"]);
             assert!(!is_final);
@@ -350,16 +374,20 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object:
-                DomainObjectBody::PyException {
-                    signatures,
-                    is_final,
-                    body,
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        DomainObjectBody::PyException {
+                            signatures,
+                            is_final,
+                            body,
+                            ..
+                        },
                     ..
                 },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["InvalidNameError(GreeterError)"]);
             assert!(*is_final);
@@ -377,10 +405,14 @@ mod tests {
         let doc = parse_document("test.rst", input);
 
         // Then
-        if let Node::Directive(Directive::DomainObject {
-            object: DomainObjectBody::PyException { is_final, body, .. },
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object: DomainObjectBody::PyException { is_final, body, .. },
+                    ..
+                },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert!(!is_final);
             assert!(body.is_empty());
@@ -401,10 +433,13 @@ mod tests {
         assert_eq!(doc.nodes.len(), 1);
         assert!(matches!(
             &doc.nodes[0],
-            Node::Directive(Directive::DomainObject {
-                object: DomainObjectBody::PyException { .. },
+            Node::Directive {
+                directive: Directive::DomainObject {
+                    object: DomainObjectBody::PyException { .. },
+                    ..
+                },
                 ..
-            })
+            }
         ));
     }
     #[test]
@@ -420,10 +455,13 @@ mod tests {
         assert_eq!(doc.nodes.len(), 1);
         assert!(matches!(
             &doc.nodes[0],
-            Node::Directive(Directive::DomainObject {
-                object: DomainObjectBody::PyClass { .. },
+            Node::Directive {
+                directive: Directive::DomainObject {
+                    object: DomainObjectBody::PyClass { .. },
+                    ..
+                },
                 ..
-            })
+            }
         ));
     }
 }

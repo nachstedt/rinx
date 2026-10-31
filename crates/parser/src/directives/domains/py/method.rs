@@ -291,22 +291,26 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object:
-                DomainObjectBody::PyMethod {
-                    flags: _,
-                    signatures,
-                    is_classmethod,
-                    is_staticmethod,
-                    is_abstractmethod,
-                    is_async,
-                    is_decorator,
-                    module: _,
-                    body,
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        DomainObjectBody::PyMethod {
+                            flags: _,
+                            signatures,
+                            is_classmethod,
+                            is_staticmethod,
+                            is_abstractmethod,
+                            is_async,
+                            is_decorator,
+                            module: _,
+                            body,
+                            ..
+                        },
                     ..
                 },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["greet(self, name)"]);
             assert!(!is_classmethod);
@@ -329,18 +333,22 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object:
-                DomainObjectBody::PyMethod {
-                    is_classmethod,
-                    is_staticmethod,
-                    is_abstractmethod,
-                    is_async,
-                    body,
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        DomainObjectBody::PyMethod {
+                            is_classmethod,
+                            is_staticmethod,
+                            is_abstractmethod,
+                            is_async,
+                            body,
+                            ..
+                        },
                     ..
                 },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert!(*is_classmethod);
             assert!(!is_staticmethod);
@@ -360,18 +368,22 @@ mod tests {
         let doc = parse_document("test.rst", input);
 
         // Then
-        if let Node::Directive(Directive::DomainObject {
-            object:
-                DomainObjectBody::PyMethod {
-                    is_classmethod,
-                    is_staticmethod,
-                    is_abstractmethod,
-                    is_async,
-                    body,
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        DomainObjectBody::PyMethod {
+                            is_classmethod,
+                            is_staticmethod,
+                            is_abstractmethod,
+                            is_async,
+                            body,
+                            ..
+                        },
                     ..
                 },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert!(!is_classmethod);
             assert!(*is_staticmethod);
@@ -395,22 +407,26 @@ mod tests {
 
         // Then — it parses as a `py:method` with `is_classmethod` forced on
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object:
-                DomainObjectBody::PyMethod {
-                    flags: _,
-                    signatures,
-                    is_classmethod,
-                    is_staticmethod,
-                    is_abstractmethod,
-                    is_async,
-                    is_decorator,
-                    module: _,
-                    body,
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        DomainObjectBody::PyMethod {
+                            flags: _,
+                            signatures,
+                            is_classmethod,
+                            is_staticmethod,
+                            is_abstractmethod,
+                            is_async,
+                            is_decorator,
+                            module: _,
+                            body,
+                            ..
+                        },
                     ..
                 },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert_eq!(
                 signatures.as_slice(),
@@ -436,22 +452,26 @@ mod tests {
 
         // Then — it parses as a `py:method` with `is_staticmethod` forced on
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object:
-                DomainObjectBody::PyMethod {
-                    flags: _,
-                    signatures,
-                    is_classmethod,
-                    is_staticmethod,
-                    is_abstractmethod,
-                    is_async,
-                    is_decorator,
-                    module: _,
-                    body,
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        DomainObjectBody::PyMethod {
+                            flags: _,
+                            signatures,
+                            is_classmethod,
+                            is_staticmethod,
+                            is_abstractmethod,
+                            is_async,
+                            is_decorator,
+                            module: _,
+                            body,
+                            ..
+                        },
                     ..
                 },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["Greeter.default_name()"]);
             assert!(!is_classmethod);
@@ -476,17 +496,21 @@ mod tests {
 
         // Then — both flags are set
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object:
-                DomainObjectBody::PyMethod {
-                    is_classmethod,
-                    is_staticmethod,
-                    is_abstractmethod,
-                    is_async,
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        DomainObjectBody::PyMethod {
+                            is_classmethod,
+                            is_staticmethod,
+                            is_abstractmethod,
+                            is_async,
+                            ..
+                        },
                     ..
                 },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert!(*is_classmethod);
             assert!(!is_staticmethod);
@@ -507,16 +531,24 @@ mod tests {
         let doc = parse_document("test.rst", input);
 
         // Then
-        if let Node::Directive(Directive::DomainObject {
-            object: DomainObjectBody::PyClass { body, .. },
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object: DomainObjectBody::PyClass { body, .. },
+                    ..
+                },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             let method = body.iter().find_map(|node| match node {
-                Node::Directive(Directive::DomainObject {
-                    object: method @ DomainObjectBody::PyMethod { .. },
+                Node::Directive {
+                    directive:
+                        Directive::DomainObject {
+                            object: method @ DomainObjectBody::PyMethod { .. },
+                            ..
+                        },
                     ..
-                }) => Some(method),
+                } => Some(method),
                 _ => None,
             });
             if let Some(DomainObjectBody::PyMethod {
@@ -548,17 +580,24 @@ mod tests {
         let doc = parse_document("test.rst", input);
 
         // Then
-        if let Node::Directive(Directive::DomainObject {
-            object: DomainObjectBody::PyClass { body, .. },
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object: DomainObjectBody::PyClass { body, .. },
+                    ..
+                },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert!(body.iter().any(|node| matches!(
                 node,
-                Node::Directive(Directive::DomainObject {
-                    object: DomainObjectBody::PyMethod { .. },
+                Node::Directive {
+                    directive: Directive::DomainObject {
+                        object: DomainObjectBody::PyMethod { .. },
+                        ..
+                    },
                     ..
-                })
+                }
             )));
         } else {
             panic!("Expected PyClass, got {:?}", doc.nodes[0]);
@@ -574,17 +613,24 @@ mod tests {
         let doc = parse_document("test.rst", input);
 
         // Then
-        if let Node::Directive(Directive::DomainObject {
-            object: DomainObjectBody::PyException { body, .. },
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object: DomainObjectBody::PyException { body, .. },
+                    ..
+                },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert!(body.iter().any(|node| matches!(
                 node,
-                Node::Directive(Directive::DomainObject {
-                    object: DomainObjectBody::PyMethod { .. },
+                Node::Directive {
+                    directive: Directive::DomainObject {
+                        object: DomainObjectBody::PyMethod { .. },
+                        ..
+                    },
                     ..
-                })
+                }
             )));
         } else {
             panic!("Expected PyException, got {:?}", doc.nodes[0]);

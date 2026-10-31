@@ -153,7 +153,11 @@ fn section_titles(document: &Document) -> BTreeMap<SectionId, String> {
 fn term_spellings(document: &Document) -> BTreeMap<TargetName, String> {
     let mut spellings = BTreeMap::new();
     walk_nodes(&document.nodes, &mut |node| {
-        if let Node::Directive(Directive::Glossary { entries, .. }) = node {
+        if let Node::Directive {
+            directive: Directive::Glossary { entries, .. },
+            ..
+        } = node
+        {
             for term in entries.iter().flat_map(|entry| &entry.terms) {
                 spellings.insert(TargetName::new(&term.text), term.text.clone());
             }
@@ -253,7 +257,7 @@ Guide
         };
         let document = Document::new(
             "reqs.rst".to_string(),
-            vec![Node::Directive(Directive::Entity(Box::new(entity)))],
+            vec![Node::directive(Directive::Entity(Box::new(entity)))],
         );
 
         // When

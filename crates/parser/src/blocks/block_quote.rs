@@ -147,6 +147,7 @@ fn split_into_block_quotes(
         nodes.push(Node::BlockQuote {
             content,
             attribution,
+            block: None,
         });
 
         start = attribution_match.map_or(dedented.len(), |m| m.end);
@@ -343,10 +344,11 @@ mod tests {
         assert_eq!(
             nodes,
             vec![Node::BlockQuote {
-                content: vec![Node::Paragraph(vec![InlineNode::Text(
+                content: vec![Node::paragraph(vec![InlineNode::Text(
                     "Quoted text.".to_string()
                 )])],
                 attribution: None,
+                block: None,
             }]
         );
         assert!(diagnostics.is_empty());
@@ -367,12 +369,13 @@ mod tests {
         assert_eq!(
             content,
             &vec![
-                Node::Paragraph(vec![InlineNode::Text("Outer.".to_string())]),
+                Node::paragraph(vec![InlineNode::Text("Outer.".to_string())]),
                 Node::BlockQuote {
-                    content: vec![Node::Paragraph(vec![InlineNode::Text(
+                    content: vec![Node::paragraph(vec![InlineNode::Text(
                         "Inner.".to_string()
                     )])],
                     attribution: None,
+                    block: None,
                 },
             ]
         );
@@ -411,7 +414,7 @@ mod tests {
             panic!("expected a block quote");
         };
         assert_eq!(content.len(), 1);
-        assert!(matches!(content[0], Node::LineBlock(_)));
+        assert!(matches!(content[0], Node::LineBlock { .. }));
     }
 
     #[test]
@@ -426,10 +429,11 @@ mod tests {
         assert_eq!(
             nodes,
             vec![Node::BlockQuote {
-                content: vec![Node::Paragraph(vec![InlineNode::Text(
+                content: vec![Node::paragraph(vec![InlineNode::Text(
                     "Quoted text.".to_string()
                 )])],
                 attribution: Some(vec![InlineNode::Text("Sherlock Holmes".to_string())]),
+                block: None,
             }]
         );
     }
@@ -500,6 +504,7 @@ mod tests {
         let Node::BlockQuote {
             content,
             attribution,
+            ..
         } = &nodes[0]
         else {
             panic!("expected a block quote");
@@ -540,10 +545,11 @@ mod tests {
         assert_eq!(
             nodes,
             vec![Node::BlockQuote {
-                content: vec![Node::Paragraph(vec![InlineNode::Text(
+                content: vec![Node::paragraph(vec![InlineNode::Text(
                     "\u{2013} Not an attribution.".to_string()
                 )])],
                 attribution: None,
+                block: None,
             }]
         );
     }

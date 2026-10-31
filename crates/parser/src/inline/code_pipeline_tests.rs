@@ -37,7 +37,7 @@ fn test_parse_creates_a_code_node_for_the_code_role() {
     // Then
     assert_eq!(
         doc.nodes,
-        vec![Node::Paragraph(vec![
+        vec![Node::paragraph(vec![
             InlineNode::Text("Write ".to_string()),
             code("x = 1", ResolvedLanguage::None, &[], at(1, 7, 20)),
             InlineNode::Text(" here.".to_string()),
@@ -54,7 +54,10 @@ fn test_parse_treats_backslashes_in_code_as_escapes() {
     let doc = parse_document("test.rst", input);
 
     // Then
-    let Node::Paragraph(inlines) = &doc.nodes[0] else {
+    let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    else {
         panic!("expected a paragraph");
     };
     assert!(
@@ -72,7 +75,10 @@ fn test_parse_does_not_apply_smart_typography_inside_code() {
     let doc = parse_document("test.rst", input);
 
     // Then
-    let Node::Paragraph(inlines) = &doc.nodes[0] else {
+    let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    else {
         panic!("expected a paragraph");
     };
     assert!(
@@ -98,7 +104,7 @@ Call :py:`print(1)`.
     assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
     assert_eq!(
         doc.nodes,
-        vec![Node::Paragraph(vec![
+        vec![Node::paragraph(vec![
             InlineNode::Text("Call ".to_string()),
             code("print(1)", python(), &["py"], at(4, 6, 20)),
             InlineNode::Text(".".to_string()),
@@ -123,13 +129,13 @@ Late :py:`y`.
     // Then
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![
+        Node::paragraph(vec![
             InlineNode::Text("Early ".to_string()),
             InlineNode::Text(":py:`x`".to_string()),
             InlineNode::Text(".".to_string()),
         ])
     );
-    let Node::Paragraph(late) = &doc.nodes[1] else {
+    let Node::Paragraph { content: late, .. } = &doc.nodes[1] else {
         panic!("expected a paragraph");
     };
     assert!(matches!(&late[1], InlineNode::Code { .. }), "{late:?}");
@@ -172,7 +178,10 @@ Use :PY:`x`.
     let doc = parse_document("test.rst", input);
 
     // Then
-    let Node::Paragraph(inlines) = &doc.nodes[0] else {
+    let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    else {
         panic!("expected a paragraph");
     };
     assert!(
@@ -194,7 +203,7 @@ fn test_parse_does_not_carry_a_role_into_another_document() {
     assert!(rendered.contains("Code"), "{rendered}");
     assert_eq!(
         second.nodes,
-        vec![Node::Paragraph(vec![
+        vec![Node::paragraph(vec![
             InlineNode::Text("In ".to_string()),
             InlineNode::Text(":py:`b`".to_string()),
             InlineNode::Text(".".to_string()),

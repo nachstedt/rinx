@@ -1,5 +1,5 @@
 {
-  "checksum": "526fccd87fa3b423ae5784538af139f539c68662257d70623fd73905d99b09f2",
+  "checksum": "0fbdbcaac00ace2eb6c3040571393343d7581314321b5f23e00170ddf4a6a52c",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -5499,6 +5499,12 @@
           {
             "id": "unicode-width 0.2.2",
             "target": "unicode_width"
+          }
+        ],
+        "deps_dev": [
+          {
+            "id": "serde_json 1.0.154",
+            "target": "serde_json"
           }
         ],
         "edition": "2024"

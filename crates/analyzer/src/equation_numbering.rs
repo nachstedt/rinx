@@ -33,11 +33,15 @@ pub(super) fn number_equations(doc: &Document) -> Vec<(TargetName, usize)> {
     let mut numbered = Vec::new();
     let mut counter = 0;
     walk_nodes(&doc.nodes, &mut |node| {
-        if let Node::Directive(Directive::Math {
-            label: Some(label),
-            nowrap: false,
+        if let Node::Directive {
+            directive:
+                Directive::Math {
+                    label: Some(label),
+                    nowrap: false,
+                    ..
+                },
             ..
-        }) = node
+        } = node
         {
             counter += 1;
             numbered.push((label.value().clone(), counter));
@@ -52,7 +56,7 @@ mod tests {
     use rinx_ast::{AdmonitionKind, InlineNode};
 
     fn math(label: Option<&str>, nowrap: bool) -> Node {
-        Node::Directive(Directive::Math {
+        Node::directive(Directive::Math {
             parts: vec!["x = y".to_string()],
             label: label.map(|text| TargetName::new(text).into()),
             nowrap,
@@ -129,7 +133,7 @@ mod tests {
             "math.rst".to_string(),
             vec![
                 math(Some("before"), false),
-                Node::Directive(Directive::Admonition {
+                Node::directive(Directive::Admonition {
                     kind: AdmonitionKind::Note,
                     title: None,
                     collapsible: None,
@@ -158,7 +162,7 @@ mod tests {
         // Given a document with no equations
         let doc = Document::new(
             "prose.rst".to_string(),
-            vec![Node::Paragraph(vec![InlineNode::Text("Hi".to_string())])],
+            vec![Node::paragraph(vec![InlineNode::Text("Hi".to_string())])],
         );
 
         // When

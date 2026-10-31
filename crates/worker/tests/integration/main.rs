@@ -2,6 +2,7 @@
 
 mod any_role;
 mod ast_round_trip;
+mod block_lines;
 mod builder_conditionals;
 mod c_domain;
 mod code_role;

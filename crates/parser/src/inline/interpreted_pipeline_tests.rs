@@ -24,7 +24,9 @@ fn paragraphs(input: &str) -> Vec<Vec<InlineNode>> {
         .nodes
         .into_iter()
         .filter_map(|node| match node {
-            Node::Paragraph(inlines) => Some(inlines),
+            Node::Paragraph {
+                content: inlines, ..
+            } => Some(inlines),
             _ => None,
         })
         .collect()
@@ -260,7 +262,7 @@ fn test_parse_reports_a_role_before_and_after_the_same_text() {
     // Then — shown as written, and reported where it was written
     assert_eq!(
         doc.nodes,
-        vec![Node::Paragraph(vec![
+        vec![Node::paragraph(vec![
             text("A "),
             text(":sub:`2`:sup:"),
             text(" here."),
@@ -290,7 +292,7 @@ fn test_parse_reports_a_role_with_a_reference_suffix() {
         // Then
         assert_eq!(
             doc.nodes,
-            vec![Node::Paragraph(vec![
+            vec![Node::paragraph(vec![
                 text("A "),
                 text(source),
                 text(" here.")
@@ -368,7 +370,7 @@ fn test_parse_keeps_the_default_role_when_a_directive_names_an_unknown_one() {
 
     // Then
     assert!(
-        matches!(&doc.nodes[0], Node::Paragraph(inlines) if matches!(inlines[0], InlineNode::Script { .. })),
+        matches!(&doc.nodes[0], Node::Paragraph { content: inlines, .. } if matches!(inlines[0], InlineNode::Script { .. })),
         "{:?}",
         doc.nodes
     );
@@ -418,7 +420,7 @@ fn test_parse_resolves_a_bare_domain_default_role_in_the_default_domain() {
     assert!(
         matches!(
             &doc.nodes[0],
-            Node::Paragraph(inlines) if matches!(
+            Node::Paragraph { content: inlines, .. } if matches!(
                 &inlines[1],
                 InlineNode::DomainObjectReference { object_type: rinx_ast::ObjectType::C(_), .. }
             )
@@ -441,7 +443,7 @@ fn test_parse_reads_bare_text_with_a_role_the_document_defined() {
     assert!(
         matches!(
             &doc.nodes[0],
-            Node::Paragraph(inlines) if matches!(&inlines[1], InlineNode::Code { text, .. } if text == "f()")
+            Node::Paragraph { content: inlines, .. } if matches!(&inlines[1], InlineNode::Code { text, .. } if text == "f()")
         ),
         "{:?}",
         doc.nodes
@@ -480,7 +482,7 @@ fn test_parse_reads_bare_text_with_an_entity_role() {
     assert!(
         matches!(
             &doc.nodes[0],
-            Node::Paragraph(inlines) if matches!(&inlines[1], InlineNode::EntityReference { target, .. } if target == "R_1")
+            Node::Paragraph { content: inlines, .. } if matches!(&inlines[1], InlineNode::EntityReference { target, .. } if target == "R_1")
         ),
         "{:?}",
         doc.nodes
@@ -499,7 +501,7 @@ fn test_parse_reads_bare_text_with_the_configured_default_role() {
 
     // Then
     assert!(
-        matches!(&doc.nodes[0], Node::Paragraph(inlines) if matches!(inlines[1], InlineNode::Script { .. })),
+        matches!(&doc.nodes[0], Node::Paragraph { content: inlines, .. } if matches!(inlines[1], InlineNode::Script { .. })),
         "{:?}",
         doc.nodes
     );
@@ -516,5 +518,8 @@ fn test_parse_restores_title_reference_rather_than_the_configured_default() {
     let doc = crate::parse("test.rst", ".. default-role::\n\n`a`\n", &ctx).document;
 
     // Then
-    assert_eq!(doc.nodes, vec![Node::Paragraph(vec![title("a")])]);
+    assert_eq!(
+        crate::unplaced(&doc).nodes,
+        vec![Node::paragraph(vec![title("a")])]
+    );
 }

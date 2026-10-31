@@ -187,7 +187,10 @@ mod tests {
             .nodes
             .iter()
             .find_map(|node| match node {
-                Node::Directive(Directive::Dropdown(dropdown)) => Some((**dropdown).clone()),
+                Node::Directive {
+                    directive: Directive::Dropdown(dropdown),
+                    ..
+                } => Some((**dropdown).clone()),
                 _ => None,
             })
             .expect("document should contain a dropdown directive");
@@ -215,7 +218,7 @@ mod tests {
         );
         assert_eq!(
             dropdown.body,
-            vec![Node::Paragraph(vec![InlineNode::Text(
+            vec![Node::paragraph(vec![InlineNode::Text(
                 "Some prose.".to_string()
             )])]
         );
@@ -500,7 +503,10 @@ mod tests {
         // Then
         assert!(matches!(
             dropdown.body[..],
-            [Node::Directive(Directive::Admonition { .. })]
+            [Node::Directive {
+                directive: Directive::Admonition { .. },
+                ..
+            }]
         ));
         assert!(diagnostics.is_empty());
     }

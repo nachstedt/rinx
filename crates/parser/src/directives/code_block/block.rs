@@ -212,7 +212,10 @@ mod tests {
         // Then — what a render-time finding about the code points at
         let [
             _,
-            rinx_ast::Node::Directive(rinx_ast::Directive::CodeBlock(block)),
+            rinx_ast::Node::Directive {
+                directive: rinx_ast::Directive::CodeBlock(block),
+                ..
+            },
         ] = document.nodes.as_slice()
         else {
             panic!(

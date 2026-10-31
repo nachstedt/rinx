@@ -127,7 +127,7 @@ fn section_node(
     let unindented = unindent_body_lines(body_lines);
     let lines: Vec<&str> = unindented.iter().map(String::as_str).collect();
     let body = parse_blocks(&lines, adornment_order, diagnostics, &body_ctx);
-    Node::Directive(Directive::EntitySection {
+    Node::directive(Directive::EntitySection {
         name: name.to_string(),
         body,
         span,

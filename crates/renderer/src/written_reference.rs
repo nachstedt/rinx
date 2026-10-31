@@ -92,7 +92,11 @@ pub fn written_uses(doc: &Document, source_map: &SourceMap) -> Vec<WrittenUse> {
         {
             uses.extend(named(name, block.and_then(|id| source_map.block_lines(id))));
         }
-        if let Node::Directive(Directive::Toctree(toctree)) = node {
+        if let Node::Directive {
+            directive: Directive::Toctree(toctree),
+            ..
+        } = node
+        {
             uses.extend(toctree.entries.iter().filter_map(|entry| {
                 Some(WrittenUse::TocEntry {
                     entry: entry.clone(),
@@ -294,7 +298,10 @@ mod tests {
             &rinx_parser::ParseCtx::default(),
         )
         .document;
-        let Node::Paragraph(inlines) = &mut document.nodes[0] else {
+        let Node::Paragraph {
+            content: inlines, ..
+        } = &mut document.nodes[0]
+        else {
             unreachable!()
         };
         let span = inlines[1].span().unwrap();

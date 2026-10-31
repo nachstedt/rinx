@@ -96,11 +96,15 @@ mod tests {
     fn only_version_change(input: &str) -> (VersionChangeKind, String, Vec<Node>) {
         let doc = parse_document("test.rst", input);
         let [
-            Node::Directive(Directive::VersionChange {
-                kind,
-                version,
-                body,
-            }),
+            Node::Directive {
+                directive:
+                    Directive::VersionChange {
+                        kind,
+                        version,
+                        body,
+                    },
+                ..
+            },
         ] = &doc.nodes[..]
         else {
             panic!("Expected one VersionChange, got {:?}", doc.nodes);
@@ -182,7 +186,7 @@ mod tests {
         assert_eq!(version, "3.1");
         assert_eq!(
             body,
-            [Node::Paragraph(vec![InlineNode::Text(
+            [Node::paragraph(vec![InlineNode::Text(
                 "Some text".to_string()
             )])]
         );
@@ -201,8 +205,8 @@ mod tests {
         assert_eq!(
             body,
             [
-                Node::Paragraph(vec![InlineNode::Text("Some text\ncontinued.".to_string())]),
-                Node::Paragraph(vec![InlineNode::Text("Body.".to_string())]),
+                Node::paragraph(vec![InlineNode::Text("Some text\ncontinued.".to_string())]),
+                Node::paragraph(vec![InlineNode::Text("Body.".to_string())]),
             ]
         );
     }

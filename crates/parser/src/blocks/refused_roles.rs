@@ -186,12 +186,13 @@ mod tests {
         // Given a refused title inside a nested paragraph
         let at = Span::new(Position::new(3, 5), Position::new(3, 30));
         let mut nodes = vec![Node::BlockQuote {
-            content: vec![Node::Paragraph(vec![refused(
+            content: vec![Node::paragraph(vec![refused(
                 "see this",
                 NumberReferenceRefusal::InvalidTitle,
                 Some(at),
             )])],
             attribution: None,
+            block: None,
         }];
         let mut diagnostics = Diagnostics::default();
 
@@ -204,7 +205,7 @@ mod tests {
         };
         assert_eq!(
             content[0],
-            Node::Paragraph(vec![InlineNode::NumberReference {
+            Node::paragraph(vec![InlineNode::NumberReference {
                 title: None,
                 target: "see this".to_string(),
                 link: false,
@@ -225,7 +226,7 @@ mod tests {
     #[test]
     fn test_reports_an_external_prefix() {
         // Given
-        let mut nodes = vec![Node::Paragraph(vec![refused(
+        let mut nodes = vec![Node::paragraph(vec![refused(
             "fig-root",
             NumberReferenceRefusal::External,
             None,
@@ -254,14 +255,14 @@ mod tests {
             link: true,
             span: None,
         };
-        let mut nodes = vec![Node::Paragraph(vec![reference.clone()])];
+        let mut nodes = vec![Node::paragraph(vec![reference.clone()])];
         let mut diagnostics = Diagnostics::default();
 
         // When
         report_refused_roles(&mut nodes, &mut diagnostics);
 
         // Then
-        assert_eq!(nodes, vec![Node::Paragraph(vec![reference])]);
+        assert_eq!(nodes, vec![Node::paragraph(vec![reference])]);
         assert!(diagnostics.into_parts().0.is_empty());
     }
 
@@ -283,7 +284,7 @@ mod tests {
     fn test_reports_a_refused_pep_and_shows_its_source() {
         // Given
         let at = Span::new(Position::new(2, 1), Position::new(2, 12));
-        let mut nodes = vec![Node::Paragraph(vec![InlineNode::RefusedRole {
+        let mut nodes = vec![Node::paragraph(vec![InlineNode::RefusedRole {
             text: ":pep:`abc`".to_string(),
             refusal: RoleRefusal::RegistryTarget {
                 registry: Registry::Pep,
@@ -299,7 +300,7 @@ mod tests {
         // Then
         assert_eq!(
             nodes,
-            vec![Node::Paragraph(vec![InlineNode::Text(
+            vec![Node::paragraph(vec![InlineNode::Text(
                 ":pep:`abc`".to_string()
             )])]
         );
@@ -318,7 +319,7 @@ mod tests {
     fn test_reports_a_refused_pep_reference_and_shows_its_source() {
         // Given
         let at = Span::new(Position::new(1, 1), Position::new(1, 23));
-        let mut nodes = vec![Node::Paragraph(vec![InlineNode::RefusedRole {
+        let mut nodes = vec![Node::paragraph(vec![InlineNode::RefusedRole {
             text: ":pep-reference:`10000`".to_string(),
             refusal: RoleRefusal::DocutilsPepNumber {
                 target: "10000".to_string(),
@@ -333,7 +334,7 @@ mod tests {
         // Then
         assert_eq!(
             nodes,
-            vec![Node::Paragraph(vec![InlineNode::Text(
+            vec![Node::paragraph(vec![InlineNode::Text(
                 ":pep-reference:`10000`".to_string()
             )])]
         );
@@ -350,7 +351,7 @@ mod tests {
     #[test]
     fn test_reports_a_refused_cve_with_its_own_code() {
         // Given
-        let mut nodes = vec![Node::Paragraph(vec![InlineNode::RefusedRole {
+        let mut nodes = vec![Node::paragraph(vec![InlineNode::RefusedRole {
             text: ":cve:`CVE-2024-3094`".to_string(),
             refusal: RoleRefusal::RegistryTarget {
                 registry: Registry::Cve,
@@ -366,7 +367,7 @@ mod tests {
         // Then
         assert_eq!(
             nodes,
-            vec![Node::Paragraph(vec![InlineNode::Text(
+            vec![Node::paragraph(vec![InlineNode::Text(
                 ":cve:`CVE-2024-3094`".to_string()
             )])]
         );
@@ -384,7 +385,7 @@ mod tests {
     #[test]
     fn test_reports_a_refused_rfc_reference_in_docutils_wording() {
         // Given
-        let mut nodes = vec![Node::Paragraph(vec![InlineNode::RefusedRole {
+        let mut nodes = vec![Node::paragraph(vec![InlineNode::RefusedRole {
             text: ":rfc-reference:`0`".to_string(),
             refusal: RoleRefusal::DocutilsRfcNumber {
                 target: "0".to_string(),
@@ -399,7 +400,7 @@ mod tests {
         // Then
         assert_eq!(
             nodes,
-            vec![Node::Paragraph(vec![InlineNode::Text(
+            vec![Node::paragraph(vec![InlineNode::Text(
                 ":rfc-reference:`0`".to_string()
             )])]
         );
@@ -457,7 +458,7 @@ mod tests {
     fn test_reports_a_malformed_index_entry_and_keeps_the_title() {
         // Given
         let at = Span::new(Position::new(1, 1), Position::new(1, 28));
-        let mut nodes = vec![Node::Paragraph(vec![InlineNode::RefusedRole {
+        let mut nodes = vec![Node::paragraph(vec![InlineNode::RefusedRole {
             text: ":index:`loops <pair: loop>`".to_string(),
             refusal: RoleRefusal::IndexEntry {
                 title: "loops".to_string(),
@@ -476,7 +477,7 @@ mod tests {
         // Then
         assert_eq!(
             nodes[0],
-            Node::Paragraph(vec![InlineNode::IndexReference {
+            Node::paragraph(vec![InlineNode::IndexReference {
                 title: "loops".to_string(),
                 entries: Vec::new(),
                 index_id: String::new(),

@@ -98,7 +98,7 @@ mod tests {
     use crate::inline_node::InlineNode;
 
     fn paragraph(text: &str) -> Vec<Node> {
-        vec![Node::Paragraph(vec![InlineNode::Text(text.to_string())])]
+        vec![Node::paragraph(vec![InlineNode::Text(text.to_string())])]
     }
 
     fn requirement() -> EntityBody {

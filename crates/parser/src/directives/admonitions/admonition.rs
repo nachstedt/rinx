@@ -160,12 +160,16 @@ mod tests {
     fn only_admonition(input: &str) -> (Option<String>, Option<bool>, Vec<Node>) {
         let doc = parse_document("test.rst", input);
         let [
-            Node::Directive(Directive::Admonition {
-                title,
-                collapsible,
-                body,
+            Node::Directive {
+                directive:
+                    Directive::Admonition {
+                        title,
+                        collapsible,
+                        body,
+                        ..
+                    },
                 ..
-            }),
+            },
         ] = &doc.nodes[..]
         else {
             panic!("Expected one Admonition, got {:?}", doc.nodes);
@@ -287,7 +291,7 @@ mod tests {
         assert_eq!(title, None);
         assert_eq!(
             body,
-            [Node::Paragraph(vec![InlineNode::Text(
+            [Node::paragraph(vec![InlineNode::Text(
                 "Plain text".to_string()
             )])]
         );
@@ -318,8 +322,8 @@ mod tests {
         assert_eq!(
             body,
             [
-                Node::Paragraph(vec![InlineNode::Text("Some text".to_string())]),
-                Node::Paragraph(vec![InlineNode::Text("Body.".to_string())]),
+                Node::paragraph(vec![InlineNode::Text("Some text".to_string())]),
+                Node::paragraph(vec![InlineNode::Text("Body.".to_string())]),
             ]
         );
     }
@@ -396,7 +400,10 @@ mod tests {
         // Then
         assert!(matches!(
             nodes[..],
-            [Node::Directive(Directive::Unknown { .. })]
+            [Node::Directive {
+                directive: Directive::Unknown { .. },
+                ..
+            }]
         ));
     }
 }

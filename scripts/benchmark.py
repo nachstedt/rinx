@@ -29,6 +29,7 @@ from benchmark_common import (
     collect_warning_sidecars,
     count_row,
     json_objects,
+    written_directive,
     whitelist_rows,
     write_frequency_summary,
 )
@@ -342,8 +343,8 @@ class AstTally:
     def count(self, tree: object) -> None:
         """Walk one parsed `.ast` file, counting everything in it."""
         for node in json_objects(tree):
-            directive = node.get("Directive")
-            if isinstance(directive, dict):
+            directive = written_directive(node)
+            if directive is not None:
                 self.count_directive(directive)
             diagnostics = node.get("diagnostics")
             if isinstance(diagnostics, list):

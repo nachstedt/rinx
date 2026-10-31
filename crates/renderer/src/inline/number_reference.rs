@@ -412,7 +412,7 @@ mod tests {
         figure.caption = Some(vec![InlineNode::Text("A caption".to_string())]);
         let doc = Document::new(
             "guide.rst".to_string(),
-            vec![Node::Directive(Directive::Figure(Box::new(figure)))],
+            vec![Node::directive(Directive::Figure(Box::new(figure)))],
         );
         let index = index();
         let config = config(true);
@@ -422,7 +422,7 @@ mod tests {
         let (html, _) = render(numref(None, "fig-a"), true);
 
         // Then
-        let Node::Directive(directive) = &doc.nodes[0] else {
+        let Node::Directive { directive, .. } = &doc.nodes[0] else {
             unreachable!()
         };
         assert_eq!(numbering.caption_number(directive), Some("Fig. 2.1"));
@@ -434,7 +434,7 @@ mod tests {
         // Given a page on which a paragraph holds the `:numref:`
         let doc = Document::new(
             "index.rst".to_string(),
-            vec![Node::Paragraph(vec![InlineNode::NumberReference {
+            vec![Node::paragraph(vec![InlineNode::NumberReference {
                 title: None,
                 target: "usage".to_string(),
                 link: true,

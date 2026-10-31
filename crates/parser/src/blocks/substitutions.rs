@@ -60,7 +60,11 @@ fn collect_definitions(nodes: &[Node], diagnostics: &mut Diagnostics) -> Definit
     let mut exact: HashMap<String, SubstitutionKind> = HashMap::new();
     let mut spans: HashMap<String, Option<Span>> = HashMap::new();
     walk_nodes(nodes, &mut |node| {
-        let Node::Directive(Directive::SubstitutionDefinition(definition)) = node else {
+        let Node::Directive {
+            directive: Directive::SubstitutionDefinition(definition),
+            ..
+        } = node
+        else {
             return;
         };
         if exact.contains_key(&definition.name) {
@@ -239,7 +243,7 @@ mod tests {
     use rinx_ast::{AssetUri, ImageOptions, SubstitutionDefinition};
 
     fn replace_def(name: &str, content: Vec<InlineNode>) -> Node {
-        Node::Directive(Directive::SubstitutionDefinition(SubstitutionDefinition {
+        Node::directive(Directive::SubstitutionDefinition(SubstitutionDefinition {
             name: name.to_string(),
             kind: SubstitutionKind::Replace(content),
             span: None,
@@ -247,7 +251,7 @@ mod tests {
     }
 
     fn unicode_def(name: &str, text: &str, trim: TrimSides) -> Node {
-        Node::Directive(Directive::SubstitutionDefinition(SubstitutionDefinition {
+        Node::directive(Directive::SubstitutionDefinition(SubstitutionDefinition {
             name: name.to_string(),
             kind: SubstitutionKind::Unicode {
                 text: text.to_string(),
@@ -269,7 +273,7 @@ mod tests {
         // Given — the common real-world shape: the definition lives near the
         // bottom of the document, the reference is used throughout it.
         let mut nodes = vec![
-            Node::Paragraph(vec![reference("release")]),
+            Node::paragraph(vec![reference("release")]),
             replace_def("release", vec![InlineNode::Text("3.13.0".to_string())]),
         ];
         let mut diagnostics = Diagnostics::default();
@@ -280,7 +284,7 @@ mod tests {
         // Then
         assert_eq!(
             nodes[0],
-            Node::Paragraph(vec![InlineNode::Text("3.13.0".to_string())])
+            Node::paragraph(vec![InlineNode::Text("3.13.0".to_string())])
         );
         assert!(diagnostics.entries().is_empty());
     }
@@ -290,8 +294,8 @@ mod tests {
         // Given
         let mut nodes = vec![
             replace_def("x", vec![InlineNode::Text("value".to_string())]),
-            Node::Paragraph(vec![reference("x")]),
-            Node::Paragraph(vec![reference("x")]),
+            Node::paragraph(vec![reference("x")]),
+            Node::paragraph(vec![reference("x")]),
         ];
         let mut diagnostics = Diagnostics::default();
 
@@ -301,11 +305,11 @@ mod tests {
         // Then
         assert_eq!(
             nodes[1],
-            Node::Paragraph(vec![InlineNode::Text("value".to_string())])
+            Node::paragraph(vec![InlineNode::Text("value".to_string())])
         );
         assert_eq!(
             nodes[2],
-            Node::Paragraph(vec![InlineNode::Text("value".to_string())])
+            Node::paragraph(vec![InlineNode::Text("value".to_string())])
         );
     }
 
@@ -314,7 +318,7 @@ mod tests {
         // Given
         let mut nodes = vec![
             replace_def("ReST", vec![InlineNode::Text("reST".to_string())]),
-            Node::Paragraph(vec![reference("rest")]),
+            Node::paragraph(vec![reference("rest")]),
         ];
         let mut diagnostics = Diagnostics::default();
 
@@ -324,7 +328,7 @@ mod tests {
         // Then
         assert_eq!(
             nodes[1],
-            Node::Paragraph(vec![InlineNode::Text("reST".to_string())])
+            Node::paragraph(vec![InlineNode::Text("reST".to_string())])
         );
         assert!(diagnostics.entries().is_empty());
     }
@@ -336,7 +340,7 @@ mod tests {
         let mut nodes = vec![
             replace_def("Foo", vec![InlineNode::Text("upper".to_string())]),
             replace_def("foo", vec![InlineNode::Text("lower".to_string())]),
-            Node::Paragraph(vec![reference("FOO")]),
+            Node::paragraph(vec![reference("FOO")]),
         ];
         let mut diagnostics = Diagnostics::default();
 
@@ -346,7 +350,7 @@ mod tests {
         // Then
         assert_eq!(
             nodes[2],
-            Node::Paragraph(vec![InlineNode::Text("|FOO|".to_string())])
+            Node::paragraph(vec![InlineNode::Text("|FOO|".to_string())])
         );
         assert_eq!(
             diagnostics
@@ -361,7 +365,7 @@ mod tests {
     #[test]
     fn test_reports_an_undefined_reference_and_keeps_the_written_text() {
         // Given
-        let mut nodes = vec![Node::Paragraph(vec![reference("nope")])];
+        let mut nodes = vec![Node::paragraph(vec![reference("nope")])];
         let mut diagnostics = Diagnostics::default();
 
         // When
@@ -370,7 +374,7 @@ mod tests {
         // Then
         assert_eq!(
             nodes[0],
-            Node::Paragraph(vec![InlineNode::Text("|nope|".to_string())])
+            Node::paragraph(vec![InlineNode::Text("|nope|".to_string())])
         );
         assert_eq!(
             diagnostics
@@ -388,7 +392,7 @@ mod tests {
         let mut nodes = vec![
             replace_def("x", vec![InlineNode::Text("first".to_string())]),
             replace_def("x", vec![InlineNode::Text("second".to_string())]),
-            Node::Paragraph(vec![reference("x")]),
+            Node::paragraph(vec![reference("x")]),
         ];
         let mut diagnostics = Diagnostics::default();
 
@@ -398,7 +402,7 @@ mod tests {
         // Then
         assert_eq!(
             nodes[2],
-            Node::Paragraph(vec![InlineNode::Text("first".to_string())])
+            Node::paragraph(vec![InlineNode::Text("first".to_string())])
         );
         assert_eq!(
             diagnostics
@@ -415,7 +419,7 @@ mod tests {
         // Given — `a` refers to itself
         let mut nodes = vec![
             replace_def("a", vec![reference("a")]),
-            Node::Paragraph(vec![reference("a")]),
+            Node::paragraph(vec![reference("a")]),
         ];
         let mut diagnostics = Diagnostics::default();
 
@@ -439,7 +443,7 @@ mod tests {
         let mut nodes = vec![
             replace_def("a", vec![reference("b")]),
             replace_def("b", vec![reference("a")]),
-            Node::Paragraph(vec![reference("a")]),
+            Node::paragraph(vec![reference("a")]),
         ];
         let mut diagnostics = Diagnostics::default();
 
@@ -466,7 +470,7 @@ mod tests {
                 vec![InlineNode::Text("see ".to_string()), reference("b")],
             ),
             replace_def("b", vec![InlineNode::Text("here".to_string())]),
-            Node::Paragraph(vec![reference("a")]),
+            Node::paragraph(vec![reference("a")]),
         ];
         let mut diagnostics = Diagnostics::default();
 
@@ -476,7 +480,7 @@ mod tests {
         // Then
         assert_eq!(
             nodes[2],
-            Node::Paragraph(vec![
+            Node::paragraph(vec![
                 InlineNode::Text("see ".to_string()),
                 InlineNode::Text("here".to_string())
             ])
@@ -489,12 +493,12 @@ mod tests {
         // Given
         let options = ImageOptions::new(AssetUri::new("logo.png"));
         let mut nodes = vec![
-            Node::Directive(Directive::SubstitutionDefinition(SubstitutionDefinition {
+            Node::directive(Directive::SubstitutionDefinition(SubstitutionDefinition {
                 name: "logo".to_string(),
                 kind: SubstitutionKind::Image(Box::new(options.clone())),
                 span: None,
             })),
-            Node::Paragraph(vec![reference("logo")]),
+            Node::paragraph(vec![reference("logo")]),
         ];
         let mut diagnostics = Diagnostics::default();
 
@@ -504,7 +508,7 @@ mod tests {
         // Then
         assert_eq!(
             nodes[1],
-            Node::Paragraph(vec![InlineNode::InlineImage(Box::new(options))])
+            Node::paragraph(vec![InlineNode::InlineImage(Box::new(options))])
         );
     }
 
@@ -520,7 +524,7 @@ mod tests {
                     rtrim: true,
                 },
             ),
-            Node::Paragraph(vec![
+            Node::paragraph(vec![
                 InlineNode::Text("left ".to_string()),
                 reference("nbsp"),
                 InlineNode::Text(" right".to_string()),
@@ -534,7 +538,7 @@ mod tests {
         // Then
         assert_eq!(
             nodes[1],
-            Node::Paragraph(vec![
+            Node::paragraph(vec![
                 InlineNode::Text("left".to_string()),
                 InlineNode::Text("\u{a0}".to_string()),
                 InlineNode::Text("right".to_string())
@@ -554,7 +558,7 @@ mod tests {
                     rtrim: false,
                 },
             ),
-            Node::Paragraph(vec![
+            Node::paragraph(vec![
                 InlineNode::Text("left ".to_string()),
                 reference("x"),
                 InlineNode::Text(" right".to_string()),
@@ -568,7 +572,7 @@ mod tests {
         // Then
         assert_eq!(
             nodes[1],
-            Node::Paragraph(vec![
+            Node::paragraph(vec![
                 InlineNode::Text("left".to_string()),
                 InlineNode::Text("X".to_string()),
                 InlineNode::Text(" right".to_string())
@@ -579,13 +583,13 @@ mod tests {
     #[test]
     fn test_resolves_a_definition_nested_inside_an_admonition() {
         // Given — a definition need not be top-level
-        let mut nodes = vec![Node::Directive(Directive::Admonition {
+        let mut nodes = vec![Node::directive(Directive::Admonition {
             kind: rinx_ast::AdmonitionKind::Note,
             title: None,
             collapsible: None,
             body: vec![
                 replace_def("x", vec![InlineNode::Text("value".to_string())]),
-                Node::Paragraph(vec![reference("x")]),
+                Node::paragraph(vec![reference("x")]),
             ],
         })];
         let mut diagnostics = Diagnostics::default();
@@ -594,12 +598,16 @@ mod tests {
         resolve_substitutions(&mut nodes, &mut diagnostics);
 
         // Then
-        let Node::Directive(Directive::Admonition { body, .. }) = &nodes[0] else {
+        let Node::Directive {
+            directive: Directive::Admonition { body, .. },
+            ..
+        } = &nodes[0]
+        else {
             panic!("expected an admonition");
         };
         assert_eq!(
             body[1],
-            Node::Paragraph(vec![InlineNode::Text("value".to_string())])
+            Node::paragraph(vec![InlineNode::Text("value".to_string())])
         );
     }
 

@@ -115,7 +115,10 @@ pub(super) fn parse_entity_of(rst: &str) -> EntityBody {
 
 fn first_entity(nodes: &[Node]) -> Option<EntityBody> {
     nodes.iter().find_map(|node| match node {
-        Node::Directive(Directive::Entity(entity)) => Some((**entity).clone()),
+        Node::Directive {
+            directive: Directive::Entity(entity),
+            ..
+        } => Some((**entity).clone()),
         _ => None,
     })
 }
@@ -334,7 +337,10 @@ fn test_a_section_body_is_fully_parsed_rst() {
     let section = entity.named_sections("verification-criteria")[0];
     assert!(matches!(
         section.body.first(),
-        Some(Node::Directive(Directive::Admonition { .. }))
+        Some(Node::Directive {
+            directive: Directive::Admonition { .. },
+            ..
+        })
     ));
 }
 
@@ -700,7 +706,10 @@ fn test_an_unknown_directive_is_untouched_without_a_schema() {
     // Then
     assert!(matches!(
         doc.nodes.first(),
-        Some(Node::Directive(Directive::Unknown { .. }))
+        Some(Node::Directive {
+            directive: Directive::Unknown { .. },
+            ..
+        })
     ));
     assert_eq!(
         doc.diagnostics
@@ -730,7 +739,10 @@ fn test_an_entity_may_nest_inside_a_section() {
     let section = entity.named_sections("verification-criteria")[0];
     assert!(matches!(
         section.body.first(),
-        Some(Node::Directive(Directive::Entity(_)))
+        Some(Node::Directive {
+            directive: Directive::Entity(_),
+            ..
+        })
     ));
 }
 
@@ -761,7 +773,10 @@ fn first_diagram(rst: &str) -> rinx_ast::Uml {
     let doc = parse(rst);
     let mut found = None;
     rinx_ast::walk_nodes(&doc.nodes, &mut |node| {
-        if let Node::Directive(Directive::Uml(uml)) = node
+        if let Node::Directive {
+            directive: Directive::Uml(uml),
+            ..
+        } = node
             && found.is_none()
         {
             found = Some((**uml).clone());

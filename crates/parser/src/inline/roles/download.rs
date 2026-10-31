@@ -128,7 +128,10 @@ mod tests {
     /// The single inline node `input` parses to, through the whole pipeline.
     fn only_inline(input: &str) -> InlineNode {
         let doc = crate::parse_document("test.rst", input);
-        let rinx_ast::Node::Paragraph(inlines) = &doc.nodes[0] else {
+        let rinx_ast::Node::Paragraph {
+            content: inlines, ..
+        } = &doc.nodes[0]
+        else {
             panic!("expected a paragraph, got {:?}", doc.nodes[0]);
         };
         assert_eq!(inlines.len(), 1, "{inlines:?}");
@@ -141,7 +144,10 @@ mod tests {
         let doc = crate::parse_document("test.rst", "Get :download:`a.py` here.");
 
         // Then
-        let rinx_ast::Node::Paragraph(inlines) = &doc.nodes[0] else {
+        let rinx_ast::Node::Paragraph {
+            content: inlines, ..
+        } = &doc.nodes[0]
+        else {
             panic!("expected a paragraph, got {:?}", doc.nodes[0]);
         };
         assert_eq!(
@@ -183,7 +189,10 @@ mod tests {
         let parsed = crate::parse("test.rst", ":download:`a.py`", &ctx).document;
 
         // Then
-        let rinx_ast::Node::Paragraph(inlines) = &parsed.nodes[0] else {
+        let rinx_ast::Node::Paragraph {
+            content: inlines, ..
+        } = &parsed.nodes[0]
+        else {
             panic!("expected a paragraph, got {:?}", parsed.nodes[0]);
         };
         assert!(matches!(inlines[0], InlineNode::DownloadReference { .. }));

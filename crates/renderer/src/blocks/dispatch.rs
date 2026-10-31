@@ -4,7 +4,8 @@
 
 use rinx_ast::Named;
 use rinx_ast::{
-    Directive, Enumerator, InlineNode, LinkDestination, ListItem, Node, Toctree, ToctreeFlag,
+    Directive, Enumerator, InlineNode, LinkDestination, ListItem, Node, TableRow, Toctree,
+    ToctreeFlag,
 };
 use std::fmt::Write as _;
 
@@ -87,39 +88,8 @@ pub(crate) fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<LinkDe
     for node in nodes {
         match node {
             Node::AnonymousTarget { destination } => targets.push(destination.clone()),
-            Node::Directive(
-                Directive::Admonition { body, .. }
-                | Directive::VersionChange { body, .. }
-                | Directive::SeeAlso { body },
-            ) => {
-                collect_anonymous_targets(body, targets);
-            }
-            // The three sphinx-design containers, for the reason the doc
-            // comment above gives: an anonymous target written inside one
-            // would otherwise never pair with its reference.
-            Node::Directive(Directive::Dropdown(dropdown)) => {
-                collect_anonymous_targets(&dropdown.body, targets);
-            }
-            Node::Directive(Directive::Grid(grid)) => {
-                collect_anonymous_targets(&grid.body, targets);
-            }
-            Node::Directive(Directive::GridItem(item)) => {
-                collect_anonymous_targets(&item.body, targets);
-            }
-            Node::Directive(Directive::DomainObject { object: obj, .. }) => {
-                collect_anonymous_targets(obj.body(), targets);
-            }
-            Node::Directive(Directive::Glossary { entries, .. }) => {
-                for entry in entries {
-                    collect_anonymous_targets(&entry.definition, targets);
-                }
-            }
-            Node::Directive(Directive::DataTable { rows, .. }) => {
-                for row in rows {
-                    for cell in &row.cells {
-                        collect_anonymous_targets(&cell.content, targets);
-                    }
-                }
+            Node::Directive { directive, .. } => {
+                collect_directive_anonymous_targets(directive, targets);
             }
             Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
                 for item in items {
@@ -136,39 +106,68 @@ pub(crate) fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<LinkDe
                     collect_anonymous_targets(&item.description, targets);
                 }
             }
-            // A bare grid/simple table and a `.. table::`-wrapped one share
-            // the same header/body row shape, so one arm covers both.
             Node::Table {
                 header_rows,
                 body_rows,
-            }
-            | Node::Directive(Directive::Table {
-                header_rows,
-                body_rows,
                 ..
-            }) => {
-                for row in header_rows.iter().chain(body_rows) {
-                    for cell in &row.cells {
-                        collect_anonymous_targets(&cell.content, targets);
-                    }
-                }
-            }
+            } => collect_row_anonymous_targets(header_rows.iter().chain(body_rows), targets),
             Node::BlockQuote { content, .. } => {
                 collect_anonymous_targets(content, targets);
             }
-            // Every other directive's payload is inline or verbatim, and the
-            // remaining node kinds have no block-level children at all. A
+            // The remaining node kinds have no block-level children at all. A
             // line block's content is `InlineNode` only, so it joins this
             // group too.
-            Node::Directive(_)
-            | Node::Heading { .. }
-            | Node::Paragraph(_)
+            Node::Heading { .. }
+            | Node::Paragraph { .. }
             | Node::Target { .. }
             | Node::LiteralBlock { .. }
-            | Node::DoctestBlock(_)
+            | Node::DoctestBlock { .. }
             | Node::Comment
-            | Node::Transition
-            | Node::LineBlock(_) => {}
+            | Node::Transition { .. }
+            | Node::LineBlock { .. } => {}
+        }
+    }
+}
+
+/// What [`collect_anonymous_targets`] collects from the bodies `directive`
+/// holds.
+fn collect_directive_anonymous_targets(directive: &Directive, targets: &mut Vec<LinkDestination>) {
+    match directive {
+        Directive::Admonition { body, .. }
+        | Directive::VersionChange { body, .. }
+        | Directive::SeeAlso { body } => collect_anonymous_targets(body, targets),
+        // The three sphinx-design containers, for the reason the doc comment
+        // on `collect_anonymous_targets` gives: an anonymous target written
+        // inside one would otherwise never pair with its reference.
+        Directive::Dropdown(dropdown) => collect_anonymous_targets(&dropdown.body, targets),
+        Directive::Grid(grid) => collect_anonymous_targets(&grid.body, targets),
+        Directive::GridItem(item) => collect_anonymous_targets(&item.body, targets),
+        Directive::DomainObject { object } => collect_anonymous_targets(object.body(), targets),
+        Directive::Glossary { entries, .. } => {
+            for entry in entries {
+                collect_anonymous_targets(&entry.definition, targets);
+            }
+        }
+        Directive::DataTable { rows, .. } => collect_row_anonymous_targets(rows, targets),
+        // A `.. table::`-wrapped table has a bare one's header/body rows.
+        Directive::Table {
+            header_rows,
+            body_rows,
+            ..
+        } => collect_row_anonymous_targets(header_rows.iter().chain(body_rows), targets),
+        // Every other directive's payload is inline or verbatim.
+        _ => {}
+    }
+}
+
+/// What [`collect_anonymous_targets`] collects from the cells of `rows`.
+fn collect_row_anonymous_targets<'a>(
+    rows: impl IntoIterator<Item = &'a TableRow>,
+    targets: &mut Vec<LinkDestination>,
+) {
+    for row in rows {
+        for cell in &row.cells {
+            collect_anonymous_targets(&cell.content, targets);
         }
     }
 }
@@ -245,7 +244,9 @@ pub(crate) fn render_nodes_with_paragraph_class(
                     .cloned();
                 render_heading(html, *level, text, id.as_ref(), index == title_index, ctx);
             }
-            Node::Paragraph(inlines) => {
+            Node::Paragraph {
+                content: inlines, ..
+            } => {
                 render_paragraph(html, inlines, paragraph_class, ctx);
             }
             Node::Target {
@@ -258,10 +259,10 @@ pub(crate) fn render_nodes_with_paragraph_class(
             }
             // Anonymous targets and comments produce no HTML output.
             Node::AnonymousTarget { .. } | Node::Comment => {}
-            Node::Transition => {
+            Node::Transition { .. } => {
                 let _ = writeln!(html, "<hr />");
             }
-            Node::Directive(directive) => {
+            Node::Directive { directive, .. } => {
                 let placement = ContentsPlacement {
                     nodes,
                     index,
@@ -297,11 +298,14 @@ pub(crate) fn render_nodes_with_paragraph_class(
             Node::Table {
                 header_rows,
                 body_rows,
+                ..
             } => super::tables::render_table(html, header_rows, body_rows, ctx),
             // A `::` block carries no options and names no language of its
             // own, but it is still highlighted — with whatever language the
             // enclosing `.. highlight::` set, exactly as Sphinx does.
-            Node::LiteralBlock { language, content } => {
+            Node::LiteralBlock {
+                language, content, ..
+            } => {
                 let resolved = language.resolve(&ctx.highlight_language);
                 let force = ctx.highlight_force;
                 super::code_block::render_code(
@@ -317,14 +321,15 @@ pub(crate) fn render_nodes_with_paragraph_class(
             // A bare `>>>` block. Rendered like the `.. doctest::` directive
             // form, which is what Sphinx does — and, unlike the literal block
             // above, this one is also executed.
-            Node::DoctestBlock(content) => {
+            Node::DoctestBlock { content, .. } => {
                 let rendered = render_bare_doctest_block(content, ctx);
                 html.push_str(&rendered);
             }
-            Node::LineBlock(items) => render_line_block(html, items, ctx),
+            Node::LineBlock { items, .. } => render_line_block(html, items, ctx),
             Node::BlockQuote {
                 content,
                 attribution,
+                ..
             } => {
                 render_block_quote(html, content, attribution.as_deref(), ctx);
             }
@@ -665,10 +670,12 @@ mod tests {
             start: Enumerator::new(sequence, format, ordinal).expect("valid ordinal"),
             items: vec![
                 ListItem {
-                    nodes: vec![Node::Paragraph(vec![InlineNode::Text("One".to_string())])],
+                    nodes: vec![Node::paragraph(vec![InlineNode::Text("One".to_string())])],
+                    block: None,
                 },
                 ListItem {
-                    nodes: vec![Node::Paragraph(vec![InlineNode::Text("Two".to_string())])],
+                    nodes: vec![Node::paragraph(vec![InlineNode::Text("Two".to_string())])],
+                    block: None,
                 },
             ],
         }
@@ -683,14 +690,16 @@ mod tests {
                 bullet: '*',
                 items: vec![
                     rinx_ast::ListItem {
-                        nodes: vec![Node::Paragraph(vec![InlineNode::Text(
+                        nodes: vec![Node::paragraph(vec![InlineNode::Text(
                             "Item 1".to_string(),
                         )])],
+                        block: None,
                     },
                     rinx_ast::ListItem {
-                        nodes: vec![Node::Paragraph(vec![InlineNode::Text(
+                        nodes: vec![Node::paragraph(vec![InlineNode::Text(
                             "Item 2".to_string(),
                         )])],
+                        block: None,
                     },
                 ],
             }],
@@ -715,16 +724,18 @@ mod tests {
                 bullet: '*',
                 items: vec![rinx_ast::ListItem {
                     nodes: vec![
-                        Node::Paragraph(vec![InlineNode::Text("Parent".to_string())]),
+                        Node::paragraph(vec![InlineNode::Text("Parent".to_string())]),
                         Node::BulletList {
                             bullet: '-',
                             items: vec![rinx_ast::ListItem {
-                                nodes: vec![Node::Paragraph(vec![InlineNode::Text(
+                                nodes: vec![Node::paragraph(vec![InlineNode::Text(
                                     "Child".to_string(),
                                 )])],
+                                block: None,
                             }],
                         },
                     ],
+                    block: None,
                 }],
             }],
         );
@@ -747,9 +758,10 @@ mod tests {
                 bullet: '*',
                 items: vec![rinx_ast::ListItem {
                     nodes: vec![
-                        Node::Paragraph(vec![InlineNode::Text("Para 1".to_string())]),
-                        Node::Paragraph(vec![InlineNode::Text("Para 2".to_string())]),
+                        Node::paragraph(vec![InlineNode::Text("Para 1".to_string())]),
+                        Node::paragraph(vec![InlineNode::Text("Para 2".to_string())]),
                     ],
+                    block: None,
                 }],
             }],
         );
@@ -945,13 +957,14 @@ mod tests {
                     .unwrap(),
                 items: vec![ListItem {
                     nodes: vec![
-                        Node::Paragraph(vec![InlineNode::Text("Parent".to_string())]),
+                        Node::paragraph(vec![InlineNode::Text("Parent".to_string())]),
                         enumerated_list(
                             EnumeratorSequence::LowerAlpha,
                             EnumeratorFormat::Parens,
                             1,
                         ),
                     ],
+                    block: None,
                 }],
             }],
         );
@@ -976,15 +989,17 @@ mod tests {
                 items: vec![
                     rinx_ast::DefinitionListItem {
                         term: vec![InlineNode::Text("Term 1".to_string())],
-                        definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                        definition: vec![Node::paragraph(vec![InlineNode::Text(
                             "Def 1".to_string(),
                         )])],
+                        block: None,
                     },
                     rinx_ast::DefinitionListItem {
                         term: vec![InlineNode::Text("Term 2".to_string())],
-                        definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                        definition: vec![Node::paragraph(vec![InlineNode::Text(
                             "Def 2".to_string(),
                         )])],
+                        block: None,
                     },
                 ],
             }],
@@ -1020,9 +1035,10 @@ mod tests {
                             inventory: rinx_ast::InventorySelector::Any,
                         },
                     ],
-                    definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                    definition: vec![Node::paragraph(vec![InlineNode::Text(
                         "Utilities for ASCII characters.".to_string(),
                     )])],
+                    block: None,
                 }],
             }],
         );
@@ -1035,5 +1051,76 @@ mod tests {
         assert!(result.starts_with("<dl>\n<dt>Module "));
         assert!(result.contains("curses.ascii"));
         assert!(result.contains("<dd><p>Utilities for ASCII characters.</p>\n</dd>"));
+    }
+
+    /// An anonymous target to `uri`.
+    fn anonymous(uri: &str) -> Node {
+        Node::AnonymousTarget {
+            destination: LinkDestination::Uri(uri.to_string()),
+        }
+    }
+
+    /// A row of one cell holding `content`.
+    fn row_of(content: Vec<Node>) -> TableRow {
+        TableRow {
+            cells: vec![rinx_ast::TableCell {
+                colspan: 1,
+                rowspan: 1,
+                content,
+            }],
+        }
+    }
+
+    #[test]
+    fn test_collect_directive_anonymous_targets_reads_a_container_body() {
+        // Given
+        let directive = Directive::SeeAlso {
+            body: vec![anonymous("https://a.example")],
+        };
+        let mut targets = Vec::new();
+
+        // When
+        collect_directive_anonymous_targets(&directive, &mut targets);
+
+        // Then
+        assert_eq!(
+            targets,
+            vec![LinkDestination::Uri("https://a.example".to_string())]
+        );
+    }
+
+    #[test]
+    fn test_collect_directive_anonymous_targets_ignores_a_directive_without_a_body() {
+        // Given
+        let directive = Directive::CNamespace { namespace: None };
+        let mut targets = Vec::new();
+
+        // When
+        collect_directive_anonymous_targets(&directive, &mut targets);
+
+        // Then
+        assert!(targets.is_empty());
+    }
+
+    #[test]
+    fn test_collect_row_anonymous_targets_reads_every_cell_in_order() {
+        // Given
+        let rows = [
+            row_of(vec![anonymous("first")]),
+            row_of(vec![anonymous("second")]),
+        ];
+        let mut targets = Vec::new();
+
+        // When
+        collect_row_anonymous_targets(&rows, &mut targets);
+
+        // Then
+        assert_eq!(
+            targets,
+            vec![
+                LinkDestination::Uri("first".to_string()),
+                LinkDestination::Uri("second".to_string()),
+            ]
+        );
     }
 }

@@ -48,7 +48,7 @@ fn test_analyze_populates_targets_for_target_nodes() {
                 destination: None,
                 block: None,
             },
-            Node::Paragraph(vec![InlineNode::Text("some text".to_string())]),
+            Node::paragraph(vec![InlineNode::Text("some text".to_string())]),
         ],
     );
 
@@ -69,7 +69,7 @@ fn test_analyze_extracts_h1_title() {
     let doc = Document::new(
         "docs/my-file.rst".to_string(),
         vec![
-            Node::Paragraph(vec![InlineNode::Text("some text".to_string())]),
+            Node::paragraph(vec![InlineNode::Text("some text".to_string())]),
             Node::Heading {
                 level: 1,
                 text: vec![InlineNode::Text("My Title".to_string())],
@@ -99,7 +99,7 @@ fn test_analyze_records_a_document_without_a_title() {
     // Given — a page with no heading at all
     let doc = Document::new(
         "notes/scratch.rst".to_string(),
-        vec![Node::Paragraph(vec![InlineNode::Text(
+        vec![Node::paragraph(vec![InlineNode::Text(
             "jottings".to_string(),
         )])],
     );
@@ -151,7 +151,7 @@ fn test_analyze_registers_glossary_terms() {
     // Given
     let doc = Document::new(
         "glossary.rst".to_string(),
-        vec![Node::Directive(Directive::Glossary {
+        vec![Node::directive(Directive::Glossary {
             entries: vec![rinx_ast::GlossaryEntry {
                 terms: vec![rinx_ast::GlossaryTerm::unplaced("environment")],
                 definition: vec![],
@@ -176,7 +176,7 @@ fn test_analyze_registers_all_terms_in_multi_term_entry() {
     // Given
     let doc = Document::new(
         "glossary.rst".to_string(),
-        vec![Node::Directive(Directive::Glossary {
+        vec![Node::directive(Directive::Glossary {
             entries: vec![rinx_ast::GlossaryEntry {
                 terms: vec![
                     rinx_ast::GlossaryTerm::unplaced("term 1"),
@@ -223,6 +223,7 @@ fn test_analyze_registers_target_nested_in_table_cell() {
                     }],
                 }],
             }],
+            block: None,
         }],
     );
 
@@ -241,7 +242,7 @@ fn test_analyze_registers_list_table_name_as_target() {
     // Given — a `.. list-table::` with a `:name:` option
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DataTable {
+        vec![Node::directive(Directive::DataTable {
             source: TableSource::List,
             title: None,
             header_rows: 0,
@@ -252,7 +253,6 @@ fn test_analyze_registers_list_table_name_as_target() {
             classes: vec![],
             name: Some(TargetName::new("fruit-table").into()),
             rows: vec![],
-            block: None,
         })],
     );
 
@@ -271,7 +271,7 @@ fn test_analyze_list_table_without_name_registers_no_target() {
     // Given — a `.. list-table::` with no `:name:` option
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DataTable {
+        vec![Node::directive(Directive::DataTable {
             source: TableSource::List,
             title: None,
             header_rows: 0,
@@ -282,7 +282,6 @@ fn test_analyze_list_table_without_name_registers_no_target() {
             classes: vec![],
             name: None,
             rows: vec![],
-            block: None,
         })],
     );
 
@@ -298,7 +297,7 @@ fn test_analyze_registers_table_directive_name_as_target() {
     // Given — a `.. table::` with a `:name:` option
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::Table {
+        vec![Node::directive(Directive::Table {
             title: None,
             widths: None,
             width: None,
@@ -307,7 +306,6 @@ fn test_analyze_registers_table_directive_name_as_target() {
             name: Some(TargetName::new("wrapped-table").into()),
             header_rows: vec![],
             body_rows: vec![],
-            block: None,
         })],
     );
 
@@ -326,7 +324,7 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
     // Given — a nested target in both a header cell and a body cell
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::Table {
+        vec![Node::directive(Directive::Table {
             title: None,
             widths: None,
             width: None,
@@ -355,7 +353,6 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
                     }],
                 }],
             }],
-            block: None,
         })],
     );
 
@@ -375,7 +372,7 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
 
 /// A code block carrying `name`, with every other option left at its default.
 fn code_block_named(name: Option<&str>) -> Node {
-    Node::Directive(Directive::CodeBlock(rinx_ast::CodeBlock {
+    Node::directive(Directive::CodeBlock(rinx_ast::CodeBlock {
         source: rinx_ast::CodeBlockSource::CodeBlock,
         language: rinx_ast::CodeLanguage::parse("python"),
         content: "x = 1".to_string(),
@@ -425,7 +422,7 @@ fn test_analyze_code_block_without_name_registers_no_target() {
 fn image_named(name: Option<&str>) -> Node {
     let mut options = rinx_ast::ImageOptions::new(rinx_ast::AssetUri::new("logo.png"));
     options.name = name.map(|text| TargetName::new(text).into());
-    Node::Directive(Directive::Image(Box::new(options)))
+    Node::directive(Directive::Image(Box::new(options)))
 }
 
 /// A `.. figure::` carrying `name` on its image and `legend` as its body.
@@ -434,7 +431,7 @@ fn figure_named(name: Option<&str>, legend: Vec<Node>) -> Node {
     options.name = name.map(|text| TargetName::new(text).into());
     let mut figure = rinx_ast::Figure::new(options);
     figure.legend = legend;
-    Node::Directive(Directive::Figure(Box::new(figure)))
+    Node::directive(Directive::Figure(Box::new(figure)))
 }
 
 #[test]
@@ -510,7 +507,7 @@ fn test_analyze_indexes_targets_inside_a_figure_legend() {
 
 /// A `.. dropdown::` carrying `name` and `body`.
 fn dropdown_named(name: Option<&str>, body: Vec<Node>) -> Node {
-    Node::Directive(Directive::Dropdown(Box::new(rinx_ast::Dropdown {
+    Node::directive(Directive::Dropdown(Box::new(rinx_ast::Dropdown {
         name: name.map(|text| TargetName::new(text).into()),
         body,
         ..rinx_ast::Dropdown::new()
@@ -521,14 +518,14 @@ fn dropdown_named(name: Option<&str>, body: Vec<Node>) -> Node {
 fn entity_table_named(name: Option<&str>) -> Node {
     let mut table = rinx_ast::EntityTable::new(rinx_ast::EntityTableSource::EntityTable);
     table.name = name.map(|text| TargetName::new(text).into());
-    Node::Directive(Directive::EntityTable(Box::new(table)))
+    Node::directive(Directive::EntityTable(Box::new(table)))
 }
 
 /// A diagram directive carrying `name`.
 fn diagram_named(name: Option<&str>) -> Node {
     let mut uml = rinx_ast::Uml::new(rinx_ast::UmlSource::PlantUml, "A -> B".to_string());
     uml.name = name.map(|text| TargetName::new(text).into());
-    Node::Directive(Directive::Uml(Box::new(uml)))
+    Node::directive(Directive::Uml(Box::new(uml)))
 }
 
 #[test]
@@ -568,7 +565,7 @@ fn test_analyze_registers_a_diagram_name_nested_in_an_admonition() {
     // diagram extraction does
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::Admonition {
+        vec![Node::directive(Directive::Admonition {
             kind: rinx_ast::AdmonitionKind::Note,
             title: None,
             collapsible: None,
@@ -666,7 +663,7 @@ fn contents_named(name: Option<&str>) -> Node {
         name: name.map(|text| TargetName::new(text).into()),
         ..rinx_ast::ContentsOptions::default()
     };
-    Node::Directive(Directive::Contents(rinx_ast::Contents {
+    Node::directive(Directive::Contents(rinx_ast::Contents {
         title: None,
         options,
     }))
@@ -711,7 +708,7 @@ fn test_analyze_records_a_sectnum_directives_options() {
     };
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::Sectnum(options.clone()))],
+        vec![Node::directive(Directive::Sectnum(options.clone()))],
     );
 
     // When
@@ -727,11 +724,11 @@ fn test_analyze_finds_a_sectnum_directive_nested_in_an_admonition_body() {
     // where it's written.
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::Admonition {
+        vec![Node::directive(Directive::Admonition {
             kind: rinx_ast::AdmonitionKind::Note,
             title: None,
             collapsible: None,
-            body: vec![Node::Directive(Directive::Sectnum(
+            body: vec![Node::directive(Directive::Sectnum(
                 rinx_ast::SectnumOptions::default(),
             ))],
         })],
@@ -758,8 +755,8 @@ fn test_analyze_keeps_the_last_sectnum_directive_when_a_document_writes_two() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::Sectnum(first)),
-            Node::Directive(Directive::Sectnum(last.clone())),
+            Node::directive(Directive::Sectnum(first)),
+            Node::directive(Directive::Sectnum(last.clone())),
         ],
     );
 
@@ -775,7 +772,7 @@ fn test_analyze_registers_a_flowcharts_name_as_a_target() {
     // Given — a `.. entity-flow::` with a `:name:` option
     let doc = Document::new(
         "specs.rst".to_string(),
-        vec![Node::Directive(Directive::EntityFlow(Box::new(
+        vec![Node::directive(Directive::EntityFlow(Box::new(
             rinx_ast::EntityFlow {
                 name: Some(TargetName::new("requirement-flow").into()),
                 ..rinx_ast::EntityFlow::new(rinx_ast::EntityFlowSource::EntityFlow)
@@ -799,7 +796,7 @@ fn test_analyze_registers_a_sequence_diagrams_name_as_a_target() {
     // Given — a `.. entity-sequence::` with a `:name:` option
     let doc = Document::new(
         "specs.rst".to_string(),
-        vec![Node::Directive(Directive::EntitySequence(Box::new(
+        vec![Node::directive(Directive::EntitySequence(Box::new(
             rinx_ast::EntitySequence {
                 name: Some(TargetName::new("startup-sequence").into()),
                 ..rinx_ast::EntitySequence::new(
@@ -827,7 +824,7 @@ fn test_analyze_registers_a_bar_charts_name_as_a_target() {
     // Given — a `.. entity-bar::` with a `:name:` option
     let doc = Document::new(
         "report.rst".to_string(),
-        vec![Node::Directive(Directive::EntityBar(Box::new(
+        vec![Node::directive(Directive::EntityBar(Box::new(
             rinx_ast::EntityBar {
                 name: Some(TargetName::new("authors-chart").into()),
                 ..rinx_ast::EntityBar::new(
@@ -913,7 +910,7 @@ fn test_analyze_records_no_title_for_a_target_labelling_a_paragraph() {
         "guide.rst".to_string(),
         vec![
             label("note"),
-            Node::Paragraph(vec![InlineNode::Text("text".to_string())]),
+            Node::paragraph(vec![InlineNode::Text("text".to_string())]),
             heading("Later"),
         ],
     );
@@ -1001,7 +998,7 @@ fn test_analyze_records_the_title_of_a_heading_labelled_inside_a_directive_body(
     // Given — a target and heading inside an admonition body
     let doc = Document::new(
         "guide.rst".to_string(),
-        vec![Node::Directive(Directive::SeeAlso {
+        vec![Node::directive(Directive::SeeAlso {
             body: vec![label("inner"), heading("Inner")],
         })],
     );
@@ -1021,7 +1018,7 @@ fn figure(caption: Option<&str>, name: Option<&str>) -> Node {
     image.name = name.map(|text| TargetName::new(text).into());
     let mut figure = rinx_ast::Figure::new(image);
     figure.caption = caption.map(|text| vec![InlineNode::Text(text.to_string())]);
-    Node::Directive(Directive::Figure(Box::new(figure)))
+    Node::directive(Directive::Figure(Box::new(figure)))
 }
 
 #[test]
@@ -1082,7 +1079,7 @@ fn test_analyze_records_a_table_title_for_its_label_and_name() {
         "guide.rst".to_string(),
         vec![
             label("sizes"),
-            Node::Directive(Directive::Table {
+            Node::directive(Directive::Table {
                 title: Some("Sizes".to_string()),
                 widths: None,
                 width: None,
@@ -1091,7 +1088,6 @@ fn test_analyze_records_a_table_title_for_its_label_and_name() {
                 name: Some(TargetName::new("sizes-table").into()),
                 header_rows: vec![],
                 body_rows: vec![],
-                block: None,
             }),
         ],
     );
@@ -1114,7 +1110,11 @@ fn test_analyze_records_a_table_title_for_its_label_and_name() {
 fn test_analyze_records_a_code_block_caption_for_its_name() {
     // Given — Sphinx shows a code block's `:caption:` for a `:ref:` to it
     let mut node = code_block_named(Some("my-code"));
-    if let Node::Directive(Directive::CodeBlock(block)) = &mut node {
+    if let Node::Directive {
+        directive: Directive::CodeBlock(block),
+        ..
+    } = &mut node
+    {
         block.caption = Some("example.py".to_string());
     }
     let doc = Document::new("test.rst".to_string(), vec![node]);
@@ -1143,7 +1143,7 @@ fn test_analyze_records_an_entity_anchor_for_its_target() {
     };
     let doc = Document::new(
         "reqs.rst".to_string(),
-        vec![Node::Directive(Directive::Entity(Box::new(body)))],
+        vec![Node::directive(Directive::Entity(Box::new(body)))],
     );
 
     // When

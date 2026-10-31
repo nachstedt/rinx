@@ -24,7 +24,7 @@ fn test_parse_creates_inline_text_and_reference_nodes_for_paragraph() {
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![
+        Node::paragraph(vec![
             InlineNode::Text("Here is a ".to_string()),
             InlineNode::Reference {
                 display: None,
@@ -43,7 +43,7 @@ fn test_parse_creates_phrased_hyperlink_node() {
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![
+        Node::paragraph(vec![
             InlineNode::Text("Check the ".to_string()),
             InlineNode::Hyperlink {
                 text: "Python Guide".to_string(),
@@ -63,7 +63,7 @@ fn test_parse_creates_embedded_uri_hyperlink_node() {
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![
+        Node::paragraph(vec![
             InlineNode::Text("Check ".to_string()),
             InlineNode::Hyperlink {
                 text: "Google".to_string(),
@@ -83,7 +83,7 @@ fn test_parse_creates_simple_link_node() {
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![
+        Node::paragraph(vec![
             InlineNode::Text("Refer to ".to_string()),
             InlineNode::Hyperlink {
                 text: "target".to_string(),
@@ -104,7 +104,7 @@ fn test_parse_does_not_treat_snake_case_word_as_hyperlink() {
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![InlineNode::Text(
+        Node::paragraph(vec![InlineNode::Text(
             "Use my_variable_name in code.".to_string()
         )])
     );
@@ -118,7 +118,7 @@ fn test_parse_does_not_treat_multi_underscore_word_as_hyperlink() {
     // Then
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![InlineNode::Text("call foo_bar_baz here".to_string())])
+        Node::paragraph(vec![InlineNode::Text("call foo_bar_baz here".to_string())])
     );
 }
 #[test]
@@ -131,7 +131,7 @@ fn test_parse_creates_simple_link_node_for_target_name_containing_underscore() {
     // Then: still recognized as a reference to "my_target"
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![
+        Node::paragraph(vec![
             InlineNode::Text("See ".to_string()),
             InlineNode::Hyperlink {
                 text: "my_target".to_string(),
@@ -153,7 +153,7 @@ fn test_parse_does_not_treat_word_with_underscores_as_anonymous_reference() {
     // Then
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![InlineNode::Text(
+        Node::paragraph(vec![InlineNode::Text(
             "word_with_underscores stays text".to_string()
         )])
     );
@@ -175,7 +175,10 @@ fn test_parse_creates_anonymous_reference() {
     let input = "See `Example`__ and link__";
     let doc = parse_document("test.rst", input);
     assert_eq!(doc.nodes.len(), 1);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(inlines.len(), 4);
         assert_eq!(
             inlines[1],
@@ -200,7 +203,10 @@ fn test_parse_creates_anonymous_hyperlink_with_embedded_uri() {
     let input = "See `Google <https://google.com>`__";
     let doc = parse_document("test.rst", input);
     assert_eq!(doc.nodes.len(), 1);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(inlines.len(), 2);
         assert_eq!(
             inlines[1],
@@ -218,7 +224,10 @@ fn test_parse_paragraph_with_emphasis() {
     let input = "*emphasized* text";
     let doc = parse_document("test.rst", input);
     assert_eq!(doc.nodes.len(), 1);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(inlines.len(), 2);
         assert_eq!(inlines[0], InlineNode::Emphasis("emphasized".to_string()));
         assert_eq!(inlines[1], InlineNode::Text(" text".to_string()));
@@ -231,7 +240,10 @@ fn test_parse_paragraph_with_strong_emphasis() {
     let input = "some **strong** text";
     let doc = parse_document("test.rst", input);
     assert_eq!(doc.nodes.len(), 1);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(inlines.len(), 3);
         assert_eq!(inlines[0], InlineNode::Text("some ".to_string()));
         assert_eq!(inlines[1], InlineNode::Strong("strong".to_string()));
@@ -245,7 +257,10 @@ fn test_parse_paragraph_with_inline_literal() {
     let input = "some ``venv`` text";
     let doc = parse_document("test.rst", input);
     assert_eq!(doc.nodes.len(), 1);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(inlines.len(), 3);
         assert_eq!(inlines[0], InlineNode::Text("some ".to_string()));
         assert_eq!(inlines[1], InlineNode::Literal("venv".to_string()));
@@ -259,7 +274,10 @@ fn test_parse_inline_literal_with_backslash() {
     let input = "``some\\path``";
     let doc = parse_document("test.rst", input);
     assert_eq!(doc.nodes.len(), 1);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(inlines.len(), 1);
         assert_eq!(inlines[0], InlineNode::Literal("some\\path".to_string()));
     } else {
@@ -271,7 +289,10 @@ fn test_parse_inline_literal_ignoring_inner_markup() {
     let input = "``**bold**``";
     let doc = parse_document("test.rst", input);
     assert_eq!(doc.nodes.len(), 1);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(inlines.len(), 1);
         assert_eq!(inlines[0], InlineNode::Literal("**bold**".to_string()));
     } else {
@@ -283,7 +304,10 @@ fn test_parse_paragraph_with_mixed_markup() {
     let input = "Go to *emphasis* or **strong** link.";
     let doc = parse_document("test.rst", input);
     assert_eq!(doc.nodes.len(), 1);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(inlines.len(), 5);
         assert_eq!(inlines[0], InlineNode::Text("Go to ".to_string()));
         assert_eq!(inlines[1], InlineNode::Emphasis("emphasis".to_string()));
@@ -301,7 +325,10 @@ fn test_parse_escaped_space_joins_markup_to_neighbouring_text() {
     let doc = parse_document("test.rst", r"Join foo\ *bar*\ baz tightly.");
 
     // Then
-    let Node::Paragraph(inlines) = &doc.nodes[0] else {
+    let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     };
     assert_eq!(inlines[0], InlineNode::Text("Join foo".to_string()));
@@ -316,7 +343,10 @@ fn test_parse_escaped_dashes_are_not_turned_into_a_typographic_dash() {
     let doc = parse_document("test.rst", r"escaped \-\- and real -- here");
 
     // Then
-    let Node::Paragraph(inlines) = &doc.nodes[0] else {
+    let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     };
     assert_eq!(
@@ -333,7 +363,10 @@ fn test_parse_role_content_is_unescaped_through_the_full_pipeline() {
     let doc = parse_document("test.rst", r":func:`spawn\* <spawnl>`");
 
     // Then
-    let Node::Paragraph(inlines) = &doc.nodes[0] else {
+    let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     };
     let InlineNode::DomainObjectReference { name, display, .. } = &inlines[0] else {
@@ -373,7 +406,10 @@ fn test_parse_paragraph_with_escaped_markup() {
     let input = r"Keep \*stars\* as is and **strong** text.";
     let doc = parse_document("test.rst", input);
     assert_eq!(doc.nodes.len(), 1);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(inlines.len(), 3);
         assert_eq!(
             inlines[0],
@@ -390,7 +426,10 @@ fn test_parse_paragraph_rejects_invalid_boundary_markup() {
     let input = "a*text* *text*b";
     let doc = parse_document("test.rst", input);
     assert_eq!(doc.nodes.len(), 1);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(inlines.len(), 1);
         assert_eq!(inlines[0], InlineNode::Text("a*text* *text*b".to_string()));
     } else {
@@ -426,7 +465,10 @@ fn test_parse_paragraph_with_punctuation_boundaries() {
     let input = "(*emphasis*), [**strong**];";
     let doc = parse_document("test.rst", input);
     assert_eq!(doc.nodes.len(), 1);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(inlines.len(), 5);
         assert_eq!(inlines[0], InlineNode::Text("(".to_string()));
         assert_eq!(inlines[1], InlineNode::Emphasis("emphasis".to_string()));
@@ -442,7 +484,10 @@ fn test_parse_paragraph_with_emphasis_multibyte() {
     let input = "*\u{03c0}* text";
     let doc = parse_document("test.rst", input);
     assert_eq!(doc.nodes.len(), 1);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(inlines.len(), 2);
         assert_eq!(inlines[0], InlineNode::Emphasis("\u{03c0}".to_string()));
         assert_eq!(inlines[1], InlineNode::Text(" text".to_string()));
@@ -455,7 +500,10 @@ fn test_parse_paragraph_with_program_role() {
     let input = "Run :program:`curl` to download files.";
     let doc = parse_document("test.rst", input);
     assert_eq!(doc.nodes.len(), 1);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(inlines.len(), 3);
         assert_eq!(inlines[0], InlineNode::Text("Run ".to_string()));
         assert_eq!(inlines[1], InlineNode::Program("curl".to_string()));
@@ -472,7 +520,10 @@ fn test_parse_paragraph_with_multiple_program_roles_and_punctuation() {
     let input = "Use :program:`git` or :program:`hg` to manage code.";
     let doc = parse_document("test.rst", input);
     assert_eq!(doc.nodes.len(), 1);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(inlines.len(), 5);
         assert_eq!(inlines[0], InlineNode::Text("Use ".to_string()));
         assert_eq!(inlines[1], InlineNode::Program("git".to_string()));
@@ -487,7 +538,10 @@ fn test_parse_paragraph_with_multiple_program_roles_and_punctuation() {
 fn test_parse_term_role_basic() {
     let input = "See :term:`environment` for details.\n";
     let doc = parse_document("test.rst", input);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         let term_ref = inlines
             .iter()
             .find(|n| matches!(n, InlineNode::TermReference { .. }));
@@ -504,7 +558,10 @@ fn test_parse_term_role_basic() {
 fn test_parse_term_role_with_display_text() {
     let input = "See :term:`the env <environment>` here.\n";
     let doc = parse_document("test.rst", input);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         let term_ref = inlines
             .iter()
             .find(|n| matches!(n, InlineNode::TermReference { .. }));
@@ -521,7 +578,10 @@ fn test_parse_term_role_with_display_text() {
 fn test_parse_option_role_basic() {
     let input = "See :option:`-h` for details.\n";
     let doc = parse_document("test.rst", input);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         let option_ref = inlines
             .iter()
             .find(|n| matches!(n, InlineNode::OptionReference { .. }));
@@ -544,7 +604,10 @@ fn test_parse_option_role_basic() {
 fn test_parse_option_role_with_display_text() {
     let input = "See :option:`-W default <-W>` here.\n";
     let doc = parse_document("test.rst", input);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         let option_ref = inlines
             .iter()
             .find(|n| matches!(n, InlineNode::OptionReference { .. }));
@@ -567,7 +630,10 @@ fn test_parse_option_role_with_embedded_program_in_target() {
     // `rinx_renderer::resolution::option`).
     let input = "See :option:`-O <dis --show-offsets>` here.\n";
     let doc = parse_document("test.rst", input);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         let option_ref = inlines
             .iter()
             .find(|n| matches!(n, InlineNode::OptionReference { .. }));
@@ -587,7 +653,10 @@ fn test_parse_option_role_with_embedded_program_in_target() {
 fn test_parse_option_role_mixed_with_surrounding_text() {
     let input = "Before :option:`-x` after.\n";
     let doc = parse_document("test.rst", input);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(inlines.len() >= 3, "Expected text + option + text");
         assert!(matches!(&inlines[0], InlineNode::Text(t) if t == "Before "));
         assert!(
@@ -601,7 +670,10 @@ fn test_parse_option_role_mixed_with_surrounding_text() {
 fn test_parse_ref_role_with_display_text() {
     let input = "See :ref:`GenericAlias <types-genericalias>` here.\n";
     let doc = parse_document("test.rst", input);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         let reference = inlines
             .iter()
             .find(|n| matches!(n, InlineNode::Reference { .. }));
@@ -621,7 +693,10 @@ fn test_parse_ref_role_with_display_text() {
 fn test_parse_term_role_mixed_with_surrounding_text() {
     let input = "Before :term:`foo` after.\n";
     let doc = parse_document("test.rst", input);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(inlines.len() >= 3, "Expected text + term + text");
         assert!(matches!(&inlines[0], InlineNode::Text(t) if t == "Before "));
         assert!(matches!(&inlines[1], InlineNode::TermReference { term, .. } if term == "foo"));
@@ -640,7 +715,7 @@ fn test_parse_paragraph_converts_triple_hyphen_to_em_dash() {
     // Then
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![InlineNode::Text(
+        Node::paragraph(vec![InlineNode::Text(
             "wait\u{2014}no, that's wrong.".to_string()
         )])
     );
@@ -656,7 +731,7 @@ fn test_parse_paragraph_converts_double_hyphen_to_en_dash() {
     // Then
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![InlineNode::Text(
+        Node::paragraph(vec![InlineNode::Text(
             "See pages 10\u{2013}20.".to_string()
         )])
     );
@@ -672,7 +747,7 @@ fn test_parse_paragraph_converts_triple_dot_to_ellipsis() {
     // Then
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![InlineNode::Text(
+        Node::paragraph(vec![InlineNode::Text(
             "Wait\u{2026} what happened?".to_string()
         )])
     );
@@ -686,7 +761,10 @@ fn test_parse_paragraph_applies_smart_typography_inside_strong_emphasis() {
     let doc = parse_document("test.rst", input);
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(inlines.contains(&InlineNode::Strong("really\u{2014}important".to_string())));
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
@@ -701,7 +779,10 @@ fn test_parse_paragraph_does_not_apply_smart_typography_inside_inline_literal() 
     let doc = parse_document("test.rst", input);
 
     // Then
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         assert!(inlines.contains(&InlineNode::Literal("git log a---b".to_string())));
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
@@ -711,7 +792,10 @@ fn test_parse_paragraph_does_not_apply_smart_typography_inside_inline_literal() 
 /// The single inline node `input` parses to, for a paragraph holding one role.
 fn only_inline(input: &str) -> InlineNode {
     let doc = parse_document("test.rst", input);
-    let Node::Paragraph(inlines) = &doc.nodes[0] else {
+    let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    else {
         panic!("expected a paragraph, got {:?}", doc.nodes[0]);
     };
     assert_eq!(inlines.len(), 1, "{inlines:?}");
@@ -818,7 +902,7 @@ fn test_parse_creates_a_number_reference_with_its_span() {
     // Then
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![
+        Node::paragraph(vec![
             InlineNode::Text("See ".to_string()),
             InlineNode::NumberReference {
                 title: Some(rinx_ast::NumberFormat::parse("Fig. %s").expect("valid")),
@@ -849,7 +933,7 @@ fn test_parse_reports_a_refused_numref_title_at_the_role() {
     assert_eq!(doc.diagnostics[0].span, Some(at(3, 5, 34)));
     assert_eq!(
         doc.nodes[1],
-        Node::Paragraph(vec![
+        Node::paragraph(vec![
             InlineNode::Text("See ".to_string()),
             InlineNode::NumberReference {
                 title: None,
@@ -873,7 +957,10 @@ fn test_parse_unescapes_a_numref_title_before_reading_its_format() {
 
     // Then
     assert!(doc.diagnostics.is_empty());
-    let Node::Paragraph(inlines) = &doc.nodes[0] else {
+    let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    else {
         unreachable!()
     };
     assert!(matches!(
@@ -885,7 +972,10 @@ fn test_parse_unescapes_a_numref_title_before_reading_its_format() {
 /// The single hyperlink-like node of `input`'s first paragraph.
 fn only_link(input: &str) -> InlineNode {
     let doc = parse_document("test.rst", input);
-    let Some(Node::Paragraph(inlines)) = doc.nodes.first() else {
+    let Some(Node::Paragraph {
+        content: inlines, ..
+    }) = doc.nodes.first()
+    else {
         panic!("Expected a paragraph, got {:?}", doc.nodes);
     };
     inlines

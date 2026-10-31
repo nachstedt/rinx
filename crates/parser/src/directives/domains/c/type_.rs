@@ -63,16 +63,20 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object:
-                DomainObjectBody::CType {
-                    signatures,
-                    flags,
-                    body,
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object:
+                        DomainObjectBody::CType {
+                            signatures,
+                            flags,
+                            body,
+                            ..
+                        },
                     ..
                 },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert_eq!(signature_texts(signatures), ["PyMemAllocatorDomain"]);
             assert_eq!(flags, &rinx_ast::DescriptionFlags::default());
@@ -91,10 +95,14 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object: DomainObjectBody::CType { signatures, .. },
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object: DomainObjectBody::CType { signatures, .. },
+                    ..
+                },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert_eq!(signature_texts(signatures), ["unsigned long ulong"]);
         } else {
@@ -111,10 +119,14 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object: DomainObjectBody::CType { flags, .. },
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object: DomainObjectBody::CType { flags, .. },
+                    ..
+                },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert!(flags.has(rinx_ast::DescriptionFlag::NoIndex));
         } else {
@@ -133,18 +145,25 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object: DomainObjectBody::CType { body, .. },
+        if let Node::Directive {
+            directive:
+                Directive::DomainObject {
+                    object: DomainObjectBody::CType { body, .. },
+                    ..
+                },
             ..
-        }) = &doc.nodes[0]
+        } = &doc.nodes[0]
         {
             assert_eq!(body.len(), 1);
             assert!(matches!(
                 &body[0],
-                Node::Directive(Directive::DomainObject {
-                    object: DomainObjectBody::CMacro { .. },
+                Node::Directive {
+                    directive: Directive::DomainObject {
+                        object: DomainObjectBody::CMacro { .. },
+                        ..
+                    },
                     ..
-                })
+                }
             ));
         } else {
             panic!("Expected CType, got {:?}", doc.nodes[0]);

@@ -2,7 +2,7 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
-use crate::blocks::parse_blocks;
+use crate::blocks::{parse_blocks, written_extent};
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
@@ -192,6 +192,7 @@ pub(super) fn try_parse_option_list(
         // Case B (content starts on its own, more-indented, line) — mirrors
         // `bullet_list`'s `item_start` and `definition_list`'s
         // `definition_start` respectively.
+        let item_start = i;
         let description_start_line;
         let body_indent;
         let mut body_lines: Vec<String> = Vec::new();
@@ -253,6 +254,7 @@ pub(super) fn try_parse_option_list(
         items.push(OptionListItem {
             options,
             description,
+            block: ctx.record_block_lines(written_extent(lines, item_start, i - item_start, ctx)),
         });
     }
 
@@ -297,7 +299,10 @@ mod tests {
             assert_eq!(items[0].options.len(), 1);
             assert_eq!(items[0].options[0].flag, "-h");
             assert!(items[0].options[0].argument.is_none());
-            if let Node::Paragraph(inlines) = &items[0].description[0] {
+            if let Node::Paragraph {
+                content: inlines, ..
+            } = &items[0].description[0]
+            {
                 assert_eq!(
                     inlines[0],
                     InlineNode::Text("Show this help message.".to_string())
@@ -442,7 +447,10 @@ mod tests {
         // Then
         if let Node::OptionList { items } = &doc.nodes[0] {
             assert_eq!(items.len(), 1);
-            if let Node::Paragraph(inlines) = &items[0].description[0] {
+            if let Node::Paragraph {
+                content: inlines, ..
+            } = &items[0].description[0]
+            {
                 assert_eq!(
                     inlines[0],
                     InlineNode::Text("A long option whose description starts below.".to_string())
@@ -467,7 +475,10 @@ mod tests {
         // Then
         if let Node::OptionList { items } = &doc.nodes[0] {
             assert_eq!(items.len(), 1);
-            if let Node::Paragraph(inlines) = &items[0].description[0] {
+            if let Node::Paragraph {
+                content: inlines, ..
+            } = &items[0].description[0]
+            {
                 assert_eq!(
                     inlines[0],
                     InlineNode::Text(
@@ -494,8 +505,8 @@ mod tests {
         if let Node::OptionList { items } = &doc.nodes[0] {
             assert_eq!(items.len(), 1);
             assert_eq!(items[0].description.len(), 2);
-            assert!(matches!(items[0].description[0], Node::Paragraph(_)));
-            assert!(matches!(items[0].description[1], Node::Paragraph(_)));
+            assert!(matches!(items[0].description[0], Node::Paragraph { .. }));
+            assert!(matches!(items[0].description[1], Node::Paragraph { .. }));
         } else {
             panic!("Expected OptionList, got {:?}", doc.nodes[0]);
         }
@@ -531,7 +542,7 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 2);
         assert!(matches!(doc.nodes[0], Node::OptionList { .. }));
-        assert!(matches!(doc.nodes[1], Node::Paragraph(_)));
+        assert!(matches!(doc.nodes[1], Node::Paragraph { .. }));
     }
 
     #[test]
@@ -544,7 +555,7 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        assert!(matches!(doc.nodes[0], Node::Paragraph(_)));
+        assert!(matches!(doc.nodes[0], Node::Paragraph { .. }));
     }
 
     #[test]

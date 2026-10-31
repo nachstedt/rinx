@@ -79,7 +79,7 @@ pub fn enumerable_elements(nodes: &[Node]) -> Vec<EnumerableElement<'_>> {
         if std::ptr::eq(siblings, nodes) {
             top_level_index = index;
         }
-        let Node::Directive(directive) = &siblings[index] else {
+        let Node::Directive { directive, .. } = &siblings[index] else {
             return;
         };
         let Some((kind, own_name, caption)) = captioned(directive) else {
@@ -165,11 +165,11 @@ mod tests {
         image.name = name.map(|text| TargetName::new(text).into());
         let mut figure = Figure::new(image);
         figure.caption = caption.map(|text| vec![InlineNode::Text(text.to_string())]);
-        Node::Directive(Directive::Figure(Box::new(figure)))
+        Node::directive(Directive::Figure(Box::new(figure)))
     }
 
     fn table(title: Option<&str>, name: Option<&str>) -> Node {
-        Node::Directive(Directive::DataTable {
+        Node::directive(Directive::DataTable {
             source: TableSource::List,
             title: title.map(str::to_string),
             header_rows: 0,
@@ -180,12 +180,11 @@ mod tests {
             classes: Vec::new(),
             name: name.map(|text| TargetName::new(text).into()),
             rows: Vec::new(),
-            block: None,
         })
     }
 
     fn code(caption: Option<&str>) -> Node {
-        Node::Directive(Directive::CodeBlock(CodeBlock {
+        Node::directive(Directive::CodeBlock(CodeBlock {
             source: CodeBlockSource::CodeBlock,
             language: CodeLanguage::Inherit,
             content: "x".to_string(),
@@ -271,7 +270,7 @@ mod tests {
         // Given a figure inside an admonition at top-level index 1
         let nodes = vec![
             Node::Comment,
-            Node::Directive(Directive::SeeAlso {
+            Node::directive(Directive::SeeAlso {
                 body: vec![figure(Some("Nested"), None)],
             }),
             figure(Some("After"), None),
@@ -296,7 +295,7 @@ mod tests {
         let elements = enumerable_elements(&nodes);
 
         // Then — the renderer recognizes an element by this address
-        let Node::Directive(directive) = &nodes[0] else {
+        let Node::Directive { directive, .. } = &nodes[0] else {
             unreachable!()
         };
         assert!(std::ptr::eq(elements[0].directive, directive));
@@ -316,7 +315,7 @@ mod tests {
                 block: None,
             },
             target("near"),
-            Node::Transition,
+            Node::Transition { block: None },
         ];
 
         // When

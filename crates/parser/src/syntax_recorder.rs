@@ -46,8 +46,8 @@ impl SyntaxRecorder {
         self.map.borrow_mut().record_name(span)
     }
 
-    /// Records a definition's block written over `lines`, yielding the id
-    /// its node is to carry.
+    /// Records a block written over `lines`, yielding the id its node is to
+    /// carry.
     pub(crate) fn block_lines(&self, lines: Span) -> BlockId {
         self.map.borrow_mut().record_block_lines(lines)
     }

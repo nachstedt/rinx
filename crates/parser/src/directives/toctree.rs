@@ -228,7 +228,10 @@ mod tests {
             .nodes
             .iter()
             .find_map(|node| match node {
-                Node::Directive(Directive::Toctree(toctree)) => Some(toctree.clone()),
+                Node::Directive {
+                    directive: Directive::Toctree(toctree),
+                    ..
+                } => Some(toctree.clone()),
                 _ => None,
             })
             .expect("document should contain a toctree");

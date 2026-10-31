@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::block_id::BlockId;
 use crate::node::Node;
 
 /// One entry in an RST option list: one or more comma-separated option
@@ -13,6 +14,10 @@ use crate::node::Node;
 pub struct OptionListItem {
     pub options: Vec<OptionSpec>,
     pub description: Vec<Node>,
+    /// The option marker's and description's lines, as the parse's source
+    /// map records them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub block: Option<BlockId>,
 }
 
 /// One option synonym within an [`OptionListItem`], e.g. `-o`, `--output`,
@@ -102,7 +107,8 @@ mod tests {
                     }),
                 },
             ],
-            description: vec![Node::Paragraph(vec![])],
+            description: vec![Node::paragraph(vec![])],
+            block: None,
         };
 
         // When

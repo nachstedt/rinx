@@ -116,11 +116,11 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::Admonition {
+            vec![Node::directive(Directive::Admonition {
                 kind: rinx_ast::AdmonitionKind::Note,
                 title: None,
                 collapsible: None,
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                body: vec![Node::paragraph(vec![InlineNode::Text(
                     "Note body".to_string(),
                 )])],
             })],
@@ -139,11 +139,11 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::Admonition {
+            vec![Node::directive(Directive::Admonition {
                 kind: rinx_ast::AdmonitionKind::Warning,
                 title: Some("Custom Warning".to_string()),
                 collapsible: Some(false),
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                body: vec![Node::paragraph(vec![InlineNode::Text(
                     "Warning body".to_string(),
                 )])],
             })],
@@ -164,7 +164,7 @@ mod tests {
         let kind = rinx_ast::AdmonitionKind::Note;
         let title: Option<String> = None;
         let collapsible: Option<bool> = None;
-        let body = vec![Node::Paragraph(vec![InlineNode::Text("Body".to_string())])];
+        let body = vec![Node::paragraph(vec![InlineNode::Text("Body".to_string())])];
 
         // When
         with_ctx(|ctx| {
@@ -199,10 +199,10 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::VersionChange {
+            vec![Node::directive(Directive::VersionChange {
                 kind: rinx_ast::VersionChangeKind::Added,
                 version: "1.0".to_string(),
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                body: vec![Node::paragraph(vec![InlineNode::Text(
                     "Initial release.".to_string(),
                 )])],
             })],
@@ -220,10 +220,10 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::VersionChange {
+            vec![Node::directive(Directive::VersionChange {
                 kind: rinx_ast::VersionChangeKind::Deprecated,
                 version: "3.0".to_string(),
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                body: vec![Node::paragraph(vec![InlineNode::Text(
                     "Use new API.".to_string(),
                 )])],
             })],
@@ -241,7 +241,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::VersionChange {
+            vec![Node::directive(Directive::VersionChange {
                 kind: rinx_ast::VersionChangeKind::Changed,
                 version: "2.0".to_string(),
                 body: vec![],
@@ -260,8 +260,8 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::SeeAlso {
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
+            vec![Node::directive(Directive::SeeAlso {
+                body: vec![Node::paragraph(vec![InlineNode::Text(
                     "The other page.".to_string(),
                 )])],
             })],
@@ -282,7 +282,7 @@ mod tests {
         // CPython benchmark's `curses` seealso block
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::SeeAlso {
+            vec![Node::directive(Directive::SeeAlso {
                 body: vec![Node::DefinitionList {
                     items: vec![
                         rinx_ast::DefinitionListItem {
@@ -300,9 +300,10 @@ mod tests {
                                     inventory: rinx_ast::InventorySelector::Any,
                                 },
                             ],
-                            definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                            definition: vec![Node::paragraph(vec![InlineNode::Text(
                                 "Utilities for working with ASCII characters.".to_string(),
                             )])],
+                            block: None,
                         },
                         rinx_ast::DefinitionListItem {
                             term: vec![InlineNode::Reference {
@@ -311,9 +312,10 @@ mod tests {
                                 span: None,
                                 inventory: rinx_ast::InventorySelector::Any,
                             }],
-                            definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                            definition: vec![Node::paragraph(vec![InlineNode::Text(
                                 "Tutorial material.".to_string(),
                             )])],
+                            block: None,
                         },
                     ],
                 }],
@@ -335,7 +337,7 @@ mod tests {
     fn test_render_seealso_static() {
         // Given
         let mut html = String::new();
-        let body = vec![Node::Paragraph(vec![InlineNode::Text(
+        let body = vec![Node::paragraph(vec![InlineNode::Text(
             "See related.".to_string(),
         )])];
 
@@ -353,7 +355,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject {
+            vec![Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
                     name: "greetings".to_string(),
                     options: rinx_ast::ModuleOptions {
@@ -363,7 +365,6 @@ mod tests {
                     },
                     body: vec![],
                 },
-                block: None,
             })],
         );
 

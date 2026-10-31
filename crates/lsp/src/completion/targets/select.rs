@@ -222,16 +222,19 @@ mod tests {
         Document::new(
             "guide.rst".to_string(),
             vec![
-                Node::Directive(Directive::PyCurrentModule {
+                Node::directive(Directive::PyCurrentModule {
                     module: Some("pkg".to_string()),
                 }),
-                Node::Paragraph(vec![reference]),
+                Node::paragraph(vec![reference]),
             ],
         )
     }
 
     fn written(doc: &Document) -> &InlineNode {
-        let Some(Node::Paragraph(inlines)) = doc.nodes.last() else {
+        let Some(Node::Paragraph {
+            content: inlines, ..
+        }) = doc.nodes.last()
+        else {
             unreachable!()
         };
         &inlines[0]

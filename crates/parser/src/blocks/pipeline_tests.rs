@@ -27,7 +27,7 @@ fn test_parse_creates_paragraph_node() {
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![InlineNode::Text("Just some\ntext".to_string())])
+        Node::paragraph(vec![InlineNode::Text("Just some\ntext".to_string())])
     );
 }
 
@@ -48,8 +48,8 @@ fn test_parse_creates_mixed_nodes_for_heading_and_paragraph() {
         )
     );
     assert_eq!(
-        doc.nodes[1],
-        Node::Paragraph(vec![InlineNode::Text("Text.".to_string())])
+        crate::unplaced_node(&doc.nodes[1]),
+        Node::paragraph(vec![InlineNode::Text("Text.".to_string())])
     );
 }
 
@@ -63,7 +63,7 @@ fn test_parse_creates_paragraph_for_shorter_underline() {
     assert_eq!(doc.nodes.len(), 1);
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![InlineNode::Text("Long Heading\n===".to_string())])
+        Node::paragraph(vec![InlineNode::Text("Long Heading\n===".to_string())])
     );
 }
 
@@ -85,8 +85,8 @@ fn test_parse_ignores_trailing_whitespace_for_heading() {
         )
     );
     assert_eq!(
-        doc.nodes[1],
-        Node::Paragraph(vec![InlineNode::Text("Next".to_string())])
+        crate::unplaced_node(&doc.nodes[1]),
+        Node::paragraph(vec![InlineNode::Text("Next".to_string())])
     );
 }
 
@@ -100,15 +100,15 @@ fn test_parse_creates_multiple_paragraphs_ignoring_blank_lines() {
     assert_eq!(doc.nodes.len(), 3);
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![InlineNode::Text("Para 1".to_string())])
+        Node::paragraph(vec![InlineNode::Text("Para 1".to_string())])
     );
     assert_eq!(
         doc.nodes[1],
-        Node::Paragraph(vec![InlineNode::Text("Para 2".to_string())])
+        Node::paragraph(vec![InlineNode::Text("Para 2".to_string())])
     );
     assert_eq!(
         doc.nodes[2],
-        Node::Paragraph(vec![InlineNode::Text("Para 3".to_string())])
+        Node::paragraph(vec![InlineNode::Text("Para 3".to_string())])
     );
 }
 
@@ -129,8 +129,8 @@ fn test_parse_handles_carriage_returns_gracefully() {
         )
     );
     assert_eq!(
-        doc.nodes[1],
-        Node::Paragraph(vec![InlineNode::Text("Para\nline 2".to_string())])
+        crate::unplaced_node(&doc.nodes[1]),
+        Node::paragraph(vec![InlineNode::Text("Para\nline 2".to_string())])
     );
 }
 
@@ -157,8 +157,8 @@ fn test_parse_creates_target_node_for_explicit_target() {
         Some(Span::new(Position::new(1, 1), Position::new(1, 15)))
     );
     assert_eq!(
-        doc.nodes[1],
-        Node::Paragraph(vec![InlineNode::Text("Some text.".to_string())])
+        crate::unplaced_node(&doc.nodes[1]),
+        Node::paragraph(vec![InlineNode::Text("Some text.".to_string())])
     );
 }
 
@@ -231,8 +231,8 @@ fn test_parse_paragraph_breaks_at_overline() {
     // Then
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
-        doc.nodes[0],
-        Node::Paragraph(vec![InlineNode::Text("Para text.".to_string())])
+        crate::unplaced_node(&doc.nodes[0]),
+        Node::paragraph(vec![InlineNode::Text("Para text.".to_string())])
     );
     assert_eq!(
         crate::placed_heading(&doc.nodes[1], &map),
@@ -259,7 +259,11 @@ fn test_parse_keeps_a_literal_block_containing_prompts_literal() {
     // Then — paragraph plus LiteralBlock; no DoctestBlock anywhere.
     assert_eq!(doc.nodes.len(), 2);
     assert!(matches!(doc.nodes[1], Node::LiteralBlock { .. }));
-    assert!(!doc.nodes.iter().any(|n| matches!(n, Node::DoctestBlock(_))));
+    assert!(
+        !doc.nodes
+            .iter()
+            .any(|n| matches!(n, Node::DoctestBlock { .. }))
+    );
 }
 
 #[test]
@@ -277,10 +281,11 @@ fn test_parse_creates_a_doctest_block_after_a_single_colon() {
         Node::BlockQuote {
             content,
             attribution: None,
+            ..
         } => {
             assert_eq!(content.len(), 1);
             match &content[0] {
-                Node::DoctestBlock(inner) => {
+                Node::DoctestBlock { content: inner, .. } => {
                     assert_eq!(inner.body(), ">>> import re\n>>> re.search('a', 'ba')");
                 }
                 other => panic!("expected a doctest block, got {other:?}"),
@@ -300,7 +305,7 @@ fn test_parse_creates_a_doctest_block_at_the_left_margin() {
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
-    assert!(matches!(doc.nodes[0], Node::DoctestBlock(_)));
+    assert!(matches!(doc.nodes[0], Node::DoctestBlock { .. }));
 }
 
 #[test]
@@ -314,7 +319,7 @@ fn test_parse_leaves_a_mid_paragraph_prompt_as_prose() {
 
     // Then
     assert_eq!(doc.nodes.len(), 1);
-    assert!(matches!(doc.nodes[0], Node::Paragraph(_)));
+    assert!(matches!(doc.nodes[0], Node::Paragraph { .. }));
 }
 
 #[test]
@@ -326,8 +331,16 @@ fn test_parse_keeps_a_transition_a_transition() {
     let doc = parse_document("test.rst", input);
 
     // Then
-    assert!(doc.nodes.iter().any(|n| matches!(n, Node::Transition)));
-    assert!(!doc.nodes.iter().any(|n| matches!(n, Node::DoctestBlock(_))));
+    assert!(
+        doc.nodes
+            .iter()
+            .any(|n| matches!(n, Node::Transition { .. }))
+    );
+    assert!(
+        !doc.nodes
+            .iter()
+            .any(|n| matches!(n, Node::DoctestBlock { .. }))
+    );
 }
 
 #[test]
@@ -342,7 +355,7 @@ fn test_parse_finds_a_doctest_block_nested_in_an_admonition() {
     // Then
     let mut found = false;
     rinx_ast::walk_nodes(&doc.nodes, &mut |node| {
-        if matches!(node, Node::DoctestBlock(_)) {
+        if matches!(node, Node::DoctestBlock { .. }) {
             found = true;
         }
     });
@@ -359,7 +372,11 @@ fn test_parse_separates_two_doctest_blocks_by_a_blank_line() {
 
     // Then
     assert_eq!(doc.nodes.len(), 2);
-    assert!(doc.nodes.iter().all(|n| matches!(n, Node::DoctestBlock(_))));
+    assert!(
+        doc.nodes
+            .iter()
+            .all(|n| matches!(n, Node::DoctestBlock { .. }))
+    );
 }
 
 #[test]
@@ -370,7 +387,10 @@ fn test_parse_double_colon_paragraph_emits_literal_block() {
     let doc = parse_document("test.rst", input);
     // Then: two nodes — paragraph (with :: reduced to :) and LiteralBlock
     assert_eq!(doc.nodes.len(), 2);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         let text = match &inlines[0] {
             InlineNode::Text(t) => t.as_str(),
             other => panic!("Expected Text inline, got {other:?}"),
@@ -379,7 +399,10 @@ fn test_parse_double_colon_paragraph_emits_literal_block() {
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }
-    if let Node::LiteralBlock { language, content } = &doc.nodes[1] {
+    if let Node::LiteralBlock {
+        language, content, ..
+    } = &doc.nodes[1]
+    {
         assert_eq!(language, &CodeLanguage::Inherit);
         assert_eq!(content, "def hello():\n    pass");
     } else {
@@ -395,7 +418,10 @@ fn test_parse_standalone_double_colon_suppresses_paragraph() {
     let doc = parse_document("test.rst", input);
     // Then: only the LiteralBlock is emitted (no paragraph)
     assert_eq!(doc.nodes.len(), 1);
-    if let Node::LiteralBlock { language, content } = &doc.nodes[0] {
+    if let Node::LiteralBlock {
+        language, content, ..
+    } = &doc.nodes[0]
+    {
         assert_eq!(language, &CodeLanguage::Inherit);
         assert_eq!(content, "verbatim content");
     } else {
@@ -411,7 +437,10 @@ fn test_parse_double_colon_strips_to_single_colon() {
     let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 2);
-    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+    if let Node::Paragraph {
+        content: inlines, ..
+    } = &doc.nodes[0]
+    {
         let text = match &inlines[0] {
             InlineNode::Text(t) => t.as_str(),
             other => panic!("Expected Text, got {other:?}"),
@@ -472,7 +501,11 @@ fn test_parse_bodyless_index_directive_inside_glossary_does_not_swallow_followin
     let doc = parse_document("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 1);
-    let Node::Directive(rinx_ast::Directive::Glossary { entries, .. }) = &doc.nodes[0] else {
+    let Node::Directive {
+        directive: rinx_ast::Directive::Glossary { entries, .. },
+        ..
+    } = &doc.nodes[0]
+    else {
         panic!("Expected Glossary directive, got {:?}", doc.nodes[0]);
     };
     assert_eq!(entries.len(), 1);
@@ -484,11 +517,14 @@ fn test_parse_bodyless_index_directive_inside_glossary_does_not_swallow_followin
     assert_eq!(entries[0].definition.len(), 2);
     assert!(matches!(
         entries[0].definition[0],
-        Node::Directive(rinx_ast::Directive::Index { .. })
+        Node::Directive {
+            directive: rinx_ast::Directive::Index { .. },
+            ..
+        }
     ));
     assert_eq!(
         entries[0].definition[1],
-        Node::Paragraph(vec![InlineNode::Text(
+        Node::paragraph(vec![InlineNode::Text(
             "An informal synonym for something.".to_string()
         )])
     );
@@ -509,12 +545,16 @@ fn test_parse_reads_a_math_directive_with_a_label() {
     let doc = parse_document("test.rst", input);
 
     // Then
-    let rinx_ast::Node::Directive(rinx_ast::Directive::Math {
-        parts,
-        label,
-        nowrap,
+    let rinx_ast::Node::Directive {
+        directive:
+            rinx_ast::Directive::Math {
+                parts,
+                label,
+                nowrap,
+                ..
+            },
         ..
-    }) = &doc.nodes[0]
+    } = &doc.nodes[0]
     else {
         panic!("expected a math directive, got {:?}", doc.nodes[0]);
     };
@@ -536,7 +576,7 @@ fn test_parse_reads_an_inline_math_role_keeping_its_backslashes() {
     let doc = parse_document("test.rst", input);
 
     // Then the backslashes survive verbatim, as they do in an inline literal
-    let Node::Paragraph(nodes) = &doc.nodes[0] else {
+    let Node::Paragraph { content: nodes, .. } = &doc.nodes[0] else {
         panic!("expected a paragraph, got {:?}", doc.nodes[0]);
     };
     assert!(
@@ -557,7 +597,7 @@ fn test_parse_reads_an_eq_role() {
     let doc = parse_document("test.rst", input);
 
     // Then
-    let Node::Paragraph(nodes) = &doc.nodes[0] else {
+    let Node::Paragraph { content: nodes, .. } = &doc.nodes[0] else {
         panic!("expected a paragraph");
     };
     assert!(
@@ -578,7 +618,7 @@ fn test_parse_does_not_recognize_a_math_role_inside_an_inline_literal() {
     let doc = parse_document("test.rst", input);
 
     // Then it stays literal text, not an equation
-    let Node::Paragraph(nodes) = &doc.nodes[0] else {
+    let Node::Paragraph { content: nodes, .. } = &doc.nodes[0] else {
         panic!("expected a paragraph");
     };
     assert!(
@@ -598,11 +638,18 @@ fn test_parse_places_a_math_directive_nested_in_an_admonition() {
     let doc = parse_document("test.rst", input);
 
     // Then the span points at the nested directive's real line (3), not line 1
-    let rinx_ast::Node::Directive(rinx_ast::Directive::Admonition { body, .. }) = &doc.nodes[0]
+    let rinx_ast::Node::Directive {
+        directive: rinx_ast::Directive::Admonition { body, .. },
+        ..
+    } = &doc.nodes[0]
     else {
         panic!("expected an admonition, got {:?}", doc.nodes[0]);
     };
-    let rinx_ast::Node::Directive(rinx_ast::Directive::Math { span, .. }) = &body[0] else {
+    let rinx_ast::Node::Directive {
+        directive: rinx_ast::Directive::Math { span, .. },
+        ..
+    } = &body[0]
+    else {
         panic!("expected a nested math directive, got {:?}", body[0]);
     };
     assert_eq!(
@@ -624,7 +671,11 @@ fn test_parse_points_a_math_directive_span_past_its_option_lines() {
 
     // Then the span names the equation's line, not the option line above it —
     // a LaTeX error is about the LaTeX
-    let rinx_ast::Node::Directive(rinx_ast::Directive::Math { span, .. }) = &doc.nodes[1] else {
+    let rinx_ast::Node::Directive {
+        directive: rinx_ast::Directive::Math { span, .. },
+        ..
+    } = &doc.nodes[1]
+    else {
         panic!("expected a math directive, got {:?}", doc.nodes[1]);
     };
     let span = span.expect("a math directive should carry a span");
@@ -643,7 +694,11 @@ fn test_parse_points_a_math_directive_span_at_the_first_of_several_equations() {
     let doc = parse_document("test.rst", input);
 
     // Then the span names the first equation's line
-    let rinx_ast::Node::Directive(rinx_ast::Directive::Math { span, .. }) = &doc.nodes[0] else {
+    let rinx_ast::Node::Directive {
+        directive: rinx_ast::Directive::Math { span, .. },
+        ..
+    } = &doc.nodes[0]
+    else {
         panic!("expected a math directive");
     };
     assert_eq!(
@@ -669,7 +724,7 @@ fn test_parse_recognizes_a_substitution_definition_and_reference_end_to_end() {
     assert_eq!(doc.nodes.len(), 2);
     assert_eq!(
         doc.nodes[0],
-        Node::Paragraph(vec![
+        Node::paragraph(vec![
             InlineNode::Text("Version ".to_string()),
             InlineNode::Text("3.13.0".to_string()),
             InlineNode::Text(" is current.".to_string()),
@@ -704,19 +759,34 @@ fn written_name_spans(input: &str) -> Vec<Option<Span>> {
         |name: &Named<rinx_ast::TargetName>| name.id().and_then(|id| source_map.name_span(id));
     let mut spans = Vec::new();
     rinx_ast::walk_nodes(&doc.nodes, &mut |node| match node {
-        Node::Directive(Directive::Figure(figure)) => {
+        Node::Directive {
+            directive: Directive::Figure(figure),
+            ..
+        } => {
             spans.push(figure.image.name.as_ref().and_then(span));
         }
-        Node::Directive(Directive::CodeBlock(block)) => {
+        Node::Directive {
+            directive: Directive::CodeBlock(block),
+            ..
+        } => {
             spans.push(block.name.as_ref().and_then(span));
         }
-        Node::Directive(Directive::DataTable { name, .. } | Directive::Table { name, .. }) => {
+        Node::Directive {
+            directive: Directive::DataTable { name, .. } | Directive::Table { name, .. },
+            ..
+        } => {
             spans.push(name.as_ref().and_then(span));
         }
-        Node::Directive(Directive::Toctree(toctree)) => {
+        Node::Directive {
+            directive: Directive::Toctree(toctree),
+            ..
+        } => {
             spans.push(toctree.options.name.as_ref().and_then(span));
         }
-        Node::Directive(Directive::Math { label, .. }) => {
+        Node::Directive {
+            directive: Directive::Math { label, .. },
+            ..
+        } => {
             spans.push(label.as_ref().and_then(span));
         }
         _ => {}

@@ -117,7 +117,7 @@ pub(in crate::directives) fn parse_if_builder(
     let builder = argument.trim();
     if builder.is_empty() {
         // The reader has reported the missing argument.
-        return vec![Node::Directive(malformed_node(
+        return vec![Node::directive(malformed_node(
             DIRECTIVE,
             argument,
             invocation.source_body,
@@ -196,7 +196,9 @@ mod tests {
         nodes
             .iter()
             .filter_map(|node| match node {
-                Node::Paragraph(inline) => Some(
+                Node::Paragraph {
+                    content: inline, ..
+                } => Some(
                     inline
                         .iter()
                         .map(|part| match part {
@@ -368,7 +370,7 @@ mod tests {
         assert!(
             matches!(
                 document.nodes.as_slice(),
-                [Node::Directive(Directive::Malformed { name, .. })] if name == DIRECTIVE
+                [Node::Directive { directive: Directive::Malformed { name, .. }, .. }] if name == DIRECTIVE
             ),
             "{:?}",
             document.nodes

@@ -74,15 +74,7 @@ pub(in crate::directives) fn parse_list_table(
     // their own, so every row-level diagnostic points at the table's first line.
     let table_span = invocation.content_span();
     let (rows, ncols) = lower_list_table_rows(row_items, diagnostics, table_span);
-    build_list_table(
-        title,
-        options,
-        rows,
-        ncols,
-        diagnostics,
-        ctx,
-        invocation.span,
-    )
+    build_list_table(title, options, rows, ncols, diagnostics, ctx)
 }
 
 /// Assembles the parsed pieces into the AST node, resolving `:widths:` (which
@@ -100,7 +92,6 @@ fn build_list_table(
     ncols: usize,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-    span: Option<Span>,
 ) -> Directive {
     let widths: Option<TableWidths> = options
         .widths
@@ -117,7 +108,6 @@ fn build_list_table(
         classes: options.classes,
         name: options.name,
         rows,
-        block: ctx.record_block_lines(span),
     }
 }
 
@@ -210,9 +200,10 @@ mod tests {
 
         // Then
         let span = doc.nodes.iter().find_map(|node| match node {
-            Node::Directive(Directive::DataTable { block, .. }) => {
-                Some(block.and_then(|id| map.block_lines(id)))
-            }
+            Node::Directive {
+                directive: Directive::DataTable { .. },
+                block,
+            } => Some(block.and_then(|id| map.block_lines(id))),
             _ => None,
         });
         assert_eq!(
@@ -607,7 +598,10 @@ mod tests {
             assert_eq!(rows.len(), 1);
             assert!(matches!(
                 rows[0].cells[0].content.as_slice(),
-                [Node::Directive(Directive::DomainObject { .. })]
+                [Node::Directive {
+                    directive: Directive::DomainObject { .. },
+                    ..
+                }]
             ));
         } else {
             panic!("Expected DataTable directive");
@@ -659,7 +653,7 @@ mod tests {
         assert_eq!(doc.nodes.len(), 1);
         assert!(matches!(
             &doc.nodes[0],
-            Node::Directive(Directive::DataTable { source, title, header_rows, rows, .. })
+            Node::Directive { directive: Directive::DataTable { source, title, header_rows, rows, .. }, .. }
                 if *source == TableSource::List
                     && title.as_deref() == Some("Fruit")
                     && *header_rows == 1
@@ -679,7 +673,7 @@ mod tests {
         if let Directive::DataTable { rows, .. } = directive {
             assert_eq!(
                 rows[0].cells[0].content,
-                vec![Node::Paragraph(vec![InlineNode::Text(
+                vec![Node::paragraph(vec![InlineNode::Text(
                     "Plain text cell".to_string()
                 )])]
             );

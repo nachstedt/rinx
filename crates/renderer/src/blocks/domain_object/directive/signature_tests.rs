@@ -18,7 +18,7 @@ fn test_render_domain_object_repeats_prefix_labels_on_every_dt() {
     // whole, so every alias's `<dt>` carries them.
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyMethod {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
@@ -33,7 +33,6 @@ fn test_render_domain_object_repeats_prefix_labels_on_every_dt() {
                 is_async: false,
                 body: vec![],
             },
-            block: None,
         })],
     );
 
@@ -54,7 +53,7 @@ fn test_render_domain_object_emits_one_dt_per_declared_name() {
     // Given — the confirmed `library/socket.rst` shape.
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyData {
                 flags: rinx_ast::DescriptionFlags::default(),
                 module: None,
@@ -64,11 +63,10 @@ fn test_render_domain_object_emits_one_dt_per_declared_name() {
                 ),
                 type_: None,
                 value: None,
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                body: vec![Node::paragraph(vec![InlineNode::Text(
                     "The address families.".to_string(),
                 )])],
             },
-            block: None,
         })],
     );
 
@@ -91,7 +89,7 @@ fn test_render_domain_object_shows_each_signature_as_its_own_dt_text() {
     // uses only the extracted name.
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::DomainObject {
+        vec![Node::directive(Directive::DomainObject {
             object: rinx_ast::DomainObjectBody::PyFunction {
                 flags: rinx_ast::DescriptionFlags::default(),
                 is_async: false,
@@ -103,7 +101,6 @@ fn test_render_domain_object_shows_each_signature_as_its_own_dt_text() {
                 ),
                 body: vec![],
             },
-            block: None,
         })],
     );
 
@@ -123,15 +120,14 @@ fn test_render_domain_object_qualifies_every_alias_by_the_current_module() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
                     name: "socket".to_string(),
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyData {
                     flags: rinx_ast::DescriptionFlags::default(),
                     module: None,
@@ -143,7 +139,6 @@ fn test_render_domain_object_qualifies_every_alias_by_the_current_module() {
                     value: None,
                     body: vec![],
                 },
-                block: None,
             }),
         ],
     );
@@ -163,21 +158,20 @@ fn test_render_domain_object_module_option_overrides_the_anchor_id() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
                     name: "multiprocessing.shared_memory".to_string(),
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyClass {
                     flags: rinx_ast::DescriptionFlags::default(),
                     module: Some("multiprocessing.managers".to_string()),
                     signatures: NonEmptyVector::single("SharedMemoryManager".to_string()),
                     is_final: false,
-                    body: vec![Node::Directive(Directive::DomainObject {
+                    body: vec![Node::directive(Directive::DomainObject {
                         object: rinx_ast::DomainObjectBody::PyMethod {
                             flags: rinx_ast::DescriptionFlags::default(),
                             module: None,
@@ -189,12 +183,10 @@ fn test_render_domain_object_module_option_overrides_the_anchor_id() {
                             is_async: false,
                             body: vec![],
                         },
-                        block: None,
                     })],
                 },
-                block: None,
             }),
-            Node::Directive(Directive::DomainObject {
+            Node::directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyFunction {
                     flags: rinx_ast::DescriptionFlags::default(),
                     is_async: false,
@@ -203,7 +195,6 @@ fn test_render_domain_object_module_option_overrides_the_anchor_id() {
                     signatures: NonEmptyVector::single("track(size)".to_string()),
                     body: vec![],
                 },
-                block: None,
             }),
         ],
     );

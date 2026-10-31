@@ -43,7 +43,10 @@ fn parse_bar(rst: &str) -> EntityBar {
     doc.nodes
         .iter()
         .find_map(|node| match node {
-            Node::Directive(Directive::EntityBar(bar)) => Some((**bar).clone()),
+            Node::Directive {
+                directive: Directive::EntityBar(bar),
+                ..
+            } => Some((**bar).clone()),
             _ => None,
         })
         .unwrap_or_else(|| panic!("no bar chart parsed from:\n{rst}"))

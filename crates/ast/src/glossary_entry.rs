@@ -118,7 +118,7 @@ mod tests {
         // Given
         let entry = GlossaryEntry {
             terms: vec![GlossaryTerm::unplaced("foo"), GlossaryTerm::unplaced("bar")],
-            definition: vec![Node::Paragraph(vec![InlineNode::Text(
+            definition: vec![Node::paragraph(vec![InlineNode::Text(
                 "A definition.".to_string(),
             )])],
         };

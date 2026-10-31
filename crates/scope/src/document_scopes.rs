@@ -109,13 +109,16 @@ impl Walk {
     fn nodes(&mut self, nodes: &[Node]) {
         for node in nodes {
             match node {
-                Node::Directive(Directive::DomainObject { object: obj, .. }) => {
+                Node::Directive {
+                    directive: Directive::DomainObject { object: obj, .. },
+                    ..
+                } => {
                     let (names, entered) = self.scope.enter_definition(obj);
                     self.definitions.insert(address(obj), names);
                     self.children(node);
                     self.scope.leave(entered);
                 }
-                Node::Directive(directive) => {
+                Node::Directive { directive, .. } => {
                     self.scope.apply_scope_directive(directive);
                     self.children(node);
                 }
@@ -161,7 +164,11 @@ mod tests {
     fn objects(document: &Document) -> Vec<&DomainObjectBody> {
         let mut found = Vec::new();
         walk_nodes(&document.nodes, &mut |node| {
-            if let Node::Directive(Directive::DomainObject { object: obj, .. }) = node {
+            if let Node::Directive {
+                directive: Directive::DomainObject { object: obj, .. },
+                ..
+            } = node
+            {
                 found.push(obj);
             }
         });

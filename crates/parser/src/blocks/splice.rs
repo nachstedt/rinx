@@ -110,7 +110,10 @@ mod tests {
 
         // Then
         assert_eq!(codes(&document), Vec::new());
-        let Some(Node::Paragraph(inline)) = document.nodes.last() else {
+        let Some(Node::Paragraph {
+            content: inline, ..
+        }) = document.nodes.last()
+        else {
             panic!("expected a paragraph, got {:?}", document.nodes);
         };
         assert!(
@@ -147,7 +150,10 @@ mod tests {
 
         // Then
         assert_eq!(codes(&document), Vec::new());
-        let Some(Node::Paragraph(inline)) = document.nodes.last() else {
+        let Some(Node::Paragraph {
+            content: inline, ..
+        }) = document.nodes.last()
+        else {
             panic!("expected a paragraph, got {:?}", document.nodes);
         };
         assert!(
@@ -171,8 +177,8 @@ mod tests {
 
         // Then
         assert_eq!(
-            parsed.document.nodes,
-            [Node::Paragraph(vec![InlineNode::Text(
+            crate::unplaced(&parsed.document).nodes,
+            [Node::paragraph(vec![InlineNode::Text(
                 "Document.".to_string()
             )])]
         );
@@ -210,15 +216,16 @@ mod tests {
         let document = parse_decorated("Prolog.\n", "Document.\n", "Epilog.\n", NO_FILES);
 
         // Then
+        let document = crate::unplaced(&document);
         let paragraphs: Vec<&Node> = document
             .nodes
             .iter()
-            .filter(|node| matches!(node, Node::Paragraph(_)))
+            .filter(|node| matches!(node, Node::Paragraph { .. }))
             .collect();
         assert_eq!(
             paragraphs,
             ["Prolog.", "Document.", "Epilog."]
-                .map(|text| Node::Paragraph(vec![InlineNode::Text(text.to_string())]))
+                .map(|text| Node::paragraph(vec![InlineNode::Text(text.to_string())]))
                 .iter()
                 .collect::<Vec<_>>()
         );
@@ -362,8 +369,8 @@ mod tests {
 
         // Then
         assert_eq!(
-            document.nodes[0],
-            Node::Paragraph(vec![InlineNode::Text(
+            crate::unplaced_node(&document.nodes[0]),
+            Node::paragraph(vec![InlineNode::Text(
                 "Literally {{ release }}.".to_string()
             )])
         );

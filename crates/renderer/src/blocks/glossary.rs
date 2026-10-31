@@ -48,7 +48,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "guide.rst".to_string(),
-            vec![Node::Directive(Directive::Index {
+            vec![Node::directive(Directive::Index {
                 entries: vec![rinx_ast::IndexEntry::Term {
                     primary: "execution".to_string(),
                     subentry: None,
@@ -69,10 +69,10 @@ mod tests {
         // Given
         let doc = Document::new(
             "glossary.rst".to_string(),
-            vec![Node::Directive(Directive::Glossary {
+            vec![Node::directive(Directive::Glossary {
                 entries: vec![rinx_ast::GlossaryEntry {
                     terms: vec![rinx_ast::GlossaryTerm::unplaced("environment")],
-                    definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                    definition: vec![Node::paragraph(vec![InlineNode::Text(
                         "A structure.".to_string(),
                     )])],
                 }],
@@ -95,13 +95,13 @@ mod tests {
         // Given
         let doc = Document::new(
             "glossary.rst".to_string(),
-            vec![Node::Directive(Directive::Glossary {
+            vec![Node::directive(Directive::Glossary {
                 entries: vec![rinx_ast::GlossaryEntry {
                     terms: vec![
                         rinx_ast::GlossaryTerm::unplaced("term 1"),
                         rinx_ast::GlossaryTerm::unplaced("term 2"),
                     ],
-                    definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                    definition: vec![Node::paragraph(vec![InlineNode::Text(
                         "Shared.".to_string(),
                     )])],
                 }],
@@ -122,7 +122,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "glossary.rst".to_string(),
-            vec![Node::Directive(Directive::Glossary {
+            vec![Node::directive(Directive::Glossary {
                 entries: vec![rinx_ast::GlossaryEntry {
                     terms: vec![rinx_ast::GlossaryTerm::unplaced("a < b")],
                     definition: vec![],
@@ -143,7 +143,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "guide.rst".to_string(),
-            vec![Node::Paragraph(vec![InlineNode::TermReference {
+            vec![Node::paragraph(vec![InlineNode::TermReference {
                 display: "environment".to_string(),
                 term: "environment".to_string(),
                 span: None,
@@ -168,7 +168,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "guide.rst".to_string(),
-            vec![Node::Paragraph(vec![InlineNode::TermReference {
+            vec![Node::paragraph(vec![InlineNode::TermReference {
                 display: "the env".to_string(),
                 term: "environment".to_string(),
                 span: None,
@@ -192,7 +192,7 @@ mod tests {
         // Given
         let doc = Document::new(
             "guide.rst".to_string(),
-            vec![Node::Paragraph(vec![InlineNode::TermReference {
+            vec![Node::paragraph(vec![InlineNode::TermReference {
                 display: "unknown".to_string(),
                 term: "unknown".to_string(),
                 span: None,
@@ -213,7 +213,7 @@ mod tests {
         // Given — document is in a subdirectory, glossary is at root
         let doc = Document::new(
             "guide/page.rst".to_string(),
-            vec![Node::Paragraph(vec![InlineNode::TermReference {
+            vec![Node::paragraph(vec![InlineNode::TermReference {
                 display: "foo".to_string(),
                 term: "foo".to_string(),
                 span: None,

@@ -128,8 +128,11 @@ fn split_caption_and_legend(
     // Only a *paragraph* becomes the caption. A body opening with a list or a
     // table is all legend, which is docutils' rule and not an approximation of
     // it: a figure whose first block is a table has no caption at all.
-    if matches!(nodes.first(), Some(Node::Paragraph(_))) {
-        let Node::Paragraph(caption) = nodes.remove(0) else {
+    if matches!(nodes.first(), Some(Node::Paragraph { .. })) {
+        let Node::Paragraph {
+            content: caption, ..
+        } = nodes.remove(0)
+        else {
             unreachable!("just matched a paragraph")
         };
         FigureBody {
@@ -321,7 +324,7 @@ mod tests {
             Some("The project logo.".to_string())
         );
         assert_eq!(figure.legend.len(), 2);
-        assert!(matches!(figure.legend[0], Node::Paragraph(_)));
+        assert!(matches!(figure.legend[0], Node::Paragraph { .. }));
         assert!(matches!(figure.legend[1], Node::BulletList { .. }));
     }
 
@@ -337,7 +340,7 @@ mod tests {
         let figure = figure_of(&directive);
         assert_eq!(figure.caption, None);
         assert_eq!(figure.legend.len(), 1);
-        assert!(matches!(figure.legend[0], Node::Paragraph(_)));
+        assert!(matches!(figure.legend[0], Node::Paragraph { .. }));
     }
 
     #[test]
@@ -487,7 +490,7 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        let Node::Directive(directive) = &doc.nodes[0] else {
+        let Node::Directive { directive, .. } = &doc.nodes[0] else {
             panic!("expected a directive, got {:?}", doc.nodes[0]);
         };
         let figure = figure_of(directive);
@@ -526,11 +529,16 @@ mod tests {
         let doc = crate::parse_document("test.rst", input);
 
         // Then
-        let Node::Directive(directive) = &doc.nodes[0] else {
+        let Node::Directive { directive, .. } = &doc.nodes[0] else {
             panic!("expected a directive, got {:?}", doc.nodes[0]);
         };
         let legend = &figure_of(directive).legend;
-        let [Node::Paragraph(inlines)] = legend.as_slice() else {
+        let [
+            Node::Paragraph {
+                content: inlines, ..
+            },
+        ] = legend.as_slice()
+        else {
             panic!("expected a single legend paragraph, got {legend:?}");
         };
         let span = inlines

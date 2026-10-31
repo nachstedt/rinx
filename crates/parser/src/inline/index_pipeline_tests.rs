@@ -14,7 +14,9 @@ fn index_references(nodes: &[Node]) -> Vec<&InlineNode> {
     nodes
         .iter()
         .filter_map(|node| match node {
-            Node::Paragraph(inlines) => Some(inlines),
+            Node::Paragraph {
+                content: inlines, ..
+            } => Some(inlines),
             _ => None,
         })
         .flatten()
@@ -43,7 +45,7 @@ fn test_parse_creates_an_index_reference_with_its_span_and_anchor() {
     // Then
     assert_eq!(
         doc.nodes,
-        vec![Node::Paragraph(vec![
+        vec![Node::paragraph(vec![
             InlineNode::Text("The ".to_string()),
             InlineNode::IndexReference {
                 title: "execution".to_string(),
@@ -70,7 +72,11 @@ fn test_parse_numbers_index_role_anchors_after_index_directives_and_among_regist
     let doc = parse_document("test.rst", input);
 
     // Then
-    let Node::Directive(Directive::Index { id, .. }) = &doc.nodes[1] else {
+    let Node::Directive {
+        directive: Directive::Index { id, .. },
+        ..
+    } = &doc.nodes[1]
+    else {
         panic!("expected an index directive, got {:?}", doc.nodes[1]);
     };
     assert_eq!(id, "index-0");
