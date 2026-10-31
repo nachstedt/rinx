@@ -147,7 +147,13 @@ class TestAstTally:
         tree = {
             "nodes": [
                 {"Directive": {"directive": {"Unknown": {"name": "automodule"}}}},
-                {"Section": {"children": [{"Directive": {"directive": {"Malformed": {"name": "csv-table"}}}}]}},
+                {
+                    "Section": {
+                        "children": [
+                            {"Directive": {"directive": {"Malformed": {"name": "csv-table"}}}}
+                        ]
+                    }
+                },
                 {
                     "Directive": {
                         "directive": {

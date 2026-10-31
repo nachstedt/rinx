@@ -29,9 +29,9 @@ from benchmark_common import (
     collect_warning_sidecars,
     count_row,
     json_objects,
-    written_directive,
     whitelist_rows,
     write_frequency_summary,
+    written_directive,
 )
 
 TARGET_DIR = Path(tempfile.gettempdir()) / "rinx_benchmark_cpython"

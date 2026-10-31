@@ -45,9 +45,9 @@ from benchmark_common import (
     add_output_arguments,
     count_row,
     json_objects,
-    written_directive,
     whitelist_rows,
     write_frequency_summary,
+    written_directive,
 )
 
 # One `(category, detail)` entry per construct the converter could not carry
