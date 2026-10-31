@@ -27,7 +27,7 @@ fn test_render_formats_py_function_domain_object() {
                     "Greets the given name.".to_string(),
                 )])],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -56,7 +56,7 @@ fn test_render_prefixes_decorator_signature_with_at_sign() {
                 signatures: NonEmptyVector::single("classmethod".to_string()),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -86,7 +86,7 @@ fn test_render_prefixes_decoratormethod_signature_with_at_sign() {
                 is_decorator: true,
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -108,7 +108,7 @@ fn test_render_omits_id_attribute_when_no_index_is_set() {
                 flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -133,7 +133,7 @@ fn test_render_omits_id_attribute_for_a_no_index_python_class() {
                 is_final: false,
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -160,7 +160,7 @@ fn test_render_formats_py_module_domain_object() {
                     "A module of greetings.".to_string(),
                 )])],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -191,7 +191,7 @@ fn test_render_formats_py_method_domain_object() {
                     "Greets the given name.".to_string(),
                 )])],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -221,7 +221,7 @@ fn test_render_py_method_modifier_prefixes_in_canonical_order() {
                 is_async: false,
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -253,7 +253,7 @@ fn test_render_formats_py_class_domain_object() {
                     "A greeter.".to_string(),
                 )])],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -280,7 +280,7 @@ fn test_render_py_class_final_prefix_precedes_class_prefix() {
                 is_final: true,
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -308,7 +308,7 @@ fn test_render_formats_py_exception_domain_object() {
                     "Raised when greeting fails.".to_string(),
                 )])],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -335,7 +335,7 @@ fn test_render_py_exception_final_prefix_precedes_exception_prefix() {
                 is_final: true,
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -364,7 +364,7 @@ fn test_render_formats_py_data_domain_object() {
                     "The default timeout in seconds.".to_string(),
                 )])],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -390,7 +390,7 @@ fn test_render_formats_py_data_type_and_value() {
                 value: Some("30".to_string()),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -418,7 +418,7 @@ fn test_render_formats_py_attribute_domain_object() {
                     "The greeter's name.".to_string(),
                 )])],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -445,7 +445,7 @@ fn test_render_formats_py_attribute_type_value_and_canonical() {
                 canonical: Some("mymodule.MyClass.name".to_string()),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -476,7 +476,7 @@ fn test_render_domain_object_resolves_nested_anonymous_hyperlink_in_body() {
                         span: None,
                     }])],
                 },
-                span: None,
+                block: None,
             }),
             Node::AnonymousTarget {
                 destination: rinx_ast::LinkDestination::Uri("https://example.com".to_string()),

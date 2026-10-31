@@ -61,7 +61,7 @@ impl DocumentUses {
     #[must_use]
     pub fn of(document: &Document, source_map: &SourceMap) -> Self {
         Self {
-            written: written_uses(document),
+            written: written_uses(document, source_map),
             relations: relation_uses(document),
             updated: updated_ids(document, source_map),
             files: document.source_files.clone(),

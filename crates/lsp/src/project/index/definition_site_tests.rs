@@ -133,19 +133,23 @@ fn test_record_moves_a_definition_without_folding_again() {
 /// A project holding `guide.rst`, which defines `own` itself and `setup` in
 /// the fragment `shared/setup.rst`.
 fn with_fragment() -> Project {
-    let mut document = rinx_parser::parse(
+    let rinx_parser::Parsed {
+        mut document,
+        mut source_map,
+    } = rinx_parser::parse(
         "guide.rst",
         ".. _own:\n\nText.\n",
         &rinx_parser::ParseCtx::default(),
-    )
-    .document;
+    );
     let fragment = document.intern_source_file("/work/docs/shared/setup.rst");
     document.nodes.push(rinx_ast::Node::Target {
         name: TargetName::new("setup").into(),
         destination: None,
-        span: Some(
-            rinx_ast::Span::new(Position::new(2, 1), Position::new(2, 11))
-                .with_file(Some(fragment)),
+        block: Some(
+            source_map.record_block_lines(
+                rinx_ast::Span::new(Position::new(2, 1), Position::new(2, 11))
+                    .with_file(Some(fragment)),
+            ),
         ),
     });
     let mut folder = folder();
@@ -154,7 +158,7 @@ fn with_fragment() -> Project {
         IndexedDocument::of(
             PathBuf::from("/work/docs/guide.rst"),
             &document,
-            &rinx_ast::SourceMap::default(),
+            &source_map,
             BTreeSet::new(),
         ),
     );

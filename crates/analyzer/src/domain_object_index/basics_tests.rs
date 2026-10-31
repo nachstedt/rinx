@@ -40,7 +40,7 @@ fn test_analyze_registers_domain_object() {
                 signatures: NonEmptyVector::single("greet(name)".to_string()),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -65,7 +65,7 @@ fn test_analyze_registers_module_domain_object() {
                 options: rinx_ast::ModuleOptions::default(),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -90,7 +90,7 @@ fn module_document(options: rinx_ast::ModuleOptions) -> Document {
                 options,
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     )
 }
@@ -164,7 +164,7 @@ fn test_analyze_still_makes_a_no_index_module_current() {
                     },
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyFunction {
@@ -175,7 +175,7 @@ fn test_analyze_still_makes_a_no_index_module_current() {
                     module: None,
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -219,7 +219,7 @@ fn test_analyze_registers_data_domain_object() {
                 value: Some("30".to_string()),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -245,7 +245,7 @@ fn test_analyze_registers_cmdoption_domain_object_without_program() {
                 signatures: NonEmptyVector::single("-m <module-name>".to_string()),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -274,7 +274,7 @@ fn test_analyze_registers_cmdoption_domain_object_qualified_by_program() {
                     signatures: NonEmptyVector::single("-O".to_string()),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -300,7 +300,7 @@ fn test_analyze_registers_each_flag_of_a_comma_separated_cmdoption_spec() {
                 signatures: NonEmptyVector::single("-c, --compress".to_string()),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -329,7 +329,7 @@ fn test_analyze_registers_each_flag_of_a_continuation_line_cmdoption() {
                 signatures: NonEmptyVector::new("-h".to_string(), vec!["--help".to_string()]),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -358,7 +358,7 @@ fn test_analyze_registers_genindex_entry_for_each_cmdoption_flag() {
                 signatures: NonEmptyVector::single("-c, --compress".to_string()),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -388,7 +388,7 @@ fn test_analyze_indexes_a_cmdoptions_body_once_shared_across_flags() {
                     sorted: false,
                 })],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -415,7 +415,7 @@ fn test_analyze_registers_exception_domain_object() {
                 is_final: false,
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -444,7 +444,7 @@ fn test_analyze_registers_distinct_keys_for_same_name_in_different_domains() {
                     signatures: NonEmptyVector::single("add(a, b)".to_string()),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::CFunction {
@@ -452,7 +452,7 @@ fn test_analyze_registers_distinct_keys_for_same_name_in_different_domains() {
                     signatures: NonEmptyVector::single("int add(int a, int b)".into()),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -484,7 +484,7 @@ fn test_analyze_no_index_suppresses_target_and_genindex_entry() {
                 flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -506,7 +506,7 @@ fn test_analyze_no_index_entry_keeps_target_but_suppresses_genindex_entry() {
                 flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndexEntry]),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -569,7 +569,7 @@ fn test_analyze_registers_genindex_entry_for_domain_object() {
                 signatures: NonEmptyVector::single("greet(name)".to_string()),
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -606,7 +606,7 @@ fn test_analyze_registers_domain_object_nested_in_table_cell() {
                             value: None,
                             body: vec![],
                         },
-                        span: None,
+                        block: None,
                     })],
                 }],
             }],
@@ -652,11 +652,11 @@ fn test_analyze_registers_domain_object_nested_in_list_table_cell() {
                             canonical: None,
                             body: vec![],
                         },
-                        span: None,
+                        block: None,
                     })],
                 }],
             }],
-            span: None,
+            block: None,
         })],
     );
 
@@ -686,7 +686,7 @@ fn test_analyze_registers_domain_object_nested_in_bullet_list() {
                         signatures: NonEmptyVector::single("greet(name)".to_string()),
                         body: vec![],
                     },
-                    span: None,
+                    block: None,
                 })],
             }],
         }],
@@ -718,7 +718,7 @@ fn test_analyze_registers_domain_object_nested_in_definition_list() {
                         signatures: NonEmptyVector::single("greet(name)".to_string()),
                         body: vec![],
                     },
-                    span: None,
+                    block: None,
                 })],
             }],
         }],
@@ -751,7 +751,7 @@ fn test_analyze_registers_domain_object_nested_in_admonition_body() {
                     signatures: NonEmptyVector::single("greet(name)".to_string()),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             })],
         })],
     );
@@ -783,10 +783,10 @@ fn test_analyze_registers_domain_object_nested_in_another_domain_objects_body() 
                         signatures: NonEmptyVector::single("greet(name)".to_string()),
                         body: vec![],
                     },
-                    span: None,
+                    block: None,
                 })],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -811,10 +811,10 @@ fn cmdoption_with(flags: rinx_ast::DescriptionFlags) -> Document {
                 body: vec![Node::Target {
                     name: TargetName::new("verbosity").into(),
                     destination: None,
-                    span: None,
+                    block: None,
                 }],
             },
-            span: None,
+            block: None,
         })],
     )
 }
@@ -868,7 +868,7 @@ fn test_analyze_skips_a_no_index_python_class() {
                 is_final: false,
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 

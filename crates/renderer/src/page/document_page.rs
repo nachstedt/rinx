@@ -134,7 +134,7 @@ mod tests {
         Node::Heading {
             level,
             text: vec![rinx_ast::InlineNode::Text(text.to_string())],
-            span: None,
+            block: None,
         }
     }
 

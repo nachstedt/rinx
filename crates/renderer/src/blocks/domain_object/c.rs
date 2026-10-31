@@ -91,7 +91,7 @@ mod tests {
                         "Adds two numbers.".to_string(),
                     )])],
                 },
-                span: None,
+                block: None,
             })],
         );
 
@@ -116,7 +116,7 @@ mod tests {
                         "Expands to whichever of a or b is greater.".to_string(),
                     )])],
                 },
-                span: None,
+                block: None,
             })],
         );
 
@@ -143,10 +143,10 @@ mod tests {
                             flags: rinx_ast::DescriptionFlags::default(),
                             body: vec![],
                         },
-                        span: None,
+                        block: None,
                     })],
                 },
-                span: None,
+                block: None,
             })],
         );
 
@@ -172,7 +172,7 @@ mod tests {
                     flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             })],
         );
 
@@ -194,7 +194,7 @@ mod tests {
                     flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             })],
         );
 
@@ -228,10 +228,10 @@ mod tests {
                             signatures: NonEmptyVector::single("PYMEM_DOMAIN_RAW".into()),
                             body: vec![],
                         },
-                        span: None,
+                        block: None,
                     })],
                 },
-                span: None,
+                block: None,
             })],
         );
 
@@ -260,7 +260,7 @@ mod tests {
                         options: rinx_ast::ModuleOptions::default(),
                         body: vec![],
                     },
-                    span: None,
+                    block: None,
                 }),
                 Node::Directive(Directive::DomainObject {
                     object: rinx_ast::DomainObjectBody::PyClass {
@@ -274,10 +274,10 @@ mod tests {
                                 signatures: NonEmptyVector::single("int helper(void)".into()),
                                 body: vec![],
                             },
-                            span: None,
+                            block: None,
                         })],
                     },
-                    span: None,
+                    block: None,
                 }),
             ],
         );
@@ -306,10 +306,10 @@ mod tests {
                             flags: rinx_ast::DescriptionFlags::default(),
                             body: vec![],
                         },
-                        span: None,
+                        block: None,
                     })],
                 },
-                span: None,
+                block: None,
             })],
         );
 
@@ -333,7 +333,7 @@ mod tests {
                     flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             })],
         );
 
@@ -359,7 +359,7 @@ mod tests {
                     flags: rinx_ast::DescriptionFlags::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             })],
         );
 
@@ -384,7 +384,7 @@ mod tests {
                     flags: rinx_ast::DescriptionFlags::of([rinx_ast::DescriptionFlag::NoIndex]),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             })],
         );
 
@@ -416,7 +416,7 @@ mod pipeline_tests {
                         "Run a module.".to_string(),
                     )])],
                 },
-                span: None,
+                block: None,
             })],
         );
         let index = ProjectIndex::default();
@@ -442,7 +442,7 @@ mod pipeline_tests {
                     signatures: NonEmptyVector::single("-c, --compress".to_string()),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             })],
         );
         let index = ProjectIndex::default();
@@ -471,7 +471,7 @@ mod pipeline_tests {
                         signatures: NonEmptyVector::single("-O".to_string()),
                         body: vec![],
                     },
-                    span: None,
+                    block: None,
                 }),
             ],
         );
@@ -494,7 +494,7 @@ mod pipeline_tests {
                     signatures: NonEmptyVector::single("-c, --compress".to_string()),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             })],
         );
         let index = ProjectIndex::default();

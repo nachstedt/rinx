@@ -126,11 +126,11 @@ fn test_render_c_namespace_null_inside_c_type_body_unqualifies_nested_macro_anch
                             signatures: rinx_ast::NonEmptyVector::single("PYMEM_DOMAIN_RAW".into()),
                             body: vec![],
                         },
-                        span: None,
+                        block: None,
                     }),
                 ],
             },
-            span: None,
+            block: None,
         })],
     );
     let index = ProjectIndex::default();

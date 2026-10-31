@@ -10,18 +10,22 @@ use rinx_renderer as renderer;
 #[test]
 fn test_parser_step() {
     let input = "Title\n=====\n\nParagraph text here.\nMore text.";
-    let ast = parser::parse("test.rst", input, &parser::ParseCtx::default()).document;
+    let parser::Parsed {
+        document: ast,
+        source_map,
+    } = parser::parse("test.rst", input, &parser::ParseCtx::default());
     assert_eq!(ast.nodes.len(), 2);
+    let ast::Node::Heading { level, text, block } = &ast.nodes[0] else {
+        panic!("expected a heading, found {:?}", ast.nodes[0]);
+    };
+    assert_eq!(*level, 1);
+    assert_eq!(*text, vec![ast::InlineNode::Text("Title".to_string())]);
     assert_eq!(
-        ast.nodes[0],
-        ast::Node::Heading {
-            level: 1,
-            text: vec![ast::InlineNode::Text("Title".to_string())],
-            span: Some(ast::Span::new(
-                ast::Position::new(1, 1),
-                ast::Position::new(1, 6)
-            ))
-        }
+        block.and_then(|id| source_map.block_lines(id)),
+        Some(ast::Span::new(
+            ast::Position::new(1, 1),
+            ast::Position::new(1, 6)
+        ))
     );
     assert_eq!(
         ast.nodes[1],
@@ -39,7 +43,7 @@ fn test_renderer_step() {
             ast::Node::Heading {
                 level: 1,
                 text: vec![ast::InlineNode::Text("Section".to_string())],
-                span: None,
+                block: None,
             },
             ast::Node::Paragraph(vec![ast::InlineNode::Text("A line of text.".to_string())]),
         ],

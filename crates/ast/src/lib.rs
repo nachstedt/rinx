@@ -35,6 +35,7 @@
 
 mod admonition_kind;
 mod asset_uri;
+mod block_id;
 mod button_link;
 mod c_signature;
 mod chart_color;
@@ -107,6 +108,7 @@ mod visit;
 
 pub use admonition_kind::AdmonitionKind;
 pub use asset_uri::AssetUri;
+pub use block_id::BlockId;
 pub use button_link::{ButtonFlag, ButtonLink, ButtonTarget, TextAlign};
 pub use c_signature::{CSignature, NameSource, extract_c_object_name};
 pub use chart_color::{ChartColor, InvalidChartColor};

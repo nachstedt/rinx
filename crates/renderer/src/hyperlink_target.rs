@@ -220,7 +220,7 @@ mod tests {
         Node::Target {
             name: TargetName::new(name).into(),
             destination: Some(LinkDestination::Uri(uri.to_string())),
-            span: None,
+            block: None,
         }
     }
 
@@ -228,7 +228,7 @@ mod tests {
         Node::Target {
             name: TargetName::new(name).into(),
             destination: Some(LinkDestination::Name(TargetName::new(of))),
-            span: None,
+            block: None,
         }
     }
 
@@ -314,7 +314,7 @@ mod tests {
         Node::Heading {
             level: 1,
             text: vec![InlineNode::Text(title.to_string())],
-            span: None,
+            block: None,
         }
     }
 

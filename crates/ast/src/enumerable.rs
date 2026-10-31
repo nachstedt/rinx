@@ -180,7 +180,7 @@ mod tests {
             classes: Vec::new(),
             name: name.map(|text| TargetName::new(text).into()),
             rows: Vec::new(),
-            span: None,
+            block: None,
         })
     }
 
@@ -204,7 +204,7 @@ mod tests {
         Node::Target {
             name: TargetName::new(name).into(),
             destination: None,
-            span: None,
+            block: None,
         }
     }
 
@@ -313,7 +313,7 @@ mod tests {
                 destination: Some(crate::LinkDestination::Uri(
                     "https://example.org".to_string(),
                 )),
-                span: None,
+                block: None,
             },
             target("near"),
             Node::Transition,

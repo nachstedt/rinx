@@ -387,7 +387,7 @@ pub(super) fn try_parse_heading(
         Node::Heading {
             level,
             text,
-            span: ctx.line_span(text_line, lines[text_line]),
+            block: ctx.record_block_lines(ctx.line_span(text_line, lines[text_line])),
         },
     ))
 }

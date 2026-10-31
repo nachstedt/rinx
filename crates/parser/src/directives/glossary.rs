@@ -152,7 +152,7 @@ pub(super) fn parse_glossary(
             }
             current_terms.push(GlossaryTerm {
                 text: line.trim().to_string(),
-                span: ctx.line_span(body_start + offset, line.trim_end()),
+                block: ctx.record_block_lines(ctx.line_span(body_start + offset, line.trim_end())),
             });
         }
     }
@@ -238,7 +238,7 @@ mod tests {
         let input = "Intro\n\n.. glossary::\n\n   API\n   interface\n      A contract.\n\n   ABI\n      A binary one.\n";
 
         // When
-        let doc = crate::parse_document("test.rst", input);
+        let (doc, map) = crate::parse_placed("test.rst", input);
 
         // Then — each term at its own line, its column past the body's indent
         let Some(Node::Directive(Directive::Glossary { entries, .. })) = doc.nodes.get(1) else {
@@ -247,7 +247,12 @@ mod tests {
         let spans: Vec<(&str, Option<rinx_ast::Span>)> = entries
             .iter()
             .flat_map(|entry| &entry.terms)
-            .map(|term| (term.text.as_str(), term.span))
+            .map(|term| {
+                (
+                    term.text.as_str(),
+                    term.block.and_then(|id| map.block_lines(id)),
+                )
+            })
             .collect();
         let at = |line, end| {
             Some(rinx_ast::Span::new(

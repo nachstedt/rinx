@@ -146,3 +146,27 @@ parser recorded the name's characters in the `SourceMap` beside the document
   no site.
 - **What a name has no characters for has no id**, as before: a composed,
   generated or imported entity id is `Named::unplaced`.
+
+## Amendment: lines by handle
+
+What this ADR stored in the `.ast` — a section title's line, a target's, a
+domain object's and a table directive's marker, a glossary term's — no build
+phase reads: only `DefinitionSites` does, and the renderer's `written_uses`,
+which only the language server calls. Each is now a `rinx_ast::BlockId`
+(`block` on `Node::Heading`, `Node::Target`, `Directive::DomainObject`,
+`Directive::Table`/`DataTable` and `GlossaryTerm`), under which the parser
+records the lines in the `SourceMap` beside the document, as a `NameId` names
+a name's characters.
+
+- **The `.ast` no longer moves when lines move above definitions.** The
+  premise above — that it moves anyway — held because of these spans as much
+  as any; a test now writes a document of definitions with blank lines added
+  and compares the `.ast` byte for byte. A document holding a reference, an
+  entity, an equation or a code block still moves, since a build phase reports
+  at those.
+- **A site is the parse's alone.** `DocumentAnalysis::of` fills sites only
+  from the map it is given; a build, analysing documents read back from
+  `.ast` files, records none — and reads none.
+- **A map belongs to its parse.** An id read against another parse's map
+  finds another block's lines: building a test document by adding a node to a
+  parsed one must record into that parse's map, never a fresh one.

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::block_id::BlockId;
 use crate::code_language::CodeLanguage;
 use crate::definition_list_item::DefinitionListItem;
 use crate::directive::Directive;
@@ -11,7 +12,6 @@ use crate::link_destination::LinkDestination;
 use crate::list_item::ListItem;
 use crate::named::Named;
 use crate::option_list_item::OptionListItem;
-use crate::span::Span;
 use crate::table::TableRow;
 use crate::target_name::TargetName;
 
@@ -21,10 +21,10 @@ pub enum Node {
         level: u8,
         text: Vec<InlineNode>,
         /// The title's line, where an editor's outline and a definition
-        /// lead. Never read by the index, which must not change when lines
-        /// move (`docs/decisions/045-definition-spans.md`).
+        /// lead, as the parse's source map records it
+        /// (`docs/decisions/045-definition-spans.md`).
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        span: Option<Span>,
+        block: Option<BlockId>,
     },
     Paragraph(Vec<InlineNode>),
     Directive(Directive),
@@ -34,9 +34,10 @@ pub enum Node {
         /// The label, with the span of its characters.
         name: Named<TargetName>,
         destination: Option<LinkDestination>,
-        /// Where the target was written, which the label's definition is.
+        /// Where the target was written, which the label's definition is, as
+        /// the parse's source map records it.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        span: Option<Span>,
+        block: Option<BlockId>,
     },
     /// `.. __: destination`, consumed in order by anonymous references.
     AnonymousTarget {

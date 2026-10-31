@@ -13,7 +13,7 @@
 
 use rinx_ast::{
     Child, Directive, Document, HyperlinkTarget, InlineNode, LinkDestination, Node, NonEmptyVector,
-    Span, TargetName, TocEntry, for_each_child, walk_nodes,
+    SourceMap, Span, TargetName, TocEntry, for_each_child, walk_nodes,
 };
 use rinx_entity::EntitySchema;
 use rinx_index::ProjectIndex;
@@ -65,12 +65,15 @@ impl WrittenUse {
 /// `.. include::`d fragment included, since the including document resolves
 /// them.
 ///
+/// An alias target's line is found in `source_map`, which only the process
+/// that parsed `doc` has.
+///
 /// Found by the walk the language server finds the one under the cursor by,
 /// so "every use" and "the use here" cover the same nodes. A named reference
 /// is followed through the aliases the document writes here, while the
 /// document is at hand: it resolves within its own document only.
 #[must_use]
-pub fn written_uses(doc: &Document) -> Vec<WrittenUse> {
+pub fn written_uses(doc: &Document, source_map: &SourceMap) -> Vec<WrittenUse> {
     let scopes = DocumentScopes::of(&doc.nodes);
     let link_targets = written_link_targets(doc);
     let named = |name: &TargetName, span: Option<Span>| {
@@ -83,11 +86,11 @@ pub fn written_uses(doc: &Document) -> Vec<WrittenUse> {
     walk_nodes(&doc.nodes, &mut |node| {
         if let Node::Target {
             destination: Some(LinkDestination::Name(name)),
-            span,
+            block,
             ..
         } = node
         {
-            uses.extend(named(name, *span));
+            uses.extend(named(name, block.and_then(|id| source_map.block_lines(id))));
         }
         if let Node::Directive(Directive::Toctree(toctree)) = node {
             uses.extend(toctree.entries.iter().filter_map(|entry| {
@@ -198,13 +201,22 @@ impl<'a> UseResolver<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     use rinx_ast::{FileId, ObjectType, Position, PyObjectType, TargetName};
+
+    /// What the parsed document wrote, its alias targets' lines
+    /// found in the source map beside it.
+    fn uses_of(parsed: &rinx_parser::Parsed) -> Vec<WrittenUse> {
+        written_uses(&parsed.document, &parsed.source_map)
+    }
 
     /// The spans' first lines of every use written in `text`.
     fn use_lines(text: &str) -> Vec<u32> {
-        written_uses(
-            &rinx_parser::parse("index.rst", text, &rinx_parser::ParseCtx::default()).document,
-        )
+        uses_of(&rinx_parser::parse(
+            "index.rst",
+            text,
+            &rinx_parser::ParseCtx::default(),
+        ))
         .iter()
         .map(|written| written.span().start.line)
         .collect()
@@ -234,9 +246,11 @@ mod tests {
         let text = ".. toctree::\n   :maxdepth: 2\n\n   intro\n   Setup <setup>\n";
 
         // When
-        let uses = written_uses(
-            &rinx_parser::parse("index.rst", text, &rinx_parser::ParseCtx::default()).document,
-        );
+        let uses = uses_of(&rinx_parser::parse(
+            "index.rst",
+            text,
+            &rinx_parser::ParseCtx::default(),
+        ));
 
         // Then
         assert!(
@@ -252,9 +266,11 @@ mod tests {
         let text = ".. py:currentmodule:: pkg\n\n:py:func:`run` and :ref:`install`\n";
 
         // When
-        let uses = written_uses(
-            &rinx_parser::parse("index.rst", text, &rinx_parser::ParseCtx::default()).document,
-        );
+        let uses = uses_of(&rinx_parser::parse(
+            "index.rst",
+            text,
+            &rinx_parser::ParseCtx::default(),
+        ));
 
         // Then
         let mut pkg = Scope::default();
@@ -287,7 +303,7 @@ mod tests {
             .with_span(Some(span.with_file(Some(FileId::new(0)))));
 
         // When
-        let uses = written_uses(&document);
+        let uses = written_uses(&document, &SourceMap::default());
 
         // Then
         assert_eq!(uses.len(), 1);
@@ -329,7 +345,7 @@ mod tests {
         let uses_resolver = UseResolver::new("index.rst", &index, &config, schema);
 
         // When
-        let uses = written_uses(&document);
+        let uses = written_uses(&document, &SourceMap::default());
 
         // Then
         let mut references = Vec::new();
@@ -369,14 +385,11 @@ mod tests {
     #[test]
     fn test_span_is_where_the_use_was_written() {
         // Given
-        let uses = written_uses(
-            &rinx_parser::parse(
-                "index.rst",
-                "See :ref:`install`.\n",
-                &rinx_parser::ParseCtx::default(),
-            )
-            .document,
-        );
+        let uses = uses_of(&rinx_parser::parse(
+            "index.rst",
+            "See :ref:`install`.\n",
+            &rinx_parser::ParseCtx::default(),
+        ));
 
         // When / Then
         assert_eq!(uses[0].span().start, Position::new(1, 5));
@@ -384,9 +397,11 @@ mod tests {
 
     /// The chain of every named reference written in `text`, in order.
     fn named_chains(text: &str) -> Vec<Vec<String>> {
-        written_uses(
-            &rinx_parser::parse("index.rst", text, &rinx_parser::ParseCtx::default()).document,
-        )
+        uses_of(&rinx_parser::parse(
+            "index.rst",
+            text,
+            &rinx_parser::ParseCtx::default(),
+        ))
         .into_iter()
         .filter_map(|written| match written {
             WrittenUse::NamedReference { chain, .. } => Some(
@@ -443,9 +458,11 @@ mod tests {
     fn named_titles(text: &str, index: &ProjectIndex) -> Vec<Vec<String>> {
         let config = SiteConfig::default();
         let resolver = UseResolver::new("index.rst", index, &config, EntitySchema::empty_ref());
-        written_uses(
-            &rinx_parser::parse("index.rst", text, &rinx_parser::ParseCtx::default()).document,
-        )
+        uses_of(&rinx_parser::parse(
+            "index.rst",
+            text,
+            &rinx_parser::ParseCtx::default(),
+        ))
         .iter()
         .filter(|written| matches!(written, WrittenUse::NamedReference { .. }))
         .map(|written| {

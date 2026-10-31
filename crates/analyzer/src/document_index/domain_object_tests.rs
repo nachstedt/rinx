@@ -39,7 +39,7 @@ fn test_analyze_registers_every_declared_name_of_a_multi_signature_object() {
                 value: None,
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -71,7 +71,7 @@ fn test_analyze_gives_every_declared_name_its_own_genindex_entry() {
                 value: None,
                 body: vec![],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -100,10 +100,10 @@ fn test_analyze_indexes_a_multi_signature_objects_body_only_once() {
                 body: vec![Node::Target {
                     name: rinx_ast::TargetName::new("address-families").into(),
                     destination: None,
-                    span: None,
+                    block: None,
                 }],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -129,7 +129,7 @@ fn test_analyze_qualifies_every_alias_of_a_multi_signature_object_by_module() {
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyData {
@@ -143,7 +143,7 @@ fn test_analyze_qualifies_every_alias_of_a_multi_signature_object_by_module() {
                     value: None,
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -186,10 +186,10 @@ fn test_analyze_does_not_double_qualify_already_qualified_nested_attribute() {
                         canonical: None,
                         body: vec![],
                     },
-                    span: None,
+                    block: None,
                 })],
             },
-            span: None,
+            block: None,
         })],
     );
 
@@ -219,7 +219,7 @@ fn test_analyze_object_before_any_module_directive_stays_unqualified() {
                     signatures: NonEmptyVector::single("greet(name)".to_string()),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyModule {
@@ -227,7 +227,7 @@ fn test_analyze_object_before_any_module_directive_stays_unqualified() {
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );
@@ -253,7 +253,7 @@ fn test_analyze_composes_module_and_class_qualifiers() {
                     options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
-                span: None,
+                block: None,
             }),
             Node::Directive(Directive::DomainObject {
                 object: rinx_ast::DomainObjectBody::PyClass {
@@ -275,10 +275,10 @@ fn test_analyze_composes_module_and_class_qualifiers() {
                             is_async: false,
                             body: vec![],
                         },
-                        span: None,
+                        block: None,
                     })],
                 },
-                span: None,
+                block: None,
             }),
         ],
     );

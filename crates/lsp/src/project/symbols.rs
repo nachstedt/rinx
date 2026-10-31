@@ -174,9 +174,9 @@ mod tests {
     use rinx_ast::{EntityBody, EntityId, Span};
 
     fn symbols_of(text: &str) -> Vec<(String, SymbolKind)> {
-        let document =
-            rinx_parser::parse("guide.rst", text, &rinx_parser::ParseCtx::default()).document;
-        DocumentSymbols::of(&document, &DocumentAnalysis::of(&document, None))
+        let parsed = rinx_parser::parse("guide.rst", text, &rinx_parser::ParseCtx::default());
+        let analysis = DocumentAnalysis::of(&parsed.document, Some(&parsed.source_map));
+        DocumentSymbols::of(&parsed.document, &analysis)
             .iter()
             .map(|entry| (entry.name.clone(), entry.kind))
             .collect()
@@ -224,15 +224,15 @@ Guide
     #[test]
     fn test_of_places_each_entry_at_its_site() {
         // Given
-        let document = rinx_parser::parse(
+        let parsed = rinx_parser::parse(
             "guide.rst",
             "Intro.\n\n.. _install:\n\nText.\n",
             &rinx_parser::ParseCtx::default(),
-        )
-        .document;
+        );
+        let analysis = DocumentAnalysis::of(&parsed.document, Some(&parsed.source_map));
 
         // When
-        let symbols = DocumentSymbols::of(&document, &DocumentAnalysis::of(&document, None));
+        let symbols = DocumentSymbols::of(&parsed.document, &analysis);
 
         // Then
         let entry = symbols.iter().next().expect("the label");
@@ -273,14 +273,15 @@ Guide
         let mut document = Document::new("guide.rst".to_string(), Vec::new());
         let prolog = document.intern_source_file(RST_PROLOG);
         let span = Span::new(Position::new(1, 1), Position::new(1, 12)).with_file(Some(prolog));
+        let mut map = rinx_ast::SourceMap::default();
         document.nodes = vec![Node::Target {
             name: TargetName::new("top").into(),
             destination: None,
-            span: Some(span),
+            block: Some(map.record_block_lines(span)),
         }];
 
         // When
-        let symbols = DocumentSymbols::of(&document, &DocumentAnalysis::of(&document, None));
+        let symbols = DocumentSymbols::of(&document, &DocumentAnalysis::of(&document, Some(&map)));
 
         // Then
         assert_eq!(symbols.iter().count(), 0, "{symbols:?}");

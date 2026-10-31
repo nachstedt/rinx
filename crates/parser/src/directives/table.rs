@@ -101,7 +101,7 @@ pub(in crate::directives) fn parse_table_directive(
         name: options.name,
         header_rows: header_rows.clone(),
         body_rows: body_rows.clone(),
-        span,
+        block: ctx.record_block_lines(span),
     }
 }
 
@@ -157,11 +157,13 @@ mod tests {
         let input = "Intro\n\n.. table:: Sizes\n   :name: sizes\n\n   =  =\n   a  b\n   =  =\n";
 
         // When
-        let doc = crate::parse_document("test.rst", input);
+        let (doc, map) = crate::parse_placed("test.rst", input);
 
         // Then
         let span = doc.nodes.iter().find_map(|node| match node {
-            Node::Directive(Directive::Table { span, .. }) => Some(*span),
+            Node::Directive(Directive::Table { block, .. }) => {
+                Some(block.and_then(|id| map.block_lines(id)))
+            }
             _ => None,
         });
         assert_eq!(
