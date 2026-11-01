@@ -700,6 +700,7 @@ mod tests {
                 embedded,
                 images: Some(&UnderWork),
                 diagrams: crate::DiagramPictures::Compiled,
+                source_lines: None,
             },
             rinx_entity::EntitySchema::empty_ref(),
             &crate::blocks::EntityTemplates::new(),

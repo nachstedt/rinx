@@ -26,6 +26,9 @@
 //
 // A diagram arrives as its PlantUML text, which the page draws itself with
 // PlantUML's JavaScript build, loaded from the extension (`diagrams.ts`).
+//
+// The page and the editor scroll together, and the line holding the cursor is
+// marked on the page, as in VS Code's Markdown preview (`scrollSync.ts`).
 
 import * as vscode from 'vscode';
 import {
@@ -38,6 +41,7 @@ import {
     isDiagramsMessage,
 } from './diagrams';
 import { errorMessage } from './errors';
+import { ACTIVE_LINE_STYLE, SCROLL_SYNC, THROTTLED, revealedPosition, syncEnabled, visibleLine } from './scrollSync';
 
 /** The request the server answers with a document's page. */
 export const PREVIEW_METHOD = 'rinx/preview';
@@ -47,6 +51,8 @@ export interface PreviewParams {
     textDocument: { uri: string };
     /** The address the webview serves the file system's root under. */
     resourceRoot?: string;
+    /** Whether each block names the line it was written on, for the page to scroll by. */
+    sourceLines?: boolean;
 }
 
 /** The server's answer to a `rinx/preview` request. */
@@ -134,11 +140,14 @@ export interface Shown {
     document: string;
     /** The anchor the page is shown at, when a link named one. */
     fragment?: string;
+    /** The source line, fractional, a newly shown document's page is scrolled to: the editor's. */
+    line?: number;
 }
 
 /**
- * The page for `document`, asked of `client`, or a page saying why there is
- * none; its files are linked under `resourceRoot` when given.
+ * The page for `document`, asked of `client`, naming each block's line, or a
+ * page saying why there is none; its files are linked under `resourceRoot`
+ * when given.
  */
 export async function renderPage(
     client: PreviewClient | undefined,
@@ -147,7 +156,7 @@ export async function renderPage(
 ): Promise<Shown> {
     const uri = document.toString();
     if (!client) return { kind: 'message', html: NO_SERVER_PAGE, document: uri };
-    const params: PreviewParams = { textDocument: { uri } };
+    const params: PreviewParams = { textDocument: { uri }, sourceLines: true };
     if (resourceRoot !== undefined) params.resourceRoot = resourceRoot;
     try {
         const result = await client.sendRequest(PREVIEW_METHOD, params);
@@ -168,6 +177,28 @@ export interface PageMessage {
     document: string;
     /** The anchor to scroll to, rather than keeping the position. */
     fragment?: string;
+    /** The source line to scroll a newly shown document's page to, without an anchor. */
+    line?: number;
+}
+
+/** The message scrolling the page to the source line the editor shows at its top. */
+export interface UpdateViewMessage {
+    type: 'updateView';
+    line: number;
+}
+
+/** The message marking the block holding the editor's cursor, or none. */
+export interface SelectionMessage {
+    type: 'selection';
+    line: number | null;
+}
+
+/** What the webview last reported of following the editor. */
+export interface SyncReport {
+    /** The line it scrolled to, and the page's position then. */
+    revealed?: { line: number; y: number };
+    /** The line of the block it marked, `null` for none. */
+    marked?: number | null;
 }
 
 /** The message scrolling the page the webview shows to an anchor, or to its top. */
@@ -225,11 +256,19 @@ export async function resolveLink(
  * document, keeping the scroll position while the document is the same one,
  * and remembers the position in the webview's state, so a reload — the panel
  * hidden and shown again — restores it at once rather than scrolling there.
- * A page shown at an anchor scrolls to it instead. It says `ready` once it
- * listens, and `shown` after each swap.
+ * A page shown at an anchor scrolls to it instead, and a document shown for
+ * the first time to the editor's line. It says `ready` once it listens, and
+ * `shown` after each swap.
  *
  * A click on a link is never the webview's to follow: a `#fragment` scrolls
  * the page, and any other link is posted to the panel as `link`.
+ *
+ * It scrolls to the line an `updateView` names and marks the block a
+ * `selection` names, saying `revealed` and `marked`; the reader scrolling
+ * posts `revealLine`, and a double-click outside a link `didClick`, each with
+ * the source line written there. A scroll the script makes itself posts
+ * nothing for a moment, so the editor following the page cannot scroll the
+ * page in turn.
  *
  * It draws the page's diagrams after each page, through the drawer, which the
  * engine calls too once it has loaded.
@@ -238,9 +277,21 @@ const PAGE_UPDATER = `(() => {
     const vscode = acquireVsCodeApi();
     const drawDiagrams = DRAWER((message) => vscode.postMessage(message), window, document);
     window.rinxDrawDiagrams = drawDiagrams;
+    const sync = SYNC(window, document);
+    const throttled = THROTTLED;
+    // The marker of the cursor's line, kept when the head is swapped.
+    const marker = new CSSStyleSheet();
+    marker.replaceSync(MARKER_STYLE);
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, marker];
     let current = DOCUMENT;
     // A jump, not the theme's smooth scroll, whenever the position is restored.
     document.documentElement.style.scrollBehavior = 'auto';
+    let ownScrollUntil = 0;
+    // Scrolls the page without the editor following, which would scroll it back.
+    const scrollOwn = (scroll) => {
+        ownScrollUntil = Date.now() + 100;
+        scroll();
+    };
     // The element an anchor names — written as is, or percent-encoded.
     const anchored = (fragment) => {
         const element = document.getElementById(fragment);
@@ -258,11 +309,33 @@ const PAGE_UPDATER = `(() => {
         else window.scrollTo(0, 0);
     };
     const remember = () => vscode.setState({ document: current, y: window.scrollY });
+    const followEditor = throttled((line) => {
+        scrollOwn(() => sync.revealLine(line));
+        vscode.postMessage({ type: 'revealed', line, y: window.scrollY });
+    }, 50);
+    const leadEditor = throttled((y) => {
+        const line = sync.lineAtOffset(y);
+        if (line !== null) vscode.postMessage({ type: 'revealLine', line });
+    }, 50);
     const fragment = FRAGMENT;
+    const line = LINE;
     const saved = vscode.getState();
     if (fragment) scrollToAnchor(fragment);
-    else if (saved && saved.document === current) window.scrollTo(0, saved.y);
-    window.addEventListener('scroll', remember, { passive: true });
+    else if (saved && saved.document === current) scrollOwn(() => window.scrollTo(0, saved.y));
+    else if (line !== null) scrollOwn(() => sync.revealLine(line));
+    window.addEventListener(
+        'scroll',
+        () => {
+            remember();
+            if (Date.now() >= ownScrollUntil) leadEditor(window.scrollY);
+        },
+        { passive: true },
+    );
+    document.addEventListener('dblclick', (event) => {
+        if (event.target instanceof Element && event.target.closest('a')) return;
+        const line = sync.lineAtOffset(event.pageY);
+        if (line !== null) vscode.postMessage({ type: 'didClick', line: Math.floor(line) });
+    });
     document.addEventListener('click', (event) => {
         const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
         if (!link) return;
@@ -277,8 +350,17 @@ const PAGE_UPDATER = `(() => {
             scrollToAnchor(message.fragment);
             return;
         }
+        if (message && message.type === 'updateView') {
+            followEditor(message.line);
+            return;
+        }
+        if (message && message.type === 'selection') {
+            vscode.postMessage({ type: 'marked', line: sync.markLine(message.line) });
+            return;
+        }
         if (!message || message.type !== 'page') return;
-        const y = message.document === current ? window.scrollY : 0;
+        const same = message.document === current;
+        const y = same ? window.scrollY : 0;
         const next = new DOMParser().parseFromString(message.html, 'text/html');
         // An unchanged head is kept, so the stylesheet is not applied again.
         if (next.head.innerHTML !== document.head.innerHTML) {
@@ -287,7 +369,8 @@ const PAGE_UPDATER = `(() => {
         document.body.replaceWith(document.adoptNode(next.body));
         current = message.document;
         if (message.fragment) scrollToAnchor(message.fragment);
-        else window.scrollTo(0, y);
+        else if (!same && typeof message.line === 'number') scrollOwn(() => sync.revealLine(message.line));
+        else scrollOwn(() => window.scrollTo(0, y));
         remember();
         drawDiagrams();
         vscode.postMessage({ type: 'shown' });
@@ -302,14 +385,30 @@ function scriptLiteral(value: string | null): string {
 }
 
 /**
- * `page`, the page of `document`, with the script that swaps later pages into
- * it, placed last in its body, and shown at the anchor `fragment` when given;
+ * `page`, the page of `shown.document`, with the script that swaps later
+ * pages into it, placed last in its body, and shown at the anchor
+ * `shown.fragment` when given, else at the source line `shown.line`;
  * `engine`, when given, is loaded after it to draw the page's diagrams.
  */
-export function withPageUpdater(page: string, document: string, fragment?: string, engine?: DiagramEngine): string {
-    const updater = PAGE_UPDATER.replace('DRAWER', () => DIAGRAM_DRAWER)
-        .replace('DOCUMENT', () => scriptLiteral(document))
-        .replace('FRAGMENT', () => scriptLiteral(fragment ?? null));
+export function withPageUpdater(
+    page: string,
+    shown: Pick<Shown, 'document' | 'fragment' | 'line'>,
+    engine?: DiagramEngine,
+): string {
+    // In one pass over the script alone, so no value is read as a placeholder.
+    const values: Record<string, string> = {
+        DRAWER: DIAGRAM_DRAWER,
+        SYNC: SCROLL_SYNC,
+        THROTTLED,
+        MARKER_STYLE: scriptLiteral(ACTIVE_LINE_STYLE),
+        DOCUMENT: scriptLiteral(shown.document),
+        FRAGMENT: scriptLiteral(shown.fragment ?? null),
+        LINE: JSON.stringify(shown.line ?? null),
+    };
+    const updater = PAGE_UPDATER.replace(
+        /\b(DRAWER|SYNC|THROTTLED|MARKER_STYLE|DOCUMENT|FRAGMENT|LINE)\b/g,
+        (name) => values[name],
+    );
     const script = `<script>${updater}</script>${engine ? engineScripts(engine) : ''}`;
     const end = page.lastIndexOf('</body>');
     return end < 0 ? page + script : page.slice(0, end) + script + page.slice(end);
@@ -395,10 +494,7 @@ export class PageDelivery {
         this.pending = undefined;
         this.ready = false;
         this.loading = shown.kind === 'page';
-        const html =
-            shown.kind === 'page'
-                ? withPageUpdater(shown.html, shown.document, shown.fragment, this.engine)
-                : shown.html;
+        const html = shown.kind === 'page' ? withPageUpdater(shown.html, shown, this.engine) : shown.html;
         return { action: 'assign', html, shown };
     }
 }
@@ -407,6 +503,7 @@ export class PageDelivery {
 function pageMessage(shown: Shown): PageMessage {
     const message: PageMessage = { type: 'page', html: shown.html, document: shown.document };
     if (shown.fragment !== undefined) message.fragment = shown.fragment;
+    if (shown.line !== undefined) message.line = shown.line;
     return message;
 }
 
@@ -450,6 +547,10 @@ export class PreviewPanel {
     private postedPage: string | undefined;
     /** What the webview last reported of the diagrams it drew. */
     private drawnDiagrams: DiagramsMessage | undefined;
+    /** What the webview last reported of following the editor. */
+    private syncReport: SyncReport = {};
+    /** Until when a change of the editor's visible lines is the page's doing, not the reader's. */
+    private revealingUntil = 0;
 
     /**
      * Reveals the panel, creating it if there is none — beside the editor,
@@ -480,7 +581,8 @@ export class PreviewPanel {
         this.followEditor(vscode.window.activeTextEditor);
         this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
         this.panel.webview.onDidReceiveMessage(
-            (message: { type?: string; href?: unknown }) => {
+            (message: { type?: string; href?: unknown; line?: unknown; y?: unknown }) => {
+                const line = typeof message.line === 'number' ? message.line : undefined;
                 if (message.type === 'link' && typeof message.href === 'string') {
                     void this.followLink(message.href);
                 } else if (isDiagramsMessage(message)) {
@@ -489,9 +591,38 @@ export class PreviewPanel {
                     this.displayed = this.loadingPage ?? this.displayed;
                     this.loadingPage = undefined;
                     this.deliver(this.delivery.onReady());
+                    this.markSelection();
                 } else if (message.type === 'shown') {
                     this.displayed = this.postedPage;
+                    this.markSelection();
+                } else if (message.type === 'revealLine' && line !== undefined) {
+                    this.revealLine(line);
+                } else if (message.type === 'didClick' && line !== undefined) {
+                    void this.switchToEditor(line);
+                } else if (message.type === 'revealed' && line !== undefined && typeof message.y === 'number') {
+                    this.syncReport = { ...this.syncReport, revealed: { line, y: message.y } };
+                } else if (message.type === 'marked') {
+                    this.syncReport = { ...this.syncReport, marked: line ?? null };
                 }
+            },
+            null,
+            this.disposables,
+        );
+        vscode.window.onDidChangeTextEditorVisibleRanges(
+            ({ textEditor }) => {
+                if (!this.shows(textEditor.document) || Date.now() < this.revealingUntil) return;
+                if (!syncEnabled(vscode.workspace.getConfiguration('rinx'), 'scrollPreviewWithEditor')) return;
+                const line = visibleLine(textEditor);
+                if (line === undefined) return;
+                const message: UpdateViewMessage = { type: 'updateView', line };
+                void this.panel.webview.postMessage(message);
+            },
+            null,
+            this.disposables,
+        );
+        vscode.window.onDidChangeTextEditorSelection(
+            ({ textEditor }) => {
+                if (this.shows(textEditor.document)) this.markSelection(textEditor);
             },
             null,
             this.disposables,
@@ -548,6 +679,45 @@ export class PreviewPanel {
         return this.drawnDiagrams;
     }
 
+    /** What the webview last reported of following the editor. */
+    public get sync(): SyncReport {
+        return this.syncReport;
+    }
+
+    /**
+     * Scrolls every editor of the document shown to bring the source line
+     * `line`, fractional, to its top — as the reader scrolling the page asks,
+     * when `rinx.preview.scrollEditorWithPreview` is on.
+     */
+    public revealLine(line: number): void {
+        if (!syncEnabled(vscode.workspace.getConfiguration('rinx'), 'scrollEditorWithPreview')) return;
+        for (const editor of vscode.window.visibleTextEditors) {
+            if (!this.shows(editor.document)) continue;
+            const position = revealedPosition(editor.document, line);
+            this.revealingUntil = Date.now() + 100;
+            editor.revealRange(
+                new vscode.Range(position.line, position.character, position.line + 1, 0),
+                vscode.TextEditorRevealType.AtTop,
+            );
+        }
+    }
+
+    /**
+     * Shows the document in its editor with the cursor at the start of the
+     * line `line` — as a double-click on the page asks, when
+     * `rinx.preview.doubleClickToSwitchToEditor` is on.
+     */
+    public async switchToEditor(line: number): Promise<void> {
+        const document = this.document;
+        if (!document) return;
+        if (!syncEnabled(vscode.workspace.getConfiguration('rinx'), 'doubleClickToSwitchToEditor')) return;
+        const at = new vscode.Position(line, 0);
+        await vscode.window.showTextDocument(document, {
+            viewColumn: this.sourceColumn ?? vscode.ViewColumn.One,
+            selection: new vscode.Range(at, at),
+        });
+    }
+
     /**
      * Follows `href`, a link of the page shown: opens a document beside the
      * panel and shows its page at the link's anchor, opens a downloaded file,
@@ -600,6 +770,28 @@ export class PreviewPanel {
         for (const disposable of this.disposables.splice(0)) disposable.dispose();
     }
 
+    /** Whether `document` is the one the page shows. */
+    private shows(document: vscode.TextDocument): boolean {
+        return this.document !== undefined && document.uri.toString() === this.document.toString();
+    }
+
+    /** A visible editor of the document shown, if any. */
+    private visibleEditor(): vscode.TextEditor | undefined {
+        return vscode.window.visibleTextEditors.find((editor) => this.shows(editor.document));
+    }
+
+    /**
+     * Marks on the page the block holding the cursor of `editor`, or of a
+     * visible editor of the document — none when
+     * `rinx.preview.markEditorSelection` is off.
+     */
+    private markSelection(editor = this.visibleEditor()): void {
+        if (!editor) return;
+        const marked = syncEnabled(vscode.workspace.getConfiguration('rinx'), 'markEditorSelection');
+        const message: SelectionMessage = { type: 'selection', line: marked ? editor.selection.active.line : null };
+        void this.panel.webview.postMessage(message);
+    }
+
     /** Shows the document of `editor`, if it is one the preview can show. */
     private followEditor(editor: vscode.TextEditor | undefined): void {
         if (!editor || !isRestructuredText(editor.document)) return;
@@ -621,6 +813,11 @@ export class PreviewPanel {
         const resourceRoot = this.panel.webview.asWebviewUri(vscode.Uri.file('/')).toString();
         const shown = await renderPage(this.client(), document, resourceRoot);
         if (fragment !== undefined && shown.kind === 'page') shown.fragment = fragment;
+        const editor = this.visibleEditor();
+        const line = editor && visibleLine(editor);
+        if (line !== undefined && syncEnabled(vscode.workspace.getConfiguration('rinx'), 'scrollPreviewWithEditor')) {
+            shown.line = line;
+        }
         if (this.disposed || !this.requests.isLatest(request)) return;
         this.deliver(this.delivery.show(shown, this.panel.visible));
     }

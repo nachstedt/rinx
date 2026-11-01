@@ -59,7 +59,7 @@ suite('Preview (e2e)', () => {
             const html = api.previewHtml();
             return html?.includes('Pictured') && html;
         });
-        const src = /<img src="([^"]*)"/.exec(page)?.[1] ?? '';
+        const src = /<img [^>]*src="([^"]*)"/.exec(page)?.[1] ?? '';
         assert.ok(src.startsWith('https://'), page);
         assert.ok(src.endsWith(workspaceFile('sphinx/logo.svg').path), page);
     });
@@ -147,5 +147,118 @@ suite('Preview (e2e)', () => {
         assert.ok(
             !vscode.window.visibleTextEditors.some((editor) => editor.document.uri.fsPath.endsWith('genindex.rst')),
         );
+    });
+
+    suite('scrolling with the editor', () => {
+        /** What `editor` shows and what the preview last reported, for a failure to name. */
+        function syncState(api: RinxApi, editor: vscode.TextEditor): string {
+            return JSON.stringify({
+                visible: editor.visibleRanges.map((range) => [range.start.line, range.end.line]),
+                editors: vscode.window.visibleTextEditors.map((shown) => path.basename(shown.document.uri.fsPath)),
+                sync: api.previewSync(),
+            });
+        }
+
+        /**
+         * Whether `editor` shows the line `line` at its top: VS Code reveals a
+         * line "at the top" with a few lines of context above it, five in CI.
+         */
+        function atTop(editor: vscode.TextEditor, line: number): boolean {
+            const top = editor.visibleRanges[0]?.start.line ?? -1;
+            return top <= line && top >= line - 10;
+        }
+
+        /** Waits as {@link waitFor} does, a timeout naming the state of `editor` and the preview. */
+        async function waitForSync<T>(
+            what: string,
+            api: RinxApi,
+            editor: vscode.TextEditor,
+            probe: () => T | undefined | false,
+        ): Promise<T> {
+            try {
+                return await waitFor(what, probe);
+            } catch (error) {
+                throw new Error(
+                    `${error instanceof Error ? error.message : String(error)}; ${syncState(api, editor)}`,
+                    {
+                        cause: error,
+                    },
+                );
+            }
+        }
+
+        /** The editor of `scrolled.rst`, with its page shown in the preview and the page's script listening. */
+        async function previewed(): Promise<{ api: RinxApi; editor: vscode.TextEditor }> {
+            const api = await rinx();
+            const editor = await vscode.window.showTextDocument(workspaceFile('scrolled.rst'));
+            await vscode.commands.executeCommand('rinx.showPreview');
+            await waitFor('the page of scrolled.rst', () => api.previewHtml()?.includes('Paragraph 80'));
+            await waitFor('the cursor marked', () => api.previewSync()?.marked !== undefined);
+            return { api, editor };
+        }
+
+        test('the page names the line each block was written on', async () => {
+            // When
+            const { api } = await previewed();
+
+            // Then — paragraph 25 on line 51, counted from 0
+            const page = api.previewHtml() ?? '';
+            assert.ok(page.includes('<p data-source-line="51">Paragraph 25 '), page);
+        });
+
+        test('scrolling the editor scrolls the preview', async () => {
+            // Given
+            const { api, editor } = await previewed();
+
+            // When
+            editor.revealRange(new vscode.Range(101, 0, 101, 0), vscode.TextEditorRevealType.AtTop);
+
+            // Then — the editor scrolled, and the page followed it to the
+            // line now at its top, well down the page
+            await waitForSync('the editor scrolled', api, editor, () => atTop(editor, 101));
+            const revealed = await waitForSync('the page scrolled', api, editor, () => {
+                const report = api.previewSync()?.revealed;
+                return report && report.line >= 91 && report.line <= 101 && report;
+            });
+            assert.ok(revealed.y > 0, JSON.stringify(revealed));
+        });
+
+        test('the preview marks the block holding the cursor', async () => {
+            // Given
+            const { api, editor } = await previewed();
+
+            // When
+            editor.selection = new vscode.Selection(51, 4, 51, 4);
+
+            // Then
+            await waitFor('paragraph 25 marked', () => api.previewSync()?.marked === 51);
+        });
+
+        test('scrolling the preview scrolls the editor', async () => {
+            // Given
+            const { api, editor } = await previewed();
+
+            // When — the reader scrolls the page to paragraph 40
+            api.scrollPreviewTo(81);
+
+            // Then
+            await waitForSync('the editor scrolled', api, editor, () => atTop(editor, 81));
+        });
+
+        test('a double-click on the preview moves the cursor to the line', async () => {
+            // Given
+            const { api } = await previewed();
+
+            // When
+            await api.doubleClickPreview(41);
+
+            // Then
+            await waitFor(
+                'the cursor on line 41',
+                () =>
+                    vscode.window.activeTextEditor?.document.uri.fsPath.endsWith('scrolled.rst') &&
+                    vscode.window.activeTextEditor.selection.active.line === 41,
+            );
+        });
     });
 });

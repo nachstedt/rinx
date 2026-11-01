@@ -32,7 +32,7 @@ import {
     ManifestDependencies,
 } from './manifests';
 import type { DiagramsMessage } from './diagrams';
-import { PanelClient, PreviewPanel } from './preview';
+import { PanelClient, PreviewPanel, SyncReport } from './preview';
 import { IndexStatus, IndexStatusItem, STATUS_METHOD } from './status';
 
 // A log channel rather than a plain one: the language client writes its own
@@ -69,6 +69,12 @@ export interface RinxApi {
     followPreviewLink(href: string): Promise<void>;
     /** What the preview panel last reported of the diagrams it drew, if it is open. */
     previewDiagrams(): DiagramsMessage | undefined;
+    /** What the preview panel last reported of following the editor, if it is open. */
+    previewSync(): SyncReport | undefined;
+    /** Scrolls the editor as the reader scrolling the preview to the source line `line` does, if one is open. */
+    scrollPreviewTo(line: number): void;
+    /** Moves the cursor as a double-click on the preview at the source line `line` does, if one is open. */
+    doubleClickPreview(line: number): Promise<void>;
 }
 
 export function activate(context: vscode.ExtensionContext): RinxApi {
@@ -96,6 +102,11 @@ export function activate(context: vscode.ExtensionContext): RinxApi {
             await PreviewPanel.currentPanel?.followLink(href);
         },
         previewDiagrams: () => PreviewPanel.currentPanel?.diagrams,
+        previewSync: () => PreviewPanel.currentPanel?.sync,
+        scrollPreviewTo: (line) => PreviewPanel.currentPanel?.revealLine(line),
+        doubleClickPreview: async (line) => {
+            await PreviewPanel.currentPanel?.switchToEditor(line);
+        },
     };
 }
 

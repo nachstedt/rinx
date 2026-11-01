@@ -124,7 +124,7 @@ suite('Diagrams Test Suite', () => {
 
     test('DIAGRAM_DRAWER: is the drawer, called by the page updater with the window and document', () => {
         // When
-        const html = withPageUpdater('<body></body>', 'file:///a.rst');
+        const html = withPageUpdater('<body></body>', { document: 'file:///a.rst' });
 
         // Then
         assert.ok(DIAGRAM_DRAWER.startsWith('(function diagramDrawer('), DIAGRAM_DRAWER);
@@ -170,10 +170,14 @@ suite('Diagrams Test Suite', () => {
 
     test('withPageUpdater: loads the engine after the updater, when given one', () => {
         // When
-        const html = withPageUpdater('<body></body>', 'file:///a.rst', undefined, {
-            globals: ['viz.js'],
-            module: 'plantuml.js',
-        });
+        const html = withPageUpdater(
+            '<body></body>',
+            { document: 'file:///a.rst' },
+            {
+                globals: ['viz.js'],
+                module: 'plantuml.js',
+            },
+        );
 
         // Then
         assert.ok(html.indexOf('acquireVsCodeApi') < html.indexOf('<script src="viz.js">'), html);
@@ -182,7 +186,7 @@ suite('Diagrams Test Suite', () => {
 
     test('withPageUpdater: loads no engine without one', () => {
         // When
-        const html = withPageUpdater('<body></body>', 'file:///a.rst');
+        const html = withPageUpdater('<body></body>', { document: 'file:///a.rst' });
 
         // Then
         assert.ok(!html.includes('<script src='), html);

@@ -263,6 +263,7 @@ fn test_preview_link_follows_every_link_the_page_writes_to_a_source() {
             PreviewParams {
                 text_document: TextDocumentIdentifier::new(workspace.uri("guide/usage.rst")),
                 resource_root: None,
+                source_lines: false,
             },
         ),
     );

@@ -7,6 +7,7 @@ use std::fmt::Write as _;
 
 use rinx_ast::{OptionArgumentDelimiter, OptionListItem, OptionSpec};
 
+use super::source_line::{LineExtent, mark_source_lines};
 use crate::RenderCtx;
 
 pub(super) fn render_option_list(
@@ -16,7 +17,9 @@ pub(super) fn render_option_list(
 ) {
     let _ = writeln!(html, "<dl class=\"option-list\">");
     for item in items {
+        let from = html.len();
         let _ = write!(html, "<dt><kbd>");
+        mark_source_lines(html, from, item.block, LineExtent::Start, ctx.source_lines);
         for (index, option) in item.options.iter().enumerate() {
             if index > 0 {
                 html.push_str(", ");

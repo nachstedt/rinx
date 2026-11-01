@@ -568,7 +568,7 @@ fn test_lsp_shows_where_a_reference_leads_on_hover() {
 }
 
 #[test]
-fn test_lsp_previews_an_open_documents_page() {
+fn test_lsp_previews_an_open_documents_page_naming_its_lines() {
     // Given — a scanned folder whose root document names `setup.rst`
     let root = std::env::temp_dir().join("rinx_lsp_stdio_preview");
     let _ = std::fs::remove_dir_all(&root);
@@ -597,7 +597,7 @@ fn test_lsp_previews_an_open_documents_page() {
     server.request(
         2,
         "rinx/preview",
-        json!({ "textDocument": { "uri": index } }),
+        json!({ "textDocument": { "uri": index }, "sourceLines": true }),
     );
     let previewed = std::iter::from_fn(|| Some(server.receive()))
         .find_map(|message| match message {
@@ -612,6 +612,8 @@ fn test_lsp_previews_an_open_documents_page() {
     assert!(html.starts_with("<!DOCTYPE html>"), "{html}");
     assert!(html.contains("<title>Home"), "{html}");
     assert!(html.contains("Installing"), "{html}");
+    // …and each block naming the line it was written on, as asked
+    assert!(html.contains("<h1 data-source-line=\"0\""), "{html}");
 }
 
 #[test]

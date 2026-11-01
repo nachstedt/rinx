@@ -156,6 +156,9 @@ pub(crate) struct RenderCtx<'a> {
     /// How a diagram is shown — compiled into `_images/` by the build, or as
     /// its text for the language server's preview to draw.
     pub diagram_pictures: DiagramPictures,
+    /// Where the document's blocks were written, named on the page for an
+    /// editor's preview to scroll by. `None` in the build.
+    pub source_lines: Option<&'a rinx_ast::SourceMap>,
     /// Turns source text into classed HTML. Held for the whole document so
     /// the grammar set is resolved once per page, not once per code block.
     pub highlighter: &'a Highlighter,
@@ -359,6 +362,7 @@ pub fn render_with_page_assets(
         embedded_assets: assets.embedded,
         image_locator: assets.images,
         diagram_pictures: assets.diagrams,
+        source_lines: assets.source_lines,
         highlighter: &highlighter,
         highlight_language: config.highlight_language.clone(),
         collapse_entities: config.collapse_entities,

@@ -357,7 +357,7 @@ fn time_references(state: &mut ServerState, at: &ReferencesAt) -> Option<Referen
 fn time_preview(state: &mut ServerState, uri: &Uri, text: String) -> PreviewTiming {
     let started = Instant::now();
     handle_notification(state, did_change(uri.clone(), text));
-    let page = state.preview(uri, None);
+    let page = state.preview(uri, None, false);
     PreviewTiming {
         milliseconds: started.elapsed().as_secs_f64() * 1000.0,
         error: page.err().map(|refusal| refusal.to_string()),

@@ -855,7 +855,8 @@ impl ServerState {
 
     /// The page of the open document `uri`, as its project would build it,
     /// with the stylesheet and the images under `resource_root` (see
-    /// [`PreviewParams`]) when they lie in a workspace folder.
+    /// [`PreviewParams`]) when they lie in a workspace folder, and each
+    /// block naming the line it was written on when `source_lines` asks.
     ///
     /// Read from the document's latest parse and its project's current
     /// index, which every change brings up to date before the next message
@@ -868,14 +869,16 @@ impl ServerState {
         &mut self,
         uri: &Uri,
         resource_root: Option<&str>,
+        source_lines: bool,
     ) -> Result<String, PreviewRefusal> {
         if self.documents.get(uri).is_none() {
             return Err(PreviewRefusal::NotOpen);
         }
         let tracked = self.tracked.get(uri).ok_or(PreviewRefusal::NotOpen)?;
         let read = |path: &Path| std::fs::read_to_string(path);
+        let source_map = source_lines.then_some(&tracked.parsed.source_map);
         let Some(project) = tracked.project.and_then(|id| self.projects.get_mut(&id)) else {
-            return render_preview_alone(&tracked.parsed.document, &read)
+            return render_preview_alone(&tracked.parsed.document, source_map, &read)
                 .map_err(PreviewRefusal::Failed);
         };
         let config = project.site_config();
@@ -896,6 +899,7 @@ impl ServerState {
             bundled: bundled.as_deref(),
             source_root: &source_root,
             resources: resource_root.map(|address| ResourceRoot::new(address, &self.folders)),
+            source_lines: source_map,
         };
         render_preview(document, project.project_index(), &settings, &read)
             .map_err(PreviewRefusal::Failed)

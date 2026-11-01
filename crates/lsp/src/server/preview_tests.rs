@@ -13,12 +13,19 @@ const INDEX: &str = "Home\n====\n\n.. toctree::\n\n   setup\n";
 const SETUP: &str = "Installing\n==========\n";
 
 fn preview(uri: Uri) -> Request {
+    preview_naming_lines(uri, false)
+}
+
+/// A `rinx/preview` request for `uri`, asking for each block's line when
+/// `source_lines`.
+fn preview_naming_lines(uri: Uri, source_lines: bool) -> Request {
     Request::new(
         RequestId::from(9),
         PREVIEW_METHOD.to_string(),
         PreviewParams {
             text_document: TextDocumentIdentifier::new(uri),
             resource_root: None,
+            source_lines,
         },
     )
 }
@@ -57,6 +64,41 @@ fn test_preview_draws_the_open_documents_page() {
     assert!(page.starts_with("<!DOCTYPE html>"), "{page}");
     assert!(page.contains("<title>Home"), "{page}");
     assert!(page.contains("Installing"), "{page}");
+}
+
+#[test]
+fn test_preview_names_each_blocks_line_in_the_unsaved_buffer_when_asked() {
+    // Given — two lines are added above the toctree, unsaved
+    let (workspace, mut state) = scanned(
+        "preview_lines",
+        &[("index.rst", INDEX), ("setup.rst", SETUP)],
+    );
+    handle_notification(&mut state, workspace.open("index.rst", INDEX));
+    handle_notification(
+        &mut state,
+        workspace.change(
+            "index.rst",
+            2,
+            "Home\n====\n\nIntro.\n\n.. toctree::\n\n   setup\n",
+        ),
+    );
+
+    // When
+    let marked = page_of(&handle_request(
+        &mut state,
+        preview_naming_lines(workspace.uri("index.rst"), true),
+    ));
+    let plain = page_of(&handle_request(
+        &mut state,
+        preview(workspace.uri("index.rst")),
+    ));
+
+    // Then
+    assert!(
+        marked.contains("<p data-source-line=\"3\">Intro."),
+        "{marked}"
+    );
+    assert!(!plain.contains("data-source-line"), "{plain}");
 }
 
 #[test]

@@ -4,8 +4,8 @@
 
 use rinx_ast::Named;
 use rinx_ast::{
-    Directive, Enumerator, InlineNode, LinkDestination, ListItem, Node, TableRow, Toctree,
-    ToctreeFlag,
+    DefinitionListItem, Directive, Enumerator, InlineNode, LinkDestination, ListItem, Node,
+    TableRow, Toctree, ToctreeFlag,
 };
 use std::fmt::Write as _;
 
@@ -26,6 +26,7 @@ use super::image::render_image_directive;
 use super::line_block::render_line_block;
 use super::math::render_math;
 use super::option_list::render_option_list;
+use super::source_line::{LineExtent, mark_source_lines};
 use super::table_directive::{TableDirectiveParams, render_table_directive};
 use super::uml::render_uml_directive;
 use crate::RenderCtx;
@@ -38,9 +39,36 @@ use crate::nav::{expand_toctree_entries, write_nav_list};
 /// with one `list_item` node, and so does [`rinx_ast::ListItem`].
 fn render_list_items(html: &mut String, items: &[ListItem], ctx: &mut RenderCtx) {
     for item in items {
+        let from = html.len();
         let _ = write!(html, "<li>");
         render_nodes(html, &item.nodes, ctx);
         let _ = writeln!(html, "</li>");
+        mark_source_lines(html, from, item.block, LineExtent::Start, ctx.source_lines);
+    }
+}
+
+/// Renders a definition list, each item's `<dt>` naming its lines.
+fn render_definition_list(html: &mut String, items: &[DefinitionListItem], ctx: &mut RenderCtx) {
+    let _ = writeln!(html, "<dl>");
+    for item in items {
+        let from = html.len();
+        let _ = write!(html, "<dt>");
+        mark_source_lines(html, from, item.block, LineExtent::Start, ctx.source_lines);
+        render_inlines(html, &item.term, ctx);
+        let _ = writeln!(html, "</dt>");
+        let _ = write!(html, "<dd>");
+        render_nodes(html, &item.definition, ctx);
+        let _ = writeln!(html, "</dd>");
+    }
+    let _ = writeln!(html, "</dl>");
+}
+
+/// Which of `node`'s lines its first tag names: a literal block's lines show
+/// one to one, so a reader scrolls through it by line rather than across it.
+fn line_extent(node: &Node) -> LineExtent {
+    match node {
+        Node::LiteralBlock { .. } | Node::DoctestBlock { .. } => LineExtent::StartAndEnd,
+        _ => LineExtent::Start,
     }
 }
 
@@ -236,6 +264,7 @@ pub(crate) fn render_nodes_with_paragraph_class(
         .position(|node| matches!(node, Node::Heading { .. }))
         .unwrap_or(usize::MAX);
     for (index, node) in nodes.iter().enumerate() {
+        let from = html.len();
         match node {
             Node::Heading { level, text, .. } => {
                 let id = at_top_level
@@ -283,18 +312,7 @@ pub(crate) fn render_nodes_with_paragraph_class(
             Node::OptionList { items } => {
                 render_option_list(html, items, ctx);
             }
-            Node::DefinitionList { items } => {
-                let _ = writeln!(html, "<dl>");
-                for item in items {
-                    let _ = write!(html, "<dt>");
-                    render_inlines(html, &item.term, ctx);
-                    let _ = writeln!(html, "</dt>");
-                    let _ = write!(html, "<dd>");
-                    render_nodes(html, &item.definition, ctx);
-                    let _ = writeln!(html, "</dd>");
-                }
-                let _ = writeln!(html, "</dl>");
-            }
+            Node::DefinitionList { items } => render_definition_list(html, items, ctx),
             Node::Table {
                 header_rows,
                 body_rows,
@@ -334,6 +352,13 @@ pub(crate) fn render_nodes_with_paragraph_class(
                 render_block_quote(html, content, attribution.as_deref(), ctx);
             }
         }
+        mark_source_lines(
+            html,
+            from,
+            node.block(),
+            line_extent(node),
+            ctx.source_lines,
+        );
     }
     ctx.at_top_level = at_top_level;
 }
@@ -980,6 +1005,34 @@ mod tests {
         );
         assert!(result.contains("</ol>\n</li>\n</ol>\n"), "{result}");
     }
+    #[test]
+    fn test_line_extent_names_a_literal_blocks_last_line_and_a_paragraphs_first_only() {
+        // Given
+        let literal = Node::LiteralBlock {
+            language: rinx_ast::CodeLanguage::Inherit,
+            content: "code".to_string(),
+            block: None,
+        };
+        let doctest = Node::DoctestBlock {
+            content: rinx_ast::HashedContent::new(">>> 1".to_string()),
+            block: None,
+        };
+        let paragraph = Node::paragraph(Vec::new());
+
+        // When
+        let extents = [&literal, &doctest, &paragraph].map(line_extent);
+
+        // Then
+        assert_eq!(
+            extents,
+            [
+                LineExtent::StartAndEnd,
+                LineExtent::StartAndEnd,
+                LineExtent::Start
+            ]
+        );
+    }
+
     #[test]
     fn test_render_definition_list() {
         // Given
