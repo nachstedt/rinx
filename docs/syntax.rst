@@ -10,9 +10,9 @@ rendered.
 
 A construct rinx does not know is never dropped silently. An unknown directive
 is reported as a warning and drawn as a visible error block quoting its source.
-A role rinx does not know keeps the source it was written as, unless the
-library's ``rinx_parser.toml`` ignores it (see :ref:`parser-config`), when it
-is shown as its text.
+A role rinx does not know is reported and keeps the source it was written as,
+unless the library's ``rinx_parser.toml`` ignores it (see
+:ref:`parser-config`), when it is shown as its text.
 
 reStructuredText
 ----------------

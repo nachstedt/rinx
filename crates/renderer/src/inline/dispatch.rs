@@ -213,7 +213,9 @@ fn render_refused_role(html: &mut String, text: &str, refusal: &rinx_ast::RoleRe
         | rinx_ast::RoleRefusal::DocutilsPepNumber { .. }
         | rinx_ast::RoleRefusal::DocutilsRfcNumber { .. }
         | rinx_ast::RoleRefusal::MultipleRoles
-        | rinx_ast::RoleRefusal::RoleAndReference => {
+        | rinx_ast::RoleRefusal::RoleAndReference
+        | rinx_ast::RoleRefusal::UnknownRole { .. }
+        | rinx_ast::RoleRefusal::UnsupportedRole { .. } => {
             let _ = write!(html, "{}", html_escape::encode_text(text));
         }
         rinx_ast::RoleRefusal::IndexEntry { title, .. } => {

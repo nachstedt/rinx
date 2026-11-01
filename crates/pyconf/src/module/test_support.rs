@@ -9,7 +9,16 @@ pub(super) use super::read_module;
 pub(super) fn literal(reading: &ModuleReading, name: &str) -> Option<ValueKind> {
     match &reading.binding(name)?.value {
         BoundValue::Literal(value) => Some(value.kind.clone()),
-        BoundValue::Unread(_) => None,
+        BoundValue::Dict { .. } | BoundValue::Unread(_) => None,
+    }
+}
+
+/// The keys of the dict display `name` is bound to, when its keys are
+/// literals and its values are not all.
+pub(super) fn dict_keys(reading: &ModuleReading, name: &str) -> Option<Vec<ValueKind>> {
+    match &reading.binding(name)?.value {
+        BoundValue::Dict { keys, .. } => Some(keys.iter().map(|key| key.kind.clone()).collect()),
+        BoundValue::Literal(_) | BoundValue::Unread(_) => None,
     }
 }
 
