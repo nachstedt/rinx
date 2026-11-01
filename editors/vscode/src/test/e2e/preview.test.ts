@@ -159,6 +159,15 @@ suite('Preview (e2e)', () => {
             });
         }
 
+        /**
+         * Whether `editor` shows the line `line` at its top: VS Code reveals a
+         * line "at the top" with a few lines of context above it, five in CI.
+         */
+        function atTop(editor: vscode.TextEditor, line: number): boolean {
+            const top = editor.visibleRanges[0]?.start.line ?? -1;
+            return top <= line && top >= line - 10;
+        }
+
         /** Waits as {@link waitFor} does, a timeout naming the state of `editor` and the preview. */
         async function waitForSync<T>(
             what: string,
@@ -204,17 +213,12 @@ suite('Preview (e2e)', () => {
             // When
             editor.revealRange(new vscode.Range(101, 0, 101, 0), vscode.TextEditorRevealType.AtTop);
 
-            // Then — the editor scrolled, and the page followed it to
-            // paragraph 50, well down the page
-            await waitForSync(
-                'the editor scrolled',
-                api,
-                editor,
-                () => (editor.visibleRanges[0]?.start.line ?? 0) >= 95,
-            );
+            // Then — the editor scrolled, and the page followed it to the
+            // line now at its top, well down the page
+            await waitForSync('the editor scrolled', api, editor, () => atTop(editor, 101));
             const revealed = await waitForSync('the page scrolled', api, editor, () => {
                 const report = api.previewSync()?.revealed;
-                return report && report.line >= 95 && report;
+                return report && report.line >= 91 && report.line <= 101 && report;
             });
             assert.ok(revealed.y > 0, JSON.stringify(revealed));
         });
@@ -238,10 +242,7 @@ suite('Preview (e2e)', () => {
             api.scrollPreviewTo(81);
 
             // Then
-            await waitForSync('the editor scrolled', api, editor, () => {
-                const top = editor.visibleRanges[0]?.start.line ?? 0;
-                return top >= 80 && top <= 82;
-            });
+            await waitForSync('the editor scrolled', api, editor, () => atTop(editor, 81));
         });
 
         test('a double-click on the preview moves the cursor to the line', async () => {
