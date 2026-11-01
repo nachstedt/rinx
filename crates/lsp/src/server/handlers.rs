@@ -203,8 +203,11 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
             Response::new_ok(id, actions)
         }),
         PREVIEW_METHOD => answer(id, &method, params, |id, params: PreviewParams| match state
-            .preview(&params.text_document.uri, params.resource_root.as_deref())
-        {
+            .preview(
+                &params.text_document.uri,
+                params.resource_root.as_deref(),
+                params.source_lines,
+            ) {
             Ok(html) => Response::new_ok(id, PreviewResult { html }),
             Err(refusal) => {
                 let code = match refusal {

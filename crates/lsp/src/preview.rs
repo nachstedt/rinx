@@ -30,7 +30,7 @@ use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use lsp_types::TextDocumentIdentifier;
 use rinx_analyzer::{DocumentAnalysis, IndexSettings, build_project_index_from_analyses};
-use rinx_ast::Document;
+use rinx_ast::{Document, SourceMap};
 use rinx_entity::EntitySchema;
 use rinx_index::ProjectIndex;
 use rinx_renderer::config::SiteConfig;
@@ -55,6 +55,11 @@ pub struct PreviewParams {
     /// followed by its path. Without one, the stylesheet is embedded.
     #[serde(default)]
     pub resource_root: Option<String>,
+    /// Whether each block names the 0-based line it was written on, as
+    /// `data-source-line`, for the client to scroll the page and the editor
+    /// together. Without it the page is the build's own.
+    #[serde(default)]
+    pub source_lines: bool,
 }
 
 /// The answer to a `rinx/preview` request.
@@ -82,6 +87,9 @@ pub struct PreviewSettings<'a> {
     pub source_root: &'a Path,
     /// Where the client serves files, when it does.
     pub resources: Option<ResourceRoot<'a>>,
+    /// Where the document's blocks were written, when the page is to name
+    /// each one's line.
+    pub source_lines: Option<&'a SourceMap>,
 }
 
 /// Where a client serves the file system: under the address
@@ -226,6 +234,7 @@ pub fn render_preview(
             } else {
                 DiagramPictures::Compiled
             },
+            source_lines: settings.source_lines,
         },
         settings.schema,
         &entity_templates,
@@ -256,6 +265,7 @@ pub fn render_preview(
 /// A [`PreviewError`] when the template fails.
 pub fn render_preview_alone(
     document: &Document,
+    source_lines: Option<&SourceMap>,
     read: &dyn Fn(&Path) -> io::Result<String>,
 ) -> Result<String, PreviewError> {
     let analyses = BTreeMap::from([(document.path.clone(), DocumentAnalysis::of(document, None))]);
@@ -273,6 +283,7 @@ pub fn render_preview_alone(
         bundled: None,
         source_root: Path::new(""),
         resources: None,
+        source_lines,
     };
     render_preview(document, &index, &settings, read)
 }
@@ -365,8 +376,40 @@ mod tests {
             bundled: None,
             source_root: Path::new("/work"),
             resources: resource_root.map(|address| ResourceRoot::new(address, &folders)),
+            source_lines: None,
         };
         render_preview(&document, &index, &settings, &disk(files))
+    }
+
+    #[test]
+    fn test_render_preview_names_each_blocks_line_given_the_source_map() {
+        // Given
+        let parsed = rinx_parser::parse("index.rst", DOCUMENT, &rinx_parser::ParseCtx::default());
+        let index = index_of(&[("index.rst", DOCUMENT), ("setup.rst", SETUP)]);
+        let settings = PreviewSettings {
+            config: &SiteConfig::default(),
+            schema: &EntitySchema::empty(),
+            presentation: &Presentation::default(),
+            bundled: None,
+            source_root: Path::new("/work"),
+            resources: None,
+            source_lines: Some(&parsed.source_map),
+        };
+
+        // When
+        let page = render_preview(&parsed.document, &index, &settings, &disk(&[])).unwrap();
+
+        // Then
+        assert!(page.contains("<p data-source-line=\"3\">See"), "{page}");
+    }
+
+    #[test]
+    fn test_render_preview_names_no_line_without_the_source_map() {
+        // When
+        let page = preview(&Presentation::default(), None, &[]).unwrap();
+
+        // Then
+        assert!(!page.contains("data-source-line"), "{page}");
     }
 
     #[test]
@@ -633,11 +676,24 @@ mod tests {
             rinx_parser::parse("notes.rst", DOCUMENT, &rinx_parser::ParseCtx::default()).document;
 
         // When
-        let page = render_preview_alone(&document, &disk(&[])).unwrap();
+        let page = render_preview_alone(&document, None, &disk(&[])).unwrap();
 
         // Then
         assert!(page.contains("<title>Guide"), "{page}");
         assert!(!page.contains("Setting up"), "{page}");
+    }
+
+    #[test]
+    fn test_render_preview_alone_names_each_blocks_line_given_the_source_map() {
+        // Given
+        let parsed = rinx_parser::parse("notes.rst", DOCUMENT, &rinx_parser::ParseCtx::default());
+
+        // When
+        let page =
+            render_preview_alone(&parsed.document, Some(&parsed.source_map), &disk(&[])).unwrap();
+
+        // Then
+        assert!(page.contains("<h1 data-source-line=\"0\""), "{page}");
     }
 
     #[test]

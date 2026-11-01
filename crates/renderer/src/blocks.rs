@@ -51,6 +51,7 @@ mod math;
 mod option_list;
 #[cfg(test)]
 mod render_test_support;
+mod source_line;
 mod table_directive;
 mod table_shell;
 #[cfg(test)]

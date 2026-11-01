@@ -102,6 +102,7 @@ fn with_ctx_over<R>(
         embedded_assets,
         image_locator: None,
         diagram_pictures: crate::DiagramPictures::Compiled,
+        source_lines: None,
         highlighter: &highlighter,
         highlight_language: language,
         collapse_entities: true,

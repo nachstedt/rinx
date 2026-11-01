@@ -106,6 +106,26 @@
           ],
           "default": "onType",
           "description": "When to update the preview"
+        },
+        "rinx.preview.scrollPreviewWithEditor": {
+          "type": "boolean",
+          "default": true,
+          "description": "When the editor is scrolled, scroll the preview to the same place."
+        },
+        "rinx.preview.scrollEditorWithPreview": {
+          "type": "boolean",
+          "default": true,
+          "description": "When the preview is scrolled, scroll the editor to the same place."
+        },
+        "rinx.preview.markEditorSelection": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mark the block holding the editor's cursor in the preview."
+        },
+        "rinx.preview.doubleClickToSwitchToEditor": {
+          "type": "boolean",
+          "default": true,
+          "description": "Double-click in the preview to switch to the editor, with the cursor on the line the block was written on."
         }
       }
     },

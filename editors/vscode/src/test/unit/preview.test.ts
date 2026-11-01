@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
+import { SCROLL_SYNC, THROTTLED } from '../../scrollSync';
 import {
     escapeHtml,
     isExternalHref,
@@ -47,7 +48,7 @@ suite('Preview Test Suite', () => {
         assert.ok(requests.isLatest(second));
     });
 
-    test('renderPage: asks the server for the document and shows its page', async () => {
+    test("renderPage: asks the server for the document's page, naming each block's line, and shows it", async () => {
         // Given
         const asked: [string, PreviewParams][] = [];
         const client: PreviewClient = {
@@ -63,7 +64,9 @@ suite('Preview Test Suite', () => {
 
         // Then
         assert.deepStrictEqual(page, { kind: 'page', html: '<p>page</p>', document: document.toString() });
-        assert.deepStrictEqual(asked, [[PREVIEW_METHOD, { textDocument: { uri: document.toString() } }]]);
+        assert.deepStrictEqual(asked, [
+            [PREVIEW_METHOD, { textDocument: { uri: document.toString() }, sourceLines: true }],
+        ]);
     });
 
     test('renderPage: asks for the page under the resource root', async () => {
@@ -82,7 +85,7 @@ suite('Preview Test Suite', () => {
 
         // Then
         assert.deepStrictEqual(asked, [
-            { textDocument: { uri: document.toString() }, resourceRoot: 'https://webview/' },
+            { textDocument: { uri: document.toString() }, sourceLines: true, resourceRoot: 'https://webview/' },
         ]);
     });
 
@@ -111,7 +114,7 @@ suite('Preview Test Suite', () => {
 
     test('withPageUpdater: places the script last in the body, naming the document', () => {
         // When
-        const html = withPageUpdater('<html><body><p>x</p></body></html>', 'file:///docs/a.rst');
+        const html = withPageUpdater('<html><body><p>x</p></body></html>', { document: 'file:///docs/a.rst' });
 
         // Then
         assert.ok(html.startsWith('<html><body><p>x</p><script>'), html);
@@ -121,7 +124,7 @@ suite('Preview Test Suite', () => {
 
     test('withPageUpdater: no document name can end the script early', () => {
         // When
-        const html = withPageUpdater('<p>x</p>', 'file:///docs/</script>.rst');
+        const html = withPageUpdater('<p>x</p>', { document: 'file:///docs/</script>.rst' });
 
         // Then — appended without a body, and the name's `<` escaped
         assert.strictEqual(html.match(/<\/script>/g)?.length, 1, html);
@@ -130,15 +133,45 @@ suite('Preview Test Suite', () => {
 
     test('withPageUpdater: names no anchor without one', () => {
         // When
-        const html = withPageUpdater('<p>x</p>', 'file:///docs/a.rst');
+        const html = withPageUpdater('<p>x</p>', { document: 'file:///docs/a.rst' });
 
         // Then
         assert.ok(html.includes('const fragment = null;'), html);
     });
 
+    test('withPageUpdater: scrolls to the source line given, and to none without one', () => {
+        // When
+        const at = withPageUpdater('<p>x</p>', { document: 'file:///docs/a.rst', line: 12.5 });
+        const without = withPageUpdater('<p>x</p>', { document: 'file:///docs/a.rst' });
+
+        // Then
+        assert.ok(at.includes('const line = 12.5;'), at);
+        assert.ok(without.includes('const line = null;'), without);
+    });
+
+    test('withPageUpdater: reads no placeholder in the document name or the anchor', () => {
+        // When — names spelling the script's placeholders
+        const html = withPageUpdater('<p>x</p>', { document: 'file:///LINE/SYNC.rst', fragment: 'DOCUMENT' });
+
+        // Then
+        assert.ok(html.includes('let current = "file:///LINE/SYNC.rst";'), html);
+        assert.ok(html.includes('const fragment = "DOCUMENT";'), html);
+        assert.ok(html.includes('const line = null;'), html);
+    });
+
+    test('withPageUpdater: loads the scroll sync, the throttle and the marker style', () => {
+        // When
+        const html = withPageUpdater('<p>x</p>', { document: 'file:///docs/a.rst' });
+
+        // Then
+        assert.ok(html.includes(`const sync = ${SCROLL_SYNC}(window, document);`), html);
+        assert.ok(html.includes(`const throttled = ${THROTTLED};`), html);
+        assert.ok(html.includes('.code-active-line::before'), html);
+    });
+
     test('withPageUpdater: names the anchor the page is shown at, escaped', () => {
         // When
-        const html = withPageUpdater('<p>x</p>', 'file:///docs/a.rst', '</script>install');
+        const html = withPageUpdater('<p>x</p>', { document: 'file:///docs/a.rst', fragment: '</script>install' });
 
         // Then
         assert.strictEqual(html.match(/<\/script>/g)?.length, 1, html);
@@ -359,6 +392,19 @@ suite('PageDelivery Test Suite', () => {
         assert.deepStrictEqual(delivery.show({ ...pageOf('two'), fragment: 'install' }, true), {
             action: 'post',
             message: { type: 'page', html: 'two', document: 'file:///docs/a.rst', fragment: 'install' },
+        });
+    });
+
+    test("a page shown at the editor's line is posted with it", () => {
+        // Given
+        const delivery = new PageDelivery();
+        delivery.show(pageOf('one'), true);
+        delivery.onReady();
+
+        // When / Then
+        assert.deepStrictEqual(delivery.show({ ...pageOf('two'), line: 7.25 }, true), {
+            action: 'post',
+            message: { type: 'page', html: 'two', document: 'file:///docs/a.rst', line: 7.25 },
         });
     });
 

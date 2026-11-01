@@ -1,6 +1,6 @@
 //! Where a page finds the files it shows: the `data:` URIs the build embedded,
 //! and — for a page no site directory is written beside — where each authored
-//! image lies and how a diagram is shown.
+//! image lies, how a diagram is shown and where each block was written.
 //!
 //! The build links an image into the site's `_images/` directory, which its
 //! bundling action fills. The language server's preview writes no site, so it
@@ -9,6 +9,8 @@
 //! that makes `rinx_filter` learn about a subject through a trait.
 
 use std::path::Path;
+
+use rinx_ast::SourceMap;
 
 use crate::EmbeddedAssets;
 
@@ -48,6 +50,10 @@ pub struct PageAssets<'a> {
     pub images: Option<&'a dyn ImageLocator>,
     /// How a diagram is shown; [`DiagramPictures::Compiled`] in the build.
     pub diagrams: DiagramPictures,
+    /// Where the document's blocks were written, for a page naming each
+    /// one's source line — the preview's, which an editor scrolls by. `None`
+    /// in the build, which holds no [`SourceMap`].
+    pub source_lines: Option<&'a SourceMap>,
 }
 
 impl<'a> PageAssets<'a> {
@@ -58,6 +64,7 @@ impl<'a> PageAssets<'a> {
             embedded,
             images: None,
             diagrams: DiagramPictures::Compiled,
+            source_lines: None,
         }
     }
 }
@@ -67,7 +74,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_embedding_locates_no_image() {
+    fn test_embedding_locates_no_image_and_names_no_line() {
         // Given
         let embedded = EmbeddedAssets::new();
 
@@ -78,5 +85,6 @@ mod tests {
         assert!(assets.images.is_none());
         assert!(assets.embedded.is_empty());
         assert_eq!(assets.diagrams, DiagramPictures::Compiled);
+        assert!(assets.source_lines.is_none());
     }
 }

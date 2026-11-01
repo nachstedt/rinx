@@ -40,8 +40,9 @@ finished one 🔶. A heading with no marker means the step has not started.
   #40 (PR #335), #24 (PR #340) and #25 (PR #355, prepared by #343, #345,
   #348, #351 and #353), #26 (PRs #358 and #362, prepared by #357) and
   #27 (PR #365, prepared by #363), #28 (PR #374), #29 (PR #378), #30 (PR #386),
-  #31 (PR #393, prepared by #387 and #390), #32 (PR #395) and #33.
-- **Next: #34, preview scroll sync.**
+  #31 (PR #393, prepared by #387 and #390), #32 (PR #395), #33 and #34
+  (prepared by #398, #400, #401 and #407).
+- **Next: #35, quick fix: add `.. noqa:`.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -1294,14 +1295,20 @@ Not done here:
   know it takes any. Lists, block quotes and paragraphs do not fold, by
   choice.
 
-### 34. Preview scroll sync
+### 34. Preview scroll sync ✅
 
-**You experience:** the preview follows the cursor, and clicking in it jumps
-to the source.
+**You experience:** the preview and the editor scroll together, the block
+holding the cursor is marked in the preview, and double-clicking in it jumps
+to the source — as in VS Code's Markdown preview, with its four settings
+(ADR-048).
 
 - `data-source-line` attributes behind a renderer flag, so build output is unchanged
 - Two-way webview ↔ editor messages
 - Tests
+
+Not done here:
+- A block an `.. include::` brings in names no line, so the preview is
+  scrolled across it from its neighbours (issue #409).
 
 ### 35. Quick fix: add `.. noqa:`
 
