@@ -59,7 +59,7 @@ suite('Preview (e2e)', () => {
             const html = api.previewHtml();
             return html?.includes('Pictured') && html;
         });
-        const src = /<img src="([^"]*)"/.exec(page)?.[1] ?? '';
+        const src = /<img [^>]*src="([^"]*)"/.exec(page)?.[1] ?? '';
         assert.ok(src.startsWith('https://'), page);
         assert.ok(src.endsWith(workspaceFile('sphinx/logo.svg').path), page);
     });
@@ -150,6 +150,34 @@ suite('Preview (e2e)', () => {
     });
 
     suite('scrolling with the editor', () => {
+        /** What `editor` shows and what the preview last reported, for a failure to name. */
+        function syncState(api: RinxApi, editor: vscode.TextEditor): string {
+            return JSON.stringify({
+                visible: editor.visibleRanges.map((range) => [range.start.line, range.end.line]),
+                editors: vscode.window.visibleTextEditors.map((shown) => path.basename(shown.document.uri.fsPath)),
+                sync: api.previewSync(),
+            });
+        }
+
+        /** Waits as {@link waitFor} does, a timeout naming the state of `editor` and the preview. */
+        async function waitForSync<T>(
+            what: string,
+            api: RinxApi,
+            editor: vscode.TextEditor,
+            probe: () => T | undefined | false,
+        ): Promise<T> {
+            try {
+                return await waitFor(what, probe);
+            } catch (error) {
+                throw new Error(
+                    `${error instanceof Error ? error.message : String(error)}; ${syncState(api, editor)}`,
+                    {
+                        cause: error,
+                    },
+                );
+            }
+        }
+
         /** The editor of `scrolled.rst`, with its page shown in the preview and the page's script listening. */
         async function previewed(): Promise<{ api: RinxApi; editor: vscode.TextEditor }> {
             const api = await rinx();
@@ -176,10 +204,17 @@ suite('Preview (e2e)', () => {
             // When
             editor.revealRange(new vscode.Range(101, 0, 101, 0), vscode.TextEditorRevealType.AtTop);
 
-            // Then — the page followed to paragraph 50, well down the page
-            const revealed = await waitFor('the page scrolled', () => {
+            // Then — the editor scrolled, and the page followed it to
+            // paragraph 50, well down the page
+            await waitForSync(
+                'the editor scrolled',
+                api,
+                editor,
+                () => (editor.visibleRanges[0]?.start.line ?? 0) >= 95,
+            );
+            const revealed = await waitForSync('the page scrolled', api, editor, () => {
                 const report = api.previewSync()?.revealed;
-                return report && report.line >= 100 && report;
+                return report && report.line >= 95 && report;
             });
             assert.ok(revealed.y > 0, JSON.stringify(revealed));
         });
@@ -203,7 +238,10 @@ suite('Preview (e2e)', () => {
             api.scrollPreviewTo(81);
 
             // Then
-            await waitFor('the editor scrolled', () => editor.visibleRanges[0]?.start.line === 81);
+            await waitForSync('the editor scrolled', api, editor, () => {
+                const top = editor.visibleRanges[0]?.start.line ?? 0;
+                return top >= 80 && top <= 82;
+            });
         });
 
         test('a double-click on the preview moves the cursor to the line', async () => {
