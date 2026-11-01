@@ -213,7 +213,7 @@ pub fn check_folder(root: &Path, options: &CheckOptions) -> FolderCheck {
         .map(PathBuf::as_path)
         .filter_map(file_uri)
         .filter_map(|uri| {
-            let fixes = state.code_actions(&uri, whole);
+            let fixes = state.build_fixes(&uri, whole);
             (!fixes.is_empty()).then_some((uri, fixes))
         })
         .collect();
@@ -643,6 +643,18 @@ mod tests {
         };
         assert_eq!(timing.tokens, 2);
         assert!(timing.after_edit_milliseconds > 0.0);
+    }
+
+    #[test]
+    fn test_check_folder_lists_no_noqa_fixes() {
+        // Given — a finding a `.. noqa:` would silence, which fails no build
+        let workspace = Workspace::new("check_folder_noqa", &[("setup.rst", ".. foo::\n")]);
+
+        // When
+        let check = check_folder(&workspace.root, &CheckOptions::default());
+
+        // Then
+        assert_eq!(check.quick_fixes, BTreeMap::new());
     }
 
     #[test]

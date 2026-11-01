@@ -248,23 +248,37 @@ impl ServerState {
 
     /// `edits` as the client takes a workspace edit: versioned per document,
     /// or by URI.
-    fn workspace_edit(&self, edits: BTreeMap<PathBuf, Vec<TextEdit>>) -> WorkspaceEdit {
-        let by_uri = edits
-            .into_iter()
-            .filter_map(|(path, edits)| Some((path.clone(), file_uri(&path)?, edits)));
+    pub(super) fn workspace_edit(&self, edits: BTreeMap<PathBuf, Vec<TextEdit>>) -> WorkspaceEdit {
+        self.versioned_edit(edits.into_iter().filter_map(|(path, edits)| {
+            let version = self.documents.get_by_path(&path).map(|open| open.version);
+            Some((file_uri(&path)?, version, edits))
+        }))
+    }
+
+    /// `edits` of the document at `uri`, which need not be a file (an
+    /// untitled buffer is not), as the client takes a workspace edit.
+    pub(super) fn document_edit(&self, uri: &Uri, edits: Vec<TextEdit>) -> WorkspaceEdit {
+        let version = self.documents.get(uri).map(|open| open.version);
+        self.versioned_edit([(uri.clone(), version, edits)])
+    }
+
+    /// Each document's `edits`, under the version it is open at, in the
+    /// shape the client announced.
+    fn versioned_edit(
+        &self,
+        edits: impl IntoIterator<Item = (Uri, Option<i32>, Vec<TextEdit>)>,
+    ) -> WorkspaceEdit {
+        let edits = edits.into_iter();
         if self.edit_shape == EditShape::ByUri {
             return WorkspaceEdit {
-                changes: Some(by_uri.map(|(_, uri, edits)| (uri, edits)).collect()),
+                changes: Some(edits.map(|(uri, _, edits)| (uri, edits)).collect()),
                 ..WorkspaceEdit::default()
             };
         }
-        let operations = by_uri
-            .map(|(path, uri, edits)| {
+        let operations = edits
+            .map(|(uri, version, edits)| {
                 DocumentChangeOperation::Edit(TextDocumentEdit {
-                    text_document: OptionalVersionedTextDocumentIdentifier {
-                        uri,
-                        version: self.documents.get_by_path(&path).map(|open| open.version),
-                    },
+                    text_document: OptionalVersionedTextDocumentIdentifier { uri, version },
                     edits: edits.into_iter().map(OneOf::Left).collect(),
                 })
             })

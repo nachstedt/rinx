@@ -10,8 +10,8 @@ use crate::headings::{Adornment, detect_adornment, try_parse_heading};
 use crate::inline::{SourceMap, parse_inline_text_mapped};
 use crate::syntax_recorder::SyntaxRecorder;
 use rinx_ast::{
-    BlockKind, CodeLanguage, Diagnostic, DiagnosticCode, Document, Node, Span, Suppression,
-    SuppressionCodes,
+    BlockKind, CodeLanguage, Diagnostic, DiagnosticCode, Document, Node, Span, SuppressionCodes,
+    SuppressionSite,
 };
 
 use super::block_quote::try_parse_block_quote;
@@ -264,8 +264,9 @@ pub(crate) fn parse_blocks(
     // `.. noqa:` comments seen since the last block. They accumulate rather
     // than replace one another so that two written in a row both apply, and
     // they survive the blank-line skip below — a suppression is nearly always
-    // separated from its block by one.
-    let mut pending_noqa: Vec<SuppressionCodes> = Vec::new();
+    // separated from its block by one. Each keeps its line, which an editor
+    // adds a further code to.
+    let mut pending_noqa: Vec<(SuppressionCodes, Option<Span>)> = Vec::new();
 
     while i < lines.len() {
         let line = lines[i].trim_end();
@@ -288,7 +289,7 @@ pub(crate) fn parse_blocks(
                     ctx.line_span(i, lines[i]),
                 ));
             }
-            pending_noqa.push(noqa.codes);
+            pending_noqa.push((noqa.codes, ctx.line_span(i, line)));
         }
 
         // A comment is the one construct that does *not* consume the pending
@@ -304,7 +305,7 @@ pub(crate) fn parse_blocks(
         let (consumed, mut new_nodes) =
             try_parse_construct(lines, i, &nodes, adornment_order, diagnostics, ctx)
                 .unwrap_or_else(|| parse_paragraph(lines, i, ctx));
-        attach_pending_noqa(&mut pending_noqa, diagnostics, ctx, i, consumed);
+        resolve_block_suppressions(&mut pending_noqa, diagnostics, ctx, i, consumed);
         record_block_syntax(&new_nodes, lines, i, consumed, ctx);
         record_block_lines(&mut new_nodes, lines, i, consumed, ctx);
         nodes.extend(new_nodes);
@@ -390,39 +391,39 @@ fn try_parse_construct(
 }
 
 /// Resolves every pending `.. noqa:` onto the block just parsed, which spans
-/// `consumed` lines from `start`.
+/// `consumed` lines from `start`, and records the block as one a `.. noqa:`
+/// written before it would cover.
 ///
 /// This is where the scope rule lives: a suppression applies to the *next*
 /// block, so it is only turned into a line range once that block's extent is
 /// known. Because `parse_blocks` recurses, a `.. noqa:` written inside a
 /// directive body or a list item resolves against that nested block, and one
-/// written before a container covers everything nested in it.
-fn attach_pending_noqa(
-    pending: &mut Vec<SuppressionCodes>,
+/// written before a container covers everything nested in it. Both the
+/// suppressions and the recorded site go through
+/// [`SuppressionSite::suppression`], so a comment an editor writes where the
+/// site says covers what the parser reads it as covering.
+fn resolve_block_suppressions(
+    pending: &mut Vec<(SuppressionCodes, Option<Span>)>,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
     start: usize,
     consumed: usize,
 ) {
-    if pending.is_empty() {
-        return;
-    }
     // A block with no source position cannot be suppressed by line, so the
     // pending comments are dropped rather than pinned to an invented range.
-    let Some(span) = ctx.lines_span(start, start + consumed.saturating_sub(1), "") else {
+    let Some(block) = ctx.lines_span(start, start + consumed.saturating_sub(1), "") else {
         pending.clear();
         return;
     };
-    for codes in pending.drain(..) {
-        diagnostics.suppress(Suppression {
-            start_line: span.start.line,
-            end_line: span.end.line,
-            codes,
-            // The comment and the block it covers are always in the same
-            // file — an `.. include::` splices whole blocks, never half of
-            // one — so the block's own attribution is the comment's.
-            file: span.file,
-        });
+    let comment = pending
+        .iter()
+        .rev()
+        .find(|(codes, _)| matches!(codes, SuppressionCodes::Only(_)))
+        .and_then(|(_, line)| *line);
+    let site = SuppressionSite { block, comment };
+    ctx.record_suppression_site(site);
+    for (codes, _) in pending.drain(..) {
+        diagnostics.suppress(site.suppression(codes));
     }
 }
 

@@ -220,7 +220,8 @@ fn build_row(
                 ctx.start_i + start + cell.first_line_offset,
                 ctx.indent + column.start + cell.column_offset,
             )
-            .without_section_titles();
+            .without_section_titles()
+            .in_table_cell();
         let content = parse_blocks(&content_refs, ctx.adornment_order, ctx.diagnostics, &nested);
         cells.push(TableCell {
             colspan,

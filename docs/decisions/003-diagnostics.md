@@ -84,6 +84,8 @@ See :ref:`work-in-progress` for details.
 
 A comment between the suppression and its block — including a second `.. noqa:` — does not consume it, so two written in a row both apply.
 
+**The editor writes a comment where the parser reads one.** The language server's quick fix (roadmap #35) does not re-derive this rule. The parser records each block a comment would cover, as a `SuppressionSite` in the editor-only `SourceMap`, at the very place it resolves a pending comment onto its block, and both build their `Suppression` through `SuppressionSite::suppression`. The fix takes the innermost site covering the diagnostic whose first line holds only its indentation before it — not a list item's first block, which shares its line with the marker, nor a block quote, which a comment would take for its body — and table cells record none, since a line added there would be a row of the table.
+
 **Why a mistyped id is reported.** `noqa.unknown-code` fires for any id that names no diagnostic. A suppression that silently matches nothing is exactly the "silently degrades valid-looking input" case `guidelines.md` says to diagnose. A bare `.. noqa` is supported but discouraged: it also hides the next problem to appear in that block, which nobody chose.
 
 ### 7. Suppression is applied at the reporting boundary

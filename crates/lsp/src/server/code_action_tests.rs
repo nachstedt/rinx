@@ -38,18 +38,24 @@ fn site_manifest(deps: &[&str]) -> String {
 }
 
 /// The code actions `state` offers for the cursor on `line` of `file`.
-fn actions_at(
+pub(super) fn actions_at(
     state: &mut ServerState,
     workspace: &Workspace,
     file: &str,
     line: u32,
 ) -> Vec<CodeAction> {
+    actions_for(state, &workspace.uri(file), line)
+}
+
+/// The code actions `state` offers for the cursor on `line` of the document
+/// at `uri`, which need not be a file.
+pub(super) fn actions_for(state: &mut ServerState, uri: &Uri, line: u32) -> Vec<CodeAction> {
     let at = lsp_types::Position::new(line, 4);
     let request = Request::new(
         RequestId::from(7),
         CodeActionRequest::METHOD.to_string(),
         serde_json::json!({
-            "textDocument": {"uri": workspace.uri(file)},
+            "textDocument": {"uri": uri},
             "range": {"start": at, "end": at},
             "context": {"diagnostics": []},
         }),
@@ -67,7 +73,7 @@ fn actions_at(
 }
 
 /// `text` with `edits` applied, each a range of ASCII text.
-fn apply(text: &str, edits: &[TextEdit]) -> String {
+pub(super) fn apply(text: &str, edits: &[TextEdit]) -> String {
     let offset = |position: lsp_types::Position| {
         let line_start: usize = text
             .split_inclusive('\n')

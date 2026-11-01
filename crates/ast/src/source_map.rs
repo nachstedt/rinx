@@ -14,6 +14,7 @@ use crate::block_id::BlockId;
 use crate::include_site::IncludeSite;
 use crate::named::NameId;
 use crate::span::Span;
+use crate::suppression::SuppressionSite;
 use crate::syntax::SyntaxTable;
 
 /// What the parser recorded about where a document's markup was written,
@@ -33,6 +34,10 @@ pub struct SourceMap {
     /// The lines of each block a definition was written as, by the
     /// [`BlockId`] its node carries.
     block_lines: Vec<Span>,
+    /// Every block a `.. noqa:` written before it would cover, in the order
+    /// the parser resolved them — an enclosing block after the blocks nested
+    /// in it.
+    suppression_sites: Vec<SuppressionSite>,
 }
 
 impl SourceMap {
@@ -74,6 +79,17 @@ impl SourceMap {
     pub fn block_lines(&self, id: BlockId) -> Option<Span> {
         self.block_lines.get(id.index()).copied()
     }
+
+    /// Records that a `.. noqa:` written before a block would cover `site`.
+    pub fn record_suppression_site(&mut self, site: SuppressionSite) {
+        self.suppression_sites.push(site);
+    }
+
+    /// Every block a `.. noqa:` written before it would cover.
+    #[must_use]
+    pub fn suppression_sites(&self) -> &[SuppressionSite] {
+        &self.suppression_sites
+    }
 }
 
 #[cfg(test)]
@@ -92,6 +108,24 @@ mod tests {
         assert!(map.include_sites.is_empty());
         assert_eq!(map.name_span(NameId::new(0)), None);
         assert_eq!(map.block_lines(BlockId::new(0)), None);
+        assert!(map.suppression_sites().is_empty());
+    }
+
+    #[test]
+    fn test_recorded_suppression_sites_are_listed_in_order() {
+        // Given
+        let mut map = SourceMap::default();
+        let site = |line| SuppressionSite {
+            block: Span::new(Position::new(line, 1), Position::new(line, 9)),
+            comment: None,
+        };
+
+        // When
+        map.record_suppression_site(site(3));
+        map.record_suppression_site(site(1));
+
+        // Then
+        assert_eq!(map.suppression_sites(), [site(3), site(1)]);
     }
 
     #[test]

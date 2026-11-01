@@ -337,6 +337,37 @@ impl Placement<'_> {
         Some((uri, text))
     }
 
+    /// The URI and text of the file a span with `file` points into — the
+    /// document's own for `None` — or `None` when it cannot be named.
+    pub(crate) fn file_text<'b>(
+        &'b self,
+        document: &Document,
+        file: Option<rinx_ast::FileId>,
+    ) -> Option<(Uri, &'b str)> {
+        match file {
+            None => Some((self.uri.clone(), self.text)),
+            Some(file) => self.file(document, file),
+        }
+    }
+
+    /// `diagnostic`, found in `document`, placed in its file and shown as
+    /// `judgement` says.
+    fn placed<'d>(
+        &self,
+        document: &Document,
+        diagnostic: &'d Diagnostic,
+        judgement: Judgement,
+        encoding: PositionEncoding,
+    ) -> Placed<'d> {
+        let (uri, range) = self.place(document, diagnostic.span, encoding);
+        Placed {
+            diagnostic,
+            judgement,
+            uri,
+            range,
+        }
+    }
+
     /// The URI of the file `span` is in, and its range there.
     ///
     /// A span in a fragment that cannot be named is placed at the start of the
@@ -372,22 +403,47 @@ pub(crate) struct Placed<'a> {
     pub range: Range,
 }
 
-/// Converts the diagnostics found in `document` — those its parse recorded,
-/// what the build fails on that its library did not declare (`undeclared`),
-/// and those rendering it found — by the URI of the file each one is in,
-/// leaving out what its `.. noqa:` comments silence, and adds, on each
+/// What of `document`'s findings — those its parse recorded and those
+/// rendering it found (`rendered`) — the editor shows and a `.. noqa:` could
+/// silence: what its comments do not silence already, judged by
+/// `strictness` (or, when it fails the build, as a
+/// [`Judgement::as_failure`]) and placed in the file each is in.
+///
+/// The filter is the build's own [`rinx_ast::retain_reportable`], so the
+/// editor and CI cannot disagree about what a comment silences — and since a
+/// suppression records its file, a comment only silences its own file. The
+/// quick fix writing a `.. noqa:` offers itself for exactly these.
+pub(crate) fn shown_findings<'a>(
+    document: &'a Document,
+    rendered: &'a RenderFindings,
+    strictness: &Strictness,
+    placement: &Placement<'_>,
+    encoding: PositionEncoding,
+) -> Vec<Placed<'a>> {
+    let reported = retain_reportable(&document.diagnostics, &document.suppressions)
+        .chain(retain_reportable(
+            &rendered.reported,
+            &document.suppressions,
+        ))
+        .map(|diagnostic| (diagnostic, strictness.judge(diagnostic)));
+    let failing = retain_reportable(&rendered.failing, &document.suppressions)
+        .map(|diagnostic| (diagnostic, Judgement::as_failure(diagnostic)));
+    reported
+        .chain(failing)
+        .map(|(diagnostic, judgement)| placement.placed(document, diagnostic, judgement, encoding))
+        .collect()
+}
+
+/// Converts the diagnostics found in `document` — its [`shown_findings`],
+/// and what the build fails on that its library did not declare
+/// (`undeclared`) — by the URI of the file each one is in, and adds, on each
 /// `.. include::` that brought problems in, a summary of them (see
 /// [`crate::include_summary`]) — the includes `source_map`, the parse's,
 /// records.
 ///
-/// The filter is the build's own [`rinx_ast::retain_reportable`], so the
-/// editor and CI cannot disagree about what a comment silences — and since a
-/// suppression records its file, a comment only silences its own file. It
-/// spares `undeclared`, as the build does: no document's comment silences a
-/// fault of its build file. What is shown is then judged by `strictness`,
-/// the one place a diagnostic's severity is decided — or, when it fails the
-/// build, which is known by where it was found, is a
-/// [`Judgement::as_failure`].
+/// `undeclared` is spared the `.. noqa:` filter, as the build spares it: no
+/// document's comment silences a fault of its build file. It fails the
+/// build, so it is a [`Judgement::as_failure`].
 #[must_use]
 pub fn to_lsp_diagnostics(
     document: &Document,
@@ -398,28 +454,15 @@ pub fn to_lsp_diagnostics(
     placement: &Placement<'_>,
     encoding: PositionEncoding,
 ) -> BTreeMap<Uri, Vec<lsp_types::Diagnostic>> {
-    let reported = retain_reportable(&document.diagnostics, &document.suppressions)
-        .chain(retain_reportable(
-            &rendered.reported,
-            &document.suppressions,
-        ))
-        .map(|diagnostic| (diagnostic, strictness.judge(diagnostic)));
-    let failing = undeclared
-        .iter()
-        .chain(retain_reportable(&rendered.failing, &document.suppressions))
-        .map(|diagnostic| (diagnostic, Judgement::as_failure(diagnostic)));
-    let placed: Vec<Placed<'_>> = reported
-        .chain(failing)
-        .map(|(diagnostic, judgement)| {
-            let (uri, range) = placement.place(document, diagnostic.span, encoding);
-            Placed {
-                diagnostic,
-                judgement,
-                uri,
-                range,
-            }
-        })
-        .collect();
+    let mut placed = shown_findings(document, rendered, strictness, placement, encoding);
+    placed.extend(undeclared.iter().map(|diagnostic| {
+        placement.placed(
+            document,
+            diagnostic,
+            Judgement::as_failure(diagnostic),
+            encoding,
+        )
+    }));
     let mut by_uri: BTreeMap<Uri, Vec<lsp_types::Diagnostic>> = BTreeMap::new();
     by_uri.insert(placement.uri.clone(), Vec::new());
     for found in &placed {
@@ -863,6 +906,60 @@ mod tests {
             own[1].code,
             Some(NumberOrString::String("link.broken-ref".to_string()))
         );
+    }
+
+    #[test]
+    fn test_shown_findings_leave_out_the_undeclared_and_the_silenced() {
+        // Given — a parse finding, a silenced one, and a build-file fault
+        let found = |line| {
+            Diagnostic::new(
+                DiagnosticCode::DirectiveUnknown,
+                "unknown",
+                Span::new(Position::new(line, 1), Position::new(line, 9)),
+            )
+        };
+        let mut document = Document::new("/docs/index.rst".to_string(), Vec::new());
+        document.diagnostics = vec![found(1), found(3)];
+        document.suppressions = vec![Suppression {
+            start_line: 3,
+            end_line: 3,
+            codes: SuppressionCodes::All,
+            file: None,
+        }];
+        let undeclared = [found(2)];
+        let index = uri("file:///docs/index.rst");
+        let reads = FileReads::default();
+        let open = DocumentStore::default();
+        let placement = Placement {
+            uri: &index,
+            text: ".. foo::\n.. foo::\n.. foo::\n",
+            reads: &reads,
+            open: &open,
+        };
+        let rendered = RenderFindings::default();
+
+        // When
+        let shown = shown_findings(
+            &document,
+            &rendered,
+            &Strictness::default(),
+            &placement,
+            PositionEncoding::Utf16,
+        );
+        let published = to_lsp_diagnostics(
+            &document,
+            &SourceMap::default(),
+            &undeclared,
+            &rendered,
+            &Strictness::default(),
+            &placement,
+            PositionEncoding::Utf16,
+        );
+
+        // Then — the one shown that a comment could silence
+        let lines: Vec<u32> = shown.iter().map(|found| found.range.start.line).collect();
+        assert_eq!(lines, [0]);
+        assert_eq!(published[&index].len(), 2);
     }
 
     #[test]

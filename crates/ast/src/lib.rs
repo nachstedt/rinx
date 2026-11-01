@@ -188,7 +188,9 @@ pub use source_map::SourceMap;
 pub use spacing::{InvalidSpacing, Spacing, SpacingKind, SpacingValue};
 pub use span::{FileId, Position, Span};
 pub use substitution::{SubstitutionDefinition, SubstitutionKind, TrimSides};
-pub use suppression::{Reported, Suppression, SuppressionCodes, is_suppressed, retain_reportable};
+pub use suppression::{
+    Reported, Suppression, SuppressionCodes, SuppressionSite, is_suppressed, retain_reportable,
+};
 pub use syntax::{
     BlockKind, SyntaxBlock, SyntaxTable, SyntaxToken, TokenKind, TokenModifier, TokenModifiers,
 };

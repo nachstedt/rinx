@@ -68,6 +68,23 @@ check(
   diagnostics
 )
 
+-- The unknown directive's quick fix writes a `.. noqa:` on the line above it.
+local actions = request('textDocument/codeAction', {
+  textDocument = { uri = uri },
+  range = { start = { line = 9, character = 0 }, ['end'] = { line = 9, character = 0 } },
+  context = { diagnostics = vim.lsp.diagnostic.from(diagnostics) },
+}) or {}
+local fix = actions[1] or {}
+local edits = fix.edit and fix.edit.changes and fix.edit.changes[uri] or {}
+check(
+  'the quick fix writes a noqa comment',
+  fix.title == 'Suppress directive.unknown with .. noqa:'
+    and #edits == 1
+    and edits[1].range.start.line == 9
+    and edits[1].newText == '.. noqa: directive.unknown\n\n',
+  actions
+)
+
 -- Hover on `:ref:` names the section in target.rst, which only the scan knows.
 local hover = request_until_answered('textDocument/hover', at(7, 4))
 local markdown = hover and hover.contents and hover.contents.value or ''

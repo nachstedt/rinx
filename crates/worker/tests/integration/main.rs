@@ -19,6 +19,7 @@ mod lsp_client;
 mod lsp_parity;
 mod named_references;
 mod needs_schema;
+mod noqa_quick_fix;
 mod numref_role;
 mod pipeline_basics;
 mod reference_matching;

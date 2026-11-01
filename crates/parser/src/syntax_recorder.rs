@@ -11,8 +11,8 @@
 use std::cell::RefCell;
 
 use rinx_ast::{
-    BlockId, BlockKind, NameId, SourceMap, Span, SyntaxBlock, SyntaxToken, TokenKind,
-    TokenModifiers,
+    BlockId, BlockKind, NameId, SourceMap, Span, SuppressionSite, SyntaxBlock, SyntaxToken,
+    TokenKind, TokenModifiers,
 };
 
 /// One document's source map, as it fills.
@@ -50,6 +50,11 @@ impl SyntaxRecorder {
     /// carry.
     pub(crate) fn block_lines(&self, lines: Span) -> BlockId {
         self.map.borrow_mut().record_block_lines(lines)
+    }
+
+    /// Records a block a `.. noqa:` written before it would cover.
+    pub(crate) fn suppression_site(&self, site: SuppressionSite) {
+        self.map.borrow_mut().record_suppression_site(site);
     }
 
     /// What was recorded.
@@ -91,6 +96,22 @@ mod tests {
         let map = recorder.into_source_map();
         assert_eq!(map.block_lines(first), Some(span(1)));
         assert_eq!(map.block_lines(second), Some(span(4)));
+    }
+
+    #[test]
+    fn test_recorder_keeps_each_suppression_site() {
+        // Given
+        let recorder = SyntaxRecorder::default();
+        let site = SuppressionSite {
+            block: span(3),
+            comment: Some(span(1)),
+        };
+
+        // When
+        recorder.suppression_site(site);
+
+        // Then
+        assert_eq!(recorder.into_source_map().suppression_sites(), [site]);
     }
 
     fn span(line: u32) -> Span {
