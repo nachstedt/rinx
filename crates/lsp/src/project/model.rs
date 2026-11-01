@@ -19,7 +19,7 @@ use rinx_analyzer::IndexSettings;
 use rinx_ast::{Domain, ResolvedLanguage};
 use rinx_entity::EntitySchema;
 use rinx_index::DomainIndex;
-use rinx_parser::DefaultRole;
+use rinx_parser::{DefaultRole, ParserConfig};
 use rinx_renderer::config::SiteConfig;
 
 use super::declarations::BuildDeclarations;
@@ -79,6 +79,9 @@ pub struct ParseSettings {
     pub prolog: Option<Splice>,
     /// The text parsed at the end of every document — `rst_epilog`.
     pub epilog: Option<Splice>,
+    /// What the project's `rinx_parser.toml` tells the parser: a Bazel
+    /// library's `parse_config`, else the file beside `conf.py`.
+    pub config: ParserConfig,
     /// The entity vocabulary documents are parsed against — converted from
     /// the project's sphinx-needs configuration. Shared, since every parse
     /// and the project's index read the one schema.
@@ -107,6 +110,7 @@ impl Default for ParseSettings {
             default_role: DefaultRole::TITLE_REFERENCE,
             prolog: None,
             epilog: None,
+            config: ParserConfig::default(),
             schema: Arc::new(EntitySchema::empty()),
             import_keys: BTreeMap::new(),
             parse_data: None,

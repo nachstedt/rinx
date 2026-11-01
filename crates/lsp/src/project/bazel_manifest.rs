@@ -38,7 +38,7 @@ use rinx_ast::{Diagnostic, DiagnosticCode, Domain, Position, Span};
 use rinx_entity::EntitySchema;
 use rinx_index::{DomainIndex, UnknownDomainIndex};
 use rinx_inventory::InventoryName;
-use rinx_parser::{DefaultRole, ParseCtx};
+use rinx_parser::{DefaultRole, ParseCtx, ParserConfig, load_parser_config};
 use rinx_renderer::config::SiteConfig;
 use rinx_toctree::DeclaredDocuments;
 use serde::Deserialize;
@@ -218,6 +218,9 @@ struct ManifestLibrary {
     rst_prolog: Option<ManifestFile>,
     rst_epilog: Option<ManifestFile>,
     entity_schema: Option<ManifestFile>,
+    /// Its `parse_config`, the `rinx_parser.toml` every parse action reads.
+    #[serde(default)]
+    parse_config: Option<ManifestFile>,
 }
 
 /// A file the manifest names, as `rules/lsp_manifest.bzl`'s `lsp_file`
@@ -474,6 +477,7 @@ impl Reader<'_> {
                 default_role,
                 prolog: self.splice(library.rst_prolog.as_ref()),
                 epilog: self.splice(library.rst_epilog.as_ref()),
+                config: self.parser_config(&library.label, library.parse_config.as_ref()),
                 schema,
                 import_keys,
                 parse_data: Some(parse_data),
@@ -540,6 +544,25 @@ impl Reader<'_> {
         let schema = Arc::new(schema);
         self.schemas.insert(path, Arc::clone(&schema));
         schema
+    }
+
+    /// The parse configuration in `file`, or the empty one without a file
+    /// or when it cannot be loaded — which fails the build, so is reported.
+    fn parser_config(&mut self, label: &str, file: Option<&ManifestFile>) -> ParserConfig {
+        let Some(file) = file else {
+            return ParserConfig::default();
+        };
+        let Some(text) = self.read_file(file) else {
+            return ParserConfig::default();
+        };
+        load_parser_config(&text).unwrap_or_else(|errors| {
+            self.invalid(format!(
+                "`{label}`'s parse config `{}` is invalid: {}; it ignores no role",
+                file.as_written(),
+                errors.join("; ")
+            ));
+            ParserConfig::default()
+        })
     }
 
     /// The prolog or epilog in `file`, named by it.
@@ -923,6 +946,80 @@ mod tests {
         assert_eq!(settings.strictness, Strictness::Rinx);
         assert!(settings.strict_links);
         assert_eq!(settings.parse.declarations, None);
+    }
+
+    #[test]
+    fn test_a_librarys_parse_config_is_read_and_watched() {
+        // Given
+        let text = manifest(
+            vec![library(
+                "//a:docs",
+                &["a/index.rst"],
+                json!({"parse_config": {"source": "a/rinx_parser.toml"}}),
+            )],
+            json!({}),
+        );
+
+        // When
+        let reading = read(
+            &text,
+            &[
+                CONFIG,
+                ("/work/a/rinx_parser.toml", "ignored_roles = [\"gh\"]\n"),
+            ],
+        );
+
+        // Then
+        let settings = reading.model.parse_settings(Some("a/index.rst"));
+        assert!(settings.config.ignored_roles.contains("gh"));
+        assert!(
+            reading
+                .model
+                .settings
+                .config_files
+                .contains(&PathBuf::from("/work/a/rinx_parser.toml"))
+        );
+    }
+
+    #[test]
+    fn test_an_invalid_parse_config_is_reported_and_ignores_nothing() {
+        // Given
+        let text = manifest(
+            vec![library(
+                "//a:docs",
+                &["a/index.rst"],
+                json!({"parse_config": {"source": "a/rinx_parser.toml"}}),
+            )],
+            json!({}),
+        );
+
+        // When
+        let reading = read(
+            &text,
+            &[
+                CONFIG,
+                ("/work/a/rinx_parser.toml", "ignored_roles = [\"ref\"]\n"),
+            ],
+        );
+
+        // Then
+        assert!(
+            reading
+                .model
+                .parse_settings(Some("a/index.rst"))
+                .config
+                .ignored_roles
+                .iter()
+                .next()
+                .is_none()
+        );
+        assert!(
+            reading.findings.iter().any(|finding| finding.code
+                == DiagnosticCode::BazelInvalidSetting
+                && finding.message.contains("`//a:docs`'s parse config")),
+            "{:?}",
+            reading.findings
+        );
     }
 
     #[test]

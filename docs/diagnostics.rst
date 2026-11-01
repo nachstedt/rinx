@@ -2052,6 +2052,13 @@ A setting ``conf.py`` computed, when run, to a value with no literal spelling �
 an object, a function — which the editor cannot take: the setting keeps its
 default.
 
+conf.parser-config-invalid
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``rinx_parser.toml`` beside ``conf.py`` could not be read, or holds what it
+does not take — an unknown key, a role it cannot ignore. The editor reads the
+project as if there were none.
+
 bazel
 -----
 

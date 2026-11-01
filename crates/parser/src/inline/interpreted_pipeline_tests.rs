@@ -523,3 +523,89 @@ fn test_parse_restores_title_reference_rather_than_the_configured_default() {
         vec![Node::paragraph(vec![title("a")])]
     );
 }
+
+/// The inline content of the only paragraph of `input`, parsed under a
+/// parse configuration ignoring `ignored`.
+fn paragraph_ignoring(input: &str, ignored: &[&str]) -> Vec<InlineNode> {
+    let config = crate::ParserConfig {
+        ignored_roles: crate::IgnoredRoles::new(
+            ignored.iter().map(|name| (*name).to_string()).collect(),
+        )
+        .unwrap(),
+    };
+    let ctx = crate::ParseCtx::with_domain(rinx_ast::Domain::Py).with_parser_config(&config);
+    let doc = crate::parse("test.rst", input, &ctx).document;
+    match crate::unplaced(&doc).nodes.into_iter().next() {
+        Some(Node::Paragraph { content, .. }) => content,
+        other => panic!("{other:?}"),
+    }
+}
+
+#[test]
+fn test_parse_shows_an_ignored_role_before_the_text_as_its_text() {
+    // Given / When
+    let inlines = paragraph_ignoring(
+        "See :issue:`123` and :cite:p:`knuth`.",
+        &["issue", "cite:p"],
+    );
+
+    // Then
+    assert_eq!(
+        inlines,
+        vec![
+            text("See "),
+            text("123"),
+            text(" and "),
+            text("knuth"),
+            text("."),
+        ]
+    );
+}
+
+#[test]
+fn test_parse_shows_an_ignored_role_after_the_text_as_its_text() {
+    // Given / When
+    let inlines = paragraph_ignoring("See `123`:issue: now.", &["issue"]);
+
+    // Then
+    assert_eq!(inlines, vec![text("See "), text("123"), text(" now.")]);
+}
+
+#[test]
+fn test_parse_leaves_a_role_not_ignored_as_written() {
+    // Given / When
+    let inlines = paragraph_ignoring("See :gh:`123`.", &["issue"]);
+
+    // Then
+    assert_eq!(inlines, vec![text("See "), text(":gh:`123`"), text(".")]);
+}
+
+#[test]
+fn test_parse_prefers_a_defined_role_over_an_ignored_one() {
+    // Given — a `.. role::` of the same name, which the document asks for
+    let input = ".. role:: issue(code)\n\nSee :issue:`123`.\n";
+
+    // When
+    let inlines = paragraph_ignoring(input, &["issue"]);
+
+    // Then
+    assert!(
+        matches!(&inlines[1], InlineNode::Code { text, .. } if text == "123"),
+        "{inlines:?}"
+    );
+}
+
+#[test]
+fn test_parse_reads_a_role_of_an_unknown_domain_whole() {
+    // Given — read as text then `:class:` before roles could carry a domain
+    let input = "A :cpp:class:`X` here.";
+
+    // When
+    let inlines = paragraph(input);
+
+    // Then
+    assert_eq!(
+        inlines,
+        vec![text("A "), text(":cpp:class:`X`"), text(" here.")]
+    );
+}

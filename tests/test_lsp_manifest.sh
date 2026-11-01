@@ -43,6 +43,8 @@ check(libraries["//examples/default_role:configured_docs"]["default_role"] == "a
 check(libraries["//examples/team_a:docs"]["default_domain"] == "c", "team_a's domain is not 'c'")
 check(libraries["//examples/rst_prolog:docs"]["rst_prolog"] == {"source": "examples/rst_prolog/prolog.rst"},
       "rst_prolog's prolog is not recorded")
+check(libraries["//examples/ignored_roles:docs"]["parse_config"] == {"source": "examples/ignored_roles/rinx_parser.toml"},
+      "ignored_roles' parse_config is not recorded")
 check(libraries["//examples/entities:docs"]["entity_schema"] == {"source": "examples/entities/entities.toml"},
       "the entities library's schema is not recorded")
 check(libraries["//examples/jinja:docs"]["jinja"], "the jinja library is not recorded as templated")

@@ -1213,6 +1213,10 @@ diagnostic_codes! {
     /// spelling — an object, a function — which the editor cannot take: the
     /// setting keeps its default.
     ConfUnrepresentableValue => "conf.unrepresentable-value",
+    /// The `rinx_parser.toml` beside `conf.py` could not be read, or holds
+    /// what it does not take — an unknown key, a role it cannot ignore. The
+    /// editor reads the project as if there were none.
+    ConfParserConfigInvalid => "conf.parser-config-invalid",
 
     // --- Reading a Bazel project's manifest (the editor only) --------------
     /// The language server's manifest of a `rinx_site` — what its

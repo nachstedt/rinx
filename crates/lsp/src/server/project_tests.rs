@@ -329,6 +329,56 @@ fn test_deleting_a_nested_conf_py_gives_its_documents_back_to_the_folder() {
 }
 
 #[test]
+fn test_creating_a_parser_config_beside_conf_py_reads_the_project_again() {
+    // Given
+    let (workspace, mut state) = scanned(
+        "project_parser_config",
+        &[("conf.py", ""), ("index.rst", HOME)],
+    );
+
+    // When
+    workspace.write("rinx_parser.toml", "ignored_roles = [\"issue\"]\n");
+    handle_notification(
+        &mut state,
+        workspace.watched(&[("rinx_parser.toml", FileChangeType::CREATED)]),
+    );
+
+    // Then
+    assert!(
+        project(&mut state, 0)
+            .model()
+            .settings
+            .parse
+            .config
+            .ignored_roles
+            .contains("issue")
+    );
+}
+
+#[test]
+fn test_an_invalid_parser_config_is_reported_in_conf_py() {
+    // Given
+    let workspace = Workspace::new(
+        "project_parser_config_invalid",
+        &[
+            ("conf.py", ""),
+            ("rinx_parser.toml", "ignored_role = []\n"),
+            ("index.rst", HOME),
+        ],
+    );
+    let (mut state, _) = workspace.server(false);
+
+    // When
+    let finished = state.on_scan_event(workspace.scanned());
+
+    // Then
+    assert_eq!(
+        workspace.codes_for(&finished, "conf.py"),
+        Some(vec!["conf.parser-config-invalid".to_string()])
+    );
+}
+
+#[test]
 fn test_fixing_conf_py_clears_what_it_reported() {
     // Given
     let (workspace, mut state) = scanned(

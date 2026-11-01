@@ -53,6 +53,7 @@ Welcome to the Rinx example.
    toctree/index
    contents/index
    default_role/index
+   ignored_roles/index
    rst_prolog/index
    sectnum/index
    dropdown/index

@@ -1,0 +1,4 @@
+# The roles this library's documents write that rinx does not implement — a
+# Sphinx extension of the project's own would provide them. Each is shown as
+# its text.
+ignored_roles = ["issue", "cite:p"]
