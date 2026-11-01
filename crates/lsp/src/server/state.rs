@@ -42,9 +42,10 @@
 use lsp_server::{Message, Request, RequestId, Response};
 use lsp_types::request::{RegisterCapability, Request as _};
 use lsp_types::{
-    CodeAction, CompletionList, CompletionResponse, DidChangeWatchedFilesRegistrationOptions,
-    FileChangeType, FileEvent, FileSystemWatcher, FoldingRange, GlobPattern,
-    GotoDefinitionResponse, Hover, Range, Registration, RegistrationParams, SemanticTokens, Uri,
+    CodeAction, CodeActionKind, CompletionList, CompletionResponse,
+    DidChangeWatchedFilesRegistrationOptions, FileChangeType, FileEvent, FileSystemWatcher,
+    FoldingRange, GlobPattern, GotoDefinitionResponse, Hover, Range, Registration,
+    RegistrationParams, SemanticTokens, Uri,
 };
 use rinx_ast::{EntityId, TargetName};
 use rinx_index::DefinitionKey;
@@ -64,7 +65,7 @@ use super::inventories::InventoryFetches;
 use super::projects::ProjectId;
 use super::renames::EditShape;
 use super::scan::ScanEvent;
-use crate::code_action::quick_fixes;
+use crate::code_action::{NoqaFix, dependency_fixes, noqa_fixes};
 use crate::completion::{
     DirectiveContext, DirectiveVocabulary, ItemStyle, PLACEHOLDER, RoleContext, RoleVocabulary,
     TargetQuestion, TextFormat, WrittenRole, directive_at, directive_items, identity_marker_line,
@@ -73,7 +74,8 @@ use crate::completion::{
 };
 use crate::definition::{line_link, reference_definition, site_location, target_location};
 use crate::diagnostics::{
-    ParsedSource, diagnose_source, parse_prefix, parse_source, text_through_line,
+    ParsedSource, Placement, diagnose_source, parse_prefix, parse_source, shown_findings,
+    text_through_line,
 };
 use crate::document_symbol::{DocumentSymbols, FlatSymbol, OutlineShape, document_symbols};
 use crate::documents::DocumentStore;
@@ -961,26 +963,90 @@ impl ServerState {
         })
     }
 
+    /// The quick fixes for what the document `uri` shows within `range`:
+    /// its [`Self::build_fixes`], then a `.. noqa:` for anything else.
+    pub(super) fn code_actions(&self, uri: &Uri, range: Range) -> Vec<CodeAction> {
+        let mut actions = self.build_fixes(uri, range);
+        actions.extend(self.noqa_actions(uri, range));
+        actions
+    }
+
     /// The quick fixes for what the document `uri` fails the build on within
     /// `range`, from its latest parse — none for a document the server does
     /// not track or that is in no Bazel project.
     ///
     /// A build file is read from the disk: the server is never sent one's
     /// buffer, so an unsaved edit to it is not seen.
-    pub(super) fn code_actions(&self, uri: &Uri, range: Range) -> Vec<CodeAction> {
+    pub(super) fn build_fixes(&self, uri: &Uri, range: Range) -> Vec<CodeAction> {
         let Some(tracked) = self.tracked.get(uri) else {
             return Vec::new();
         };
         let Some(project) = tracked.project.and_then(|id| self.projects.get(&id)) else {
             return Vec::new();
         };
-        quick_fixes(
+        dependency_fixes(
             &tracked.parsed,
             project.model(),
             range,
             self.encoding,
             &|path| std::fs::read_to_string(path).ok(),
         )
+    }
+
+    /// The actions writing a `.. noqa:` for each finding the file `uri` shows
+    /// within `range` that one can silence — found by the documents whose
+    /// diagnosis it shows, itself or those including it, from the parse and
+    /// render whose findings were published.
+    fn noqa_actions(&self, uri: &Uri, range: Range) -> Vec<CodeAction> {
+        let mut fixes: Vec<NoqaFix> = Vec::new();
+        for producer in self.graph.shown_from(uri) {
+            let Some(tracked) = self.tracked.get(&producer) else {
+                continue;
+            };
+            let parsed = &tracked.parsed;
+            let placement = Placement {
+                uri: &producer,
+                text: &parsed.text,
+                reads: &parsed.reads,
+                open: &self.documents,
+            };
+            let found = self.diagnosed_with(tracked, |rendered, strictness| {
+                let findings = shown_findings(
+                    &parsed.document,
+                    rendered,
+                    strictness,
+                    &placement,
+                    self.encoding,
+                );
+                noqa_fixes(
+                    &findings,
+                    parsed.source_map.suppression_sites(),
+                    &|file| placement.file_text(&parsed.document, file),
+                    uri,
+                    range,
+                    self.encoding,
+                )
+            });
+            for fix in found {
+                // Two documents including one fragment offer one fix twice.
+                if !fixes.iter().any(|known| known.edit == fix.edit) {
+                    fixes.push(fix);
+                }
+            }
+        }
+        fixes
+            .into_iter()
+            .filter_map(|fix| {
+                let path = file_path(&fix.uri)?;
+                Some(CodeAction {
+                    title: fix.title,
+                    kind: Some(CodeActionKind::QUICKFIX),
+                    diagnostics: Some(fix.diagnostics),
+                    edit: Some(self.workspace_edit(BTreeMap::from([(path, vec![fix.edit])]))),
+                    ..CodeAction::default()
+                })
+            })
+            .collect()
     }
 
     /// The definition of the reference, the id in a relation option, or the
@@ -1604,6 +1670,30 @@ impl ServerState {
         let Some(tracked) = self.tracked.get(uri) else {
             return self.graph.forget(uri);
         };
+        let mut diagnosis = self.diagnosed_with(tracked, |rendered, strictness| {
+            diagnose_source(
+                uri,
+                &tracked.parsed,
+                rendered,
+                strictness,
+                &self.documents,
+                self.encoding,
+            )
+        });
+        if self.documents.get(uri).is_none() {
+            diagnosis.by_uri.remove(uri);
+        }
+        self.graph.record(uri.clone(), diagnosis)
+    }
+
+    /// `diagnose` called with what the tracked document is diagnosed with
+    /// besides its parse: what rendering found (nothing until it is
+    /// rendered), and its project's strictness.
+    fn diagnosed_with<R>(
+        &self,
+        tracked: &TrackedDocument,
+        diagnose: impl FnOnce(&RenderFindings, &Strictness) -> R,
+    ) -> R {
         let unrendered = RenderFindings::default();
         let rendered = tracked
             .rendered
@@ -1616,18 +1706,7 @@ impl ServerState {
             .project
             .and_then(|project| self.projects.get(&project))
             .map_or(&default_strictness, Project::strictness);
-        let mut diagnosis = diagnose_source(
-            uri,
-            &tracked.parsed,
-            rendered,
-            strictness,
-            &self.documents,
-            self.encoding,
-        );
-        if self.documents.get(uri).is_none() {
-            diagnosis.by_uri.remove(uri);
-        }
-        self.graph.record(uri.clone(), diagnosis)
+        diagnose(rendered, strictness)
     }
 
     /// Whether a document the server shows has not been rendered against its

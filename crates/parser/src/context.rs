@@ -18,7 +18,8 @@
 use std::collections::BTreeMap;
 
 use rinx_ast::{
-    BlockId, BlockKind, Domain, EntityId, FileId, NameId, Position, Span, TokenKind, TokenModifiers,
+    BlockId, BlockKind, Domain, EntityId, FileId, NameId, Position, Span, SuppressionSite,
+    TokenKind, TokenModifiers,
 };
 use rinx_entity::{EntitySchema, EntityType};
 
@@ -284,6 +285,10 @@ pub struct ParseCtx<'a> {
     /// forbids titles where it is entered, with
     /// [`Self::without_section_titles`].
     section_titles: SectionTitles,
+    /// Whether a block parsed here is one a `.. noqa:` could be written
+    /// before — not inside a table's cell, whose lines are rows of the
+    /// table. See [`Self::in_table_cell`].
+    writable_suppressions: bool,
 }
 
 /// The map a context built without a schema points at.
@@ -336,6 +341,7 @@ impl<'a> ParseCtx<'a> {
             include_stack: &[],
             template_map: None,
             section_titles: SectionTitles::Allowed,
+            writable_suppressions: true,
         }
     }
 
@@ -404,6 +410,14 @@ impl<'a> ParseCtx<'a> {
     /// came from no source line.
     pub(crate) fn record_block_lines(&self, lines: Option<Span>) -> Option<BlockId> {
         Some(self.syntax?.block_lines(lines?))
+    }
+
+    /// Records a block a `.. noqa:` written before it would cover, when this
+    /// parse records a source map and a comment can be written here.
+    pub(crate) fn record_suppression_site(&self, site: SuppressionSite) {
+        if let (Some(syntax), true) = (self.syntax, self.writable_suppressions) {
+            syntax.suppression_site(site);
+        }
     }
 
     /// The roles the document has defined so far, or `None` when this parse
@@ -552,6 +566,17 @@ impl<'a> ParseCtx<'a> {
     #[must_use]
     pub(crate) fn without_section_titles(&self) -> Self {
         self.with_section_titles(SectionTitles::Forbidden)
+    }
+
+    /// The context for a table cell's content, before whose blocks no
+    /// `.. noqa:` can be written: a line added there would be a line of the
+    /// table. A comment before the table covers them.
+    #[must_use]
+    pub(crate) fn in_table_cell(&self) -> Self {
+        Self {
+            writable_suppressions: false,
+            ..*self
+        }
     }
 
     /// The context for parsing the body of a `.. grid::`, in which a
@@ -727,6 +752,7 @@ impl<'a> ParseCtx<'a> {
             // A fragment's titles are allowed exactly where the `.. include::`
             // stands allows them: the splice is transparent.
             section_titles: self.section_titles,
+            writable_suppressions: self.writable_suppressions,
         }
     }
 

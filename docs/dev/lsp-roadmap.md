@@ -41,8 +41,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   #348, #351 and #353), #26 (PRs #358 and #362, prepared by #357) and
   #27 (PR #365, prepared by #363), #28 (PR #374), #29 (PR #378), #30 (PR #386),
   #31 (PR #393, prepared by #387 and #390), #32 (PR #395), #33 and #34
-  (prepared by #398, #400, #401 and #407).
-- **Next: #35, quick fix: add `.. noqa:`.**
+  (prepared by #398, #400, #401 and #407), #35.
+- **Next: #36, "rinx: Analyse project".**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -1310,12 +1310,30 @@ Not done here:
 - A block an `.. include::` brings in names no line, so the preview is
   scrolled across it from its neighbours (issue #409).
 
-### 35. Quick fix: add `.. noqa:`
+### 35. Quick fix: add `.. noqa:` ✅
 
 **You experience:** any squiggle can be suppressed with one click.
 
 - Code action inserting the suppression at the right place under the noqa scoping rules
 - Tests
+
+The parser records each block a `.. noqa:` written before it would cover
+(`rinx_ast::SuppressionSite`, in the `SourceMap`), where it resolves a
+written comment onto its block, and both build their suppression the same
+way. The fix (`code_action/noqa.rs`) writes `.. noqa: <code>` before the
+innermost such block that only its indentation precedes, or adds the code to
+a listed `.. noqa:` already there; a list item's first block and a table cell
+fall back to the list or table. It is offered for what the editor shows and a
+comment silences — not for what fails the build because a library did not
+declare it, nor for a finding with no line — in a fragment as well, edited in
+the fragment. `rinx lsp --check` keeps listing only the fixes of the build.
+`crates/worker/tests/integration/noqa_quick_fix.rs` applies the fix to every
+finding of its fixtures over stdio and checks the finding is gone.
+
+Not done here:
+- A `noqa.unknown-code` finding stands on the comment, which no comment
+  covers, so it is offered no fix; correcting the id would be one
+  (issue #411).
 
 ---
 

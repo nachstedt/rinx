@@ -136,6 +136,20 @@ The workspace scan may still be running when it is first asked."
       (should (equal (rinx-test--rename-edits edit)
                      '("index.rst:7:10=setup" "target.rst:0:4=setup"))))))
 
+(ert-deftest rinx-eglot-offers-a-noqa-for-the-unknown-directive ()
+  (rinx-test--with-index
+    (let* ((at '(:line 9 :character 0))
+           (actions (rinx-test--request
+                     :textDocument/codeAction
+                     `(:textDocument ,(plist-get (rinx-test--at 9 0) :textDocument)
+                       :range (:start ,at :end ,at)
+                       :context (:diagnostics []))))
+           (fix (aref actions 0)))
+      (should (equal (plist-get fix :title) "Suppress directive.unknown with .. noqa:"))
+      ;; Written on the directive's line, which it moves down.
+      (should (equal (rinx-test--rename-edits (plist-get fix :edit))
+                     '("index.rst:9:0=.. noqa: directive.unknown\n\n"))))))
+
 (ert-deftest rinx-eglot-completes-the-label ()
   (rinx-test--with-index
     (let* ((completion (rinx-test--request :textDocument/completion (rinx-test--at 7 10)))

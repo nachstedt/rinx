@@ -398,6 +398,24 @@ mod noqa_tests {
         parse_document("test.rst", input).suppressions
     }
 
+    /// Each block `input` records a `.. noqa:` could be written before, as
+    /// its first line and column, last line, and the line of the comment a
+    /// code may be added to.
+    fn sites(input: &str) -> Vec<(u32, u32, u32, Option<u32>)> {
+        crate::blocks::parse_source_map("test.rst", input)
+            .suppression_sites()
+            .iter()
+            .map(|site| {
+                (
+                    site.block.start.line,
+                    site.block.start.column,
+                    site.block.end.line,
+                    site.comment.map(|comment| comment.start.line),
+                )
+            })
+            .collect()
+    }
+
     // --- parse_noqa_comment ---
 
     #[test]
@@ -611,5 +629,99 @@ mod noqa_tests {
             3
         );
         assert!(reported[0].message.contains("nope"));
+    }
+
+    // --- the sites an editor writes a suppression at ---
+
+    #[test]
+    fn test_every_top_level_block_is_a_site_but_a_comment() {
+        // Given / When
+        let found = sites("Title\n=====\n\n.. a comment\n\nA paragraph\nof two lines.\n");
+
+        // Then
+        assert_eq!(found, [(1, 1, 2, None), (6, 1, 7, None)]);
+    }
+
+    #[test]
+    fn test_a_directive_bodys_blocks_are_sites_at_the_bodys_column() {
+        // Given / When
+        let found = sites(".. note::\n\n   Inside.\n");
+
+        // Then — the body's paragraph first, then the directive holding it
+        assert_eq!(found, [(3, 4, 3, None), (1, 1, 3, None)]);
+    }
+
+    #[test]
+    fn test_a_list_items_first_block_is_a_site_after_its_marker() {
+        // Given / When
+        let found = sites("- First.\n\n  Second.\n");
+
+        // Then — the first paragraph shares its line with the marker
+        assert!(found.contains(&(1, 3, 1, None)), "{found:?}");
+        assert!(found.contains(&(3, 3, 3, None)), "{found:?}");
+        assert!(found.contains(&(1, 1, 3, None)), "{found:?}");
+    }
+
+    #[test]
+    fn test_a_block_quotes_blocks_are_sites_at_its_indentation() {
+        // Given / When
+        let found = sites("Text.\n\n   Quoted.\n");
+
+        // Then — the quote itself starts at the outer level's column
+        assert!(found.contains(&(3, 4, 3, None)), "{found:?}");
+        assert!(found.contains(&(3, 1, 3, None)), "{found:?}");
+    }
+
+    #[test]
+    fn test_a_tables_cells_are_no_sites() {
+        // Given / When
+        let found = sites("=====  =====\nA      B\n=====  =====\n");
+
+        // Then — only the table itself takes a comment
+        assert_eq!(found, [(1, 1, 3, None)]);
+    }
+
+    #[test]
+    fn test_a_grid_tables_cells_are_no_sites() {
+        // Given / When
+        let found = sites("+---+\n| A |\n+---+\n");
+
+        // Then
+        assert_eq!(found, [(1, 1, 3, None)]);
+    }
+
+    #[test]
+    fn test_a_site_names_the_last_listed_noqa_written_before_it() {
+        // Given / When
+        let found = sites(".. noqa: link.broken-ref\n\n.. noqa\n\nA paragraph.\n");
+
+        // Then — the bare one takes no further code
+        assert_eq!(found, [(5, 1, 5, Some(1))]);
+    }
+
+    #[test]
+    fn test_a_site_with_only_a_bare_noqa_names_no_comment() {
+        // Given / When
+        let found = sites(".. noqa\n\nA paragraph.\n");
+
+        // Then
+        assert_eq!(found, [(3, 1, 3, None)]);
+    }
+
+    #[test]
+    fn test_a_sites_suppression_is_the_one_the_parser_records() {
+        // Given
+        let input = ".. noqa: link.broken-ref\n\nA paragraph.\n";
+
+        // When
+        let map = crate::blocks::parse_source_map("test.rst", input);
+        let recorded = suppressions(input);
+
+        // Then
+        assert_eq!(
+            [map.suppression_sites()[0]
+                .suppression(SuppressionCodes::Only(vec![DiagnosticCode::LinkBrokenRef]))],
+            recorded.as_slice()
+        );
     }
 }

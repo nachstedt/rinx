@@ -38,7 +38,7 @@ fn site_manifest(deps: &[&str]) -> String {
 }
 
 /// The code actions `state` offers for the cursor on `line` of `file`.
-fn actions_at(
+pub(super) fn actions_at(
     state: &mut ServerState,
     workspace: &Workspace,
     file: &str,
@@ -67,7 +67,7 @@ fn actions_at(
 }
 
 /// `text` with `edits` applied, each a range of ASCII text.
-fn apply(text: &str, edits: &[TextEdit]) -> String {
+pub(super) fn apply(text: &str, edits: &[TextEdit]) -> String {
     let offset = |position: lsp_types::Position| {
         let line_start: usize = text
             .split_inclusive('\n')

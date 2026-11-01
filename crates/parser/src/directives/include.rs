@@ -465,6 +465,24 @@ mod tests {
     }
 
     #[test]
+    fn test_an_included_block_is_a_suppression_site_in_its_file() {
+        // Given / When
+        let map = parse_source_map(
+            &[("shared.rst", "\n\nFrom the fragment.\n")],
+            "Before.\n\n.. include:: shared.rst\n",
+        );
+
+        // Then — a `.. noqa:` covering it is written in the fragment
+        let in_fragment: Vec<u32> = map
+            .suppression_sites()
+            .iter()
+            .filter(|site| site.block.file.is_some())
+            .map(|site| site.block.start.line)
+            .collect();
+        assert_eq!(in_fragment, [3]);
+    }
+
+    #[test]
     fn test_a_role_defined_in_a_fragment_applies_after_the_include() {
         // Given a fragment defining a role, as docutils would apply it
         let document = parse_document(

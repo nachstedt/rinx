@@ -5,7 +5,7 @@ Other editors
 
 The language server is the ``rinx`` binary itself, run as ``rinx lsp``. It speaks the Language Server Protocol over standard input and output, so any editor with a language client can use it. The :ref:`VS Code extension <vscode>` is one such client. This page configures three others: Neovim, Helix and Emacs.
 
-Each configuration below is a file in the repository, under ``editors/``, and continuous integration runs every one in its editor against the server. Neovim and Emacs are checked for diagnostics, hover, go to definition, find references, rename, the outline, the workspace search, folding, coloured names, and completion of references, domain objects, directives and role names. Helix, which cannot be scripted, is checked for finding the server and showing its diagnostics.
+Each configuration below is a file in the repository, under ``editors/``, and continuous integration runs every one in its editor against the server. Neovim and Emacs are checked for diagnostics, the quick fix writing a ``.. noqa:``, hover, go to definition, find references, rename, the outline, the workspace search, folding, coloured names, and completion of references, domain objects, directives and role names. Helix, which cannot be scripted, is checked for finding the server, showing its diagnostics and offering the quick fix.
 
 Installing the server
 ---------------------
@@ -61,6 +61,7 @@ The server behaves the same in every editor. :ref:`vscode-diagnostics` describes
 - Diagnostics as you type, with the build's codes and messages, linking to :ref:`diagnostics`. This includes the problems an ``.. include::`` brings in, and broken references once you pause.
 - Completion of every role's targets — labels, documents, terms, numbers, equations, options, domain objects and entity ids, and the targets of loaded inventories — of directive names, options and option values, and of role names.
 - Hover, go to definition, find references and rename on references.
+- A quick fix on every diagnostic a ``.. noqa:`` can silence, writing that comment above the block holding it.
 - The document's outline: its sections, with the objects and entities written in them.
 - A search of the workspace's sections, labels, terms, objects and entities (``workspace/symbol``).
 - Folding of sections, directives, comments, literal blocks and tables, and the names the markup writes coloured by kind (semantic tokens). The Neovim snippet above links each kind's highlight group to a standard one; elsewhere, a theme colours ``directive``, ``option``, ``role``, ``reference`` and ``substitution`` tokens as it chooses.

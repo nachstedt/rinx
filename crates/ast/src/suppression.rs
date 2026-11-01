@@ -179,6 +179,42 @@ impl Suppression {
     }
 }
 
+/// A block a `.. noqa:` comment written before it would cover, as the parser
+/// read it — what an editor needs to write one.
+///
+/// Recorded where the parser resolves a pending comment onto its block, and
+/// [`Self::suppression`] is how that resolution builds a [`Suppression`], so
+/// a comment an editor writes before this block silences exactly what the
+/// parser will read it as silencing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SuppressionSite {
+    /// The block's lines and the file they are in: its start is the first
+    /// line, at the column the block's nesting level starts at, and its end
+    /// is on the last line.
+    pub block: Span,
+    /// The first line of the last listed `.. noqa: a, b` written before the
+    /// block, which a further code may be added to — `None` when there is
+    /// none, or only a bare `.. noqa`.
+    pub comment: Option<Span>,
+}
+
+impl SuppressionSite {
+    /// The suppression a comment naming `codes`, written before this block,
+    /// yields.
+    #[must_use]
+    pub fn suppression(&self, codes: SuppressionCodes) -> Suppression {
+        Suppression {
+            start_line: self.block.start.line,
+            end_line: self.block.end.line,
+            codes,
+            // The comment and the block it covers are always in the same
+            // file — an `.. include::` splices whole blocks, never half of
+            // one — so the block's own attribution is the comment's.
+            file: self.block.file,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -499,5 +535,41 @@ mod tests {
 
         // Then
         assert_eq!(suppression, deserialized);
+    }
+
+    /// A site over lines 10–12, its block starting at column 4.
+    fn site_in(file: Option<FileId>) -> SuppressionSite {
+        SuppressionSite {
+            block: Span::new(Position::new(10, 4), Position::new(12, 8)).with_file(file),
+            comment: None,
+        }
+    }
+
+    #[test]
+    fn test_a_sites_suppression_covers_its_block_lines() {
+        // Given
+        let site = site_in(None);
+
+        // When
+        let suppression =
+            site.suppression(SuppressionCodes::Only(vec![DiagnosticCode::LinkBrokenRef]));
+
+        // Then
+        assert_eq!(suppression, only_broken_ref());
+    }
+
+    #[test]
+    fn test_a_sites_suppression_is_in_the_sites_file() {
+        // Given
+        let file = FileId::new(0);
+        let site = site_in(Some(file));
+
+        // When
+        let suppression = site.suppression(SuppressionCodes::All);
+
+        // Then
+        assert_eq!(suppression.file, Some(file));
+        assert!(suppression.suppresses(DiagnosticCode::CsvNoData, Some(span_on_in(12, file))));
+        assert!(!suppression.suppresses(DiagnosticCode::CsvNoData, Some(span_on(12))));
     }
 }

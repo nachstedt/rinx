@@ -61,35 +61,42 @@ impl IncludeGraph {
             .collect()
     }
 
-    /// What to publish for `uri`: what the other open documents reading it
-    /// found there, or, when none does, its own diagnosis.
+    /// The open documents whose diagnosis is what `uri` shows: the other
+    /// open documents reading it, or, when none does, its own.
     #[must_use]
-    pub fn diagnostics_for(&self, uri: &Uri) -> Vec<lsp_types::Diagnostic> {
-        let includers: Vec<&DocumentDiagnosis> = match file_path(uri) {
+    pub fn shown_from(&self, uri: &Uri) -> Vec<Uri> {
+        let includers: Vec<Uri> = match file_path(uri) {
             Some(path) => self
                 .diagnoses
                 .iter()
                 .filter(|(producer, diagnosis)| *producer != uri && diagnosis.reads.contains(&path))
-                .map(|(_, diagnosis)| diagnosis)
+                .map(|(producer, _)| producer.clone())
                 .collect(),
             None => Vec::new(),
         };
-        if includers.is_empty() {
-            return self
-                .diagnoses
-                .get(uri)
+        if includers.is_empty() && self.diagnoses.contains_key(uri) {
+            return vec![uri.clone()];
+        }
+        includers
+    }
+
+    /// What to publish for `uri`: what the other open documents reading it
+    /// found there, or, when none does, its own diagnosis.
+    #[must_use]
+    pub fn diagnostics_for(&self, uri: &Uri) -> Vec<lsp_types::Diagnostic> {
+        let producers = self.shown_from(uri);
+        let found_by = |producer: &Uri| {
+            self.diagnoses
+                .get(producer)
                 .and_then(|diagnosis| diagnosis.by_uri.get(uri))
-                .cloned()
-                .unwrap_or_default();
+        };
+        if producers == [uri.clone()] {
+            return found_by(uri).cloned().unwrap_or_default();
         }
         // Two documents including one fragment find the same mistake in it
         // twice; it is one mistake.
         let mut merged: Vec<lsp_types::Diagnostic> = Vec::new();
-        for found in includers
-            .into_iter()
-            .filter_map(|diagnosis| diagnosis.by_uri.get(uri))
-            .flatten()
-        {
+        for found in producers.iter().filter_map(found_by).flatten() {
             if !merged.contains(found) {
                 merged.push(found.clone());
             }
@@ -183,6 +190,24 @@ mod tests {
 
         // Then
         assert_eq!(shown, Vec::new());
+    }
+
+    #[test]
+    fn test_shown_from_names_the_includers_of_a_fragment() {
+        // Given a fragment open on its own and read by an includer
+        let mut graph = IncludeGraph::default();
+        graph.record(uri(PART), diagnosis(&[(PART, &["standalone"])], &[]));
+        graph.record(uri(INDEX), diagnosis(&[(INDEX, &[])], &["/docs/part.rst"]));
+
+        // When / Then
+        assert_eq!(graph.shown_from(&uri(PART)), [uri(INDEX)]);
+        assert_eq!(graph.shown_from(&uri(INDEX)), [uri(INDEX)]);
+    }
+
+    #[test]
+    fn test_shown_from_names_nothing_for_an_unknown_document() {
+        // Given / When / Then
+        assert_eq!(IncludeGraph::default().shown_from(&uri(PART)), []);
     }
 
     #[test]

@@ -248,7 +248,7 @@ impl ServerState {
 
     /// `edits` as the client takes a workspace edit: versioned per document,
     /// or by URI.
-    fn workspace_edit(&self, edits: BTreeMap<PathBuf, Vec<TextEdit>>) -> WorkspaceEdit {
+    pub(super) fn workspace_edit(&self, edits: BTreeMap<PathBuf, Vec<TextEdit>>) -> WorkspaceEdit {
         let by_uri = edits
             .into_iter()
             .filter_map(|(path, edits)| Some((path.clone(), file_uri(&path)?, edits)));
