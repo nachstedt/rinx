@@ -32,9 +32,11 @@ pub(crate) struct NoqaFix {
 }
 
 /// The `.. noqa:` fixes for what `findings` — the shown findings of one
-/// parse, whose `sites` its source map records — shows in `uri` within
-/// `range`. `file_text` names the file a span's file id points into, and its
-/// text. One fix per block and code, however many findings it silences.
+/// parse, whose `sites` its source map records — shows in `uri` on
+/// the lines of `range` — by line, as a comment silences, so a cursor in an
+/// indentation before the finding is offered it. `file_text` names the file a
+/// span's file id points into, and its text. One fix per block and code,
+/// however many findings it silences.
 pub(crate) fn noqa_fixes<'t>(
     findings: &[Placed<'_>],
     sites: &[SuppressionSite],
@@ -48,7 +50,10 @@ pub(crate) fn noqa_fixes<'t>(
         let Some(span) = found.diagnostic.span else {
             continue;
         };
-        if found.uri != *uri || found.range.end < range.start || range.end < found.range.start {
+        if found.uri != *uri
+            || found.range.end.line < range.start.line
+            || range.end.line < found.range.start.line
+        {
             continue;
         }
         let Some((file, text)) = file_text(span.file).filter(|(file, _)| file == uri) else {
@@ -389,6 +394,22 @@ mod tests {
 
         // Then
         assert_eq!(fixes, []);
+    }
+
+    #[test]
+    fn test_a_cursor_before_the_finding_on_its_line_gets_its_fix() {
+        // Given — the cursor in the indentation before an indented reference
+        let text = ".. note::\n\n   See :ref:`x`.\n";
+        let indentation = Range::new(
+            lsp_types::Position::new(2, 0),
+            lsp_types::Position::new(2, 0),
+        );
+
+        // When
+        let fixes = fixes_in(text, &[found_at(3, 8)], indentation);
+
+        // Then
+        assert_eq!(fixes.len(), 1, "{fixes:?}");
     }
 
     #[test]
