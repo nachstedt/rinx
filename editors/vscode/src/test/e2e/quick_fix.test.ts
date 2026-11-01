@@ -30,9 +30,13 @@ suite('Language server quick fixes (e2e)', () => {
         await waitFor('the unknown directive', () => vscode.languages.getDiagnostics(document.uri).length > 0);
 
         // When
-        const [fix] = await quickFixesAt(document, 4);
-        assert.strictEqual(fix?.title, 'Suppress directive.unknown with .. noqa:');
-        assert.ok(fix.edit, 'the fix carries its edit');
+        // VS Code adds fixes of its own (its chat's "Fix"), so ours is found by title.
+        const fixes = await quickFixesAt(document, 4);
+        const fix = fixes.find((action) => action.title === 'Suppress directive.unknown with .. noqa:');
+        assert.ok(
+            fix?.edit,
+            `the noqa fix with its edit, among ${JSON.stringify(fixes.map((action) => action.title))}`,
+        );
         await vscode.workspace.applyEdit(fix.edit);
 
         // Then — written at the body's indentation, and the squiggle gone
