@@ -252,8 +252,34 @@ resolves against the document, as in Sphinx.</p>
 <code>rst_epilog</code>.</p>
 </td>
 </tr>
+<tr>
+<td><p><code>parse_config</code></p>
+</td>
+<td><p>The library's parse configuration, conventionally
+<code>rinx_parser.toml</code>: what it tells the parser beyond these attributes
+(see <a href="rules.html#parser-config">Parse configuration</a>). Editing it re-parses every document of the
+library, and only that: the site's <code>rinx.toml</code> is a separate file,
+read when rendering.</p>
+</td>
+</tr>
 </tbody>
 </table>
+<a id="parser-config"></a>
+<h3 id="parse-configuration">Parse configuration</h3>
+<p>A <code>rinx_parser.toml</code> holds one setting today:</p>
+<div class="highlight-toml notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-toml"><span class="hl-comment hl-line hl-number-sign hl-toml"><span class="hl-punctuation hl-definition hl-comment hl-toml">#</span> The roles this library&#39;s documents write that rinx does not implement —</span></span>
+<span class="hl-source hl-toml"><span class="hl-comment hl-line hl-number-sign hl-toml"><span class="hl-punctuation hl-definition hl-comment hl-toml">#</span> a Sphinx extension of the project&#39;s own would provide them.</span></span>
+<span class="hl-source hl-toml"><span class="hl-meta hl-tag hl-key hl-toml"><span class="hl-entity hl-name hl-tag hl-toml">ignored_roles</span></span> <span class="hl-punctuation hl-definition hl-key-value hl-toml">=</span> <span class="hl-punctuation hl-definition hl-array hl-begin hl-toml">[</span><span class="hl-string hl-quoted hl-double hl-basic hl-toml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-toml">&quot;</span>issue<span class="hl-punctuation hl-definition hl-string hl-end hl-toml">&quot;</span></span><span class="hl-punctuation hl-separator hl-array hl-toml">,</span> <span class="hl-string hl-quoted hl-double hl-basic hl-toml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-toml">&quot;</span>cite:p<span class="hl-punctuation hl-definition hl-string hl-end hl-toml">&quot;</span></span><span class="hl-punctuation hl-definition hl-array hl-end hl-toml">]</span></span></pre></div>
+</div>
+<p>An ignored role is shown as its text, as docutils shows a role it has no
+meaning for: <code>:issue:`4321`</code> reads <code>4321</code>. A role rinx neither implements
+nor ignores keeps the source it was written as. A role a <code>.. role::</code> defines
+or the entity schema declares is never ignored, and listing a role rinx
+implements, an unknown key or a name no role is written with fails the build.
+The language server reads the same file beside a Sphinx project's <code>conf.py</code>
+(see <a href="vscode.html#vscode">VS Code Extension</a>).</p>
 <h2 id="rinx-site">rinx_site</h2>
 <p>Assembles a site from <code>rinx_library</code> targets: it indexes every document the
 libraries bring in (transitively), renders one page per document, compiles the
