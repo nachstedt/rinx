@@ -1036,15 +1036,12 @@ impl ServerState {
         }
         fixes
             .into_iter()
-            .filter_map(|fix| {
-                let path = file_path(&fix.uri)?;
-                Some(CodeAction {
-                    title: fix.title,
-                    kind: Some(CodeActionKind::QUICKFIX),
-                    diagnostics: Some(fix.diagnostics),
-                    edit: Some(self.workspace_edit(BTreeMap::from([(path, vec![fix.edit])]))),
-                    ..CodeAction::default()
-                })
+            .map(|fix| CodeAction {
+                title: fix.title,
+                kind: Some(CodeActionKind::QUICKFIX),
+                diagnostics: Some(fix.diagnostics),
+                edit: Some(self.document_edit(&fix.uri, vec![fix.edit])),
+                ..CodeAction::default()
             })
             .collect()
     }

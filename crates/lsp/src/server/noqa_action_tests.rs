@@ -3,7 +3,7 @@
 
 use lsp_types::{CodeAction, DocumentChanges, OneOf, TextEdit};
 
-use super::code_action_tests::{actions_at, apply};
+use super::code_action_tests::{actions_at, actions_for, apply};
 use super::renames::EditShape;
 use super::test_support::*;
 
@@ -136,5 +136,42 @@ fn test_a_client_taking_versioned_edits_gets_the_open_documents_version() {
         matches!(&edit.edits[..], [OneOf::Left(_)]),
         "{:?}",
         edit.edits
+    );
+}
+
+#[test]
+fn test_an_untitled_documents_finding_is_suppressed_in_the_buffer() {
+    // Given — a buffer never saved, so with no file
+    let (_workspace, mut state) = scanned("noqa_action_untitled", &[]);
+    let untitled: Uri = "untitled:Untitled-1".parse().expect("valid uri");
+    let text = ".. foo::\n";
+    handle_notification(
+        &mut state,
+        Notification::new(
+            DidOpenTextDocument::METHOD.to_string(),
+            DidOpenTextDocumentParams {
+                text_document: TextDocumentItem::new(
+                    untitled.clone(),
+                    "restructuredtext".to_string(),
+                    1,
+                    text.to_string(),
+                ),
+            },
+        ),
+    );
+
+    // When
+    let actions = actions_for(&mut state, &untitled, 0);
+
+    // Then — the edit names the buffer by its URI
+    assert_eq!(actions.len(), 1, "{actions:?}");
+    let changes = actions[0]
+        .edit
+        .as_ref()
+        .and_then(|edit| edit.changes.clone())
+        .expect("changes by URI");
+    assert_eq!(
+        apply(text, &changes[&untitled]),
+        ".. noqa: directive.unknown\n\n.. foo::\n"
     );
 }
