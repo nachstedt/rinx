@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>quopri — Encode and decode MIME quoted-printable data — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Internet Data Handling"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="email.html">email — An email and MIME handling package</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="json.html">json — JSON encoder and decoder</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mailbox.html">mailbox — Manipulate mailboxes in various formats</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mimetypes.html">mimetypes — Map filenames to MIME types</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="base64.html">base64 — Base16, Base32, Base64, Base85 Data Encodings</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="binascii.html">binascii — Convert between binary and ASCII</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current">
+            <a href="quopri.html">quopri — Encode and decode MIME quoted-printable data</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="binascii.html">&larr; binascii — Convert between binary and ASCII</a>
+        <a class="next" href="markup.html">Structured Markup Processing Tools &rarr;</a>
+      </nav>
+      
+      <h1 id="quopri-encode-and-decode-mime-quoted-printable-data"><code class="xref py module docutils literal">quopri</code> — Encode and decode MIME quoted-printable data</h1>
+<dl class="py module">
+  <dt id="py:module:quopri"><code class="sig-name">quopri</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/quopri.py`</p>
+<span id="index-0"></span>
+<hr />
+<p>This module performs quoted-printable transport encoding and decoding, as
+defined in <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1521.html"><strong>RFC 1521</strong></a>: "MIME (Multipurpose Internet Mail Extensions) Part One:
+Mechanisms for Specifying and Describing the Format of Internet Message Bodies".
+The quoted-printable encoding is designed for data where there are relatively
+few nonprintable characters; the base64 encoding scheme available via the
+<a class="reference internal" href="base64.html#py:module:base64" title="base64: RFC 4648: Base16, Base32, Base64 Data Encodings; Base85 and Ascii85"><code class="xref py module docutils literal">base64</code></a> module is more compact if there are many such characters, as when
+sending a graphics file.</p>
+<dl class="py function">
+  <dt id="py:function:quopri.decode"><code class="sig-name">decode(input, output, header=False)</code></dt>
+  <dd><p>Decode the contents of the <em>input</em> file and write the resulting decoded binary
+data to the <em>output</em> file. <em>input</em> and <em>output</em> must be <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">binary file objects</span></a>.  If the optional argument <em>header</em> is present and true, underscore
+will be decoded as space. This is used to decode "Q"-encoded headers as
+described in <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1522.html"><strong>RFC 1522</strong></a>: "MIME (Multipurpose Internet Mail Extensions)
+Part Two: Message Header Extensions for Non-ASCII Text".</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:quopri.encode"><code class="sig-name">encode(input, output, quotetabs, header=False)</code></dt>
+  <dd><p>Encode the contents of the <em>input</em> file and write the resulting quoted-printable
+data to the <em>output</em> file. <em>input</em> and <em>output</em> must be
+<a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">binary file objects</span></a>. <em>quotetabs</em>, a
+non-optional flag which controls whether to encode embedded spaces
+and tabs; when true it encodes such embedded whitespace, and when
+false it leaves them unencoded.
+Note that spaces and tabs appearing at the end of lines are always encoded,
+as per <span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1521.html"><strong>RFC 1521</strong></a>.  <em>header</em> is a flag which controls if spaces are encoded
+as underscores as per <span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1522.html"><strong>RFC 1522</strong></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:quopri.decodestring"><code class="sig-name">decodestring(s, header=False)</code></dt>
+  <dd><p>Like <a class="reference internal" href="quopri.html#py:function:quopri.decode"><code class="xref py function docutils literal">decode</code></a>, except that it accepts a source <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> and
+returns the corresponding decoded <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:quopri.encodestring"><code class="sig-name">encodestring(s, quotetabs=False, header=False)</code></dt>
+  <dd><p>Like <a class="reference internal" href="quopri.html#py:function:quopri.encode"><code class="xref py function docutils literal">encode</code></a>, except that it accepts a source <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> and
+returns the corresponding encoded <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>. By default, it sends a
+<code>False</code> value to <em>quotetabs</em> parameter of the <a class="reference internal" href="quopri.html#py:function:quopri.encode"><code class="xref py function docutils literal">encode</code></a> function.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>Module <a class="reference internal" href="base64.html#py:module:base64" title="base64: RFC 4648: Base16, Base32, Base64 Data Encodings; Base85 and Ascii85"><code class="xref py module docutils literal">base64</code></a></dt>
+<dd><p>Encode and decode MIME base64 data</p>
+</dd>
+</dl>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="binascii.html">&larr; binascii — Convert between binary and ASCII</a>
+        <a class="next" href="markup.html">Structured Markup Processing Tools &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

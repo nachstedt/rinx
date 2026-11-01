@@ -1,0 +1,13 @@
+[
+  {
+    "version": "v0.1.0",
+    "url": "https://nachstedt.github.io/rinx/v0.1.0/",
+    "name": "v0.1.0 (latest)",
+    "preferred": true
+  },
+  {
+    "version": "main",
+    "name": "main (development)",
+    "url": "https://nachstedt.github.io/rinx/main/"
+  }
+]
