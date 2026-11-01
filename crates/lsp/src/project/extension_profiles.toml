@@ -1,18 +1,18 @@
 # What the Sphinx extensions rinx knows contribute to a document, for the
 # language server's strictness filter (ADR-038 §5). A project's `conf.py`
-# declares its `extensions`; for one listed here, an unknown directive it
-# provides is reported as *Information* rather than as a warning, and a broken
+# declares its `extensions`; for one listed here, an unknown directive or role
+# it provides is reported as *Information* rather than as a warning, and a broken
 # reference into a domain it fills with targets as a *Hint*. An extension
 # missing from this table is assumed to produce targets in every domain, but
-# its directives stay warnings, since nothing says which they are.
+# its directives and roles stay warnings, since nothing says which they are.
 #
 # One `[[extension]]` table per extension, keyed by the module name a
 # `conf.py` writes:
 #
 # - `directives`: the directive names it adds that rinx does not implement.
 #   A directive rinx implements is never unknown, so listing one is refused.
-# - `roles`: the role names it adds. Recorded, but not yet filtered on: rinx
-#   does not report an unknown role.
+# - `roles`: the role names it adds that rinx does not implement, domain
+#   prefix included (`cite:p`). A role rinx implements is refused.
 # - `produces_targets`: which domains' objects it defines — `"none"` (the
 #   default), `"everything"`, or `{ domains = ["py", "c", "std"] }`.
 #

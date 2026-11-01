@@ -609,3 +609,100 @@ fn test_parse_reads_a_role_of_an_unknown_domain_whole() {
         vec![text("A "), text(":cpp:class:`X`"), text(" here.")]
     );
 }
+
+/// The codes, messages and spans `input` is reported with, parsed under a
+/// parse configuration ignoring `ignored`.
+fn reported(input: &str, ignored: &[&str]) -> Vec<(DiagnosticCode, String, Option<Span>)> {
+    let config = crate::ParserConfig {
+        ignored_roles: crate::IgnoredRoles::new(
+            ignored.iter().map(|name| (*name).to_string()).collect(),
+        )
+        .unwrap(),
+    };
+    let ctx = crate::ParseCtx::with_domain(rinx_ast::Domain::Py).with_parser_config(&config);
+    crate::parse("test.rst", input, &ctx)
+        .document
+        .diagnostics
+        .into_iter()
+        .map(|diagnostic| (diagnostic.code, diagnostic.message, diagnostic.span))
+        .collect()
+}
+
+#[test]
+fn test_parse_reports_an_unknown_role_before_the_text_where_it_is_written() {
+    // Given / When
+    let found = reported("A :pypi:`requests` here.\n", &[]);
+
+    // Then
+    assert_eq!(
+        found,
+        [(
+            DiagnosticCode::InterpretedUnknownRole,
+            "unknown interpreted text role 'pypi'".to_string(),
+            Some(Span::new(Position::new(1, 3), Position::new(1, 19))),
+        )]
+    );
+}
+
+#[test]
+fn test_parse_reports_an_unknown_role_after_the_text_by_its_name() {
+    // Given / When
+    let found = reported("A `x`:nope: here.\n", &[]);
+
+    // Then
+    assert_eq!(found.len(), 1, "{found:?}");
+    assert_eq!(found[0].0, DiagnosticCode::InterpretedUnknownRole);
+    assert_eq!(found[0].1, "unknown interpreted text role 'nope'");
+}
+
+#[test]
+fn test_parse_reports_a_role_of_an_unknown_domain_under_its_whole_name() {
+    // Given / When
+    let found = reported("A :cpp:class:`X` here.\n", &[]);
+
+    // Then
+    assert_eq!(found.len(), 1, "{found:?}");
+    assert_eq!(found[0].1, "unknown interpreted text role 'cpp:class'");
+}
+
+#[test]
+fn test_parse_does_not_report_an_ignored_role() {
+    // Given / When
+    let found = reported("See :issue:`1` and `2`:issue:.\n", &["issue"]);
+
+    // Then
+    assert_eq!(found, []);
+}
+
+#[test]
+fn test_parse_reports_a_sphinx_role_rinx_lacks_as_unsupported() {
+    // Given / When
+    let found = reported("Press :kbd:`C-x` and see :std:envvar:`HOME`.\n", &[]);
+
+    // Then
+    let codes: Vec<DiagnosticCode> = found.iter().map(|(code, _, _)| *code).collect();
+    assert_eq!(
+        codes,
+        [
+            DiagnosticCode::InterpretedUnsupportedRole,
+            DiagnosticCode::InterpretedUnsupportedRole
+        ]
+    );
+    assert_eq!(
+        found[0].1,
+        "role 'kbd' is not supported by rinx yet; shown as written"
+    );
+}
+
+#[test]
+fn test_parse_names_the_spelling_of_a_role_written_in_another_case() {
+    // Given / When
+    let found = reported("See :PEP:`8`.\n", &[]);
+
+    // Then
+    assert_eq!(found.len(), 1, "{found:?}");
+    assert_eq!(
+        found[0].1,
+        "unknown interpreted text role 'PEP'; role names are case-sensitive in rinx, write ':pep:'"
+    );
+}

@@ -96,7 +96,9 @@ mod tests {
         let module = rinx_pyconf::read_module(&format!("x = {text}\n"));
         match &module.binding("x").expect("bound").value {
             rinx_pyconf::BoundValue::Literal(value) => value.clone(),
-            rinx_pyconf::BoundValue::Unread(_) => panic!("{text} is no literal"),
+            rinx_pyconf::BoundValue::Dict { .. } | rinx_pyconf::BoundValue::Unread(_) => {
+                panic!("{text} is no literal")
+            }
         }
     }
 

@@ -7,14 +7,14 @@
 //! registry role (`:pep:`, `:rfc:`, `:cve:`, `:cwe:`) or docutils'
 //! `:pep-reference:`/`:rfc-reference:` naming nothing it can link, an
 //! `:index:` entry its type cannot split, interpreted text with two roles or
-//! a role and a reference suffix — belongs
+//! a role and a reference suffix, a role nothing gives a meaning — belongs
 //! at the role the author wrote. The refusal travels on the node as an
 //! [`InlineNode::RefusedRole`] until this pass reaches it.
 
 use rinx_ast::{
-    Diagnostic, DiagnosticCode, DocutilsPepNumber, DocutilsRfcNumber, IndexEntryType, InlineNode,
-    Node, NumberFormat, NumberReferenceRefusal, Registry, RegistryTarget, RoleRefusal, Span,
-    for_each_inline_list_mut,
+    Diagnostic, DiagnosticCode, DiagnosticSubject, DocutilsPepNumber, DocutilsRfcNumber,
+    IndexEntryType, InlineNode, Node, NumberFormat, NumberReferenceRefusal, Registry,
+    RegistryTarget, RoleRefusal, Span, for_each_inline_list_mut,
 };
 
 use crate::diagnostics::Diagnostics;
@@ -53,7 +53,9 @@ fn lowered(text: String, refusal: &RoleRefusal, span: Option<Span>) -> InlineNod
         | RoleRefusal::DocutilsPepNumber { .. }
         | RoleRefusal::DocutilsRfcNumber { .. }
         | RoleRefusal::MultipleRoles
-        | RoleRefusal::RoleAndReference => InlineNode::Text(text),
+        | RoleRefusal::RoleAndReference
+        | RoleRefusal::UnknownRole { .. }
+        | RoleRefusal::UnsupportedRole { .. } => InlineNode::Text(text),
         RoleRefusal::IndexEntry { title, .. } => InlineNode::IndexReference {
             title: title.clone(),
             entries: Vec::new(),
@@ -112,6 +114,36 @@ fn refusal_diagnostic(text: &str, refusal: &RoleRefusal, span: Option<Span>) -> 
             format!("interpreted text '{text}' has both a role and a reference suffix"),
             span,
         ),
+        // docutils' wording, which a reader who knows Sphinx will recognize;
+        // the subject lets a front end tell which extension the role is from.
+        RoleRefusal::UnknownRole { name } => Diagnostic::at(
+            DiagnosticCode::InterpretedUnknownRole,
+            unknown_role_message(name),
+            span,
+        )
+        .about(DiagnosticSubject::Role(name.clone())),
+        RoleRefusal::UnsupportedRole { name } => Diagnostic::at(
+            DiagnosticCode::InterpretedUnsupportedRole,
+            format!("role '{name}' is not supported by rinx yet; shown as written"),
+            span,
+        )
+        .about(DiagnosticSubject::Role(name.clone())),
+    }
+}
+
+/// What an unknown role named `name` is reported as: docutils' wording, and,
+/// when the name differs from a role rinx implements only in case, which
+/// spelling it takes — role names are case-sensitive here, where docutils'
+/// are not.
+fn unknown_role_message(name: &str) -> String {
+    let lowered = name.to_lowercase();
+    if lowered != name && crate::is_fixed_role_name(&lowered) {
+        format!(
+            "unknown interpreted text role '{name}'; role names are case-sensitive in rinx, \
+             write ':{lowered}:'"
+        )
+    } else {
+        format!("unknown interpreted text role '{name}'")
     }
 }
 
@@ -492,6 +524,83 @@ mod tests {
             ":index: invalid pair index entry 'loop'"
         );
         assert_eq!(entries[0].span, Some(at));
+    }
+
+    #[test]
+    fn test_reports_an_unknown_role_by_name_and_shows_its_source() {
+        // Given
+        let at = Span::new(Position::new(2, 3), Position::new(2, 20));
+        let mut nodes = vec![Node::paragraph(vec![InlineNode::RefusedRole {
+            text: ":pypi:`requests`".to_string(),
+            refusal: RoleRefusal::UnknownRole {
+                name: "pypi".to_string(),
+            },
+            span: Some(at),
+        }])];
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        report_refused_roles(&mut nodes, &mut diagnostics);
+
+        // Then
+        assert_eq!(
+            nodes[0],
+            Node::paragraph(vec![InlineNode::Text(":pypi:`requests`".to_string())])
+        );
+        let (entries, _, _) = diagnostics.into_parts();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].code, DiagnosticCode::InterpretedUnknownRole);
+        assert_eq!(entries[0].message, "unknown interpreted text role 'pypi'");
+        assert_eq!(entries[0].span, Some(at));
+        assert_eq!(
+            entries[0].subject,
+            Some(DiagnosticSubject::Role("pypi".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_reports_an_unsupported_role_by_name_and_shows_its_source() {
+        // Given
+        let mut nodes = vec![Node::paragraph(vec![InlineNode::RefusedRole {
+            text: ":kbd:`C-x`".to_string(),
+            refusal: RoleRefusal::UnsupportedRole {
+                name: "kbd".to_string(),
+            },
+            span: None,
+        }])];
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        report_refused_roles(&mut nodes, &mut diagnostics);
+
+        // Then
+        assert_eq!(
+            nodes[0],
+            Node::paragraph(vec![InlineNode::Text(":kbd:`C-x`".to_string())])
+        );
+        let (entries, _, _) = diagnostics.into_parts();
+        assert_eq!(entries[0].code, DiagnosticCode::InterpretedUnsupportedRole);
+        assert_eq!(
+            entries[0].subject,
+            Some(DiagnosticSubject::Role("kbd".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_unknown_role_message_names_the_spelling_only_for_a_case_difference() {
+        // Given / When / Then
+        assert_eq!(
+            unknown_role_message("RFC"),
+            "unknown interpreted text role 'RFC'; role names are case-sensitive in rinx, write ':rfc:'"
+        );
+        assert_eq!(
+            unknown_role_message("gh"),
+            "unknown interpreted text role 'gh'"
+        );
+        assert_eq!(
+            unknown_role_message("Issue"),
+            "unknown interpreted text role 'Issue'"
+        );
     }
 
     #[test]

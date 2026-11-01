@@ -10,7 +10,7 @@ const INVENTORY_FIXTURE: &str = include_str!("../../inventory/testdata/sphinx-9.
 fn literal<'a>(reading: &'a ModuleReading, name: &str) -> &'a ValueKind {
     match &reading.binding(name).expect(name).value {
         BoundValue::Literal(value) => &value.kind,
-        BoundValue::Unread(_) => panic!("{name} is unread"),
+        BoundValue::Dict { .. } | BoundValue::Unread(_) => panic!("{name} is unread"),
     }
 }
 

@@ -74,8 +74,10 @@ RESULT_PATH = Path("benchmark_result.txt")
 # `rinx lsp --check` may show across CPython's documents, all open, before the
 # benchmark fails. Measured at 2564 when introduced — nearly all of them
 # directives CPython's own extensions add, or that rinx lacks — with a small
-# margin. Lower it as rinx implements what CPython uses.
-MAX_LSP_WARNINGS = 2600
+# margin. Reporting unknown roles (#282) added 34, CPython's `:RFC:` and
+# `:PEP:`, whose names rinx reads case-sensitively; its own extensions' roles
+# are ignored (IGNORED_ROLES). Lower it as rinx implements what CPython uses.
+MAX_LSP_WARNINGS = 2640
 
 # The protocol's `DiagnosticSeverity`, as the summary names each.
 LSP_SEVERITIES = {1: "errors", 2: "warnings", 3: "information", 4: "hints"}
@@ -145,9 +147,28 @@ python.toolchain(
     template_content = default_template_path.read_text()
     (doc_dir / "custom_template.html").write_text(template_content)
 
+    # Beside `conf.py`, so the language server's `rinx lsp --check` reads the
+    # same file the build's parse actions do.
+    (doc_dir / "rinx_parser.toml").write_text(render_parser_config())
     (doc_dir / "BUILD.bazel").write_text(render_corpus_build_file())
 
     benchmark_common.generate_warmup_package(TARGET_DIR, workspace_root)
+
+
+# The roles CPython's own Sphinx extensions add (`Doc/tools/extensions/`):
+# `issue_role` adds `issue` and `gh`, `pyspecific` an object type each for
+# `opcode`, `pdbcmd` and `monitoring-event`. rinx runs neither, so the corpus
+# ignores them, as a project would in its `rinx_parser.toml`.
+IGNORED_ROLES = ("issue", "gh", "opcode", "pdbcmd", "monitoring-event")
+
+
+def render_parser_config() -> str:
+    """The corpus' `Doc/rinx_parser.toml`: the roles of CPython's own extensions."""
+    roles = ", ".join(f'"{role}"' for role in IGNORED_ROLES)
+    return (
+        "# The roles CPython's own extensions add, which rinx shows as their text.\n"
+        f"ignored_roles = [{roles}]\n"
+    )
 
 
 def render_corpus_build_file() -> str:
@@ -181,6 +202,8 @@ rinx_library(
         exclude = ["**/*.rst"],
         allow_empty = True,
     ),
+    # The roles CPython's own extensions add; see IGNORED_ROLES.
+    parse_config = "rinx_parser.toml",
 )
 
 rinx_site(

@@ -50,6 +50,14 @@ pub enum RoleRefusal {
     /// Interpreted text with a role and a hyperlink reference's `_` or `__`,
     /// lowered to its source text as docutils' `problematic` node shows it.
     RoleAndReference,
+    /// A role no table, schema or `.. role::` gives a meaning, lowered to its
+    /// source text as docutils' `problematic` node shows it. `name` is the
+    /// role's name as written, domain prefix included.
+    UnknownRole { name: String },
+    /// A role docutils or Sphinx defines that this build does not implement
+    /// yet, lowered to its source text as [`Self::UnknownRole`] is. `name`
+    /// is the role's name as written.
+    UnsupportedRole { name: String },
 }
 
 /// Why the parser refused a `:numref:` — see [`RoleRefusal::NumberReference`].

@@ -246,12 +246,13 @@ const ROLE_NAME: &str = "[a-zA-Z][a-zA-Z0-9_-]*";
 
 /// Any ``:name:`target` `` role, for the roles whose names are not fixed: the
 /// entity roles a schema declares, the roles a document defines with
-/// `.. role::`, and the roles a library's parse configuration ignores.
+/// `.. role::`, and the roles a library's parse configuration ignores — and
+/// every role nothing gives a meaning, which is reported.
 ///
 /// A name may carry domain prefixes (``:cpp:class:``), so a role of a domain
-/// this build does not have is read whole rather than as text followed by a
-/// role of the same name in another domain. Neither a schema nor a `.. role::`
-/// can name such a role; an ignored one can.
+/// this build does not have is read whole, and reported under its whole name,
+/// rather than as text followed by a role of the same name in another domain.
+/// Neither a schema nor a `.. role::` can name such a role; an ignored one can.
 ///
 /// Deliberately one static pattern rather than a regex compiled per project:
 /// the role names are configurable, but their *syntax* is not, so matching the
@@ -276,7 +277,8 @@ pub(crate) fn is_writable_role_name(name: &str) -> bool {
 /// Asked with a sample role rather than of a list of names, so the answer
 /// cannot drift from the table: a role added to [`ROLES`] is
 /// reserved the moment it is.
-pub(crate) fn is_fixed_role_name(name: &str) -> bool {
+#[must_use]
+pub fn is_fixed_role_name(name: &str) -> bool {
     let sample = format!(":{name}:`x`");
     ROLES
         .iter()

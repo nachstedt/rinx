@@ -21,6 +21,7 @@ use super::regexes::scan_patterns;
 use super::roles::custom::handle_custom_role_match;
 use super::roles::entity::handle_entity_role_match;
 use super::roles::title_reference::title_reference_node;
+use super::unknown_role::refused_unknown_role;
 use crate::context::ParseCtx;
 
 /// docutils' `simplename`, the shape of a role name *it* reads: wider than
@@ -118,7 +119,7 @@ pub(super) fn find_interpreted_closes(
 /// byte offset and what was found, or `None` when it opens none.
 ///
 /// None when a role is written right before the backquote — the role table
-/// reads that, or it is a role this build does not know and stays text — or
+/// reads that, a role this build does not know included — or
 /// when the first close ends a hyperlink reference, which the role table
 /// reads too. A role together with a reference is refused here, so the text
 /// is reported rather than half-read.
@@ -192,8 +193,8 @@ pub(super) fn prefix_role_trailer(after: &str) -> Option<(RoleRefusal, usize)> {
 /// Builds the node for interpreted text whose `body` was written between
 /// backquotes, with `suffix_role` after them if one was. `source` is the
 /// whole construct as written, which is what a role this build does not know
-/// is left as — as for one written before the text — unless the library
-/// ignores it, when `body` is shown as plain text.
+/// is refused and shown as — as for one written before the text — unless the
+/// library ignores it, when `body` is shown as plain text.
 pub(super) fn handle_interpreted_text(
     source: &str,
     body: &str,
@@ -210,7 +211,7 @@ pub(super) fn handle_interpreted_text(
             ctx.ignores_role(role)
                 .then(|| InlineNode::Text(body.to_string()))
         })
-        .unwrap_or_else(|| InlineNode::Text(source.to_string()))
+        .unwrap_or_else(|| refused_unknown_role(source, role))
 }
 
 /// The node ``:role:`body` `` would be, or `None` when no role answers to
@@ -633,11 +634,20 @@ mod tests {
     }
 
     #[test]
-    fn test_handle_interpreted_text_leaves_an_unknown_suffix_role_as_written() {
+    fn test_handle_interpreted_text_refuses_an_unknown_suffix_role_as_written() {
         // Given / When
         let node = handle_interpreted_text("`x`:nope:", "x", Some("nope"), Domain::Py, &ctx());
 
         // Then
-        assert_eq!(node, InlineNode::Text("`x`:nope:".to_string()));
+        assert_eq!(
+            node,
+            InlineNode::RefusedRole {
+                text: "`x`:nope:".to_string(),
+                refusal: RoleRefusal::UnknownRole {
+                    name: "nope".to_string()
+                },
+                span: None,
+            }
+        );
     }
 }
