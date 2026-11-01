@@ -54,6 +54,14 @@ def _rinx_library_impl(ctx):
     if ctx.file.rst_epilog:
         splice_args.extend(["--rst-epilog", ctx.file.rst_epilog.path])
         splice_inputs.append(ctx.file.rst_epilog)
+
+    # The library's `rinx_parser.toml`: what it tells the parser beyond the
+    # attributes above, such as the roles it ignores. An input of every parse
+    # action, so editing it re-parses the library — and only the library,
+    # since the site's `rinx.toml` is a separate file no parse action reads.
+    parse_config = ctx.file.parse_config
+    parse_config_args = ["--parse-config", parse_config.path] if parse_config else []
+    parse_config_inputs = [parse_config] if parse_config else []
     ast_files = []
     doctest_plans = []
     embed_sidecars = []
@@ -77,7 +85,7 @@ def _rinx_library_impl(ctx):
                 "--input", src.path,
                 "--output", ast_raw.path,
                 "--default-domain", ctx.attr.default_domain,
-            ] + schema_args + diagram_args + jinja_args + default_role_args + splice_args,
+            ] + schema_args + diagram_args + jinja_args + default_role_args + splice_args + parse_config_args,
             # `parse_data` files join the parse action's inputs because the
             # parser genuinely reads them: `.. csv-table::`'s `:file:`, and the
             # sources `.. include::`/`.. literalinclude::` splice into the
@@ -91,7 +99,7 @@ def _rinx_library_impl(ctx):
             # included file's text becomes part of the .ast, so editing it
             # re-parses and re-renders every document that includes it. That is
             # correct — the page really did change.
-            inputs = [src] + ctx.files.parse_data + schema_inputs + splice_inputs,
+            inputs = [src] + ctx.files.parse_data + schema_inputs + splice_inputs + parse_config_inputs,
             outputs = [ast_raw],
             mnemonic = "RinxParse",
             progress_message = "Parsing %s" % src.short_path,
@@ -196,6 +204,7 @@ def _rinx_library_impl(ctx):
         rst_prolog = lsp_file(ctx.file.rst_prolog) if ctx.file.rst_prolog else None,
         rst_epilog = lsp_file(ctx.file.rst_epilog) if ctx.file.rst_epilog else None,
         entity_schema = lsp_file(entity_schema) if entity_schema else None,
+        parse_config = lsp_file(parse_config) if parse_config else None,
     ))
 
     # Collect .ast files from deps (other rinx_library targets).
@@ -229,7 +238,7 @@ def _rinx_library_impl(ctx):
                 transitive = [dep[RinxInfo].lsp_libraries for dep in ctx.attr.deps],
             ),
             lsp_inputs = depset(
-                ctx.files.srcs + schema_inputs + splice_inputs,
+                ctx.files.srcs + schema_inputs + splice_inputs + parse_config_inputs,
                 transitive = [dep[RinxInfo].lsp_inputs for dep in ctx.attr.deps],
             ),
         ),
@@ -285,6 +294,10 @@ rinx_library = rule(
         "rst_prolog": attr.label(
             allow_single_file = True,
             doc = "reStructuredText parsed at the start of every document of this library, after its leading field list — Sphinx's `rst_prolog`, kept in a file rather than a string. Typically substitutions, `.. role::` definitions and link targets shared by every page. A diagnostic in it names this file. Unlike an `.. include::`, it is parsed with each document rather than spliced into one, so it must not also appear in `srcs`, and editing it re-parses the whole library. An `.. include::` written in it resolves against the document, as in Sphinx.",
+        ),
+        "parse_config": attr.label(
+            allow_single_file = [".toml"],
+            doc = "This library's parse configuration, conventionally `rinx_parser.toml`: what it tells the parser beyond the attributes here. Today that is `ignored_roles`, the roles its documents write that rinx does not implement — a Sphinx extension's of its own, say — which are then shown as their text, as docutils' generic role shows it, rather than as the source they were written as. An input of every parse action of this library, so editing it re-parses the library; the site's `rinx.toml` is a separate file, read only when rendering. The language server reads the same file beside a Sphinx project's `conf.py`.",
         ),
         "rst_epilog": attr.label(
             allow_single_file = True,

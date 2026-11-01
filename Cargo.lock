@@ -1199,7 +1199,9 @@ dependencies = [
  "rinx_entity",
  "rinx_filter",
  "rinx_template",
+ "serde",
  "serde_json",
+ "toml",
  "unicode-width",
 ]
 

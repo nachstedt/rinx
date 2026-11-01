@@ -1,18 +1,19 @@
 //! Everything a subcommand needs in order to *parse*, bundled.
 //!
-//! Seven settings travel together wherever RST is turned into an AST — the
+//! Eight settings travel together wherever RST is turned into an AST — the
 //! default domain, the default role, the loader a file-reading directive goes
 //! through, the entity schema that supplies the project's own directive
 //! vocabulary, the import keys it declares, whether the source is rendered as
-//! a Jinja template first, and the prolog and epilog added to every document.
-//! They are one parameter rather than seven, for the same reason `ParseCtx`
+//! a Jinja template first, the prolog and epilog added to every document, and
+//! the library's `rinx_parser.toml`. They are one parameter rather than
+//! eight, for the same reason `ParseCtx`
 //! exists in the parser: the next parse-time setting should not have to touch
 //! every signature again.
 
 use anyhow::{Result, anyhow};
 use rinx_ast as ast;
 use rinx_entity::EntitySchema;
-use rinx_parser::{DefaultRole, ParseCtx, SplicedText};
+use rinx_parser::{DefaultRole, ParseCtx, ParserConfig, SplicedText, load_parser_config};
 use std::collections::BTreeMap;
 
 use super::cli_args::{flag_value_opt, flag_values_opt};
@@ -41,6 +42,8 @@ pub(super) struct ParseInputs<'a> {
     pub import_keys: &'a BTreeMap<String, String>,
     /// The text added to the start and the end of every document.
     pub splices: &'a DocumentSplices,
+    /// The library's parse configuration: the roles it ignores.
+    pub config: &'a ParserConfig,
 }
 
 /// A file read to be parsed as part of every document, and the path its
@@ -76,7 +79,8 @@ impl<'a> ParseInputs<'a> {
         let ctx = parse_ctx(self.default_domain, self.files)
             .with_schema(self.schema)
             .with_import_keys(self.import_keys)
-            .with_default_role(self.default_role);
+            .with_default_role(self.default_role)
+            .with_parser_config(self.config);
         let ctx = match &self.splices.prolog {
             Some(prolog) => ctx.with_prolog(prolog.as_spliced_text()),
             None => ctx,
@@ -157,6 +161,32 @@ pub(super) fn splices_from_args(args: &[String]) -> Result<DocumentSplices> {
     })
 }
 
+/// Reads the file the `--parse-config` flag names, which `rinx_library`'s
+/// `parse_config` attribute passes, defaulting to the empty configuration when
+/// it is absent.
+///
+/// # Errors
+///
+/// Fails when the file cannot be read or is refused, naming every fault: the
+/// configuration belongs to the build, so a mistake in it is a configuration
+/// fault rather than one more warning.
+pub(super) fn parser_config_from_args(args: &[String]) -> Result<ParserConfig> {
+    let Some(path) = flag_value_opt(args, "--parse-config") else {
+        return Ok(ParserConfig::default());
+    };
+    let text = std::fs::read_to_string(&path).map_err(|error| {
+        anyhow!(
+            "Cannot read --parse-config '{path}': {error}; check the rinx_library's `parse_config`"
+        )
+    })?;
+    load_parser_config(&text).map_err(|errors| {
+        anyhow!(
+            "Invalid --parse-config '{path}': {}; check the rinx_library's `parse_config`",
+            errors.join("; ")
+        )
+    })
+}
+
 /// Reads the `--jinja` opt-in and the `--jinja-context k=v ...` bindings that
 /// `rinx_library`'s `jinja` and `jinja_context` attributes pass.
 ///
@@ -191,6 +221,61 @@ mod tests {
 
     fn args(values: &[&str]) -> Vec<String> {
         values.iter().map(ToString::to_string).collect()
+    }
+
+    #[test]
+    fn test_parser_config_from_args_defaults_without_the_flag() {
+        // When
+        let config = parser_config_from_args(&[]).unwrap();
+
+        // Then
+        assert_eq!(&config, ParserConfig::empty_ref());
+    }
+
+    #[test]
+    fn test_parser_config_from_args_reads_the_named_file() {
+        // Given
+        let dir = std::env::temp_dir().join("rinx_parser_config_from_args");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("rinx_parser.toml");
+        std::fs::write(&path, "ignored_roles = [\"issue\"]\n").unwrap();
+
+        // When
+        let config =
+            parser_config_from_args(&args(&["--parse-config", path.to_str().unwrap()])).unwrap();
+
+        // Then
+        assert!(config.ignored_roles.contains("issue"));
+    }
+
+    #[test]
+    fn test_parser_config_from_args_fails_naming_the_attribute_and_every_fault() {
+        // Given
+        let dir = std::env::temp_dir().join("rinx_parser_config_from_args_invalid");
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("rinx_parser.toml");
+        std::fs::write(&path, "ignored_roles = [\"ref\", \"gh\", \"gh\"]\n").unwrap();
+
+        // When
+        let error = parser_config_from_args(&args(&["--parse-config", path.to_str().unwrap()]))
+            .unwrap_err()
+            .to_string();
+
+        // Then
+        assert!(error.contains("'ref' is one rinx implements"), "{error}");
+        assert!(error.contains("'gh' is listed twice"), "{error}");
+        assert!(error.contains("`parse_config`"), "{error}");
+    }
+
+    #[test]
+    fn test_parser_config_from_args_fails_on_a_missing_file() {
+        // When
+        let error = parser_config_from_args(&args(&["--parse-config", "/nonexistent/p.toml"]))
+            .unwrap_err()
+            .to_string();
+
+        // Then
+        assert!(error.contains("Cannot read --parse-config"), "{error}");
     }
 
     #[test]
@@ -266,6 +351,7 @@ mod tests {
             jinja: None,
             import_keys: &BTreeMap::new(),
             splices: &splices,
+            config: ParserConfig::empty_ref(),
         };
 
         // When
@@ -345,6 +431,7 @@ mod tests {
             jinja: None,
             import_keys: &BTreeMap::new(),
             splices: &DocumentSplices::default(),
+            config: ParserConfig::empty_ref(),
         };
 
         // When
@@ -368,6 +455,7 @@ mod tests {
             jinja: None,
             import_keys: &BTreeMap::new(),
             splices: &DocumentSplices::default(),
+            config: ParserConfig::empty_ref(),
         };
 
         // When
@@ -394,6 +482,7 @@ mod tests {
             jinja: None,
             import_keys: &BTreeMap::new(),
             splices: &DocumentSplices::default(),
+            config: ParserConfig::empty_ref(),
         };
 
         // When
@@ -480,6 +569,7 @@ mod tests {
             jinja: Some(&context),
             import_keys: &BTreeMap::new(),
             splices: &DocumentSplices::default(),
+            config: ParserConfig::empty_ref(),
         };
 
         // When

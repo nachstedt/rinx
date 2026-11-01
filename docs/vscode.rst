@@ -118,6 +118,8 @@ These are the settings read:
 
 - The sphinx-needs settings, when ``extensions`` declares ``sphinx_needs`` (see below).
 
+A ``rinx_parser.toml`` beside ``conf.py`` is read too: the parse configuration a Bazel library names as its ``parse_config`` (see :ref:`parser-config`), such as the roles of the project's own extensions to show as their text. A mistake in it is reported on ``conf.py`` as ``conf.parser-config-invalid``, and the project is read without it. Saving, creating or deleting it reads the project again.
+
 Every other setting is ignored, and not reported. Nor is ``setup()`` run, so a project rendering its documents as Jinja templates from a ``source-read`` handler has them read as written. Saving ``conf.py``, or creating or deleting one, reads the folder's projects again.
 
 A project declaring ``sphinx_needs`` gets its need types as directives: ``.. req::`` is recognised and checked, its id is a target, and ``:need:`` and each type's own role resolve, hover and go to the need, and complete the ids of the needs the project defines. The server converts the project's sphinx-needs configuration into an entity schema (see :ref:`entities`), the conversion ``rinx needs_schema`` writes an ``entities.toml`` with:

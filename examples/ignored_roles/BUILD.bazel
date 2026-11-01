@@ -1,0 +1,16 @@
+"""Documents using roles this build does not implement, which their library
+ignores.
+
+A library's `parse_config` names its `rinx_parser.toml`, the parse settings no
+attribute spells: here, the roles a Sphinx project's own extension would add,
+which rinx shows as their text.
+"""
+
+load("@rinx//:defs.bzl", "rinx_library")
+
+rinx_library(
+    name = "docs",
+    srcs = ["index.rst"],
+    parse_config = "rinx_parser.toml",
+    visibility = ["//visibility:public"],
+)

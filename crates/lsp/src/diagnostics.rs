@@ -227,8 +227,8 @@ fn splice_text(splice: Option<&Splice>, unnamed: &str, open: &DocumentStore) -> 
 }
 
 /// `ctx` configured with a project's parse settings: its default role, its
-/// schema and import keys, its Jinja context, and the prolog and epilog in
-/// `splices`.
+/// schema and import keys, its parse configuration, its Jinja context, and
+/// the prolog and epilog in `splices`.
 fn configured<'a>(
     ctx: ParseCtx<'a>,
     settings: &'a ParseSettings,
@@ -238,7 +238,8 @@ fn configured<'a>(
     let ctx = ctx
         .with_default_role(&settings.default_role)
         .with_schema(&settings.schema)
-        .with_import_keys(&settings.import_keys);
+        .with_import_keys(&settings.import_keys)
+        .with_parser_config(&settings.config);
     let ctx = match &settings.jinja {
         Some(context) => ctx.with_jinja(context),
         None => ctx,

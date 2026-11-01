@@ -10,7 +10,8 @@ use super::diagnostics::{WarningOrigin, format_error_diagnostic, report_diagnost
 use super::entity_schema::{import_keys_from_args, load_entity_schema};
 use super::parse_files::DocumentRelativeFiles;
 use super::parse_inputs::{
-    ParseInputs, default_role_from_args, jinja_from_args, splices_from_args,
+    ParseInputs, default_role_from_args, jinja_from_args, parser_config_from_args,
+    splices_from_args,
 };
 
 /// Whether the library a document belongs to opted in to diagrams.
@@ -144,6 +145,7 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
     let jinja = jinja_from_args(args)?;
     let default_role = default_role_from_args(args, &schema)?;
     let splices = splices_from_args(args)?;
+    let config = parser_config_from_args(args)?;
     let inputs = ParseInputs {
         default_domain,
         default_role: &default_role,
@@ -152,6 +154,7 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
         jinja: jinja.as_deref(),
         import_keys: &import_keys,
         splices: &splices,
+        config: &config,
     };
     dump_rendered_source(args, &rst, &inputs)?;
     let json = process_parse(&input, &rst, &inputs, DiagramSupport::from_args(args))?;
@@ -180,6 +183,7 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
 mod tests {
     use super::*;
     use crate::commands::parse_inputs::DocumentSplices;
+    use rinx_parser::ParserConfig;
     use std::collections::BTreeMap;
 
     /// A loader rooted at a directory holding no CSV files, for the tests
@@ -205,6 +209,7 @@ mod tests {
                 jinja: None,
                 import_keys: &BTreeMap::new(),
                 splices: &DocumentSplices::default(),
+                config: ParserConfig::empty_ref(),
             },
             DiagramSupport::Enabled,
         )
@@ -228,6 +233,7 @@ mod tests {
                 jinja: None,
                 import_keys: &BTreeMap::new(),
                 splices: &DocumentSplices::default(),
+                config: ParserConfig::empty_ref(),
             },
             diagrams,
         )
@@ -311,6 +317,7 @@ mod tests {
                 jinja: None,
                 import_keys: &BTreeMap::new(),
                 splices: &DocumentSplices::default(),
+                config: ParserConfig::empty_ref(),
             },
             DiagramSupport::Enabled,
         )
@@ -395,6 +402,25 @@ mod tests {
     }
 
     #[test]
+    fn test_cmd_parse_shows_a_role_the_parse_config_ignores_as_its_text() {
+        // Given
+        let args = parse_args_for("rinx_cmd_parse_parse_config", "See :issue:`123`.\n");
+        let config = std::path::Path::new(&args[1]).with_file_name("rinx_parser.toml");
+        std::fs::write(&config, "ignored_roles = [\"issue\"]\n").expect("write config");
+        let config = config.to_str().expect("utf-8 temp path").to_string();
+        let args = [args, vec!["--parse-config".to_string(), config]].concat();
+
+        // When
+        let result = cmd_parse(&args);
+
+        // Then
+        assert!(result.is_ok(), "{result:?}");
+        let ast = std::fs::read_to_string(&args[3]).expect("read ast");
+        assert!(ast.contains("\"123\""), "{ast}");
+        assert!(!ast.contains(":issue:"), "{ast}");
+    }
+
+    #[test]
     fn test_cmd_parse_fails_when_the_prolog_is_missing() {
         // Given
         let args = parse_args_for("rinx_cmd_parse_rst_prolog_missing", "Text.\n");
@@ -434,6 +460,7 @@ mod tests {
             jinja: None,
             import_keys: &BTreeMap::new(),
             splices: &splices,
+            config: ParserConfig::empty_ref(),
         };
         let doc = parser::parse("docs/doc.rst", "Text.\n", &inputs.ctx()).document;
 

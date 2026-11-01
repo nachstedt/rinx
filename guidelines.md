@@ -117,6 +117,7 @@ entry under the heading it belongs to, as a single short sentence.
 
 - Documentation builds should fail loudly if content invariants (like missing diagram images) are violated.
 - Keep the resilient parser and the strict build separate: the parser degrades bad input and records what went wrong, and the build step decides whether that is fatal.
+- Before choosing how to quiet a flood of findings, measure it on a real corpus by category; then let a project declare what to ignore rather than guessing from heuristics such as "it declares an unknown extension".
 - Do not diagnose a failure the author could not have caused or acted on: a value this codebase chose for them degrades silently, while one they wrote is reported.
 - When a lookup is genuinely ambiguous, do not pick a winner — leave it unresolved and emit a warning that names every candidate, so the diagnostic tells the author what to disambiguate between.
 - Never let a result depend on the order inputs arrive in: a definition claimed twice defines nothing, and its warning reads the same whichever came first.
@@ -179,6 +180,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Keep a resource's *name* in configuration and its *path* on the command line, so a sandboxed build can relocate the file without invalidating the config that refers to it.
 - Configuration files should contain metadata and settings, not file paths; sandboxed build systems relocate files, breaking embedded paths.
 - Check whether a rule about configuration is about *paths* or about *phases* before invoking it: a config file the parser reads is fine, and a workspace-relative path survives relocation — what a config file cannot do is declare a build input.
+- Give each pipeline phase a configuration file of its own (`rinx_parser.toml` beside the renderer's `rinx.toml`), so editing one phase's settings never invalidates the other phase's cached work.
 - Relative file paths work correctly for offline viewing; do not use inlining as a workaround for path computation.
 - Decide which files a tool reads from explicit configuration, never from a convention meant for another tool such as `.gitignore`, since generated sources are often exactly what such a file ignores.
 - When a Sphinx project already configures a behaviour (such as `intersphinx_cache_limit`), the editor follows that value rather than adding an editor setting for it.

@@ -192,7 +192,8 @@ pub(super) fn prefix_role_trailer(after: &str) -> Option<(RoleRefusal, usize)> {
 /// Builds the node for interpreted text whose `body` was written between
 /// backquotes, with `suffix_role` after them if one was. `source` is the
 /// whole construct as written, which is what a role this build does not know
-/// is left as — as for one written before the text.
+/// is left as — as for one written before the text — unless the library
+/// ignores it, when `body` is shown as plain text.
 pub(super) fn handle_interpreted_text(
     source: &str,
     body: &str,
@@ -205,6 +206,10 @@ pub(super) fn handle_interpreted_text(
         return title_reference_node(body);
     };
     dispatch_as_role(role, body, default_domain, ctx)
+        .or_else(|| {
+            ctx.ignores_role(role)
+                .then(|| InlineNode::Text(body.to_string()))
+        })
         .unwrap_or_else(|| InlineNode::Text(source.to_string()))
 }
 

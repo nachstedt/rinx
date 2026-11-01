@@ -462,6 +462,13 @@ Directives
    * - ``.. class::`` / ``.. rst-class::``
      - ❌
      -
+   * - Roles rinx does not implement
+     - ✅ ℹ️
+     - - Shown as the source they were written as, and not reported; docutils
+         reports an unknown role.
+       - A library's ``rinx_parser.toml`` may list them as ``ignored_roles``,
+         which are then shown as their text, as docutils' generic role shows
+         it.
    * - ``.. role::``
      - 🔶
      - - Only a role derived from ``code`` (``.. role:: python(code)``), with

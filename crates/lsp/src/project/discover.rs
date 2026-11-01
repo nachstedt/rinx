@@ -28,14 +28,18 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use rinx_ast::{Diagnostic, DiagnosticCode, Position, Span};
+use rinx_parser::load_parser_config;
 
 use super::conf_eval::{ConfEvaluation, ConfEvaluations};
 use super::model::{ProjectModel, ProjectSource};
 use super::needs::resolve_needs;
-use super::sphinx_conf::{read_executed_sphinx_conf, read_sphinx_conf};
+use super::sphinx_conf::{ConfReading, read_executed_sphinx_conf, read_sphinx_conf};
 
 /// The file that makes a directory a Sphinx project's source root.
 pub(crate) const CONF_FILE: &str = "conf.py";
+/// The file beside `conf.py` holding what a Bazel library's `parse_config`
+/// names: the project's parse configuration.
+pub(crate) const PARSER_CONFIG_FILE: &str = "rinx_parser.toml";
 
 /// One project of a workspace folder, as found on the disk: its model, what
 /// reading its `conf.py` found, and its documents, before any is parsed.
@@ -198,6 +202,7 @@ fn sphinx_project_at(directory: &Path, evaluations: &ConfEvaluations) -> Option<
         reading.settings.parse.import_keys = needs.import_keys;
         reading.settings.config_files = needs.files;
     }
+    read_parser_config(directory, &mut reading);
     if let Some(Ok(values)) = evaluation.map(|evaluation| &evaluation.outcome) {
         // A module `conf.py` imports changes what it computes, so editing
         // one finds the project again, as editing `conf.py` does.
@@ -217,6 +222,39 @@ fn sphinx_project_at(directory: &Path, evaluations: &ConfEvaluations) -> Option<
         sources: Vec::new(),
         wants_conf_run: reading.falls_short,
     })
+}
+
+/// Reads the `rinx_parser.toml` beside a `conf.py` in `directory` into
+/// `reading`'s parse settings — what a Bazel library names as its
+/// `parse_config` — reporting a fault in it on `conf.py`. The file is
+/// watched whether or not it exists, so creating one finds the project
+/// again.
+fn read_parser_config(directory: &Path, reading: &mut ConfReading) {
+    let path = directory.join(PARSER_CONFIG_FILE);
+    reading.settings.config_files.push(path.clone());
+    let text = match fs::read_to_string(&path) {
+        Ok(text) => text,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return,
+        Err(error) => {
+            reading.findings.push(parser_config_finding(format!(
+                "cannot read `{PARSER_CONFIG_FILE}`: {error}"
+            )));
+            return;
+        }
+    };
+    match load_parser_config(&text) {
+        Ok(config) => reading.settings.parse.config = config,
+        Err(errors) => reading.findings.push(parser_config_finding(format!(
+            "`{PARSER_CONFIG_FILE}` is invalid, so rinx reads the project without it: {}",
+            errors.join("; ")
+        ))),
+    }
+}
+
+/// A finding about the `rinx_parser.toml` beside `conf.py`, which names no
+/// line of `conf.py`.
+fn parser_config_finding(message: String) -> Diagnostic {
+    Diagnostic::without_span(DiagnosticCode::ConfParserConfigInvalid, message)
 }
 
 /// The finding that `evaluation`, a run of `conf.py`, failed — on the line
@@ -702,6 +740,86 @@ mod tests {
                 .settings
                 .config_files
                 .contains(&root.join("paths.py"))
+        );
+    }
+
+    #[test]
+    fn test_discover_projects_reads_the_parser_config_beside_conf_py() {
+        // Given
+        let root = temp_tree(
+            "parser_config",
+            &[
+                ("conf.py", ""),
+                ("rinx_parser.toml", "ignored_roles = [\"issue\"]\n"),
+                ("index.rst", "x"),
+            ],
+        );
+
+        // When
+        let projects = discover_projects_with(&root, &ConfEvaluations::new(), Vec::new());
+
+        // Then
+        let settings = &projects[0].model.settings;
+        assert!(settings.parse.config.ignored_roles.contains("issue"));
+        assert!(
+            settings
+                .config_files
+                .contains(&root.join("rinx_parser.toml"))
+        );
+        assert_eq!(projects[0].findings, []);
+    }
+
+    #[test]
+    fn test_discover_projects_watches_a_parser_config_not_written_yet() {
+        // Given
+        let root = temp_tree(
+            "parser_config_absent",
+            &[("conf.py", ""), ("index.rst", "x")],
+        );
+
+        // When
+        let projects = discover_projects_with(&root, &ConfEvaluations::new(), Vec::new());
+
+        // Then
+        let settings = &projects[0].model.settings;
+        assert_eq!(
+            &settings.parse.config,
+            rinx_parser::ParserConfig::empty_ref()
+        );
+        assert!(
+            settings
+                .config_files
+                .contains(&root.join("rinx_parser.toml"))
+        );
+    }
+
+    #[test]
+    fn test_discover_projects_reports_an_invalid_parser_config_on_conf_py() {
+        // Given
+        let root = temp_tree(
+            "parser_config_invalid",
+            &[
+                ("conf.py", ""),
+                ("rinx_parser.toml", "ignored_roles = [\"ref\"]\n"),
+                ("index.rst", "x"),
+            ],
+        );
+
+        // When
+        let projects = discover_projects_with(&root, &ConfEvaluations::new(), Vec::new());
+
+        // Then
+        let findings = &projects[0].findings;
+        assert_eq!(findings.len(), 1, "{findings:?}");
+        assert_eq!(findings[0].code, DiagnosticCode::ConfParserConfigInvalid);
+        assert!(
+            findings[0].message.contains("'ref' is one rinx implements"),
+            "{}",
+            findings[0].message
+        );
+        assert_eq!(
+            &projects[0].model.settings.parse.config,
+            rinx_parser::ParserConfig::empty_ref()
         );
     }
 

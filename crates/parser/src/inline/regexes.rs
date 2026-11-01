@@ -245,14 +245,23 @@ pub(super) fn scan_patterns() -> impl Iterator<Item = (&'static Regex, &'static 
 const ROLE_NAME: &str = "[a-zA-Z][a-zA-Z0-9_-]*";
 
 /// Any ``:name:`target` `` role, for the roles whose names are not fixed: the
-/// entity roles a schema declares, and the roles a document defines with
-/// `.. role::`.
+/// entity roles a schema declares, the roles a document defines with
+/// `.. role::`, and the roles a library's parse configuration ignores.
+///
+/// A name may carry domain prefixes (``:cpp:class:``), so a role of a domain
+/// this build does not have is read whole rather than as text followed by a
+/// role of the same name in another domain. Neither a schema nor a `.. role::`
+/// can name such a role; an ignored one can.
 ///
 /// Deliberately one static pattern rather than a regex compiled per project:
 /// the role names are configurable, but their *syntax* is not, so matching the
 /// shape here and checking the name afterwards keeps this table static.
-pub(super) static NAMED_ROLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(&format!(r":(?P<role>{ROLE_NAME}):`(?P<target>[^`]+)`")).unwrap());
+pub(super) static NAMED_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        r":(?P<role>{ROLE_NAME}(?::{ROLE_NAME})*):`(?P<target>[^`]+)`"
+    ))
+    .unwrap()
+});
 
 /// Whether `name` could be written as a role this scan recognizes.
 pub(crate) fn is_writable_role_name(name: &str) -> bool {

@@ -25,6 +25,7 @@ use rinx_entity::{EntitySchema, EntityType};
 
 use crate::default_role::DefaultRole;
 use crate::document_roles::DocumentRoles;
+use crate::parser_config::ParserConfig;
 use crate::syntax_recorder::SyntaxRecorder;
 use crate::templating::TemplateMap;
 
@@ -223,6 +224,8 @@ pub struct ParseCtx<'a> {
     /// schema file, and only the worker knows where that is. This crate reads
     /// a map it can hand straight to [`ParseFileLoader::load`] with no anchor.
     pub import_keys: &'a BTreeMap<String, String>,
+    /// The library's `rinx_parser.toml`: the roles it ignores.
+    config: &'a ParserConfig,
     /// The role a bare `` `text` `` is read as until a `.. default-role::`
     /// says otherwise: the library's `default_role`, Sphinx's `conf.py`
     /// setting of the same name. `title-reference` unless one is given.
@@ -330,6 +333,7 @@ impl<'a> ParseCtx<'a> {
             enclosing_entity_id: None,
             in_grid_row: false,
             import_keys: empty_import_keys(),
+            config: ParserConfig::empty_ref(),
             configured_default_role: &DefaultRole::TITLE_REFERENCE,
             document_roles: None,
             syntax: None,
@@ -425,6 +429,18 @@ impl<'a> ParseCtx<'a> {
     #[must_use]
     pub(crate) const fn document_roles(&self) -> Option<&'a DocumentRoles> {
         self.document_roles
+    }
+
+    /// The same context, under the library's parse configuration.
+    #[must_use]
+    pub fn with_parser_config(self, config: &'a ParserConfig) -> Self {
+        Self { config, ..self }
+    }
+
+    /// Whether the library's parse configuration ignores the role `name`.
+    #[must_use]
+    pub(crate) fn ignores_role(&self, name: &str) -> bool {
+        self.config.ignored_roles.contains(name)
     }
 
     /// The same context, reading a bare `` `text` `` as `role` until a
@@ -734,6 +750,7 @@ impl<'a> ParseCtx<'a> {
             enclosing_entity_id: self.enclosing_entity_id,
             in_grid_row: self.in_grid_row,
             import_keys: self.import_keys,
+            config: self.config,
             configured_default_role: self.configured_default_role,
             document_roles: self.document_roles,
             syntax: self.syntax,

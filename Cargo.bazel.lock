@@ -1,5 +1,5 @@
 {
-  "checksum": "0fbdbcaac00ace2eb6c3040571393343d7581314321b5f23e00170ddf4a6a52c",
+  "checksum": "12f56c22542e1bd07a8ebe76355f29e0a8b0e9446985b57ec913835dd0a9f31a",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -2480,7 +2480,7 @@
       ],
       "version": "0.3.105"
     },
-    "jsonschema 0.59.0": {
+    "jsonschema 0.60.2": {
       "common_attrs": {
         "deps": {
           "common": [
@@ -2513,11 +2513,11 @@
               "target": "itoa"
             },
             {
-              "id": "jsonschema-regex 0.59.0",
+              "id": "jsonschema-regex 0.60.2",
               "target": "jsonschema_regex"
             },
             {
-              "id": "jsonschema-value 0.59.0",
+              "id": "jsonschema-value 0.60.2",
               "target": "jsonschema_value"
             },
             {
@@ -2533,7 +2533,7 @@
               "target": "percent_encoding"
             },
             {
-              "id": "referencing 0.59.0",
+              "id": "referencing 0.60.2",
               "target": "referencing"
             },
             {
@@ -2582,8 +2582,8 @@
       "package_url": "https://github.com/Stranger6667/jsonschema",
       "repository": {
         "Http": {
-          "sha256": "1b320ad34c177093d21622edc9215bb608294c2333ff296672c0c8265a5ee60c",
-          "url": "https://static.crates.io/crates/jsonschema/0.59.0/download"
+          "sha256": "a42a11b47492e6a2cc76e9c7bcc8077776cb31dac444e0795d7f61bcc6441c08",
+          "url": "https://static.crates.io/crates/jsonschema/0.60.2/download"
         }
       },
       "targets": [
@@ -2594,9 +2594,9 @@
           }
         }
       ],
-      "version": "0.59.0"
+      "version": "0.60.2"
     },
-    "jsonschema-regex 0.59.0": {
+    "jsonschema-regex 0.60.2": {
       "common_attrs": {
         "deps": [
           {
@@ -2615,8 +2615,8 @@
       "package_url": "https://github.com/Stranger6667/jsonschema",
       "repository": {
         "Http": {
-          "sha256": "1472f7be79026f79e01a9b172263311e829d7c210d57b39cb57037abc0ce0500",
-          "url": "https://static.crates.io/crates/jsonschema-regex/0.59.0/download"
+          "sha256": "107aeb6ff14b8deb5610096a8ce5c554ec89806b521147eaeb3cae05b07edb7a",
+          "url": "https://static.crates.io/crates/jsonschema-regex/0.60.2/download"
         }
       },
       "targets": [
@@ -2627,9 +2627,9 @@
           }
         }
       ],
-      "version": "0.59.0"
+      "version": "0.60.2"
     },
-    "jsonschema-value 0.59.0": {
+    "jsonschema-value 0.60.2": {
       "build_script_attrs": {},
       "common_attrs": {
         "crate_features": [
@@ -2649,6 +2649,10 @@
             {
               "id": "fraction 0.17.0",
               "target": "fraction"
+            },
+            {
+              "id": "memchr 2.8.3",
+              "target": "memchr"
             },
             {
               "id": "num-cmp 0.1.0",
@@ -2690,8 +2694,8 @@
       "package_url": "https://github.com/Stranger6667/jsonschema",
       "repository": {
         "Http": {
-          "sha256": "e5a7550a7a84787e715ead0b47e01fa8c6bb7c3413630f91a8f2094c06c2078a",
-          "url": "https://static.crates.io/crates/jsonschema-value/0.59.0/download"
+          "sha256": "e281d6b177bb4834f2ffd6f92aa0443cffe29c996b251c8d94eb6f456186feba",
+          "url": "https://static.crates.io/crates/jsonschema-value/0.60.2/download"
         }
       },
       "targets": [
@@ -2708,7 +2712,7 @@
           }
         }
       ],
-      "version": "0.59.0"
+      "version": "0.60.2"
     },
     "kstring 2.0.4": {
       "common_attrs": {
@@ -3118,6 +3122,7 @@
       "common_attrs": {
         "crate_features": [
           "alloc",
+          "default",
           "std"
         ],
         "edition": "2021"
@@ -3652,7 +3657,7 @@
       ],
       "version": "0.2.19"
     },
-    "octicons-pack 19.40.0": {
+    "octicons-pack 19.42.0": {
       "common_attrs": {
         "edition": "2024"
       },
@@ -3666,8 +3671,8 @@
       "package_url": "https://github.com/2bndy5/redist-icons",
       "repository": {
         "Http": {
-          "sha256": "6f819c27690776bcb52458e3ea790e149ca67bd6ebc5f9d09de7f9ebf9dd8cb7",
-          "url": "https://static.crates.io/crates/octicons-pack/19.40.0/download"
+          "sha256": "45989fe5cd1903bf96e8f0f10ff3299ef5533ea5e0f3d190a01d5cd2f26bf09b",
+          "url": "https://static.crates.io/crates/octicons-pack/19.42.0/download"
         }
       },
       "targets": [
@@ -3678,7 +3683,7 @@
           }
         }
       ],
-      "version": "19.40.0"
+      "version": "19.42.0"
     },
     "once_cell 1.21.4": {
       "common_attrs": {
@@ -4836,7 +4841,7 @@
       ],
       "version": "1.0.27"
     },
-    "referencing 0.59.0": {
+    "referencing 0.60.2": {
       "common_attrs": {
         "crate_features": [
           "default"
@@ -4897,8 +4902,8 @@
       "package_url": "https://github.com/Stranger6667/jsonschema",
       "repository": {
         "Http": {
-          "sha256": "473f4dcca28ead7ee0f8e5b5d0bbae2549f4fc4c958fb20af328961b6c174be3",
-          "url": "https://static.crates.io/crates/referencing/0.59.0/download"
+          "sha256": "f42818036d3b37cda6bd4c494543158a36e431cb717015ef7c93acc6ba214d3b",
+          "url": "https://static.crates.io/crates/referencing/0.60.2/download"
         }
       },
       "targets": [
@@ -4909,7 +4914,7 @@
           }
         }
       ],
-      "version": "0.59.0"
+      "version": "0.60.2"
     },
     "regex 1.13.1": {
       "common_attrs": {
@@ -5264,7 +5269,7 @@
         ],
         "deps_dev": [
           {
-            "id": "jsonschema 0.59.0",
+            "id": "jsonschema 0.60.2",
             "target": "jsonschema"
           }
         ],
@@ -5489,7 +5494,7 @@
             "target": "csv"
           },
           {
-            "id": "octicons-pack 19.40.0",
+            "id": "octicons-pack 19.42.0",
             "target": "octicons_pack"
           },
           {
@@ -5497,7 +5502,15 @@
             "target": "regex"
           },
           {
-            "id": "unicode-width 0.2.2",
+            "id": "serde 1.0.229",
+            "target": "serde"
+          },
+          {
+            "id": "toml 1.1.8+spec-1.1.0",
+            "target": "toml"
+          },
+          {
+            "id": "unicode-width 0.2.3",
             "target": "unicode_width"
           }
         ],
@@ -5577,7 +5590,7 @@
             "target": "minijinja"
           },
           {
-            "id": "octicons-pack 19.40.0",
+            "id": "octicons-pack 19.42.0",
             "target": "octicons_pack"
           },
           {
@@ -7473,7 +7486,7 @@
       ],
       "version": "0.1.26"
     },
-    "unicode-width 0.2.2": {
+    "unicode-width 0.2.3": {
       "common_attrs": {
         "crate_features": [
           "cjk",
@@ -7492,8 +7505,8 @@
       "package_url": "https://github.com/unicode-rs/unicode-width",
       "repository": {
         "Http": {
-          "sha256": "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254",
-          "url": "https://static.crates.io/crates/unicode-width/0.2.2/download"
+          "sha256": "ca718471876992059f251e33aafc334346ada08042b7661dd1fe313a9bced557",
+          "url": "https://static.crates.io/crates/unicode-width/0.2.3/download"
         }
       },
       "targets": [
@@ -7504,7 +7517,7 @@
           }
         }
       ],
-      "version": "0.2.2"
+      "version": "0.2.3"
     },
     "uuid-simd 0.8.0": {
       "common_attrs": {
@@ -8286,7 +8299,7 @@
     "lsp-types 0.97.0",
     "math-core 0.9.0",
     "minijinja 2.24.0",
-    "octicons-pack 19.40.0",
+    "octicons-pack 19.42.0",
     "pathdiff 0.2.3",
     "plotters 0.3.7",
     "rayon 1.12.0",
@@ -8299,10 +8312,10 @@
     "toml 1.1.8+spec-1.1.0",
     "two-face 0.5.2+bat-0.26.1",
     "unicode-normalization 0.1.26",
-    "unicode-width 0.2.2"
+    "unicode-width 0.2.3"
   ],
   "direct_dev_deps": [
-    "jsonschema 0.59.0",
+    "jsonschema 0.60.2",
     "proptest 1.12.0"
   ],
   "workspace_members": {

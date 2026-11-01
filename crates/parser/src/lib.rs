@@ -11,6 +11,7 @@ pub(crate) mod explicit_title;
 pub(crate) mod headings;
 pub(crate) mod indent;
 pub(crate) mod inline;
+pub(crate) mod parser_config;
 pub(crate) mod syntax_recorder;
 pub(crate) mod templating;
 pub(crate) mod width;
@@ -28,4 +29,7 @@ pub use document_roles::{DefinedRole, RolesInForce};
 pub use entity_schema::load_entity_schema;
 pub use explicit_title::role_target_range;
 pub use inline::{ExternalPrefix, RoleSpec, can_precede_inline_markup, read_role, role_specs};
+pub use parser_config::{
+    IgnoredRoleFault, IgnoredRoles, InvalidIgnoredRole, ParserConfig, load_parser_config,
+};
 pub use templating::rendered_source;

@@ -92,6 +92,33 @@ document that a ``rinx_site`` renders, not HTML.
    * - ``rst_epilog``
      - The same, parsed at the end of every document, like Sphinx's
        ``rst_epilog``.
+   * - ``parse_config``
+     - The library's parse configuration, conventionally
+       ``rinx_parser.toml``: what it tells the parser beyond these attributes
+       (see :ref:`parser-config`). Editing it re-parses every document of the
+       library, and only that: the site's ``rinx.toml`` is a separate file,
+       read when rendering.
+
+.. _parser-config:
+
+Parse configuration
+~~~~~~~~~~~~~~~~~~~
+
+A ``rinx_parser.toml`` holds one setting today:
+
+.. code-block:: toml
+
+   # The roles this library's documents write that rinx does not implement —
+   # a Sphinx extension of the project's own would provide them.
+   ignored_roles = ["issue", "cite:p"]
+
+An ignored role is shown as its text, as docutils shows a role it has no
+meaning for: ``:issue:`4321``` reads ``4321``. A role rinx neither implements
+nor ignores keeps the source it was written as. A role a ``.. role::`` defines
+or the entity schema declares is never ignored, and listing a role rinx
+implements, an unknown key or a name no role is written with fails the build.
+The language server reads the same file beside a Sphinx project's ``conf.py``
+(see :ref:`vscode`).
 
 rinx_site
 ---------

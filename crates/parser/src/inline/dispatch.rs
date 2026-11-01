@@ -15,7 +15,8 @@ use crate::context::ParseCtx;
 use super::escapes::unescape;
 use super::link_destination::read_link_destination;
 use super::regexes::{
-    ANONYMOUS_PHRASED_REGEX, EMBEDDED_URI_REGEX, EXTERNAL_PREFIX_REGEX, PHRASED_LINK_REGEX,
+    ANONYMOUS_PHRASED_REGEX, EMBEDDED_URI_REGEX, EXTERNAL_PREFIX_REGEX, NAMED_ROLE_REGEX,
+    PHRASED_LINK_REGEX,
 };
 use super::roles::any::handle_any_match;
 use super::roles::c::macro_::handle_macro_match;
@@ -159,6 +160,15 @@ fn apply_inventory_selector(node: InlineNode, selector: InventorySelector) -> In
     }
 }
 
+/// The text of a ``:name:`text` `` whose name the library's parse
+/// configuration ignores, as plain text — what docutils' generic role shows —
+/// or `None` when it does not ignore it.
+fn ignored_role_text(m_str: &str, ctx: &ParseCtx<'_>) -> Option<InlineNode> {
+    let caps = NAMED_ROLE_REGEX.captures(m_str)?;
+    ctx.ignores_role(&caps["role"])
+        .then(|| InlineNode::Text(caps["target"].to_string()))
+}
+
 /// Builds the node for one matched role or link, dispatching on its `kind`.
 fn build_inline_node(
     kind: &str,
@@ -170,10 +180,12 @@ fn build_inline_node(
     match kind {
         // The schema is asked first, so a custom role can never take over an
         // entity role — `.. role::` refuses such a name, but a document's
-        // role names are case-insensitive where the schema's are not. Anything
-        // neither knows stays the text it was written as.
+        // role names are case-insensitive where the schema's are not. A role
+        // neither knows shows its text when the library ignores it, and stays
+        // the text it was written as otherwise.
         "named_role" => super::roles::entity::handle_entity_role_match(m_str, ctx.schema)
             .or_else(|| handle_custom_role_match(m_str, ctx.document_roles()))
+            .or_else(|| ignored_role_text(m_str, ctx))
             .unwrap_or_else(|| InlineNode::Text(m_str.to_string())),
         "inline" => node_opt.expect("inline node should be present"),
         "ref" => handle_ref_match(m_str),
