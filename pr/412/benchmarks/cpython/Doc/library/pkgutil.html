@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>pkgutil — Package extension utility — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="modules.html">Importing Modules</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Importing Modules"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="zipimport.html">zipimport — Import modules from Zip archives</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current">
+            <a href="pkgutil.html">pkgutil — Package extension utility</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="modulefinder.html">modulefinder — Find modules used by a script</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="runpy.html">runpy — Locating and executing Python modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="importlib.html">importlib — The implementation of :keyword:`!import`</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="importlib.resources.html">importlib.resources – Package resource reading, opening and access</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="importlib.resources.abc.html">importlib.resources.abc – Abstract base classes for resources</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="importlib.metadata.html">importlib.metadata – Accessing package metadata</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="sys_path_init.html">The initialization of the sys.path module search path</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="zipimport.html">&larr; zipimport — Import modules from Zip archives</a>
+        <a class="next" href="modulefinder.html">modulefinder — Find modules used by a script &rarr;</a>
+      </nav>
+      
+      <h1 id="pkgutil-package-extension-utility"><code class="xref py module docutils literal">pkgutil</code> — Package extension utility</h1>
+<dl class="py module">
+  <dt id="py:module:pkgutil"><code class="sig-name">pkgutil</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/pkgutil.py`</p>
+<hr />
+<p>This module provides utilities for the import system, in particular package
+support.</p>
+<dl class="py class">
+  <dt id="py:class:pkgutil.moduleinfo"><em class="property">class</em> <code class="sig-name">ModuleInfo(module_finder, name, ispkg)</code></dt>
+  <dd><p>A namedtuple that holds a brief summary of a module's info.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:pkgutil.extend_path"><code class="sig-name">extend_path(path, name)</code></dt>
+  <dd><p>Extend the search path for the modules which comprise a package.  Intended
+use is to place the following code in a package's :file:`__init__.py`:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">pkgutil</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">extend_path</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">__path__</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">extend_path</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">__path__</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-variable hl-magic hl-python">__name__</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>For each directory on <a class="reference internal" href="sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a> that has a subdirectory that matches the
+package name, add the subdirectory to the package's
+<a class="reference internal" href="../reference/datamodel.html#py:attribute:module.__path__"><code class="xref py attribute docutils literal">__path__</code></a>. This is useful
+if one wants to distribute different parts of a single logical package as multiple
+directories.</p>
+<p>It also looks for :file:`*.pkg` files beginning where <code>*</code> matches the
+<em>name</em> argument.  This feature is similar to :file:`*.pth` files (see the
+<a class="reference internal" href="site.html#py:module:site" title="site: Module responsible for site-specific configuration."><code class="xref py module docutils literal">site</code></a> module for more information), except that it doesn't special-case
+lines starting with <code>import</code>.  A :file:`*.pkg` file is trusted at face
+value: apart from skipping blank lines and ignoring comments, all entries
+found in a :file:`*.pkg` file are added to the path, regardless of whether
+they exist on the filesystem (this is a feature).</p>
+<p>If the input path is not a list (as is the case for frozen packages) it is
+returned unchanged.  The input path is not modified; an extended copy is
+returned.  Items are only appended to the copy at the end.</p>
+<p>It is assumed that <a class="reference internal" href="sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a> is a sequence.  Items of <a class="reference internal" href="sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a>
+that are not strings referring to existing directories are ignored. Unicode
+items on <a class="reference internal" href="sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a> that cause errors when used as filenames may cause
+this function to raise an exception (in line with <a class="reference internal" href="os.path.html#py:function:os.path.isdir"><code class="xref py function docutils literal">os.path.isdir</code></a>
+behavior).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:pkgutil.get_importer"><code class="sig-name">get_importer(path_item)</code></dt>
+  <dd><p>Retrieve a <a class="reference internal" href="../glossary.html#term-finder"><span class="xref std std-term">finder</span></a> for the given <em>path_item</em>.</p>
+<p>The returned finder is cached in <a class="reference internal" href="sys.html#py:data:sys.path_importer_cache"><code class="xref py data docutils literal">sys.path_importer_cache</code></a> if it was
+newly created by a path hook.</p>
+<p>The cache (or part of it) can be cleared manually if a rescan of
+<a class="reference internal" href="sys.html#py:data:sys.path_hooks"><code class="xref py data docutils literal">sys.path_hooks</code></a> is necessary.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Updated to be based directly on <a class="reference internal" href="importlib.html#py:module:importlib" title="importlib: The implementation of the import machinery."><code class="xref py module docutils literal">importlib</code></a> rather than relying
+on the package internal <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0302/"><strong>PEP 302</strong></a> import emulation.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:pkgutil.iter_importers"><code class="sig-name">iter_importers(fullname='')</code></dt>
+  <dd><p>Yield <a class="reference internal" href="../glossary.html#term-finder"><span class="xref std std-term">finder</span></a> objects for the given module name.</p>
+<p>If <em>fullname</em> contains a <code>'.'</code>, the finders will be for the package
+containing <em>fullname</em>, otherwise they will be all registered top level
+finders (i.e. those on both <a class="reference internal" href="sys.html#py:data:sys.meta_path"><code class="xref py data docutils literal">sys.meta_path</code></a> and <a class="reference internal" href="sys.html#py:data:sys.path_hooks"><code class="xref py data docutils literal">sys.path_hooks</code></a>).</p>
+<p>If the named module is in a package, that package is imported as a side
+effect of invoking this function.</p>
+<p>If no module name is specified, all top level finders are produced.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Updated to be based directly on <a class="reference internal" href="importlib.html#py:module:importlib" title="importlib: The implementation of the import machinery."><code class="xref py module docutils literal">importlib</code></a> rather than relying
+on the package internal <span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0302/"><strong>PEP 302</strong></a> import emulation.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:pkgutil.iter_modules"><code class="sig-name">iter_modules(path=None, prefix='')</code></dt>
+  <dd><p>Yields <a class="reference internal" href="pkgutil.html#py:class:pkgutil.moduleinfo"><code class="xref py class docutils literal">ModuleInfo</code></a> for all submodules on <em>path</em>, or, if
+<em>path</em> is <code>None</code>, all top-level modules on <a class="reference internal" href="sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a>.</p>
+<p><em>path</em> should be either <code>None</code> or a list of paths to look for modules in.</p>
+<p><em>prefix</em> is a string to output on the front of every module name on output.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Only works for a <a class="reference internal" href="../glossary.html#term-finder"><span class="xref std std-term">finder</span></a> which defines an <code>iter_modules()</code>
+method. This interface is non-standard, so the module also provides
+implementations for <a class="reference internal" href="importlib.html#py:class:importlib.machinery.filefinder"><code class="xref py class docutils literal">importlib.machinery.FileFinder</code></a> and
+<a class="reference internal" href="zipimport.html#py:class:zipimport.zipimporter"><code class="xref py class docutils literal">zipimport.zipimporter</code></a>.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Updated to be based directly on <a class="reference internal" href="importlib.html#py:module:importlib" title="importlib: The implementation of the import machinery."><code class="xref py module docutils literal">importlib</code></a> rather than relying
+on the package internal <span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0302/"><strong>PEP 302</strong></a> import emulation.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:pkgutil.walk_packages"><code class="sig-name">walk_packages(path=None, prefix='', onerror=None)</code></dt>
+  <dd><p>Yields <a class="reference internal" href="pkgutil.html#py:class:pkgutil.moduleinfo"><code class="xref py class docutils literal">ModuleInfo</code></a> for all modules recursively on
+<em>path</em>, or, if <em>path</em> is <code>None</code>, all accessible modules.</p>
+<p><em>path</em> should be either <code>None</code> or a list of paths to look for modules in.</p>
+<p><em>prefix</em> is a string to output on the front of every module name on output.</p>
+<p>Note that this function must import all <em>packages</em> (<em>not</em> all modules!) on
+the given <em>path</em>, in order to access the <code>__path__</code> attribute to find
+submodules.</p>
+<p><em>onerror</em> is a function which gets called with one argument (the name of the
+package which was being imported) if any exception occurs while trying to
+import a package.  If no <em>onerror</em> function is supplied, <a class="reference internal" href="exceptions.html#py:exception:importerror"><code class="xref py exception docutils literal">ImportError</code></a>s
+are caught and ignored, while all other exceptions are propagated,
+terminating the search.</p>
+<p>Examples:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> list all modules python can access
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">walk_packages</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> list all submodules of ctypes
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">walk_packages</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ctypes</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">__path__</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ctypes</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-support hl-variable hl-magic hl-python">__name__</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">.<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Only works for a <a class="reference internal" href="../glossary.html#term-finder"><span class="xref std std-term">finder</span></a> which defines an <code>iter_modules()</code>
+method. This interface is non-standard, so the module also provides
+implementations for <a class="reference internal" href="importlib.html#py:class:importlib.machinery.filefinder"><code class="xref py class docutils literal">importlib.machinery.FileFinder</code></a> and
+<a class="reference internal" href="zipimport.html#py:class:zipimport.zipimporter"><code class="xref py class docutils literal">zipimport.zipimporter</code></a>.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Updated to be based directly on <a class="reference internal" href="importlib.html#py:module:importlib" title="importlib: The implementation of the import machinery."><code class="xref py module docutils literal">importlib</code></a> rather than relying
+on the package internal <span class="target" id="index-3"></span><a class="pep reference external" href="https://peps.python.org/pep-0302/"><strong>PEP 302</strong></a> import emulation.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:pkgutil.get_data"><code class="sig-name">get_data(package, resource)</code></dt>
+  <dd><p>Get a resource from a package.</p>
+<p>This is a wrapper for the <a class="reference internal" href="../glossary.html#term-loader"><span class="xref std std-term">loader</span></a>
+<a href="#" class="broken-link"><code class="xref py method docutils literal">get_data</code></a> API.  The
+<em>package</em> argument should be the name of a package, in standard module format
+(<code>foo.bar</code>).  The <em>resource</em> argument should be in the form of a relative
+filename, using <code>/</code> as the path separator.  The parent directory name
+<code>..</code> is not allowed, and nor is a rooted name (starting with a <code>/</code>).</p>
+<p>The function returns a binary string that is the contents of the specified
+resource.</p>
+<p>For packages located in the filesystem, which have already been imported,
+this is the rough equivalent of:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">d</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">os</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">path</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">dirname</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">modules</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">package</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-support hl-variable hl-magic hl-python">__file__</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">data</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">os</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">path</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">join</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">d</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">resource</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">rb<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">read</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>If the package cannot be located or loaded, or it uses a <a class="reference internal" href="../glossary.html#term-loader"><span class="xref std std-term">loader</span></a>
+which does not support <a href="#" class="broken-link"><code class="xref py method docutils literal">get_data</code></a>,
+then <code>None</code> is returned.  In particular, the <a class="reference internal" href="../glossary.html#term-loader"><span class="xref std std-term">loader</span></a> for
+<a class="reference internal" href="../glossary.html#term-namespace-package"><span class="xref std std-term">namespace packages</span></a> does not support
+<a href="#" class="broken-link"><code class="xref py method docutils literal">get_data</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:pkgutil.resolve_name"><code class="sig-name">resolve_name(name)</code></dt>
+  <dd><p>Resolve a name to an object.</p>
+<p>This functionality is used in numerous places in the standard library (see
+:issue:`12915`) - and equivalent functionality is also in widely used
+third-party packages such as setuptools, Django and Pyramid.</p>
+<p>It is expected that <em>name</em> will be a string in one of the following
+formats, where W is shorthand for a valid Python identifier and dot stands
+for a literal period in these pseudo-regexes:</p>
+<ul>
+<li><p><code>W(.W)*</code></p>
+</li>
+<li><p><code>W(.W)*:(W(.W)*)?</code></p>
+</li>
+</ul>
+<p>The first form is intended for backward compatibility only. It assumes that
+some part of the dotted name is a package, and the rest is an object
+somewhere within that package, possibly nested inside other objects.
+Because the place where the package stops and the object hierarchy starts
+can't be inferred by inspection, repeated attempts to import must be done
+with this form.</p>
+<p>In the second form, the caller makes the division point clear through the
+provision of a single colon: the dotted name to the left of the colon is a
+package to be imported, and the dotted name to the right is the object
+hierarchy within that package. Only one import is needed in this form. If
+it ends with the colon, then a module object is returned.</p>
+<p>The function will return an object (which might be a module), or raise one
+of the following exceptions:</p>
+<p><a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> – if <em>name</em> isn't in a recognised format.</p>
+<p><a class="reference internal" href="exceptions.html#py:exception:importerror"><code class="xref py exception docutils literal">ImportError</code></a> – if an import failed when it shouldn't have.</p>
+<p><a class="reference internal" href="exceptions.html#py:exception:attributeerror"><code class="xref py exception docutils literal">AttributeError</code></a> – If a failure occurred when traversing the object
+hierarchy within the imported package to get to the desired object.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="zipimport.html">&larr; zipimport — Import modules from Zip archives</a>
+        <a class="next" href="modulefinder.html">modulefinder — Find modules used by a script &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
