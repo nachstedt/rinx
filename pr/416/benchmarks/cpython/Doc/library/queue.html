@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>queue — A synchronized queue class — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Concurrent Execution"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="threading.html">threading — Thread-based parallelism</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="multiprocessing.html">multiprocessing — Process-based parallelism</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="multiprocessing.shared_memory.html">multiprocessing.shared_memory — Shared memory for direct access across processes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concurrent.html">The concurrent package</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concurrent.futures.html">concurrent.futures — Launching parallel tasks</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concurrent.interpreters.html">concurrent.interpreters — Multiple interpreters in the same process</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="subprocess.html">subprocess — Subprocess management</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="sched.html">sched — Event scheduler</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="queue.html">queue — A synchronized queue class</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle queue — A synchronized queue class"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="queue.html#queue-objects">Queue Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="queue.html#simplequeue-objects">SimpleQueue Objects</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="contextvars.html">contextvars — Context Variables</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="_thread.html">_thread — Low-level threading API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="sched.html">&larr; sched — Event scheduler</a>
+        <a class="next" href="contextvars.html">contextvars — Context Variables &rarr;</a>
+      </nav>
+      
+      <h1 id="queue-a-synchronized-queue-class"><code class="xref py module docutils literal">queue</code> — A synchronized queue class</h1>
+<dl class="py module">
+  <dt id="py:module:queue"><code class="sig-name">queue</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/queue.py`</p>
+<hr />
+<p>The <a class="reference internal" href="queue.html#py:module:queue" title="queue: A synchronized queue class."><code class="xref py module docutils literal">queue</code></a> module implements multi-producer, multi-consumer queues.
+It is especially useful in threaded programming when information must be
+exchanged safely between multiple threads.  The <a class="reference internal" href="queue.html#py:class:queue.queue"><code class="xref py class docutils literal">Queue</code></a> class in this
+module implements all the required locking semantics.</p>
+<p>The module implements three types of queue, which differ only in the order in
+which the entries are retrieved.  In a :abbr:`FIFO (first-in, first-out)`
+queue, the first tasks added are the first retrieved.  In a
+:abbr:`LIFO (last-in, first-out)` queue, the most recently added entry is
+the first retrieved (operating like a stack).  With a priority queue,
+the entries are kept sorted (using the <a class="reference internal" href="heapq.html#py:module:heapq" title="heapq: Heap queue algorithm (a.k.a. priority queue)."><code class="xref py module docutils literal">heapq</code></a> module) and the
+lowest valued entry is retrieved first.</p>
+<p>Internally, those three types of queues use locks to temporarily block
+competing threads; however, they are not designed to handle reentrancy
+within a thread.</p>
+<p>In addition, the module implements a "simple"
+:abbr:`FIFO (first-in, first-out)` queue type, <a class="reference internal" href="queue.html#py:class:queue.simplequeue"><code class="xref py class docutils literal">SimpleQueue</code></a>, whose
+specific implementation provides additional guarantees
+in exchange for the smaller functionality.</p>
+<p>The <a class="reference internal" href="queue.html#py:module:queue" title="queue: A synchronized queue class."><code class="xref py module docutils literal">queue</code></a> module defines the following classes and exceptions:</p>
+<dl class="py class">
+  <dt id="py:class:queue.queue"><em class="property">class</em> <code class="sig-name">Queue(maxsize=0)</code></dt>
+  <dd><p>Constructor for a :abbr:`FIFO (first-in, first-out)` queue.  <em>maxsize</em> is
+an integer that sets the upperbound
+limit on the number of items that can be placed in the queue.  Insertion will
+block once this size has been reached, until queue items are consumed.  If
+<em>maxsize</em> is less than or equal to zero, the queue size is infinite.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:queue.lifoqueue"><em class="property">class</em> <code class="sig-name">LifoQueue(maxsize=0)</code></dt>
+  <dd><p>Constructor for a :abbr:`LIFO (last-in, first-out)` queue.  <em>maxsize</em> is
+an integer that sets the upperbound
+limit on the number of items that can be placed in the queue.  Insertion will
+block once this size has been reached, until queue items are consumed.  If
+<em>maxsize</em> is less than or equal to zero, the queue size is infinite.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:queue.priorityqueue"><em class="property">class</em> <code class="sig-name">PriorityQueue(maxsize=0)</code></dt>
+  <dd><p>Constructor for a priority queue.  <em>maxsize</em> is an integer that sets the upperbound
+limit on the number of items that can be placed in the queue.  Insertion will
+block once this size has been reached, until queue items are consumed.  If
+<em>maxsize</em> is less than or equal to zero, the queue size is infinite.</p>
+<p>The lowest valued entries are retrieved first (the lowest valued entry is the
+one that would be returned by <code>min(entries)</code>).  A typical pattern for
+entries is a tuple in the form: <code>(priority_number, data)</code>.</p>
+<p>If the <em>data</em> elements are not comparable, the data can be wrapped in a class
+that ignores the data item and only compares the priority number:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">dataclasses</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">dataclass</span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-generic-name hl-python">field</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">typing</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">Any</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-annotation hl-python"><span class="hl-punctuation hl-definition hl-annotation hl-python">@</span><span class="hl-meta hl-annotation hl-function hl-python"></span></span><span class="hl-meta hl-annotation hl-function hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-annotation hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">dataclass</span></span></span></span><span class="hl-meta hl-annotation hl-function hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span></span><span class="hl-meta hl-annotation hl-arguments hl-python"><span class="hl-variable hl-parameter hl-python">order</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-language hl-python">True</span></span><span class="hl-meta hl-annotation hl-function hl-python"><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-class hl-python"><span class="hl-storage hl-type hl-class hl-python"><span class="hl-keyword hl-declaration hl-class hl-python">class</span></span> <span class="hl-entity hl-name hl-class hl-python"><span class="hl-meta hl-generic-name hl-python">PrioritizedItem</span></span><span class="hl-punctuation hl-section hl-class hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">priority</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">item</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Any</span></span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">field</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">compare</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-language hl-python">False</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:queue.simplequeue"><em class="property">class</em> <code class="sig-name">SimpleQueue()</code></dt>
+  <dd><p>Constructor for an unbounded :abbr:`FIFO (first-in, first-out)` queue.
+Simple queues lack advanced functionality such as task tracking.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:queue.empty"><em class="property">exception</em> <code class="sig-name">Empty</code></dt>
+  <dd><p>Exception raised when non-blocking <a class="reference internal" href="queue.html#py:method:queue.queue.get"><code class="xref py method docutils literal">get</code></a> (or
+<a class="reference internal" href="queue.html#py:method:queue.queue.get_nowait"><code class="xref py method docutils literal">get_nowait</code></a>) is called
+on a <a class="reference internal" href="queue.html#py:class:queue.queue"><code class="xref py class docutils literal">Queue</code></a> object which is empty.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:queue.full"><em class="property">exception</em> <code class="sig-name">Full</code></dt>
+  <dd><p>Exception raised when non-blocking <a class="reference internal" href="queue.html#py:method:queue.queue.put"><code class="xref py method docutils literal">put</code></a> (or
+<a class="reference internal" href="queue.html#py:method:queue.queue.put_nowait"><code class="xref py method docutils literal">put_nowait</code></a>) is called
+on a <a class="reference internal" href="queue.html#py:class:queue.queue"><code class="xref py class docutils literal">Queue</code></a> object which is full.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:queue.shutdown"><em class="property">exception</em> <code class="sig-name">ShutDown</code></dt>
+  <dd><p>Exception raised when <a class="reference internal" href="queue.html#py:method:queue.queue.put"><code class="xref py method docutils literal">put</code></a> or <a class="reference internal" href="queue.html#py:method:queue.queue.get"><code class="xref py method docutils literal">get</code></a> is called on
+a <a class="reference internal" href="queue.html#py:class:queue.queue"><code class="xref py class docutils literal">Queue</code></a> object which has been shut down.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<a id="queueobjects"></a>
+<h2 id="queue-objects">Queue Objects</h2>
+<p>Queue objects (<a class="reference internal" href="queue.html#py:class:queue.queue"><code class="xref py class docutils literal">Queue</code></a>, <a class="reference internal" href="queue.html#py:class:queue.lifoqueue"><code class="xref py class docutils literal">LifoQueue</code></a>, or <a class="reference internal" href="queue.html#py:class:queue.priorityqueue"><code class="xref py class docutils literal">PriorityQueue</code></a>)
+provide the public methods described below.</p>
+<dl class="py method">
+  <dt id="py:method:queue.queue.qsize"><code class="sig-name">Queue.qsize()</code></dt>
+  <dd><p>Return the approximate size of the queue.  Note, qsize() &gt; 0 doesn't
+guarantee that a subsequent get() will not block, nor will qsize() &lt; maxsize
+guarantee that put() will not block.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:queue.queue.empty"><code class="sig-name">Queue.empty()</code></dt>
+  <dd><p>Return <code>True</code> if the queue is empty, <code>False</code> otherwise.  If empty()
+returns <code>True</code> it doesn't guarantee that a subsequent call to put()
+will not block.  Similarly, if empty() returns <code>False</code> it doesn't
+guarantee that a subsequent call to get() will not block.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:queue.queue.full"><code class="sig-name">Queue.full()</code></dt>
+  <dd><p>Return <code>True</code> if the queue is full, <code>False</code> otherwise.  If full()
+returns <code>True</code> it doesn't guarantee that a subsequent call to get()
+will not block.  Similarly, if full() returns <code>False</code> it doesn't
+guarantee that a subsequent call to put() will not block.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:queue.queue.put"><code class="sig-name">Queue.put(item, block=True, timeout=None)</code></dt>
+  <dd><p>Put <em>item</em> into the queue.  If optional args <em>block</em> is true and <em>timeout</em> is
+<code>None</code> (the default), block if necessary until a free slot is available.  If
+<em>timeout</em> is a positive number, it blocks at most <em>timeout</em> seconds and raises
+the <a class="reference internal" href="queue.html#py:exception:queue.full"><code class="xref py exception docutils literal">Full</code></a> exception if no free slot was available within that time.
+Otherwise (<em>block</em> is false), put an item on the queue if a free slot is
+immediately available, else raise the <a class="reference internal" href="queue.html#py:exception:queue.full"><code class="xref py exception docutils literal">Full</code></a> exception (<em>timeout</em> is
+ignored in that case).</p>
+<p>Raises <a class="reference internal" href="queue.html#py:exception:queue.shutdown"><code class="xref py exception docutils literal">ShutDown</code></a> if the queue has been shut down.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:queue.queue.put_nowait"><code class="sig-name">Queue.put_nowait(item)</code></dt>
+  <dd><p>Equivalent to <code>put(item, block=False)</code>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:queue.queue.get"><code class="sig-name">Queue.get(block=True, timeout=None)</code></dt>
+  <dd><p>Remove and return an item from the queue.  If optional args <em>block</em> is true and
+<em>timeout</em> is <code>None</code> (the default), block if necessary until an item is available.
+If <em>timeout</em> is a positive number, it blocks at most <em>timeout</em> seconds and
+raises the <a class="reference internal" href="queue.html#py:exception:queue.empty"><code class="xref py exception docutils literal">Empty</code></a> exception if no item was available within that time.
+Otherwise (<em>block</em> is false), return an item if one is immediately available,
+else raise the <a class="reference internal" href="queue.html#py:exception:queue.empty"><code class="xref py exception docutils literal">Empty</code></a> exception (<em>timeout</em> is ignored in that case).</p>
+<p>Prior to 3.0 on POSIX systems, and for all versions on Windows, if
+<em>block</em> is true and <em>timeout</em> is <code>None</code>, this operation goes into
+an uninterruptible wait on an underlying lock.  This means that no exceptions
+can occur, and in particular a SIGINT will not trigger a <a class="reference internal" href="exceptions.html#py:exception:keyboardinterrupt"><code class="xref py exception docutils literal">KeyboardInterrupt</code></a>.</p>
+<p>Raises <a class="reference internal" href="queue.html#py:exception:queue.shutdown"><code class="xref py exception docutils literal">ShutDown</code></a> if the queue has been shut down and is empty, or if
+the queue has been shut down immediately.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:queue.queue.get_nowait"><code class="sig-name">Queue.get_nowait()</code></dt>
+  <dd><p>Equivalent to <code>get(False)</code>.</p>
+</dd>
+</dl>
+<p>Two methods are offered to support tracking whether enqueued tasks have been
+fully processed by daemon consumer threads.</p>
+<dl class="py method">
+  <dt id="py:method:queue.queue.task_done"><code class="sig-name">Queue.task_done()</code></dt>
+  <dd><p>Indicate that a formerly enqueued task is complete.  Used by queue consumer
+threads.  For each <a class="reference internal" href="queue.html#py:method:queue.queue.get"><code class="xref py method docutils literal">get</code></a> used to fetch a task, a subsequent call to
+<a class="reference internal" href="queue.html#py:method:queue.queue.task_done"><code class="xref py method docutils literal">task_done</code></a> tells the queue that the processing on the task is complete.</p>
+<p>If a <a class="reference internal" href="queue.html#py:method:queue.queue.join"><code class="xref py method docutils literal">join</code></a> is currently blocking, it will resume when all items have been
+processed (meaning that a <a class="reference internal" href="queue.html#py:method:queue.queue.task_done"><code class="xref py method docutils literal">task_done</code></a> call was received for every item
+that had been <a class="reference internal" href="queue.html#py:method:queue.queue.put"><code class="xref py method docutils literal">put</code></a> into the queue).</p>
+<p>Raises a <a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> if called more times than there were items placed in
+the queue.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:queue.queue.join"><code class="sig-name">Queue.join()</code></dt>
+  <dd><p>Blocks until all items in the queue have been gotten and processed.</p>
+<p>The count of unfinished tasks goes up whenever an item is added to the queue.
+The count goes down whenever a consumer thread calls <a class="reference internal" href="queue.html#py:method:queue.queue.task_done"><code class="xref py method docutils literal">task_done</code></a> to
+indicate that the item was retrieved and all work on it is complete.  When the
+count of unfinished tasks drops to zero, <a class="reference internal" href="queue.html#py:method:queue.queue.join"><code class="xref py method docutils literal">join</code></a> unblocks.</p>
+</dd>
+</dl>
+<h3 id="waiting-for-task-completion">Waiting for task completion</h3>
+<p>Example of how to wait for enqueued tasks to be completed:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">threading</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">queue</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">q</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">queue</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Queue</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">worker</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-loop hl-while hl-python"><span class="hl-keyword hl-control hl-loop hl-while hl-python">while</span> <span class="hl-constant hl-language hl-python">True</span><span class="hl-punctuation hl-section hl-block hl-loop hl-while hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">item</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">q</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">f</span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-single hl-python">Working on </span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-begin hl-python">{</span><span class="hl-source hl-python hl-embedded"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">item</span></span></span></span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-end hl-python">}</span></span><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">f</span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-single hl-python">Finished </span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-begin hl-python">{</span><span class="hl-source hl-python hl-embedded"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">item</span></span></span></span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-end hl-python">}</span></span><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">q</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">task_done</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Turn-on the worker thread.
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">threading</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Thread</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">target</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">worker</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">daemon</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-language hl-python">True</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">start</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Send thirty task requests to the worker.
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">item</span> <span class="hl-keyword hl-control hl-loop hl-for hl-in hl-python">in</span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">range</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">30</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-punctuation hl-section hl-block hl-loop hl-for hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">q</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">put</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">item</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Block until all tasks are done.
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">q</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">join</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">All work completed<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<h3 id="terminating-queues">Terminating queues</h3>
+<p>When no longer needed, <a class="reference internal" href="queue.html#py:class:queue.queue"><code class="xref py class docutils literal">Queue</code></a> objects can be wound down
+until empty or terminated immediately with a hard shutdown.</p>
+<dl class="py method">
+  <dt id="py:method:queue.queue.shutdown"><code class="sig-name">Queue.shutdown(immediate=False)</code></dt>
+  <dd><p>Put a <a class="reference internal" href="queue.html#py:class:queue.queue"><code class="xref py class docutils literal">Queue</code></a> instance into a shutdown mode.</p>
+<p>The queue can no longer grow.
+Future calls to <a class="reference internal" href="queue.html#py:method:queue.queue.put"><code class="xref py method docutils literal">put</code></a> raise <a class="reference internal" href="queue.html#py:exception:queue.shutdown"><code class="xref py exception docutils literal">ShutDown</code></a>.
+Currently blocked callers of <a class="reference internal" href="queue.html#py:method:queue.queue.put"><code class="xref py method docutils literal">put</code></a> will be unblocked
+and will raise <a class="reference internal" href="queue.html#py:exception:queue.shutdown"><code class="xref py exception docutils literal">ShutDown</code></a> in the formerly blocked thread.</p>
+<p>If <em>immediate</em> is false (the default), the queue can be wound
+down normally with <a class="reference internal" href="queue.html#py:method:queue.queue.get"><code class="xref py method docutils literal">get</code></a> calls to extract tasks
+that have already been loaded.</p>
+<p>And if <a class="reference internal" href="queue.html#py:method:queue.queue.task_done"><code class="xref py method docutils literal">task_done</code></a> is called for each remaining task, a
+pending <a class="reference internal" href="queue.html#py:method:queue.queue.join"><code class="xref py method docutils literal">join</code></a> will be unblocked normally.</p>
+<p>Once the queue is empty, future calls to <a class="reference internal" href="queue.html#py:method:queue.queue.get"><code class="xref py method docutils literal">get</code></a> will
+raise <a class="reference internal" href="queue.html#py:exception:queue.shutdown"><code class="xref py exception docutils literal">ShutDown</code></a>.</p>
+<p>If <em>immediate</em> is true, the queue is terminated immediately.
+The queue is drained to be completely empty and the count
+of unfinished tasks is reduced by the number of tasks drained.
+If unfinished tasks is zero, callers of <a class="reference internal" href="queue.html#py:method:queue.queue.join"><code class="xref py method docutils literal">join</code></a>
+are unblocked.  Also, blocked callers of <a class="reference internal" href="queue.html#py:method:queue.queue.get"><code class="xref py method docutils literal">get</code></a>
+are unblocked and will raise <a class="reference internal" href="queue.html#py:exception:queue.shutdown"><code class="xref py exception docutils literal">ShutDown</code></a> because the
+queue is empty.</p>
+<p>Use caution when using <a class="reference internal" href="queue.html#py:method:queue.queue.join"><code class="xref py method docutils literal">join</code></a> with <em>immediate</em> set
+to true. This unblocks the join even when no work has been done
+on the tasks, violating the usual invariant for joining a queue.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<h2 id="simplequeue-objects">SimpleQueue Objects</h2>
+<p><a class="reference internal" href="queue.html#py:class:queue.simplequeue"><code class="xref py class docutils literal">SimpleQueue</code></a> objects provide the public methods described below.</p>
+<dl class="py method">
+  <dt id="py:method:queue.simplequeue.qsize"><code class="sig-name">SimpleQueue.qsize()</code></dt>
+  <dd><p>Return the approximate size of the queue.  Note, qsize() &gt; 0 doesn't
+guarantee that a subsequent get() will not block.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:queue.simplequeue.empty"><code class="sig-name">SimpleQueue.empty()</code></dt>
+  <dd><p>Return <code>True</code> if the queue is empty, <code>False</code> otherwise.  If empty()
+returns <code>False</code> it doesn't guarantee that a subsequent call to get()
+will not block.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:queue.simplequeue.put"><code class="sig-name">SimpleQueue.put(item, block=True, timeout=None)</code></dt>
+  <dd><p>Put <em>item</em> into the queue.  The method never blocks and always succeeds
+(except for potential low-level errors such as failure to allocate memory).
+The optional args <em>block</em> and <em>timeout</em> are ignored and only provided
+for compatibility with <a class="reference internal" href="queue.html#py:method:queue.queue.put"><code class="xref py method docutils literal">Queue.put</code></a>.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+   This method has a C implementation which is reentrant.  That is, a
+   ``put()`` or ``get()`` call can be interrupted by another ``put()``
+   call in the same thread without deadlocking or corrupting internal
+   state inside the queue.  This makes it appropriate for use in
+   destructors such as ``__del__`` methods or :mod:`weakref` callbacks.</pre>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:queue.simplequeue.put_nowait"><code class="sig-name">SimpleQueue.put_nowait(item)</code></dt>
+  <dd><p>Equivalent to <code>put(item, block=False)</code>, provided for compatibility with
+<a class="reference internal" href="queue.html#py:method:queue.queue.put_nowait"><code class="xref py method docutils literal">Queue.put_nowait</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:queue.simplequeue.get"><code class="sig-name">SimpleQueue.get(block=True, timeout=None)</code></dt>
+  <dd><p>Remove and return an item from the queue.  If optional args <em>block</em> is true and
+<em>timeout</em> is <code>None</code> (the default), block if necessary until an item is available.
+If <em>timeout</em> is a positive number, it blocks at most <em>timeout</em> seconds and
+raises the <a class="reference internal" href="queue.html#py:exception:queue.empty"><code class="xref py exception docutils literal">Empty</code></a> exception if no item was available within that time.
+Otherwise (<em>block</em> is false), return an item if one is immediately available,
+else raise the <a class="reference internal" href="queue.html#py:exception:queue.empty"><code class="xref py exception docutils literal">Empty</code></a> exception (<em>timeout</em> is ignored in that case).</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:queue.simplequeue.get_nowait"><code class="sig-name">SimpleQueue.get_nowait()</code></dt>
+  <dd><p>Equivalent to <code>get(False)</code>.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>Class <a class="reference internal" href="multiprocessing.html#py:class:multiprocessing.queue"><code class="xref py class docutils literal">multiprocessing.Queue</code></a></dt>
+<dd><p>A queue class for use in a multi-processing (rather than multi-threading)
+context.</p>
+</dd>
+</dl>
+<p><a class="reference internal" href="collections.html#py:class:collections.deque"><code class="xref py class docutils literal">collections.deque</code></a> is an alternative implementation of unbounded
+queues with fast atomic <a class="reference internal" href="collections.html#py:method:collections.deque.append"><code class="xref py method docutils literal">append</code></a> and
+<a class="reference internal" href="collections.html#py:method:collections.deque.popleft"><code class="xref py method docutils literal">popleft</code></a> operations that do not require locking
+and also support indexing.</p>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="sched.html">&larr; sched — Event scheduler</a>
+        <a class="next" href="contextvars.html">contextvars — Context Variables &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

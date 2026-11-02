@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>cmd — Support for line-oriented command interpreters — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Command-line interface libraries"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="argparse.html">argparse — Parser for command-line options, arguments and subcommands</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="optparse.html">optparse — Parser for command line options</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="getpass.html">getpass — Portable password input</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="fileinput.html">fileinput — Iterate over lines from multiple input streams</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="curses.html">curses — Terminal handling for character-cell displays</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="curses.ascii.html">curses.ascii — Utilities for ASCII characters</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="curses.panel.html">curses.panel — A panel stack extension for curses</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="cmd.html">cmd — Support for line-oriented command interpreters</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle cmd — Support for line-oriented command interpreters"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="cmd.html#cmd-objects">Cmd Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="cmd.html#cmd-example">Cmd Example</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="curses.panel.html">&larr; curses.panel — A panel stack extension for curses</a>
+        <a class="next" href="concurrency.html">Concurrent Execution &rarr;</a>
+      </nav>
+      
+      <h1 id="cmd-support-for-line-oriented-command-interpreters"><code class="xref py module docutils literal">cmd</code> — Support for line-oriented command interpreters</h1>
+<dl class="py module">
+  <dt id="py:module:cmd"><code class="sig-name">cmd</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Eric S. Raymond &lt;esr@snark.thyrsus.com&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/cmd.py`</p>
+<hr />
+<p>The <a class="reference internal" href="cmd.html#py:class:cmd.cmd"><code class="xref py class docutils literal">Cmd</code></a> class provides a simple framework for writing line-oriented
+command interpreters.  These are often useful for test harnesses, administrative
+tools, and prototypes that will later be wrapped in a more sophisticated
+interface.</p>
+<dl class="py class">
+  <dt id="py:class:cmd.cmd"><em class="property">class</em> <code class="sig-name">Cmd(completekey='tab', stdin=None, stdout=None)</code></dt>
+  <dd><p>A <a class="reference internal" href="cmd.html#py:class:cmd.cmd"><code class="xref py class docutils literal">Cmd</code></a> instance or subclass instance is a line-oriented interpreter
+framework.  There is no good reason to instantiate <a class="reference internal" href="cmd.html#py:class:cmd.cmd"><code class="xref py class docutils literal">Cmd</code></a> itself; rather,
+it's useful as a superclass of an interpreter class you define yourself in order
+to inherit <a class="reference internal" href="cmd.html#py:class:cmd.cmd"><code class="xref py class docutils literal">Cmd</code></a>'s methods and encapsulate action methods.</p>
+<p>The optional argument <em>completekey</em> is the <a class="reference internal" href="readline.html#py:module:readline" title="readline: GNU readline support for Python. (Unix)"><code class="xref py module docutils literal">readline</code></a> name of a completion
+key; it defaults to :kbd:`Tab`. If <em>completekey</em> is not <a class="reference internal" href="constants.html#py:data:none"><code class="xref py data docutils literal">None</code></a> and
+<a class="reference internal" href="readline.html#py:module:readline" title="readline: GNU readline support for Python. (Unix)"><code class="xref py module docutils literal">readline</code></a> is available, command completion is done automatically.</p>
+<p>The default, <code>'tab'</code>, is treated specially, so that it refers to the
+:kbd:`Tab` key on every <a class="reference internal" href="readline.html#py:data:readline.backend"><code class="xref py data docutils literal">readline.backend</code></a>.
+Specifically, if <a class="reference internal" href="readline.html#py:data:readline.backend"><code class="xref py data docutils literal">readline.backend</code></a> is <code>editline</code>,
+<code>Cmd</code> will use <code>'^I'</code> instead of <code>'tab'</code>.
+Note that other values are not treated this way, and might only work
+with a specific backend.</p>
+<p>The optional arguments <em>stdin</em> and <em>stdout</em> specify the  input and output file
+objects that the Cmd instance or subclass  instance will use for input and
+output. If not specified, they will default to <a class="reference internal" href="sys.html#py:data:sys.stdin"><code class="xref py data docutils literal">sys.stdin</code></a> and
+<a class="reference internal" href="sys.html#py:data:sys.stdout"><code class="xref py data docutils literal">sys.stdout</code></a>.</p>
+<p>If you want a given <em>stdin</em> to be used, make sure to set the instance's
+<a class="reference internal" href="cmd.html#py:attribute:cmd.cmd.use_rawinput"><code class="xref py attribute docutils literal">use_rawinput</code></a> attribute to <code>False</code>, otherwise <em>stdin</em> will be
+ignored.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p><code>completekey='tab'</code> is replaced by <code>'^I'</code> for <code>editline</code>.</p>
+</div>
+</dd>
+</dl>
+<a id="cmd-objects"></a>
+<h2 id="cmd-objects">Cmd Objects</h2>
+<p>A <a class="reference internal" href="cmd.html#py:class:cmd.cmd"><code class="xref py class docutils literal">Cmd</code></a> instance has the following methods:</p>
+<dl class="py method">
+  <dt id="py:method:cmd.cmd.cmdloop"><code class="sig-name">Cmd.cmdloop(intro=None)</code></dt>
+  <dd><p>Repeatedly issue a prompt, accept input, parse an initial prefix off the
+received input, and dispatch to action methods, passing them the remainder of
+the line as argument.</p>
+<p>The optional argument is a banner or intro string to be issued before the first
+prompt (this overrides the <a class="reference internal" href="cmd.html#py:attribute:cmd.cmd.intro"><code class="xref py attribute docutils literal">intro</code></a> class attribute).</p>
+<p>If the <a class="reference internal" href="readline.html#py:module:readline" title="readline: GNU readline support for Python. (Unix)"><code class="xref py module docutils literal">readline</code></a> module is loaded, input will automatically inherit
+<strong class="program">bash</strong>-like history-list editing (e.g. :kbd:`Control-P` scrolls back
+to the last command, :kbd:`Control-N` forward to the next one, :kbd:`Control-F`
+moves the cursor to the right non-destructively, :kbd:`Control-B` moves the
+cursor to the left non-destructively, etc.).</p>
+<p>An end-of-file on input is passed back as the string <code>'EOF'</code>.</p>
+<span id="index-0"></span>
+<p>An interpreter instance will recognize a command name <code>foo</code> if and only if it
+has a method <code class="xref py method docutils literal">do_foo</code>.  As a special case, a line beginning with the
+character <code>'?'</code> is dispatched to the method <a class="reference internal" href="cmd.html#py:method:cmd.cmd.do_help"><code class="xref py method docutils literal">do_help</code></a>.  As another
+special case, a line beginning with the character <code>'!'</code> is dispatched to the
+method <code class="xref py method docutils literal">do_shell</code> (if such a method is defined).</p>
+<p>This method will return when the <a class="reference internal" href="cmd.html#py:method:cmd.cmd.postcmd"><code class="xref py method docutils literal">postcmd</code></a> method returns a true value.
+The <em>stop</em> argument to <a class="reference internal" href="cmd.html#py:method:cmd.cmd.postcmd"><code class="xref py method docutils literal">postcmd</code></a> is the return value from the command's
+corresponding <code class="xref py method docutils literal">do_*</code> method.</p>
+<p>If completion is enabled, completing commands will be done automatically, and
+completing of commands args is done by calling <code class="xref py method docutils literal">complete_foo</code> with
+arguments <em>text</em>, <em>line</em>, <em>begidx</em>, and <em>endidx</em>.  <em>text</em> is the string prefix
+we are attempting to match: all returned matches must begin with it. <em>line</em> is
+the current input line with leading whitespace removed, <em>begidx</em> and <em>endidx</em>
+are the beginning and ending indexes of the prefix text, which could be used to
+provide different completion depending upon which position the argument is in.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:cmd.cmd.do_help"><code class="sig-name">Cmd.do_help(arg)</code></dt>
+  <dd><p>All subclasses of <a class="reference internal" href="cmd.html#py:class:cmd.cmd"><code class="xref py class docutils literal">Cmd</code></a> inherit a predefined <code class="xref py method docutils literal">do_help</code>.  This
+method, called with an argument <code>'bar'</code>, invokes the corresponding method
+<code class="xref py method docutils literal">help_bar</code>, and if that is not present, prints the docstring of
+<code class="xref py method docutils literal">do_bar</code>, if available.  With no argument, <code class="xref py method docutils literal">do_help</code> lists all
+available help topics (that is, all commands with corresponding
+<code class="xref py method docutils literal">help_*</code> methods or commands that have docstrings), and also lists any
+undocumented commands.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:cmd.cmd.onecmd"><code class="sig-name">Cmd.onecmd(str)</code></dt>
+  <dd><p>Interpret the argument as though it had been typed in response to the prompt.
+This may be overridden, but should not normally need to be; see the
+<a class="reference internal" href="cmd.html#py:method:cmd.cmd.precmd"><code class="xref py method docutils literal">precmd</code></a> and <a class="reference internal" href="cmd.html#py:method:cmd.cmd.postcmd"><code class="xref py method docutils literal">postcmd</code></a> methods for useful execution hooks.  The
+return value is a flag indicating whether interpretation of commands by the
+interpreter should stop.  If there is a <code class="xref py method docutils literal">do_*</code> method for the command
+<em>str</em>, the return value of that method is returned, otherwise the return value
+from the <a class="reference internal" href="cmd.html#py:method:cmd.cmd.default"><code class="xref py method docutils literal">default</code></a> method is returned.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:cmd.cmd.emptyline"><code class="sig-name">Cmd.emptyline()</code></dt>
+  <dd><p>Method called when an empty line is entered in response to the prompt. If this
+method is not overridden, it repeats the last nonempty command entered.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:cmd.cmd.default"><code class="sig-name">Cmd.default(line)</code></dt>
+  <dd><p>Method called on an input line when the command prefix is not recognized. If
+this method is not overridden, it prints an error message and returns.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:cmd.cmd.completedefault"><code class="sig-name">Cmd.completedefault(text, line, begidx, endidx)</code></dt>
+  <dd><p>Method called to complete an input line when no command-specific
+<code class="xref py method docutils literal">complete_*</code> method is available.  By default, it returns an empty list.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:cmd.cmd.columnize"><code class="sig-name">Cmd.columnize(list, displaywidth=80)</code></dt>
+  <dd><p>Method called to display a list of strings as a compact set of columns.
+Each column is only as wide as necessary.
+Columns are separated by two spaces for readability.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:cmd.cmd.precmd"><code class="sig-name">Cmd.precmd(line)</code></dt>
+  <dd><p>Hook method executed just before the command line <em>line</em> is interpreted, but
+after the input prompt is generated and issued.  This method is a stub in
+<a class="reference internal" href="cmd.html#py:class:cmd.cmd"><code class="xref py class docutils literal">Cmd</code></a>; it exists to be overridden by subclasses.  The return value is
+used as the command which will be executed by the <a class="reference internal" href="cmd.html#py:method:cmd.cmd.onecmd"><code class="xref py method docutils literal">onecmd</code></a> method; the
+<a class="reference internal" href="cmd.html#py:method:cmd.cmd.precmd"><code class="xref py method docutils literal">precmd</code></a> implementation may re-write the command or simply return <em>line</em>
+unchanged.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:cmd.cmd.postcmd"><code class="sig-name">Cmd.postcmd(stop, line)</code></dt>
+  <dd><p>Hook method executed just after a command dispatch is finished.  This method is
+a stub in <a class="reference internal" href="cmd.html#py:class:cmd.cmd"><code class="xref py class docutils literal">Cmd</code></a>; it exists to be overridden by subclasses.  <em>line</em> is the
+command line which was executed, and <em>stop</em> is a flag which indicates whether
+execution will be terminated after the call to <a class="reference internal" href="cmd.html#py:method:cmd.cmd.postcmd"><code class="xref py method docutils literal">postcmd</code></a>; this will be the
+return value of the <a class="reference internal" href="cmd.html#py:method:cmd.cmd.onecmd"><code class="xref py method docutils literal">onecmd</code></a> method.  The return value of this method will
+be used as the new value for the internal flag which corresponds to <em>stop</em>;
+returning false will cause interpretation to continue.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:cmd.cmd.preloop"><code class="sig-name">Cmd.preloop()</code></dt>
+  <dd><p>Hook method executed once when <a class="reference internal" href="cmd.html#py:method:cmd.cmd.cmdloop"><code class="xref py method docutils literal">cmdloop</code></a> is called.  This method is a stub
+in <a class="reference internal" href="cmd.html#py:class:cmd.cmd"><code class="xref py class docutils literal">Cmd</code></a>; it exists to be overridden by subclasses.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:cmd.cmd.postloop"><code class="sig-name">Cmd.postloop()</code></dt>
+  <dd><p>Hook method executed once when <a class="reference internal" href="cmd.html#py:method:cmd.cmd.cmdloop"><code class="xref py method docutils literal">cmdloop</code></a> is about to return. This method
+is a stub in <a class="reference internal" href="cmd.html#py:class:cmd.cmd"><code class="xref py class docutils literal">Cmd</code></a>; it exists to be overridden by subclasses.</p>
+</dd>
+</dl>
+<p>Instances of <a class="reference internal" href="cmd.html#py:class:cmd.cmd"><code class="xref py class docutils literal">Cmd</code></a> subclasses have some public instance variables:</p>
+<dl class="py attribute">
+  <dt id="py:attribute:cmd.cmd.prompt"><code class="sig-name">Cmd.prompt</code></dt>
+  <dd><p>The prompt issued to solicit input.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:cmd.cmd.identchars"><code class="sig-name">Cmd.identchars</code></dt>
+  <dd><p>The string of characters accepted for the command prefix.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:cmd.cmd.lastcmd"><code class="sig-name">Cmd.lastcmd</code></dt>
+  <dd><p>The last nonempty command prefix seen.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:cmd.cmd.cmdqueue"><code class="sig-name">Cmd.cmdqueue</code></dt>
+  <dd><p>A list of queued input lines.  The cmdqueue list is checked in
+<a class="reference internal" href="cmd.html#py:method:cmd.cmd.cmdloop"><code class="xref py method docutils literal">cmdloop</code></a> when new input is needed; if it is nonempty, its elements
+will be processed in order, as if entered at the prompt.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:cmd.cmd.intro"><code class="sig-name">Cmd.intro</code></dt>
+  <dd><p>A string to issue as an intro or banner.  May be overridden by giving the
+<a class="reference internal" href="cmd.html#py:method:cmd.cmd.cmdloop"><code class="xref py method docutils literal">cmdloop</code></a> method an argument.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:cmd.cmd.doc_header"><code class="sig-name">Cmd.doc_header</code></dt>
+  <dd><p>The header to issue if the help output has a section for documented commands.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:cmd.cmd.misc_header"><code class="sig-name">Cmd.misc_header</code></dt>
+  <dd><p>The header to issue if the help output has a section for miscellaneous  help
+topics (that is, there are <code class="xref py method docutils literal">help_*</code> methods without corresponding
+<code class="xref py method docutils literal">do_*</code> methods).</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:cmd.cmd.undoc_header"><code class="sig-name">Cmd.undoc_header</code></dt>
+  <dd><p>The header to issue if the help output has a section for undocumented  commands
+(that is, there are <code class="xref py method docutils literal">do_*</code> methods without corresponding <code class="xref py method docutils literal">help_*</code>
+methods).</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:cmd.cmd.ruler"><code class="sig-name">Cmd.ruler</code></dt>
+  <dd><p>The character used to draw separator lines under the help-message headers.  If
+empty, no ruler line is drawn.  It defaults to <code>'='</code>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:cmd.cmd.use_rawinput"><code class="sig-name">Cmd.use_rawinput</code></dt>
+  <dd><p>A flag, defaulting to true.  If true, <a class="reference internal" href="cmd.html#py:method:cmd.cmd.cmdloop"><code class="xref py method docutils literal">cmdloop</code></a> uses <a class="reference internal" href="functions.html#py:function:input"><code class="xref py function docutils literal">input</code></a> to
+display a prompt and read the next command; if false, <a class="reference internal" href="sys.html#py:data:sys.stdout"><code class="xref py data docutils literal">sys.stdout.write()</code></a>
+and <a class="reference internal" href="sys.html#py:data:sys.stdin"><code class="xref py data docutils literal">sys.stdin.readline()</code></a> are used. (This means that by importing
+<a class="reference internal" href="readline.html#py:module:readline" title="readline: GNU readline support for Python. (Unix)"><code class="xref py module docutils literal">readline</code></a>, on systems that support it, the interpreter will automatically
+support <strong class="program">Emacs</strong>-like line editing  and command-history keystrokes.)</p>
+</dd>
+</dl>
+<a id="cmd-example"></a>
+<h2 id="cmd-example">Cmd Example</h2>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Raymond Hettinger &lt;python at rcn dot com&gt;</pre>
+</div>
+<p>The <a class="reference internal" href="cmd.html#py:module:cmd" title="cmd: Build line-oriented command interpreters."><code class="xref py module docutils literal">cmd</code></a> module is mainly useful for building custom shells that let a
+user work with a program interactively.</p>
+<p>This section presents a simple example of how to build a shell around a few of
+the commands in the <a class="reference internal" href="turtle.html#py:module:turtle" title="turtle: An educational framework for simple graphics applications"><code class="xref py module docutils literal">turtle</code></a> module.</p>
+<p>Basic turtle commands such as <a href="#" class="broken-link"><code class="xref py method docutils literal">forward</code></a> are added to a
+<a class="reference internal" href="cmd.html#py:class:cmd.cmd"><code class="xref py class docutils literal">Cmd</code></a> subclass with method named <code class="xref py method docutils literal">do_forward</code>.  The argument is
+converted to a number and dispatched to the turtle module.  The docstring is
+used in the help utility provided by the shell.</p>
+<p>The example also includes a basic record and playback facility implemented with
+the <a class="reference internal" href="cmd.html#py:method:cmd.cmd.precmd"><code class="xref py method docutils literal">precmd</code></a> method which is responsible for converting the input to
+lowercase and writing the commands to a file.  The <code class="xref py method docutils literal">do_playback</code> method
+reads the file and adds the recorded commands to the <a class="reference internal" href="cmd.html#py:attribute:cmd.cmd.cmdqueue"><code class="xref py attribute docutils literal">cmdqueue</code></a> for
+immediate playback:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">cmd</span></span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">turtle</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-constant hl-language hl-import-all hl-python">*</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-class hl-python"><span class="hl-storage hl-type hl-class hl-python"><span class="hl-keyword hl-declaration hl-class hl-python">class</span></span> <span class="hl-entity hl-name hl-class hl-python"><span class="hl-meta hl-generic-name hl-python">TurtleShell</span></span><span class="hl-meta hl-class hl-inheritance hl-python"><span class="hl-punctuation hl-section hl-inheritance hl-begin hl-python">(</span></span></span><span class="hl-meta hl-class hl-inheritance hl-python"><span class="hl-entity hl-other hl-inherited-class hl-python">cmd<span class="hl-punctuation hl-accessor hl-dot hl-python">.</span>Cmd</span><span class="hl-punctuation hl-section hl-inheritance hl-end hl-python">)</span></span><span class="hl-meta hl-class hl-python"><span class="hl-punctuation hl-section hl-class hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">intro</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Welcome to the turtle shell.   Type help or ? to list commands.<span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">prompt</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">(turtle) <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">file</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-constant hl-language hl-python">None</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> ----- basic turtle commands -----
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">do_forward</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Move the turtle forward by the specified distance:  FORWARD 10<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">forward</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">parse</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">arg</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">do_right</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Turn turtle right by given number of degrees:  RIGHT 20<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">right</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">parse</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">arg</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">do_left</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Turn turtle left by given number of degrees:  LEFT 90<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">left</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">parse</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">arg</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">do_goto</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Move turtle to an absolute position with changing orientation.  GOTO 100 200<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">goto</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">parse</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">arg</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">do_home</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Return turtle to the home position:  HOME<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">home</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">do_circle</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Draw circle with given radius an options extent and steps:  CIRCLE 50<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">circle</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">parse</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">arg</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">do_position</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Print the current turtle position:  POSITION<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Current position is <span class="hl-constant hl-other hl-placeholder hl-python">%d</span> <span class="hl-constant hl-other hl-placeholder hl-python">%d</span><span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">%</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">position</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">do_heading</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Print the current turtle heading in degrees:  HEADING<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Current heading is <span class="hl-constant hl-other hl-placeholder hl-python">%d</span><span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">%</span> <span class="hl-meta hl-group hl-python"><span class="hl-punctuation hl-section hl-group hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">heading</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-tuple hl-python">,</span><span class="hl-punctuation hl-section hl-group hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">do_color</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Set the color:  COLOR BLUE<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">color</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">arg</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">lower</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">do_undo</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Undo (repeatedly) the last turtle action(s):  UNDO<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">do_reset</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Clear the screen and return turtle to center:  RESET<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">reset</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">do_bye</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Stop recording, close the turtle window, and exit:  BYE<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Thank you for using Turtle<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">close</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">bye</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-constant hl-language hl-python">True</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> ----- record and playback -----
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">do_record</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Save future commands to filename:  RECORD rose.cmd<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">file</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">arg</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">w<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">do_playback</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Playback commands from a file:  PLAYBACK rose.cmd<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">close</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">arg</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">f</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">            <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">cmdqueue</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">extend</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">f</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">read</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">splitlines</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">precmd</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">line</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">lower</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">file</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">and</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">playback<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> <span class="hl-keyword hl-operator hl-logical hl-python">not</span> <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">            <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">file</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">file</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">close</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">file</span></span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">            <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">file</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">close</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">            <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">file</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-constant hl-language hl-python">None</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">parse</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Convert a series of zero or more numbers to an argument tuple<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-python">tuple</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">map</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">arg</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">split</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-variable hl-magic hl-python">__name__</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">__main__<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">TurtleShell</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">cmdloop</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>Here is a sample session with the turtle shell showing the help functions, using
+blank lines to repeat commands, and the simple record and playback facility:</p>
+<div class="highlight-none notranslate">
+<div class="highlight hl-code"><pre>
+Welcome to the turtle shell.   Type help or ? to list commands.
+
+(turtle) ?
+
+Documented commands (type help &lt;topic&gt;):
+========================================
+bye     color    goto     home  playback  record  right
+circle  forward  heading  left  position  reset   undo
+
+(turtle) help forward
+Move the turtle forward by the specified distance:  FORWARD 10
+(turtle) record spiral.cmd
+(turtle) position
+Current position is 0 0
+
+(turtle) heading
+Current heading is 0
+
+(turtle) reset
+(turtle) circle 20
+(turtle) right 30
+(turtle) circle 40
+(turtle) right 30
+(turtle) circle 60
+(turtle) right 30
+(turtle) circle 80
+(turtle) right 30
+(turtle) circle 100
+(turtle) right 30
+(turtle) circle 120
+(turtle) right 30
+(turtle) circle 120
+(turtle) heading
+Current heading is 180
+
+(turtle) forward 100
+(turtle)
+(turtle) right 90
+(turtle) forward 100
+(turtle)
+(turtle) right 90
+(turtle) forward 400
+(turtle) right 90
+(turtle) forward 500
+(turtle) right 90
+(turtle) forward 400
+(turtle) right 90
+(turtle) forward 300
+(turtle) playback spiral.cmd
+Current position is 0 0
+
+Current heading is 0
+
+Current heading is 180
+
+(turtle) bye
+Thank you for using Turtle</pre></div>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="curses.panel.html">&larr; curses.panel — A panel stack extension for curses</a>
+        <a class="next" href="concurrency.html">Concurrent Execution &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

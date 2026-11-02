@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>fcntl — The fcntl and ioctl system calls — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="unix.html">Unix-specific services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Unix-specific services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="shlex.html">shlex — Simple lexical analysis</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="posix.html">posix — The most common POSIX system calls</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pwd.html">pwd — The password database</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="grp.html">grp — The group database</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="termios.html">termios — POSIX style tty control</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tty.html">tty — Terminal control functions</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pty.html">pty — Pseudo-terminal utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current">
+            <a href="fcntl.html">fcntl — The fcntl and ioctl system calls</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="resource.html">resource — Resource usage information</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="syslog.html">syslog — Unix syslog library routines</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="pty.html">&larr; pty — Pseudo-terminal utilities</a>
+        <a class="next" href="resource.html">resource — Resource usage information &rarr;</a>
+      </nav>
+      
+      <h1 id="fcntl-the-fcntl-and-ioctl-system-calls"><code class="xref py module docutils literal">fcntl</code> — The <code>fcntl</code> and <code>ioctl</code> system calls</h1>
+<dl class="py module">
+  <dt id="py:module:fcntl"><code class="sig-name">fcntl</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Jaap Vermeulen</pre>
+</div>
+<span id="index-0"></span>
+<hr />
+<p>This module performs file and I/O control on file descriptors. It is an
+interface to the <a href="#" class="broken-link"><code class="xref c function docutils literal">fcntl</code></a> and <a href="#" class="broken-link"><code class="xref c function docutils literal">ioctl</code></a> Unix routines.
+See the :manpage:`fcntl(2)` and :manpage:`ioctl(2)` Unix manual pages
+for full details.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'availability'</p>
+<pre class="directive-error-source">.. availability:: Unix, not WASI.</pre>
+</div>
+<p>All functions in this module take a file descriptor <em>fd</em> as their first
+argument.  This can be an integer file descriptor, such as returned by
+<code>sys.stdin.fileno()</code>, or an <a class="reference internal" href="io.html#py:class:io.iobase"><code class="xref py class docutils literal">io.IOBase</code></a> object, such as <code>sys.stdin</code>
+itself, which provides a <a class="reference internal" href="io.html#py:method:io.iobase.fileno"><code class="xref py method docutils literal">fileno</code></a> that returns a genuine file
+descriptor.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Operations in this module used to raise an <a class="reference internal" href="exceptions.html#py:exception:ioerror"><code class="xref py exception docutils literal">IOError</code></a> where they now
+raise an <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a>.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
+<p>The <code class="xref py module docutils literal">fcntl</code> module now contains <code>F_ADD_SEALS</code>, <code>F_GET_SEALS</code>, and
+<code>F_SEAL_*</code> constants for sealing of <a class="reference internal" href="os.html#py:function:os.memfd_create"><code class="xref py function docutils literal">os.memfd_create</code></a> file
+descriptors.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.9:</span></p>
+<p>On macOS, the <code class="xref py module docutils literal">fcntl</code> module exposes the <code>F_GETPATH</code> constant,
+which obtains the path of a file from a file descriptor.
+On Linux(&gt;=3.15), the <code class="xref py module docutils literal">fcntl</code> module exposes the <code>F_OFD_GETLK</code>,
+<code>F_OFD_SETLK</code> and <code>F_OFD_SETLKW</code> constants, which are used when working
+with open file description locks.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>On Linux &gt;= 2.6.11, the <code class="xref py module docutils literal">fcntl</code> module exposes the <code>F_GETPIPE_SZ</code> and
+<code>F_SETPIPE_SZ</code> constants, which allow to check and modify a pipe's size
+respectively.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>On FreeBSD, the <code class="xref py module docutils literal">fcntl</code> module exposes the <code>F_DUP2FD</code> and
+<code>F_DUP2FD_CLOEXEC</code> constants, which allow to duplicate a file descriptor,
+the latter setting <code>FD_CLOEXEC</code> flag in addition.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p>On Linux &gt;= 4.5, the <a class="reference internal" href="fcntl.html#py:module:fcntl" title="fcntl: The fcntl() and ioctl() system calls. (Unix)"><code class="xref py module docutils literal">fcntl</code></a> module exposes the <code>FICLONE</code> and
+<code>FICLONERANGE</code> constants, which allow to share some data of one file with
+another file by reflinking on some filesystems (e.g., btrfs, OCFS2, and
+XFS). This behavior is commonly referred to as "copy-on-write".</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>On Linux &gt;= 2.6.32, the <code class="xref py module docutils literal">fcntl</code> module exposes the
+<code>F_GETOWN_EX</code>, <code>F_SETOWN_EX</code>, <code>F_OWNER_TID</code>, <code>F_OWNER_PID</code>, <code>F_OWNER_PGRP</code> constants, which allow to direct I/O availability signals
+to a specific thread, process, or process group.
+On Linux &gt;= 4.13, the <code class="xref py module docutils literal">fcntl</code> module exposes the
+<code>F_GET_RW_HINT</code>, <code>F_SET_RW_HINT</code>, <code>F_GET_FILE_RW_HINT</code>,
+<code>F_SET_FILE_RW_HINT</code>, and <code>RWH_WRITE_LIFE_*</code> constants, which allow
+to inform the kernel about the relative expected lifetime of writes on
+a given inode or via a particular open file description.
+On Linux &gt;= 5.1 and NetBSD, the <code class="xref py module docutils literal">fcntl</code> module exposes the
+<code>F_SEAL_FUTURE_WRITE</code> constant for use with <code>F_ADD_SEALS</code> and
+<code>F_GET_SEALS</code> operations.
+On FreeBSD, the <code class="xref py module docutils literal">fcntl</code> module exposes the <code>F_READAHEAD</code>, <code>F_ISUNIONSTACK</code>, and <code>F_KINFO</code> constants.
+On macOS and FreeBSD, the <code class="xref py module docutils literal">fcntl</code> module exposes the <code>F_RDAHEAD</code>
+constant.
+On NetBSD and AIX, the <code class="xref py module docutils literal">fcntl</code> module exposes the <code>F_CLOSEM</code>
+constant.
+On NetBSD, the <code class="xref py module docutils literal">fcntl</code> module exposes the <code>F_MAXFD</code> constant.
+On macOS and NetBSD, the <code class="xref py module docutils literal">fcntl</code> module exposes the <code>F_GETNOSIGPIPE</code>
+and <code>F_SETNOSIGPIPE</code> constant.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>On Linux &gt;= 6.1, the <code class="xref py module docutils literal">fcntl</code> module exposes the <code>F_DUPFD_QUERY</code>
+to query a file descriptor pointing to the same file.</p>
+</div>
+<p>The module defines the following functions:</p>
+<dl class="py function">
+  <dt id="py:function:fcntl.fcntl"><code class="sig-name">fcntl(fd, cmd, arg=0, /)</code></dt>
+  <dd><p>Perform the operation <em>cmd</em> on file descriptor <em>fd</em> (file objects providing
+a <a class="reference internal" href="io.html#py:method:io.iobase.fileno"><code class="xref py method docutils literal">fileno</code></a> method are accepted as well).  The values used
+for <em>cmd</em> are operating system dependent, and are available as constants
+in the <a class="reference internal" href="fcntl.html#py:module:fcntl" title="fcntl: The fcntl() and ioctl() system calls. (Unix)"><code class="xref py module docutils literal">fcntl</code></a> module, using the same names as used in the relevant C
+header files. The argument <em>arg</em> can either be an integer value, a
+<a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a>, or a string.
+The type and size of <em>arg</em> must match the type and size of
+the argument of the operation as specified in the relevant C documentation.</p>
+<p>When <em>arg</em> is an integer, the function returns the integer
+return value of the C <a href="#" class="broken-link"><code class="xref c function docutils literal">fcntl</code></a> call.</p>
+<p>When the argument is bytes-like object, it represents a binary structure,
+for example, created by <a class="reference internal" href="struct.html#py:function:struct.pack"><code class="xref py function docutils literal">struct.pack</code></a>.
+A string value is encoded to binary using the UTF-8 encoding.
+The binary data is copied to a buffer whose address is
+passed to the C <a href="#" class="broken-link"><code class="xref c function docutils literal">fcntl</code></a> call.  The return value after a successful
+call is the contents of the buffer, converted to a <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> object.
+The length of the returned object will be the same as the length of the
+<em>arg</em> argument. This is limited to 1024 bytes.</p>
+<p>If the <a href="#" class="broken-link"><code class="xref c function docutils literal">fcntl</code></a> call fails, an <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> is raised.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>If the type or the size of <em>arg</em> does not match the type or size
+of the argument of the operation (for example, if an integer is
+passed when a pointer is expected, or the information returned in
+the buffer by the operating system is larger than 1024 bytes),
+this is most likely to result in a segmentation violation or
+a more subtle data corruption.</p>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: fcntl.fcntl fd,cmd,arg fcntl.fcntl</pre>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>Add support of arbitrary <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like objects</span></a>,
+not only <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:fcntl.ioctl"><code class="sig-name">ioctl(fd, request, arg=0, mutate_flag=True, /)</code></dt>
+  <dd><p>This function is identical to the <a class="reference internal" href="fcntl.html#py:function:fcntl.fcntl"><code class="xref py function docutils literal">fcntl</code></a> function, except
+that the argument handling is even more complicated.</p>
+<p>The <em>request</em> parameter is limited to values that can fit in 32-bits
+or 64-bits, depending on the platform.
+Additional constants of interest for use as the <em>request</em> argument can be
+found in the <a class="reference internal" href="termios.html#py:module:termios" title="termios: POSIX style tty control. (Unix)"><code class="xref py module docutils literal">termios</code></a> module, under the same names as used in
+the relevant C header files.</p>
+<p>The parameter <em>arg</em> can be an integer, a <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a>,
+or a string.
+The type and size of <em>arg</em> must match the type and size of
+the argument of the operation as specified in the relevant C documentation.</p>
+<p>If <em>arg</em> does not support the read-write buffer interface or
+the <em>mutate_flag</em> is false, behavior is as for the <a class="reference internal" href="fcntl.html#py:function:fcntl.fcntl"><code class="xref py function docutils literal">fcntl</code></a>
+function.</p>
+<p>If <em>arg</em> supports the read-write buffer interface (like <a class="reference internal" href="stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a>)
+and <em>mutate_flag</em> is true (the default), then the buffer is (in effect) passed
+to the underlying <code class="xref c function docutils literal">ioctl</code> system call, the latter's return code is
+passed back to the calling Python, and the buffer's new contents reflect the
+action of the <a href="#" class="broken-link"><code class="xref c function docutils literal">ioctl</code></a>.  This is a slight simplification, because if the
+supplied buffer is less than 1024 bytes long it is first copied into a static
+buffer 1024 bytes long which is then passed to <a class="reference internal" href="fcntl.html#py:function:fcntl.ioctl"><code class="xref py function docutils literal">ioctl</code></a> and copied back
+into the supplied buffer.</p>
+<p>If the <a href="#" class="broken-link"><code class="xref c function docutils literal">ioctl</code></a> call fails, an <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> exception is raised.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>If the type or size of <em>arg</em> does not match the type or size
+of the operation's argument (for example, if an integer is
+passed when a pointer is expected, or the information returned in
+the buffer by the operating system is larger than 1024 bytes,
+or the size of the mutable bytes-like object is too small),
+this is most likely to result in a segmentation violation or
+a more subtle data corruption.</p>
+</div>
+<p>An example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">array</span></span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fcntl</span></span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">struct</span></span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">termios</span></span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">os</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">os</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">getpgrp</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">13341</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">struct</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">unpack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">h<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fcntl</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ioctl</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">termios</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">TIOCGPGRP</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">  <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">13341</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">buf</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">array</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">array</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">h<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fcntl</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ioctl</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">termios</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">TIOCGPGRP</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">buf</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">buf</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">array</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">h<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">13341</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: fcntl.ioctl fd,request,arg fcntl.ioctl</pre>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>The GIL is always released during a system call.
+System calls failing with EINTR are automatically retried.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:fcntl.flock"><code class="sig-name">flock(fd, operation, /)</code></dt>
+  <dd><p>Perform the lock operation <em>operation</em> on file descriptor <em>fd</em> (file objects providing
+a <a class="reference internal" href="io.html#py:method:io.iobase.fileno"><code class="xref py method docutils literal">fileno</code></a> method are accepted as well). See the Unix manual
+:manpage:`flock(2)` for details.  (On some systems, this function is emulated
+using <a href="#" class="broken-link"><code class="xref c function docutils literal">fcntl</code></a>.)</p>
+<p>If the <a href="#" class="broken-link"><code class="xref c function docutils literal">flock</code></a> call fails, an <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> exception is raised.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: fcntl.flock fd,operation fcntl.flock</pre>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:fcntl.lockf"><code class="sig-name">lockf(fd, cmd, len=0, start=0, whence=0, /)</code></dt>
+  <dd><p>This is essentially a wrapper around the <a class="reference internal" href="fcntl.html#py:function:fcntl.fcntl"><code class="xref py function docutils literal">fcntl</code></a> locking calls.
+<em>fd</em> is the file descriptor (file objects providing a <a class="reference internal" href="io.html#py:method:io.iobase.fileno"><code class="xref py method docutils literal">fileno</code></a>
+method are accepted as well) of the file to lock or unlock, and <em>cmd</em>
+is one of the following values:</p>
+<dl class="py data">
+  <dt id="py:data:fcntl.lock_un"><code class="sig-name">LOCK_UN</code></dt>
+  <dd><p>Release an existing lock.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:fcntl.lock_sh"><code class="sig-name">LOCK_SH</code></dt>
+  <dd><p>Acquire a shared lock.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:fcntl.lock_ex"><code class="sig-name">LOCK_EX</code></dt>
+  <dd><p>Acquire an exclusive lock.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:fcntl.lock_nb"><code class="sig-name">LOCK_NB</code></dt>
+  <dd><p>Bitwise OR with any of the other three <code>LOCK_*</code> constants to make
+the request non-blocking.</p>
+</dd>
+</dl>
+<p>If <code class="xref py data docutils literal">LOCK_NB</code> is used and the lock cannot be acquired, an
+<a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> will be raised and the exception will have an <em>errno</em>
+attribute set to <a class="reference internal" href="errno.html#py:data:errno.eacces"><code class="xref py data docutils literal">EACCES</code></a> or <a class="reference internal" href="errno.html#py:data:errno.eagain"><code class="xref py data docutils literal">EAGAIN</code></a> (depending on the
+operating system; for portability, check for both values).  On at least some
+systems, <code class="xref py data docutils literal">LOCK_EX</code> can only be used if the file descriptor refers to a
+file opened for writing.</p>
+<p><em>len</em> is the number of bytes to lock, <em>start</em> is the byte offset at
+which the lock starts, relative to <em>whence</em>, and <em>whence</em> is as with
+<a href="#" class="broken-link"><code class="xref py function docutils literal">io.IOBase.seek</code></a>, specifically:</p>
+<ul>
+<li><p><code>0</code> – relative to the start of the file (<a class="reference internal" href="os.html#py:data:os.seek_set"><code class="xref py data docutils literal">os.SEEK_SET</code></a>)</p>
+</li>
+<li><p><code>1</code> – relative to the current buffer position (<a class="reference internal" href="os.html#py:data:os.seek_cur"><code class="xref py data docutils literal">os.SEEK_CUR</code></a>)</p>
+</li>
+<li><p><code>2</code> – relative to the end of the file (<a class="reference internal" href="os.html#py:data:os.seek_end"><code class="xref py data docutils literal">os.SEEK_END</code></a>)</p>
+</li>
+</ul>
+<p>The default for <em>start</em> is 0, which means to start at the beginning of the file.
+The default for <em>len</em> is 0 which means to lock to the end of the file.  The
+default for <em>whence</em> is also 0.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: fcntl.lockf fd,cmd,len,start,whence fcntl.lockf</pre>
+</div>
+</dd>
+</dl>
+<p>Examples (all on a SVR4 compliant system):</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">struct</span></span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fcntl</span></span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">os</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">f</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-language hl-python">...</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rv</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fcntl</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">fcntl</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">f</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fcntl</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">F_SETFL</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">os</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">O_NDELAY</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lockdata</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">struct</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">pack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">hhllhh<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fcntl</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">F_WRLCK</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rv</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fcntl</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">fcntl</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">f</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fcntl</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">F_SETLKW</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lockdata</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>Note that in the first example the return value variable <em>rv</em> will hold an
+integer value; in the second example it will hold a <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> object.  The
+structure lay-out for the <em>lockdata</em> variable is system dependent — therefore
+using the <a class="reference internal" href="fcntl.html#py:function:fcntl.flock"><code class="xref py function docutils literal">flock</code></a> call may be better.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>Module <a class="reference internal" href="os.html#py:module:os" title="os: Miscellaneous operating system interfaces."><code class="xref py module docutils literal">os</code></a></dt>
+<dd><p>If the locking flags <a class="reference internal" href="os.html#py:data:os.o_shlock"><code class="xref py data docutils literal">O_SHLOCK</code></a> and <a class="reference internal" href="os.html#py:data:os.o_exlock"><code class="xref py data docutils literal">O_EXLOCK</code></a> are
+present in the <a class="reference internal" href="os.html#py:module:os" title="os: Miscellaneous operating system interfaces."><code class="xref py module docutils literal">os</code></a> module (on BSD only), the <a class="reference internal" href="os.html#py:function:os.open"><code class="xref py function docutils literal">os.open</code></a>
+function provides an alternative to the <a class="reference internal" href="fcntl.html#py:function:fcntl.lockf"><code class="xref py function docutils literal">lockf</code></a> and <a class="reference internal" href="fcntl.html#py:function:fcntl.flock"><code class="xref py function docutils literal">flock</code></a>
+functions.</p>
+</dd>
+</dl>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="pty.html">&larr; pty — Pseudo-terminal utilities</a>
+        <a class="next" href="resource.html">resource — Resource usage information &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

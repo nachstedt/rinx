@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data Types — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="datatypes.html">Data Types</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Data Types"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="datetime.html">datetime — Basic date and time types</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="zoneinfo.html">zoneinfo — IANA time zone support</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="calendar.html">calendar — General calendar-related functions</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="collections.html">collections — Container datatypes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="collections.abc.html">collections.abc — Abstract Base Classes for Containers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="heapq.html">heapq — Heap queue algorithm</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="bisect.html">bisect — Array bisection algorithm</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="array.html">array — Efficient arrays of numeric values</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="weakref.html">weakref — Weak references</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="types.html">types — Dynamic type creation and names for built-in types</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="copy.html">copy — Shallow and deep copy operations</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pprint.html">pprint — Data pretty printer</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="reprlib.html">reprlib — Alternate repr implementation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="enum.html">enum — Support for enumerations</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="graphlib.html">graphlib — Functionality to operate with graph-like structures</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="codecs.html">&larr; codecs — Codec registry and base classes</a>
+        <a class="next" href="datetime.html">datetime — Basic date and time types &rarr;</a>
+      </nav>
+      
+      <a id="datatypes"></a>
+<h1 id="data-types">Data Types</h1>
+<p>The modules described in this chapter provide a variety of specialized data
+types such as dates and times, fixed-type arrays, heap queues, double-ended
+queues, and enumerations.</p>
+<p>Python also provides some built-in data types, in particular,
+<a class="reference internal" href="stdtypes.html#py:class:dict"><code class="xref py class docutils literal">dict</code></a>, <a class="reference internal" href="stdtypes.html#py:class:list"><code class="xref py class docutils literal">list</code></a>, <a class="reference internal" href="stdtypes.html#py:class:set"><code class="xref py class docutils literal">set</code></a> and <a class="reference internal" href="stdtypes.html#py:class:frozenset"><code class="xref py class docutils literal">frozenset</code></a>, and
+<a class="reference internal" href="stdtypes.html#py:class:tuple"><code class="xref py class docutils literal">tuple</code></a>.  The <a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> class is used to hold
+Unicode strings, and the <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> and <a class="reference internal" href="stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a> classes are used
+to hold binary data.</p>
+<p>The following modules are documented in this chapter:</p>
+<ul>
+  <li><a href="datetime.html">datetime — Basic date and time types</a>
+<ul>
+  <li><a href="datetime.html#aware-and-naive-objects">Aware and Naive Objects</a></li>
+  <li><a href="datetime.html#constants">Constants</a></li>
+  <li><a href="datetime.html#available-types">Available Types</a>
+<ul>
+  <li><a href="datetime.html#common-properties">Common Properties</a></li>
+  <li><a href="datetime.html#determining-if-an-object-is-aware-or-naive">Determining if an Object is Aware or Naive</a></li>
+</ul>
+  </li>
+  <li><a href="datetime.html#timedelta-objects">timedelta Objects</a>
+<ul>
+  <li><a href="datetime.html#examples-of-usage-timedelta">Examples of usage: timedelta</a></li>
+</ul>
+  </li>
+  <li><a href="datetime.html#date-objects">date Objects</a>
+<ul>
+  <li><a href="datetime.html#examples-of-usage-date">Examples of Usage: date</a></li>
+</ul>
+  </li>
+  <li><a href="datetime.html#datetime-objects">datetime Objects</a>
+<ul>
+  <li><a href="datetime.html#examples-of-usage-datetime">Examples of Usage: datetime</a></li>
+</ul>
+  </li>
+  <li><a href="datetime.html#time-objects">time Objects</a>
+<ul>
+  <li><a href="datetime.html#examples-of-usage-time">Examples of Usage: time</a></li>
+</ul>
+  </li>
+  <li><a href="datetime.html#tzinfo-objects">tzinfo Objects</a></li>
+  <li><a href="datetime.html#timezone-objects">timezone Objects</a></li>
+  <li><a href="datetime.html#strftime-and-strptime-behavior">strftime and strptime Behavior</a>
+<ul>
+  <li><a href="datetime.html#strftime-and-strptime-format-codes">strftime and strptime Format Codes</a></li>
+  <li><a href="datetime.html#technical-detail">Technical Detail</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li><a href="zoneinfo.html">zoneinfo — IANA time zone support</a>
+<ul>
+  <li><a href="zoneinfo.html#using-zoneinfo">Using ZoneInfo</a></li>
+  <li><a href="zoneinfo.html#data-sources">Data sources</a>
+<ul>
+  <li><a href="zoneinfo.html#configuring-the-data-sources">Configuring the data sources</a>
+<ul>
+  <li><a href="zoneinfo.html#compile-time-configuration">Compile-time configuration</a></li>
+  <li><a href="zoneinfo.html#environment-configuration">Environment configuration</a></li>
+  <li><a href="zoneinfo.html#runtime-configuration">Runtime configuration</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li><a href="zoneinfo.html#the-zoneinfo-class">The ZoneInfo class</a>
+<ul>
+  <li><a href="zoneinfo.html#string-representations">String representations</a></li>
+  <li><a href="zoneinfo.html#pickle-serialization">Pickle serialization</a></li>
+</ul>
+  </li>
+  <li><a href="zoneinfo.html#functions">Functions</a></li>
+  <li><a href="zoneinfo.html#globals">Globals</a></li>
+  <li><a href="zoneinfo.html#exceptions-and-warnings">Exceptions and warnings</a></li>
+</ul>
+  </li>
+  <li><a href="calendar.html">calendar — General calendar-related functions</a>
+<ul>
+  <li><a href="calendar.html#command-line-usage">Command-line usage</a></li>
+</ul>
+  </li>
+  <li><a href="collections.html">collections — Container datatypes</a>
+<ul>
+  <li><a href="collections.html#chainmap-objects">ChainMap objects</a>
+<ul>
+  <li><a href="collections.html#chainmap-examples-and-recipes">ChainMap Examples and Recipes</a></li>
+</ul>
+  </li>
+  <li><a href="collections.html#counter-objects">Counter objects</a></li>
+  <li><a href="collections.html#deque-objects">deque objects</a>
+<ul>
+  <li><a href="collections.html#deque-recipes">deque Recipes</a></li>
+</ul>
+  </li>
+  <li><a href="collections.html#defaultdict-objects">defaultdict objects</a>
+<ul>
+  <li><a href="collections.html#defaultdict-examples">defaultdict Examples</a></li>
+</ul>
+  </li>
+  <li><a href="collections.html#namedtuple-factory-function-for-tuples-with-named-fields">namedtuple Factory Function for Tuples with Named Fields</a></li>
+  <li><a href="collections.html#ordereddict-objects">OrderedDict objects</a>
+<ul>
+  <li><a href="collections.html#ordereddict-examples-and-recipes">OrderedDict Examples and Recipes</a></li>
+</ul>
+  </li>
+  <li><a href="collections.html#userdict-objects">UserDict objects</a></li>
+  <li><a href="collections.html#userlist-objects">UserList objects</a></li>
+  <li><a href="collections.html#userstring-objects">UserString objects</a></li>
+</ul>
+  </li>
+  <li><a href="collections.abc.html">collections.abc — Abstract Base Classes for Containers</a>
+<ul>
+  <li><a href="collections.abc.html#collections-abstract-base-classes">Collections Abstract Base Classes</a></li>
+  <li><a href="collections.abc.html#collections-abstract-base-classes-detailed-descriptions">Collections Abstract Base Classes – Detailed Descriptions</a></li>
+  <li><a href="collections.abc.html#examples-and-recipes">Examples and Recipes</a></li>
+</ul>
+  </li>
+  <li><a href="heapq.html">heapq — Heap queue algorithm</a>
+<ul>
+  <li><a href="heapq.html#basic-examples">Basic Examples</a></li>
+  <li><a href="heapq.html#priority-queue-implementation-notes">Priority Queue Implementation Notes</a></li>
+  <li><a href="heapq.html#theory">Theory</a></li>
+</ul>
+  </li>
+  <li><a href="bisect.html">bisect — Array bisection algorithm</a>
+<ul>
+  <li><a href="bisect.html#performance-notes">Performance Notes</a></li>
+  <li><a href="bisect.html#searching-sorted-lists">Searching Sorted Lists</a></li>
+  <li><a href="bisect.html#examples">Examples</a></li>
+</ul>
+  </li>
+  <li><a href="array.html">array — Efficient arrays of numeric values</a></li>
+  <li><a href="weakref.html">weakref — Weak references</a>
+<ul>
+  <li><a href="weakref.html#weak-reference-objects">Weak Reference Objects</a></li>
+  <li><a href="weakref.html#example">Example</a></li>
+  <li><a href="weakref.html#finalizer-objects">Finalizer Objects</a></li>
+  <li><a href="weakref.html#comparing-finalizers-with-del-methods">Comparing finalizers with __del__ methods</a></li>
+</ul>
+  </li>
+  <li><a href="types.html">types — Dynamic type creation and names for built-in types</a>
+<ul>
+  <li><a href="types.html#dynamic-type-creation">Dynamic Type Creation</a></li>
+  <li><a href="types.html#standard-interpreter-types">Standard Interpreter Types</a></li>
+  <li><a href="types.html#additional-utility-classes-and-functions">Additional Utility Classes and Functions</a></li>
+  <li><a href="types.html#coroutine-utility-functions">Coroutine Utility Functions</a></li>
+</ul>
+  </li>
+  <li><a href="copy.html">copy — Shallow and deep copy operations</a></li>
+  <li><a href="pprint.html">pprint — Data pretty printer</a>
+<ul>
+  <li><a href="pprint.html#functions">Functions</a></li>
+  <li><a href="pprint.html#prettyprinter-objects">PrettyPrinter Objects</a></li>
+  <li><a href="pprint.html#example">Example</a></li>
+</ul>
+  </li>
+  <li><a href="reprlib.html">reprlib — Alternate repr implementation</a>
+<ul>
+  <li><a href="reprlib.html#repr-objects">Repr Objects</a></li>
+  <li><a href="reprlib.html#subclassing-repr-objects">Subclassing Repr Objects</a></li>
+</ul>
+  </li>
+  <li><a href="enum.html">enum — Support for enumerations</a>
+<ul>
+  <li><a href="enum.html#module-contents">Module Contents</a></li>
+  <li><a href="enum.html#data-types">Data Types</a>
+<ul>
+  <li><a href="enum.html#supported-dunder-names">Supported __dunder__ names</a></li>
+  <li><a href="enum.html#supported-sunder-names">Supported _sunder_ names</a></li>
+</ul>
+  </li>
+  <li><a href="enum.html#utilities-and-decorators">Utilities and Decorators</a></li>
+  <li><a href="enum.html#notes">Notes</a></li>
+</ul>
+  </li>
+  <li><a href="graphlib.html">graphlib — Functionality to operate with graph-like structures</a>
+<ul>
+  <li><a href="graphlib.html#exceptions">Exceptions</a></li>
+</ul>
+  </li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="codecs.html">&larr; codecs — Codec registry and base classes</a>
+        <a class="next" href="datetime.html">datetime — Basic date and time types &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

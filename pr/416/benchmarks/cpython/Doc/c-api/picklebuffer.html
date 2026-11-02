@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pickle buffer objects — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python&#x2f;C API Reference Manual</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python&#x2f;C API Reference Manual"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stable.html">C API Stability</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="veryhigh.html">The Very High Level Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="refcounting.html">Reference Counting</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Exception Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="extension-modules.html">Defining extension modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="utilities.html">Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="abstract.html">Abstract Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="concrete.html">Concrete Objects Layer</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Concrete Objects Layer"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="concrete.html#fundamental-objects">Fundamental Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#numeric-objects">Numeric Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#sequence-objects">Sequence Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#container-objects">Container Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#function-objects">Function Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3 ancestor has-children">
+            <a href="concrete.html#other-objects">Other Objects</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Other Objects"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="file.html">File Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="module.html">Module Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="iterator.html">Iterator Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="descriptor.html">Descriptor Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="slice.html">Slice Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="memoryview.html">MemoryView objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4 current">
+            <a href="picklebuffer.html">Pickle buffer objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="weakref.html">Weak Reference Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="capsule.html">Capsules</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="frame.html">Frame Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="gen.html">Generator Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="coro.html">Coroutine Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="contextvars.html">Context Variables Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="typehints.html">Objects for Type Hinting</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#c-api-for-extension-modules">C API for extension modules</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init.html">Initialization, Finalization, and Threads</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init_config.html">Python Initialization Configuration</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="memory.html">Memory Management</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="objimpl.html">Object Implementation Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="apiabiversion.html">API and ABI Versioning</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="monitoring.html">Monitoring C API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="memoryview.html">&larr; MemoryView objects</a>
+        <a class="next" href="weakref.html">Weak Reference Objects &rarr;</a>
+      </nav>
+      
+      <a id="picklebuffer-objects"></a>
+<span id="index-0"></span>
+<h1 id="pickle-buffer-objects">Pickle buffer objects</h1>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.8:</span></p>
+</div>
+<p>A <a class="reference internal" href="../library/pickle.html#py:class:pickle.picklebuffer"><code class="xref py class docutils literal">pickle.PickleBuffer</code></a> object wraps a <a href="buffer.html#bufferobjects">buffer-providing object</a> for out-of-band data transfer with the <a class="reference internal" href="../library/pickle.html#py:module:pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py module docutils literal">pickle</code></a> module.</p>
+<dl class="c member">
+  <dt id="c:member:pypicklebuffer_type"><code class="sig-name">PyTypeObject PyPickleBuffer_Type</code></dt>
+  <dd><p>This instance of <a class="reference internal" href="type.html#c:type:pytypeobject"><code class="xref c type docutils literal">PyTypeObject</code></a> represents the Python pickle buffer type.
+This is the same object as <a class="reference internal" href="../library/pickle.html#py:class:pickle.picklebuffer"><code class="xref py class docutils literal">pickle.PickleBuffer</code></a> in the Python layer.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pypicklebuffer_check"><code class="sig-name">int PyPickleBuffer_Check(PyObject *op)</code></dt>
+  <dd><p>Return true if <em>op</em> is a pickle buffer instance.
+This function always succeeds.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pypicklebuffer_fromobject"><code class="sig-name">PyObject *PyPickleBuffer_FromObject(PyObject *obj)</code></dt>
+  <dd><p>Create a pickle buffer from the object <em>obj</em>.</p>
+<p>This function will fail if <em>obj</em> doesn't support the <a href="buffer.html#bufferobjects">buffer protocol</a>.</p>
+<p>On success, return a new pickle buffer instance.
+On failure, set an exception and return <code>NULL</code>.</p>
+<p>Analogous to calling <a class="reference internal" href="../library/pickle.html#py:class:pickle.picklebuffer"><code class="xref py class docutils literal">pickle.PickleBuffer</code></a> with <em>obj</em> in Python.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pypicklebuffer_getbuffer"><code class="sig-name">const Py_buffer *PyPickleBuffer_GetBuffer(PyObject *picklebuf)</code></dt>
+  <dd><p>Get a pointer to the underlying <a class="reference internal" href="buffer.html#c:type:py_buffer"><code class="xref c type docutils literal">Py_buffer</code></a> that the pickle buffer wraps.</p>
+<p>The returned pointer is valid as long as <em>picklebuf</em> is alive and has not been
+released. The caller must not modify or free the returned <a class="reference internal" href="buffer.html#c:type:py_buffer"><code class="xref c type docutils literal">Py_buffer</code></a>.
+If the pickle buffer has been released, raise <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a>.</p>
+<p>On success, return a pointer to the buffer view.
+On failure, set an exception and return <code>NULL</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pypicklebuffer_release"><code class="sig-name">int PyPickleBuffer_Release(PyObject *picklebuf)</code></dt>
+  <dd><p>Release the underlying buffer held by the pickle buffer.</p>
+<p>Return <code>0</code> on success. On failure, set an exception and return <code>-1</code>.</p>
+<p>Analogous to calling <a class="reference internal" href="../library/pickle.html#py:method:pickle.picklebuffer.release"><code class="xref py method docutils literal">pickle.PickleBuffer.release</code></a> in Python.</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="memoryview.html">&larr; MemoryView objects</a>
+        <a class="next" href="weakref.html">Weak Reference Objects &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

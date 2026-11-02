@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>wave — Read and write WAV files — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="mm.html">Multimedia Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Multimedia Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 current has-children">
+            <a href="wave.html">wave — Read and write WAV files</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle wave — Read and write WAV files"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="wave.html#wave-read-objects">Wave_read Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="wave.html#wave-write-objects">Wave_write Objects</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="colorsys.html">colorsys — Conversions between color systems</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="mm.html">&larr; Multimedia Services</a>
+        <a class="next" href="colorsys.html">colorsys — Conversions between color systems &rarr;</a>
+      </nav>
+      
+      <h1 id="wave-read-and-write-wav-files"><code class="xref py module docutils literal">wave</code> — Read and write WAV files</h1>
+<dl class="py module">
+  <dt id="py:module:wave"><code class="sig-name">wave</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Moshe Zadka &lt;moshez@zadka.site.co.il&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/wave.py`</p>
+<hr />
+<p>The <a class="reference internal" href="wave.html#py:module:wave" title="wave: Provide an interface to the WAV sound format."><code class="xref py module docutils literal">wave</code></a> module provides a convenient interface to the Waveform Audio
+"WAVE" (or "WAV") file format. Only uncompressed PCM encoded wave files are
+supported.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p>Support for <code>WAVE_FORMAT_EXTENSIBLE</code> headers was added, provided that the
+extended format is <code>KSDATAFORMAT_SUBTYPE_PCM</code>.</p>
+</div>
+<p>The <a class="reference internal" href="wave.html#py:module:wave" title="wave: Provide an interface to the WAV sound format."><code class="xref py module docutils literal">wave</code></a> module defines the following function and exception:</p>
+<dl class="py function">
+  <dt id="py:function:wave.open"><code class="sig-name">open(file, mode=None)</code></dt>
+  <dd><p>If <em>file</em> is a string, open the file by that name, otherwise treat it as a
+file-like object.  <em>mode</em> can be:</p>
+<dl>
+<dt><code>'rb'</code></dt>
+<dd><p>Read only mode.</p>
+</dd>
+<dt><code>'wb'</code></dt>
+<dd><p>Write only mode.</p>
+</dd>
+</dl>
+<p>Note that it does not allow read/write WAV files.</p>
+<p>A <em>mode</em> of <code>'rb'</code> returns a <a class="reference internal" href="wave.html#py:class:wave.wave_read"><code class="xref py class docutils literal">Wave_read</code></a> object, while a <em>mode</em> of
+<code>'wb'</code> returns a <a class="reference internal" href="wave.html#py:class:wave.wave_write"><code class="xref py class docutils literal">Wave_write</code></a> object.  If <em>mode</em> is omitted and a
+file-like object is passed as <em>file</em>, <code>file.mode</code> is used as the default
+value for <em>mode</em>.</p>
+<p>If you pass in a file-like object, the wave object will not close it when its
+<code>close()</code> method is called; it is the caller's responsibility to close
+the file object.</p>
+<p>The <a class="reference internal" href="wave.html#py:function:wave.open"><code class="xref py function docutils literal">open</code></a> function may be used in a :keyword:`with` statement.  When
+the :keyword:`!with` block completes, the <a class="reference internal" href="wave.html#py:method:wave.wave_read.close"><code class="xref py method docutils literal">Wave_read.close</code></a> or
+<a class="reference internal" href="wave.html#py:method:wave.wave_write.close"><code class="xref py method docutils literal">Wave_write.close</code></a> method is called.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>Added support for unseekable files.</p>
+</div>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:wave.error"><em class="property">exception</em> <code class="sig-name">Error</code></dt>
+  <dd><p>An error raised when something is impossible because it violates the WAV
+specification or hits an implementation deficiency.</p>
+</dd>
+</dl>
+<a id="wave-read-objects"></a>
+<h2 id="wave-read-objects">Wave_read Objects</h2>
+<dl class="py class">
+  <dt id="py:class:wave.wave_read"><em class="property">class</em> <code class="sig-name">Wave_read</code></dt>
+  <dd><p>Read a WAV file.</p>
+<p>Wave_read objects, as returned by <a class="reference internal" href="wave.html#py:function:wave.open"><code class="xref py function docutils literal">open</code></a>, have the following methods:</p>
+<dl class="py method">
+  <dt id="py:method:wave.wave_read.close"><code class="sig-name">close()</code></dt>
+  <dd><p>Close the stream if it was opened by <a class="reference internal" href="wave.html#py:module:wave" title="wave: Provide an interface to the WAV sound format."><code class="xref py module docutils literal">wave</code></a>, and make the instance
+unusable.  This is called automatically on object collection.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_read.getnchannels"><code class="sig-name">getnchannels()</code></dt>
+  <dd><p>Returns number of audio channels (<code>1</code> for mono, <code>2</code> for stereo).</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_read.getsampwidth"><code class="sig-name">getsampwidth()</code></dt>
+  <dd><p>Returns sample width in bytes.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_read.getframerate"><code class="sig-name">getframerate()</code></dt>
+  <dd><p>Returns sampling frequency.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_read.getnframes"><code class="sig-name">getnframes()</code></dt>
+  <dd><p>Returns number of audio frames.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_read.getcomptype"><code class="sig-name">getcomptype()</code></dt>
+  <dd><p>Returns compression type (<code>'NONE'</code> is the only supported type).</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_read.getcompname"><code class="sig-name">getcompname()</code></dt>
+  <dd><p>Human-readable version of <a class="reference internal" href="wave.html#py:method:wave.wave_read.getcomptype"><code class="xref py method docutils literal">getcomptype</code></a>. Usually <code>'not compressed'</code>
+parallels <code>'NONE'</code>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_read.getparams"><code class="sig-name">getparams()</code></dt>
+  <dd><p>Returns a <a class="reference internal" href="collections.html#py:function:collections.namedtuple"><code class="xref py function docutils literal">namedtuple</code></a> <code>(nchannels, sampwidth,
+framerate, nframes, comptype, compname)</code>, equivalent to output of the
+<code>get*()</code> methods.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_read.readframes"><code class="sig-name">readframes(n)</code></dt>
+  <dd><p>Reads and returns at most <em>n</em> frames of audio, as a <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> object.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_read.rewind"><code class="sig-name">rewind()</code></dt>
+  <dd><p>Rewind the file pointer to the beginning of the audio stream.</p>
+</dd>
+</dl>
+<p>The following two methods are defined for compatibility with the old <code class="xref py module docutils literal">aifc</code>
+module, and don't do anything interesting.</p>
+<dl class="py method">
+  <dt id="py:method:wave.wave_read.getmarkers"><code class="sig-name">getmarkers()</code></dt>
+  <dd><p>Returns <code>None</code>.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'deprecated-removed'</p>
+<pre class="directive-error-source">.. deprecated-removed:: 3.13 3.15
+   The method only existed for compatibility with the :mod:`!aifc` module
+   which has been removed in Python 3.13.</pre>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_read.getmark"><code class="sig-name">getmark(id)</code></dt>
+  <dd><p>Raise an error.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'deprecated-removed'</p>
+<pre class="directive-error-source">.. deprecated-removed:: 3.13 3.15
+   The method only existed for compatibility with the :mod:`!aifc` module
+   which has been removed in Python 3.13.</pre>
+</div>
+</dd>
+</dl>
+<p>The following two methods define a term "position" which is compatible between
+them, and is otherwise implementation dependent.</p>
+<dl class="py method">
+  <dt id="py:method:wave.wave_read.setpos"><code class="sig-name">setpos(pos)</code></dt>
+  <dd><p>Set the file pointer to the specified position.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_read.tell"><code class="sig-name">tell()</code></dt>
+  <dd><p>Return current file pointer position.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<a id="wave-write-objects"></a>
+<h2 id="wave-write-objects">Wave_write Objects</h2>
+<dl class="py class">
+  <dt id="py:class:wave.wave_write"><em class="property">class</em> <code class="sig-name">Wave_write</code></dt>
+  <dd><p>Write a WAV file.</p>
+<p>Wave_write objects, as returned by <a class="reference internal" href="wave.html#py:function:wave.open"><code class="xref py function docutils literal">open</code></a>.</p>
+<p>For seekable output streams, the <code>wave</code> header will automatically be updated
+to reflect the number of frames actually written.  For unseekable streams, the
+<em>nframes</em> value must be accurate when the first frame data is written.  An
+accurate <em>nframes</em> value can be achieved either by calling
+<a class="reference internal" href="wave.html#py:method:wave.wave_write.setnframes"><code class="xref py method docutils literal">setnframes</code></a> or <a class="reference internal" href="wave.html#py:method:wave.wave_write.setparams"><code class="xref py method docutils literal">setparams</code></a> with the number
+of frames that will be written before <a class="reference internal" href="wave.html#py:method:wave.wave_write.close"><code class="xref py method docutils literal">close</code></a> is called and
+then using <a class="reference internal" href="wave.html#py:method:wave.wave_write.writeframesraw"><code class="xref py method docutils literal">writeframesraw</code></a> to write the frame data, or by
+calling <a class="reference internal" href="wave.html#py:method:wave.wave_write.writeframes"><code class="xref py method docutils literal">writeframes</code></a> with all of the frame data to be
+written.  In the latter case <a class="reference internal" href="wave.html#py:method:wave.wave_write.writeframes"><code class="xref py method docutils literal">writeframes</code></a> will calculate
+the number of frames in the data and set <em>nframes</em> accordingly before writing
+the frame data.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>Added support for unseekable files.</p>
+</div>
+<p>Wave_write objects have the following methods:</p>
+<dl class="py method">
+  <dt id="py:method:wave.wave_write.close"><code class="sig-name">close()</code></dt>
+  <dd><p>Make sure <em>nframes</em> is correct, and close the file if it was opened by
+<a class="reference internal" href="wave.html#py:module:wave" title="wave: Provide an interface to the WAV sound format."><code class="xref py module docutils literal">wave</code></a>.  This method is called upon object collection.  It will raise
+an exception if the output stream is not seekable and <em>nframes</em> does not
+match the number of frames actually written.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_write.setnchannels"><code class="sig-name">setnchannels(n)</code></dt>
+  <dd><p>Set the number of channels.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_write.setsampwidth"><code class="sig-name">setsampwidth(n)</code></dt>
+  <dd><p>Set the sample width to <em>n</em> bytes.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_write.setframerate"><code class="sig-name">setframerate(n)</code></dt>
+  <dd><p>Set the frame rate to <em>n</em>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p>A non-integral input to this method is rounded to the nearest
+integer.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_write.setnframes"><code class="sig-name">setnframes(n)</code></dt>
+  <dd><p>Set the number of frames to <em>n</em>.  This will be changed later if the number
+of frames actually written is different (this update attempt will
+raise an error if the output stream is not seekable).</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_write.setcomptype"><code class="sig-name">setcomptype(type, name)</code></dt>
+  <dd><p>Set the compression type and description. At the moment, only compression type
+<code>NONE</code> is supported, meaning no compression.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_write.setparams"><code class="sig-name">setparams(tuple)</code></dt>
+  <dd><p>The <em>tuple</em> should be <code>(nchannels, sampwidth, framerate, nframes, comptype,
+compname)</code>, with values valid for the <code>set*()</code> methods.  Sets all
+parameters.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_write.tell"><code class="sig-name">tell()</code></dt>
+  <dd><p>Return current position in the file, with the same disclaimer for the
+<a class="reference internal" href="wave.html#py:method:wave.wave_read.tell"><code class="xref py method docutils literal">Wave_read.tell</code></a> and <a class="reference internal" href="wave.html#py:method:wave.wave_read.setpos"><code class="xref py method docutils literal">Wave_read.setpos</code></a> methods.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_write.writeframesraw"><code class="sig-name">writeframesraw(data)</code></dt>
+  <dd><p>Write audio frames, without correcting <em>nframes</em>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>Any <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a> is now accepted.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:wave.wave_write.writeframes"><code class="sig-name">writeframes(data)</code></dt>
+  <dd><p>Write audio frames and make sure <em>nframes</em> is correct.  It will raise an
+error if the output stream is not seekable and the total number of frames
+that have been written after <em>data</em> has been written does not match the
+previously set value for <em>nframes</em>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>Any <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a> is now accepted.</p>
+</div>
+<p>Note that it is invalid to set any parameters after calling <a class="reference internal" href="wave.html#py:method:wave.wave_write.writeframes"><code class="xref py method docutils literal">writeframes</code></a>
+or <a class="reference internal" href="wave.html#py:method:wave.wave_write.writeframesraw"><code class="xref py method docutils literal">writeframesraw</code></a>, and any attempt to do so will raise
+<a class="reference internal" href="wave.html#py:exception:wave.error"><code class="xref py exception docutils literal">wave.Error</code></a>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="mm.html">&larr; Multimedia Services</a>
+        <a class="next" href="colorsys.html">colorsys — Conversions between color systems &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

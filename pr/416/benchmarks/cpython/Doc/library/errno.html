@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>errno — Standard errno system symbols — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Generic Operating System Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="os.html">os — Miscellaneous operating system interfaces</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="io.html">io — Core tools for working with streams</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="time.html">time — Time access and conversions</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="logging.html">logging — Logging facility for Python</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="logging.config.html">logging.config — Logging configuration</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="logging.handlers.html">logging.handlers — Logging handlers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="platform.html">platform —  Access to underlying platform&#x27;s identifying data</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current">
+            <a href="errno.html">errno — Standard errno system symbols</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ctypes.html">ctypes — A foreign function library for Python</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="platform.html">&larr; platform —  Access to underlying platform&#x27;s identifying data</a>
+        <a class="next" href="ctypes.html">ctypes — A foreign function library for Python &rarr;</a>
+      </nav>
+      
+      <h1 id="errno-standard-errno-system-symbols"><code class="xref py module docutils literal">errno</code> — Standard errno system symbols</h1>
+<dl class="py module">
+  <dt id="py:module:errno"><code class="sig-name">errno</code></dt>
+  <dd></dd>
+</dl>
+<hr />
+<p>This module makes available standard <code>errno</code> system symbols. The value of each
+symbol is the corresponding integer value. The names and descriptions are
+borrowed from :file:`linux/include/errno.h`, which should be
+all-inclusive.</p>
+<dl class="py data">
+  <dt id="py:data:errno.errorcode"><code class="sig-name">errorcode</code></dt>
+  <dd><p>Dictionary providing a mapping from the errno value to the string name in the
+underlying system.  For instance, <code>errno.errorcode[errno.EPERM]</code> maps to
+<code>'EPERM'</code>.</p>
+</dd>
+</dl>
+<p>To translate a numeric error code to an error message, use <a class="reference internal" href="os.html#py:function:os.strerror"><code class="xref py function docutils literal">os.strerror</code></a>.</p>
+<p>Of the following list, symbols that are not used on the current platform are not
+defined by the module.  The specific list of defined symbols is available as
+<code>errno.errorcode.keys()</code>.  Symbols available can include:</p>
+<dl class="py data">
+  <dt id="py:data:errno.eperm"><code class="sig-name">EPERM</code></dt>
+  <dd><p>Operation not permitted. This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:permissionerror"><code class="xref py exception docutils literal">PermissionError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enoent"><code class="sig-name">ENOENT</code></dt>
+  <dd><p>No such file or directory. This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:filenotfounderror"><code class="xref py exception docutils literal">FileNotFoundError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.esrch"><code class="sig-name">ESRCH</code></dt>
+  <dd><p>No such process. This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:processlookuperror"><code class="xref py exception docutils literal">ProcessLookupError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eintr"><code class="sig-name">EINTR</code></dt>
+  <dd><p>Interrupted system call. This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:interruptederror"><code class="xref py exception docutils literal">InterruptedError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eio"><code class="sig-name">EIO</code></dt>
+  <dd><p>I/O error</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enxio"><code class="sig-name">ENXIO</code></dt>
+  <dd><p>No such device or address</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.e2big"><code class="sig-name">E2BIG</code></dt>
+  <dd><p>Arg list too long</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enoexec"><code class="sig-name">ENOEXEC</code></dt>
+  <dd><p>Exec format error</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ebadf"><code class="sig-name">EBADF</code></dt>
+  <dd><p>Bad file number</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.echild"><code class="sig-name">ECHILD</code></dt>
+  <dd><p>No child processes. This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:childprocesserror"><code class="xref py exception docutils literal">ChildProcessError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eagain"><code class="sig-name">EAGAIN</code></dt>
+  <dd><p>Try again. This error is mapped to the exception <a class="reference internal" href="exceptions.html#py:exception:blockingioerror"><code class="xref py exception docutils literal">BlockingIOError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enomem"><code class="sig-name">ENOMEM</code></dt>
+  <dd><p>Out of memory</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eacces"><code class="sig-name">EACCES</code></dt>
+  <dd><p>Permission denied.  This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:permissionerror"><code class="xref py exception docutils literal">PermissionError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.efault"><code class="sig-name">EFAULT</code></dt>
+  <dd><p>Bad address</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enotblk"><code class="sig-name">ENOTBLK</code></dt>
+  <dd><p>Block device required</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ebusy"><code class="sig-name">EBUSY</code></dt>
+  <dd><p>Device or resource busy</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eexist"><code class="sig-name">EEXIST</code></dt>
+  <dd><p>File exists. This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:fileexistserror"><code class="xref py exception docutils literal">FileExistsError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.exdev"><code class="sig-name">EXDEV</code></dt>
+  <dd><p>Cross-device link</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enodev"><code class="sig-name">ENODEV</code></dt>
+  <dd><p>No such device</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enotdir"><code class="sig-name">ENOTDIR</code></dt>
+  <dd><p>Not a directory. This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:notadirectoryerror"><code class="xref py exception docutils literal">NotADirectoryError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eisdir"><code class="sig-name">EISDIR</code></dt>
+  <dd><p>Is a directory. This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:isadirectoryerror"><code class="xref py exception docutils literal">IsADirectoryError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.einval"><code class="sig-name">EINVAL</code></dt>
+  <dd><p>Invalid argument</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enfile"><code class="sig-name">ENFILE</code></dt>
+  <dd><p>File table overflow</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.emfile"><code class="sig-name">EMFILE</code></dt>
+  <dd><p>Too many open files</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enotty"><code class="sig-name">ENOTTY</code></dt>
+  <dd><p>Not a typewriter</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.etxtbsy"><code class="sig-name">ETXTBSY</code></dt>
+  <dd><p>Text file busy</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.efbig"><code class="sig-name">EFBIG</code></dt>
+  <dd><p>File too large</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enospc"><code class="sig-name">ENOSPC</code></dt>
+  <dd><p>No space left on device</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.espipe"><code class="sig-name">ESPIPE</code></dt>
+  <dd><p>Illegal seek</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.erofs"><code class="sig-name">EROFS</code></dt>
+  <dd><p>Read-only file system</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.emlink"><code class="sig-name">EMLINK</code></dt>
+  <dd><p>Too many links</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.epipe"><code class="sig-name">EPIPE</code></dt>
+  <dd><p>Broken pipe. This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:brokenpipeerror"><code class="xref py exception docutils literal">BrokenPipeError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.edom"><code class="sig-name">EDOM</code></dt>
+  <dd><p>Math argument out of domain of func</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.erange"><code class="sig-name">ERANGE</code></dt>
+  <dd><p>Math result not representable</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.edeadlk"><code class="sig-name">EDEADLK</code></dt>
+  <dd><p>Resource deadlock would occur</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enametoolong"><code class="sig-name">ENAMETOOLONG</code></dt>
+  <dd><p>File name too long</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enolck"><code class="sig-name">ENOLCK</code></dt>
+  <dd><p>No record locks available</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enosys"><code class="sig-name">ENOSYS</code></dt>
+  <dd><p>Function not implemented</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enotempty"><code class="sig-name">ENOTEMPTY</code></dt>
+  <dd><p>Directory not empty</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eloop"><code class="sig-name">ELOOP</code></dt>
+  <dd><p>Too many symbolic links encountered</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ewouldblock"><code class="sig-name">EWOULDBLOCK</code></dt>
+  <dd><p>Operation would block. This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:blockingioerror"><code class="xref py exception docutils literal">BlockingIOError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enomsg"><code class="sig-name">ENOMSG</code></dt>
+  <dd><p>No message of desired type</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eidrm"><code class="sig-name">EIDRM</code></dt>
+  <dd><p>Identifier removed</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.echrng"><code class="sig-name">ECHRNG</code></dt>
+  <dd><p>Channel number out of range</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.el2nsync"><code class="sig-name">EL2NSYNC</code></dt>
+  <dd><p>Level 2 not synchronized</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.el3hlt"><code class="sig-name">EL3HLT</code></dt>
+  <dd><p>Level 3 halted</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.el3rst"><code class="sig-name">EL3RST</code></dt>
+  <dd><p>Level 3 reset</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.elnrng"><code class="sig-name">ELNRNG</code></dt>
+  <dd><p>Link number out of range</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eunatch"><code class="sig-name">EUNATCH</code></dt>
+  <dd><p>Protocol driver not attached</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enocsi"><code class="sig-name">ENOCSI</code></dt>
+  <dd><p>No CSI structure available</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.el2hlt"><code class="sig-name">EL2HLT</code></dt>
+  <dd><p>Level 2 halted</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ebade"><code class="sig-name">EBADE</code></dt>
+  <dd><p>Invalid exchange</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ebadr"><code class="sig-name">EBADR</code></dt>
+  <dd><p>Invalid request descriptor</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.exfull"><code class="sig-name">EXFULL</code></dt>
+  <dd><p>Exchange full</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enoano"><code class="sig-name">ENOANO</code></dt>
+  <dd><p>No anode</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ebadrqc"><code class="sig-name">EBADRQC</code></dt>
+  <dd><p>Invalid request code</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ebadslt"><code class="sig-name">EBADSLT</code></dt>
+  <dd><p>Invalid slot</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.edeadlock"><code class="sig-name">EDEADLOCK</code></dt>
+  <dd><p>File locking deadlock error</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ebfont"><code class="sig-name">EBFONT</code></dt>
+  <dd><p>Bad font file format</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enostr"><code class="sig-name">ENOSTR</code></dt>
+  <dd><p>Device not a stream</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enodata"><code class="sig-name">ENODATA</code></dt>
+  <dd><p>No data available</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.etime"><code class="sig-name">ETIME</code></dt>
+  <dd><p>Timer expired</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enosr"><code class="sig-name">ENOSR</code></dt>
+  <dd><p>Out of streams resources</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enonet"><code class="sig-name">ENONET</code></dt>
+  <dd><p>Machine is not on the network</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enopkg"><code class="sig-name">ENOPKG</code></dt>
+  <dd><p>Package not installed</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eremote"><code class="sig-name">EREMOTE</code></dt>
+  <dd><p>Object is remote</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enolink"><code class="sig-name">ENOLINK</code></dt>
+  <dd><p>Link has been severed</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eadv"><code class="sig-name">EADV</code></dt>
+  <dd><p>Advertise error</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.esrmnt"><code class="sig-name">ESRMNT</code></dt>
+  <dd><p>Srmount error</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ecomm"><code class="sig-name">ECOMM</code></dt>
+  <dd><p>Communication error on send</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eproto"><code class="sig-name">EPROTO</code></dt>
+  <dd><p>Protocol error</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.emultihop"><code class="sig-name">EMULTIHOP</code></dt>
+  <dd><p>Multihop attempted</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.edotdot"><code class="sig-name">EDOTDOT</code></dt>
+  <dd><p>RFS specific error</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ebadmsg"><code class="sig-name">EBADMSG</code></dt>
+  <dd><p>Not a data message</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eoverflow"><code class="sig-name">EOVERFLOW</code></dt>
+  <dd><p>Value too large for defined data type</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enotuniq"><code class="sig-name">ENOTUNIQ</code></dt>
+  <dd><p>Name not unique on network</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ebadfd"><code class="sig-name">EBADFD</code></dt>
+  <dd><p>File descriptor in bad state</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eremchg"><code class="sig-name">EREMCHG</code></dt>
+  <dd><p>Remote address changed</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.elibacc"><code class="sig-name">ELIBACC</code></dt>
+  <dd><p>Can not access a needed shared library</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.elibbad"><code class="sig-name">ELIBBAD</code></dt>
+  <dd><p>Accessing a corrupted shared library</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.elibscn"><code class="sig-name">ELIBSCN</code></dt>
+  <dd><p>.lib section in a.out corrupted</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.elibmax"><code class="sig-name">ELIBMAX</code></dt>
+  <dd><p>Attempting to link in too many shared libraries</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.elibexec"><code class="sig-name">ELIBEXEC</code></dt>
+  <dd><p>Cannot exec a shared library directly</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eilseq"><code class="sig-name">EILSEQ</code></dt>
+  <dd><p>Illegal byte sequence</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.erestart"><code class="sig-name">ERESTART</code></dt>
+  <dd><p>Interrupted system call should be restarted</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.estrpipe"><code class="sig-name">ESTRPIPE</code></dt>
+  <dd><p>Streams pipe error</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eusers"><code class="sig-name">EUSERS</code></dt>
+  <dd><p>Too many users</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enotsock"><code class="sig-name">ENOTSOCK</code></dt>
+  <dd><p>Socket operation on non-socket</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.edestaddrreq"><code class="sig-name">EDESTADDRREQ</code></dt>
+  <dd><p>Destination address required</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.emsgsize"><code class="sig-name">EMSGSIZE</code></dt>
+  <dd><p>Message too long</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eprototype"><code class="sig-name">EPROTOTYPE</code></dt>
+  <dd><p>Protocol wrong type for socket</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enoprotoopt"><code class="sig-name">ENOPROTOOPT</code></dt>
+  <dd><p>Protocol not available</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eprotonosupport"><code class="sig-name">EPROTONOSUPPORT</code></dt>
+  <dd><p>Protocol not supported</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.esocktnosupport"><code class="sig-name">ESOCKTNOSUPPORT</code></dt>
+  <dd><p>Socket type not supported</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eopnotsupp"><code class="sig-name">EOPNOTSUPP</code></dt>
+  <dd><p>Operation not supported on transport endpoint</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enotsup"><code class="sig-name">ENOTSUP</code></dt>
+  <dd><p>Operation not supported</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.epfnosupport"><code class="sig-name">EPFNOSUPPORT</code></dt>
+  <dd><p>Protocol family not supported</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eafnosupport"><code class="sig-name">EAFNOSUPPORT</code></dt>
+  <dd><p>Address family not supported by protocol</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eaddrinuse"><code class="sig-name">EADDRINUSE</code></dt>
+  <dd><p>Address already in use</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eaddrnotavail"><code class="sig-name">EADDRNOTAVAIL</code></dt>
+  <dd><p>Cannot assign requested address</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enetdown"><code class="sig-name">ENETDOWN</code></dt>
+  <dd><p>Network is down</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enetunreach"><code class="sig-name">ENETUNREACH</code></dt>
+  <dd><p>Network is unreachable</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enetreset"><code class="sig-name">ENETRESET</code></dt>
+  <dd><p>Network dropped connection because of reset</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.econnaborted"><code class="sig-name">ECONNABORTED</code></dt>
+  <dd><p>Software caused connection abort. This error is mapped to the
+exception <a class="reference internal" href="exceptions.html#py:exception:connectionabortederror"><code class="xref py exception docutils literal">ConnectionAbortedError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.econnreset"><code class="sig-name">ECONNRESET</code></dt>
+  <dd><p>Connection reset by peer. This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:connectionreseterror"><code class="xref py exception docutils literal">ConnectionResetError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enobufs"><code class="sig-name">ENOBUFS</code></dt>
+  <dd><p>No buffer space available</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eisconn"><code class="sig-name">EISCONN</code></dt>
+  <dd><p>Transport endpoint is already connected</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enotconn"><code class="sig-name">ENOTCONN</code></dt>
+  <dd><p>Transport endpoint is not connected</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eshutdown"><code class="sig-name">ESHUTDOWN</code></dt>
+  <dd><p>Cannot send after transport endpoint shutdown. This error is mapped
+to the exception <a class="reference internal" href="exceptions.html#py:exception:brokenpipeerror"><code class="xref py exception docutils literal">BrokenPipeError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.etoomanyrefs"><code class="sig-name">ETOOMANYREFS</code></dt>
+  <dd><p>Too many references: cannot splice</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.etimedout"><code class="sig-name">ETIMEDOUT</code></dt>
+  <dd><p>Connection timed out. This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:timeouterror"><code class="xref py exception docutils literal">TimeoutError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.econnrefused"><code class="sig-name">ECONNREFUSED</code></dt>
+  <dd><p>Connection refused. This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:connectionrefusederror"><code class="xref py exception docutils literal">ConnectionRefusedError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ehostdown"><code class="sig-name">EHOSTDOWN</code></dt>
+  <dd><p>Host is down</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ehostunreach"><code class="sig-name">EHOSTUNREACH</code></dt>
+  <dd><p>No route to host</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ehwpoison"><code class="sig-name">EHWPOISON</code></dt>
+  <dd><p>Memory page has hardware error.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ealready"><code class="sig-name">EALREADY</code></dt>
+  <dd><p>Operation already in progress. This error is mapped to the
+exception <a class="reference internal" href="exceptions.html#py:exception:blockingioerror"><code class="xref py exception docutils literal">BlockingIOError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.einprogress"><code class="sig-name">EINPROGRESS</code></dt>
+  <dd><p>Operation now in progress. This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:blockingioerror"><code class="xref py exception docutils literal">BlockingIOError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.estale"><code class="sig-name">ESTALE</code></dt>
+  <dd><p>Stale NFS file handle</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.euclean"><code class="sig-name">EUCLEAN</code></dt>
+  <dd><p>Structure needs cleaning</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enotnam"><code class="sig-name">ENOTNAM</code></dt>
+  <dd><p>Not a XENIX named type file</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enavail"><code class="sig-name">ENAVAIL</code></dt>
+  <dd><p>No XENIX semaphores available</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eisnam"><code class="sig-name">EISNAM</code></dt>
+  <dd><p>Is a named type file</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eremoteio"><code class="sig-name">EREMOTEIO</code></dt>
+  <dd><p>Remote I/O error</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.edquot"><code class="sig-name">EDQUOT</code></dt>
+  <dd><p>Quota exceeded</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eqfull"><code class="sig-name">EQFULL</code></dt>
+  <dd><p>Interface output queue is full</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enomedium"><code class="sig-name">ENOMEDIUM</code></dt>
+  <dd><p>No medium found</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.emediumtype"><code class="sig-name">EMEDIUMTYPE</code></dt>
+  <dd><p>Wrong medium type</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enokey"><code class="sig-name">ENOKEY</code></dt>
+  <dd><p>Required key not available</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ekeyexpired"><code class="sig-name">EKEYEXPIRED</code></dt>
+  <dd><p>Key has expired</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ekeyrevoked"><code class="sig-name">EKEYREVOKED</code></dt>
+  <dd><p>Key has been revoked</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ekeyrejected"><code class="sig-name">EKEYREJECTED</code></dt>
+  <dd><p>Key was rejected by service</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.erfkill"><code class="sig-name">ERFKILL</code></dt>
+  <dd><p>Operation not possible due to RF-kill</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.elockunmapped"><code class="sig-name">ELOCKUNMAPPED</code></dt>
+  <dd><p>Locked lock was unmapped</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enotactive"><code class="sig-name">ENOTACTIVE</code></dt>
+  <dd><p>Facility is not active</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eauth"><code class="sig-name">EAUTH</code></dt>
+  <dd><p>Authentication error</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ebadarch"><code class="sig-name">EBADARCH</code></dt>
+  <dd><p>Bad CPU type in executable</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ebadexec"><code class="sig-name">EBADEXEC</code></dt>
+  <dd><p>Bad executable (or shared library)</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ebadmacho"><code class="sig-name">EBADMACHO</code></dt>
+  <dd><p>Malformed Mach-o file</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.edeverr"><code class="sig-name">EDEVERR</code></dt>
+  <dd><p>Device error</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eftype"><code class="sig-name">EFTYPE</code></dt>
+  <dd><p>Inappropriate file type or format</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eneedauth"><code class="sig-name">ENEEDAUTH</code></dt>
+  <dd><p>Need authenticator</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enoattr"><code class="sig-name">ENOATTR</code></dt>
+  <dd><p>Attribute not found</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enopolicy"><code class="sig-name">ENOPOLICY</code></dt>
+  <dd><p>Policy not found</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eproclim"><code class="sig-name">EPROCLIM</code></dt>
+  <dd><p>Too many processes</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eprocunavail"><code class="sig-name">EPROCUNAVAIL</code></dt>
+  <dd><p>Bad procedure for program</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eprogmismatch"><code class="sig-name">EPROGMISMATCH</code></dt>
+  <dd><p>Program version wrong</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eprogunavail"><code class="sig-name">EPROGUNAVAIL</code></dt>
+  <dd><p>RPC prog. not avail</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.epwroff"><code class="sig-name">EPWROFF</code></dt>
+  <dd><p>Device power is off</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ebadrpc"><code class="sig-name">EBADRPC</code></dt>
+  <dd><p>RPC struct is bad</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.erpcmismatch"><code class="sig-name">ERPCMISMATCH</code></dt>
+  <dd><p>RPC version wrong</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eshlibvers"><code class="sig-name">ESHLIBVERS</code></dt>
+  <dd><p>Shared library version mismatch</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enotcapable"><code class="sig-name">ENOTCAPABLE</code></dt>
+  <dd><p>Capabilities insufficient. This error is mapped to the exception
+<a class="reference internal" href="exceptions.html#py:exception:permissionerror"><code class="xref py exception docutils literal">PermissionError</code></a>.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'availability'</p>
+<pre class="directive-error-source">.. availability:: WASI, FreeBSD</pre>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11.1:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.ecanceled"><code class="sig-name">ECANCELED</code></dt>
+  <dd><p>Operation canceled</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.eownerdead"><code class="sig-name">EOWNERDEAD</code></dt>
+  <dd><p>Owner died</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:errno.enotrecoverable"><code class="sig-name">ENOTRECOVERABLE</code></dt>
+  <dd><p>State not recoverable</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="platform.html">&larr; platform —  Access to underlying platform&#x27;s identifying data</a>
+        <a class="next" href="ctypes.html">ctypes — A foreign function library for Python &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Introduction — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2 current has-children">
+            <a href="intro.html">Introduction</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Introduction"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="intro.html#notes-on-availability">Notes on availability</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="index.html">&larr; The Python Standard Library</a>
+        <a class="next" href="functions.html">Built-in Functions &rarr;</a>
+      </nav>
+      
+      <a id="library-intro"></a>
+<h1 id="introduction">Introduction</h1>
+<p>The "Python library" contains several different kinds of components.</p>
+<p>It contains data types that would normally be considered part of the "core" of a
+language, such as numbers and lists.  For these types, the Python language core
+defines the form of literals and places some constraints on their semantics, but
+does not fully define the semantics.  (On the other hand, the language core does
+define syntactic properties like the spelling and priorities of operators.)</p>
+<p>The library also contains built-in functions and exceptions — objects that can
+be used by all Python code without the need of an :keyword:`import` statement.
+Some of these are defined by the core language, but many are not essential for
+the core semantics and are only described here.</p>
+<p>The bulk of the library, however, consists of a collection of modules. There are
+many ways to dissect this collection.  Some modules are written in C and built
+in to the Python interpreter; others are written in Python and imported in
+source form.  Some modules provide interfaces that are highly specific to
+Python, like printing a stack trace; some provide interfaces that are specific
+to particular operating systems, such as access to specific hardware; others
+provide interfaces that are specific to a particular application domain, like
+the World Wide Web. Some modules are available in all versions and ports of
+Python; others are only available when the underlying system supports or
+requires them; yet others are available only when a particular configuration
+option was chosen at the time when Python was compiled and installed.</p>
+<p>This manual is organized "from the inside out:" it first describes the built-in
+functions, data types and exceptions, and finally the modules, grouped in
+chapters of related modules.</p>
+<p>This means that if you start reading this manual from the start, and skip to the
+next chapter when you get bored, you will get a reasonable overview of the
+available modules and application areas that are supported by the Python
+library.  Of course, you don't <em>have</em> to read it like a novel — you can also
+browse the table of contents (in front of the manual), or look for a specific
+function, module or term in the index (in the back).  And finally, if you enjoy
+learning about random subjects, you choose a random page number (see module
+<a class="reference internal" href="random.html#py:module:random" title="random: Generate pseudo-random numbers with various common distributions."><code class="xref py module docutils literal">random</code></a>) and read a section or two.  Regardless of the order in which you
+read the sections of this manual, it helps to start with chapter
+<a href="functions.html#built-in-funcs">Built-in Functions</a>, as the remainder of the manual assumes familiarity with
+this material.</p>
+<p>Let the show begin!</p>
+<a id="availability"></a>
+<h2 id="notes-on-availability">Notes on availability</h2>
+<ul>
+<li><p>An "Availability: Unix" note means that this function is commonly found on
+Unix systems.  It does not make any claims about its existence on a specific
+operating system.</p>
+</li>
+<li><p>If not separately noted, all functions that claim "Availability: Unix" are
+supported on macOS, iOS and Android, all of which build on a Unix core.</p>
+</li>
+<li><p>If an availability note contains both a minimum Kernel version and a minimum
+libc version, then both conditions must hold. For example a feature with note
+<em>Availability: Linux &gt;= 3.17 with glibc &gt;= 2.27</em> requires both Linux 3.17 or
+newer and glibc 2.27 or newer.</p>
+</li>
+</ul>
+<a id="wasm-availability"></a>
+<h3 id="webassembly-platforms">WebAssembly platforms</h3>
+<p>The <a href="https://webassembly.org/">WebAssembly</a> platforms <code>wasm32-emscripten</code> (<a href="https://emscripten.org/">Emscripten</a>) and
+<code>wasm32-wasi</code> (<a href="https://wasi.dev/">WASI</a>) provide a subset of POSIX APIs. WebAssembly runtimes
+and browsers are sandboxed and have limited access to the host and external
+resources. Any Python standard library module that uses processes, threading,
+networking, signals, or other forms of inter-process communication (IPC), is
+either not available or may not work as on other Unix-like systems. File I/O,
+file system, and Unix permission-related functions are restricted, too.
+Emscripten does not permit blocking I/O. Other blocking operations like
+<a class="reference internal" href="time.html#py:function:time.sleep"><code class="xref py function docutils literal">sleep</code></a> block the browser event loop.</p>
+<p>The properties and behavior of Python on WebAssembly platforms depend on the
+<a href="https://emscripten.org/">Emscripten</a>-SDK or <a href="https://wasi.dev/">WASI</a>-SDK version, WASM runtimes (browser, NodeJS,
+<a href="https://wasmtime.dev/">wasmtime</a>), and Python build time flags. WebAssembly, Emscripten, and WASI
+are evolving standards; some features like networking may be
+supported in the future.</p>
+<p>For Python in the browser, users should consider <a href="https://pyodide.org/">Pyodide</a> or <a href="https://pyscript.net/">PyScript</a>.
+PyScript is built on top of Pyodide, which itself is built on top of
+CPython and Emscripten. Pyodide provides access to browsers' JavaScript and
+DOM APIs as well as limited networking capabilities with JavaScript's
+<code>XMLHttpRequest</code> and <code>Fetch</code> APIs.</p>
+<ul>
+<li><p>Process-related APIs are not available or always fail with an error. That
+includes APIs that spawn new processes (<a class="reference internal" href="os.html#py:function:os.fork"><code class="xref py function docutils literal">fork</code></a>,
+<a class="reference internal" href="os.html#py:function:os.execve"><code class="xref py function docutils literal">execve</code></a>), wait for processes (<a class="reference internal" href="os.html#py:function:os.waitpid"><code class="xref py function docutils literal">waitpid</code></a>), send signals
+(<a class="reference internal" href="os.html#py:function:os.kill"><code class="xref py function docutils literal">kill</code></a>), or otherwise interact with processes. The
+<a class="reference internal" href="subprocess.html#py:module:subprocess" title="subprocess: Subprocess management."><code class="xref py module docutils literal">subprocess</code></a> is importable but does not work.</p>
+</li>
+<li><p>The <a class="reference internal" href="socket.html#py:module:socket" title="socket: Low-level networking interface."><code class="xref py module docutils literal">socket</code></a> module is available, but is limited and behaves
+differently from other platforms. On Emscripten, sockets are always
+non-blocking and require additional JavaScript code and helpers on the
+server to proxy TCP through WebSockets; see <a href="https://emscripten.org/docs/porting/networking.html">Emscripten Networking</a>
+for more information. WASI snapshot preview 1 only permits sockets from an
+existing file descriptor.</p>
+</li>
+<li><p>Some functions are stubs that either don't do anything and always return
+hardcoded values.</p>
+</li>
+<li><p>Functions related to file descriptors, file permissions, file ownership, and
+links are limited and don't support some operations. For example, WASI does
+not permit symlinks with absolute file names.</p>
+</li>
+</ul>
+<a id="mobile-availability"></a>
+<a id="ios-availability"></a>
+<h3 id="mobile-platforms">Mobile platforms</h3>
+<p>Android and iOS are, in most respects, POSIX operating systems. File I/O, socket handling,
+and threading all behave as they would on any POSIX operating system. However,
+there are several major differences:</p>
+<ul>
+<li><p>Mobile platforms can only use Python in "embedded" mode. There is no Python
+REPL, and no ability to use separate executables such as <strong class="program">python</strong> or
+<strong class="program">pip</strong>. To add Python code to your mobile app, you must use
+the <a href="../extending/embedding.html#embedding">Python embedding API</a>. For more details, see
+<a href="../using/android.html#using-android">Using Python on Android</a> and <a href="../using/ios.html#using-ios">Using Python on iOS</a>.</p>
+</li>
+<li><p>Subprocesses:</p>
+<ul>
+<li><p>On Android, creating subprocesses is possible but <a href="https://issuetracker.google.com/issues/128554619#comment4">officially unsupported</a>.
+In particular, Android does not support any part of the System V IPC API,
+so <a class="reference internal" href="multiprocessing.html#py:module:multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py module docutils literal">multiprocessing</code></a> is not available.</p>
+</li>
+<li><p>An iOS app cannot use any form of subprocessing, multiprocessing, or
+inter-process communication. If an iOS app attempts to create a subprocess,
+the process creating the subprocess will either lock up, or crash. An iOS app
+has no visibility of other applications that are running, nor any ability to
+communicate with other running applications, outside of the iOS-specific APIs
+that exist for this purpose.</p>
+</li>
+</ul>
+</li>
+<li><p>Mobile apps have limited access to modify system resources (such as the system
+clock). These resources will often be <em>readable</em>, but attempts to modify
+those resources will usually fail.</p>
+</li>
+<li><p>Console input and output:</p>
+<ul>
+<li><p>On Android, the native <code>stdout</code> and <code>stderr</code> are not connected to
+anything, so Python installs its own streams which redirect messages to the
+system log. These can be seen under the tags <code>python.stdout</code> and
+<code>python.stderr</code> respectively.</p>
+</li>
+<li><p>iOS apps have a limited concept of console output. <code>stdout</code> and
+<code>stderr</code> <em>exist</em>, and content written to <code>stdout</code> and <code>stderr</code> will be
+visible in logs when running in Xcode, but this content <em>won't</em> be recorded
+in the system log. If a user who has installed your app provides their app
+logs as a diagnostic aid, they will not include any detail written to
+<code>stdout</code> or <code>stderr</code>.</p>
+</li>
+<li><p>Mobile apps have no usable <code>stdin</code> at all. While apps can display an on-screen
+keyboard, this is a software feature, not something that is attached to
+<code>stdin</code>.</p>
+<p>As a result, Python modules that involve console manipulation (such as
+<a class="reference internal" href="curses.html#py:module:curses" title="curses: An interface to the curses library, providing portable terminal handling. (Unix)"><code class="xref py module docutils literal">curses</code></a> and <a class="reference internal" href="readline.html#py:module:readline" title="readline: GNU readline support for Python. (Unix)"><code class="xref py module docutils literal">readline</code></a>) are not available on mobile platforms.</p>
+</li>
+</ul>
+</li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="index.html">&larr; The Python Standard Library</a>
+        <a class="next" href="functions.html">Built-in Functions &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

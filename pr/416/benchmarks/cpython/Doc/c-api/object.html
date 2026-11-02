@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Object Protocol — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python&#x2f;C API Reference Manual</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python&#x2f;C API Reference Manual"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stable.html">C API Stability</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="veryhigh.html">The Very High Level Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="refcounting.html">Reference Counting</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Exception Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="extension-modules.html">Defining extension modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="utilities.html">Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="abstract.html">Abstract Objects Layer</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Abstract Objects Layer"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 current">
+            <a href="object.html">Object Protocol</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="call.html">Call Protocol</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="number.html">Number Protocol</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="sequence.html">Sequence Protocol</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mapping.html">Mapping Protocol</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="iter.html">Iterator Protocol</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="buffer.html">Buffer Protocol</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concrete.html">Concrete Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init.html">Initialization, Finalization, and Threads</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init_config.html">Python Initialization Configuration</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="memory.html">Memory Management</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="objimpl.html">Object Implementation Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="apiabiversion.html">API and ABI Versioning</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="monitoring.html">Monitoring C API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="abstract.html">&larr; Abstract Objects Layer</a>
+        <a class="next" href="call.html">Call Protocol &rarr;</a>
+      </nav>
+      
+      <a id="object"></a>
+<h1 id="object-protocol">Object Protocol</h1>
+<dl class="c function">
+  <dt id="c:function:py_getconstant"><code class="sig-name">PyObject* Py_GetConstant(unsigned int constant_id)</code></dt>
+  <dd><p>Get a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to a constant.</p>
+<p>Set an exception and return <code>NULL</code> if <em>constant_id</em> is invalid.</p>
+<p><em>constant_id</em> must be one of these constant identifiers:</p>
+<table>
+<thead>
+<tr>
+<th><p>Constant Identifier</p>
+</th>
+<th><p>Value</p>
+</th>
+<th><p>Returned object</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_constant_none"><code class="sig-name">Py_CONSTANT_NONE</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>0</code></p>
+</td>
+<td><p><a class="reference internal" href="../library/constants.html#py:data:none"><code class="xref py data docutils literal">None</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_constant_false"><code class="sig-name">Py_CONSTANT_FALSE</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>1</code></p>
+</td>
+<td><p><a class="reference internal" href="../library/constants.html#py:data:false"><code class="xref py data docutils literal">False</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_constant_true"><code class="sig-name">Py_CONSTANT_TRUE</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>2</code></p>
+</td>
+<td><p><a class="reference internal" href="../library/constants.html#py:data:true"><code class="xref py data docutils literal">True</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_constant_ellipsis"><code class="sig-name">Py_CONSTANT_ELLIPSIS</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>3</code></p>
+</td>
+<td><p><a class="reference internal" href="../library/constants.html#py:data:ellipsis"><code class="xref py data docutils literal">Ellipsis</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_constant_not_implemented"><code class="sig-name">Py_CONSTANT_NOT_IMPLEMENTED</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>4</code></p>
+</td>
+<td><p><a class="reference internal" href="../library/constants.html#py:data:notimplemented"><code class="xref py data docutils literal">NotImplemented</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_constant_zero"><code class="sig-name">Py_CONSTANT_ZERO</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>5</code></p>
+</td>
+<td><p><code>0</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_constant_one"><code class="sig-name">Py_CONSTANT_ONE</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>6</code></p>
+</td>
+<td><p><code>1</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_constant_empty_str"><code class="sig-name">Py_CONSTANT_EMPTY_STR</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>7</code></p>
+</td>
+<td><p><code>''</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_constant_empty_bytes"><code class="sig-name">Py_CONSTANT_EMPTY_BYTES</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>8</code></p>
+</td>
+<td><p><code>b''</code></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:py_constant_empty_tuple"><code class="sig-name">Py_CONSTANT_EMPTY_TUPLE</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><code>9</code></p>
+</td>
+<td><p><code>()</code></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Numeric values are only given for projects which cannot use the constant
+identifiers.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+
+   In CPython, all of these constants are :term:`immortal`.</pre>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:py_getconstantborrowed"><code class="sig-name">PyObject* Py_GetConstantBorrowed(unsigned int constant_id)</code></dt>
+  <dd><p>Similar to <a class="reference internal" href="object.html#c:function:py_getconstant"><code class="xref c function docutils literal">Py_GetConstant</code></a>, but return a <a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">borrowed
+reference</span></a>.</p>
+<p>This function is primarily intended for backwards compatibility:
+using <a class="reference internal" href="object.html#c:function:py_getconstant"><code class="xref c function docutils literal">Py_GetConstant</code></a> is recommended for new code.</p>
+<p>The reference is borrowed from the interpreter, and is valid until the
+interpreter finalization.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:py_notimplemented"><code class="sig-name">PyObject* Py_NotImplemented</code></dt>
+  <dd><p>The <code>NotImplemented</code> singleton, used to signal that an operation is
+not implemented for the given type combination.</p>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:py_return_notimplemented"><code class="sig-name">Py_RETURN_NOTIMPLEMENTED</code></dt>
+  <dd><p>Properly handle returning <a class="reference internal" href="object.html#c:member:py_notimplemented"><code class="xref c member docutils literal">Py_NotImplemented</code></a> from within a C
+function (that is, create a new <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a>
+to <a class="reference internal" href="../library/constants.html#py:data:notimplemented"><code class="xref py data docutils literal">NotImplemented</code></a> and return it).</p>
+</dd>
+</dl>
+<dl class="c macro">
+  <dt id="c:macro:py_print_raw"><code class="sig-name">Py_PRINT_RAW</code></dt>
+  <dd><p>Flag to be used with multiple functions that print the object (like
+<a class="reference internal" href="object.html#c:function:pyobject_print"><code class="xref c function docutils literal">PyObject_Print</code></a> and <a class="reference internal" href="file.html#c:function:pyfile_writeobject"><code class="xref c function docutils literal">PyFile_WriteObject</code></a>).
+If passed, these functions use the <a href="#" class="broken-link"><code class="xref py function docutils literal">str</code></a> of the object
+instead of the <a class="reference internal" href="../library/functions.html#py:function:repr"><code class="xref py function docutils literal">repr</code></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_print"><code class="sig-name">int PyObject_Print(PyObject *o, FILE *fp, int flags)</code></dt>
+  <dd><p>Print an object <em>o</em>, on file <em>fp</em>.  Returns <code>-1</code> on error.  The flags argument
+is used to enable certain printing options.  The only option currently supported
+is <a class="reference internal" href="object.html#c:macro:py_print_raw"><code class="xref c macro docutils literal">Py_PRINT_RAW</code></a>; if given, the <a href="#" class="broken-link"><code class="xref py function docutils literal">str</code></a> of the object is written
+instead of the <a class="reference internal" href="../library/functions.html#py:function:repr"><code class="xref py function docutils literal">repr</code></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_hasattrwitherror"><code class="sig-name">int PyObject_HasAttrWithError(PyObject *o, PyObject *attr_name)</code></dt>
+  <dd><p>Returns <code>1</code> if <em>o</em> has the attribute <em>attr_name</em>, and <code>0</code> otherwise.
+This is equivalent to the Python expression <code>hasattr(o, attr_name)</code>.
+On failure, return <code>-1</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_hasattrstringwitherror"><code class="sig-name">int PyObject_HasAttrStringWithError(PyObject *o, const char *attr_name)</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="object.html#c:function:pyobject_hasattrwitherror"><code class="xref c function docutils literal">PyObject_HasAttrWithError</code></a>, but <em>attr_name</em> is
+specified as a :c:expr:`const char*` UTF-8 encoded bytes string,
+rather than a :c:expr:`PyObject*`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_hasattr"><code class="sig-name">int PyObject_HasAttr(PyObject *o, PyObject *attr_name)</code></dt>
+  <dd><p>Returns <code>1</code> if <em>o</em> has the attribute <em>attr_name</em>, and <code>0</code> otherwise.
+This function always succeeds.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Exceptions that occur when this calls <a class="reference internal" href="../reference/datamodel.html#py:method:object.__getattr__"><code class="xref py method docutils literal">__getattr__</code></a> and
+<a class="reference internal" href="../reference/datamodel.html#py:method:object.__getattribute__"><code class="xref py method docutils literal">__getattribute__</code></a> methods aren't propagated,
+but instead given to <a class="reference internal" href="../library/sys.html#py:function:sys.unraisablehook"><code class="xref py function docutils literal">sys.unraisablehook</code></a>.
+For proper error handling, use <a class="reference internal" href="object.html#c:function:pyobject_hasattrwitherror"><code class="xref c function docutils literal">PyObject_HasAttrWithError</code></a>,
+<a class="reference internal" href="object.html#c:function:pyobject_getoptionalattr"><code class="xref c function docutils literal">PyObject_GetOptionalAttr</code></a> or <a class="reference internal" href="object.html#c:function:pyobject_getattr"><code class="xref c function docutils literal">PyObject_GetAttr</code></a> instead.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_hasattrstring"><code class="sig-name">int PyObject_HasAttrString(PyObject *o, const char *attr_name)</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="object.html#c:function:pyobject_hasattr"><code class="xref c function docutils literal">PyObject_HasAttr</code></a>, but <em>attr_name</em> is
+specified as a :c:expr:`const char*` UTF-8 encoded bytes string,
+rather than a :c:expr:`PyObject*`.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Exceptions that occur when this calls <a class="reference internal" href="../reference/datamodel.html#py:method:object.__getattr__"><code class="xref py method docutils literal">__getattr__</code></a> and
+<a class="reference internal" href="../reference/datamodel.html#py:method:object.__getattribute__"><code class="xref py method docutils literal">__getattribute__</code></a> methods or while creating the temporary
+<a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> object are silently ignored.
+For proper error handling, use <a class="reference internal" href="object.html#c:function:pyobject_hasattrstringwitherror"><code class="xref c function docutils literal">PyObject_HasAttrStringWithError</code></a>,
+<a class="reference internal" href="object.html#c:function:pyobject_getoptionalattrstring"><code class="xref c function docutils literal">PyObject_GetOptionalAttrString</code></a>
+or <a class="reference internal" href="object.html#c:function:pyobject_getattrstring"><code class="xref c function docutils literal">PyObject_GetAttrString</code></a> instead.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_getattr"><code class="sig-name">PyObject* PyObject_GetAttr(PyObject *o, PyObject *attr_name)</code></dt>
+  <dd><p>Retrieve an attribute named <em>attr_name</em> from object <em>o</em>. Returns the attribute
+value on success, or <code>NULL</code> on failure.  This is the equivalent of the Python
+expression <code>o.attr_name</code>.</p>
+<p>If the missing attribute should not be treated as a failure, you can use
+<a class="reference internal" href="object.html#c:function:pyobject_getoptionalattr"><code class="xref c function docutils literal">PyObject_GetOptionalAttr</code></a> instead.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_getattrstring"><code class="sig-name">PyObject* PyObject_GetAttrString(PyObject *o, const char *attr_name)</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="object.html#c:function:pyobject_getattr"><code class="xref c function docutils literal">PyObject_GetAttr</code></a>, but <em>attr_name</em> is
+specified as a :c:expr:`const char*` UTF-8 encoded bytes string,
+rather than a :c:expr:`PyObject*`.</p>
+<p>If the missing attribute should not be treated as a failure, you can use
+<a class="reference internal" href="object.html#c:function:pyobject_getoptionalattrstring"><code class="xref c function docutils literal">PyObject_GetOptionalAttrString</code></a> instead.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_getoptionalattr"><code class="sig-name">int PyObject_GetOptionalAttr(PyObject *obj, PyObject *attr_name, PyObject **result);</code></dt>
+  <dd><p>Variant of <a class="reference internal" href="object.html#c:function:pyobject_getattr"><code class="xref c function docutils literal">PyObject_GetAttr</code></a> which doesn't raise
+<a class="reference internal" href="../library/exceptions.html#py:exception:attributeerror"><code class="xref py exception docutils literal">AttributeError</code></a> if the attribute is not found.</p>
+<p>If the attribute is found, return <code>1</code> and set <em>*result</em> to a new
+<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to the attribute.
+If the attribute is not found, return <code>0</code> and set <em>*result</em> to <code>NULL</code>;
+the <a class="reference internal" href="../library/exceptions.html#py:exception:attributeerror"><code class="xref py exception docutils literal">AttributeError</code></a> is silenced.
+If an error other than <a class="reference internal" href="../library/exceptions.html#py:exception:attributeerror"><code class="xref py exception docutils literal">AttributeError</code></a> is raised, return <code>-1</code> and
+set <em>*result</em> to <code>NULL</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_getoptionalattrstring"><code class="sig-name">int PyObject_GetOptionalAttrString(PyObject *obj, const char *attr_name, PyObject **result);</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="object.html#c:function:pyobject_getoptionalattr"><code class="xref c function docutils literal">PyObject_GetOptionalAttr</code></a>, but <em>attr_name</em> is
+specified as a :c:expr:`const char*` UTF-8 encoded bytes string,
+rather than a :c:expr:`PyObject*`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_genericgetattr"><code class="sig-name">PyObject* PyObject_GenericGetAttr(PyObject *o, PyObject *name)</code></dt>
+  <dd><p>Generic attribute getter function that is meant to be put into a type
+object's <code>tp_getattro</code> slot.  It looks for a descriptor in the dictionary
+of classes in the object's MRO as well as an attribute in the object's
+<a class="reference internal" href="../reference/datamodel.html#py:attribute:object.__dict__"><code class="xref py attribute docutils literal">__dict__</code></a> (if present).  As outlined in <a href="../reference/datamodel.html#descriptors">Implementing Descriptors</a>,
+data descriptors take preference over instance attributes, while non-data
+descriptors don't.  Otherwise, an <a class="reference internal" href="../library/exceptions.html#py:exception:attributeerror"><code class="xref py exception docutils literal">AttributeError</code></a> is raised.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_setattr"><code class="sig-name">int PyObject_SetAttr(PyObject *o, PyObject *attr_name, PyObject *v)</code></dt>
+  <dd><p>Set the value of the attribute named <em>attr_name</em>, for object <em>o</em>, to the value
+<em>v</em>. Raise an exception and return <code>-1</code> on failure;
+return <code>0</code> on success.  This is the equivalent of the Python statement
+<code>o.attr_name = v</code>.</p>
+<p>If <em>v</em> is <code>NULL</code>, the attribute is deleted. This behaviour is deprecated
+in favour of using <a class="reference internal" href="object.html#c:function:pyobject_delattr"><code class="xref c function docutils literal">PyObject_DelAttr</code></a>, but there are currently no
+plans to remove it.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_setattrstring"><code class="sig-name">int PyObject_SetAttrString(PyObject *o, const char *attr_name, PyObject *v)</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="object.html#c:function:pyobject_setattr"><code class="xref c function docutils literal">PyObject_SetAttr</code></a>, but <em>attr_name</em> is
+specified as a :c:expr:`const char*` UTF-8 encoded bytes string,
+rather than a :c:expr:`PyObject*`.</p>
+<p>If <em>v</em> is <code>NULL</code>, the attribute is deleted, but this feature is
+deprecated in favour of using <a class="reference internal" href="object.html#c:function:pyobject_delattrstring"><code class="xref c function docutils literal">PyObject_DelAttrString</code></a>.</p>
+<p>The number of different attribute names passed to this function
+should be kept small, usually by using a statically allocated string
+as <em>attr_name</em>.
+For attribute names that aren't known at compile time, prefer calling
+<a class="reference internal" href="unicode.html#c:function:pyunicode_fromstring"><code class="xref c function docutils literal">PyUnicode_FromString</code></a> and <a class="reference internal" href="object.html#c:function:pyobject_setattr"><code class="xref c function docutils literal">PyObject_SetAttr</code></a> directly.
+For more details, see <a class="reference internal" href="unicode.html#c:function:pyunicode_internfromstring"><code class="xref c function docutils literal">PyUnicode_InternFromString</code></a>, which may be
+used internally to create a key object.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_genericsetattr"><code class="sig-name">int PyObject_GenericSetAttr(PyObject *o, PyObject *name, PyObject *value)</code></dt>
+  <dd><p>Generic attribute setter and deleter function that is meant
+to be put into a type object's <a class="reference internal" href="typeobj.html#c:member:pytypeobject.tp_setattro"><code class="xref c member docutils literal">tp_setattro</code></a>
+slot.  It looks for a data descriptor in the
+dictionary of classes in the object's MRO, and if found it takes preference
+over setting or deleting the attribute in the instance dictionary. Otherwise, the
+attribute is set or deleted in the object's <a class="reference internal" href="../reference/datamodel.html#py:attribute:object.__dict__"><code class="xref py attribute docutils literal">__dict__</code></a> (if present).
+On success, <code>0</code> is returned, otherwise an <a class="reference internal" href="../library/exceptions.html#py:exception:attributeerror"><code class="xref py exception docutils literal">AttributeError</code></a>
+is raised and <code>-1</code> is returned.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_delattr"><code class="sig-name">int PyObject_DelAttr(PyObject *o, PyObject *attr_name)</code></dt>
+  <dd><p>Delete attribute named <em>attr_name</em>, for object <em>o</em>. Returns <code>-1</code> on failure.
+This is the equivalent of the Python statement <code>del o.attr_name</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_delattrstring"><code class="sig-name">int PyObject_DelAttrString(PyObject *o, const char *attr_name)</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="object.html#c:function:pyobject_delattr"><code class="xref c function docutils literal">PyObject_DelAttr</code></a>, but <em>attr_name</em> is
+specified as a :c:expr:`const char*` UTF-8 encoded bytes string,
+rather than a :c:expr:`PyObject*`.</p>
+<p>The number of different attribute names passed to this function
+should be kept small, usually by using a statically allocated string
+as <em>attr_name</em>.
+For attribute names that aren't known at compile time, prefer calling
+<a class="reference internal" href="unicode.html#c:function:pyunicode_fromstring"><code class="xref c function docutils literal">PyUnicode_FromString</code></a> and <a class="reference internal" href="object.html#c:function:pyobject_delattr"><code class="xref c function docutils literal">PyObject_DelAttr</code></a> directly.
+For more details, see <a class="reference internal" href="unicode.html#c:function:pyunicode_internfromstring"><code class="xref c function docutils literal">PyUnicode_InternFromString</code></a>, which may be
+used internally to create a key object for lookup.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_genericgetdict"><code class="sig-name">PyObject* PyObject_GenericGetDict(PyObject *o, void *context)</code></dt>
+  <dd><p>A generic implementation for the getter of a <code>__dict__</code> descriptor. It
+creates the dictionary if necessary.</p>
+<p>This function may also be called to get the <a class="reference internal" href="../reference/datamodel.html#py:attribute:object.__dict__"><code class="xref py attribute docutils literal">__dict__</code></a>
+of the object <em>o</em>. Pass <code>NULL</code> for <em>context</em> when calling it.
+Since this function may need to allocate memory for the
+dictionary, it may be more efficient to call <a class="reference internal" href="object.html#c:function:pyobject_getattr"><code class="xref c function docutils literal">PyObject_GetAttr</code></a>
+when accessing an attribute on the object.</p>
+<p>On failure, returns <code>NULL</code> with an exception set.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_genericsetdict"><code class="sig-name">int PyObject_GenericSetDict(PyObject *o, PyObject *value, void *context)</code></dt>
+  <dd><p>A generic implementation for the setter of a <code>__dict__</code> descriptor. This
+implementation does not allow the dictionary to be deleted.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:_pyobject_getdictptr"><code class="sig-name">PyObject** _PyObject_GetDictPtr(PyObject *obj)</code></dt>
+  <dd><p>Return a pointer to <a class="reference internal" href="../reference/datamodel.html#py:attribute:object.__dict__"><code class="xref py attribute docutils literal">__dict__</code></a> of the object <em>obj</em>.
+If there is no <code>__dict__</code>, return <code>NULL</code> without setting an exception.</p>
+<p>This function may need to allocate memory for the
+dictionary, so it may be more efficient to call <a class="reference internal" href="object.html#c:function:pyobject_getattr"><code class="xref c function docutils literal">PyObject_GetAttr</code></a>
+when accessing an attribute on the object.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_richcompare"><code class="sig-name">PyObject* PyObject_RichCompare(PyObject *o1, PyObject *o2, int opid)</code></dt>
+  <dd><p>Compare the values of <em>o1</em> and <em>o2</em> using the operation specified by <em>opid</em>,
+which must be one of <a class="reference internal" href="typeobj.html#c:macro:py_lt"><code class="xref c macro docutils literal">Py_LT</code></a>, <a class="reference internal" href="typeobj.html#c:macro:py_le"><code class="xref c macro docutils literal">Py_LE</code></a>, <a class="reference internal" href="typeobj.html#c:macro:py_eq"><code class="xref c macro docutils literal">Py_EQ</code></a>,
+<a class="reference internal" href="typeobj.html#c:macro:py_ne"><code class="xref c macro docutils literal">Py_NE</code></a>, <a class="reference internal" href="typeobj.html#c:macro:py_gt"><code class="xref c macro docutils literal">Py_GT</code></a>, or <a class="reference internal" href="typeobj.html#c:macro:py_ge"><code class="xref c macro docutils literal">Py_GE</code></a>, corresponding to <code>&lt;</code>,
+<code>&lt;=</code>, <code>==</code>, <code>!=</code>, <code>&gt;</code>, or <code>&gt;=</code> respectively. This is the equivalent of
+the Python expression <code>o1 op o2</code>, where <code>op</code> is the operator corresponding
+to <em>opid</em>. Returns the value of the comparison on success, or <code>NULL</code> on failure.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_richcomparebool"><code class="sig-name">int PyObject_RichCompareBool(PyObject *o1, PyObject *o2, int opid)</code></dt>
+  <dd><p>Compare the values of <em>o1</em> and <em>o2</em> using the operation specified by <em>opid</em>,
+like <a class="reference internal" href="object.html#c:function:pyobject_richcompare"><code class="xref c function docutils literal">PyObject_RichCompare</code></a>, but returns <code>-1</code> on error, <code>0</code> if
+the result is false, <code>1</code> otherwise.</p>
+</dd>
+</dl>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>If <em>o1</em> and <em>o2</em> are the same object, <a class="reference internal" href="object.html#c:function:pyobject_richcomparebool"><code class="xref c function docutils literal">PyObject_RichCompareBool</code></a>
+will always return <code>1</code> for <a class="reference internal" href="typeobj.html#c:macro:py_eq"><code class="xref c macro docutils literal">Py_EQ</code></a> and <code>0</code> for <a class="reference internal" href="typeobj.html#c:macro:py_ne"><code class="xref c macro docutils literal">Py_NE</code></a>.</p>
+</div>
+<dl class="c function">
+  <dt id="c:function:pyobject_format"><code class="sig-name">PyObject* PyObject_Format(PyObject *obj, PyObject *format_spec)</code></dt>
+  <dd><p>Format <em>obj</em> using <em>format_spec</em>. This is equivalent to the Python
+expression <code>format(obj, format_spec)</code>.</p>
+<p><em>format_spec</em> may be <code>NULL</code>. In this case the call is equivalent
+to <code>format(obj)</code>.
+Returns the formatted string on success, <code>NULL</code> on failure.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_repr"><code class="sig-name">PyObject* PyObject_Repr(PyObject *o)</code></dt>
+  <dd><span id="index-0"></span>
+<p>Compute a string representation of object <em>o</em>.  Returns the string
+representation on success, <code>NULL</code> on failure.  This is the equivalent of the
+Python expression <code>repr(o)</code>.  Called by the <a class="reference internal" href="../library/functions.html#py:function:repr"><code class="xref py function docutils literal">repr</code></a> built-in function.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>This function now includes a debug assertion to help ensure that it
+does not silently discard an active exception.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_ascii"><code class="sig-name">PyObject* PyObject_ASCII(PyObject *o)</code></dt>
+  <dd><span id="index-1"></span>
+<p>As <a class="reference internal" href="object.html#c:function:pyobject_repr"><code class="xref c function docutils literal">PyObject_Repr</code></a>, compute a string representation of object <em>o</em>, but
+escape the non-ASCII characters in the string returned by
+<a class="reference internal" href="object.html#c:function:pyobject_repr"><code class="xref c function docutils literal">PyObject_Repr</code></a> with <code>\x</code>, <code>\u</code> or <code>\U</code> escapes.  This generates
+a string similar to that returned by <a class="reference internal" href="object.html#c:function:pyobject_repr"><code class="xref c function docutils literal">PyObject_Repr</code></a> in Python 2.
+Called by the <a class="reference internal" href="../library/functions.html#py:function:ascii"><code class="xref py function docutils literal">ascii</code></a> built-in function.</p>
+<span id="index-2"></span>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_str"><code class="sig-name">PyObject* PyObject_Str(PyObject *o)</code></dt>
+  <dd><p>Compute a string representation of object <em>o</em>.  Returns the string
+representation on success, <code>NULL</code> on failure.  This is the equivalent of the
+Python expression <code>str(o)</code>.  Called by the <a href="#" class="broken-link"><code class="xref py function docutils literal">str</code></a> built-in function
+and, therefore, by the <a class="reference internal" href="../library/functions.html#py:function:print"><code class="xref py function docutils literal">print</code></a> function.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>This function now includes a debug assertion to help ensure that it
+does not silently discard an active exception.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_bytes"><code class="sig-name">PyObject* PyObject_Bytes(PyObject *o)</code></dt>
+  <dd><span id="index-3"></span>
+<p>Compute a bytes representation of object <em>o</em>.  <code>NULL</code> is returned on
+failure and a bytes object on success.  This is equivalent to the Python
+expression <code>bytes(o)</code>, when <em>o</em> is not an integer.  Unlike <code>bytes(o)</code>,
+a TypeError is raised when <em>o</em> is an integer instead of a zero-initialized
+bytes object.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_issubclass"><code class="sig-name">int PyObject_IsSubclass(PyObject *derived, PyObject *cls)</code></dt>
+  <dd><p>Return <code>1</code> if the class <em>derived</em> is identical to or derived from the class
+<em>cls</em>, otherwise return <code>0</code>.  In case of an error, return <code>-1</code>.</p>
+<p>If <em>cls</em> is a tuple, the check will be done against every entry in <em>cls</em>.
+The result will be <code>1</code> when at least one of the checks returns <code>1</code>,
+otherwise it will be <code>0</code>.</p>
+<p>If <em>cls</em> has a <a class="reference internal" href="../reference/datamodel.html#py:method:type.__subclasscheck__"><code class="xref py method docutils literal">__subclasscheck__</code></a> method, it will be called to
+determine the subclass status as described in <span class="target" id="index-7"></span><a class="pep reference external" href="https://peps.python.org/pep-3119/"><strong>PEP 3119</strong></a>.  Otherwise,
+<em>derived</em> is a subclass of <em>cls</em> if it is a direct or indirect subclass,
+i.e. contained in <a class="reference internal" href="../reference/datamodel.html#py:attribute:type.__mro__"><code class="xref py attribute docutils literal">cls.__mro__</code></a>.</p>
+<p>Normally only class objects, i.e. instances of <a class="reference internal" href="../library/functions.html#py:class:type"><code class="xref py class docutils literal">type</code></a> or a derived
+class, are considered classes.  However, objects can override this by having
+a <a class="reference internal" href="../reference/datamodel.html#py:attribute:type.__bases__"><code class="xref py attribute docutils literal">__bases__</code></a> attribute (which must be a tuple of base classes).</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_isinstance"><code class="sig-name">int PyObject_IsInstance(PyObject *inst, PyObject *cls)</code></dt>
+  <dd><p>Return <code>1</code> if <em>inst</em> is an instance of the class <em>cls</em> or a subclass of
+<em>cls</em>, or <code>0</code> if not.  On error, returns <code>-1</code> and sets an exception.</p>
+<p>If <em>cls</em> is a tuple, the check will be done against every entry in <em>cls</em>.
+The result will be <code>1</code> when at least one of the checks returns <code>1</code>,
+otherwise it will be <code>0</code>.</p>
+<p>If <em>cls</em> has a <a class="reference internal" href="../reference/datamodel.html#py:method:type.__instancecheck__"><code class="xref py method docutils literal">__instancecheck__</code></a> method, it will be called to
+determine the subclass status as described in <span class="target" id="index-8"></span><a class="pep reference external" href="https://peps.python.org/pep-3119/"><strong>PEP 3119</strong></a>.  Otherwise, <em>inst</em>
+is an instance of <em>cls</em> if its class is a subclass of <em>cls</em>.</p>
+<p>An instance <em>inst</em> can override what is considered its class by having a
+<a class="reference internal" href="../reference/datamodel.html#py:attribute:object.__class__"><code class="xref py attribute docutils literal">__class__</code></a> attribute.</p>
+<p>An object <em>cls</em> can override if it is considered a class, and what its base
+classes are, by having a <a class="reference internal" href="../reference/datamodel.html#py:attribute:type.__bases__"><code class="xref py attribute docutils literal">__bases__</code></a> attribute (which must be a tuple
+of base classes).</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_hash"><code class="sig-name">Py_hash_t PyObject_Hash(PyObject *o)</code></dt>
+  <dd><span id="index-4"></span>
+<p>Compute and return the hash value of an object <em>o</em>.  On failure, return <code>-1</code>.
+This is the equivalent of the Python expression <code>hash(o)</code>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p>The return type is now Py_hash_t.  This is a signed integer the same size
+as <a class="reference internal" href="intro.html#c:type:py_ssize_t"><code class="xref c type docutils literal">Py_ssize_t</code></a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_hashnotimplemented"><code class="sig-name">Py_hash_t PyObject_HashNotImplemented(PyObject *o)</code></dt>
+  <dd><p>Set a <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> indicating that <code>type(o)</code> is not <a class="reference internal" href="../glossary.html#term-hashable"><span class="xref std std-term">hashable</span></a> and return <code>-1</code>.
+This function receives special treatment when stored in a <code>tp_hash</code> slot,
+allowing a type to explicitly indicate to the interpreter that it is not
+hashable.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_istrue"><code class="sig-name">int PyObject_IsTrue(PyObject *o)</code></dt>
+  <dd><p>Returns <code>1</code> if the object <em>o</em> is considered to be true, and <code>0</code> otherwise.
+This is equivalent to the Python expression <code>not not o</code>.  On failure, return
+<code>-1</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_not"><code class="sig-name">int PyObject_Not(PyObject *o)</code></dt>
+  <dd><p>Returns <code>0</code> if the object <em>o</em> is considered to be true, and <code>1</code> otherwise.
+This is equivalent to the Python expression <code>not o</code>.  On failure, return
+<code>-1</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_type"><code class="sig-name">PyObject* PyObject_Type(PyObject *o)</code></dt>
+  <dd><span id="index-5"></span>
+<p>When <em>o</em> is non-<code>NULL</code>, returns a type object corresponding to the object type
+of object <em>o</em>. On failure, raises <a class="reference internal" href="../library/exceptions.html#py:exception:systemerror"><code class="xref py exception docutils literal">SystemError</code></a> and returns <code>NULL</code>.  This
+is equivalent to the Python expression <code>type(o)</code>.
+This function creates a new <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to the return value.
+There's really no reason to use this
+function instead of the <a class="reference internal" href="structures.html#c:function:py_type"><code class="xref c function docutils literal">Py_TYPE()</code></a> function, which returns a
+pointer of type :c:expr:`PyTypeObject*`, except when a new
+<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> is needed.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_typecheck"><code class="sig-name">int PyObject_TypeCheck(PyObject *o, PyTypeObject *type)</code></dt>
+  <dd><p>Return non-zero if the object <em>o</em> is of type <em>type</em> or a subtype of <em>type</em>, and
+<code>0</code> otherwise.  Both parameters must be non-<code>NULL</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_size"><code class="sig-name">Py_ssize_t PyObject_Size(PyObject *o)</code></dt>
+  <dt id="c:function:pyobject_length"><code class="sig-name">Py_ssize_t PyObject_Length(PyObject *o)</code></dt>
+  <dd><span id="index-6"></span>
+<p>Return the length of object <em>o</em>.  If the object <em>o</em> provides either the sequence
+and mapping protocols, the sequence length is returned.  On error, <code>-1</code> is
+returned.  This is the equivalent to the Python expression <code>len(o)</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_lengthhint"><code class="sig-name">Py_ssize_t PyObject_LengthHint(PyObject *o, Py_ssize_t defaultvalue)</code></dt>
+  <dd><p>Return an estimated length for the object <em>o</em>. First try to return its
+actual length, then an estimate using <a class="reference internal" href="../reference/datamodel.html#py:method:object.__length_hint__"><code class="xref py method docutils literal">__length_hint__</code></a>, and
+finally return the default value. On error return <code>-1</code>. This is the
+equivalent to the Python expression <code>operator.length_hint(o, defaultvalue)</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_getitem"><code class="sig-name">PyObject* PyObject_GetItem(PyObject *o, PyObject *key)</code></dt>
+  <dd><p>Return element of <em>o</em> corresponding to the object <em>key</em> or <code>NULL</code> on failure.
+This is the equivalent of the Python expression <code>o[key]</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_setitem"><code class="sig-name">int PyObject_SetItem(PyObject *o, PyObject *key, PyObject *v)</code></dt>
+  <dd><p>Map the object <em>key</em> to the value <em>v</em>.  Raise an exception and
+return <code>-1</code> on failure; return <code>0</code> on success.  This is the
+equivalent of the Python statement <code>o[key] = v</code>.  This function <em>does
+not</em> steal a reference to <em>v</em>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_delitem"><code class="sig-name">int PyObject_DelItem(PyObject *o, PyObject *key)</code></dt>
+  <dd><p>Remove the mapping for the object <em>key</em> from the object <em>o</em>.  Return <code>-1</code>
+on failure.  This is equivalent to the Python statement <code>del o[key]</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_delitemstring"><code class="sig-name">int PyObject_DelItemString(PyObject *o, const char *key)</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="object.html#c:function:pyobject_delitem"><code class="xref c function docutils literal">PyObject_DelItem</code></a>, but <em>key</em> is
+specified as a :c:expr:`const char*` UTF-8 encoded bytes string,
+rather than a :c:expr:`PyObject*`.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_dir"><code class="sig-name">PyObject* PyObject_Dir(PyObject *o)</code></dt>
+  <dd><p>This is equivalent to the Python expression <code>dir(o)</code>, returning a (possibly
+empty) list of strings appropriate for the object argument, or <code>NULL</code> if there
+was an error.  If the argument is <code>NULL</code>, this is like the Python <code>dir()</code>,
+returning the names of the current locals; in this case, if no execution frame
+is active then <code>NULL</code> is returned but <a class="reference internal" href="exceptions.html#c:function:pyerr_occurred"><code class="xref c function docutils literal">PyErr_Occurred</code></a> will return false.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_getiter"><code class="sig-name">PyObject* PyObject_GetIter(PyObject *o)</code></dt>
+  <dd><p>This is equivalent to the Python expression <code>iter(o)</code>. It returns a new
+iterator for the object argument, or the object  itself if the object is already
+an iterator.  Raises <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> and returns <code>NULL</code> if the object cannot be
+iterated.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_selfiter"><code class="sig-name">PyObject* PyObject_SelfIter(PyObject *obj)</code></dt>
+  <dd><p>This is equivalent to the Python <code>__iter__(self): return self</code> method.
+It is intended for <a class="reference internal" href="../glossary.html#term-iterator"><span class="xref std std-term">iterator</span></a> types, to be used in the <a class="reference internal" href="typeobj.html#c:member:pytypeobject.tp_iter"><code class="xref c member docutils literal">PyTypeObject.tp_iter</code></a> slot.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_getaiter"><code class="sig-name">PyObject* PyObject_GetAIter(PyObject *o)</code></dt>
+  <dd><p>This is the equivalent to the Python expression <code>aiter(o)</code>. Takes an
+<a href="#" class="broken-link"><code class="xref py class docutils literal">AsyncIterable</code></a> object and returns an <a href="#" class="broken-link"><code class="xref py class docutils literal">AsyncIterator</code></a> for it.
+This is typically a new iterator but if the argument is an
+<a href="#" class="broken-link"><code class="xref py class docutils literal">AsyncIterator</code></a>, this returns itself. Raises <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> and
+returns <code>NULL</code> if the object cannot be iterated.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.10:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_gettypedata"><code class="sig-name">void *PyObject_GetTypeData(PyObject *o, PyTypeObject *cls)</code></dt>
+  <dd><p>Get a pointer to subclass-specific data reserved for <em>cls</em>.</p>
+<p>The object <em>o</em> must be an instance of <em>cls</em>, and <em>cls</em> must have been
+created using negative <a class="reference internal" href="type.html#c:member:pytype_spec.basicsize"><code class="xref c member docutils literal">PyType_Spec.basicsize</code></a>.
+Python does not check this.</p>
+<p>On error, set an exception and return <code>NULL</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pytype_gettypedatasize"><code class="sig-name">Py_ssize_t PyType_GetTypeDataSize(PyTypeObject *cls)</code></dt>
+  <dd><p>Return the size of the instance memory space reserved for <em>cls</em>, i.e. the size of the
+memory <a class="reference internal" href="object.html#c:function:pyobject_gettypedata"><code class="xref c function docutils literal">PyObject_GetTypeData</code></a> returns.</p>
+<p>This may be larger than requested using <a class="reference internal" href="type.html#c:member:pytype_spec.basicsize"><code class="xref c member docutils literal">-PyType_Spec.basicsize</code></a>;
+it is safe to use this larger size (e.g. with <code class="xref c function docutils literal">memset</code>).</p>
+<p>The type <em>cls</em> <strong>must</strong> have been created using
+negative <a class="reference internal" href="type.html#c:member:pytype_spec.basicsize"><code class="xref c member docutils literal">PyType_Spec.basicsize</code></a>.
+Python does not check this.</p>
+<p>On error, set an exception and return a negative value.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_getitemdata"><code class="sig-name">void *PyObject_GetItemData(PyObject *o)</code></dt>
+  <dd><p>Get a pointer to per-item data for a class with
+<a class="reference internal" href="typeobj.html#c:macro:py_tpflags_items_at_end"><code class="xref c macro docutils literal">Py_TPFLAGS_ITEMS_AT_END</code></a>.</p>
+<p>On error, set an exception and return <code>NULL</code>.
+<a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> is raised if <em>o</em> does not have
+<a class="reference internal" href="typeobj.html#c:macro:py_tpflags_items_at_end"><code class="xref c macro docutils literal">Py_TPFLAGS_ITEMS_AT_END</code></a> set.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_visitmanageddict"><code class="sig-name">int PyObject_VisitManagedDict(PyObject *obj, visitproc visit, void *arg)</code></dt>
+  <dd><p>Visit the managed dictionary of <em>obj</em>.</p>
+<p>This function must only be called in a traverse function of the type which
+has the <a class="reference internal" href="typeobj.html#c:macro:py_tpflags_managed_dict"><code class="xref c macro docutils literal">Py_TPFLAGS_MANAGED_DICT</code></a> flag set.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyobject_clearmanageddict"><code class="sig-name">void PyObject_ClearManagedDict(PyObject *obj)</code></dt>
+  <dd><p>Clear the managed dictionary of <em>obj</em>.</p>
+<p>This function must only be called in a clear function of the type which
+has the <a class="reference internal" href="typeobj.html#c:macro:py_tpflags_managed_dict"><code class="xref c macro docutils literal">Py_TPFLAGS_MANAGED_DICT</code></a> flag set.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunstable_object_enabledeferredrefcount"><code class="sig-name">int PyUnstable_Object_EnableDeferredRefcount(PyObject *obj)</code></dt>
+  <dd><p>Enable <a href="https://peps.python.org/pep-0703/#deferred-reference-counting">deferred reference counting</a> on <em>obj</em>,
+if supported by the runtime.  In the <a class="reference internal" href="../glossary.html#term-free-threading"><span class="xref std std-term">free-threaded</span></a> build,
+this allows the interpreter to avoid reference count adjustments to <em>obj</em>,
+which may improve multi-threaded performance.  The tradeoff is
+that <em>obj</em> will only be deallocated by the tracing garbage collector, and
+not when the interpreter no longer has any references to it.</p>
+<p>This function returns <code>1</code> if deferred reference counting is enabled on <em>obj</em>,
+and <code>0</code> if deferred reference counting is not supported or if the hint was
+ignored by the interpreter, such as when deferred reference counting is already
+enabled on <em>obj</em>. This function is thread-safe, and cannot fail.</p>
+<p>This function does nothing on builds with the <a class="reference internal" href="../glossary.html#term-gil"><span class="xref std std-term">GIL</span></a> enabled, which do
+not support deferred reference counting. This also does nothing if <em>obj</em> is not
+an object tracked by the garbage collector (see <a class="reference internal" href="../library/gc.html#py:function:gc.is_tracked"><code class="xref py function docutils literal">gc.is_tracked</code></a> and
+<a class="reference internal" href="gcsupport.html#c:function:pyobject_gc_istracked"><code class="xref c function docutils literal">PyObject_GC_IsTracked</code></a>).</p>
+<p>This function is intended to be used soon after <em>obj</em> is created,
+by the code that creates it, such as in the object's <a class="reference internal" href="typeobj.html#c:member:pytypeobject.tp_new"><code class="xref c member docutils literal">tp_new</code></a>
+slot.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunstable_object_isuniquereferencedtemporary"><code class="sig-name">int PyUnstable_Object_IsUniqueReferencedTemporary(PyObject *obj)</code></dt>
+  <dd><p>Check if <em>obj</em> is a unique temporary object.
+Returns <code>1</code> if <em>obj</em> is known to be a unique temporary object,
+and <code>0</code> otherwise.  This function cannot fail, but the check is
+conservative, and may return <code>0</code> in some cases even if <em>obj</em> is a unique
+temporary object.</p>
+<p>If an object is a unique temporary, it is guaranteed that the current code
+has the only reference to the object. For arguments to C functions, this
+should be used instead of checking if the reference count is <code>1</code>. Starting
+with Python 3.14, the interpreter internally avoids some reference count
+modifications when loading objects onto the operands stack by
+<a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">borrowing</span></a> references when possible, which means
+that a reference count of <code>1</code> by itself does not guarantee that a function
+argument uniquely referenced.</p>
+<p>In the example below, <code>my_func</code> is called with a unique temporary object
+as its argument:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">my_func</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-meta hl-brackets hl-c"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-c">[</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span><span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">2</span><span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">3</span><span class="hl-punctuation hl-section hl-brackets hl-end hl-c">]</span></span></span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span></span></pre></div>
+<p>In the example below, <code>my_func</code> is <strong>not</strong> called with a unique temporary
+object as its argument, even if its refcount is <code>1</code>:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">my_list <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-meta hl-brackets hl-c"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-c">[</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span><span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">2</span><span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">3</span><span class="hl-punctuation hl-section hl-brackets hl-end hl-c">]</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">my_func</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">my_list</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span></span></pre></div>
+<p>See also the function <a class="reference internal" href="refcounting.html#c:function:py_refcnt"><code class="xref c function docutils literal">Py_REFCNT</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunstable_isimmortal"><code class="sig-name">int PyUnstable_IsImmortal(PyObject *obj)</code></dt>
+  <dd><p>This function returns non-zero if <em>obj</em> is <a class="reference internal" href="../glossary.html#term-immortal"><span class="xref std std-term">immortal</span></a>, and zero
+otherwise. This function cannot fail.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Objects that are immortal in one CPython version are not guaranteed to
+be immortal in another.</p>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunstable_tryincref"><code class="sig-name">int PyUnstable_TryIncRef(PyObject *obj)</code></dt>
+  <dd><p>Increments the reference count of <em>obj</em> if it is not zero.  Returns <code>1</code>
+if the object's reference count was successfully incremented. Otherwise,
+this function returns <code>0</code>.</p>
+<p><a class="reference internal" href="object.html#c:function:pyunstable_enabletryincref"><code class="xref c function docutils literal">PyUnstable_EnableTryIncRef</code></a> must have been called
+earlier on <em>obj</em> or this function may spuriously return <code>0</code> in the
+<a class="reference internal" href="../glossary.html#term-free-threading"><span class="xref std std-term">free threading</span></a> build.</p>
+<p>This function is logically equivalent to the following C code, except that
+it behaves atomically in the <a class="reference internal" href="../glossary.html#term-free-threading"><span class="xref std std-term">free threading</span></a> build:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-keyword hl-control hl-c">if</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_REFCNT</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">op</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span> <span class="hl-keyword hl-operator hl-comparison hl-c">&gt;</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">0</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">   <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_INCREF</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">op</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">   <span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span>
+<span class="hl-source hl-c"><span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">0</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></pre></div>
+<p>This is intended as a building block for managing weak references
+without the overhead of a Python <a href="weakref.html#weakrefobjects">weak reference object</a>.</p>
+<p>Typically, correct use of this function requires support from <em>obj</em>'s
+deallocator (<a class="reference internal" href="typeobj.html#c:member:pytypeobject.tp_dealloc"><code class="xref c member docutils literal">tp_dealloc</code></a>).
+For example, the following sketch could be adapted to implement a
+"weakmap" that works like a <a class="reference internal" href="../library/weakref.html#py:class:weakref.weakvaluedictionary"><code class="xref py class docutils literal">WeakValueDictionary</code></a>
+for a specific type:</p>
+<div class="highlight-c notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">PyMutex mutex<span class="hl-punctuation hl-terminator hl-c">;</span></span>
+<span class="hl-source hl-c"></span>
+<span class="hl-source hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">add_entry</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">weakmap_key_type <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">key</span><span class="hl-punctuation hl-separator hl-c">,</span> PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">value</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-meta hl-function hl-c"></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyUnstable_EnableTryIncRef</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">value</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    weakmap_type weakmap <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-keyword hl-operator hl-variadic hl-c">...</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyMutex_Lock</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-keyword hl-operator hl-c">&amp;</span>mutex</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">weakmap_add_entry</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">weakmap<span class="hl-punctuation hl-separator hl-c">,</span> key<span class="hl-punctuation hl-separator hl-c">,</span> value</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyMutex_Unlock</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-keyword hl-operator hl-c">&amp;</span>mutex</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    Py_RETURN_NONE<span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span>
+<span class="hl-source hl-c"></span>
+<span class="hl-source hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">get_value</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">weakmap_key_type <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">key</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-meta hl-function hl-c"></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    weakmap_type weakmap <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-keyword hl-operator hl-variadic hl-c">...</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyMutex_Lock</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-keyword hl-operator hl-c">&amp;</span>mutex</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    PyObject <span class="hl-keyword hl-operator hl-c">*</span>result <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">weakmap_find</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">weakmap<span class="hl-punctuation hl-separator hl-c">,</span> key</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-control hl-c">if</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyUnstable_TryIncRef</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">result</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> `result` is safe to use
+</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyMutex_Unlock</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-keyword hl-operator hl-c">&amp;</span>mutex</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> result<span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> if we get here, `result` is starting to be garbage-collected,
+</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> but has not been removed from the weakmap yet
+</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyMutex_Unlock</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-keyword hl-operator hl-c">&amp;</span>mutex</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> <span class="hl-constant hl-language hl-c">NULL</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span>
+<span class="hl-source hl-c"></span>
+<span class="hl-source hl-c"><span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> tp_dealloc function for weakmap values
+</span></span>
+<span class="hl-source hl-c"><span class="hl-storage hl-type hl-c">void</span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">value_dealloc</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">value</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-meta hl-function hl-c"></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    weakmap_type weakmap <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-keyword hl-operator hl-variadic hl-c">...</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyMutex_Lock</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-keyword hl-operator hl-c">&amp;</span>mutex</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">weakmap_remove_value</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">weakmap<span class="hl-punctuation hl-separator hl-c">,</span> value</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-operator hl-variadic hl-c">...</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyMutex_Unlock</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-keyword hl-operator hl-c">&amp;</span>mutex</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span></pre></div>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunstable_enabletryincref"><code class="sig-name">void PyUnstable_EnableTryIncRef(PyObject *obj)</code></dt>
+  <dd><p>Enables subsequent uses of <a class="reference internal" href="object.html#c:function:pyunstable_tryincref"><code class="xref c function docutils literal">PyUnstable_TryIncRef</code></a> on <em>obj</em>.  The
+caller must hold a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to <em>obj</em> when calling this.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyunstable_object_isuniquelyreferenced"><code class="sig-name">int PyUnstable_Object_IsUniquelyReferenced(PyObject *op)</code></dt>
+  <dd><p>Determine if <em>op</em> only has one reference.</p>
+<p>On GIL-enabled builds, this function is equivalent to
+:c:expr:`Py_REFCNT(op) == 1`.</p>
+<p>On a <a class="reference internal" href="../glossary.html#term-free-threading"><span class="xref std std-term">free threaded</span></a> build, this checks if <em>op</em>'s
+<a class="reference internal" href="../glossary.html#term-reference-count"><span class="xref std std-term">reference count</span></a> is equal to one and additionally checks if <em>op</em>
+is only used by this thread. :c:expr:`Py_REFCNT(op) == 1` is <strong>not</strong>
+thread-safe on free threaded builds; prefer this function.</p>
+<p>The caller must hold an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>, despite the fact
+that this function doesn't call into the Python interpreter. This function
+cannot fail.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="abstract.html">&larr; Abstract Objects Layer</a>
+        <a class="next" href="call.html">Call Protocol &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

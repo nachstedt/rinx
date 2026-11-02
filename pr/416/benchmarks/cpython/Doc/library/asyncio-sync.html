@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Synchronization Primitives — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Networking and Interprocess Communication"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 ancestor has-children">
+            <a href="asyncio.html">asyncio — Asynchronous I&#x2f;O</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle asyncio — Asynchronous I&#x2f;O"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="asyncio-runner.html">Runners</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-task.html">Coroutines and Tasks</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-stream.html">Streams</a>
+            
+          </li>
+        
+          <li class="toctree-l4 current has-children">
+            <a href="asyncio-sync.html">Synchronization Primitives</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Synchronization Primitives"></span></summary>
+              <ul>
+                
+          <li class="toctree-l5">
+            <a href="asyncio-sync.html#lock">Lock</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-sync.html#event">Event</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-sync.html#condition">Condition</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-sync.html#semaphore">Semaphore</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-sync.html#boundedsemaphore">BoundedSemaphore</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-sync.html#barrier">Barrier</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-subprocess.html">Subprocesses</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-queue.html">Queues</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-exceptions.html">Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-graph.html">Call Graph Introspection</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-eventloop.html">Event Loop</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-future.html">Futures</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-protocol.html">Transports and Protocols</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-policy.html">Policies</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-platforms.html">Platform Support</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-extending.html">Extending</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-api-index.html">High-level API Index</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-llapi-index.html">Low-level API Index</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-dev.html">Developing with asyncio</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="socket.html">socket — Low-level networking interface</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ssl.html">ssl — TLS&#x2f;SSL wrapper for socket objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="select.html">select — Waiting for I&#x2f;O completion</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="selectors.html">selectors — High-level I&#x2f;O multiplexing</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="signal.html">signal — Set handlers for asynchronous events</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mmap.html">mmap — Memory-mapped file support</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="asyncio-stream.html">&larr; Streams</a>
+        <a class="next" href="asyncio-subprocess.html">Subprocesses &rarr;</a>
+      </nav>
+      
+      <a id="asyncio-sync"></a>
+<h1 id="synchronization-primitives">Synchronization Primitives</h1>
+<p><strong>Source code:</strong> :source:`Lib/asyncio/locks.py`</p>
+<hr />
+<p>asyncio synchronization primitives are designed to be similar to
+those of the <a class="reference internal" href="threading.html#py:module:threading" title="threading: Thread-based parallelism."><code class="xref py module docutils literal">threading</code></a> module with two important caveats:</p>
+<ul>
+<li><p>asyncio primitives are not thread-safe, therefore they should not
+be used for OS thread synchronization (use <a class="reference internal" href="threading.html#py:module:threading" title="threading: Thread-based parallelism."><code class="xref py module docutils literal">threading</code></a> for
+that);</p>
+</li>
+<li><p>methods of these synchronization primitives do not accept the <em>timeout</em>
+argument; use the <a class="reference internal" href="asyncio-task.html#py:function:asyncio.wait_for"><code class="xref py function docutils literal">asyncio.wait_for</code></a> function to perform
+operations with timeouts.</p>
+</li>
+</ul>
+<p>asyncio has the following basic synchronization primitives:</p>
+<ul>
+<li><p><a class="reference internal" href="asyncio-sync.html#py:class:asyncio.lock"><code class="xref py class docutils literal">Lock</code></a></p>
+</li>
+<li><p><a class="reference internal" href="asyncio-sync.html#py:class:asyncio.event"><code class="xref py class docutils literal">Event</code></a></p>
+</li>
+<li><p><a class="reference internal" href="asyncio-sync.html#py:class:asyncio.condition"><code class="xref py class docutils literal">Condition</code></a></p>
+</li>
+<li><p><a class="reference internal" href="asyncio-sync.html#py:class:asyncio.semaphore"><code class="xref py class docutils literal">Semaphore</code></a></p>
+</li>
+<li><p><a class="reference internal" href="asyncio-sync.html#py:class:asyncio.boundedsemaphore"><code class="xref py class docutils literal">BoundedSemaphore</code></a></p>
+</li>
+<li><p><a class="reference internal" href="asyncio-sync.html#py:class:asyncio.barrier"><code class="xref py class docutils literal">Barrier</code></a></p>
+</li>
+</ul>
+<hr />
+<h2 id="lock">Lock</h2>
+<dl class="py class">
+  <dt id="py:class:asyncio.lock"><em class="property">class</em> <code class="sig-name">Lock()</code></dt>
+  <dd><p>Implements a mutex lock for asyncio tasks.  Not thread-safe.</p>
+<p>An asyncio lock can be used to guarantee exclusive access to a
+shared resource.</p>
+<p>The preferred way to use a Lock is an :keyword:`async with`
+statement:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lock</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Lock</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> ... later
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async </span><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lock</span></span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> access shared state</span></span></pre></div>
+<p>which is equivalent to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lock</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Lock</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> ... later
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lock</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">acquire</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-exception hl-try hl-python"><span class="hl-keyword hl-control hl-exception hl-try hl-python">try</span><span class="hl-punctuation hl-section hl-block hl-exception hl-try hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> access shared state
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-exception hl-finally hl-python"><span class="hl-keyword hl-control hl-exception hl-finally hl-python">finally</span><span class="hl-punctuation hl-section hl-block hl-exception hl-finally hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lock</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">release</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>Removed the <em>loop</em> parameter.</p>
+</div>
+<dl class="py method">
+  <dt id="py:method:asyncio.lock.acquire"><em class="property">async</em> <code class="sig-name">acquire()</code></dt>
+  <dd><p>Acquire the lock.</p>
+<p>This method waits until the lock is <em>unlocked</em>, sets it to
+<em>locked</em> and returns <code>True</code>.</p>
+<p>When more than one coroutine is blocked in <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.lock.acquire"><code class="xref py method docutils literal">acquire</code></a>
+waiting for the lock to be unlocked, only one coroutine
+eventually proceeds.</p>
+<p>Acquiring a lock is <em>fair</em>: the coroutine that proceeds will be
+the first coroutine that started waiting on the lock.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.lock.release"><code class="sig-name">release()</code></dt>
+  <dd><p>Release the lock.</p>
+<p>When the lock is <em>locked</em>, reset it to <em>unlocked</em> and return.</p>
+<p>If the lock is <em>unlocked</em>, a <a class="reference internal" href="exceptions.html#py:exception:runtimeerror"><code class="xref py exception docutils literal">RuntimeError</code></a> is raised.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.lock.locked"><code class="sig-name">locked()</code></dt>
+  <dd><p>Return <code>True</code> if the lock is <em>locked</em>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<h2 id="event">Event</h2>
+<dl class="py class">
+  <dt id="py:class:asyncio.event"><em class="property">class</em> <code class="sig-name">Event()</code></dt>
+  <dd><p>An event object.  Not thread-safe.</p>
+<p>An asyncio event can be used to notify multiple asyncio tasks
+that some event has happened.</p>
+<p>An Event object manages an internal flag that can be set to <em>true</em>
+with the <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.event.set"><code class="xref py method docutils literal">set</code></a> method and reset to <em>false</em> with the
+<a class="reference internal" href="asyncio-sync.html#py:method:asyncio.event.clear"><code class="xref py method docutils literal">clear</code></a> method.  The <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.event.wait"><code class="xref py method docutils literal">wait</code></a> method blocks until the
+flag is set to <em>true</em>.  The flag is set to <em>false</em> initially.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>Removed the <em>loop</em> parameter.</p>
+</div>
+<a id="asyncio_example_sync_event"></a>
+<p>Example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async</span> <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">waiter</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">event</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">waiting for it ...<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">event</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">wait</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">... got it!<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async</span> <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Create an Event object.
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">event</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Event</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Spawn a Task to wait until &#39;event&#39; is set.
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">waiter_task</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">create_task</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">waiter</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">event</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Sleep for 1 second and set the event.
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">sleep</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">event</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">set</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Wait until the waiter task is finished.
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">waiter_task</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">run</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<dl class="py method">
+  <dt id="py:method:asyncio.event.wait"><em class="property">async</em> <code class="sig-name">wait()</code></dt>
+  <dd><p>Wait until the event is set.</p>
+<p>If the event is set, return <code>True</code> immediately.
+Otherwise block until another task calls <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.event.set"><code class="xref py method docutils literal">set</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.event.set"><code class="sig-name">set()</code></dt>
+  <dd><p>Set the event.</p>
+<p>All tasks waiting for event to be set will be immediately
+awakened.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.event.clear"><code class="sig-name">clear()</code></dt>
+  <dd><p>Clear (unset) the event.</p>
+<p>Subsequent tasks awaiting on <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.event.wait"><code class="xref py method docutils literal">wait</code></a> will now block until the
+<a class="reference internal" href="asyncio-sync.html#py:method:asyncio.event.set"><code class="xref py method docutils literal">set</code></a> method is called again.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.event.is_set"><code class="sig-name">is_set()</code></dt>
+  <dd><p>Return <code>True</code> if the event is set.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<h2 id="condition">Condition</h2>
+<dl class="py class">
+  <dt id="py:class:asyncio.condition"><em class="property">class</em> <code class="sig-name">Condition(lock=None)</code></dt>
+  <dd><p>A Condition object.  Not thread-safe.</p>
+<p>An asyncio condition primitive can be used by a task to wait for
+some event to happen and then get exclusive access to a shared
+resource.</p>
+<p>In essence, a Condition object combines the functionality
+of an <a class="reference internal" href="asyncio-sync.html#py:class:asyncio.event"><code class="xref py class docutils literal">Event</code></a> and a <a class="reference internal" href="asyncio-sync.html#py:class:asyncio.lock"><code class="xref py class docutils literal">Lock</code></a>.  It is possible to have
+multiple Condition objects share one Lock, which allows coordinating
+exclusive access to a shared resource between different tasks
+interested in particular states of that shared resource.</p>
+<p>The optional <em>lock</em> argument must be a <a class="reference internal" href="asyncio-sync.html#py:class:asyncio.lock"><code class="xref py class docutils literal">Lock</code></a> object or
+<code>None</code>.  In the latter case a new Lock object is created
+automatically.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>Removed the <em>loop</em> parameter.</p>
+</div>
+<p>The preferred way to use a Condition is an :keyword:`async with`
+statement:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">cond</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Condition</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> ... later
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async </span><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">cond</span></span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">cond</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">wait</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>which is equivalent to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">cond</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Condition</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> ... later
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">cond</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">acquire</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-exception hl-try hl-python"><span class="hl-keyword hl-control hl-exception hl-try hl-python">try</span><span class="hl-punctuation hl-section hl-block hl-exception hl-try hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">cond</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">wait</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-exception hl-finally hl-python"><span class="hl-keyword hl-control hl-exception hl-finally hl-python">finally</span><span class="hl-punctuation hl-section hl-block hl-exception hl-finally hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">cond</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">release</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<dl class="py method">
+  <dt id="py:method:asyncio.condition.acquire"><em class="property">async</em> <code class="sig-name">acquire()</code></dt>
+  <dd><p>Acquire the underlying lock.</p>
+<p>This method waits until the underlying lock is <em>unlocked</em>,
+sets it to <em>locked</em> and returns <code>True</code>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.condition.notify"><code class="sig-name">notify(n=1)</code></dt>
+  <dd><p>Wake up <em>n</em> tasks (1 by default) waiting on this
+condition.  If fewer than <em>n</em> tasks are waiting they are all awakened.</p>
+<p>The lock must be acquired before this method is called and
+released shortly after.  If called with an <em>unlocked</em> lock
+a <a class="reference internal" href="exceptions.html#py:exception:runtimeerror"><code class="xref py exception docutils literal">RuntimeError</code></a> error is raised.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.condition.locked"><code class="sig-name">locked()</code></dt>
+  <dd><p>Return <code>True</code> if the underlying lock is acquired.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.condition.notify_all"><code class="sig-name">notify_all()</code></dt>
+  <dd><p>Wake up all tasks waiting on this condition.</p>
+<p>This method acts like <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.condition.notify"><code class="xref py method docutils literal">notify</code></a>, but wakes up all waiting
+tasks.</p>
+<p>The lock must be acquired before this method is called and
+released shortly after.  If called with an <em>unlocked</em> lock
+a <a class="reference internal" href="exceptions.html#py:exception:runtimeerror"><code class="xref py exception docutils literal">RuntimeError</code></a> error is raised.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.condition.release"><code class="sig-name">release()</code></dt>
+  <dd><p>Release the underlying lock.</p>
+<p>When invoked on an unlocked lock, a <a class="reference internal" href="exceptions.html#py:exception:runtimeerror"><code class="xref py exception docutils literal">RuntimeError</code></a> is
+raised.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.condition.wait"><em class="property">async</em> <code class="sig-name">wait()</code></dt>
+  <dd><p>Wait until notified.</p>
+<p>If the calling task has not acquired the lock when this method is
+called, a <a class="reference internal" href="exceptions.html#py:exception:runtimeerror"><code class="xref py exception docutils literal">RuntimeError</code></a> is raised.</p>
+<p>This method releases the underlying lock, and then blocks until
+it is awakened by a <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.condition.notify"><code class="xref py method docutils literal">notify</code></a> or <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.condition.notify_all"><code class="xref py method docutils literal">notify_all</code></a> call.
+Once awakened, the Condition re-acquires its lock and this method
+returns <code>True</code>.</p>
+<p>Note that a task <em>may</em> return from this call spuriously,
+which is why the caller should always re-check the state
+and be prepared to <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.condition.wait"><code class="xref py method docutils literal">wait</code></a> again. For this reason, you may
+prefer to use <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.condition.wait_for"><code class="xref py method docutils literal">wait_for</code></a> instead.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.condition.wait_for"><em class="property">async</em> <code class="sig-name">wait_for(predicate)</code></dt>
+  <dd><p>Wait until a predicate becomes <em>true</em>.</p>
+<p>The predicate must be a callable which result will be
+interpreted as a boolean value.  The method will repeatedly
+<a class="reference internal" href="asyncio-sync.html#py:method:asyncio.condition.wait"><code class="xref py method docutils literal">wait</code></a> until the predicate evaluates to <em>true</em>. The final value is the
+return value.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<h2 id="semaphore">Semaphore</h2>
+<dl class="py class">
+  <dt id="py:class:asyncio.semaphore"><em class="property">class</em> <code class="sig-name">Semaphore(value=1)</code></dt>
+  <dd><p>A Semaphore object.  Not thread-safe.</p>
+<p>A semaphore manages an internal counter which is decremented by each
+<a class="reference internal" href="asyncio-sync.html#py:method:asyncio.semaphore.acquire"><code class="xref py method docutils literal">acquire</code></a> call and incremented by each <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.semaphore.release"><code class="xref py method docutils literal">release</code></a> call.
+The counter can never go below zero; when <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.semaphore.acquire"><code class="xref py method docutils literal">acquire</code></a> finds
+that it is zero, it blocks, waiting until some task calls
+<a class="reference internal" href="asyncio-sync.html#py:method:asyncio.semaphore.release"><code class="xref py method docutils literal">release</code></a>.</p>
+<p>The optional <em>value</em> argument gives the initial value for the
+internal counter (<code>1</code> by default). If the given value is
+less than <code>0</code> a <a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> is raised.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>Removed the <em>loop</em> parameter.</p>
+</div>
+<p>The preferred way to use a Semaphore is an :keyword:`async with`
+statement:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sem</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Semaphore</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> ... later
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async </span><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sem</span></span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> work with shared resource</span></span></pre></div>
+<p>which is equivalent to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sem</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Semaphore</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> ... later
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sem</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">acquire</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-exception hl-try hl-python"><span class="hl-keyword hl-control hl-exception hl-try hl-python">try</span><span class="hl-punctuation hl-section hl-block hl-exception hl-try hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> work with shared resource
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-exception hl-finally hl-python"><span class="hl-keyword hl-control hl-exception hl-finally hl-python">finally</span><span class="hl-punctuation hl-section hl-block hl-exception hl-finally hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sem</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">release</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<dl class="py method">
+  <dt id="py:method:asyncio.semaphore.acquire"><em class="property">async</em> <code class="sig-name">acquire()</code></dt>
+  <dd><p>Acquire a semaphore.</p>
+<p>If the internal counter is greater than zero, decrement
+it by one and return <code>True</code> immediately.  If it is zero, wait
+until a <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.semaphore.release"><code class="xref py method docutils literal">release</code></a> is called and return <code>True</code>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.semaphore.locked"><code class="sig-name">locked()</code></dt>
+  <dd><p>Returns <code>True</code> if semaphore can not be acquired immediately.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.semaphore.release"><code class="sig-name">release()</code></dt>
+  <dd><p>Release a semaphore, incrementing the internal counter by one.
+Can wake up a task waiting to acquire the semaphore.</p>
+<p>Unlike <a class="reference internal" href="asyncio-sync.html#py:class:asyncio.boundedsemaphore"><code class="xref py class docutils literal">BoundedSemaphore</code></a>, <a class="reference internal" href="asyncio-sync.html#py:class:asyncio.semaphore"><code class="xref py class docutils literal">Semaphore</code></a> allows
+making more <code>release()</code> calls than <code>acquire()</code> calls.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<h2 id="boundedsemaphore">BoundedSemaphore</h2>
+<dl class="py class">
+  <dt id="py:class:asyncio.boundedsemaphore"><em class="property">class</em> <code class="sig-name">BoundedSemaphore(value=1)</code></dt>
+  <dd><p>A bounded semaphore object.  Not thread-safe.</p>
+<p>Bounded Semaphore is a version of <a class="reference internal" href="asyncio-sync.html#py:class:asyncio.semaphore"><code class="xref py class docutils literal">Semaphore</code></a> that raises
+a <a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> in <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.semaphore.release"><code class="xref py method docutils literal">release</code></a> if it
+increases the internal counter above the initial <em>value</em>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>Removed the <em>loop</em> parameter.</p>
+</div>
+</dd>
+</dl>
+<h2 id="barrier">Barrier</h2>
+<dl class="py class">
+  <dt id="py:class:asyncio.barrier"><em class="property">class</em> <code class="sig-name">Barrier(parties)</code></dt>
+  <dd><p>A barrier object.  Not thread-safe.</p>
+<p>A barrier is a simple synchronization primitive that allows to block until
+<em>parties</em> number of tasks are waiting on it.
+Tasks can wait on the <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.barrier.wait"><code class="xref py method docutils literal">wait</code></a> method and would be blocked until
+the specified number of tasks end up waiting on <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.barrier.wait"><code class="xref py method docutils literal">wait</code></a>.
+At that point all of the waiting tasks would unblock simultaneously.</p>
+<p>:keyword:`async with` can be used as an alternative to awaiting on
+<a class="reference internal" href="asyncio-sync.html#py:method:asyncio.barrier.wait"><code class="xref py method docutils literal">wait</code></a>.</p>
+<p>The barrier can be reused any number of times.</p>
+<a id="asyncio_example_barrier"></a>
+<p>Example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async</span> <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">example_barrier</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">   <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> barrier with 3 parties
+</span></span>
+<span class="hl-source hl-python">   <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">b</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Barrier</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">   <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> create 2 new waiting tasks
+</span></span>
+<span class="hl-source hl-python">   <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">create_task</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">b</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">wait</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">   <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">create_task</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">b</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">wait</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">   <span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">sleep</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">   <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">b</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">   <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> The third .wait() call passes the barrier
+</span></span>
+<span class="hl-source hl-python">   <span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">b</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">wait</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">   <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">b</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">   <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">barrier passed<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">   <span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">sleep</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">   <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">b</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">run</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">example_barrier</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>Result of this example is:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&lt;</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">locks</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">Barrier</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">object</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">at</span></span> 0x<span class="hl-constant hl-language hl-python">...</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">filling</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">waiters</span></span>:<span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&lt;</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">locks</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">Barrier</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">object</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">at</span></span> 0x<span class="hl-constant hl-language hl-python">...</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">draining</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">waiters</span></span>:<span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">barrier</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">passed</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&lt;</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">locks</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">Barrier</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">object</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">at</span></span> 0x<span class="hl-constant hl-language hl-python">...</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">filling</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">waiters</span></span>:<span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span></span></pre></div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+<dl class="py method">
+  <dt id="py:method:asyncio.barrier.wait"><em class="property">async</em> <code class="sig-name">wait()</code></dt>
+  <dd><p>Pass the barrier. When all the tasks party to the barrier have called
+this function, they are all unblocked simultaneously.</p>
+<p>When a waiting or blocked task in the barrier is cancelled,
+this task exits the barrier which stays in the same state.
+If the state of the barrier is "filling", the number of waiting task
+decreases by 1.</p>
+<p>The return value is an integer in the range of 0 to <code>parties-1</code>, different
+for each task. This can be used to select a task to do some special
+housekeeping, e.g.:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async </span><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">barrier</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">position</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">   <span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">position</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">      <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Only one task prints this
+</span></span>
+<span class="hl-source hl-python">      <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">End of *draining phase*<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>This method may raise a <a class="reference internal" href="asyncio-sync.html#py:exception:asyncio.brokenbarriererror"><code class="xref py class docutils literal">BrokenBarrierError</code></a> exception if the
+barrier is broken or reset while a task is waiting.
+It could raise a <a class="reference internal" href="asyncio-exceptions.html#py:exception:asyncio.cancellederror"><code class="xref py exception docutils literal">CancelledError</code></a> if a task is cancelled.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.barrier.reset"><em class="property">async</em> <code class="sig-name">reset()</code></dt>
+  <dd><p>Return the barrier to the default, empty state.  Any tasks waiting on it
+will receive the <a class="reference internal" href="asyncio-sync.html#py:exception:asyncio.brokenbarriererror"><code class="xref py class docutils literal">BrokenBarrierError</code></a> exception.</p>
+<p>If a barrier is broken it may be better to just leave it and create a new one.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.barrier.abort"><em class="property">async</em> <code class="sig-name">abort()</code></dt>
+  <dd><p>Put the barrier into a broken state.  This causes any active or future
+calls to <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.barrier.wait"><code class="xref py method docutils literal">wait</code></a> to fail with the <a class="reference internal" href="asyncio-sync.html#py:exception:asyncio.brokenbarriererror"><code class="xref py class docutils literal">BrokenBarrierError</code></a>.
+Use this for example if one of the tasks needs to abort, to avoid infinite
+waiting tasks.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:asyncio.barrier.parties"><code class="sig-name">parties</code></dt>
+  <dd><p>The number of tasks required to pass the barrier.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:asyncio.barrier.n_waiting"><code class="sig-name">n_waiting</code></dt>
+  <dd><p>The number of tasks currently waiting in the barrier while filling.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:asyncio.barrier.broken"><code class="sig-name">broken</code></dt>
+  <dd><p>A boolean that is <code>True</code> if the barrier is in the broken state.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:asyncio.brokenbarriererror"><em class="property">exception</em> <code class="sig-name">BrokenBarrierError</code></dt>
+  <dd><p>This exception, a subclass of <a class="reference internal" href="exceptions.html#py:exception:runtimeerror"><code class="xref py exception docutils literal">RuntimeError</code></a>, is raised when the
+<a class="reference internal" href="asyncio-sync.html#py:class:asyncio.barrier"><code class="xref py class docutils literal">Barrier</code></a> object is reset or broken.</p>
+</dd>
+</dl>
+<hr />
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.9:</span></p>
+<p>Acquiring a lock using <code>await lock</code> or <code>yield from lock</code> and/or
+:keyword:`with` statement (<code>with await lock</code>, <code>with (yield from
+lock)</code>) was removed.  Use <code>async with lock</code> instead.</p>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="asyncio-stream.html">&larr; Streams</a>
+        <a class="next" href="asyncio-subprocess.html">Subprocesses &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>cmath — Mathematical functions for complex numbers — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Numeric and Mathematical Modules"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="numbers.html">numbers — Numeric abstract base classes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="math.html">math — Mathematical functions</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="cmath.html">cmath — Mathematical functions for complex numbers</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle cmath — Mathematical functions for complex numbers"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="cmath.html#conversions-to-and-from-polar-coordinates">Conversions to and from polar coordinates</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="cmath.html#power-and-logarithmic-functions">Power and logarithmic functions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="cmath.html#trigonometric-functions">Trigonometric functions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="cmath.html#hyperbolic-functions">Hyperbolic functions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="cmath.html#classification-functions">Classification functions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="cmath.html#constants">Constants</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="decimal.html">decimal — Decimal fixed-point and floating-point arithmetic</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="fractions.html">fractions — Rational numbers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="random.html">random — Generate pseudo-random numbers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="statistics.html">statistics — Mathematical statistics functions</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="math.html">&larr; math — Mathematical functions</a>
+        <a class="next" href="decimal.html">decimal — Decimal fixed-point and floating-point arithmetic &rarr;</a>
+      </nav>
+      
+      <h1 id="cmath-mathematical-functions-for-complex-numbers"><code class="xref py module docutils literal">cmath</code> — Mathematical functions for complex numbers</h1>
+<dl class="py module">
+  <dt id="py:module:cmath"><code class="sig-name">cmath</code></dt>
+  <dd></dd>
+</dl>
+<hr />
+<p>This module provides access to mathematical functions for complex numbers.  The
+functions in this module accept integers, floating-point numbers or complex
+numbers as arguments. They will also accept any Python object that has either a
+<a class="reference internal" href="../reference/datamodel.html#py:method:object.__complex__"><code class="xref py method docutils literal">__complex__</code></a> or a <a class="reference internal" href="../reference/datamodel.html#py:method:object.__float__"><code class="xref py method docutils literal">__float__</code></a> method: these methods are used to
+convert the object to a complex or floating-point number, respectively, and
+the function is then applied to the result of the conversion.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>For functions involving branch cuts, we have the problem of deciding how to
+define those functions on the cut itself. Following Kahan's "Branch cuts for
+complex elementary functions" paper, as well as Annex G of C99 and later C
+standards, we use the sign of zero to distinguish one side of the branch cut
+from the other: for a branch cut along (a portion of) the real axis we look
+at the sign of the imaginary part, while for a branch cut along the
+imaginary axis we look at the sign of the real part.</p>
+<p>For example, the <a class="reference internal" href="cmath.html#py:function:cmath.sqrt"><code class="xref py function docutils literal">cmath.sqrt</code></a> function has a branch cut along the
+negative real axis. An argument of <code>-2-0j</code> is treated as
+though it lies <em>below</em> the branch cut, and so gives a result on the negative
+imaginary axis:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">cmath</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">sqrt</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-imaginary hl-decimal hl-python">0<span class="hl-storage hl-type hl-numeric hl-python">j</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-imaginary hl-decimal hl-python">1<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>4142135623730951<span class="hl-storage hl-type hl-numeric hl-python">j</span></span></span></pre></div>
+<p>But an argument of <code>-2+0j</code> is treated as though it lies above
+the branch cut:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">cmath</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">sqrt</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span><span class="hl-constant hl-numeric hl-imaginary hl-decimal hl-python">0<span class="hl-storage hl-type hl-numeric hl-python">j</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-imaginary hl-decimal hl-python">1<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>4142135623730951<span class="hl-storage hl-type hl-numeric hl-python">j</span></span></span></pre></div>
+</div>
+<table>
+<tbody>
+<tr>
+<td colspan="2"><p><strong>Conversions to and from polar coordinates</strong></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.phase"><code class="xref py function docutils literal">phase(z)</code></a></p>
+</td>
+<td><p>Return the phase of <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.polar"><code class="xref py function docutils literal">polar(z)</code></a></p>
+</td>
+<td><p>Return the representation of <em>z</em> in polar coordinates</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.rect"><code class="xref py function docutils literal">rect(r, phi)</code></a></p>
+</td>
+<td><p>Return the complex number <em>z</em> with polar coordinates <em>r</em> and <em>phi</em></p>
+</td>
+</tr>
+<tr>
+<td colspan="2"><p><strong>Power and logarithmic functions</strong></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.exp"><code class="xref py function docutils literal">exp(z)</code></a></p>
+</td>
+<td><p>Return <em>e</em> raised to the power <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.log"><code class="xref py function docutils literal">log(z[, base])</code></a></p>
+</td>
+<td><p>Return the logarithm of <em>z</em> to the given <em>base</em> (<em>e</em> by default)</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.log10"><code class="xref py function docutils literal">log10(z)</code></a></p>
+</td>
+<td><p>Return the base-10 logarithm of <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.sqrt"><code class="xref py function docutils literal">sqrt(z)</code></a></p>
+</td>
+<td><p>Return the square root of <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td colspan="2"><p><strong>Trigonometric functions</strong></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.acos"><code class="xref py function docutils literal">acos(z)</code></a></p>
+</td>
+<td><p>Return the arc cosine of <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.asin"><code class="xref py function docutils literal">asin(z)</code></a></p>
+</td>
+<td><p>Return the arc sine of <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.atan"><code class="xref py function docutils literal">atan(z)</code></a></p>
+</td>
+<td><p>Return the arc tangent of <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.cos"><code class="xref py function docutils literal">cos(z)</code></a></p>
+</td>
+<td><p>Return the cosine of <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.sin"><code class="xref py function docutils literal">sin(z)</code></a></p>
+</td>
+<td><p>Return the sine of <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.tan"><code class="xref py function docutils literal">tan(z)</code></a></p>
+</td>
+<td><p>Return the tangent of <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td colspan="2"><p><strong>Hyperbolic functions</strong></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.acosh"><code class="xref py function docutils literal">acosh(z)</code></a></p>
+</td>
+<td><p>Return the inverse hyperbolic cosine of <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.asinh"><code class="xref py function docutils literal">asinh(z)</code></a></p>
+</td>
+<td><p>Return the inverse hyperbolic sine of <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.atanh"><code class="xref py function docutils literal">atanh(z)</code></a></p>
+</td>
+<td><p>Return the inverse hyperbolic tangent of <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.cosh"><code class="xref py function docutils literal">cosh(z)</code></a></p>
+</td>
+<td><p>Return the hyperbolic cosine of <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.sinh"><code class="xref py function docutils literal">sinh(z)</code></a></p>
+</td>
+<td><p>Return the hyperbolic sine of <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.tanh"><code class="xref py function docutils literal">tanh(z)</code></a></p>
+</td>
+<td><p>Return the hyperbolic tangent of <em>z</em></p>
+</td>
+</tr>
+<tr>
+<td colspan="2"><p><strong>Classification functions</strong></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.isfinite"><code class="xref py function docutils literal">isfinite(z)</code></a></p>
+</td>
+<td><p>Check if all components of <em>z</em> are finite</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.isinf"><code class="xref py function docutils literal">isinf(z)</code></a></p>
+</td>
+<td><p>Check if any component of <em>z</em> is infinite</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.isnan"><code class="xref py function docutils literal">isnan(z)</code></a></p>
+</td>
+<td><p>Check if any component of <em>z</em> is a NaN</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:function:cmath.isclose"><code class="xref py function docutils literal">isclose(a, b, *, rel_tol, abs_tol)</code></a></p>
+</td>
+<td><p>Check if the values <em>a</em> and <em>b</em> are close to each other</p>
+</td>
+</tr>
+<tr>
+<td colspan="2"><p><strong>Constants</strong></p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:data:cmath.pi"><code class="xref py data docutils literal">pi</code></a></p>
+</td>
+<td><p><em>π</em> = 3.141592…</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:data:cmath.e"><code class="xref py data docutils literal">e</code></a></p>
+</td>
+<td><p><em>e</em> = 2.718281…</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:data:cmath.tau"><code class="xref py data docutils literal">tau</code></a></p>
+</td>
+<td><p><em>τ</em> = 2<em>π</em> = 6.283185…</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:data:cmath.inf"><code class="xref py data docutils literal">inf</code></a></p>
+</td>
+<td><p>Positive infinity</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:data:cmath.infj"><code class="xref py data docutils literal">infj</code></a></p>
+</td>
+<td><p>Pure imaginary infinity</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:data:cmath.nan"><code class="xref py data docutils literal">nan</code></a></p>
+</td>
+<td><p>"Not a number" (NaN)</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="cmath.html#py:data:cmath.nanj"><code class="xref py data docutils literal">nanj</code></a></p>
+</td>
+<td><p>Pure imaginary NaN</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="conversions-to-and-from-polar-coordinates">Conversions to and from polar coordinates</h2>
+<p>A Python complex number <code>z</code> is stored internally using <em>rectangular</em>
+or <em>Cartesian</em> coordinates.  It is completely determined by its <em>real
+part</em> <code>z.real</code> and its <em>imaginary part</em> <code>z.imag</code>.</p>
+<p><em>Polar coordinates</em> give an alternative way to represent a complex
+number.  In polar coordinates, a complex number <em>z</em> is defined by the
+modulus <em>r</em> and the phase angle <em>phi</em>. The modulus <em>r</em> is the distance
+from <em>z</em> to the origin, while the phase <em>phi</em> is the counterclockwise
+angle, measured in radians, from the positive x-axis to the line
+segment that joins the origin to <em>z</em>.</p>
+<p>The following functions can be used to convert from the native
+rectangular coordinates to polar coordinates and back.</p>
+<dl class="py function">
+  <dt id="py:function:cmath.phase"><code class="sig-name">phase(z)</code></dt>
+  <dd><p>Return the phase of <em>z</em> (also known as the <em>argument</em> of <em>z</em>), as a float.
+<code>phase(z)</code> is equivalent to <code>math.atan2(z.imag, z.real)</code>.  The result
+lies in the range [-<em>π</em>, <em>π</em>], and the branch cut for this operation lies
+along the negative real axis.  The sign of the result is the same as the
+sign of <code>z.imag</code>, even when <code>z.imag</code> is zero:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">phase</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span><span class="hl-constant hl-numeric hl-imaginary hl-decimal hl-python">0<span class="hl-storage hl-type hl-numeric hl-python">j</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">3<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>141592653589793</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">phase</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-imaginary hl-decimal hl-python">0<span class="hl-storage hl-type hl-numeric hl-python">j</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">3<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>141592653589793</span></span></pre></div>
+</dd>
+</dl>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>The modulus (absolute value) of a complex number <em>z</em> can be
+computed using the built-in <a class="reference internal" href="functions.html#py:function:abs"><code class="xref py function docutils literal">abs</code></a> function.  There is no
+separate <a class="reference internal" href="cmath.html#py:module:cmath" title="cmath: Mathematical functions for complex numbers."><code class="xref py module docutils literal">cmath</code></a> module function for this operation.</p>
+</div>
+<dl class="py function">
+  <dt id="py:function:cmath.polar"><code class="sig-name">polar(z)</code></dt>
+  <dd><p>Return the representation of <em>z</em> in polar coordinates.  Returns a
+pair <code>(r, phi)</code> where <em>r</em> is the modulus of <em>z</em> and <em>phi</em> is the
+phase of <em>z</em>.  <code>polar(z)</code> is equivalent to <code>(abs(z),
+phase(z))</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.rect"><code class="sig-name">rect(r, phi)</code></dt>
+  <dd><p>Return the complex number <em>z</em> with polar coordinates <em>r</em> and <em>phi</em>.
+Equivalent to <code>complex(r * math.cos(phi), r * math.sin(phi))</code>.</p>
+</dd>
+</dl>
+<h2 id="power-and-logarithmic-functions">Power and logarithmic functions</h2>
+<dl class="py function">
+  <dt id="py:function:cmath.exp"><code class="sig-name">exp(z)</code></dt>
+  <dd><p>Return <em>e</em> raised to the power <em>z</em>, where <em>e</em> is the base of natural
+logarithms.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.log"><code class="sig-name">log(z[, base])</code></dt>
+  <dd><p>Return the logarithm of <em>z</em> to the given <em>base</em>. If the <em>base</em> is not
+specified, returns the natural logarithm of <em>z</em>. There is one branch cut,
+from 0 along the negative real axis to -∞.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.log10"><code class="sig-name">log10(z)</code></dt>
+  <dd><p>Return the base-10 logarithm of <em>z</em>. This has the same branch cut as
+<a class="reference internal" href="cmath.html#py:function:cmath.log"><code class="xref py function docutils literal">log</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.sqrt"><code class="sig-name">sqrt(z)</code></dt>
+  <dd><p>Return the square root of <em>z</em>. This has the same branch cut as <a class="reference internal" href="cmath.html#py:function:cmath.log"><code class="xref py function docutils literal">log</code></a>.</p>
+</dd>
+</dl>
+<h2 id="trigonometric-functions">Trigonometric functions</h2>
+<dl class="py function">
+  <dt id="py:function:cmath.acos"><code class="sig-name">acos(z)</code></dt>
+  <dd><p>Return the arc cosine of <em>z</em>. There are two branch cuts: One extends right
+from 1 along the real axis to ∞. The other extends left from -1 along the
+real axis to -∞.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.asin"><code class="sig-name">asin(z)</code></dt>
+  <dd><p>Return the arc sine of <em>z</em>. This has the same branch cuts as <a class="reference internal" href="cmath.html#py:function:cmath.acos"><code class="xref py function docutils literal">acos</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.atan"><code class="sig-name">atan(z)</code></dt>
+  <dd><p>Return the arc tangent of <em>z</em>. There are two branch cuts: One extends from
+<code>1j</code> along the imaginary axis to <code>∞j</code>. The other extends from <code>-1j</code>
+along the imaginary axis to <code>-∞j</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.cos"><code class="sig-name">cos(z)</code></dt>
+  <dd><p>Return the cosine of <em>z</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.sin"><code class="sig-name">sin(z)</code></dt>
+  <dd><p>Return the sine of <em>z</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.tan"><code class="sig-name">tan(z)</code></dt>
+  <dd><p>Return the tangent of <em>z</em>.</p>
+</dd>
+</dl>
+<h2 id="hyperbolic-functions">Hyperbolic functions</h2>
+<dl class="py function">
+  <dt id="py:function:cmath.acosh"><code class="sig-name">acosh(z)</code></dt>
+  <dd><p>Return the inverse hyperbolic cosine of <em>z</em>. There is one branch cut,
+extending left from 1 along the real axis to -∞.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.asinh"><code class="sig-name">asinh(z)</code></dt>
+  <dd><p>Return the inverse hyperbolic sine of <em>z</em>. There are two branch cuts:
+One extends from <code>1j</code> along the imaginary axis to <code>∞j</code>.  The other
+extends from <code>-1j</code> along the imaginary axis to <code>-∞j</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.atanh"><code class="sig-name">atanh(z)</code></dt>
+  <dd><p>Return the inverse hyperbolic tangent of <em>z</em>. There are two branch cuts: One
+extends from <code>1</code> along the real axis to <code>∞</code>. The other extends from
+<code>-1</code> along the real axis to <code>-∞</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.cosh"><code class="sig-name">cosh(z)</code></dt>
+  <dd><p>Return the hyperbolic cosine of <em>z</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.sinh"><code class="sig-name">sinh(z)</code></dt>
+  <dd><p>Return the hyperbolic sine of <em>z</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.tanh"><code class="sig-name">tanh(z)</code></dt>
+  <dd><p>Return the hyperbolic tangent of <em>z</em>.</p>
+</dd>
+</dl>
+<h2 id="classification-functions">Classification functions</h2>
+<dl class="py function">
+  <dt id="py:function:cmath.isfinite"><code class="sig-name">isfinite(z)</code></dt>
+  <dd><p>Return <code>True</code> if both the real and imaginary parts of <em>z</em> are finite, and
+<code>False</code> otherwise.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.isinf"><code class="sig-name">isinf(z)</code></dt>
+  <dd><p>Return <code>True</code> if either the real or the imaginary part of <em>z</em> is an
+infinity, and <code>False</code> otherwise.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.isnan"><code class="sig-name">isnan(z)</code></dt>
+  <dd><p>Return <code>True</code> if either the real or the imaginary part of <em>z</em> is a NaN,
+and <code>False</code> otherwise.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:cmath.isclose"><code class="sig-name">isclose(a, b, *, rel_tol=1e-09, abs_tol=0.0)</code></dt>
+  <dd><p>Return <code>True</code> if the values <em>a</em> and <em>b</em> are close to each other and
+<code>False</code> otherwise.</p>
+<p>Whether or not two values are considered close is determined according to
+given absolute and relative tolerances.  If no errors occur, the result will
+be: <code>abs(a-b) &lt;= max(rel_tol * max(abs(a), abs(b)), abs_tol)</code>.</p>
+<p><em>rel_tol</em> is the relative tolerance – it is the maximum allowed difference
+between <em>a</em> and <em>b</em>, relative to the larger absolute value of <em>a</em> or <em>b</em>.
+For example, to set a tolerance of 5%, pass <code>rel_tol=0.05</code>.  The default
+tolerance is <code>1e-09</code>, which assures that the two values are the same
+within about 9 decimal digits.  <em>rel_tol</em> must be nonnegative and less
+than <code>1.0</code>.</p>
+<p><em>abs_tol</em> is the absolute tolerance; it defaults to <code>0.0</code> and it must be
+nonnegative.  When comparing <code>x</code> to <code>0.0</code>, <code>isclose(x, 0)</code> is computed
+as <code>abs(x) &lt;= rel_tol  * abs(x)</code>, which is <code>False</code> for any <code>x</code> and
+rel_tol less than <code>1.0</code>.  So add an appropriate positive abs_tol argument
+to the call.</p>
+<p>The IEEE 754 special values of <code>NaN</code>, <code>inf</code>, and <code>-inf</code> will be
+handled according to IEEE rules.  Specifically, <code>NaN</code> is not considered
+close to any other value, including <code>NaN</code>.  <code>inf</code> and <code>-inf</code> are only
+considered close to themselves.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p><span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0485/"><strong>PEP 485</strong></a> – A function for testing approximate equality</p>
+</div>
+</dd>
+</dl>
+<h2 id="constants">Constants</h2>
+<dl class="py data">
+  <dt id="py:data:cmath.pi"><code class="sig-name">pi</code></dt>
+  <dd><p>The mathematical constant <em>π</em>, as a float.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:cmath.e"><code class="sig-name">e</code></dt>
+  <dd><p>The mathematical constant <em>e</em>, as a float.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:cmath.tau"><code class="sig-name">tau</code></dt>
+  <dd><p>The mathematical constant <em>τ</em>, as a float.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:cmath.inf"><code class="sig-name">inf</code></dt>
+  <dd><p>Floating-point positive infinity. Equivalent to <code>float('inf')</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:cmath.infj"><code class="sig-name">infj</code></dt>
+  <dd><p>Complex number with zero real part and positive infinity imaginary
+part. Equivalent to <code>complex(0.0, float('inf'))</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:cmath.nan"><code class="sig-name">nan</code></dt>
+  <dd><p>A floating-point "not a number" (NaN) value.  Equivalent to
+<code>float('nan')</code>. See also <a class="reference internal" href="math.html#py:data:math.nan"><code class="xref py data docutils literal">math.nan</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:cmath.nanj"><code class="sig-name">nanj</code></dt>
+  <dd><p>Complex number with zero real part and NaN imaginary part. Equivalent to
+<code>complex(0.0, float('nan'))</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+</div>
+</dd>
+</dl>
+<span id="index-0"></span>
+<p>Note that the selection of functions is similar, but not identical, to that in
+module <a class="reference internal" href="math.html#py:module:math" title="math: Mathematical functions (sin() etc.)."><code class="xref py module docutils literal">math</code></a>.  The reason for having two modules is that some users aren't
+interested in complex numbers, and perhaps don't even know what they are.  They
+would rather have <code>math.sqrt(-1)</code> raise an exception than return a complex
+number. Also note that the functions defined in <a class="reference internal" href="cmath.html#py:module:cmath" title="cmath: Mathematical functions for complex numbers."><code class="xref py module docutils literal">cmath</code></a> always return a
+complex number, even if the answer can be expressed as a real number (in which
+case the complex number has an imaginary part of zero).</p>
+<p>A note on branch cuts: They are curves along which the given function fails to
+be continuous.  They are a necessary feature of many complex functions.  It is
+assumed that if you need to compute with complex functions, you will understand
+about branch cuts.  Consult almost any (not too elementary) book on complex
+variables for enlightenment.  For information of the proper choice of branch
+cuts for numerical purposes, a good reference should be the following:</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p>Kahan, W:  Branch cuts for complex elementary functions; or, Much ado about
+nothing's sign bit.  In Iserles, A., and Powell, M. (eds.), The state of the art
+in numerical analysis. Clarendon Press (1987) pp165–211.</p>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="math.html">&larr; math — Mathematical functions</a>
+        <a class="next" href="decimal.html">decimal — Decimal fixed-point and floating-point arithmetic &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

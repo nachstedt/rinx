@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>operator — Standard operators as functions — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Functional Programming Modules"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="itertools.html">itertools — Functions creating iterators for efficient looping</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="functools.html">functools — Higher-order functions and operations on callable objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="operator.html">operator — Standard operators as functions</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle operator — Standard operators as functions"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="operator.html#mapping-operators-to-functions">Mapping Operators to Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="operator.html#in-place-operators">In-place Operators</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="functools.html">&larr; functools — Higher-order functions and operations on callable objects</a>
+        <a class="next" href="filesys.html">File and Directory Access &rarr;</a>
+      </nav>
+      
+      <h1 id="operator-standard-operators-as-functions"><code class="xref py module docutils literal">operator</code> — Standard operators as functions</h1>
+<dl class="py module">
+  <dt id="py:module:operator"><code class="sig-name">operator</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Skip Montanaro &lt;skip@automatrix.com&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/operator.py`</p>
+<hr />
+<p>The <a class="reference internal" href="operator.html#py:module:operator" title="operator: Functions corresponding to the standard operators."><code class="xref py module docutils literal">operator</code></a> module exports a set of efficient functions corresponding to
+the intrinsic operators of Python.  For example, <code>operator.add(x, y)</code> is
+equivalent to the expression <code>x+y</code>. Many function names are those used for
+special methods, without the double underscores.  For backward compatibility,
+many of these have a variant with the double underscores kept. The variants
+without the double underscores are preferred for clarity.</p>
+<p>The functions fall into categories that perform object comparisons, logical
+operations, mathematical operations and sequence operations.</p>
+<p>The object comparison functions are useful for all objects, and are named after
+the rich comparison operators they support:</p>
+<dl class="py function">
+  <dt id="py:function:operator.lt"><code class="sig-name">lt(a, b)</code></dt>
+  <dt id="py:function:operator.le"><code class="sig-name">le(a, b)</code></dt>
+  <dt id="py:function:operator.eq"><code class="sig-name">eq(a, b)</code></dt>
+  <dt id="py:function:operator.ne"><code class="sig-name">ne(a, b)</code></dt>
+  <dt id="py:function:operator.ge"><code class="sig-name">ge(a, b)</code></dt>
+  <dt id="py:function:operator.gt"><code class="sig-name">gt(a, b)</code></dt>
+  <dt id="py:function:operator.__lt__"><code class="sig-name">__lt__(a, b)</code></dt>
+  <dt id="py:function:operator.__le__"><code class="sig-name">__le__(a, b)</code></dt>
+  <dt id="py:function:operator.__eq__"><code class="sig-name">__eq__(a, b)</code></dt>
+  <dt id="py:function:operator.__ne__"><code class="sig-name">__ne__(a, b)</code></dt>
+  <dt id="py:function:operator.__ge__"><code class="sig-name">__ge__(a, b)</code></dt>
+  <dt id="py:function:operator.__gt__"><code class="sig-name">__gt__(a, b)</code></dt>
+  <dd><p>Perform "rich comparisons" between <em>a</em> and <em>b</em>. Specifically, <code>lt(a, b)</code> is
+equivalent to <code>a &lt; b</code>, <code>le(a, b)</code> is equivalent to <code>a &lt;= b</code>, <code>eq(a,
+b)</code> is equivalent to <code>a == b</code>, <code>ne(a, b)</code> is equivalent to <code>a != b</code>,
+<code>gt(a, b)</code> is equivalent to <code>a &gt; b</code> and <code>ge(a, b)</code> is equivalent to <code>a
+&gt;= b</code>.  Note that these functions can return any value, which may
+or may not be interpretable as a Boolean value.  See
+<a href="../reference/expressions.html#comparisons">Comparisons</a> for more information about rich comparisons.</p>
+</dd>
+</dl>
+<p>The logical operations are also generally applicable to all objects, and support
+truth tests, identity tests, and boolean operations:</p>
+<dl class="py function">
+  <dt id="py:function:operator.not_"><code class="sig-name">not_(obj)</code></dt>
+  <dt id="py:function:operator.__not__"><code class="sig-name">__not__(obj)</code></dt>
+  <dd><p>Return the outcome of :keyword:`not` <em>obj</em>.  (Note that there is no
+<code class="xref py method docutils literal">__not__</code> method for object instances; only the interpreter core defines
+this operation.  The result is affected by the <a class="reference internal" href="../reference/datamodel.html#py:method:object.__bool__"><code class="xref py method docutils literal">__bool__</code></a> and
+<a class="reference internal" href="../reference/datamodel.html#py:method:object.__len__"><code class="xref py method docutils literal">__len__</code></a> methods.)</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.truth"><code class="sig-name">truth(obj)</code></dt>
+  <dd><p>Return <a class="reference internal" href="constants.html#py:data:true"><code class="xref py data docutils literal">True</code></a> if <em>obj</em> is true, and <a class="reference internal" href="constants.html#py:data:false"><code class="xref py data docutils literal">False</code></a> otherwise.  This is
+equivalent to using the <a class="reference internal" href="functions.html#py:class:bool"><code class="xref py class docutils literal">bool</code></a> constructor.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.is_"><code class="sig-name">is_(a, b)</code></dt>
+  <dd><p>Return <code>a is b</code>.  Tests object identity.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.is_not"><code class="sig-name">is_not(a, b)</code></dt>
+  <dd><p>Return <code>a is not b</code>.  Tests object identity.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.is_none"><code class="sig-name">is_none(a)</code></dt>
+  <dd><p>Return <code>a is None</code>.  Tests object identity.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.is_not_none"><code class="sig-name">is_not_none(a)</code></dt>
+  <dd><p>Return <code>a is not None</code>.  Tests object identity.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<p>The mathematical and bitwise operations are the most numerous:</p>
+<dl class="py function">
+  <dt id="py:function:operator.abs"><code class="sig-name">abs(obj)</code></dt>
+  <dt id="py:function:operator.__abs__"><code class="sig-name">__abs__(obj)</code></dt>
+  <dd><p>Return the absolute value of <em>obj</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.add"><code class="sig-name">add(a, b)</code></dt>
+  <dt id="py:function:operator.__add__"><code class="sig-name">__add__(a, b)</code></dt>
+  <dd><p>Return <code>a + b</code>, for <em>a</em> and <em>b</em> numbers.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.and_"><code class="sig-name">and_(a, b)</code></dt>
+  <dt id="py:function:operator.__and__"><code class="sig-name">__and__(a, b)</code></dt>
+  <dd><p>Return the bitwise and of <em>a</em> and <em>b</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.floordiv"><code class="sig-name">floordiv(a, b)</code></dt>
+  <dt id="py:function:operator.__floordiv__"><code class="sig-name">__floordiv__(a, b)</code></dt>
+  <dd><p>Return <code>a // b</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.index"><code class="sig-name">index(a)</code></dt>
+  <dt id="py:function:operator.__index__"><code class="sig-name">__index__(a)</code></dt>
+  <dd><p>Return <em>a</em> converted to an integer.  Equivalent to <code>a.__index__()</code>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>The result always has exact type <a class="reference internal" href="functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a>.  Previously, the result
+could have been an instance of a subclass of <code>int</code>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.inv"><code class="sig-name">inv(obj)</code></dt>
+  <dt id="py:function:operator.invert"><code class="sig-name">invert(obj)</code></dt>
+  <dt id="py:function:operator.__inv__"><code class="sig-name">__inv__(obj)</code></dt>
+  <dt id="py:function:operator.__invert__"><code class="sig-name">__invert__(obj)</code></dt>
+  <dd><p>Return the bitwise inverse of the number <em>obj</em>.  This is equivalent to <code>~obj</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.lshift"><code class="sig-name">lshift(a, b)</code></dt>
+  <dt id="py:function:operator.__lshift__"><code class="sig-name">__lshift__(a, b)</code></dt>
+  <dd><p>Return <em>a</em> shifted left by <em>b</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.mod"><code class="sig-name">mod(a, b)</code></dt>
+  <dt id="py:function:operator.__mod__"><code class="sig-name">__mod__(a, b)</code></dt>
+  <dd><p>Return <code>a % b</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.mul"><code class="sig-name">mul(a, b)</code></dt>
+  <dt id="py:function:operator.__mul__"><code class="sig-name">__mul__(a, b)</code></dt>
+  <dd><p>Return <code>a * b</code>, for <em>a</em> and <em>b</em> numbers.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.matmul"><code class="sig-name">matmul(a, b)</code></dt>
+  <dt id="py:function:operator.__matmul__"><code class="sig-name">__matmul__(a, b)</code></dt>
+  <dd><p>Return <code>a @ b</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.neg"><code class="sig-name">neg(obj)</code></dt>
+  <dt id="py:function:operator.__neg__"><code class="sig-name">__neg__(obj)</code></dt>
+  <dd><p>Return <em>obj</em> negated (<code>-obj</code>).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.or_"><code class="sig-name">or_(a, b)</code></dt>
+  <dt id="py:function:operator.__or__"><code class="sig-name">__or__(a, b)</code></dt>
+  <dd><p>Return the bitwise or of <em>a</em> and <em>b</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.pos"><code class="sig-name">pos(obj)</code></dt>
+  <dt id="py:function:operator.__pos__"><code class="sig-name">__pos__(obj)</code></dt>
+  <dd><p>Return <em>obj</em> positive (<code>+obj</code>).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.pow"><code class="sig-name">pow(a, b)</code></dt>
+  <dt id="py:function:operator.__pow__"><code class="sig-name">__pow__(a, b)</code></dt>
+  <dd><p>Return <code>a ** b</code>, for <em>a</em> and <em>b</em> numbers.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.rshift"><code class="sig-name">rshift(a, b)</code></dt>
+  <dt id="py:function:operator.__rshift__"><code class="sig-name">__rshift__(a, b)</code></dt>
+  <dd><p>Return <em>a</em> shifted right by <em>b</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.sub"><code class="sig-name">sub(a, b)</code></dt>
+  <dt id="py:function:operator.__sub__"><code class="sig-name">__sub__(a, b)</code></dt>
+  <dd><p>Return <code>a - b</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.truediv"><code class="sig-name">truediv(a, b)</code></dt>
+  <dt id="py:function:operator.__truediv__"><code class="sig-name">__truediv__(a, b)</code></dt>
+  <dd><p>Return <code>a / b</code> where 2/3 is .66 rather than 0.  This is also known as
+"true" division.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.xor"><code class="sig-name">xor(a, b)</code></dt>
+  <dt id="py:function:operator.__xor__"><code class="sig-name">__xor__(a, b)</code></dt>
+  <dd><p>Return the bitwise exclusive or of <em>a</em> and <em>b</em>.</p>
+</dd>
+</dl>
+<p>Operations which work with sequences (some of them with mappings too) include:</p>
+<dl class="py function">
+  <dt id="py:function:operator.concat"><code class="sig-name">concat(a, b)</code></dt>
+  <dt id="py:function:operator.__concat__"><code class="sig-name">__concat__(a, b)</code></dt>
+  <dd><p>Return <code>a + b</code> for <em>a</em> and <em>b</em> sequences.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.contains"><code class="sig-name">contains(a, b)</code></dt>
+  <dt id="py:function:operator.__contains__"><code class="sig-name">__contains__(a, b)</code></dt>
+  <dd><p>Return the outcome of the test <code>b in a</code>. Note the reversed operands.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.countof"><code class="sig-name">countOf(a, b)</code></dt>
+  <dd><p>Return the number of occurrences of <em>b</em> in <em>a</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.delitem"><code class="sig-name">delitem(a, b)</code></dt>
+  <dt id="py:function:operator.__delitem__"><code class="sig-name">__delitem__(a, b)</code></dt>
+  <dd><p>Remove the value of <em>a</em> at index <em>b</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.getitem"><code class="sig-name">getitem(a, b)</code></dt>
+  <dt id="py:function:operator.__getitem__"><code class="sig-name">__getitem__(a, b)</code></dt>
+  <dd><p>Return the value of <em>a</em> at index <em>b</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.indexof"><code class="sig-name">indexOf(a, b)</code></dt>
+  <dd><p>Return the index of the first of occurrence of <em>b</em> in <em>a</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.setitem"><code class="sig-name">setitem(a, b, c)</code></dt>
+  <dt id="py:function:operator.__setitem__"><code class="sig-name">__setitem__(a, b, c)</code></dt>
+  <dd><p>Set the value of <em>a</em> at index <em>b</em> to <em>c</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.length_hint"><code class="sig-name">length_hint(obj, default=0)</code></dt>
+  <dd><p>Return an estimated length for the object <em>obj</em>. First try to return its
+actual length, then an estimate using <a class="reference internal" href="../reference/datamodel.html#py:method:object.__length_hint__"><code class="xref py method docutils literal">object.__length_hint__</code></a>, and
+finally return the default value.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<p>The following operation works with callables:</p>
+<dl class="py function">
+  <dt id="py:function:operator.call"><code class="sig-name">call(obj, /, *args, **kwargs)</code></dt>
+  <dt id="py:function:operator.__call__"><code class="sig-name">__call__(obj, /, *args, **kwargs)</code></dt>
+  <dd><p>Return <code>obj(*args, **kwargs)</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<p>The <a class="reference internal" href="operator.html#py:module:operator" title="operator: Functions corresponding to the standard operators."><code class="xref py module docutils literal">operator</code></a> module also defines tools for generalized attribute and item
+lookups.  These are useful for making fast field extractors as arguments for
+<a class="reference internal" href="functions.html#py:function:map"><code class="xref py function docutils literal">map</code></a>, <a class="reference internal" href="functions.html#py:function:sorted"><code class="xref py function docutils literal">sorted</code></a>, <a href="#" class="broken-link"><code class="xref py method docutils literal">itertools.groupby</code></a>, or other functions that
+expect a function argument.</p>
+<dl class="py function">
+  <dt id="py:function:operator.attrgetter"><code class="sig-name">attrgetter(attr)</code></dt>
+  <dt id="py:function:operator.attrgetter"><code class="sig-name">attrgetter(*attrs)</code></dt>
+  <dd><p>Return a callable object that fetches <em>attr</em> from its operand.
+If more than one attribute is requested, returns a tuple of attributes.
+The attribute names can also contain dots. For example:</p>
+<ul>
+<li><p>After <code>f = attrgetter('name')</code>, the call <code>f(b)</code> returns <code>b.name</code>.</p>
+</li>
+<li><p>After <code>f = attrgetter('name', 'date')</code>, the call <code>f(b)</code> returns
+<code>(b.name, b.date)</code>.</p>
+</li>
+<li><p>After <code>f = attrgetter('name.first', 'name.last')</code>, the call <code>f(b)</code>
+returns <code>(b.name.first, b.name.last)</code>.</p>
+</li>
+</ul>
+<p>Equivalent to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">attrgetter</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-keyword hl-operator hl-unpacking hl-sequence hl-python">*</span><span class="hl-variable hl-parameter hl-python">items</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">any</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-logical hl-python">not</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">isinstance</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">item</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">str</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-expression hl-generator hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-generator hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">item</span> <span class="hl-keyword hl-control hl-loop hl-for hl-in hl-python">in</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">items</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-statement hl-raise hl-python"><span class="hl-keyword hl-control hl-flow hl-raise hl-python">raise</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-exception hl-python">TypeError</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">attribute name must be a string<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">len</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">items</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">attr</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">items</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">        <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">g</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">obj</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">            <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">resolve_attr</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">obj</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">attr</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-conditional hl-else hl-python"><span class="hl-keyword hl-control hl-conditional hl-else hl-python">else</span><span class="hl-punctuation hl-section hl-block hl-conditional hl-else hl-python">:</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">        <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">g</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">obj</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">            <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-python">tuple</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">resolve_attr</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">obj</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">attr</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-expression hl-generator hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-generator hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">attr</span> <span class="hl-keyword hl-control hl-loop hl-for hl-in hl-python">in</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">items</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">g</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">resolve_attr</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">obj</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">attr</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">name</span> <span class="hl-keyword hl-control hl-loop hl-for hl-in hl-python">in</span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">attr</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">split</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">.<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-punctuation hl-section hl-block hl-loop hl-for hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">obj</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">getattr</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">obj</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">name</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">obj</span></span></span></pre></div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.itemgetter"><code class="sig-name">itemgetter(item)</code></dt>
+  <dt id="py:function:operator.itemgetter"><code class="sig-name">itemgetter(*items)</code></dt>
+  <dd><p>Return a callable object that fetches <em>item</em> from its operand using the
+operand's <a class="reference internal" href="../reference/datamodel.html#py:method:object.__getitem__"><code class="xref py method docutils literal">__getitem__</code></a> method.  If multiple items are specified,
+returns a tuple of lookup values.  For example:</p>
+<ul>
+<li><p>After <code>f = itemgetter(2)</code>, the call <code>f(r)</code> returns <code>r[2]</code>.</p>
+</li>
+<li><p>After <code>g = itemgetter(2, 5, 3)</code>, the call <code>g(r)</code> returns
+<code>(r[2], r[5], r[3])</code>.</p>
+</li>
+</ul>
+<p>Equivalent to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">itemgetter</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-keyword hl-operator hl-unpacking hl-sequence hl-python">*</span><span class="hl-variable hl-parameter hl-python">items</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">len</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">items</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">item</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">items</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">        <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">g</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">obj</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">            <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">obj</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">item</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-conditional hl-else hl-python"><span class="hl-keyword hl-control hl-conditional hl-else hl-python">else</span><span class="hl-punctuation hl-section hl-block hl-conditional hl-else hl-python">:</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">        <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">g</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">obj</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">            <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-python">tuple</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">obj</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">item</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span> <span class="hl-meta hl-expression hl-generator hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-generator hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">item</span> <span class="hl-keyword hl-control hl-loop hl-for hl-in hl-python">in</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">items</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">g</span></span></span></pre></div>
+<p>The items can be any type accepted by the operand's <a class="reference internal" href="../reference/datamodel.html#py:method:object.__getitem__"><code class="xref py method docutils literal">__getitem__</code></a>
+method.  Dictionaries accept any <a class="reference internal" href="../glossary.html#term-hashable"><span class="xref std std-term">hashable</span></a> value.  Lists, tuples, and
+strings accept an index or a slice:</p>
+<blockquote>
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; itemgetter(1)('ABCDEFG')
+'B'
+&gt;&gt;&gt; itemgetter(1, 3, 5)('ABCDEFG')
+('B', 'D', 'F')
+&gt;&gt;&gt; itemgetter(slice(2, None))('ABCDEFG')
+'CDEFG'
+&gt;&gt;&gt; soldier = dict(rank='captain', name='dotterbart')
+&gt;&gt;&gt; itemgetter('rank')(soldier)
+'captain'</pre></div>
+</blockquote>
+<p>Example of using <a class="reference internal" href="operator.html#py:function:operator.itemgetter"><code class="xref py function docutils literal">itemgetter</code></a> to retrieve specific fields from a
+tuple record:</p>
+<blockquote>
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; inventory = [('apple', 3), ('banana', 2), ('pear', 5), ('orange', 1)]
+&gt;&gt;&gt; getcount = itemgetter(1)
+&gt;&gt;&gt; list(map(getcount, inventory))
+[3, 2, 5, 1]
+&gt;&gt;&gt; sorted(inventory, key=getcount)
+[('orange', 1), ('banana', 2), ('apple', 3), ('pear', 5)]</pre></div>
+</blockquote>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.methodcaller"><code class="sig-name">methodcaller(name, /, *args, **kwargs)</code></dt>
+  <dd><p>Return a callable object that calls the method <em>name</em> on its operand.  If
+additional arguments and/or keyword arguments are given, they will be given
+to the method as well.  For example:</p>
+<ul>
+<li><p>After <code>f = methodcaller('name')</code>, the call <code>f(b)</code> returns <code>b.name()</code>.</p>
+</li>
+<li><p>After <code>f = methodcaller('name', 'foo', bar=1)</code>, the call <code>f(b)</code>
+returns <code>b.name('foo', bar=1)</code>.</p>
+</li>
+</ul>
+<p>Equivalent to:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">methodcaller</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">name</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-storage hl-modifier hl-positional-args-only hl-python">/</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-keyword hl-operator hl-unpacking hl-sequence hl-python">*</span><span class="hl-variable hl-parameter hl-python">args</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-keyword hl-operator hl-unpacking hl-mapping hl-python">**</span><span class="hl-variable hl-parameter hl-python">kwargs</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">caller</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">obj</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">getattr</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">obj</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">name</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">args</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-keyword hl-operator hl-unpacking hl-mapping hl-python">**</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">kwargs</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">caller</span></span></span></pre></div>
+</dd>
+</dl>
+<a id="operator-map"></a>
+<h2 id="mapping-operators-to-functions">Mapping Operators to Functions</h2>
+<p>This table shows how abstract operations correspond to operator symbols in the
+Python syntax and the functions in the <a class="reference internal" href="operator.html#py:module:operator" title="operator: Functions corresponding to the standard operators."><code class="xref py module docutils literal">operator</code></a> module.</p>
+<table>
+<thead>
+<tr>
+<th><p>Operation</p>
+</th>
+<th colspan="4"><p>Syntax</p>
+</th>
+<th><p>Function</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>Addition</p>
+</td>
+<td colspan="4"><p><code>a + b</code></p>
+</td>
+<td><p><code>add(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Concatenation</p>
+</td>
+<td colspan="4"><p><code>seq1 + seq2</code></p>
+</td>
+<td><p><code>concat(seq1, seq2)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Containment Test</p>
+</td>
+<td colspan="4"><p><code>obj in seq</code></p>
+</td>
+<td><p><code>contains(seq, obj)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Division</p>
+</td>
+<td colspan="4"><p><code>a / b</code></p>
+</td>
+<td><p><code>truediv(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Division</p>
+</td>
+<td colspan="4"><p><code>a // b</code></p>
+</td>
+<td><p><code>floordiv(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Bitwise And</p>
+</td>
+<td colspan="4"><p><code>a &amp; b</code></p>
+</td>
+<td><p><code>and_(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Bitwise Exclusive Or</p>
+</td>
+<td colspan="4"><p><code>a ^ b</code></p>
+</td>
+<td><p><code>xor(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Bitwise Inversion</p>
+</td>
+<td colspan="4"><p><code>~ a</code></p>
+</td>
+<td><p><code>invert(a)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Bitwise Or</p>
+</td>
+<td colspan="2"><p>``a</p>
+</td>
+<td colspan="2"><p>b``</p>
+</td>
+<td><p><code>or_(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Exponentiation</p>
+</td>
+<td colspan="4"><p><code>a ** b</code></p>
+</td>
+<td><p><code>pow(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Identity</p>
+</td>
+<td colspan="4"><p><code>a is b</code></p>
+</td>
+<td><p><code>is_(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Identity</p>
+</td>
+<td colspan="4"><p><code>a is not b</code></p>
+</td>
+<td><p><code>is_not(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Identity</p>
+</td>
+<td colspan="4"><p><code>a is None</code></p>
+</td>
+<td><p><code>is_none(a)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Identity</p>
+</td>
+<td colspan="4"><p><code>a is not None</code></p>
+</td>
+<td><p><code>is_not_none(a)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Indexed Assignment</p>
+</td>
+<td colspan="4"><p><code>obj[k] = v</code></p>
+</td>
+<td><p><code>setitem(obj, k, v)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Indexed Deletion</p>
+</td>
+<td colspan="4"><p><code>del obj[k]</code></p>
+</td>
+<td><p><code>delitem(obj, k)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Indexing</p>
+</td>
+<td colspan="4"><p><code>obj[k]</code></p>
+</td>
+<td><p><code>getitem(obj, k)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Left Shift</p>
+</td>
+<td colspan="4"><p><code>a &lt;&lt; b</code></p>
+</td>
+<td><p><code>lshift(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Modulo</p>
+</td>
+<td colspan="4"><p><code>a % b</code></p>
+</td>
+<td><p><code>mod(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Multiplication</p>
+</td>
+<td colspan="4"><p><code>a * b</code></p>
+</td>
+<td><p><code>mul(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Matrix Multiplication</p>
+</td>
+<td colspan="4"><p><code>a @ b</code></p>
+</td>
+<td><p><code>matmul(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Negation (Arithmetic)</p>
+</td>
+<td colspan="4"><p><code>- a</code></p>
+</td>
+<td><p><code>neg(a)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Negation (Logical)</p>
+</td>
+<td colspan="4"><p><code>not a</code></p>
+</td>
+<td><p><code>not_(a)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Positive</p>
+</td>
+<td colspan="4"><p><code>+ a</code></p>
+</td>
+<td><p><code>pos(a)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Right Shift</p>
+</td>
+<td colspan="4"><p><code>a &gt;&gt; b</code></p>
+</td>
+<td><p><code>rshift(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Slice Assignment</p>
+</td>
+<td colspan="4"><p><code>seq[i:j] = values</code></p>
+</td>
+<td><p><code>setitem(seq, slice(i, j), values)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Slice Deletion</p>
+</td>
+<td colspan="4"><p><code>del seq[i:j]</code></p>
+</td>
+<td><p><code>delitem(seq, slice(i, j))</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Slicing</p>
+</td>
+<td colspan="4"><p><code>seq[i:j]</code></p>
+</td>
+<td><p><code>getitem(seq, slice(i, j))</code></p>
+</td>
+</tr>
+<tr>
+<td><p>String Formatting</p>
+</td>
+<td colspan="4"><p><code>s % obj</code></p>
+</td>
+<td><p><code>mod(s, obj)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Subtraction</p>
+</td>
+<td colspan="4"><p><code>a - b</code></p>
+</td>
+<td><p><code>sub(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Truth Test</p>
+</td>
+<td colspan="4"><p><code>obj</code></p>
+</td>
+<td><p><code>truth(obj)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Ordering</p>
+</td>
+<td colspan="4"><p><code>a &lt; b</code></p>
+</td>
+<td><p><code>lt(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Ordering</p>
+</td>
+<td colspan="4"><p><code>a &lt;= b</code></p>
+</td>
+<td><p><code>le(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Equality</p>
+</td>
+<td colspan="4"><p><code>a == b</code></p>
+</td>
+<td><p><code>eq(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Difference</p>
+</td>
+<td colspan="4"><p><code>a != b</code></p>
+</td>
+<td><p><code>ne(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Ordering</p>
+</td>
+<td colspan="4"><p><code>a &gt;= b</code></p>
+</td>
+<td><p><code>ge(a, b)</code></p>
+</td>
+</tr>
+<tr>
+<td><p>Ordering</p>
+</td>
+<td colspan="4"><p><code>a &gt; b</code></p>
+</td>
+<td><p><code>gt(a, b)</code></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="in-place-operators">In-place Operators</h2>
+<p>Many operations have an "in-place" version.  Listed below are functions
+providing a more primitive access to in-place operators than the usual syntax
+does; for example, the <a class="reference internal" href="../glossary.html#term-statement"><span class="xref std std-term">statement</span></a> <code>x += y</code> is equivalent to
+<code>x = operator.iadd(x, y)</code>.  Another way to put it is to say that
+<code>z = operator.iadd(x, y)</code> is equivalent to the compound statement
+<code>z = x; z += y</code>.</p>
+<p>In those examples, note that when an in-place method is called, the computation
+and assignment are performed in two separate steps.  The in-place functions
+listed below only do the first step, calling the in-place method.  The second
+step, assignment, is not handled.</p>
+<p>For immutable targets such as strings, numbers, and tuples, the updated
+value is computed, but not assigned back to the input variable:</p>
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; a = 'hello'
+&gt;&gt;&gt; iadd(a, ' world')
+'hello world'
+&gt;&gt;&gt; a
+'hello'</pre></div>
+<p>For mutable targets such as lists and dictionaries, the in-place method
+will perform the update, so no subsequent assignment is necessary:</p>
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; s = ['h', 'e', 'l', 'l', 'o']
+&gt;&gt;&gt; iadd(s, [' ', 'w', 'o', 'r', 'l', 'd'])
+['h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd']
+&gt;&gt;&gt; s
+['h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd']</pre></div>
+<dl class="py function">
+  <dt id="py:function:operator.iadd"><code class="sig-name">iadd(a, b)</code></dt>
+  <dt id="py:function:operator.__iadd__"><code class="sig-name">__iadd__(a, b)</code></dt>
+  <dd><p><code>a = iadd(a, b)</code> is equivalent to <code>a += b</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.iand"><code class="sig-name">iand(a, b)</code></dt>
+  <dt id="py:function:operator.__iand__"><code class="sig-name">__iand__(a, b)</code></dt>
+  <dd><p><code>a = iand(a, b)</code> is equivalent to <code>a &amp;= b</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.iconcat"><code class="sig-name">iconcat(a, b)</code></dt>
+  <dt id="py:function:operator.__iconcat__"><code class="sig-name">__iconcat__(a, b)</code></dt>
+  <dd><p><code>a = iconcat(a, b)</code> is equivalent to <code>a += b</code> for <em>a</em> and <em>b</em> sequences.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.ifloordiv"><code class="sig-name">ifloordiv(a, b)</code></dt>
+  <dt id="py:function:operator.__ifloordiv__"><code class="sig-name">__ifloordiv__(a, b)</code></dt>
+  <dd><p><code>a = ifloordiv(a, b)</code> is equivalent to <code>a //= b</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.ilshift"><code class="sig-name">ilshift(a, b)</code></dt>
+  <dt id="py:function:operator.__ilshift__"><code class="sig-name">__ilshift__(a, b)</code></dt>
+  <dd><p><code>a = ilshift(a, b)</code> is equivalent to <code>a &lt;&lt;= b</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.imod"><code class="sig-name">imod(a, b)</code></dt>
+  <dt id="py:function:operator.__imod__"><code class="sig-name">__imod__(a, b)</code></dt>
+  <dd><p><code>a = imod(a, b)</code> is equivalent to <code>a %= b</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.imul"><code class="sig-name">imul(a, b)</code></dt>
+  <dt id="py:function:operator.__imul__"><code class="sig-name">__imul__(a, b)</code></dt>
+  <dd><p><code>a = imul(a, b)</code> is equivalent to <code>a *= b</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.imatmul"><code class="sig-name">imatmul(a, b)</code></dt>
+  <dt id="py:function:operator.__imatmul__"><code class="sig-name">__imatmul__(a, b)</code></dt>
+  <dd><p><code>a = imatmul(a, b)</code> is equivalent to <code>a @= b</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.ior"><code class="sig-name">ior(a, b)</code></dt>
+  <dt id="py:function:operator.__ior__"><code class="sig-name">__ior__(a, b)</code></dt>
+  <dd><p><code>a = ior(a, b)</code> is equivalent to <code>a |= b</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.ipow"><code class="sig-name">ipow(a, b)</code></dt>
+  <dt id="py:function:operator.__ipow__"><code class="sig-name">__ipow__(a, b)</code></dt>
+  <dd><p><code>a = ipow(a, b)</code> is equivalent to <code>a **= b</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.irshift"><code class="sig-name">irshift(a, b)</code></dt>
+  <dt id="py:function:operator.__irshift__"><code class="sig-name">__irshift__(a, b)</code></dt>
+  <dd><p><code>a = irshift(a, b)</code> is equivalent to <code>a &gt;&gt;= b</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.isub"><code class="sig-name">isub(a, b)</code></dt>
+  <dt id="py:function:operator.__isub__"><code class="sig-name">__isub__(a, b)</code></dt>
+  <dd><p><code>a = isub(a, b)</code> is equivalent to <code>a -= b</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.itruediv"><code class="sig-name">itruediv(a, b)</code></dt>
+  <dt id="py:function:operator.__itruediv__"><code class="sig-name">__itruediv__(a, b)</code></dt>
+  <dd><p><code>a = itruediv(a, b)</code> is equivalent to <code>a /= b</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:operator.ixor"><code class="sig-name">ixor(a, b)</code></dt>
+  <dt id="py:function:operator.__ixor__"><code class="sig-name">__ixor__(a, b)</code></dt>
+  <dd><p><code>a = ixor(a, b)</code> is equivalent to <code>a ^= b</code>.</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="functools.html">&larr; functools — Higher-order functions and operations on callable objects</a>
+        <a class="next" href="filesys.html">File and Directory Access &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

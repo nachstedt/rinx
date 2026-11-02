@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>plistlib — Generate and parse Apple .plist files — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="fileformats.html">File Formats</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle File Formats"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="csv.html">csv — CSV File Reading and Writing</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="configparser.html">configparser — Configuration file parser</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tomllib.html">tomllib — Parse TOML files</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="netrc.html">netrc — netrc file processing</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="plistlib.html">plistlib — Generate and parse Apple .plist files</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle plistlib — Generate and parse Apple .plist files"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="plistlib.html#examples">Examples</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="netrc.html">&larr; netrc — netrc file processing</a>
+        <a class="next" href="crypto.html">Cryptographic Services &rarr;</a>
+      </nav>
+      
+      <h1 id="plistlib-generate-and-parse-apple-plist-files"><code class="xref py module docutils literal">plistlib</code> — Generate and parse Apple <code>.plist</code> files</h1>
+<dl class="py module">
+  <dt id="py:module:plistlib"><code class="sig-name">plistlib</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'moduleauthor'</p>
+<pre class="directive-error-source">.. moduleauthor:: Jack Jansen</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Georg Brandl &lt;georg@python.org&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/plistlib.py`</p>
+<span id="index-0"></span>
+<hr />
+<p>This module provides an interface for reading and writing the "property list"
+files used by Apple, primarily on macOS and iOS. This module supports both binary
+and XML plist files.</p>
+<p>The property list (<code>.plist</code>) file format is a simple serialization supporting
+basic object types, like dictionaries, lists, numbers and strings.  Usually the
+top level object is a dictionary.</p>
+<p>To write out and to parse a plist file, use the <a class="reference internal" href="plistlib.html#py:function:plistlib.dump"><code class="xref py function docutils literal">dump</code></a> and
+<a class="reference internal" href="plistlib.html#py:function:plistlib.load"><code class="xref py function docutils literal">load</code></a> functions.</p>
+<p>To work with plist data in bytes or string objects, use <a class="reference internal" href="plistlib.html#py:function:plistlib.dumps"><code class="xref py function docutils literal">dumps</code></a>
+and <a class="reference internal" href="plistlib.html#py:function:plistlib.loads"><code class="xref py function docutils literal">loads</code></a>.</p>
+<p>Values can be strings, integers, floats, booleans, tuples, lists, dictionaries
+(but only with string keys), <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>, <a class="reference internal" href="stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a>
+or <a class="reference internal" href="datetime.html#py:class:datetime.datetime"><code class="xref py class docutils literal">datetime.datetime</code></a> objects.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>New API, old API deprecated.  Support for binary format plists added.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
+<p>Support added for reading and writing <a class="reference internal" href="plistlib.html#py:class:plistlib.uid"><code class="xref py class docutils literal">UID</code></a> tokens in binary plists as used
+by NSKeyedArchiver and NSKeyedUnarchiver.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.9:</span></p>
+<p>Old API removed.</p>
+</div>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt><a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/PropertyLists/">PList manual page</a></dt>
+<dd><p>Apple's documentation of the file format.</p>
+</dd>
+</dl>
+</div>
+<p>This module defines the following functions:</p>
+<dl class="py function">
+  <dt id="py:function:plistlib.load"><code class="sig-name">load(fp, *, fmt=None, dict_type=dict, aware_datetime=False)</code></dt>
+  <dd><p>Read a plist file. <em>fp</em> should be a readable and binary file object.
+Return the unpacked root object (which usually is a
+dictionary).</p>
+<p>The <em>fmt</em> is the format of the file and the following values are valid:</p>
+<ul>
+<li><p><a class="reference internal" href="constants.html#py:data:none"><code class="xref py data docutils literal">None</code></a>: Autodetect the file format</p>
+</li>
+<li><p><a class="reference internal" href="plistlib.html#py:data:plistlib.fmt_xml"><code class="xref py data docutils literal">FMT_XML</code></a>: XML file format</p>
+</li>
+<li><p><a class="reference internal" href="plistlib.html#py:data:plistlib.fmt_binary"><code class="xref py data docutils literal">FMT_BINARY</code></a>: Binary plist format</p>
+</li>
+</ul>
+<p>The <em>dict_type</em> is the type used for dictionaries that are read from the
+plist file.</p>
+<p>When <em>aware_datetime</em> is true, fields with type <code>datetime.datetime</code> will
+be created as <a href="datetime.html#datetime-naive-aware">aware object</a>, with
+<code class="xref py attribute docutils literal">tzinfo</code> as <a class="reference internal" href="datetime.html#py:data:datetime.utc"><code class="xref py data docutils literal">datetime.UTC</code></a>.</p>
+<p>XML data for the <a class="reference internal" href="plistlib.html#py:data:plistlib.fmt_xml"><code class="xref py data docutils literal">FMT_XML</code></a> format is parsed using the Expat parser
+from <a class="reference internal" href="pyexpat.html#py:module:xml.parsers.expat" title="xml.parsers.expat: An interface to the Expat non-validating XML parser."><code class="xref py module docutils literal">xml.parsers.expat</code></a> – see its documentation for possible
+exceptions on ill-formed XML.  Unknown elements will simply be ignored
+by the plist parser.</p>
+<p>The parser raises <a class="reference internal" href="plistlib.html#py:exception:plistlib.invalidfileexception"><code class="xref py exception docutils literal">InvalidFileException</code></a> when the file cannot be parsed.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>The keyword-only parameter <em>aware_datetime</em> has been added.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:plistlib.loads"><code class="sig-name">loads(data, *, fmt=None, dict_type=dict, aware_datetime=False)</code></dt>
+  <dd><p>Load a plist from a bytes or string object. See <a class="reference internal" href="plistlib.html#py:function:plistlib.load"><code class="xref py function docutils literal">load</code></a> for an
+explanation of the keyword arguments.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p><em>data</em> can be a string when <em>fmt</em> equals <a class="reference internal" href="plistlib.html#py:data:plistlib.fmt_xml"><code class="xref py data docutils literal">FMT_XML</code></a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:plistlib.dump"><code class="sig-name">dump(value, fp, *, fmt=FMT_XML, sort_keys=True, skipkeys=False, aware_datetime=False)</code></dt>
+  <dd><p>Write <em>value</em> to a plist file. <em>fp</em> should be a writable, binary
+file object.</p>
+<p>The <em>fmt</em> argument specifies the format of the plist file and can be
+one of the following values:</p>
+<ul>
+<li><p><a class="reference internal" href="plistlib.html#py:data:plistlib.fmt_xml"><code class="xref py data docutils literal">FMT_XML</code></a>: XML formatted plist file</p>
+</li>
+<li><p><a class="reference internal" href="plistlib.html#py:data:plistlib.fmt_binary"><code class="xref py data docutils literal">FMT_BINARY</code></a>: Binary formatted plist file</p>
+</li>
+</ul>
+<p>When <em>sort_keys</em> is true (the default) the keys for dictionaries will be
+written to the plist in sorted order, otherwise they will be written in
+the iteration order of the dictionary.</p>
+<p>When <em>skipkeys</em> is false (the default) the function raises <a class="reference internal" href="exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a>
+when a key of a dictionary is not a string, otherwise such keys are skipped.</p>
+<p>When <em>aware_datetime</em> is true and any field with type <code>datetime.datetime</code>
+is set as an <a href="datetime.html#datetime-naive-aware">aware object</a>, it will convert to
+UTC timezone before writing it.</p>
+<p>A <a class="reference internal" href="exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> will be raised if the object is of an unsupported type or
+a container that contains objects of unsupported types.</p>
+<p>An <a class="reference internal" href="exceptions.html#py:exception:overflowerror"><code class="xref py exception docutils literal">OverflowError</code></a> will be raised for integer values that cannot
+be represented in (binary) plist files.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>The keyword-only parameter <em>aware_datetime</em> has been added.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:plistlib.dumps"><code class="sig-name">dumps(value, *, fmt=FMT_XML, sort_keys=True, skipkeys=False, aware_datetime=False)</code></dt>
+  <dd><p>Return <em>value</em> as a plist-formatted bytes object. See
+the documentation for <a class="reference internal" href="plistlib.html#py:function:plistlib.dump"><code class="xref py function docutils literal">dump</code></a> for an explanation of the keyword
+arguments of this function.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<p>The following classes are available:</p>
+<dl class="py class">
+  <dt id="py:class:plistlib.uid"><em class="property">class</em> <code class="sig-name">UID(data)</code></dt>
+  <dd><p>Wraps an <a class="reference internal" href="functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a>.  This is used when reading or writing NSKeyedArchiver
+encoded data, which contains UID (see PList manual).</p>
+<dl class="py attribute">
+  <dt id="py:attribute:plistlib.uid.data"><code class="sig-name">data</code></dt>
+  <dd><p>Int value of the UID.  It must be in the range <code>0 &lt;= data &lt; 2**64</code>.</p>
+</dd>
+</dl>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.8:</span></p>
+</div>
+</dd>
+</dl>
+<p>The following constants are available:</p>
+<dl class="py data">
+  <dt id="py:data:plistlib.fmt_xml"><code class="sig-name">FMT_XML</code></dt>
+  <dd><p>The XML format for plist files.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:plistlib.fmt_binary"><code class="sig-name">FMT_BINARY</code></dt>
+  <dd><p>The binary format for plist files</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<p>The module defines the following exceptions:</p>
+<dl class="py exception">
+  <dt id="py:exception:plistlib.invalidfileexception"><em class="property">exception</em> <code class="sig-name">InvalidFileException</code></dt>
+  <dd><p>Raised when a file cannot be parsed.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<p>Generating a plist:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">datetime</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">plistlib</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">pl</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-python">dict</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">aString</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Doodah<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">aList</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">A<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">B<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">12</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">32<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>1</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">aFloat</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">0<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">anInt</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">728</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">aDict</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-python">dict</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">        <span class="hl-variable hl-parameter hl-python">anotherString</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;hello &amp; hi there!&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">        <span class="hl-variable hl-parameter hl-python">aThirdString</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">M<span class="hl-constant hl-character hl-escape hl-hex hl-python">\xe4</span>ssig, Ma<span class="hl-constant hl-character hl-escape hl-hex hl-python">\xdf</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">        <span class="hl-variable hl-parameter hl-python">aTrueValue</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-constant hl-language hl-python">True</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">        <span class="hl-variable hl-parameter hl-python">aFalseValue</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-constant hl-language hl-python">False</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">someData</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;binary gunk&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">someMoreData</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;lots of binary gunk&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">aDate</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">datetime</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">datetime</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">now</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">plistlib</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">dumps</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">pl</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">decode</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>Parsing a plist:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">plistlib</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">plist</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;&quot;&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python">&lt;plist version=&quot;1.0&quot;&gt;</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python">&lt;dict&gt;</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python">    &lt;key&gt;foo&lt;/key&gt;</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python">    &lt;string&gt;bar&lt;/string&gt;</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python">&lt;/dict&gt;</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python">&lt;/plist&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;&quot;&quot;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">pl</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">plistlib</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">loads</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">plist</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">pl</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">foo<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="netrc.html">&larr; netrc — netrc file processing</a>
+        <a class="next" href="crypto.html">Cryptographic Services &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

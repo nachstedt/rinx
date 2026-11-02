@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Object Implementation Support — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python&#x2f;C API Reference Manual</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python&#x2f;C API Reference Manual"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stable.html">C API Stability</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="veryhigh.html">The Very High Level Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="refcounting.html">Reference Counting</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Exception Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="extension-modules.html">Defining extension modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="utilities.html">Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="abstract.html">Abstract Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concrete.html">Concrete Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init.html">Initialization, Finalization, and Threads</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init_config.html">Python Initialization Configuration</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="memory.html">Memory Management</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="objimpl.html">Object Implementation Support</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Object Implementation Support"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="allocation.html">Allocating Objects on the Heap</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="lifecycle.html">Object Life Cycle</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="structures.html">Common Object Structures</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="typeobj.html">Type Object Structures</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="gcsupport.html">Supporting Cyclic Garbage Collection</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="apiabiversion.html">API and ABI Versioning</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="monitoring.html">Monitoring C API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="memory.html">&larr; Memory Management</a>
+        <a class="next" href="allocation.html">Allocating Objects on the Heap &rarr;</a>
+      </nav>
+      
+      <a id="newtypes"></a>
+<h1 id="object-implementation-support">Object Implementation Support</h1>
+<p>This chapter describes the functions, types, and macros used when defining new
+object types.</p>
+<ul>
+  <li><a href="allocation.html">Allocating Objects on the Heap</a>
+<ul>
+  <li><a href="allocation.html#deprecated-aliases">Deprecated aliases</a></li>
+</ul>
+  </li>
+  <li><a href="lifecycle.html">Object Life Cycle</a>
+<ul>
+  <li><a href="lifecycle.html#life-events">Life Events</a></li>
+  <li><a href="lifecycle.html#cyclic-isolate-destruction">Cyclic Isolate Destruction</a></li>
+  <li><a href="lifecycle.html#functions">Functions</a></li>
+</ul>
+  </li>
+  <li><a href="structures.html">Common Object Structures</a>
+<ul>
+  <li><a href="structures.html#base-object-types-and-macros">Base object types and macros</a></li>
+  <li><a href="structures.html#implementing-functions-and-methods">Implementing functions and methods</a></li>
+  <li><a href="structures.html#accessing-attributes-of-extension-types">Accessing attributes of extension types</a>
+<ul>
+  <li><a href="structures.html#member-flags">Member flags</a></li>
+  <li><a href="structures.html#member-types">Member types</a></li>
+  <li><a href="structures.html#defining-getters-and-setters">Defining Getters and Setters</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li><a href="typeobj.html">Type Object Structures</a>
+<ul>
+  <li><a href="typeobj.html#quick-reference">Quick Reference</a>
+<ul>
+  <li><a href="typeobj.html#tp-slots">"tp slots"</a></li>
+  <li><a href="typeobj.html#sub-slots">sub-slots</a></li>
+  <li><a href="typeobj.html#slot-typedefs">slot typedefs</a></li>
+</ul>
+  </li>
+  <li><a href="typeobj.html#pytypeobject-definition">PyTypeObject Definition</a></li>
+  <li><a href="typeobj.html#pyobject-slots">PyObject Slots</a></li>
+  <li><a href="typeobj.html#pyvarobject-slots">PyVarObject Slots</a></li>
+  <li><a href="typeobj.html#pytypeobject-slots">PyTypeObject Slots</a></li>
+  <li><a href="typeobj.html#static-types">Static Types</a></li>
+  <li><a href="typeobj.html#heap-types">Heap Types</a></li>
+  <li><a href="typeobj.html#number-object-structures">Number Object Structures</a></li>
+  <li><a href="typeobj.html#mapping-object-structures">Mapping Object Structures</a></li>
+  <li><a href="typeobj.html#sequence-object-structures">Sequence Object Structures</a></li>
+  <li><a href="typeobj.html#buffer-object-structures">Buffer Object Structures</a></li>
+  <li><a href="typeobj.html#async-object-structures">Async Object Structures</a></li>
+  <li><a href="typeobj.html#slot-type-typedefs">Slot Type typedefs</a></li>
+  <li><a href="typeobj.html#examples">Examples</a></li>
+</ul>
+  </li>
+  <li><a href="gcsupport.html">Supporting Cyclic Garbage Collection</a>
+<ul>
+  <li><a href="gcsupport.html#controlling-the-garbage-collector-state">Controlling the Garbage Collector State</a></li>
+  <li><a href="gcsupport.html#querying-garbage-collector-state">Querying Garbage Collector State</a></li>
+</ul>
+  </li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="memory.html">&larr; Memory Management</a>
+        <a class="next" href="allocation.html">Allocating Objects on the Heap &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

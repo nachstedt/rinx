@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>__future__ — Future statement definitions — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="python.html">Python Runtime Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python Runtime Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="sys.html">sys — System-specific parameters and functions</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="sys.monitoring.html">sys.monitoring — Execution event monitoring</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="sysconfig.html">sysconfig — Provide access to Python&#x27;s configuration information</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="builtins.html">builtins — Built-in objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="__main__.html">__main__ — Top-level code environment</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="warnings.html">warnings — Warning control</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="dataclasses.html">dataclasses — Data Classes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="contextlib.html">contextlib — Utilities for :keyword:`!with`-statement contexts</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="abc.html">abc — Abstract Base Classes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="atexit.html">atexit — Exit handlers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="traceback.html">traceback — Print or retrieve a stack traceback</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="__future__.html">__future__ — Future statement definitions</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle __future__ — Future statement definitions"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="__future__.html#module-contents">Module Contents</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="gc.html">gc — Garbage Collector interface</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="inspect.html">inspect — Inspect live objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="annotationlib.html">annotationlib — Functionality for introspecting annotations</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="site.html">site — Site-specific configuration hook</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="traceback.html">&larr; traceback — Print or retrieve a stack traceback</a>
+        <a class="next" href="gc.html">gc — Garbage Collector interface &rarr;</a>
+      </nav>
+      
+      <h1 id="future-future-statement-definitions"><code class="xref py module docutils literal">__future__</code> — Future statement definitions</h1>
+<dl class="py module">
+  <dt id="py:module:__future__"><code class="sig-name">__future__</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/__future__.py`</p>
+<hr />
+<p>Imports of the form <code>from __future__ import feature</code> are called
+<a href="../reference/simple_stmts.html#future">future statements</a>. These are special-cased by the Python compiler
+to allow the use of new Python features in modules containing the future statement
+before the release in which the feature becomes standard.</p>
+<p>While these future statements are given additional special meaning by the
+Python compiler, they are still executed like any other import statement and
+the <a class="reference internal" href="__future__.html#py:module:__future__" title="__future__: Future statement definitions"><code class="xref py module docutils literal">__future__</code></a> exists and is handled by the import system the same way
+any other Python module would be. This design serves three purposes:</p>
+<ul>
+<li><p>To avoid confusing existing tools that analyze import statements and expect to
+find the modules they're importing.</p>
+</li>
+<li><p>To document when incompatible changes were introduced, and when they will be
+— or were — made mandatory.  This is a form of executable documentation, and
+can be inspected programmatically via importing <a class="reference internal" href="__future__.html#py:module:__future__" title="__future__: Future statement definitions"><code class="xref py module docutils literal">__future__</code></a> and examining
+its contents.</p>
+</li>
+<li><p>To ensure that <a href="../reference/simple_stmts.html#future">future statements</a> run under releases prior to
+Python 2.1 at least yield runtime exceptions (the import of <a class="reference internal" href="__future__.html#py:module:__future__" title="__future__: Future statement definitions"><code class="xref py module docutils literal">__future__</code></a>
+will fail, because there was no module of that name prior to 2.1).</p>
+</li>
+</ul>
+<h2 id="module-contents">Module Contents</h2>
+<p>No feature description will ever be deleted from <a class="reference internal" href="__future__.html#py:module:__future__" title="__future__: Future statement definitions"><code class="xref py module docutils literal">__future__</code></a>. Since its
+introduction in Python 2.1 the following features have found their way into the
+language using this mechanism:</p>
+<table class="list-table">
+<thead>
+<tr>
+<th><p>feature</p>
+</th>
+<th><p>optional in</p>
+</th>
+<th><p>mandatory in</p>
+</th>
+<th><p>effect</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:__future__.nested_scopes"><code class="sig-name">nested_scopes</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>2.1.0b1</p>
+</td>
+<td><p>2.2</p>
+</td>
+<td><p><span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0227/"><strong>PEP 227</strong></a>: <em>Statically Nested Scopes</em></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:__future__.generators"><code class="sig-name">generators</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>2.2.0a1</p>
+</td>
+<td><p>2.3</p>
+</td>
+<td><p><span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0255/"><strong>PEP 255</strong></a>: <em>Simple Generators</em></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:__future__.division"><code class="sig-name">division</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>2.2.0a2</p>
+</td>
+<td><p>3.0</p>
+</td>
+<td><p><span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0238/"><strong>PEP 238</strong></a>: <em>Changing the Division Operator</em></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:__future__.absolute_import"><code class="sig-name">absolute_import</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>2.5.0a1</p>
+</td>
+<td><p>3.0</p>
+</td>
+<td><p><span class="target" id="index-3"></span><a class="pep reference external" href="https://peps.python.org/pep-0328/"><strong>PEP 328</strong></a>: <em>Imports: Multi-Line and Absolute/Relative</em></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:__future__.with_statement"><code class="sig-name">with_statement</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>2.5.0a1</p>
+</td>
+<td><p>2.6</p>
+</td>
+<td><p><span class="target" id="index-4"></span><a class="pep reference external" href="https://peps.python.org/pep-0343/"><strong>PEP 343</strong></a>: <em>The “with” Statement</em></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:__future__.print_function"><code class="sig-name">print_function</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>2.6.0a2</p>
+</td>
+<td><p>3.0</p>
+</td>
+<td><p><span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-3105/"><strong>PEP 3105</strong></a>: <em>Make print a function</em></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:__future__.unicode_literals"><code class="sig-name">unicode_literals</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>2.6.0a2</p>
+</td>
+<td><p>3.0</p>
+</td>
+<td><p><span class="target" id="index-6"></span><a class="pep reference external" href="https://peps.python.org/pep-3112/"><strong>PEP 3112</strong></a>: <em>Bytes literals in Python 3000</em></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:__future__.generator_stop"><code class="sig-name">generator_stop</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>3.5.0b1</p>
+</td>
+<td><p>3.7</p>
+</td>
+<td><p><span class="target" id="index-7"></span><a class="pep reference external" href="https://peps.python.org/pep-0479/"><strong>PEP 479</strong></a>: <em>StopIteration handling inside generators</em></p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:__future__.annotations"><code class="sig-name">annotations</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>3.7.0b1</p>
+</td>
+<td><p>Never [1]_</p>
+</td>
+<td><p><span class="target" id="index-8"></span><a class="pep reference external" href="https://peps.python.org/pep-0563/"><strong>PEP 563</strong></a>: <em>Postponed evaluation of annotations</em>,
+<span class="target" id="index-9"></span><a class="pep reference external" href="https://peps.python.org/pep-0649/"><strong>PEP 649</strong></a>: <em>Deferred evaluation of annotations using descriptors</em></p>
+</td>
+</tr>
+</tbody>
+</table>
+<a id="future-classes"></a>
+<dl class="py class">
+  <dt id="py:class:__future__._feature"><em class="property">class</em> <code class="sig-name">_Feature</code></dt>
+  <dd><p>Each statement in :file:`__future__.py` is of the form:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">FeatureName</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">_Feature</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">OptionalRelease</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">MandatoryRelease</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">                       <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">CompilerFlag</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>where, normally, <em>OptionalRelease</em> is less than <em>MandatoryRelease</em>, and both are
+5-tuples of the same form as <a class="reference internal" href="sys.html#py:data:sys.version_info"><code class="xref py data docutils literal">sys.version_info</code></a>:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">PY_MAJOR_VERSION</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> the 2 in 2.1.0a3; an int
+</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-tuple hl-python"> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">PY_MINOR_VERSION</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> the 1; an int
+</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-tuple hl-python"> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">PY_MICRO_VERSION</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> the 0; an int
+</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-tuple hl-python"> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">PY_RELEASE_LEVEL</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> &quot;alpha&quot;, &quot;beta&quot;, &quot;candidate&quot; or &quot;final&quot;; string
+</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-tuple hl-python"> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">PY_RELEASE_SERIAL</span></span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> the 3; an int
+</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span></pre></div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:__future__._feature.getoptionalrelease"><code class="sig-name">_Feature.getOptionalRelease()</code></dt>
+  <dd><p><em>OptionalRelease</em> records the first release in which the feature was accepted.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:__future__._feature.getmandatoryrelease"><code class="sig-name">_Feature.getMandatoryRelease()</code></dt>
+  <dd><p>In the case of a <em>MandatoryRelease</em> that has not yet occurred,
+<em>MandatoryRelease</em> predicts the release in which the feature will become part of
+the language.</p>
+<p>Else <em>MandatoryRelease</em> records when the feature became part of the language; in
+releases at or after that, modules no longer need a future statement to use the
+feature in question, but may continue to use such imports.</p>
+<p><em>MandatoryRelease</em> may also be <code>None</code>, meaning that a planned feature got
+dropped or that it is not yet decided.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:__future__._feature.compiler_flag"><code class="sig-name">_Feature.compiler_flag</code></dt>
+  <dd><p><em>CompilerFlag</em> is the (bitfield) flag that should be passed in the fourth
+argument to the built-in function <a class="reference internal" href="functions.html#py:function:compile"><code class="xref py function docutils literal">compile</code></a> to enable the feature in
+dynamically compiled code.  This flag is stored in the <a class="reference internal" href="__future__.html#py:attribute:__future__._feature.compiler_flag"><code class="xref py attribute docutils literal">_Feature.compiler_flag</code></a>
+attribute on <a class="reference internal" href="__future__.html#py:class:__future__._feature"><code class="xref py class docutils literal">_Feature</code></a> instances.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt><a href="../reference/simple_stmts.html#future">Future statements</a></dt>
+<dd><p>How the compiler treats future imports.</p>
+</dd>
+<dt><span class="target" id="index-10"></span><a class="pep reference external" href="https://peps.python.org/pep-0236/"><strong>PEP 236</strong></a> - Back to the <a href="#" class="broken-link">__future</a></dt>
+<dd><p>The original proposal for the <a href="#" class="broken-link">__future</a> mechanism.</p>
+</dd>
+</dl>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="traceback.html">&larr; traceback — Print or retrieve a stack traceback</a>
+        <a class="next" href="gc.html">gc — Garbage Collector interface &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

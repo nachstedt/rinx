@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>email.iterators: Iterators — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Internet Data Handling"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 ancestor has-children">
+            <a href="email.html">email — An email and MIME handling package</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle email — An email and MIME handling package"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="email.message.html">email.message: Representing an email message</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.parser.html">email.parser: Parsing email messages</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.generator.html">email.generator: Generating MIME documents</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.policy.html">email.policy: Policy Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.errors.html">email.errors: Exception and Defect classes</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.headerregistry.html">email.headerregistry: Custom Header Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.contentmanager.html">email.contentmanager: Managing MIME Content</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.examples.html">email: Examples</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.compat32-message.html">email.message.Message: Representing an email message using the compat32 API</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.mime.html">email.mime: Creating email and MIME objects from scratch</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.header.html">email.header: Internationalized headers</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.charset.html">email.charset: Representing character sets</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.encoders.html">email.encoders: Encoders</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.utils.html">email.utils: Miscellaneous utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l4 current">
+            <a href="email.iterators.html">email.iterators: Iterators</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="json.html">json — JSON encoder and decoder</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mailbox.html">mailbox — Manipulate mailboxes in various formats</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mimetypes.html">mimetypes — Map filenames to MIME types</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="base64.html">base64 — Base16, Base32, Base64, Base85 Data Encodings</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="binascii.html">binascii — Convert between binary and ASCII</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="quopri.html">quopri — Encode and decode MIME quoted-printable data</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="email.utils.html">&larr; email.utils: Miscellaneous utilities</a>
+        <a class="next" href="json.html">json — JSON encoder and decoder &rarr;</a>
+      </nav>
+      
+      <h1 id="email-iterators-iterators"><code class="xref py module docutils literal">email.iterators</code>: Iterators</h1>
+<dl class="py module">
+  <dt id="py:module:email.iterators"><code class="sig-name">email.iterators</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/email/iterators.py`</p>
+<hr />
+<p>Iterating over a message object tree is fairly easy with the
+<a class="reference internal" href="email.compat32-message.html#py:method:email.message.message.walk"><code class="xref py method docutils literal">Message.walk</code></a> method.  The
+<a class="reference internal" href="email.iterators.html#py:module:email.iterators" title="email.iterators: Iterate over a  message object tree."><code class="xref py module docutils literal">email.iterators</code></a> module provides some useful higher level iterations over
+message object trees.</p>
+<dl class="py function">
+  <dt id="py:function:email.iterators.body_line_iterator"><code class="sig-name">body_line_iterator(msg, decode=False)</code></dt>
+  <dd><p>This iterates over all the payloads in all the subparts of <em>msg</em>, returning the
+string payloads line-by-line.  It skips over all the subpart headers, and it
+skips over any subpart with a payload that isn't a Python string.  This is
+somewhat equivalent to reading the flat text representation of the message from
+a file using <a class="reference internal" href="io.html#py:method:io.textiobase.readline"><code class="xref py method docutils literal">readline</code></a>, skipping over all the
+intervening headers.</p>
+<p>Optional <em>decode</em> is passed through to <a class="reference internal" href="email.compat32-message.html#py:method:email.message.message.get_payload"><code class="xref py method docutils literal">Message.get_payload</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.iterators.typed_subpart_iterator"><code class="sig-name">typed_subpart_iterator(msg, maintype='text', subtype=None)</code></dt>
+  <dd><p>This iterates over all the subparts of <em>msg</em>, returning only those subparts that
+match the MIME type specified by <em>maintype</em> and <em>subtype</em>.</p>
+<p>Note that <em>subtype</em> is optional; if omitted, then subpart MIME type matching is
+done only with the main type.  <em>maintype</em> is optional too; it defaults to
+:mimetype:`text`.</p>
+<p>Thus, by default <a class="reference internal" href="email.iterators.html#py:function:email.iterators.typed_subpart_iterator"><code class="xref py function docutils literal">typed_subpart_iterator</code></a> returns each subpart that has a
+MIME type of :mimetype:`text/*`.</p>
+</dd>
+</dl>
+<p>The following function has been added as a useful debugging tool.  It should
+<em>not</em> be considered part of the supported public interface for the package.</p>
+<dl class="py function">
+  <dt id="py:function:email.iterators._structure"><code class="sig-name">_structure(msg, fp=None, level=0, include_default=False)</code></dt>
+  <dd><p>Prints an indented representation of the content types of the message object
+structure.  For example:</p>
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; msg = email.message_from_file(somefile)
+&gt;&gt;&gt; _structure(msg)
+multipart/mixed
+    text/plain
+    text/plain
+    multipart/digest
+        message/rfc822
+            text/plain
+        message/rfc822
+            text/plain
+        message/rfc822
+            text/plain
+        message/rfc822
+            text/plain
+        message/rfc822
+            text/plain
+    text/plain</pre></div>
+<p>Optional <em>fp</em> is a file-like object to print the output to.  It must be
+suitable for Python's <a class="reference internal" href="functions.html#py:function:print"><code class="xref py function docutils literal">print</code></a> function.  <em>level</em> is used internally.
+<em>include_default</em>, if true, prints the default type as well.</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="email.utils.html">&larr; email.utils: Miscellaneous utilities</a>
+        <a class="next" href="json.html">json — JSON encoder and decoder &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

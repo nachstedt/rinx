@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>posix — The most common POSIX system calls — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="unix.html">Unix-specific services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Unix-specific services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="shlex.html">shlex — Simple lexical analysis</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="posix.html">posix — The most common POSIX system calls</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle posix — The most common POSIX system calls"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="posix.html#large-file-support">Large File Support</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="posix.html#notable-module-contents">Notable Module Contents</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pwd.html">pwd — The password database</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="grp.html">grp — The group database</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="termios.html">termios — POSIX style tty control</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tty.html">tty — Terminal control functions</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pty.html">pty — Pseudo-terminal utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="fcntl.html">fcntl — The fcntl and ioctl system calls</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="resource.html">resource — Resource usage information</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="syslog.html">syslog — Unix syslog library routines</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="shlex.html">&larr; shlex — Simple lexical analysis</a>
+        <a class="next" href="pwd.html">pwd — The password database &rarr;</a>
+      </nav>
+      
+      <h1 id="posix-the-most-common-posix-system-calls"><code class="xref py module docutils literal">posix</code> — The most common POSIX system calls</h1>
+<dl class="py module">
+  <dt id="py:module:posix"><code class="sig-name">posix</code></dt>
+  <dd></dd>
+</dl>
+<hr />
+<p>This module provides access to operating system functionality that is
+standardized by the C Standard and the POSIX standard (a thinly disguised Unix
+interface).</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'availability'</p>
+<pre class="directive-error-source">.. availability:: Unix.</pre>
+</div>
+<span id="index-0"></span>
+<p><strong>Do not import this module directly.</strong>  Instead, import the module <a class="reference internal" href="os.html#py:module:os" title="os: Miscellaneous operating system interfaces."><code class="xref py module docutils literal">os</code></a>,
+which provides a <em>portable</em> version of this interface.  On Unix, the <a class="reference internal" href="os.html#py:module:os" title="os: Miscellaneous operating system interfaces."><code class="xref py module docutils literal">os</code></a>
+module provides a superset of the <a class="reference internal" href="posix.html#py:module:posix" title="posix: The most common POSIX system calls (normally used via module os). (Unix)"><code class="xref py module docutils literal">posix</code></a> interface.  On non-Unix operating
+systems the <a class="reference internal" href="posix.html#py:module:posix" title="posix: The most common POSIX system calls (normally used via module os). (Unix)"><code class="xref py module docutils literal">posix</code></a> module is not available, but a subset is always
+available through the <a class="reference internal" href="os.html#py:module:os" title="os: Miscellaneous operating system interfaces."><code class="xref py module docutils literal">os</code></a> interface.  Once <a class="reference internal" href="os.html#py:module:os" title="os: Miscellaneous operating system interfaces."><code class="xref py module docutils literal">os</code></a> is imported, there is
+<em>no</em> performance penalty in using it instead of <a class="reference internal" href="posix.html#py:module:posix" title="posix: The most common POSIX system calls (normally used via module os). (Unix)"><code class="xref py module docutils literal">posix</code></a>.  In addition,
+<a class="reference internal" href="os.html#py:module:os" title="os: Miscellaneous operating system interfaces."><code class="xref py module docutils literal">os</code></a> provides some additional functionality, such as automatically calling
+<a class="reference internal" href="os.html#py:function:os.putenv"><code class="xref py function docutils literal">putenv</code></a> when an entry in <code>os.environ</code> is changed.</p>
+<p>Errors are reported as exceptions; the usual exceptions are given for type
+errors, while errors reported by the system calls raise <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a>.</p>
+<a id="posix-large-files"></a>
+<h2 id="large-file-support">Large File Support</h2>
+<span id="index-1"></span>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Steve Clift &lt;clift@mail.anacapa.net&gt;</pre>
+</div>
+<p>Several operating systems (including AIX and Solaris) provide
+support for files that are larger than 2 GiB from a C programming model where
+:c:expr:`int` and :c:expr:`long` are 32-bit values. This is typically accomplished
+by defining the relevant size and offset types as 64-bit values. Such files are
+sometimes referred to as :dfn:`large files`.</p>
+<p>Large file support is enabled in Python when the size of an <a href="#" class="broken-link"><code class="xref c type docutils literal">off_t</code></a> is
+larger than a :c:expr:`long` and the :c:expr:`long long` is at least as large
+as an <a href="#" class="broken-link"><code class="xref c type docutils literal">off_t</code></a>.
+It may be necessary to configure and compile Python with certain compiler flags
+to enable this mode. For example, with Solaris 2.6 and 2.7 you need to do
+something like:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">CFLAGS</span></span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">`getconf LFS_CFLAGS`<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">OPT</span></span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">-g -O2 $CFLAGS<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span> <span class="hl-punctuation hl-separator hl-continuation hl-line hl-python">\</span></span>
+<span class="hl-source hl-python">        .<span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">configure</span></span></span></pre></div>
+<p>On large-file-capable Linux systems, this might work:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">CFLAGS</span></span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">OPT</span></span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">-g -O2 $CFLAGS<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span> <span class="hl-punctuation hl-separator hl-continuation hl-line hl-python">\</span></span>
+<span class="hl-source hl-python">        .<span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">configure</span></span></span></pre></div>
+<a id="posix-contents"></a>
+<h2 id="notable-module-contents">Notable Module Contents</h2>
+<p>In addition to many functions described in the <a class="reference internal" href="os.html#py:module:os" title="os: Miscellaneous operating system interfaces."><code class="xref py module docutils literal">os</code></a> module documentation,
+<a class="reference internal" href="posix.html#py:module:posix" title="posix: The most common POSIX system calls (normally used via module os). (Unix)"><code class="xref py module docutils literal">posix</code></a> defines the following data item:</p>
+<dl class="py data">
+  <dt id="py:data:posix.environ"><code class="sig-name">environ</code></dt>
+  <dd><p>A dictionary representing the string environment at the time the interpreter
+was started. Keys and values are bytes on Unix and str on Windows. For
+example, <code>environ[b'HOME']</code> (<code>environ['HOME']</code> on Windows) is the
+pathname of your home directory, equivalent to <code>getenv("HOME")</code> in C.</p>
+<p>Modifying this dictionary does not affect the string environment passed on by
+<a class="reference internal" href="os.html#py:function:os.execv"><code class="xref py function docutils literal">execv</code></a>, <a class="reference internal" href="os.html#py:function:os.popen"><code class="xref py function docutils literal">popen</code></a> or <a class="reference internal" href="os.html#py:function:os.system"><code class="xref py function docutils literal">system</code></a>; if you need to
+change the environment, pass <code>environ</code> to <a class="reference internal" href="os.html#py:function:os.execve"><code class="xref py function docutils literal">execve</code></a> or add
+variable assignments and export statements to the command string for
+<a class="reference internal" href="os.html#py:function:os.system"><code class="xref py function docutils literal">system</code></a> or <a class="reference internal" href="os.html#py:function:os.popen"><code class="xref py function docutils literal">popen</code></a>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p>On Unix, keys and values are bytes.</p>
+</div>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>The <a class="reference internal" href="os.html#py:module:os" title="os: Miscellaneous operating system interfaces."><code class="xref py module docutils literal">os</code></a> module provides an alternate implementation of <code>environ</code>
+which updates the environment on modification. Note also that updating
+<a class="reference internal" href="os.html#py:data:os.environ"><code class="xref py data docutils literal">os.environ</code></a> will render this dictionary obsolete. Use of the
+<a class="reference internal" href="os.html#py:module:os" title="os: Miscellaneous operating system interfaces."><code class="xref py module docutils literal">os</code></a> module version of this is recommended over direct access to the
+<a class="reference internal" href="posix.html#py:module:posix" title="posix: The most common POSIX system calls (normally used via module os). (Unix)"><code class="xref py module docutils literal">posix</code></a> module.</p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="shlex.html">&larr; shlex — Simple lexical analysis</a>
+        <a class="next" href="pwd.html">pwd — The password database &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

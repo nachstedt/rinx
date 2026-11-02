@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sphinx-Needs Demo Benchmark</title>
+  <link rel="stylesheet" href="../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">Sphinx-Needs Demo Benchmark</h2>
+        
+        
+        
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../demo_details.html">🔍 Demo details</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../online_editor.html">⌨ Online Editor</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../basic_example/index.html">🧰 Basic Example</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../coffee-machine/index.html">☕️ Coffee Machine Example</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../automotive-adas/index.html">🚗 Automotive ADAS</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../safety_example/index.html">🛡️ ISO 26262 Functional Safety Example</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header sd-bg-success sd-bg-text-success">
+<span class="sd-summary-icon"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-light-bulb" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg></span><span class="sd-summary-text">Demo feature hint: Constraints</span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<p class="sd-card-text">For requirements two constraints are defined, which check if the <code>status</code>
+is set correctly and if a <code>release</code> is linked.</p>
+<p class="sd-card-text">If these constraints are not fulfilled, the need object gets a colored
+right border and the footer contains the reason why a constraint is
+not fulfilled.</p>
+<p class="sd-card-text">Constraints are best configured in <code>ubproject.toml</code>:</p>
+<div class="highlight-toml notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-toml"><span class="hl-punctuation hl-definition hl-table hl-begin hl-toml">[</span><span class="hl-meta hl-tag hl-table hl-toml"><span class="hl-entity hl-name hl-table hl-toml">needs</span><span class="hl-punctuation hl-separator hl-table hl-toml">.</span><span class="hl-entity hl-name hl-table hl-toml">constraints</span><span class="hl-punctuation hl-separator hl-table hl-toml">.</span><span class="hl-entity hl-name hl-table hl-toml">status_set</span></span><span class="hl-punctuation hl-definition hl-table hl-end hl-toml">]</span></span>
+<span class="hl-source hl-toml"><span class="hl-meta hl-tag hl-key hl-toml"><span class="hl-entity hl-name hl-tag hl-toml">check_0</span></span> <span class="hl-punctuation hl-definition hl-key-value hl-toml">=</span> <span class="hl-string hl-quoted hl-double hl-basic hl-toml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-toml">&quot;</span>status is not None and status in [&#39;open&#39;, &#39;in progress&#39;, &#39;closed&#39;]<span class="hl-punctuation hl-definition hl-string hl-end hl-toml">&quot;</span></span></span>
+<span class="hl-source hl-toml"><span class="hl-meta hl-tag hl-key hl-toml"><span class="hl-entity hl-name hl-tag hl-toml">severity</span></span> <span class="hl-punctuation hl-definition hl-key-value hl-toml">=</span> <span class="hl-string hl-quoted hl-double hl-basic hl-toml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-toml">&quot;</span>LOW<span class="hl-punctuation hl-definition hl-string hl-end hl-toml">&quot;</span></span></span>
+<span class="hl-source hl-toml"><span class="hl-meta hl-tag hl-key hl-toml"><span class="hl-entity hl-name hl-tag hl-toml">error_message</span></span> <span class="hl-punctuation hl-definition hl-key-value hl-toml">=</span> <span class="hl-string hl-quoted hl-double hl-basic hl-toml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-toml">&quot;</span>Status is invalid or not set!<span class="hl-punctuation hl-definition hl-string hl-end hl-toml">&quot;</span></span></span>
+<span class="hl-source hl-toml"></span>
+<span class="hl-source hl-toml"><span class="hl-punctuation hl-definition hl-table hl-begin hl-toml">[</span><span class="hl-meta hl-tag hl-table hl-toml"><span class="hl-entity hl-name hl-table hl-toml">needs</span><span class="hl-punctuation hl-separator hl-table hl-toml">.</span><span class="hl-entity hl-name hl-table hl-toml">constraints</span><span class="hl-punctuation hl-separator hl-table hl-toml">.</span><span class="hl-entity hl-name hl-table hl-toml">release_set</span></span><span class="hl-punctuation hl-definition hl-table hl-end hl-toml">]</span></span>
+<span class="hl-source hl-toml"><span class="hl-meta hl-tag hl-key hl-toml"><span class="hl-entity hl-name hl-tag hl-toml">check_0</span></span> <span class="hl-punctuation hl-definition hl-key-value hl-toml">=</span> <span class="hl-string hl-quoted hl-double hl-basic hl-toml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-toml">&quot;</span>len(release)&gt;0<span class="hl-punctuation hl-definition hl-string hl-end hl-toml">&quot;</span></span></span>
+<span class="hl-source hl-toml"><span class="hl-meta hl-tag hl-key hl-toml"><span class="hl-entity hl-name hl-tag hl-toml">severity</span></span> <span class="hl-punctuation hl-definition hl-key-value hl-toml">=</span> <span class="hl-string hl-quoted hl-double hl-basic hl-toml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-toml">&quot;</span>CRITICAL<span class="hl-punctuation hl-definition hl-string hl-end hl-toml">&quot;</span></span></span>
+<span class="hl-source hl-toml"><span class="hl-meta hl-tag hl-key hl-toml"><span class="hl-entity hl-name hl-tag hl-toml">error_message</span></span> <span class="hl-punctuation hl-definition hl-key-value hl-toml">=</span> <span class="hl-string hl-quoted hl-double hl-basic hl-toml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-toml">&quot;</span>Requirement is not planned for any release!<span class="hl-punctuation hl-definition hl-string hl-end hl-toml">&quot;</span></span></span></pre></div>
+</div>
+<p class="sd-card-text">Depending on the <em>severity</em>, the build is stopped or a warning gets
+printed:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sphinx</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">needs</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">demo</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">docs</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">granny_car</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">requirements</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">rst</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">20</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">WARNING</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Constraint</span></span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">len</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">release</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span> <span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">need</span> <span class="hl-variable hl-other hl-constant hl-python">GRANNY_EXAMPLE</span> <span class="hl-variable hl-other hl-constant hl-python">FAILED</span>! <span class="hl-meta hl-generic-name hl-python">severity</span><span class="hl-invalid hl-illegal hl-missing-in hl-python">:</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">CRITICAL</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Requirement</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">is</span> <span class="hl-keyword hl-operator hl-logical hl-python">not</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">planned</span></span> <span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-python">for</span> <span class="hl-support hl-function hl-builtin hl-python">any</span> <span class="hl-meta hl-generic-name hl-python">release</span>! [<span class="hl-meta hl-generic-name hl-python">needs</span>.<span class="hl-meta hl-generic-name hl-python">constraint</span>]</span></span></pre></div>
+<p class="sd-card-text">Docs: <a href="https://sphinx-needs.readthedocs.io/en/latest/configuration.html#needs-constraints">needs_constraints by Sphinx-Needs</a>.</p>
+</div>
+</details>
+
+      
+    </main>
+  </div>
+</body>
+</html>

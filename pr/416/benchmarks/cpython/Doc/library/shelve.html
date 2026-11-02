@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>shelve — Python object persistence — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="persistence.html">Data Persistence</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Data Persistence"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="pickle.html">pickle — Python object serialization</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="copyreg.html">copyreg — Register pickle support functions</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="shelve.html">shelve — Python object persistence</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle shelve — Python object persistence"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="shelve.html#restrictions">Restrictions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="shelve.html#example">Example</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="marshal.html">marshal — Internal Python object serialization</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="dbm.html">dbm — Interfaces to Unix &quot;databases&quot;</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="sqlite3.html">sqlite3 — DB-API 2.0 interface for SQLite databases</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="copyreg.html">&larr; copyreg — Register pickle support functions</a>
+        <a class="next" href="marshal.html">marshal — Internal Python object serialization &rarr;</a>
+      </nav>
+      
+      <h1 id="shelve-python-object-persistence"><code class="xref py module docutils literal">shelve</code> — Python object persistence</h1>
+<dl class="py module">
+  <dt id="py:module:shelve"><code class="sig-name">shelve</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/shelve.py`</p>
+<span id="index-0"></span>
+<hr />
+<p>A "shelf" is a persistent, dictionary-like object.  The difference with "dbm"
+databases is that the values (not the keys!) in a shelf can be essentially
+arbitrary Python objects — anything that the <a class="reference internal" href="pickle.html#py:module:pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py module docutils literal">pickle</code></a> module can handle.
+This includes most class instances, recursive data types, and objects containing
+lots of shared  sub-objects.  The keys are ordinary strings.</p>
+<dl class="py function">
+  <dt id="py:function:shelve.open"><code class="sig-name">open(filename, flag='c', protocol=None, writeback=False)</code></dt>
+  <dd><p>Open a persistent dictionary.  The filename specified is the base filename for
+the underlying database.  As a side-effect, an extension may be added to the
+filename and more than one file may be created.  By default, the underlying
+database file is opened for reading and writing.  The optional <em>flag</em> parameter
+has the same interpretation as the <em>flag</em> parameter of <a class="reference internal" href="dbm.html#py:function:dbm.open"><code class="xref py function docutils literal">dbm.open</code></a>.</p>
+<p>By default, pickles created with <a class="reference internal" href="pickle.html#py:data:pickle.default_protocol"><code class="xref py data docutils literal">pickle.DEFAULT_PROTOCOL</code></a> are used
+to serialize values.  The version of the pickle protocol can be specified
+with the <em>protocol</em> parameter.</p>
+<p>Because of Python semantics, a shelf cannot know when a mutable
+persistent-dictionary entry is modified.  By default modified objects are
+written <em>only</em> when assigned to the shelf (see <a href="shelve.html#shelve-example">Example</a>).  If the
+optional <em>writeback</em> parameter is set to <code>True</code>, all entries accessed are also
+cached in memory, and written back on <a class="reference internal" href="shelve.html#py:method:shelve.shelf.sync"><code class="xref py method docutils literal">sync</code></a> and
+<a class="reference internal" href="shelve.html#py:method:shelve.shelf.close"><code class="xref py method docutils literal">close</code></a>; this can make it handier to mutate mutable entries in
+the persistent dictionary, but, if many entries are accessed, it can consume
+vast amounts of memory for the cache, and it can make the close operation
+very slow since all accessed entries are written back (there is no way to
+determine which accessed entries are mutable, nor which ones were actually
+mutated).</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p><a class="reference internal" href="pickle.html#py:data:pickle.default_protocol"><code class="xref py data docutils literal">pickle.DEFAULT_PROTOCOL</code></a> is now used as the default pickle
+protocol.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>Accepts <a class="reference internal" href="../glossary.html#term-path-like-object"><span class="xref std std-term">path-like object</span></a> for filename.</p>
+</div>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Do not rely on the shelf being closed automatically; always call
+<a class="reference internal" href="shelve.html#py:method:shelve.shelf.close"><code class="xref py method docutils literal">close</code></a> explicitly when you don't need it any more, or
+use <a class="reference internal" href="shelve.html#py:function:shelve.open"><code class="xref py function docutils literal">shelve.open</code></a> as a context manager:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">shelve</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">spam<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">db</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">db</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">eggs<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">eggs<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
+</div>
+</dd>
+</dl>
+<a id="shelve-security"></a>
+<div class="admonition warning">
+  <p class="admonition-title">Warning</p>
+<p>Because the <a class="reference internal" href="shelve.html#py:module:shelve" title="shelve: Python object persistence."><code class="xref py module docutils literal">shelve</code></a> module is backed by <a class="reference internal" href="pickle.html#py:module:pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py module docutils literal">pickle</code></a>, it is insecure
+to load a shelf from an untrusted source.  Like with pickle, loading a shelf
+can execute arbitrary code.</p>
+</div>
+<p>Shelf objects support most of methods and operations supported by dictionaries
+(except copying, constructors and operators <code>|</code> and <code>|=</code>).  This eases the
+transition from dictionary based scripts to those requiring persistent storage.</p>
+<p>Two additional methods are supported:</p>
+<dl class="py method">
+  <dt id="py:method:shelve.shelf.sync"><code class="sig-name">Shelf.sync()</code></dt>
+  <dd><p>Write back all entries in the cache if the shelf was opened with <em>writeback</em>
+set to <a class="reference internal" href="constants.html#py:data:true"><code class="xref py data docutils literal">True</code></a>.  Also empty the cache and synchronize the persistent
+dictionary on disk, if feasible.  This is called automatically when the shelf
+is closed with <a class="reference internal" href="shelve.html#py:method:shelve.shelf.close"><code class="xref py method docutils literal">close</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:shelve.shelf.close"><code class="sig-name">Shelf.close()</code></dt>
+  <dd><p>Synchronize and close the persistent <em>dict</em> object.  Operations on a closed
+shelf will fail with a <a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a>.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p><a href="https://code.activestate.com/recipes/576642-persistent-dict-with-multiple-standard-file-format/">Persistent dictionary recipe</a>
+with widely supported storage formats and having the speed of native
+dictionaries.</p>
+</div>
+<h2 id="restrictions">Restrictions</h2>
+<span id="index-1"></span>
+<ul>
+<li><p>The choice of which database package will be used (such as <a class="reference internal" href="dbm.html#py:module:dbm.ndbm" title="dbm.ndbm: The New Database Manager (Unix)"><code class="xref py module docutils literal">dbm.ndbm</code></a> or
+<a class="reference internal" href="dbm.html#py:module:dbm.gnu" title="dbm.gnu: GNU database manager (Unix)"><code class="xref py module docutils literal">dbm.gnu</code></a>) depends on which interface is available.  Therefore it is not
+safe to open the database directly using <a class="reference internal" href="dbm.html#py:module:dbm" title="dbm: Interfaces to various Unix &quot;database&quot; formats."><code class="xref py module docutils literal">dbm</code></a>.  The database is also
+(unfortunately) subject to the limitations of <a class="reference internal" href="dbm.html#py:module:dbm" title="dbm: Interfaces to various Unix &quot;database&quot; formats."><code class="xref py module docutils literal">dbm</code></a>, if it is used —
+this means that (the pickled representation of) the objects stored in the
+database should be fairly small, and in rare cases key collisions may cause
+the database to refuse updates.</p>
+</li>
+<li><p>The <a class="reference internal" href="shelve.html#py:module:shelve" title="shelve: Python object persistence."><code class="xref py module docutils literal">shelve</code></a> module does not support <em>concurrent</em> read/write access to
+shelved objects.  (Multiple simultaneous read accesses are safe.)  When a
+program has a shelf open for writing, no other program should have it open for
+reading or writing.  Unix file locking can be used to solve this, but this
+differs across Unix versions and requires knowledge about the database
+implementation used.</p>
+</li>
+<li><p>On macOS <a class="reference internal" href="dbm.html#py:module:dbm.ndbm" title="dbm.ndbm: The New Database Manager (Unix)"><code class="xref py module docutils literal">dbm.ndbm</code></a> can silently corrupt the database file on updates,
+which can cause hard crashes when trying to read from the database.</p>
+</li>
+</ul>
+<dl class="py class">
+  <dt id="py:class:shelve.shelf"><em class="property">class</em> <code class="sig-name">Shelf(dict, protocol=None, writeback=False, keyencoding='utf-8')</code></dt>
+  <dd><p>A subclass of <a class="reference internal" href="collections.abc.html#py:class:collections.abc.mutablemapping"><code class="xref py class docutils literal">collections.abc.MutableMapping</code></a> which stores pickled
+values in the <em>dict</em> object.</p>
+<p>By default, pickles created with <a class="reference internal" href="pickle.html#py:data:pickle.default_protocol"><code class="xref py data docutils literal">pickle.DEFAULT_PROTOCOL</code></a> are used
+to serialize values.  The version of the pickle protocol can be specified
+with the <em>protocol</em> parameter.  See the <a class="reference internal" href="pickle.html#py:module:pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py module docutils literal">pickle</code></a> documentation for a
+discussion of the pickle protocols.</p>
+<p>If the <em>writeback</em> parameter is <code>True</code>, the object will hold a cache of all
+entries accessed and write them back to the <em>dict</em> at sync and close times.
+This allows natural operations on mutable entries, but can consume much more
+memory and make sync and close take a long time.</p>
+<p>The <em>keyencoding</em> parameter is the encoding used to encode keys before they
+are used with the underlying dict.</p>
+<p>A <a class="reference internal" href="shelve.html#py:class:shelve.shelf"><code class="xref py class docutils literal">Shelf</code></a> object can also be used as a context manager, in which
+case it will be automatically closed when the :keyword:`with` block ends.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p>Added the <em>keyencoding</em> parameter; previously, keys were always encoded in
+UTF-8.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>Added context manager support.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p><a class="reference internal" href="pickle.html#py:data:pickle.default_protocol"><code class="xref py data docutils literal">pickle.DEFAULT_PROTOCOL</code></a> is now used as the default pickle
+protocol.</p>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:shelve.bsddbshelf"><em class="property">class</em> <code class="sig-name">BsdDbShelf(dict, protocol=None, writeback=False, keyencoding='utf-8')</code></dt>
+  <dd><p>A subclass of <a class="reference internal" href="shelve.html#py:class:shelve.shelf"><code class="xref py class docutils literal">Shelf</code></a> which exposes <code class="xref py method docutils literal">first</code>, <code class="xref py method docutils literal">next</code>,
+<code class="xref py method docutils literal">previous</code>, <code class="xref py method docutils literal">last</code> and <code class="xref py method docutils literal">set_location</code> methods.
+These are available
+in the third-party <code class="xref py module docutils literal">bsddb</code> module from <a href="https://www.jcea.es/programacion/pybsddb.htm">pybsddb</a> but not in other database
+modules.  The <em>dict</em> object passed to the constructor must support those
+methods.  This is generally accomplished by calling one of
+<code class="xref py function docutils literal">bsddb.hashopen</code>, <code class="xref py function docutils literal">bsddb.btopen</code> or <code class="xref py function docutils literal">bsddb.rnopen</code>.  The
+optional <em>protocol</em>, <em>writeback</em>, and <em>keyencoding</em> parameters have the same
+interpretation as for the <a class="reference internal" href="shelve.html#py:class:shelve.shelf"><code class="xref py class docutils literal">Shelf</code></a> class.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:shelve.dbfilenameshelf"><em class="property">class</em> <code class="sig-name">DbfilenameShelf(filename, flag='c', protocol=None, writeback=False)</code></dt>
+  <dd><p>A subclass of <a class="reference internal" href="shelve.html#py:class:shelve.shelf"><code class="xref py class docutils literal">Shelf</code></a> which accepts a <em>filename</em> instead of a dict-like
+object.  The underlying file will be opened using <a class="reference internal" href="dbm.html#py:function:dbm.open"><code class="xref py function docutils literal">dbm.open</code></a>.  By
+default, the file will be created and opened for both read and write.  The
+optional <em>flag</em> parameter has the same interpretation as for the <a class="reference internal" href="shelve.html#py:function:shelve.open"><code class="xref py function docutils literal">open</code></a>
+function.  The optional <em>protocol</em> and <em>writeback</em> parameters have the same
+interpretation as for the <a class="reference internal" href="shelve.html#py:class:shelve.shelf"><code class="xref py class docutils literal">Shelf</code></a> class.</p>
+</dd>
+</dl>
+<a id="shelve-example"></a>
+<h2 id="example">Example</h2>
+<p>To summarize the interface (<code>key</code> is a string, <code>data</code> is an arbitrary
+object):</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">shelve</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">d</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">shelve</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">filename</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> open -- file may get suffix added by low-level
+</span></span>
+<span class="hl-source hl-python">                           <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> library
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">d</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">key</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">data</span></span>              <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> store data at key (overwrites old data if
+</span></span>
+<span class="hl-source hl-python">                           <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> using an existing key)
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">data</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">d</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">key</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span>              <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> retrieve a COPY of data at key (raise KeyError
+</span></span>
+<span class="hl-source hl-python">                           <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> if no such key)
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-other hl-del hl-python">del</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">d</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">key</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span>                 <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> delete data stored at key (raises KeyError
+</span></span>
+<span class="hl-source hl-python">                           <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> if no such key)
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">flag</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">key</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">d</span></span>            <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> true if the key exists
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">klist</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-python">list</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">d</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">keys</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>     <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> a list of all existing keys (slow!)
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> as d was opened WITHOUT writeback=True, beware:
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">d</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">xx<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span>        <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> this works as expected, but...
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">d</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">xx<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">append</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>          <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> *this doesn&#39;t!* -- d[&#39;xx&#39;] is STILL [0, 1, 2]!
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> having opened d without writeback=True, you need to code carefully:
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">temp</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">d</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">xx<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span>             <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> extracts the copy
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">temp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">append</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">5</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>             <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> mutates the copy
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">d</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">xx<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">temp</span></span>             <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> stores the copy right back, to persist it
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> or, d=shelve.open(filename,writeback=True) would let you just code
+</span></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> d[&#39;xx&#39;].append(5) and have it work as expected, BUT it would also
+</span></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> consume more memory and make the d.close() operation slower.
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">d</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">close</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>                  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> close it</span></span></pre></div>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>Module <a class="reference internal" href="dbm.html#py:module:dbm" title="dbm: Interfaces to various Unix &quot;database&quot; formats."><code class="xref py module docutils literal">dbm</code></a></dt>
+<dd><p>Generic interface to <code>dbm</code>-style databases.</p>
+</dd>
+<dt>Module <a class="reference internal" href="pickle.html#py:module:pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py module docutils literal">pickle</code></a></dt>
+<dd><p>Object serialization used by <a class="reference internal" href="shelve.html#py:module:shelve" title="shelve: Python object persistence."><code class="xref py module docutils literal">shelve</code></a>.</p>
+</dd>
+</dl>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="copyreg.html">&larr; copyreg — Register pickle support functions</a>
+        <a class="next" href="marshal.html">marshal — Internal Python object serialization &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

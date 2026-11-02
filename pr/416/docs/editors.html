@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Other editors — rinx</title>
+  <link rel="stylesheet" href="../default.css">
+  <script defer src="../version_switcher.js"></script>
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">rinx</h2>
+        
+        <div class="version-switcher" data-json-url="https:&#x2f;&#x2f;nachstedt.github.io&#x2f;rinx&#x2f;versions.json" hidden></div>
+        
+        
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="getting_started.html">Getting started</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="rules.html">Bazel rules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="syntax.html">Supported syntax</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="compatibility.html">Compatibility status</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="entities.html">Entities</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="intersphinx.html">Linking between documentation sites</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="vscode.html">VS Code Extension</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="editors.html">Other editors</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Other editors"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="editors.html#installing-the-server">Installing the server</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="editors.html#neovim">Neovim</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="editors.html#helix">Helix</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="editors.html#emacs">Emacs</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="editors.html#what-every-editor-gets">What every editor gets</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="editors.html#what-only-vs-code-has">What only VS Code has</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="benchmark.html">Benchmarking Rinx</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="diagnostics.html">Diagnostic codes</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="vscode.html">&larr; VS Code Extension</a>
+        <a class="next" href="benchmark.html">Benchmarking Rinx &rarr;</a>
+      </nav>
+      
+      <a id="editors"></a>
+<h1 id="other-editors">Other editors</h1>
+<p>The language server is the <code>rinx</code> binary itself, run as <code>rinx lsp</code>. It speaks the Language Server Protocol over standard input and output, so any editor with a language client can use it. The <a href="vscode.html#vscode">VS Code extension</a> is one such client. This page configures three others: Neovim, Helix and Emacs.</p>
+<p>Each configuration below is a file in the repository, under <code>editors/</code>, and continuous integration runs every one in its editor against the server. Neovim and Emacs are checked for diagnostics, the quick fix writing a <code>.. noqa:</code>, hover, go to definition, find references, rename, the outline, the workspace search, folding, coloured names, and completion of references, domain objects, directives and role names. Helix, which cannot be scripted, is checked for finding the server, showing its diagnostics and offering the quick fix.</p>
+<h2 id="installing-the-server">Installing the server</h2>
+<p>Each configuration starts <code>rinx</code> from the <code>PATH</code>. Install it with Cargo:</p>
+<div class="highlight-console notranslate">
+<div class="highlight hl-code"><pre>
+$ cargo install --git https://github.com/nachstedt/rinx rinx</pre></div>
+</div>
+<p>In a Bazel workspace depending on rinx, <code>bazel build @rinx//:rinx</code> builds the version the workspace's documentation build uses. Put that binary on the <code>PATH</code>, or name its path in place of <code>rinx</code> below.</p>
+<h2 id="neovim">Neovim</h2>
+<p>Neovim 0.11 or later, with no plugin. Put this in <code>init.lua</code>, or in a file of its own under <code>~/.config/nvim/plugin/</code>:</p>
+<div class="highlight-lua notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-lua"><span class="hl-comment hl-line hl-lua"><span class="hl-punctuation hl-definition hl-comment hl-lua">--</span> rinx&#39;s language server for reStructuredText, in Neovim 0.11 or later.
+</span></span>
+<span class="hl-source hl-lua"><span class="hl-variable hl-other hl-lua">vim</span><span class="hl-punctuation hl-accessor hl-lua">.</span><span class="hl-meta hl-property hl-lua">lsp</span><span class="hl-punctuation hl-accessor hl-lua">.</span><span class="hl-meta hl-property hl-lua"><span class="hl-variable hl-function hl-lua">config</span></span><span class="hl-meta hl-function-call hl-arguments hl-lua"><span class="hl-meta hl-group hl-lua"><span class="hl-punctuation hl-section hl-group hl-begin hl-lua">(</span><span class="hl-string hl-quoted hl-single hl-lua"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lua">&#39;</span>rinx<span class="hl-punctuation hl-definition hl-string hl-end hl-lua">&#39;</span></span><span class="hl-punctuation hl-separator hl-comma hl-lua">,</span> <span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-section hl-block hl-begin hl-lua">{</span></span></span></span></span>
+<span class="hl-source hl-lua"><span class="hl-meta hl-function-call hl-arguments hl-lua"><span class="hl-meta hl-group hl-lua"><span class="hl-meta hl-mapping hl-lua">  </span><span class="hl-meta hl-mapping hl-key hl-lua"><span class="hl-string hl-unquoted hl-key hl-lua">cmd</span></span><span class="hl-meta hl-mapping hl-lua"> </span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-key-value hl-lua">=</span></span><span class="hl-meta hl-mapping hl-value hl-lua"> <span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-section hl-block hl-begin hl-lua">{</span> <span class="hl-string hl-quoted hl-single hl-lua"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lua">&#39;</span>rinx<span class="hl-punctuation hl-definition hl-string hl-end hl-lua">&#39;</span></span><span class="hl-punctuation hl-separator hl-field hl-lua">,</span> <span class="hl-string hl-quoted hl-single hl-lua"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lua">&#39;</span>lsp<span class="hl-punctuation hl-definition hl-string hl-end hl-lua">&#39;</span></span> <span class="hl-punctuation hl-section hl-block hl-end hl-lua">}</span></span></span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-field hl-lua">,</span></span></span></span></span>
+<span class="hl-source hl-lua"><span class="hl-meta hl-function-call hl-arguments hl-lua"><span class="hl-meta hl-group hl-lua"><span class="hl-meta hl-mapping hl-lua">  </span><span class="hl-meta hl-mapping hl-key hl-lua"><span class="hl-string hl-unquoted hl-key hl-lua">filetypes</span></span><span class="hl-meta hl-mapping hl-lua"> </span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-key-value hl-lua">=</span></span><span class="hl-meta hl-mapping hl-value hl-lua"> <span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-section hl-block hl-begin hl-lua">{</span> <span class="hl-string hl-quoted hl-single hl-lua"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lua">&#39;</span>rst<span class="hl-punctuation hl-definition hl-string hl-end hl-lua">&#39;</span></span> <span class="hl-punctuation hl-section hl-block hl-end hl-lua">}</span></span></span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-field hl-lua">,</span></span></span></span></span>
+<span class="hl-source hl-lua"><span class="hl-meta hl-function-call hl-arguments hl-lua"><span class="hl-meta hl-group hl-lua"><span class="hl-meta hl-mapping hl-lua">  </span><span class="hl-meta hl-mapping hl-key hl-lua"><span class="hl-string hl-unquoted hl-key hl-lua">root_markers</span></span><span class="hl-meta hl-mapping hl-lua"> </span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-key-value hl-lua">=</span></span><span class="hl-meta hl-mapping hl-value hl-lua"> <span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-section hl-block hl-begin hl-lua">{</span> <span class="hl-string hl-quoted hl-single hl-lua"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lua">&#39;</span>conf.py<span class="hl-punctuation hl-definition hl-string hl-end hl-lua">&#39;</span></span><span class="hl-punctuation hl-separator hl-field hl-lua">,</span> <span class="hl-string hl-quoted hl-single hl-lua"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lua">&#39;</span>MODULE.bazel<span class="hl-punctuation hl-definition hl-string hl-end hl-lua">&#39;</span></span><span class="hl-punctuation hl-separator hl-field hl-lua">,</span> <span class="hl-string hl-quoted hl-single hl-lua"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lua">&#39;</span>.git<span class="hl-punctuation hl-definition hl-string hl-end hl-lua">&#39;</span></span> <span class="hl-punctuation hl-section hl-block hl-end hl-lua">}</span></span></span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-field hl-lua">,</span></span></span></span></span>
+<span class="hl-source hl-lua"><span class="hl-meta hl-function-call hl-arguments hl-lua"><span class="hl-meta hl-group hl-lua"><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-section hl-block hl-end hl-lua">}</span></span><span class="hl-punctuation hl-section hl-group hl-end hl-lua">)</span></span></span></span>
+<span class="hl-source hl-lua"><span class="hl-variable hl-other hl-lua">vim</span><span class="hl-punctuation hl-accessor hl-lua">.</span><span class="hl-meta hl-property hl-lua">lsp</span><span class="hl-punctuation hl-accessor hl-lua">.</span><span class="hl-meta hl-property hl-lua"><span class="hl-variable hl-function hl-lua">enable</span></span><span class="hl-meta hl-function-call hl-arguments hl-lua"><span class="hl-meta hl-group hl-lua"><span class="hl-punctuation hl-section hl-group hl-begin hl-lua">(</span><span class="hl-string hl-quoted hl-single hl-lua"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lua">&#39;</span>rinx<span class="hl-punctuation hl-definition hl-string hl-end hl-lua">&#39;</span></span><span class="hl-punctuation hl-section hl-group hl-end hl-lua">)</span></span></span></span>
+<span class="hl-source hl-lua"></span>
+<span class="hl-source hl-lua"><span class="hl-comment hl-line hl-lua"><span class="hl-punctuation hl-definition hl-comment hl-lua">--</span> Colours the names rinx marks — directives, options, roles, references,
+</span></span>
+<span class="hl-source hl-lua"><span class="hl-comment hl-line hl-lua"><span class="hl-punctuation hl-definition hl-comment hl-lua">--</span> substitutions — like their nearest kin, unless the colour scheme says otherwise.
+</span></span>
+<span class="hl-source hl-lua"><span class="hl-keyword hl-control hl-loop hl-lua">for</span> <span class="hl-variable hl-other hl-lua">kind</span><span class="hl-punctuation hl-separator hl-comma hl-lua">,</span> <span class="hl-variable hl-other hl-lua">group</span> <span class="hl-keyword hl-control hl-loop hl-lua">in</span> <span class="hl-support hl-function hl-builtin hl-lua">pairs</span><span class="hl-meta hl-function-call hl-arguments hl-lua"><span class="hl-meta hl-group hl-lua"><span class="hl-punctuation hl-section hl-group hl-begin hl-lua">(</span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-section hl-block hl-begin hl-lua">{</span></span></span></span></span>
+<span class="hl-source hl-lua"><span class="hl-meta hl-function-call hl-arguments hl-lua"><span class="hl-meta hl-group hl-lua"><span class="hl-meta hl-mapping hl-lua">  </span><span class="hl-meta hl-mapping hl-key hl-lua"><span class="hl-string hl-unquoted hl-key hl-lua">directive</span></span><span class="hl-meta hl-mapping hl-lua"> </span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-key-value hl-lua">=</span></span><span class="hl-meta hl-mapping hl-value hl-lua"> <span class="hl-string hl-quoted hl-single hl-lua"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lua">&#39;</span>@keyword<span class="hl-punctuation hl-definition hl-string hl-end hl-lua">&#39;</span></span></span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-field hl-lua">,</span></span></span></span></span>
+<span class="hl-source hl-lua"><span class="hl-meta hl-function-call hl-arguments hl-lua"><span class="hl-meta hl-group hl-lua"><span class="hl-meta hl-mapping hl-lua">  </span><span class="hl-meta hl-mapping hl-key hl-lua"><span class="hl-string hl-unquoted hl-key hl-lua">option</span></span><span class="hl-meta hl-mapping hl-lua"> </span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-key-value hl-lua">=</span></span><span class="hl-meta hl-mapping hl-value hl-lua"> <span class="hl-string hl-quoted hl-single hl-lua"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lua">&#39;</span>@property<span class="hl-punctuation hl-definition hl-string hl-end hl-lua">&#39;</span></span></span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-field hl-lua">,</span></span></span></span></span>
+<span class="hl-source hl-lua"><span class="hl-meta hl-function-call hl-arguments hl-lua"><span class="hl-meta hl-group hl-lua"><span class="hl-meta hl-mapping hl-lua">  </span><span class="hl-meta hl-mapping hl-key hl-lua"><span class="hl-string hl-unquoted hl-key hl-lua">role</span></span><span class="hl-meta hl-mapping hl-lua"> </span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-key-value hl-lua">=</span></span><span class="hl-meta hl-mapping hl-value hl-lua"> <span class="hl-string hl-quoted hl-single hl-lua"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lua">&#39;</span>@function<span class="hl-punctuation hl-definition hl-string hl-end hl-lua">&#39;</span></span></span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-field hl-lua">,</span></span></span></span></span>
+<span class="hl-source hl-lua"><span class="hl-meta hl-function-call hl-arguments hl-lua"><span class="hl-meta hl-group hl-lua"><span class="hl-meta hl-mapping hl-lua">  </span><span class="hl-meta hl-mapping hl-key hl-lua"><span class="hl-string hl-unquoted hl-key hl-lua">reference</span></span><span class="hl-meta hl-mapping hl-lua"> </span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-key-value hl-lua">=</span></span><span class="hl-meta hl-mapping hl-value hl-lua"> <span class="hl-string hl-quoted hl-single hl-lua"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lua">&#39;</span>@markup.link<span class="hl-punctuation hl-definition hl-string hl-end hl-lua">&#39;</span></span></span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-field hl-lua">,</span></span></span></span></span>
+<span class="hl-source hl-lua"><span class="hl-meta hl-function-call hl-arguments hl-lua"><span class="hl-meta hl-group hl-lua"><span class="hl-meta hl-mapping hl-lua">  </span><span class="hl-meta hl-mapping hl-key hl-lua"><span class="hl-string hl-unquoted hl-key hl-lua">substitution</span></span><span class="hl-meta hl-mapping hl-lua"> </span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-key-value hl-lua">=</span></span><span class="hl-meta hl-mapping hl-value hl-lua"> <span class="hl-string hl-quoted hl-single hl-lua"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lua">&#39;</span>@variable<span class="hl-punctuation hl-definition hl-string hl-end hl-lua">&#39;</span></span></span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-field hl-lua">,</span></span></span></span></span>
+<span class="hl-source hl-lua"><span class="hl-meta hl-function-call hl-arguments hl-lua"><span class="hl-meta hl-group hl-lua"><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-section hl-block hl-end hl-lua">}</span></span><span class="hl-punctuation hl-section hl-group hl-end hl-lua">)</span></span></span> <span class="hl-meta hl-block hl-lua"><span class="hl-keyword hl-control hl-lua">do</span></span></span>
+<span class="hl-source hl-lua"><span class="hl-meta hl-block hl-lua">  <span class="hl-variable hl-other hl-lua">vim</span><span class="hl-punctuation hl-accessor hl-lua">.</span><span class="hl-meta hl-property hl-lua">api</span><span class="hl-punctuation hl-accessor hl-lua">.</span><span class="hl-meta hl-property hl-lua"><span class="hl-variable hl-function hl-lua">nvim_set_hl</span></span><span class="hl-meta hl-function-call hl-arguments hl-lua"><span class="hl-meta hl-group hl-lua"><span class="hl-punctuation hl-section hl-group hl-begin hl-lua">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-lua">0</span><span class="hl-punctuation hl-separator hl-comma hl-lua">,</span> <span class="hl-string hl-quoted hl-single hl-lua"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lua">&#39;</span>@lsp.type.<span class="hl-punctuation hl-definition hl-string hl-end hl-lua">&#39;</span></span> <span class="hl-keyword hl-operator hl-concatenation hl-lua">..</span> <span class="hl-variable hl-other hl-lua">kind</span><span class="hl-punctuation hl-separator hl-comma hl-lua">,</span> <span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-section hl-block hl-begin hl-lua">{</span> </span><span class="hl-meta hl-mapping hl-key hl-lua"><span class="hl-string hl-unquoted hl-key hl-lua">link</span></span><span class="hl-meta hl-mapping hl-lua"> </span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-key-value hl-lua">=</span></span><span class="hl-meta hl-mapping hl-value hl-lua"> <span class="hl-variable hl-other hl-lua">group</span></span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-field hl-lua">,</span> </span><span class="hl-meta hl-mapping hl-key hl-lua"><span class="hl-string hl-unquoted hl-key hl-lua">default</span></span><span class="hl-meta hl-mapping hl-lua"> </span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-separator hl-key-value hl-lua">=</span></span><span class="hl-meta hl-mapping hl-value hl-lua"> <span class="hl-constant hl-language hl-boolean hl-true hl-lua">true</span> </span><span class="hl-meta hl-mapping hl-lua"><span class="hl-punctuation hl-section hl-block hl-end hl-lua">}</span></span><span class="hl-punctuation hl-section hl-group hl-end hl-lua">)</span></span></span></span></span>
+<span class="hl-source hl-lua"><span class="hl-meta hl-block hl-lua"><span class="hl-keyword hl-control hl-end hl-lua">end</span></span></span></pre></div>
+</div>
+<p>The server's root is the nearest directory above the file holding <code>conf.py</code> or <code>MODULE.bazel</code>, or else the Git repository. A file outside every one is checked on its own, with no project around it.</p>
+<p>On Linux, Neovim does not watch files for a language server unless asked, so renaming or deleting a file in another program goes unnoticed until the document is opened again. To have it watch, add <code>capabilities = { workspace = { didChangeWatchedFiles = { dynamicRegistration = true } } }</code> to the table above.</p>
+<h2 id="helix">Helix</h2>
+<p>Add this to <code>~/.config/helix/languages.toml</code>, or to <code>.helix/languages.toml</code> in the project:</p>
+<div class="highlight-toml notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-toml"><span class="hl-comment hl-line hl-number-sign hl-toml"><span class="hl-punctuation hl-definition hl-comment hl-toml">#</span> rinx&#39;s language server for reStructuredText, in Helix.</span></span>
+<span class="hl-source hl-toml"><span class="hl-punctuation hl-definition hl-table hl-begin hl-toml">[</span><span class="hl-meta hl-tag hl-table hl-toml"><span class="hl-entity hl-name hl-table hl-toml">language-server</span><span class="hl-punctuation hl-separator hl-table hl-toml">.</span><span class="hl-entity hl-name hl-table hl-toml">rinx</span></span><span class="hl-punctuation hl-definition hl-table hl-end hl-toml">]</span></span>
+<span class="hl-source hl-toml"><span class="hl-meta hl-tag hl-key hl-toml"><span class="hl-entity hl-name hl-tag hl-toml">command</span></span> <span class="hl-punctuation hl-definition hl-key-value hl-toml">=</span> <span class="hl-string hl-quoted hl-double hl-basic hl-toml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-toml">&quot;</span>rinx<span class="hl-punctuation hl-definition hl-string hl-end hl-toml">&quot;</span></span></span>
+<span class="hl-source hl-toml"><span class="hl-meta hl-tag hl-key hl-toml"><span class="hl-entity hl-name hl-tag hl-toml">args</span></span> <span class="hl-punctuation hl-definition hl-key-value hl-toml">=</span> <span class="hl-punctuation hl-definition hl-array hl-begin hl-toml">[</span><span class="hl-string hl-quoted hl-double hl-basic hl-toml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-toml">&quot;</span>lsp<span class="hl-punctuation hl-definition hl-string hl-end hl-toml">&quot;</span></span><span class="hl-punctuation hl-definition hl-array hl-end hl-toml">]</span></span>
+<span class="hl-source hl-toml"></span>
+<span class="hl-source hl-toml"><span class="hl-punctuation hl-definition hl-table hl-array hl-begin hl-toml">[[</span><span class="hl-meta hl-tag hl-table hl-array hl-toml"><span class="hl-entity hl-name hl-table hl-toml">language</span></span><span class="hl-punctuation hl-definition hl-table hl-array hl-end hl-toml">]]</span></span>
+<span class="hl-source hl-toml"><span class="hl-meta hl-tag hl-key hl-toml"><span class="hl-entity hl-name hl-tag hl-toml">name</span></span> <span class="hl-punctuation hl-definition hl-key-value hl-toml">=</span> <span class="hl-string hl-quoted hl-double hl-basic hl-toml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-toml">&quot;</span>rst<span class="hl-punctuation hl-definition hl-string hl-end hl-toml">&quot;</span></span></span>
+<span class="hl-source hl-toml"><span class="hl-meta hl-tag hl-key hl-toml"><span class="hl-entity hl-name hl-tag hl-toml">language-servers</span></span> <span class="hl-punctuation hl-definition hl-key-value hl-toml">=</span> <span class="hl-punctuation hl-definition hl-array hl-begin hl-toml">[</span><span class="hl-string hl-quoted hl-double hl-basic hl-toml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-toml">&quot;</span>rinx<span class="hl-punctuation hl-definition hl-string hl-end hl-toml">&quot;</span></span><span class="hl-punctuation hl-definition hl-array hl-end hl-toml">]</span></span>
+<span class="hl-source hl-toml"><span class="hl-meta hl-tag hl-key hl-toml"><span class="hl-entity hl-name hl-tag hl-toml">roots</span></span> <span class="hl-punctuation hl-definition hl-key-value hl-toml">=</span> <span class="hl-punctuation hl-definition hl-array hl-begin hl-toml">[</span><span class="hl-string hl-quoted hl-double hl-basic hl-toml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-toml">&quot;</span>conf.py<span class="hl-punctuation hl-definition hl-string hl-end hl-toml">&quot;</span></span><span class="hl-punctuation hl-separator hl-array hl-toml">,</span> <span class="hl-string hl-quoted hl-double hl-basic hl-toml"><span class="hl-punctuation hl-definition hl-string hl-begin hl-toml">&quot;</span>MODULE.bazel<span class="hl-punctuation hl-definition hl-string hl-end hl-toml">&quot;</span></span><span class="hl-punctuation hl-definition hl-array hl-end hl-toml">]</span></span></pre></div>
+</div>
+<p><code>hx --health rst</code> then lists <code>rinx</code> among the configured language servers. The server's root is the nearest directory above the file holding <code>conf.py</code> or <code>MODULE.bazel</code>, or else the workspace Helix opened.</p>
+<h2 id="emacs">Emacs</h2>
+<p>Emacs 29 or later, through Eglot, which is built in. Put this in <code>init.el</code>:</p>
+<div class="highlight-lisp notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-lisp"><span class="hl-comment hl-line hl-semicolon hl-lisp"><span class="hl-punctuation hl-definition hl-comment hl-lisp">;;</span> Eglot is built into Emacs 29 and later.
+</span></span>
+<span class="hl-source hl-lisp"><span class="hl-meta hl-parens hl-lisp"><span class="hl-punctuation hl-section hl-parens hl-begin hl-lisp">(</span><span class="hl-meta hl-function-call hl-lisp"><span class="hl-support hl-function hl-lisp">require</span></span> <span class="hl-punctuation hl-definition hl-quoted hl-lisp">&#39;</span><span class="hl-constant hl-other hl-symbol hl-lisp">eglot</span><span class="hl-punctuation hl-section hl-parens hl-end hl-lisp">)</span></span></span>
+<span class="hl-source hl-lisp"><span class="hl-meta hl-parens hl-lisp"><span class="hl-punctuation hl-section hl-parens hl-begin hl-lisp">(</span><span class="hl-meta hl-function-call hl-lisp"><span class="hl-variable hl-function hl-lisp">add-to-list</span></span> <span class="hl-punctuation hl-definition hl-quoted hl-lisp">&#39;</span><span class="hl-constant hl-other hl-symbol hl-lisp">eglot-server-programs</span> <span class="hl-punctuation hl-definition hl-quoted hl-lisp">&#39;</span><span class="hl-meta hl-parens hl-lisp"><span class="hl-punctuation hl-section hl-parens hl-begin hl-lisp">(</span><span class="hl-variable hl-other hl-lisp">rst-mode</span> <span class="hl-keyword hl-control hl-lisp">.</span> <span class="hl-meta hl-parens hl-lisp"><span class="hl-punctuation hl-section hl-parens hl-begin hl-lisp">(</span><span class="hl-meta hl-string hl-lisp"><span class="hl-string hl-quoted hl-double hl-lisp"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lisp">&quot;</span>rinx<span class="hl-punctuation hl-definition hl-string hl-end hl-lisp">&quot;</span></span></span> <span class="hl-meta hl-string hl-lisp"><span class="hl-string hl-quoted hl-double hl-lisp"><span class="hl-punctuation hl-definition hl-string hl-begin hl-lisp">&quot;</span>lsp<span class="hl-punctuation hl-definition hl-string hl-end hl-lisp">&quot;</span></span></span><span class="hl-punctuation hl-section hl-parens hl-end hl-lisp">)</span></span><span class="hl-punctuation hl-section hl-parens hl-end hl-lisp">)</span></span><span class="hl-punctuation hl-section hl-parens hl-end hl-lisp">)</span></span></span>
+<span class="hl-source hl-lisp"><span class="hl-meta hl-parens hl-lisp"><span class="hl-punctuation hl-section hl-parens hl-begin hl-lisp">(</span><span class="hl-meta hl-function-call hl-lisp"><span class="hl-variable hl-function hl-lisp">add-hook</span></span> <span class="hl-punctuation hl-definition hl-quoted hl-lisp">&#39;</span><span class="hl-constant hl-other hl-symbol hl-lisp">rst-mode-hook</span> <span class="hl-punctuation hl-definition hl-function hl-lisp">#&#39;</span><span class="hl-meta hl-function-call hl-lisp"><span class="hl-variable hl-function hl-lisp">eglot-ensure</span></span><span class="hl-punctuation hl-section hl-parens hl-end hl-lisp">)</span></span></span>
+<span class="hl-source hl-lisp"></span>
+<span class="hl-source hl-lisp"><span class="hl-comment hl-line hl-semicolon hl-lisp"><span class="hl-punctuation hl-definition hl-comment hl-lisp">;;</span> Emacs 31.1 shows Flymake&#39;s diagnostics only for files listed in
+</span></span>
+<span class="hl-source hl-lisp"><span class="hl-comment hl-line hl-semicolon hl-lisp"><span class="hl-punctuation hl-definition hl-comment hl-lisp">;;</span> `trusted-content&#39;, Eglot&#39;s included; later releases exempt Eglot, whose
+</span></span>
+<span class="hl-source hl-lisp"><span class="hl-comment hl-line hl-semicolon hl-lisp"><span class="hl-punctuation hl-definition hl-comment hl-lisp">;;</span> diagnostics come from the server rather than from running the file.
+</span></span>
+<span class="hl-source hl-lisp"><span class="hl-meta hl-parens hl-lisp"><span class="hl-punctuation hl-section hl-parens hl-begin hl-lisp">(</span><span class="hl-meta hl-function-call hl-lisp"><span class="hl-variable hl-function hl-lisp">put</span></span> <span class="hl-punctuation hl-definition hl-quoted hl-lisp">&#39;</span><span class="hl-constant hl-other hl-symbol hl-lisp">eglot-flymake-backend</span> <span class="hl-punctuation hl-definition hl-quoted hl-lisp">&#39;</span><span class="hl-constant hl-other hl-symbol hl-lisp">flymake-always-safe</span> <span class="hl-constant hl-language hl-lisp">t</span><span class="hl-punctuation hl-section hl-parens hl-end hl-lisp">)</span></span></span></pre></div>
+</div>
+<p>The last line matters only on Emacs 31.1. That release shows Flymake's diagnostics only in files listed in <code>trusted-content</code>, Eglot's among them, so without it a file shows hover and completion but no diagnostics. Later releases exempt Eglot themselves.</p>
+<p>The server's root is the project Emacs finds for the file, usually its version-control repository. Within it, each document still belongs to the nearest <code>conf.py</code> (see <a href="vscode.html#vscode-sphinx-projects">Sphinx projects</a>). lsp-mode works as well, as a client registered for <code>rst-mode</code> running <code>rinx lsp</code>, but this configuration is not tested.</p>
+<h2 id="what-every-editor-gets">What every editor gets</h2>
+<p>The server behaves the same in every editor. <a href="vscode.html#vscode-diagnostics">3. Diagnostics</a> describes what it does, and none of it depends on VS Code:</p>
+<ul>
+<li><p>Diagnostics as you type, with the build's codes and messages, linking to <a href="diagnostics.html#diagnostics">Diagnostic codes</a>. This includes the problems an <code>.. include::</code> brings in, and broken references once you pause.</p>
+</li>
+<li><p>Completion of every role's targets — labels, documents, terms, numbers, equations, options, domain objects and entity ids, and the targets of loaded inventories — of directive names, options and option values, and of role names.</p>
+</li>
+<li><p>Hover, go to definition, find references and rename on references.</p>
+</li>
+<li><p>A quick fix on every diagnostic a <code>.. noqa:</code> can silence, writing that comment above the block holding it.</p>
+</li>
+<li><p>The document's outline: its sections, with the objects and entities written in them.</p>
+</li>
+<li><p>A search of the workspace's sections, labels, terms, objects and entities (<code>workspace/symbol</code>).</p>
+</li>
+<li><p>Folding of sections, directives, comments, literal blocks and tables, and the names the markup writes coloured by kind (semantic tokens). The Neovim snippet above links each kind's highlight group to a standard one; elsewhere, a theme colours <code>directive</code>, <code>option</code>, <code>role</code>, <code>reference</code> and <code>substitution</code> tokens as it chooses.</p>
+</li>
+<li><p>Reading a Sphinx project's <code>conf.py</code>, and the extensions it declares (see <a href="vscode.html#vscode-sphinx-projects">Sphinx projects</a>).</p>
+</li>
+<li><p>Inventories that <code>intersphinx_mapping</code> names as files (see <a href="vscode.html#vscode-intersphinx">Inventories</a>).</p>
+</li>
+<li><p>Watching the workspace for files changed by other programs, when the editor announces that it watches files for a server.</p>
+</li>
+</ul>
+<h2 id="what-only-vs-code-has">What only VS Code has</h2>
+<p>Some features need the editor to do something for the server, and only the VS Code extension does so far:</p>
+<ul>
+<li><p>The live preview.</p>
+</li>
+<li><p>Downloading inventories. The server never touches the network, so in other editors an inventory named by an address is not loaded, and references into it are hints rather than warnings.</p>
+</li>
+<li><p>Running <code>conf.py</code>. The server needs to be told which interpreter to run it in, and only in a trusted workspace (see <a href="vscode.html#vscode-running-conf">Running conf.py</a>). Elsewhere, <code>conf.py</code> is only read.</p>
+</li>
+<li><p>Reading a Bazel workspace's sites as the build does. The server never runs Bazel, so it needs to be handed each site's manifest (see <a href="vscode.html#vscode-bazel-projects">Bazel projects</a>). Elsewhere, a Bazel workspace is read as a folder, so neither what fails the build nor the quick fix adding a missing <code>deps</code> entry is shown.</p>
+</li>
+<li><p>The status bar, which shows the scan's progress and the project. Other editors show the protocol's own progress reports, where they support them.</p>
+</li>
+</ul>
+<h3 id="protocol-extensions">Protocol extensions</h3>
+<p>A client can offer what VS Code offers through these messages. Each one is opt-in, so a client that knows none of them gets a working server:</p>
+<ul>
+<li><p><code>rinx/status</code>, a notification from the server, with the index's state (<code>indexing</code> or <code>ready</code>), the number of documents indexed, and the projects found. A client may ignore it.</p>
+</li>
+<li><p>The <code>fetchInventories</code> initialization option. With it, the server sends <code>rinx/fetchInventory</code> requests naming an address, and the client answers with the downloaded inventory.</p>
+</li>
+<li><p>The <code>evaluateConf</code> initialization option. With it, the server sends a <code>rinx/confInterpreter</code> request for each <code>conf.py</code> it could not read, and the client answers with an interpreter or none. The client sends a <code>rinx/confInterpreterChanged</code> notification when its answer would change.</p>
+</li>
+<li><p>The <code>bazelManifests</code> initialization option. With it, the server sends a <code>rinx/bazelManifests</code> request for each workspace folder holding <code>MODULE.bazel</code> or a <code>WORKSPACE</code> file, and the client answers with the paths of the <code>&lt;site&gt;.lsp_manifest.json</code> files that <code>bazel build --output_groups=lsp_manifest</code> wrote, the workspace and execution roots, and optionally the preferred site — or none. The client sends a <code>rinx/bazelManifestsChanged</code> notification when its answer would change.</p>
+</li>
+<li><p>The <code>reopenCompletion</code> initialization option. With it, choosing an option whose values complete — a choice, or a relation's ids — carries VS Code's <code>editor.action.triggerSuggest</code> command, so the client asks for the values at once. A client that runs no such command should leave it out.</p>
+</li>
+</ul>
+<p>The exact shapes are in <code>crates/lsp/src/server/</code> in the repository.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="vscode.html">&larr; VS Code Extension</a>
+        <a class="next" href="benchmark.html">Benchmarking Rinx &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
