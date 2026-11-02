@@ -29,6 +29,7 @@ mod source_map;
 mod syntax;
 mod text;
 mod typography;
+mod unknown_role;
 
 #[cfg(test)]
 mod code_pipeline_tests;
@@ -47,8 +48,9 @@ pub(crate) use interpreted::find_role_kind;
 pub use interpreted::read_role;
 pub(crate) use link_destination::read_target_destination;
 pub use punctuation::can_precede_start_string as can_precede_inline_markup;
+pub use regexes::is_fixed_role_name;
+pub(crate) use regexes::is_writable_role_name;
 pub use regexes::role_specs;
-pub(crate) use regexes::{is_fixed_role_name, is_writable_role_name};
 pub use roles::spec::{ExternalPrefix, RoleSpec};
 pub(super) use source_map::SourceMap;
 pub(super) use text::parse_inline_text_mapped;

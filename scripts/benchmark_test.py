@@ -226,6 +226,23 @@ class TestRenderCorpusBuildFile:
         site = text.split("rinx_site(")[1]
         assert 'domain_indices = ["py-modindex"],' in site
 
+    def test_the_library_names_the_parser_config(self) -> None:
+        # Given / When
+        text = benchmark.render_corpus_build_file()
+
+        # Then
+        library = text.split("rinx_library(")[1].split("rinx_site(")[0]
+        assert 'parse_config = "rinx_parser.toml",' in library
+
+
+class TestRenderParserConfig:
+    def test_ignores_the_roles_of_cpythons_own_extensions(self) -> None:
+        # Given / When
+        text = benchmark.render_parser_config()
+
+        # Then
+        assert 'ignored_roles = ["issue", "gh", "opcode", "pdbcmd", "monitoring-event"]\n' in text
+
 
 class TestSummaryRows:
     def test_every_count_is_listed_then_the_whitelist(self) -> None:

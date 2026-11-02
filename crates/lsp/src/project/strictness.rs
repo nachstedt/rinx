@@ -10,16 +10,18 @@
 //! ([`rinx_ast::DiagnosticSubject`]) and on which extensions the project
 //! declares, as the [`ExtensionProfiles`] describe them:
 //!
-//! - an unknown directive a declared extension provides is *Information*;
+//! - an unknown directive or role a declared extension provides is
+//!   *Information*, as is a role `conf.py`'s `extlinks` defines and a
+//!   Sphinx role rinx does not implement yet;
 //! - a reference resolving to nothing, into a domain a declared extension
 //!   fills, is a *Hint* — an extension the table does not model may fill any;
 //! - while an `intersphinx_mapping` inventory is not loaded — the editor has
 //!   not downloaded it, or could not — a reference that may be in it is a
 //!   *Hint* too: a domain reference, or one naming that inventory;
 //! - everything else stays a *Warning*, as the build reports it. That
-//!   includes an unknown directive nothing known provides, even when the
-//!   project declares extensions the table does not model: it is as likely a
-//!   typo as theirs.
+//!   includes an unknown directive or role nothing known provides, even when
+//!   the project declares extensions the table does not model: it is as
+//!   likely a typo as theirs.
 //!
 //! A project rinx builds — a `rinx_site` — is [`Strictness::Rinx`]: nothing
 //! is lowered, since the build runs no extension, and what fails its build is
@@ -27,6 +29,8 @@
 //! by their code: the checks of what a library declared, and a broken
 //! reference in a site setting `strict_links`. Those are
 //! [`Judgement::as_failure`] whatever the strictness.
+
+use std::collections::BTreeSet;
 
 use lsp_types::DiagnosticSeverity;
 use rinx_ast::{Diagnostic, DiagnosticCode, DiagnosticSubject};
@@ -87,6 +91,20 @@ impl Strictness {
         }
     }
 
+    /// This strictness, for a project whose `extlinks` define the roles
+    /// `names`. A project rinx builds has no `extlinks`, so nothing changes
+    /// for it.
+    #[must_use]
+    pub fn with_extlinks(self, names: BTreeSet<String>) -> Self {
+        match self {
+            Self::Legacy(policy) => Self::Legacy(ExtensionPolicy {
+                extlinks: names,
+                ..policy
+            }),
+            Self::Rinx => Self::Rinx,
+        }
+    }
+
     /// The declared extensions the table does not describe, in declaration
     /// order — what the server names once, so an author knows why references
     /// are lowered.
@@ -140,6 +158,9 @@ pub struct ExtensionPolicy {
     /// The `intersphinx_mapping` inventories not loaded, with why, in
     /// declaration order — any of which may hold what a reference missed.
     unloaded_inventories: Vec<(InventoryName, String)>,
+    /// The roles `conf.py`'s `extlinks` defines, when it declares the
+    /// extension.
+    extlinks: BTreeSet<String>,
 }
 
 impl ExtensionPolicy {
@@ -175,6 +196,24 @@ impl ExtensionPolicy {
                         "`{name}` comes from `{extension}`, which rinx does not analyse; contents not checked"
                     ),
                 })
+            }
+            DiagnosticSubject::Role(name)
+                if diagnostic.code == DiagnosticCode::InterpretedUnknownRole =>
+            {
+                self.role_explanation(name).map_or_else(warning, |message| Judgement {
+                    severity: DiagnosticSeverity::INFORMATION,
+                    message,
+                })
+            }
+            // Sphinx defines it: the project is not wrong to use it, rinx
+            // merely does not render it yet.
+            DiagnosticSubject::Role(_)
+                if diagnostic.code == DiagnosticCode::InterpretedUnsupportedRole =>
+            {
+                Judgement {
+                    severity: DiagnosticSeverity::INFORMATION,
+                    message: diagnostic.message.clone(),
+                }
             }
             DiagnosticSubject::DomainReference(_) | DiagnosticSubject::AnyReference => {
                 let definers = self.definers_of(subject);
@@ -219,6 +258,7 @@ impl ExtensionPolicy {
                     })
             }
             DiagnosticSubject::Directive(_)
+            | DiagnosticSubject::Role(_)
             | DiagnosticSubject::Inventory(_)
             | DiagnosticSubject::UndeclaredToctreeEntry(_) => warning(),
         }
@@ -231,6 +271,25 @@ impl ExtensionPolicy {
             .iter()
             .find(|profile| profile.directives.contains(name))
             .map(|profile| profile.name.as_str())
+    }
+
+    /// Why the unknown role `name` is no mistake of the author's: a role
+    /// `extlinks` defines, or one a declared, modelled extension provides.
+    fn role_explanation(&self, name: &str) -> Option<String> {
+        if self.extlinks.contains(name) {
+            return Some(format!(
+                "`{name}` is defined by `extlinks`, which rinx does not render as a link; shown as written"
+            ));
+        }
+        self.modelled
+            .iter()
+            .find(|profile| profile.roles.contains(name))
+            .map(|profile| {
+                format!(
+                    "`{name}` comes from `{}`, which rinx does not analyse; shown as written",
+                    profile.name
+                )
+            })
     }
 
     /// The declared extensions that may define what a reference about
@@ -280,6 +339,15 @@ mod tests {
             SPAN,
         )
         .about(DiagnosticSubject::Directive(name.to_string()))
+    }
+
+    fn unknown_role(name: &str) -> Diagnostic {
+        Diagnostic::new(
+            DiagnosticCode::InterpretedUnknownRole,
+            format!("unknown interpreted text role '{name}'"),
+            SPAN,
+        )
+        .about(DiagnosticSubject::Role(name.to_string()))
     }
 
     fn broken_reference(code: DiagnosticCode, subject: DiagnosticSubject) -> Diagnostic {
@@ -358,6 +426,80 @@ mod tests {
             policy(&["pyspecific"]).judge(&diagnostic).severity,
             DiagnosticSeverity::WARNING
         );
+    }
+
+    #[test]
+    fn test_a_role_of_a_declared_extension_is_information() {
+        // Given / When
+        let judgement = policy(&["sphinxcontrib.bibtex"]).judge(&unknown_role("cite:p"));
+
+        // Then
+        assert_eq!(judgement.severity, DiagnosticSeverity::INFORMATION);
+        assert_eq!(
+            judgement.message,
+            "`cite:p` comes from `sphinxcontrib.bibtex`, which rinx does not analyse; shown as written"
+        );
+    }
+
+    #[test]
+    fn test_a_role_extlinks_defines_is_information() {
+        // Given
+        let strictness =
+            policy(&["sphinx.ext.extlinks"]).with_extlinks(BTreeSet::from(["issue".to_string()]));
+
+        // When
+        let judgement = strictness.judge(&unknown_role("issue"));
+
+        // Then
+        assert_eq!(judgement.severity, DiagnosticSeverity::INFORMATION);
+        assert_eq!(
+            judgement.message,
+            "`issue` is defined by `extlinks`, which rinx does not render as a link; shown as written"
+        );
+    }
+
+    #[test]
+    fn test_an_unmodelled_extension_does_not_explain_an_unknown_role() {
+        // Given — nothing says `gh` is `pyspecific`'s, or a typo
+        let diagnostic = unknown_role("gh");
+
+        // When
+        let judgement = policy(&["pyspecific"]).judge(&diagnostic);
+
+        // Then
+        assert_eq!(judgement.severity, DiagnosticSeverity::WARNING);
+        assert_eq!(judgement.message, diagnostic.message);
+    }
+
+    #[test]
+    fn test_a_sphinx_role_rinx_lacks_is_information() {
+        // Given
+        let diagnostic = Diagnostic::new(
+            DiagnosticCode::InterpretedUnsupportedRole,
+            "role 'kbd' is not supported by rinx yet; shown as written",
+            SPAN,
+        )
+        .about(DiagnosticSubject::Role("kbd".to_string()));
+
+        // When
+        let legacy = policy(&[]).judge(&diagnostic);
+        let rinx = Strictness::Rinx.judge(&diagnostic);
+
+        // Then
+        assert_eq!(legacy.severity, DiagnosticSeverity::INFORMATION);
+        assert_eq!(legacy.message, diagnostic.message);
+        assert_eq!(rinx.severity, DiagnosticSeverity::WARNING);
+    }
+
+    #[test]
+    fn test_a_rinx_project_reports_an_unknown_role_as_the_build_does() {
+        // Given / When
+        let judgement = Strictness::Rinx
+            .with_extlinks(BTreeSet::from(["issue".to_string()]))
+            .judge(&unknown_role("issue"));
+
+        // Then
+        assert_eq!(judgement.severity, DiagnosticSeverity::WARNING);
     }
 
     #[test]

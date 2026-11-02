@@ -725,6 +725,21 @@ interpreted.role-and-reference
 A role and a hyperlink reference's ``_`` on the same text, as in ``:ref:`x`_``,
 which cannot both apply; shown as written.
 
+interpreted.unknown-role
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+A role name this build does not know — not one of its own, not one the entity
+schema declares, not one a ``.. role::`` defined above — so the text is shown
+as written. A role a declared Sphinx extension provides is lowered to
+*Information* by the language server.
+
+interpreted.unsupported-role
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A role docutils or Sphinx defines that this build does not implement yet, such
+as ``:kbd:`` or ``:envvar:``, so the text is shown as written. The language
+server reports it as *Information* in a Sphinx project.
+
 code-role
 ---------
 

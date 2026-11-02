@@ -113,8 +113,10 @@ A ``rinx_parser.toml`` holds one setting today:
    ignored_roles = ["issue", "cite:p"]
 
 An ignored role is shown as its text, as docutils shows a role it has no
-meaning for: ``:issue:`4321``` reads ``4321``. A role rinx neither implements
-nor ignores keeps the source it was written as. A role a ``.. role::`` defines
+meaning for: ``:issue:`4321``` reads ``4321``, and it is not reported. A role
+rinx neither implements nor ignores keeps the source it was written as, and is
+reported as ``interpreted.unknown-role`` (``interpreted.unsupported-role`` for
+one Sphinx defines). A role a ``.. role::`` defines
 or the entity schema declares is never ignored, and listing a role rinx
 implements, an unknown key or a name no role is written with fails the build.
 The language server reads the same file beside a Sphinx project's ``conf.py``

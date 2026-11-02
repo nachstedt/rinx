@@ -113,6 +113,7 @@ These are the settings read:
 - ``primary_domain``: ``py`` or ``c``. Any other domain, or ``None``, is reported, and ``py`` is used.
 - ``numfig``, ``numfig_secnum_depth`` and ``highlight_language``: how pages are rendered.
 - ``extensions``: how strictly the project's findings are reported (see below).
+- ``extlinks``: the roles it defines, when ``extensions`` declares ``sphinx.ext.extlinks`` (see below).
 - ``intersphinx_mapping`` and ``intersphinx_cache_limit``: the other sites the project links into, when ``extensions`` declares ``sphinx.ext.intersphinx`` (see :ref:`vscode-intersphinx`).
 - ``rst_prolog`` and ``rst_epilog``: text parsed at the start and the end of every document, typically substitutions. Read without running ``conf.py``, only a literal string is taken: an f-string such as CPython's ``rst_epilog`` is reported, and its substitutions stay undefined. A mistake in the text itself is shown at the start of each document it is parsed with.
 
@@ -133,9 +134,10 @@ What could not be read is ``conf.needs-invalid``, and each construct the entity 
 A Sphinx project leans on extensions rinx does not run, such as autodoc. Reported as warnings, everything they explain would drown the findings you can fix, so the server lowers what a declared extension accounts for:
 
 - An unknown directive that a declared extension provides, such as ``.. automodule::`` under ``sphinx.ext.autodoc``, is *Information*: its contents are not checked. Any other unknown directive stays a warning, since it may be a typo.
+- An unknown role is *Information* when a declared extension provides it, such as ``:cite:p:`` under ``sphinxcontrib.bibtex``, or when ``sphinx.ext.extlinks`` is declared and ``extlinks`` names it — only its keys are read, so a dict whose values are computed counts too. A role Sphinx defines that rinx does not implement yet, such as ``:kbd:``, is *Information* as well (``interpreted.unsupported-role``). Any other unknown role stays a warning; list a role of the project's own extensions in ``rinx_parser.toml`` to show it as its text instead (see :ref:`parser-config`).
 - A domain reference that resolves to nothing, such as ``:py:func:`spam.eggs```, is a *Hint* when a declared extension may define it: autodoc defines ``py`` objects. ``:ref:``, ``:doc:`` and every other reference stay warnings.
 
-Which extensions rinx knows, and what each one adds, is a table in the repository, ``crates/lsp/src/project/extension_profiles.toml``; teaching it another extension needs no Rust. An extension missing from the table is assumed to define objects of every domain, so it lowers every broken domain reference to a hint, but it explains no directive: nothing says which are its. The server names those extensions once, in a notification, when it first finds the project. The code of a lowered diagnostic is unchanged, so a ``.. noqa:`` still names it, and the build still reports it as a warning.
+Which extensions rinx knows, and what each one adds, is a table in the repository, ``crates/lsp/src/project/extension_profiles.toml``; teaching it another extension needs no Rust. An extension missing from the table is assumed to define objects of every domain, so it lowers every broken domain reference to a hint, but it explains no directive or role: nothing says which are its. The server names those extensions once, in a notification, when it first finds the project. The code of a lowered diagnostic is unchanged, so a ``.. noqa:`` still names it, and the build still reports it as a warning.
 
 .. _vscode-running-conf:
 

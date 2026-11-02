@@ -258,7 +258,8 @@ Inline markup
        ``:makevar:``, ``:manpage:``, ``:menuselection:``, ``:mimetype:``,
        ``:newsgroup:``, ``:regexp:``, ``:samp:``)
      - ❌
-     -
+     - - Shown as written and reported as ``interpreted.unsupported-role``,
+         which the language server shows as information in a Sphinx project.
 
 Domain-object roles are listed under their domain in
 :ref:`compatibility-domains` below.
@@ -464,11 +465,14 @@ Directives
      -
    * - Roles rinx does not implement
      - ✅ ℹ️
-     - - Shown as the source they were written as, and not reported; docutils
-         reports an unknown role.
+     - - Shown as the source they were written as, and reported: a role
+         docutils or Sphinx defines as ``interpreted.unsupported-role``, any
+         other as ``interpreted.unknown-role``, as docutils reports it.
+       - Role names are case-sensitive, so ``:PEP:`` is unknown; the warning
+         names the spelling rinx takes.
        - A library's ``rinx_parser.toml`` may list them as ``ignored_roles``,
          which are then shown as their text, as docutils' generic role shows
-         it.
+         it, and not reported.
    * - ``.. role::``
      - 🔶
      - - Only a role derived from ``code`` (``.. role:: python(code)``), with

@@ -26,7 +26,7 @@
 use rinx_ast::{Diagnostic, DiagnosticCode, Domain, Position, ResolvedLanguage, Span};
 use rinx_parser::{DefaultRole, ParseCtx, RejectParseFiles};
 use rinx_pyconf::{BoundValue, ModuleReading, Value, ValueKind, read_module};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::conf_eval::{ConfValues, ExecutedValue, conf_settings};
 
@@ -179,6 +179,7 @@ fn anchored(value: &Value, span: rinx_pyconf::Span) -> Value {
 
 /// The extension whose settings say which other sites a project links into.
 const INTERSPHINX: &str = "sphinx.ext.intersphinx";
+const EXTLINKS: &str = "sphinx.ext.extlinks";
 
 struct Reader<'a> {
     module: &'a ModuleReading,
@@ -220,7 +221,7 @@ impl<'a> Reader<'a> {
                 .highlight_language()
                 .unwrap_or(defaults.highlight_language),
             intersphinx: self.intersphinx(&extensions),
-            strictness: Strictness::legacy(&extensions),
+            strictness: Strictness::legacy(&extensions).with_extlinks(self.extlinks(&extensions)),
             ..defaults
         };
         (settings, needs)
@@ -285,18 +286,10 @@ impl<'a> Reader<'a> {
         let binding = self.module.binding(name)?;
         match &binding.value {
             BoundValue::Literal(value) => {
-                for modification in &binding.modifications {
-                    self.findings.push(Diagnostic::new(
-                        DiagnosticCode::ConfModifiedSetting,
-                        format!(
-                            "`{name}` is changed here by code rinx does not run, so the change is not applied"
-                        ),
-                        to_span(*modification),
-                    ));
-                }
+                self.report_modifications(name, &binding.modifications);
                 Some(value)
             }
-            BoundValue::Unread(span) => {
+            BoundValue::Dict { span, .. } | BoundValue::Unread(span) => {
                 self.findings.push(Diagnostic::new(
                     DiagnosticCode::ConfUnreadSetting,
                     format!("`{name}` is not a literal, so rinx uses its default"),
@@ -305,6 +298,42 @@ impl<'a> Reader<'a> {
                 None
             }
         }
+    }
+
+    /// Reports each change made to `name` after its binding, which the
+    /// reader does not apply.
+    fn report_modifications(&mut self, name: &str, modifications: &[rinx_pyconf::Span]) {
+        for modification in modifications {
+            self.findings.push(Diagnostic::new(
+                DiagnosticCode::ConfModifiedSetting,
+                format!(
+                    "`{name}` is changed here by code rinx does not run, so the change is not applied"
+                ),
+                to_span(*modification),
+            ));
+        }
+    }
+
+    /// The keys of the dict `name` is bound to: a literal dict's, or those
+    /// of a dict display whose keys alone are literals — all a setting keyed
+    /// by name, as `extlinks` is, needs. Anything else is reported as
+    /// [`Self::literal`] reports it, and a literal of another kind as
+    /// `expected`.
+    fn dict_keys(&mut self, name: &str, expected: &str) -> Option<Vec<&'a Value>> {
+        if self.executed.is_none()
+            && let Some(binding) = self.module.binding(name)
+            && let BoundValue::Dict { keys, .. } = &binding.value
+        {
+            self.asked.push(name.to_string());
+            self.report_modifications(name, &binding.modifications);
+            return Some(keys.iter().collect());
+        }
+        let value = self.literal(name)?;
+        if let ValueKind::Dict(items) = &value.kind {
+            return Some(items.iter().map(|(key, _)| key).collect());
+        }
+        self.invalid(value, format!("`{name}` must be {expected}"));
+        None
     }
 
     fn invalid(&mut self, value: &Value, message: String) {
@@ -379,6 +408,35 @@ impl<'a> Reader<'a> {
                 .whole_number("intersphinx_cache_limit")
                 .unwrap_or(DEFAULT_CACHE_LIMIT_DAYS),
         }
+    }
+
+    /// The role names `extlinks` defines, its keys — read only when
+    /// `extensions` declares the extension, as Sphinx ignores it otherwise.
+    /// What each links to is not read, so a value that is no literal, as
+    /// the `SOURCE_URI` of `CPython`'s is, costs nothing: the roles are only told
+    /// apart from mistakes.
+    fn extlinks(&mut self, extensions: &[String]) -> BTreeSet<String> {
+        if !extensions.iter().any(|name| name == EXTLINKS) {
+            return BTreeSet::new();
+        }
+        let Some(keys) = self.dict_keys("extlinks", "a dict from a role name to `(url, caption)`")
+        else {
+            return BTreeSet::new();
+        };
+        let mut names = BTreeSet::new();
+        for key in keys {
+            match key.as_str() {
+                Some(name) => {
+                    names.insert(name.to_string());
+                }
+                None => self.invalid(
+                    key,
+                    "an `extlinks` key must be a string naming the role; this entry is left out"
+                        .to_string(),
+                ),
+            }
+        }
+        names
     }
 
     fn whole_number(&mut self, name: &str) -> Option<i64> {
@@ -774,6 +832,67 @@ mod tests {
         assert_eq!(settings.intersphinx.entries[0].name.as_str(), "python");
         assert_eq!(settings.intersphinx.cache_limit_days, -1);
         assert!(findings(text).is_empty());
+    }
+
+    /// Whether `settings` read an unknown role named `name` as one
+    /// `extlinks` defines.
+    fn extlinks_defines(settings: &ProjectSettings, name: &str) -> bool {
+        let diagnostic = Diagnostic::new(
+            DiagnosticCode::InterpretedUnknownRole,
+            format!("unknown interpreted text role '{name}'"),
+            Span::new(Position::new(1, 1), Position::new(1, 2)),
+        )
+        .about(rinx_ast::DiagnosticSubject::Role(name.to_string()));
+        settings.strictness.judge(&diagnostic).severity
+            == lsp_types::DiagnosticSeverity::INFORMATION
+    }
+
+    #[test]
+    fn test_read_sphinx_conf_reads_the_roles_extlinks_defines() {
+        // Given — CPython's, one of whose values names a variable
+        let text = "extensions = ['sphinx.ext.extlinks']
+extlinks = {
+    'pypi': ('https://pypi.org/project/%s/', '%s'),
+    'source': (SOURCE_URI, '%s'),
+}
+";
+
+        // When
+        let reading = read_sphinx_conf(text);
+
+        // Then
+        assert_eq!(findings(text), []);
+        assert!(extlinks_defines(&reading.settings, "pypi"));
+        assert!(extlinks_defines(&reading.settings, "source"));
+        assert!(!extlinks_defines(&reading.settings, "gh"));
+    }
+
+    #[test]
+    fn test_read_sphinx_conf_ignores_extlinks_without_the_extension() {
+        // Given
+        let text = "extlinks = {'pypi': ('https://pypi.org/project/%s/', '%s')}
+";
+
+        // When / Then
+        assert!(!extlinks_defines(&settings(text), "pypi"));
+    }
+
+    #[test]
+    fn test_read_sphinx_conf_reports_extlinks_of_the_wrong_kind() {
+        // Given
+        let text = "extensions = ['sphinx.ext.extlinks']
+extlinks = ['pypi']
+x = 1
+extlinks2 = 0
+";
+        let keyed = "extensions = ['sphinx.ext.extlinks']
+extlinks = {1: ('u', 'c'), 'pypi': ('u', 'c')}
+";
+
+        // When / Then
+        assert_eq!(findings(text), [("conf.invalid-value", 2)]);
+        assert_eq!(findings(keyed), [("conf.invalid-value", 2)]);
+        assert!(extlinks_defines(&settings(keyed), "pypi"));
     }
 
     #[test]

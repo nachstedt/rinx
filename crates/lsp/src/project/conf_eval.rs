@@ -55,6 +55,7 @@ const READ_SETTINGS: &[&str] = &[
     "extensions",
     "intersphinx_mapping",
     "intersphinx_cache_limit",
+    "extlinks",
     "needs_from_toml",
     "needs_from_toml_table",
 ];

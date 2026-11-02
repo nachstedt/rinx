@@ -186,3 +186,50 @@ fn test_read_module_reads_a_soft_keyword_as_a_name() {
     assert_eq!(literal(&reading, "match"), Some(string("x")));
     assert_eq!(literal(&reading, "type"), Some(ValueKind::Int(1)));
 }
+
+#[test]
+fn test_read_module_keeps_the_literal_keys_of_a_dict_with_computed_values() {
+    // When — CPython's `extlinks`, one of whose values names a variable
+    let reading = read_module(
+        "extlinks = {\n    \"pypi\": (\"https://pypi.org/project/%s/\", \"%s\"),\n    \"source\": (SOURCE_URI, \"%s\"),\n}\n",
+    );
+
+    // Then
+    assert_eq!(literal(&reading, "extlinks"), None);
+    assert_eq!(
+        dict_keys(&reading, "extlinks"),
+        Some(vec![string("pypi"), string("source")])
+    );
+}
+
+#[test]
+fn test_read_module_keeps_a_dict_keys_once_each() {
+    // When
+    let reading = read_module("d = {'a': f(1), 'a': f(2), 'b': [x for x in y]}\n");
+
+    // Then
+    assert_eq!(
+        dict_keys(&reading, "d"),
+        Some(vec![string("a"), string("b")])
+    );
+}
+
+#[test]
+fn test_read_module_reads_no_keys_of_what_is_no_plain_dict_display() {
+    // Given — a computed key, an unpacked mapping, a comprehension, a
+    // missing value, a dict followed by more, and a call
+    for value in [
+        "{key: 1, 'b': f()}",
+        "{**base, 'b': f()}",
+        "{k: f(k) for k in keys}",
+        "{'a': }",
+        "{'a': f()} | other",
+        "dict(a=f())",
+    ] {
+        // When
+        let reading = read_module(&format!("d = {value}\n"));
+
+        // Then
+        assert!(is_unread(&reading, "d"), "{value}");
+    }
+}

@@ -83,6 +83,36 @@ fn test_a_directive_of_a_declared_extension_is_information_and_a_typo_a_warning(
 }
 
 #[test]
+fn test_roles_an_extension_extlinks_or_sphinx_define_are_information_and_a_typo_a_warning() {
+    // Given — bibtex adds `:cite:p:`, `extlinks` `:pypi:` from a dict with a
+    // computed value, Sphinx `:kbd:`; nothing adds `:gh:`
+    let conf = "extensions = ['sphinxcontrib.bibtex', 'sphinx.ext.extlinks']\nextlinks = {'pypi': (BASE + '%s', '%s')}\n";
+    let text = "Home\n====\n\n:cite:p:`knuth` :pypi:`rinx` :kbd:`C-x` :gh:`1`\n";
+    let (workspace, mut state) = scanned(
+        "strictness_roles",
+        &[("conf.py", conf), ("index.rst", text)],
+    );
+
+    // When
+    let replies = handle_notification(&mut state, workspace.open("index.rst", text));
+
+    // Then
+    let information = Some(DiagnosticSeverity::INFORMATION);
+    assert_eq!(
+        severities_for(&workspace, &replies, "index.rst"),
+        [
+            ("interpreted.unknown-role".to_string(), information),
+            ("interpreted.unknown-role".to_string(), information),
+            ("interpreted.unsupported-role".to_string(), information),
+            (
+                "interpreted.unknown-role".to_string(),
+                Some(DiagnosticSeverity::WARNING)
+            ),
+        ]
+    );
+}
+
+#[test]
 fn test_a_reference_an_extension_may_define_is_a_hint_and_a_label_a_warning() {
     // Given — autodoc would define `spam.eggs`; no extension defines labels
     let text = "Home\n====\n\nSee :py:func:`spam.eggs` and :ref:`install`.\n";

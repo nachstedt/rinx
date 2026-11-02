@@ -46,6 +46,7 @@ use super::roles::std_::program::handle_program_match;
 use super::roles::std_::ref_::handle_ref_match;
 use super::roles::std_::term::handle_term_match;
 use super::roles::title_reference::handle_title_reference_match;
+use super::unknown_role::refused_unknown_role;
 
 pub(super) fn handle_inline_match(
     kind: &str,
@@ -169,6 +170,15 @@ fn ignored_role_text(m_str: &str, ctx: &ParseCtx<'_>) -> Option<InlineNode> {
         .then(|| InlineNode::Text(caps["target"].to_string()))
 }
 
+/// A ``:name:`target` `` whose name no role answers to, refused so the
+/// whole-document pass reports it, by its name, and shows `m_str` as written.
+fn unknown_role(m_str: &str) -> InlineNode {
+    let name = NAMED_ROLE_REGEX
+        .captures(m_str)
+        .map_or_else(String::new, |caps| caps["role"].to_string());
+    refused_unknown_role(m_str, &name)
+}
+
 /// Builds the node for one matched role or link, dispatching on its `kind`.
 fn build_inline_node(
     kind: &str,
@@ -181,12 +191,12 @@ fn build_inline_node(
         // The schema is asked first, so a custom role can never take over an
         // entity role — `.. role::` refuses such a name, but a document's
         // role names are case-insensitive where the schema's are not. A role
-        // neither knows shows its text when the library ignores it, and stays
-        // the text it was written as otherwise.
+        // neither knows shows its text when the library ignores it, and is
+        // refused — shown as the text it was written as — otherwise.
         "named_role" => super::roles::entity::handle_entity_role_match(m_str, ctx.schema)
             .or_else(|| handle_custom_role_match(m_str, ctx.document_roles()))
             .or_else(|| ignored_role_text(m_str, ctx))
-            .unwrap_or_else(|| InlineNode::Text(m_str.to_string())),
+            .unwrap_or_else(|| unknown_role(m_str)),
         "inline" => node_opt.expect("inline node should be present"),
         "ref" => handle_ref_match(m_str),
         "any" => handle_any_match(m_str),

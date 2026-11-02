@@ -56,6 +56,9 @@ pub struct ExtensionProfile {
     pub name: String,
     /// The directives it adds that this build does not implement.
     pub directives: BTreeSet<String>,
+    /// The roles it adds that this build does not implement, domain prefix
+    /// included (`cite:p`).
+    pub roles: BTreeSet<String>,
     pub produces_targets: TargetScope,
 }
 
@@ -93,8 +96,8 @@ impl ExtensionProfiles {
 ///
 /// One message per fault: text that is not a table of the expected shape, an
 /// extension listed twice, an empty or repeated name, a domain this build
-/// does not have, or a directive this build implements — which is never
-/// unknown, so listing it would say nothing.
+/// does not have, or a directive or role this build implements — which is
+/// never unknown, so listing it would say nothing.
 pub fn load_extension_profiles(text: &str) -> Result<ExtensionProfiles, Vec<String>> {
     let raw: RawProfiles = toml::from_str(text).map_err(|error| vec![error.to_string()])?;
     let mut errors = Vec::new();
@@ -128,8 +131,6 @@ struct RawProfile {
     name: String,
     #[serde(default)]
     directives: Vec<String>,
-    /// Checked, but not kept: the parser does not report an unknown role, so
-    /// there is nothing to filter yet.
     #[serde(default)]
     roles: Vec<String>,
     produces_targets: Option<RawTargetScope>,
@@ -157,11 +158,19 @@ fn convert_profile(raw: RawProfile, errors: &mut Vec<String>) -> Option<Extensio
             ));
         }
     }
-    names(&name, "role", raw.roles, errors);
+    let roles = names(&name, "role", raw.roles, errors);
+    for role in &roles {
+        if rinx_parser::is_fixed_role_name(role) {
+            errors.push(format!(
+                "extension '{name}' lists role '{role}', which rinx implements"
+            ));
+        }
+    }
     let produces_targets = target_scope(&name, raw.produces_targets, errors);
     (errors.len() == before).then_some(ExtensionProfile {
         name,
         directives,
+        roles,
         produces_targets,
     })
 }
@@ -320,6 +329,31 @@ mod tests {
             errors,
             ["extension 'x' lists directive 'note', which rinx implements"]
         );
+    }
+
+    #[test]
+    fn test_a_role_rinx_implements_is_refused() {
+        // Given — `ref` is never unknown, so listing it would say nothing
+        let text = "[[extension]]\nname = \"x\"\nroles = [\"ref\", \"cite:p\"]\n";
+
+        // When
+        let errors = refused(text);
+
+        // Then
+        assert_eq!(
+            errors,
+            ["extension 'x' lists role 'ref', which rinx implements"]
+        );
+    }
+
+    #[test]
+    fn test_known_keeps_an_extensions_roles() {
+        // Given / When
+        let bibtex = ExtensionProfiles::known().get("sphinxcontrib.bibtex");
+
+        // Then
+        let bibtex = bibtex.expect("bibtex is in the table");
+        assert!(bibtex.roles.contains("cite:p"), "{:?}", bibtex.roles);
     }
 
     #[test]

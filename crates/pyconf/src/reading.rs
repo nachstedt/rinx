@@ -46,6 +46,10 @@ pub struct Binding {
 pub enum BoundValue {
     /// A literal, read.
     Literal(Value),
+    /// A dict display whose keys are literals while not every value is —
+    /// `{"source": (SOURCE_URI, "%s")}` — over the source range that binds
+    /// it: its keys are known, its value is not.
+    Dict { keys: Vec<Value>, span: Span },
     /// Anything else — a computed value, an import, a function, a value
     /// bound only on some paths — over the source range that binds it.
     Unread(Span),

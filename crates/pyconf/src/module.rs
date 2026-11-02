@@ -18,6 +18,7 @@ use crate::literal::read_literal;
 use crate::position::Span;
 use crate::reading::{Binding, BoundValue, ModuleReading};
 use crate::token::{Token, TokenKind};
+use crate::value::Value;
 
 /// Every augmented-assignment operator.
 const AUGMENTED: &[&str] = &[
@@ -258,7 +259,12 @@ impl Reader {
         };
         let value_tokens = &statement[last + 1..];
         let value = read_literal(value_tokens).map_or_else(
-            || BoundValue::Unread(statement_span(value_tokens).unwrap_or(span)),
+            || {
+                let span = statement_span(value_tokens).unwrap_or(span);
+                read_dict_keys(value_tokens).map_or(BoundValue::Unread(span), |keys| {
+                    BoundValue::Dict { keys, span }
+                })
+            },
             BoundValue::Literal,
         );
         let mut start = 0;
@@ -589,6 +595,55 @@ fn split_top_level<'a>(tokens: &'a [Token], op: &str) -> Vec<&'a [Token]> {
 }
 
 /// The range `tokens` cover, if any.
+/// The keys of the dict display `tokens` spell, when each is a literal —
+/// whatever its value is — or `None` for anything else: no dict display, a
+/// key that is no literal, a `**mapping` unpacked into it, a comprehension.
+fn read_dict_keys(tokens: &[Token]) -> Option<Vec<Value>> {
+    let (open, rest) = tokens.split_first()?;
+    let (close, inner) = rest.split_last()?;
+    if !open.kind.is_op("{") || !close.kind.is_op("}") || !is_balanced(inner) {
+        return None;
+    }
+    let mut entries = split_top_level(inner, ",");
+    if entries.last().is_some_and(|entry| entry.is_empty()) {
+        entries.pop();
+    }
+    let mut keys: Vec<Value> = Vec::new();
+    for entry in entries {
+        if entry.first()?.kind.is_op("**")
+            || !top_level_positions(entry, |kind| kind.is_name("for")).is_empty()
+        {
+            return None;
+        }
+        let colon = *top_level_positions(entry, |kind| kind.is_op(":")).first()?;
+        if colon + 1 == entry.len() {
+            return None;
+        }
+        let key = read_literal(&entry[..colon])?;
+        if !keys.iter().any(|seen| seen.same_value(&key)) {
+            keys.push(key);
+        }
+    }
+    (!keys.is_empty()).then_some(keys)
+}
+
+/// Whether every bracket `tokens` open they close, and none they close is
+/// opened before them.
+fn is_balanced(tokens: &[Token]) -> bool {
+    let mut depth = 0usize;
+    for token in tokens {
+        if is_opening(&token.kind) {
+            depth += 1;
+        } else if is_closing(&token.kind) {
+            let Some(shallower) = depth.checked_sub(1) else {
+                return false;
+            };
+            depth = shallower;
+        }
+    }
+    depth == 0
+}
+
 fn statement_span(tokens: &[Token]) -> Option<Span> {
     Some(tokens.first()?.span.to(tokens.last()?.span))
 }
