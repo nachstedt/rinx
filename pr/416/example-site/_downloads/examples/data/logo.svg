@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60" width="120" height="60" role="img" aria-label="Rinx">
-  <rect width="120" height="60" rx="6" fill="#b7410e"/>
-  <circle cx="30" cy="30" r="14" fill="#f5deb3"/>
-  <path d="M52 44 L68 16 L84 44 Z" fill="#f5deb3"/>
-  <rect x="92" y="16" width="14" height="28" rx="3" fill="#f5deb3"/>
-</svg>
