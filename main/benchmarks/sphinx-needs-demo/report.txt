@@ -72,8 +72,8 @@ directive.unknown (4):
 ----------------------
     1  coffee-machine/index.rst: unknown directive type 'src-trace'
     1  automotive-adas/sys_5_sys_quali_test_results.rst: unknown directive type 'test-file'
-    1  automotive-adas/swe_3_sw_detailed_design.rst: unknown directive type 'automodule'
     1  automotive-adas/swe_4_unit_tests.rst: unknown directive type 'automodule'
+    1  automotive-adas/swe_3_sw_detailed_design.rst: unknown directive type 'automodule'
 
 directive.unsupported-option (4):
 ---------------------------------
@@ -101,6 +101,10 @@ entity-update.unknown-field (1):
 entity.invalid-attribute-value (1):
 -----------------------------------
     1  automotive-adas/sys_2_req_analysis.rst: `:approved:`: expected `true` or `false`, found "False"
+
+interpreted.unknown-role (1):
+-----------------------------
+    1  automotive-adas/releases.rst: unknown interpreted text role 'ndf'
 
 needservice.unsupported (1):
 ----------------------------

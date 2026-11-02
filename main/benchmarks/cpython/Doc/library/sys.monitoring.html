@@ -611,7 +611,7 @@ following IDs are pre-defined to make co-operation of tools easier:</p>
 <p>These events are attributes of the <code class="xref py module docutils literal">sys.monitoring.events</code> namespace.
 Each event is represented as a power-of-2 integer constant.
 To define a set of events, simply bitwise OR the individual events together.
-For example, to specify both :monitoring-event:`PY_RETURN` and :monitoring-event:`PY_START`
+For example, to specify both PY_RETURN and PY_START
 events, use the expression <code>PY_RETURN | PY_START</code>.</p>
 <div class="directive-error">
 <p class="directive-error-message">unknown directive type 'monitoring-event'</p>
@@ -630,27 +630,27 @@ events, use the expression <code>PY_RETURN | PY_START</code>.</p>
 at clearly defined locations. All local events can be disabled.
 The local events are:</p>
 <ul>
-<li><p>:monitoring-event:`PY_START`</p>
+<li><p>PY_START</p>
 </li>
-<li><p>:monitoring-event:`PY_RESUME`</p>
+<li><p>PY_RESUME</p>
 </li>
-<li><p>:monitoring-event:`PY_RETURN`</p>
+<li><p>PY_RETURN</p>
 </li>
-<li><p>:monitoring-event:`PY_YIELD`</p>
+<li><p>PY_YIELD</p>
 </li>
-<li><p>:monitoring-event:`CALL`</p>
+<li><p>CALL</p>
 </li>
-<li><p>:monitoring-event:`LINE`</p>
+<li><p>LINE</p>
 </li>
-<li><p>:monitoring-event:`INSTRUCTION`</p>
+<li><p>INSTRUCTION</p>
 </li>
-<li><p>:monitoring-event:`JUMP`</p>
+<li><p>JUMP</p>
 </li>
-<li><p>:monitoring-event:`BRANCH_LEFT`</p>
+<li><p>BRANCH_LEFT</p>
 </li>
-<li><p>:monitoring-event:`BRANCH_RIGHT`</p>
+<li><p>BRANCH_RIGHT</p>
 </li>
-<li><p>:monitoring-event:`STOP_ITERATION`</p>
+<li><p>STOP_ITERATION</p>
 </li>
 </ul>
 <h3 id="deprecated-event">Deprecated event</h3>
@@ -659,35 +659,35 @@ The local events are:</p>
 </li>
 </ul>
 <p>The <code>BRANCH</code> event is deprecated in 3.14.
-Using :monitoring-event:`BRANCH_LEFT` and :monitoring-event:`BRANCH_RIGHT`
+Using BRANCH_LEFT and BRANCH_RIGHT
 events will give much better performance as they can be disabled
 independently.</p>
 <h3 id="ancillary-events">Ancillary events</h3>
 <p>Ancillary events can be monitored like other events, but are controlled
 by another event:</p>
 <ul>
-<li><p>:monitoring-event:`C_RAISE`</p>
+<li><p>C_RAISE</p>
 </li>
-<li><p>:monitoring-event:`C_RETURN`</p>
+<li><p>C_RETURN</p>
 </li>
 </ul>
-<p>The :monitoring-event:`C_RETURN` and :monitoring-event:`C_RAISE` events
-are controlled by the :monitoring-event:`CALL` event.
-:monitoring-event:`C_RETURN` and :monitoring-event:`C_RAISE` events will only be
-seen if the corresponding :monitoring-event:`CALL` event is being monitored.</p>
+<p>The C_RETURN and C_RAISE events
+are controlled by the CALL event.
+C_RETURN and C_RAISE events will only be
+seen if the corresponding CALL event is being monitored.</p>
 <a id="monitoring-event-global"></a>
 <h3 id="other-events">Other events</h3>
 <p>Other events are not necessarily tied to a specific location in the
 program and cannot be individually disabled via <a class="reference internal" href="sys.monitoring.html#py:data:sys.monitoring.disable"><code class="xref py data docutils literal">DISABLE</code></a>.</p>
 <p>The other events that can be monitored are:</p>
 <ul>
-<li><p>:monitoring-event:`PY_THROW`</p>
+<li><p>PY_THROW</p>
 </li>
-<li><p>:monitoring-event:`PY_UNWIND`</p>
+<li><p>PY_UNWIND</p>
 </li>
-<li><p>:monitoring-event:`RAISE`</p>
+<li><p>RAISE</p>
 </li>
-<li><p>:monitoring-event:`EXCEPTION_HANDLED`</p>
+<li><p>EXCEPTION_HANDLED</p>
 </li>
 </ul>
 <h3 id="the-stop-iteration-event">The STOP_ITERATION event</h3>
@@ -697,14 +697,14 @@ from a generator or coroutine. However, this is a very inefficient way to
 return a value, so some Python implementations, notably CPython 3.12+, do not
 raise an exception unless it would be visible to other code.</p>
 <p>To allow tools to monitor for real exceptions without slowing down generators
-and coroutines, the :monitoring-event:`STOP_ITERATION` event is provided.
-:monitoring-event:`STOP_ITERATION` can be locally disabled, unlike
-:monitoring-event:`RAISE`.</p>
-<p>Note that the :monitoring-event:`STOP_ITERATION` event and the
-:monitoring-event:`RAISE` event for a <a class="reference internal" href="exceptions.html#py:exception:stopiteration"><code class="xref py exception docutils literal">StopIteration</code></a> exception are
+and coroutines, the STOP_ITERATION event is provided.
+STOP_ITERATION can be locally disabled, unlike
+RAISE.</p>
+<p>Note that the STOP_ITERATION event and the
+RAISE event for a <a class="reference internal" href="exceptions.html#py:exception:stopiteration"><code class="xref py exception docutils literal">StopIteration</code></a> exception are
 equivalent, and are treated as interchangeable when generating events.
-Implementations will favor :monitoring-event:`STOP_ITERATION` for performance
-reasons, but may generate a :monitoring-event:`RAISE` event with a
+Implementations will favor STOP_ITERATION for performance
+reasons, but may generate a RAISE event with a
 <a class="reference internal" href="exceptions.html#py:exception:stopiteration"><code class="xref py exception docutils literal">StopIteration</code></a>.</p>
 <h2 id="turning-events-on-and-off">Turning events on and off</h2>
 <p>In order to monitor an event, it must be turned on and a corresponding callback
@@ -799,15 +799,15 @@ that there are no arguments to the call.</p>
 Callback functions returning an object other than <a class="reference internal" href="sys.monitoring.html#py:data:sys.monitoring.disable"><code class="xref py data docutils literal">DISABLE</code></a> will have no effect.
 Different events will provide the callback function with different arguments, as follows:</p>
 <ul>
-<li><p>:monitoring-event:`PY_START` and :monitoring-event:`PY_RESUME`:</p>
+<li><p>PY_START and PY_RESUME:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">func</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">code</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">CodeType</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">instruction_offset</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">object</span></span></span></pre></div>
 </li>
-<li><p>:monitoring-event:`PY_RETURN` and :monitoring-event:`PY_YIELD`:</p>
+<li><p>PY_RETURN and PY_YIELD:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">func</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">code</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">CodeType</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">instruction_offset</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">retval</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">object</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">object</span></span></span></pre></div>
 </li>
-<li><p>:monitoring-event:`CALL`, :monitoring-event:`C_RAISE` and :monitoring-event:`C_RETURN`
+<li><p>CALL, C_RAISE and C_RETURN
 (<em>arg0</em> can be <a class="reference internal" href="sys.monitoring.html#py:data:sys.monitoring.missing"><code class="xref py data docutils literal">MISSING</code></a> specifically):</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">func</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">code</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">CodeType</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">instruction_offset</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-function hl-builtin hl-python">callable</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">object</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">arg0</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">object</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">object</span></span></span></pre></div>
@@ -819,21 +819,21 @@ If there are no arguments, <em>arg0</em> is set to <a class="reference internal"
 class with <em>arg0</em> set to the instance (i.e. the <code>self</code> argument to the
 method).</p>
 </li>
-<li><p>:monitoring-event:`RAISE`, :monitoring-event:`RERAISE`, :monitoring-event:`EXCEPTION_HANDLED`,
-:monitoring-event:`PY_UNWIND`, :monitoring-event:`PY_THROW` and :monitoring-event:`STOP_ITERATION`:</p>
+<li><p>RAISE, RERAISE, EXCEPTION_HANDLED,
+PY_UNWIND, PY_THROW and STOP_ITERATION:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">func</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">code</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">CodeType</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">instruction_offset</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">exception</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-exception hl-python">BaseException</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">object</span></span></span></pre></div>
 </li>
-<li><p>:monitoring-event:`LINE`:</p>
+<li><p>LINE:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">func</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">code</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">CodeType</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line_number</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">object</span></span></span></pre></div>
 </li>
-<li><p>:monitoring-event:`BRANCH_LEFT`, :monitoring-event:`BRANCH_RIGHT` and :monitoring-event:`JUMP`:</p>
+<li><p>BRANCH_LEFT, BRANCH_RIGHT and JUMP:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">func</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">code</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">CodeType</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">instruction_offset</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">destination_offset</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">object</span></span></span></pre></div>
 <p>Note that the <em>destination_offset</em> is where the code will next execute.</p>
 </li>
-<li><p>:monitoring-event:`INSTRUCTION`:</p>
+<li><p>INSTRUCTION:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">func</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">code</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">CodeType</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">instruction_offset</span></span>: <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">int</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">object</span></span></span></pre></div>
 </li>

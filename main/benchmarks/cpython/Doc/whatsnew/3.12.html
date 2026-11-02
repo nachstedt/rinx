@@ -436,7 +436,7 @@ The third-party <a href="https://setuptools.pypa.io/en/latest/deprecated/distuti
 package continues to provide <code class="xref py module docutils literal">distutils</code>,
 if you still require it in Python 3.12 and beyond.</p>
 </li>
-<li><p>:gh:`95299`: Do not pre-install <code>setuptools</code> in virtual environments
+<li><p>95299: Do not pre-install <code>setuptools</code> in virtual environments
 created with <a class="reference internal" href="../library/venv.html#py:module:venv" title="venv: Creation of virtual environments."><code class="xref py module docutils literal">venv</code></a>.
 This means that <code>distutils</code>, <code>setuptools</code>, <code>pkg_resources</code>,
 and <code>easy_install</code> will no longer available by default; to access these
@@ -502,7 +502,7 @@ In Python 3.13, <a class="reference internal" href="../glossary.html#term-annota
 annotation scopes.</p>
 <p>See <span class="target" id="index-6"></span><a class="pep reference external" href="https://peps.python.org/pep-0695/"><strong>PEP 695</strong></a> for more details.</p>
 <p>(PEP written by Eric Traut. Implementation by Jelle Zijlstra, Eric Traut,
-and others in :gh:`103764`.)</p>
+and others in 103764.)</p>
 <a id="whatsnew312-pep701"></a>
 <h3 id="pep-701-syntactic-formalization-of-f-strings">PEP 701: Syntactic formalization of f-strings</h3>
 <p><span class="target" id="index-7"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a> lifts some restrictions on the usage of <a class="reference internal" href="../glossary.html#term-f-string"><span class="xref std std-term">f-strings</span></a>.
@@ -595,7 +595,7 @@ are parsed with the PEG parser, error messages can be more precise and show the 
 <span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-exception hl-python">SyntaxError</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">invalid</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">syntax</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span> <span class="hl-meta hl-generic-name hl-python">Perhaps</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">you</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">forgot</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">a</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">comma</span></span>?</span></pre></div>
 </div>
 <p>(Contributed by Pablo Galindo, Batuhan Taskaya, Lysandros Nikolaou, Cristián
-Maureira-Fredes and Marta Gómez in :gh:`102856`. PEP written by Pablo Galindo,
+Maureira-Fredes and Marta Gómez in 102856. PEP written by Pablo Galindo,
 Batuhan Taskaya, Lysandros Nikolaou and Marta Gómez).</p>
 <a id="whatsnew312-pep684"></a>
 <h3 id="pep-684-a-per-interpreter-gil">PEP 684: A Per-Interpreter GIL</h3>
@@ -621,7 +621,7 @@ create an interpreter with its own GIL:</p>
 </div>
 <p>For further examples how to use the C-API for sub-interpreters with a
 per-interpreter GIL, see <code>Modules/_xxsubinterpretersmodule.c</code>.</p>
-<p>(Contributed by Eric Snow in :gh:`104210`, etc.)</p>
+<p>(Contributed by Eric Snow in 104210, etc.)</p>
 <a id="whatsnew312-pep669"></a>
 <h3 id="pep-669-low-impact-monitoring-for-cpython">PEP 669: Low impact monitoring for CPython</h3>
 <p><span class="target" id="index-12"></span><a class="pep reference external" href="https://peps.python.org/pep-0669/"><strong>PEP 669</strong></a> defines a new <a class="reference internal" href="../library/sys.monitoring.html#py:module:sys.monitoring" title="sys.monitoring: Access and control event monitoring"><code class="xref py module docutils literal">API</code></a> for profilers,
@@ -631,7 +631,7 @@ returns, lines, exceptions, jumps, and more.
 This means that you only pay for what you use, providing support
 for near-zero overhead debuggers and coverage tools.
 See  <a class="reference internal" href="../library/sys.monitoring.html#py:module:sys.monitoring" title="sys.monitoring: Access and control event monitoring"><code class="xref py module docutils literal">sys.monitoring</code></a> for details.</p>
-<p>(Contributed by Mark Shannon in :gh:`103082`.)</p>
+<p>(Contributed by Mark Shannon in 103082.)</p>
 <a id="whatsnew312-pep688"></a>
 <h3 id="pep-688-making-the-buffer-protocol-accessible-in-python">PEP 688: Making the buffer protocol accessible in Python</h3>
 <p><span class="target" id="index-13"></span><a class="pep reference external" href="https://peps.python.org/pep-0688/"><strong>PEP 688</strong></a> introduces a way to use the <a href="../c-api/buffer.html#bufferobjects">buffer protocol</a>
@@ -641,7 +641,7 @@ are now usable as buffer types.</p>
 way to represent buffer objects, for example in type annotations.
 The new <a class="reference internal" href="../library/inspect.html#py:class:inspect.bufferflags"><code class="xref py class docutils literal">inspect.BufferFlags</code></a> enum represents the flags that
 can be used to customize buffer creation.
-(Contributed by Jelle Zijlstra in :gh:`102500`.)</p>
+(Contributed by Jelle Zijlstra in 102500.)</p>
 <a id="whatsnew312-pep709"></a>
 <h3 id="pep-709-comprehension-inlining">PEP 709: Comprehension inlining</h3>
 <p>Dictionary, list, and set comprehensions are now inlined, rather than creating a
@@ -676,7 +676,7 @@ keys]</code>.</p>
 <ul>
 <li><p>Modules from the standard library are now potentially suggested as part of
 the error messages displayed by the interpreter when a <a class="reference internal" href="../library/exceptions.html#py:exception:nameerror"><code class="xref py exception docutils literal">NameError</code></a> is
-raised to the top level. (Contributed by Pablo Galindo in :gh:`98254`.)</p>
+raised to the top level. (Contributed by Pablo Galindo in 98254.)</p>
 <blockquote>
 <div class="highlight hl-code"><pre>
 &gt;&gt;&gt; sys.version_info
@@ -689,7 +689,7 @@ NameError: name 'sys' is not defined. Did you forget to import 'sys'?</pre></div
 Now if a <a class="reference internal" href="../library/exceptions.html#py:exception:nameerror"><code class="xref py exception docutils literal">NameError</code></a> is raised in a method and the instance has an
 attribute that's exactly equal to the name in the exception, the suggestion
 will include <code>self.&lt;NAME&gt;</code> instead of the closest match in the method
-scope. (Contributed by Pablo Galindo in :gh:`99139`.)</p>
+scope. (Contributed by Pablo Galindo in 99139.)</p>
 <blockquote>
 <div class="highlight hl-code"><pre>
 &gt;&gt;&gt; class A:
@@ -708,7 +708,7 @@ NameError: name 'blech' is not defined. Did you mean: 'self.blech'?</pre></div>
 </blockquote>
 </li>
 <li><p>Improve the <a class="reference internal" href="../library/exceptions.html#py:exception:syntaxerror"><code class="xref py exception docutils literal">SyntaxError</code></a> error message when the user types <code>import x
-from y</code> instead of <code>from y import x</code>. (Contributed by Pablo Galindo in :gh:`98931`.)</p>
+from y</code> instead of <code>from y import x</code>. (Contributed by Pablo Galindo in 98931.)</p>
 <blockquote>
 <div class="highlight hl-code"><pre>
 &gt;&gt;&gt; import a.y.z from b.y.z
@@ -721,7 +721,7 @@ SyntaxError: Did you mean to use 'from ... import ...' instead?</pre></div>
 </li>
 <li><p><a class="reference internal" href="../library/exceptions.html#py:exception:importerror"><code class="xref py exception docutils literal">ImportError</code></a> exceptions raised from failed <code>from &lt;module&gt; import
 &lt;name&gt;</code> statements now include suggestions for the value of <code>&lt;name&gt;</code> based on the
-available names in <code>&lt;module&gt;</code>. (Contributed by Pablo Galindo in :gh:`91058`.)</p>
+available names in <code>&lt;module&gt;</code>. (Contributed by Pablo Galindo in 91058.)</p>
 <blockquote>
 <div class="highlight hl-code"><pre>
 &gt;&gt;&gt; from collections import chainmap
@@ -750,7 +750,7 @@ typed dictionaries:</p>
 <span class="hl-source hl-python"></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">foo</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-keyword hl-operator hl-unpacking hl-mapping hl-python">**</span><span class="hl-variable hl-parameter hl-python">kwargs</span></span><span class="hl-meta hl-function hl-parameters hl-annotation hl-python"><span class="hl-punctuation hl-separator hl-annotation hl-parameter hl-python">:</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Unpack</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Movie</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span> <span class="hl-constant hl-language hl-python">...</span></span></pre></div>
 <p>See <span class="target" id="index-19"></span><a class="pep reference external" href="https://peps.python.org/pep-0692/"><strong>PEP 692</strong></a> for more details.</p>
-<p>(Contributed by Franek Magiera in :gh:`103629`.)</p>
+<p>(Contributed by Franek Magiera in 103629.)</p>
 <a id="whatsnew312-pep698"></a>
 <h3 id="pep-698-override-decorator-for-static-typing">PEP 698: Override Decorator for Static Typing</h3>
 <p>A new decorator <a class="reference internal" href="../library/typing.html#py:function:typing.override"><code class="xref py function docutils literal">typing.override</code></a> has been added to the <a class="reference internal" href="../library/typing.html#py:module:typing" title="typing: Support for type hints (see :pep:`484`)."><code class="xref py module docutils literal">typing</code></a>
@@ -778,11 +778,11 @@ does not in fact do so.</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">  <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_colour</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"> </span><span class="hl-meta hl-function hl-annotation hl-return hl-python"><span class="hl-punctuation hl-separator hl-annotation hl-return hl-python">-&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">str</span></span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
 <span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">red<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span></pre></div>
 <p>See <span class="target" id="index-20"></span><a class="pep reference external" href="https://peps.python.org/pep-0698/"><strong>PEP 698</strong></a> for more details.</p>
-<p>(Contributed by Steven Troxler in :gh:`101561`.)</p>
+<p>(Contributed by Steven Troxler in 101561.)</p>
 <h2 id="other-language-changes">Other Language Changes</h2>
 <ul>
 <li><p>The parser now raises <a class="reference internal" href="../library/exceptions.html#py:exception:syntaxerror"><code class="xref py exception docutils literal">SyntaxError</code></a> when parsing source code containing
-null bytes. (Contributed by Pablo Galindo in :gh:`96670`.)</p>
+null bytes. (Contributed by Pablo Galindo in 96670.)</p>
 </li>
 <li><p>A backslash-character pair that is not a valid escape sequence now generates
 a <a class="reference internal" href="../library/exceptions.html#py:exception:syntaxwarning"><code class="xref py exception docutils literal">SyntaxWarning</code></a>, instead of <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a>.
@@ -791,54 +791,54 @@ For example, <code>re.compile("\d+\.\d+")</code> now emits a <a class="reference
 expression: <code>re.compile(r"\d+\.\d+")</code>).
 In a future Python version, <a class="reference internal" href="../library/exceptions.html#py:exception:syntaxerror"><code class="xref py exception docutils literal">SyntaxError</code></a> will eventually be raised,
 instead of <a class="reference internal" href="../library/exceptions.html#py:exception:syntaxwarning"><code class="xref py exception docutils literal">SyntaxWarning</code></a>.
-(Contributed by Victor Stinner in :gh:`98401`.)</p>
+(Contributed by Victor Stinner in 98401.)</p>
 </li>
 <li><p>Octal escapes with value larger than <code>0o377</code> (ex: <code>"\477"</code>), deprecated
 in Python 3.11, now produce a <a class="reference internal" href="../library/exceptions.html#py:exception:syntaxwarning"><code class="xref py exception docutils literal">SyntaxWarning</code></a>, instead of
 <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a>.
 In a future Python version they will be eventually a <a class="reference internal" href="../library/exceptions.html#py:exception:syntaxerror"><code class="xref py exception docutils literal">SyntaxError</code></a>.
-(Contributed by Victor Stinner in :gh:`98401`.)</p>
+(Contributed by Victor Stinner in 98401.)</p>
 </li>
 <li><p>Variables used in the target part of comprehensions that are not stored to
 can now be used in assignment expressions (<code>:=</code>).
 For example, in <code>[(b := 1) for a, b.prop in some_iter]</code>, the assignment to
 <code>b</code> is now allowed. Note that assigning to variables stored to in the target
 part of comprehensions (like <code>a</code>) is still disallowed, as per <span class="target" id="index-21"></span><a class="pep reference external" href="https://peps.python.org/pep-0572/"><strong>PEP 572</strong></a>.
-(Contributed by Nikita Sobolev in :gh:`100581`.)</p>
+(Contributed by Nikita Sobolev in 100581.)</p>
 </li>
 <li><p>Exceptions raised in a class or type's <code>__set_name__</code> method are no longer
 wrapped by a <a class="reference internal" href="../library/exceptions.html#py:exception:runtimeerror"><code class="xref py exception docutils literal">RuntimeError</code></a>. Context information is added to the
-exception as a <span class="target" id="index-22"></span><a class="pep reference external" href="https://peps.python.org/pep-0678/"><strong>PEP 678</strong></a> note. (Contributed by Irit Katriel in :gh:`77757`.)</p>
+exception as a <span class="target" id="index-22"></span><a class="pep reference external" href="https://peps.python.org/pep-0678/"><strong>PEP 678</strong></a> note. (Contributed by Irit Katriel in 77757.)</p>
 </li>
 <li><p>When a <code>try-except*</code> construct handles the entire <a class="reference internal" href="../library/exceptions.html#py:exception:exceptiongroup"><code class="xref py exception docutils literal">ExceptionGroup</code></a>
 and raises one other exception, that exception is no longer wrapped in an
 <a class="reference internal" href="../library/exceptions.html#py:exception:exceptiongroup"><code class="xref py exception docutils literal">ExceptionGroup</code></a>. Also changed in version 3.11.4. (Contributed by Irit
-Katriel in :gh:`103590`.)</p>
+Katriel in 103590.)</p>
 </li>
 <li><p>The Garbage Collector now runs only on the eval breaker mechanism of the
 Python bytecode evaluation loop instead of object allocations. The GC can
 also run when <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_checksignals"><code class="xref c function docutils literal">PyErr_CheckSignals</code></a> is called so C extensions that
 need to run for a long time without executing any Python code also have a
 chance to execute the GC periodically. (Contributed by Pablo Galindo in
-:gh:`97922`.)</p>
+97922.)</p>
 </li>
 <li><p>All builtin and extension callables expecting boolean parameters now accept
 arguments of any type instead of just <a class="reference internal" href="../library/functions.html#py:class:bool"><code class="xref py class docutils literal">bool</code></a> and <a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a>.
-(Contributed by Serhiy Storchaka in :gh:`60203`.)</p>
+(Contributed by Serhiy Storchaka in 60203.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/stdtypes.html#py:class:memoryview"><code class="xref py class docutils literal">memoryview</code></a> now supports the half-float type (the "e" format code).
-(Contributed by Donghee Na and Antoine Pitrou in :gh:`90751`.)</p>
+(Contributed by Donghee Na and Antoine Pitrou in 90751.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/functions.html#py:class:slice"><code class="xref py class docutils literal">slice</code></a> objects are now hashable, allowing them to be used as dict keys and
-set items. (Contributed by Will Bradshaw, Furkan Onder, and Raymond Hettinger in :gh:`101264`.)</p>
+set items. (Contributed by Will Bradshaw, Furkan Onder, and Raymond Hettinger in 101264.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/functions.html#py:function:sum"><code class="xref py function docutils literal">sum</code></a> now uses Neumaier summation to improve accuracy and commutativity
 when summing floats or mixed ints and floats.
-(Contributed by Raymond Hettinger in :gh:`100425`.)</p>
+(Contributed by Raymond Hettinger in 100425.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/ast.html#py:function:ast.parse"><code class="xref py function docutils literal">ast.parse</code></a> now raises <a class="reference internal" href="../library/exceptions.html#py:exception:syntaxerror"><code class="xref py exception docutils literal">SyntaxError</code></a> instead of <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a>
 when parsing source code containing null bytes. (Contributed by Pablo Galindo
-in :gh:`96670`.)</p>
+in 96670.)</p>
 </li>
 <li><p>The extraction methods in <a class="reference internal" href="../library/tarfile.html#py:module:tarfile" title="tarfile: Read and write tar-format archive files."><code class="xref py module docutils literal">tarfile</code></a>, and <a class="reference internal" href="../library/shutil.html#py:function:shutil.unpack_archive"><code class="xref py function docutils literal">shutil.unpack_archive</code></a>,
 have a new a <em>filter</em> argument that allows limiting tar features than may be
@@ -850,7 +850,7 @@ In Python 3.14, the default will switch to <code>'data'</code>.
 </li>
 <li><p><a class="reference internal" href="../library/types.html#py:class:types.mappingproxytype"><code class="xref py class docutils literal">types.MappingProxyType</code></a> instances are now hashable if the underlying
 mapping is hashable.
-(Contributed by Serhiy Storchaka in :gh:`87995`.)</p>
+(Contributed by Serhiy Storchaka in 87995.)</p>
 </li>
 <li><p>Add <a href="../howto/perf_profiling.html#perf_profiling">support for the perf profiler</a> through the new
 environment variable :envvar:`PYTHONPERFSUPPORT`
@@ -860,7 +860,7 @@ as well as the new <a class="reference internal" href="../library/sys.html#py:fu
 and <a class="reference internal" href="../library/sys.html#py:function:sys.is_stack_trampoline_active"><code class="xref py function docutils literal">sys.is_stack_trampoline_active</code></a> functions.
 (Design by Pablo Galindo. Contributed by Pablo Galindo and Christian Heimes
 with contributions from Gregory P. Smith [Google] and Mark Shannon
-in :gh:`96123`.)</p>
+in 96123.)</p>
 </li>
 </ul>
 <h2 id="new-modules">New Modules</h2>
@@ -872,7 +872,7 @@ in :gh:`96123`.)</p>
 <h3 id="array">array</h3>
 <ul>
 <li><p>The <a class="reference internal" href="../library/array.html#py:class:array.array"><code class="xref py class docutils literal">array.array</code></a> class now supports subscripting, making it a
-<a class="reference internal" href="../glossary.html#term-generic-type"><span class="xref std std-term">generic type</span></a>. (Contributed by Jelle Zijlstra in :gh:`98658`.)</p>
+<a class="reference internal" href="../glossary.html#term-generic-type"><span class="xref std std-term">generic type</span></a>. (Contributed by Jelle Zijlstra in 98658.)</p>
 </li>
 </ul>
 <h3 id="asyncio">asyncio</h3>
@@ -880,45 +880,45 @@ in :gh:`96123`.)</p>
 <li><p>The performance of writing to sockets in <a class="reference internal" href="../library/asyncio.html#py:module:asyncio" title="asyncio: Asynchronous I/O."><code class="xref py module docutils literal">asyncio</code></a> has been
 significantly improved. <code>asyncio</code> now avoids unnecessary copying when
 writing to sockets and uses <a class="reference internal" href="../library/socket.html#py:method:socket.socket.sendmsg"><code class="xref py method docutils literal">sendmsg</code></a> if the platform
-supports it. (Contributed by Kumar Aditya in :gh:`91166`.)</p>
+supports it. (Contributed by Kumar Aditya in 91166.)</p>
 </li>
 <li><p>Add <a class="reference internal" href="../library/asyncio-task.html#py:function:asyncio.eager_task_factory"><code class="xref py function docutils literal">asyncio.eager_task_factory</code></a> and <a class="reference internal" href="../library/asyncio-task.html#py:function:asyncio.create_eager_task_factory"><code class="xref py function docutils literal">asyncio.create_eager_task_factory</code></a>
 functions to allow opting an event loop in to eager task execution,
 making some use-cases 2x to 5x faster.
-(Contributed by Jacob Bower &amp; Itamar Oren in :gh:`102853`, :gh:`104140`, and :gh:`104138`)</p>
+(Contributed by Jacob Bower &amp; Itamar Oren in 102853, 104140, and 104138)</p>
 </li>
 <li><p>On Linux, <a class="reference internal" href="../library/asyncio.html#py:module:asyncio" title="asyncio: Asynchronous I/O."><code class="xref py module docutils literal">asyncio</code></a> uses <code class="xref py class docutils literal">asyncio.PidfdChildWatcher</code> by default
 if <a class="reference internal" href="../library/os.html#py:function:os.pidfd_open"><code class="xref py function docutils literal">os.pidfd_open</code></a> is available and functional instead of
 <code class="xref py class docutils literal">asyncio.ThreadedChildWatcher</code>.
-(Contributed by Kumar Aditya in :gh:`98024`.)</p>
+(Contributed by Kumar Aditya in 98024.)</p>
 </li>
 <li><p>The event loop now uses the best available child watcher for each platform
 (<code class="xref py class docutils literal">asyncio.PidfdChildWatcher</code> if supported and
 <code class="xref py class docutils literal">asyncio.ThreadedChildWatcher</code> otherwise), so manually
 configuring a child watcher is not recommended.
-(Contributed by Kumar Aditya in :gh:`94597`.)</p>
+(Contributed by Kumar Aditya in 94597.)</p>
 </li>
 <li><p>Add <em>loop_factory</em> parameter to <a class="reference internal" href="../library/asyncio-runner.html#py:function:asyncio.run"><code class="xref py function docutils literal">asyncio.run</code></a> to allow specifying
 a custom event loop factory.
-(Contributed by Kumar Aditya in :gh:`99388`.)</p>
+(Contributed by Kumar Aditya in 99388.)</p>
 </li>
 <li><p>Add C implementation of <a class="reference internal" href="../library/asyncio-task.html#py:function:asyncio.current_task"><code class="xref py function docutils literal">asyncio.current_task</code></a> for 4x-6x speedup.
-(Contributed by Itamar Oren and Pranav Thulasiram Bhat in :gh:`100344`.)</p>
+(Contributed by Itamar Oren and Pranav Thulasiram Bhat in 100344.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/asyncio-task.html#py:function:asyncio.iscoroutine"><code class="xref py function docutils literal">asyncio.iscoroutine</code></a> now returns <code>False</code> for generators as
 <a class="reference internal" href="../library/asyncio.html#py:module:asyncio" title="asyncio: Asynchronous I/O."><code class="xref py module docutils literal">asyncio</code></a> does not support legacy generator-based coroutines.
-(Contributed by Kumar Aditya in :gh:`102748`.)</p>
+(Contributed by Kumar Aditya in 102748.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/asyncio-task.html#py:function:asyncio.wait"><code class="xref py function docutils literal">asyncio.wait</code></a> and <a class="reference internal" href="../library/asyncio-task.html#py:function:asyncio.as_completed"><code class="xref py function docutils literal">asyncio.as_completed</code></a> now accepts generators
 yielding tasks.
-(Contributed by Kumar Aditya in :gh:`78530`.)</p>
+(Contributed by Kumar Aditya in 78530.)</p>
 </li>
 </ul>
 <h3 id="calendar">calendar</h3>
 <ul>
 <li><p>Add enums <a href="#" class="broken-link"><code class="xref py data docutils literal">calendar.Month</code></a> and <a href="#" class="broken-link"><code class="xref py data docutils literal">calendar.Day</code></a>
 defining months of the year and days of the week.
-(Contributed by Prince Roshan in :gh:`103636`.)</p>
+(Contributed by Prince Roshan in 103636.)</p>
 </li>
 </ul>
 <h3 id="csv">csv</h3>
@@ -933,75 +933,75 @@ provide finer grained control of <code>None</code> and empty strings by
 <li><p>Pseudo instruction opcodes (which are used by the compiler but
 do not appear in executable bytecode) are now exposed in the
 <a class="reference internal" href="../library/dis.html#py:module:dis" title="dis: Disassembler for Python bytecode."><code class="xref py module docutils literal">dis</code></a> module.
-:opcode:`HAVE_ARGUMENT` is still relevant to real opcodes,
+HAVE_ARGUMENT is still relevant to real opcodes,
 but it is not useful for pseudo instructions. Use the new
 <a class="reference internal" href="../library/dis.html#py:data:dis.hasarg"><code class="xref py data docutils literal">dis.hasarg</code></a> collection instead.
-(Contributed by Irit Katriel in :gh:`94216`.)</p>
+(Contributed by Irit Katriel in 94216.)</p>
 </li>
 <li><p>Add the <a class="reference internal" href="../library/dis.html#py:data:dis.hasexc"><code class="xref py data docutils literal">dis.hasexc</code></a> collection to signify instructions that set
-an exception handler. (Contributed by Irit Katriel in :gh:`94216`.)</p>
+an exception handler. (Contributed by Irit Katriel in 94216.)</p>
 </li>
 </ul>
 <h3 id="fractions">fractions</h3>
 <ul>
 <li><p>Objects of type <a class="reference internal" href="../library/fractions.html#py:class:fractions.fraction"><code class="xref py class docutils literal">fractions.Fraction</code></a> now support float-style
-formatting. (Contributed by Mark Dickinson in :gh:`100161`.)</p>
+formatting. (Contributed by Mark Dickinson in 100161.)</p>
 </li>
 </ul>
 <h3 id="importlib-resources">importlib.resources</h3>
 <ul>
 <li><p><a class="reference internal" href="../library/importlib.resources.html#py:function:importlib.resources.as_file"><code class="xref py function docutils literal">importlib.resources.as_file</code></a> now supports resource directories.
-(Contributed by Jason R. Coombs in :gh:`97930`.)</p>
+(Contributed by Jason R. Coombs in 97930.)</p>
 </li>
 <li><p>Rename first parameter of <a class="reference internal" href="../library/importlib.resources.html#py:function:importlib.resources.files"><code class="xref py function docutils literal">importlib.resources.files</code></a> to <em>anchor</em>.
-(Contributed by Jason R. Coombs in :gh:`100598`.)</p>
+(Contributed by Jason R. Coombs in 100598.)</p>
 </li>
 </ul>
 <h3 id="inspect">inspect</h3>
 <ul>
 <li><p>Add <a class="reference internal" href="../library/inspect.html#py:function:inspect.markcoroutinefunction"><code class="xref py function docutils literal">inspect.markcoroutinefunction</code></a> to mark sync functions that return
 a <a class="reference internal" href="../glossary.html#term-coroutine"><span class="xref std std-term">coroutine</span></a> for use with <a class="reference internal" href="../library/inspect.html#py:function:inspect.iscoroutinefunction"><code class="xref py function docutils literal">inspect.iscoroutinefunction</code></a>.
-(Contributed by Carlton Gibson in :gh:`99247`.)</p>
+(Contributed by Carlton Gibson in 99247.)</p>
 </li>
 <li><p>Add <a class="reference internal" href="../library/inspect.html#py:function:inspect.getasyncgenstate"><code class="xref py function docutils literal">inspect.getasyncgenstate</code></a> and <a class="reference internal" href="../library/inspect.html#py:function:inspect.getasyncgenlocals"><code class="xref py function docutils literal">inspect.getasyncgenlocals</code></a>
 for determining the current state of asynchronous generators.
-(Contributed by Thomas Krennwallner in :gh:`79940`.)</p>
+(Contributed by Thomas Krennwallner in 79940.)</p>
 </li>
 <li><p>The performance of <a class="reference internal" href="../library/inspect.html#py:function:inspect.getattr_static"><code class="xref py function docutils literal">inspect.getattr_static</code></a> has been considerably
 improved. Most calls to the function should be at least 2x faster than they
-were in Python 3.11. (Contributed by Alex Waygood in :gh:`103193`.)</p>
+were in Python 3.11. (Contributed by Alex Waygood in 103193.)</p>
 </li>
 </ul>
 <h3 id="itertools">itertools</h3>
 <ul>
 <li><p>Add <a class="reference internal" href="../library/itertools.html#py:function:itertools.batched"><code class="xref py function docutils literal">itertools.batched</code></a> for collecting into even-sized
 tuples where the last batch may be shorter than the rest.
-(Contributed by Raymond Hettinger in :gh:`98363`.)</p>
+(Contributed by Raymond Hettinger in 98363.)</p>
 </li>
 </ul>
 <h3 id="math">math</h3>
 <ul>
 <li><p>Add <a class="reference internal" href="../library/math.html#py:function:math.sumprod"><code class="xref py function docutils literal">math.sumprod</code></a> for computing a sum of products.
-(Contributed by Raymond Hettinger in :gh:`100485`.)</p>
+(Contributed by Raymond Hettinger in 100485.)</p>
 </li>
 <li><p>Extend <a class="reference internal" href="../library/math.html#py:function:math.nextafter"><code class="xref py function docutils literal">math.nextafter</code></a> to include a <em>steps</em> argument
 for moving up or down multiple steps at a time. (Contributed by
-Matthias Goergens, Mark Dickinson, and Raymond Hettinger in :gh:`94906`.)</p>
+Matthias Goergens, Mark Dickinson, and Raymond Hettinger in 94906.)</p>
 </li>
 </ul>
 <h3 id="os">os</h3>
 <ul>
 <li><p>Add <a class="reference internal" href="../library/os.html#py:data:os.pidfd_nonblock"><code class="xref py data docutils literal">os.PIDFD_NONBLOCK</code></a> to open a file descriptor
 for a process with <a class="reference internal" href="../library/os.html#py:function:os.pidfd_open"><code class="xref py function docutils literal">os.pidfd_open</code></a> in non-blocking mode.
-(Contributed by Kumar Aditya in :gh:`93312`.)</p>
+(Contributed by Kumar Aditya in 93312.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/os.html#py:class:os.direntry"><code class="xref py class docutils literal">os.DirEntry</code></a> now includes an <a class="reference internal" href="../library/os.html#py:method:os.direntry.is_junction"><code class="xref py method docutils literal">os.DirEntry.is_junction</code></a>
 method to check if the entry is a junction.
-(Contributed by Charles Machalow in :gh:`99547`.)</p>
+(Contributed by Charles Machalow in 99547.)</p>
 </li>
 <li><p>Add <a class="reference internal" href="../library/os.html#py:function:os.listdrives"><code class="xref py function docutils literal">os.listdrives</code></a>, <a class="reference internal" href="../library/os.html#py:function:os.listvolumes"><code class="xref py function docutils literal">os.listvolumes</code></a> and <a class="reference internal" href="../library/os.html#py:function:os.listmounts"><code class="xref py function docutils literal">os.listmounts</code></a>
 functions on Windows for enumerating drives, volumes and mount points.
-(Contributed by Steve Dower in :gh:`102519`.)</p>
+(Contributed by Steve Dower in 102519.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/os.html#py:function:os.stat"><code class="xref py function docutils literal">os.stat</code></a> and <a class="reference internal" href="../library/os.html#py:function:os.lstat"><code class="xref py function docutils literal">os.lstat</code></a> are now more accurate on Windows.
 The <code>st_birthtime</code> field will now be filled with the creation time
@@ -1011,16 +1011,16 @@ for consistency with other platforms). <code>st_dev</code> may be up to 64 bits
 and <code>st_ino</code> up to 128 bits depending on your file system, and
 <code>st_rdev</code> is always set to zero rather than incorrect values.
 Both functions may be significantly faster on newer releases of
-Windows. (Contributed by Steve Dower in :gh:`99726`.)</p>
+Windows. (Contributed by Steve Dower in 99726.)</p>
 </li>
 </ul>
 <h3 id="os-path">os.path</h3>
 <ul>
 <li><p>Add <a class="reference internal" href="../library/os.path.html#py:function:os.path.isjunction"><code class="xref py function docutils literal">os.path.isjunction</code></a> to check if a given path is a junction.
-(Contributed by Charles Machalow in :gh:`99547`.)</p>
+(Contributed by Charles Machalow in 99547.)</p>
 </li>
 <li><p>Add <a class="reference internal" href="../library/os.path.html#py:function:os.path.splitroot"><code class="xref py function docutils literal">os.path.splitroot</code></a> to split a path into a triad
-<code>(drive, root, tail)</code>. (Contributed by Barney Gale in :gh:`101000`.)</p>
+<code>(drive, root, tail)</code>. (Contributed by Barney Gale in 101000.)</p>
 </li>
 </ul>
 <h3 id="pathlib">pathlib</h3>
@@ -1032,15 +1032,15 @@ to pass information between path instances.</p>
 </li>
 <li><p>Add <a class="reference internal" href="../library/pathlib.html#py:method:pathlib.path.walk"><code class="xref py method docutils literal">pathlib.Path.walk</code></a> for walking the directory trees and generating
 all file or directory names within them, similar to <a class="reference internal" href="../library/os.html#py:function:os.walk"><code class="xref py function docutils literal">os.walk</code></a>.
-(Contributed by Stanislav Zmiev in :gh:`90385`.)</p>
+(Contributed by Stanislav Zmiev in 90385.)</p>
 </li>
 <li><p>Add <em>walk_up</em> optional parameter to <a class="reference internal" href="../library/pathlib.html#py:method:pathlib.purepath.relative_to"><code class="xref py method docutils literal">pathlib.PurePath.relative_to</code></a>
 to allow the insertion of <code>..</code> entries in the result; this behavior is
 more consistent with <a class="reference internal" href="../library/os.path.html#py:function:os.path.relpath"><code class="xref py function docutils literal">os.path.relpath</code></a>.
-(Contributed by Domenico Ragusa in :gh:`84538`.)</p>
+(Contributed by Domenico Ragusa in 84538.)</p>
 </li>
 <li><p>Add <a class="reference internal" href="../library/pathlib.html#py:method:pathlib.path.is_junction"><code class="xref py method docutils literal">pathlib.Path.is_junction</code></a> as a proxy to <a class="reference internal" href="../library/os.path.html#py:function:os.path.isjunction"><code class="xref py function docutils literal">os.path.isjunction</code></a>.
-(Contributed by Charles Machalow in :gh:`99547`.)</p>
+(Contributed by Charles Machalow in 99547.)</p>
 </li>
 <li><p>Add <em>case_sensitive</em> optional parameter to <a class="reference internal" href="../library/pathlib.html#py:method:pathlib.path.glob"><code class="xref py method docutils literal">pathlib.Path.glob</code></a>,
 <a class="reference internal" href="../library/pathlib.html#py:method:pathlib.path.rglob"><code class="xref py method docutils literal">pathlib.Path.rglob</code></a> and <a class="reference internal" href="../library/pathlib.html#py:method:pathlib.purepath.match"><code class="xref py method docutils literal">pathlib.PurePath.match</code></a> for matching
@@ -1052,7 +1052,7 @@ the path's case sensitivity, allowing for more precise control over the matching
 <li><p>Add support for detecting Windows 11 and Windows Server releases past 2012.
 Previously, lookups on Windows Server platforms newer than Windows Server 2012
 and on Windows 11 would return <code>Windows-10</code>.
-(Contributed by Steve Dower in :gh:`89545`.)</p>
+(Contributed by Steve Dower in 89545.)</p>
 </li>
 </ul>
 <h3 id="pdb">pdb</h3>
@@ -1060,16 +1060,16 @@ and on Windows 11 would return <code>Windows-10</code>.
 <li><p>Add convenience variables to hold values temporarily for debug session
 and provide quick access to values like the current frame or the return
 value.
-(Contributed by Tian Gao in :gh:`103693`.)</p>
+(Contributed by Tian Gao in 103693.)</p>
 </li>
 </ul>
 <h3 id="random">random</h3>
 <ul>
 <li><p>Add <a class="reference internal" href="../library/random.html#py:function:random.binomialvariate"><code class="xref py function docutils literal">random.binomialvariate</code></a>.
-(Contributed by Raymond Hettinger in :gh:`81620`.)</p>
+(Contributed by Raymond Hettinger in 81620.)</p>
 </li>
 <li><p>Add a default of <code>lambd=1.0</code> to <a class="reference internal" href="../library/random.html#py:function:random.expovariate"><code class="xref py function docutils literal">random.expovariate</code></a>.
-(Contributed by Raymond Hettinger in :gh:`100234`.)</p>
+(Contributed by Raymond Hettinger in 100234.)</p>
 </li>
 </ul>
 <h3 id="shutil">shutil</h3>
@@ -1078,61 +1078,61 @@ value.
 archivers which support it.
 In this case it no longer temporarily changes the current working directory
 of the process to <em>root_dir</em> to perform archiving.
-(Contributed by Serhiy Storchaka in :gh:`74696`.)</p>
+(Contributed by Serhiy Storchaka in 74696.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/shutil.html#py:function:shutil.rmtree"><code class="xref py function docutils literal">shutil.rmtree</code></a> now accepts a new argument <em>onexc</em> which is an
 error handler like <em>onerror</em> but which expects an exception instance
 rather than a <em>(typ, val, tb)</em> triplet. <em>onerror</em> is deprecated.
-(Contributed by Irit Katriel in :gh:`102828`.)</p>
+(Contributed by Irit Katriel in 102828.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/shutil.html#py:function:shutil.which"><code class="xref py function docutils literal">shutil.which</code></a> now consults the <em>PATHEXT</em> environment variable to
 find matches within <em>PATH</em> on Windows even when the given <em>cmd</em> includes
 a directory component.
-(Contributed by Charles Machalow in :gh:`103179`.)</p>
+(Contributed by Charles Machalow in 103179.)</p>
 <p><a class="reference internal" href="../library/shutil.html#py:function:shutil.which"><code class="xref py function docutils literal">shutil.which</code></a> will call <code>NeedCurrentDirectoryForExePathW</code> when
 querying for executables on Windows to determine if the current working
 directory should be prepended to the search path.
-(Contributed by Charles Machalow in :gh:`103179`.)</p>
+(Contributed by Charles Machalow in 103179.)</p>
 <p><a class="reference internal" href="../library/shutil.html#py:function:shutil.which"><code class="xref py function docutils literal">shutil.which</code></a> will return a path matching the <em>cmd</em> with a component
 from <code>PATHEXT</code> prior to a direct match elsewhere in the search path on
 Windows.
-(Contributed by Charles Machalow in :gh:`103179`.)</p>
+(Contributed by Charles Machalow in 103179.)</p>
 </li>
 </ul>
 <h3 id="sqlite3">sqlite3</h3>
 <ul>
 <li><p>Add a <a href="../library/sqlite3.html#sqlite3-cli">command-line interface</a>.
-(Contributed by Erlend E. Aasland in :gh:`77617`.)</p>
+(Contributed by Erlend E. Aasland in 77617.)</p>
 </li>
 <li><p>Add the <a class="reference internal" href="../library/sqlite3.html#py:attribute:sqlite3.connection.autocommit"><code class="xref py attribute docutils literal">sqlite3.Connection.autocommit</code></a> attribute
 to <a class="reference internal" href="../library/sqlite3.html#py:class:sqlite3.connection"><code class="xref py class docutils literal">sqlite3.Connection</code></a>
 and the <em>autocommit</em> parameter to <a class="reference internal" href="../library/sqlite3.html#py:function:sqlite3.connect"><code class="xref py function docutils literal">sqlite3.connect</code></a>
 to control <span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0249/"><strong>PEP 249</strong></a>-compliant
 <a href="../library/sqlite3.html#sqlite3-transaction-control-autocommit">transaction handling</a>.
-(Contributed by Erlend E. Aasland in :gh:`83638`.)</p>
+(Contributed by Erlend E. Aasland in 83638.)</p>
 </li>
 <li><p>Add <em>entrypoint</em> keyword-only parameter to
 <a class="reference internal" href="../library/sqlite3.html#py:method:sqlite3.connection.load_extension"><code class="xref py method docutils literal">sqlite3.Connection.load_extension</code></a>,
 for overriding the SQLite extension entry point.
-(Contributed by Erlend E. Aasland in :gh:`103015`.)</p>
+(Contributed by Erlend E. Aasland in 103015.)</p>
 </li>
 <li><p>Add <a class="reference internal" href="../library/sqlite3.html#py:method:sqlite3.connection.getconfig"><code class="xref py method docutils literal">sqlite3.Connection.getconfig</code></a> and
 <a class="reference internal" href="../library/sqlite3.html#py:method:sqlite3.connection.setconfig"><code class="xref py method docutils literal">sqlite3.Connection.setconfig</code></a> to <a class="reference internal" href="../library/sqlite3.html#py:class:sqlite3.connection"><code class="xref py class docutils literal">sqlite3.Connection</code></a>
 to make configuration changes to a database connection.
-(Contributed by Erlend E. Aasland in :gh:`103489`.)</p>
+(Contributed by Erlend E. Aasland in 103489.)</p>
 </li>
 </ul>
 <h3 id="statistics">statistics</h3>
 <ul>
 <li><p>Extend <a class="reference internal" href="../library/statistics.html#py:function:statistics.correlation"><code class="xref py function docutils literal">statistics.correlation</code></a> to include as a <code>ranked</code> method
 for computing the Spearman correlation of ranked data.
-(Contributed by Raymond Hettinger in :gh:`95861`.)</p>
+(Contributed by Raymond Hettinger in 95861.)</p>
 </li>
 </ul>
 <h3 id="sys">sys</h3>
 <ul>
 <li><p>Add the <a class="reference internal" href="../library/sys.monitoring.html#py:module:sys.monitoring" title="sys.monitoring: Access and control event monitoring"><code class="xref py module docutils literal">sys.monitoring</code></a> namespace to expose the new <a href="3.12.html#whatsnew312-pep669">PEP 669</a> monitoring API.
-(Contributed by Mark Shannon in :gh:`103082`.)</p>
+(Contributed by Mark Shannon in 103082.)</p>
 </li>
 <li><p>Add <a class="reference internal" href="../library/sys.html#py:function:sys.activate_stack_trampoline"><code class="xref py function docutils literal">sys.activate_stack_trampoline</code></a> and
 <a class="reference internal" href="../library/sys.html#py:function:sys.deactivate_stack_trampoline"><code class="xref py function docutils literal">sys.deactivate_stack_trampoline</code></a> for activating and deactivating
@@ -1141,17 +1141,17 @@ and <a class="reference internal" href="../library/sys.html#py:function:sys.is_s
 trampolines are active.
 (Contributed by Pablo Galindo and Christian Heimes
 with contributions from Gregory P. Smith [Google] and Mark Shannon
-in :gh:`96123`.)</p>
+in 96123.)</p>
 </li>
 <li><p>Add <a class="reference internal" href="../library/sys.html#py:data:sys.last_exc"><code class="xref py data docutils literal">sys.last_exc</code></a> which holds the last unhandled exception that
 was raised (for post-mortem debugging use cases). Deprecate the
 three fields that have the same information in its legacy form:
 <a class="reference internal" href="../library/sys.html#py:data:sys.last_type"><code class="xref py data docutils literal">sys.last_type</code></a>, <a class="reference internal" href="../library/sys.html#py:data:sys.last_value"><code class="xref py data docutils literal">sys.last_value</code></a> and <a class="reference internal" href="../library/sys.html#py:data:sys.last_traceback"><code class="xref py data docutils literal">sys.last_traceback</code></a>.
-(Contributed by Irit Katriel in :gh:`102778`.)</p>
+(Contributed by Irit Katriel in 102778.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/sys.html#py:function:sys._current_exceptions"><code class="xref py function docutils literal">sys._current_exceptions</code></a> now returns a mapping from thread-id to an
 exception instance, rather than to a <code>(typ, exc, tb)</code> tuple.
-(Contributed by Irit Katriel in :gh:`103176`.)</p>
+(Contributed by Irit Katriel in 103176.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/sys.html#py:function:sys.setrecursionlimit"><code class="xref py function docutils literal">sys.setrecursionlimit</code></a> and <a class="reference internal" href="../library/sys.html#py:function:sys.getrecursionlimit"><code class="xref py function docutils literal">sys.getrecursionlimit</code></a>.
 The recursion limit now applies only to Python code. Builtin functions do
@@ -1162,7 +1162,7 @@ that prevents recursion from causing a virtual machine crash.</p>
 <h3 id="tempfile">tempfile</h3>
 <ul>
 <li><p>The <a href="#" class="broken-link"><code class="xref py class docutils literal">tempfile.NamedTemporaryFile</code></a> function has a new optional parameter
-<em>delete_on_close</em> (Contributed by Evgeny Zorin in :gh:`58451`.)</p>
+<em>delete_on_close</em> (Contributed by Evgeny Zorin in 58451.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/tempfile.html#py:function:tempfile.mkdtemp"><code class="xref py function docutils literal">tempfile.mkdtemp</code></a> now always returns an absolute path, even if the
 argument provided to the <em>dir</em> parameter is a relative path.</p>
@@ -1173,7 +1173,7 @@ argument provided to the <em>dir</em> parameter is a relative path.</p>
 <li><p>Add <a class="reference internal" href="../library/threading.html#py:function:threading.settrace_all_threads"><code class="xref py function docutils literal">threading.settrace_all_threads</code></a> and
 <a class="reference internal" href="../library/threading.html#py:function:threading.setprofile_all_threads"><code class="xref py function docutils literal">threading.setprofile_all_threads</code></a> that allow to set tracing and
 profiling functions in all running threads in addition to the calling one.
-(Contributed by Pablo Galindo in :gh:`93503`.)</p>
+(Contributed by Pablo Galindo in 93503.)</p>
 </li>
 </ul>
 <h3 id="tkinter">tkinter</h3>
@@ -1184,13 +1184,13 @@ It now accepts not only coordinates as separate arguments
 (<code>[x1, y1, x2, y2, ...]</code>), but also coordinates grouped in pairs
 (<code>(x1, y1), (x2, y2), ...</code> and <code>[(x1, y1), (x2, y2), ...]</code>),
 like <code>create_*()</code> methods.
-(Contributed by Serhiy Storchaka in :gh:`94473`.)</p>
+(Contributed by Serhiy Storchaka in 94473.)</p>
 </li>
 </ul>
 <h3 id="tokenize">tokenize</h3>
 <ul>
 <li><p>The <a class="reference internal" href="../library/tokenize.html#py:module:tokenize" title="tokenize: Lexical scanner for Python source code."><code class="xref py module docutils literal">tokenize</code></a> module includes the changes introduced in <span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a>.
-(Contributed by Marta Gómez Macías and Pablo Galindo in :gh:`102856`.)
+(Contributed by Marta Gómez Macías and Pablo Galindo in 102856.)
 See <a href="3.12.html#whatsnew312-porting-to-python312">Porting to Python 3.12</a> for more information on the
 changes to the <a class="reference internal" href="../library/tokenize.html#py:module:tokenize" title="tokenize: Lexical scanner for Python source code."><code class="xref py module docutils literal">tokenize</code></a> module.</p>
 </li>
@@ -1199,7 +1199,7 @@ changes to the <a class="reference internal" href="../library/tokenize.html#py:m
 <ul>
 <li><p>Add <a class="reference internal" href="../library/types.html#py:function:types.get_original_bases"><code class="xref py function docutils literal">types.get_original_bases</code></a> to allow for further introspection of
 <a href="../library/typing.html#user-defined-generics">User-defined generic types</a> when subclassed. (Contributed by
-James Hilton-Balfe and Alex Waygood in :gh:`101827`.)</p>
+James Hilton-Balfe and Alex Waygood in 101827.)</p>
 </li>
 </ul>
 <a id="whatsnew-typing-py312"></a>
@@ -1214,7 +1214,7 @@ against runtime-checkable protocols. However, it may also mean that some
 objects which used to be considered instances of a runtime-checkable protocol
 may no longer be considered instances of that protocol on Python 3.12+, and
 vice versa. Most users are unlikely to be affected by this change.
-(Contributed by Alex Waygood in :gh:`102433`.)</p>
+(Contributed by Alex Waygood in 102433.)</p>
 </li>
 <li><p>The members of a runtime-checkable protocol are now considered "frozen" at
 runtime as soon as the class has been created. Monkey-patching attributes
@@ -1247,20 +1247,20 @@ significantly. Most <code>isinstance()</code> checks against protocols with only
 members should be at least 2x faster than in 3.11, and some may be 20x
 faster or more. However, <code>isinstance()</code> checks against protocols with many
 members may be slower than in Python 3.11. (Contributed by Alex
-Waygood in :gh:`74690` and :gh:`103193`.)</p>
+Waygood in 74690 and 103193.)</p>
 </li>
 <li><p>All <a href="#" class="broken-link"><code class="xref py data docutils literal">typing.TypedDict</code></a> and <a href="#" class="broken-link"><code class="xref py data docutils literal">typing.NamedTuple</code></a> classes now have the
 <code>__orig_bases__</code> attribute. (Contributed by Adrian Garcia Badaracco in
-:gh:`103699`.)</p>
+103699.)</p>
 </li>
 <li><p>Add <code>frozen_default</code> parameter to <a class="reference internal" href="../library/typing.html#py:function:typing.dataclass_transform"><code class="xref py function docutils literal">typing.dataclass_transform</code></a>.
-(Contributed by Erik De Bonte in :gh:`99957`.)</p>
+(Contributed by Erik De Bonte in 99957.)</p>
 </li>
 </ul>
 <h3 id="unicodedata">unicodedata</h3>
 <ul>
 <li><p>The Unicode database has been updated to version 15.0.0. (Contributed by
-Benjamin Peterson in :gh:`96734`).</p>
+Benjamin Peterson in 96734).</p>
 </li>
 </ul>
 <h3 id="unittest">unittest</h3>
@@ -1279,96 +1279,96 @@ Benjamin Peterson in :gh:`96734`).</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Ran</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">158</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">tests</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">9<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>869</span>s</span>
 <span class="hl-source hl-python"></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">OK</span></span></span> </span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">skipped</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
-<p>(Contributed by Giampaolo Rodola in :gh:`48330`)</p>
+<p>(Contributed by Giampaolo Rodola in 48330)</p>
 <h3 id="uuid">uuid</h3>
 <ul>
 <li><p>Add a <a href="../library/uuid.html#uuid-cli">command-line interface</a>.
-(Contributed by Adam Chhina in :gh:`88597`.)</p>
+(Contributed by Adam Chhina in 88597.)</p>
 </li>
 </ul>
 <h2 id="optimizations">Optimizations</h2>
 <ul>
 <li><p>Remove <code>wstr</code> and <code>wstr_length</code> members from Unicode objects.
 It reduces object size by 8 or 16 bytes on 64bit platform. (<span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0623/"><strong>PEP 623</strong></a>)
-(Contributed by Inada Naoki in :gh:`92536`.)</p>
+(Contributed by Inada Naoki in 92536.)</p>
 </li>
 <li><p>Add experimental support for using the BOLT binary optimizer in the build
 process, which improves performance by 1-5%.
-(Contributed by Kevin Modzelewski in :gh:`90536` and tuned by Donghee Na in :gh:`101525`)</p>
+(Contributed by Kevin Modzelewski in 90536 and tuned by Donghee Na in 101525)</p>
 </li>
 <li><p>Speed up the regular expression substitution (functions <a class="reference internal" href="../library/re.html#py:function:re.sub"><code class="xref py function docutils literal">re.sub</code></a> and
 <a class="reference internal" href="../library/re.html#py:function:re.subn"><code class="xref py function docutils literal">re.subn</code></a> and corresponding <code class="xref py class docutils literal">re.Pattern</code> methods) for
 replacement strings containing group references by 2–3 times.
-(Contributed by Serhiy Storchaka in :gh:`91524`.)</p>
+(Contributed by Serhiy Storchaka in 91524.)</p>
 </li>
 <li><p>Speed up <a class="reference internal" href="../library/asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">asyncio.Task</code></a> creation by deferring expensive string formatting.
-(Contributed by Itamar Oren in :gh:`103793`.)</p>
+(Contributed by Itamar Oren in 103793.)</p>
 </li>
 <li><p>The <a class="reference internal" href="../library/tokenize.html#py:function:tokenize.tokenize"><code class="xref py function docutils literal">tokenize.tokenize</code></a> and <a class="reference internal" href="../library/tokenize.html#py:function:tokenize.generate_tokens"><code class="xref py function docutils literal">tokenize.generate_tokens</code></a> functions are
 up to 64% faster as a side effect of the changes required to cover <span class="target" id="index-27"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a> in
 the <a class="reference internal" href="../library/tokenize.html#py:module:tokenize" title="tokenize: Lexical scanner for Python source code."><code class="xref py module docutils literal">tokenize</code></a> module. (Contributed by Marta Gómez Macías and Pablo Galindo
-in :gh:`102856`.)</p>
+in 102856.)</p>
 </li>
 <li><p>Speed up <a href="#" class="broken-link"><code class="xref py function docutils literal">super</code></a> method calls and attribute loads via the
-new :opcode:`LOAD_SUPER_ATTR` instruction. (Contributed by Carl Meyer and
-Vladimir Matveev in :gh:`103497`.)</p>
+new LOAD_SUPER_ATTR instruction. (Contributed by Carl Meyer and
+Vladimir Matveev in 103497.)</p>
 </li>
 </ul>
 <h2 id="cpython-bytecode-changes">CPython bytecode changes</h2>
 <ul>
-<li><p>Remove the :opcode:`!LOAD_METHOD` instruction. It has been merged into
-:opcode:`LOAD_ATTR`. :opcode:`LOAD_ATTR` will now behave like the old
-:opcode:`!LOAD_METHOD` instruction if the low bit of its oparg is set.
-(Contributed by Ken Jin in :gh:`93429`.)</p>
+<li><p>Remove the !LOAD_METHOD instruction. It has been merged into
+LOAD_ATTR. LOAD_ATTR will now behave like the old
+!LOAD_METHOD instruction if the low bit of its oparg is set.
+(Contributed by Ken Jin in 93429.)</p>
 </li>
-<li><p>Remove the :opcode:`!JUMP_IF_FALSE_OR_POP` and :opcode:`!JUMP_IF_TRUE_OR_POP`
-instructions. (Contributed by Irit Katriel in :gh:`102859`.)</p>
+<li><p>Remove the !JUMP_IF_FALSE_OR_POP and !JUMP_IF_TRUE_OR_POP
+instructions. (Contributed by Irit Katriel in 102859.)</p>
 </li>
-<li><p>Remove the :opcode:`!PRECALL` instruction. (Contributed by Mark Shannon in
-:gh:`92925`.)</p>
+<li><p>Remove the !PRECALL instruction. (Contributed by Mark Shannon in
+92925.)</p>
 </li>
-<li><p>Add the :opcode:`BINARY_SLICE` and :opcode:`STORE_SLICE` instructions.
-(Contributed by Mark Shannon in :gh:`94163`.)</p>
+<li><p>Add the BINARY_SLICE and STORE_SLICE instructions.
+(Contributed by Mark Shannon in 94163.)</p>
 </li>
-<li><p>Add the :opcode:`CALL_INTRINSIC_1` instructions.
-(Contributed by Mark Shannon in :gh:`99005`.)</p>
+<li><p>Add the CALL_INTRINSIC_1 instructions.
+(Contributed by Mark Shannon in 99005.)</p>
 </li>
-<li><p>Add the :opcode:`CALL_INTRINSIC_2` instruction.
-(Contributed by Irit Katriel in :gh:`101799`.)</p>
+<li><p>Add the CALL_INTRINSIC_2 instruction.
+(Contributed by Irit Katriel in 101799.)</p>
 </li>
-<li><p>Add the :opcode:`CLEANUP_THROW` instruction.
-(Contributed by Brandt Bucher in :gh:`90997`.)</p>
+<li><p>Add the CLEANUP_THROW instruction.
+(Contributed by Brandt Bucher in 90997.)</p>
 </li>
-<li><p>Add the :opcode:`!END_SEND` instruction.
-(Contributed by Mark Shannon in :gh:`103082`.)</p>
+<li><p>Add the !END_SEND instruction.
+(Contributed by Mark Shannon in 103082.)</p>
 </li>
-<li><p>Add the :opcode:`LOAD_FAST_AND_CLEAR` instruction as part of the
-implementation of <span class="target" id="index-28"></span><a class="pep reference external" href="https://peps.python.org/pep-0709/"><strong>PEP 709</strong></a>. (Contributed by Carl Meyer in :gh:`101441`.)</p>
+<li><p>Add the LOAD_FAST_AND_CLEAR instruction as part of the
+implementation of <span class="target" id="index-28"></span><a class="pep reference external" href="https://peps.python.org/pep-0709/"><strong>PEP 709</strong></a>. (Contributed by Carl Meyer in 101441.)</p>
 </li>
-<li><p>Add the :opcode:`LOAD_FAST_CHECK` instruction.
-(Contributed by Dennis Sweeney in :gh:`93143`.)</p>
+<li><p>Add the LOAD_FAST_CHECK instruction.
+(Contributed by Dennis Sweeney in 93143.)</p>
 </li>
-<li><p>Add the :opcode:`LOAD_FROM_DICT_OR_DEREF`, :opcode:`LOAD_FROM_DICT_OR_GLOBALS`,
-and :opcode:`LOAD_LOCALS` opcodes as part of the implementation of <span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0695/"><strong>PEP 695</strong></a>.
-Remove the :opcode:`!LOAD_CLASSDEREF` opcode, which can be replaced with
-:opcode:`LOAD_LOCALS` plus :opcode:`LOAD_FROM_DICT_OR_DEREF`. (Contributed
-by Jelle Zijlstra in :gh:`103764`.)</p>
+<li><p>Add the LOAD_FROM_DICT_OR_DEREF, LOAD_FROM_DICT_OR_GLOBALS,
+and LOAD_LOCALS opcodes as part of the implementation of <span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0695/"><strong>PEP 695</strong></a>.
+Remove the !LOAD_CLASSDEREF opcode, which can be replaced with
+LOAD_LOCALS plus LOAD_FROM_DICT_OR_DEREF. (Contributed
+by Jelle Zijlstra in 103764.)</p>
 </li>
-<li><p>Add the :opcode:`LOAD_SUPER_ATTR` instruction. (Contributed by Carl Meyer and
-Vladimir Matveev in :gh:`103497`.)</p>
+<li><p>Add the LOAD_SUPER_ATTR instruction. (Contributed by Carl Meyer and
+Vladimir Matveev in 103497.)</p>
 </li>
-<li><p>Add the <code>RETURN_CONST</code> instruction. (Contributed by Wenyang Wang in :gh:`101632`.)</p>
+<li><p>Add the <code>RETURN_CONST</code> instruction. (Contributed by Wenyang Wang in 101632.)</p>
 </li>
 </ul>
 <h2 id="demos-and-tools">Demos and Tools</h2>
 <ul>
 <li><p>Remove the <code>Tools/demo/</code> directory which contained old demo scripts. A copy
 can be found in the <a href="https://github.com/gvanrossum/old-demos">old-demos project</a>.
-(Contributed by Victor Stinner in :gh:`97681`.)</p>
+(Contributed by Victor Stinner in 97681.)</p>
 </li>
 <li><p>Remove outdated example scripts of the <code>Tools/scripts/</code> directory.
 A copy can be found in the <a href="https://github.com/gvanrossum/old-demos">old-demos project</a>.
-(Contributed by Victor Stinner in :gh:`97669`.)</p>
+(Contributed by Victor Stinner in 97669.)</p>
 </li>
 </ul>
 <h2 id="deprecated">Deprecated</h2>
@@ -1376,7 +1376,7 @@ A copy can be found in the <a href="https://github.com/gvanrossum/old-demos">old
 <li><p><a class="reference internal" href="../library/argparse.html#py:module:argparse" title="argparse: Command-line option and argument parsing library."><code class="xref py module docutils literal">argparse</code></a>: The <em>type</em>, <em>choices</em>, and <em>metavar</em> parameters
 of <code class="xref py class docutils literal">argparse.BooleanOptionalAction</code> are deprecated
 and will be removed in 3.14.
-(Contributed by Nikita Sobolev in :gh:`92248`.)</p>
+(Contributed by Nikita Sobolev in 92248.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/ast.html#py:module:ast" title="ast: Abstract Syntax Tree classes and manipulation."><code class="xref py module docutils literal">ast</code></a>: The following <a class="reference internal" href="../library/ast.html#py:module:ast" title="ast: Abstract Syntax Tree classes and manipulation."><code class="xref py module docutils literal">ast</code></a> features have been deprecated in documentation since
 Python 3.8, now cause a <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> to be emitted at runtime
@@ -1394,7 +1394,7 @@ when they are accessed or used, and will be removed in Python 3.14:</p>
 </li>
 </ul>
 <p>Use <a class="reference internal" href="../library/ast.html#py:class:ast.constant"><code class="xref py class docutils literal">ast.Constant</code></a> instead.
-(Contributed by Serhiy Storchaka in :gh:`90953`.)</p>
+(Contributed by Serhiy Storchaka in 90953.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/asyncio.html#py:module:asyncio" title="asyncio: Asynchronous I/O."><code class="xref py module docutils literal">asyncio</code></a>:</p>
 <ul>
@@ -1402,24 +1402,24 @@ when they are accessed or used, and will be removed in Python 3.14:</p>
 <code class="xref py class docutils literal">asyncio.FastChildWatcher</code>, <code class="xref py class docutils literal">asyncio.AbstractChildWatcher</code>
 and <code class="xref py class docutils literal">asyncio.SafeChildWatcher</code> are deprecated and
 will be removed in Python 3.14.
-(Contributed by Kumar Aditya in :gh:`94597`.)</p>
+(Contributed by Kumar Aditya in 94597.)</p>
 </li>
 <li><p><code class="xref py function docutils literal">asyncio.set_child_watcher</code>, <code class="xref py function docutils literal">asyncio.get_child_watcher</code>,
 <code class="xref py method docutils literal">asyncio.AbstractEventLoopPolicy.set_child_watcher</code> and
 <code class="xref py method docutils literal">asyncio.AbstractEventLoopPolicy.get_child_watcher</code> are deprecated
 and will be removed in Python 3.14.
-(Contributed by Kumar Aditya in :gh:`94597`.)</p>
+(Contributed by Kumar Aditya in 94597.)</p>
 </li>
 <li><p>The <a href="#" class="broken-link"><code class="xref py method docutils literal">get_event_loop</code></a> method of the
 default event loop policy now emits a <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> if there
 is no current event loop set and it decides to create one.
-(Contributed by Serhiy Storchaka and Guido van Rossum in :gh:`100160`.)</p>
+(Contributed by Serhiy Storchaka and Guido van Rossum in 100160.)</p>
 </li>
 </ul>
 </li>
 <li><p><a class="reference internal" href="../library/calendar.html#py:module:calendar" title="calendar: Functions for working with calendars, including some emulation of the Unix cal program."><code class="xref py module docutils literal">calendar</code></a>: <code>calendar.January</code> and <code>calendar.February</code> constants are deprecated and
 replaced by <a class="reference internal" href="../library/calendar.html#py:data:calendar.january"><code class="xref py data docutils literal">calendar.JANUARY</code></a> and <a class="reference internal" href="../library/calendar.html#py:data:calendar.february"><code class="xref py data docutils literal">calendar.FEBRUARY</code></a>.
-(Contributed by Prince Roshan in :gh:`103636`.)</p>
+(Contributed by Prince Roshan in 103636.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/collections.abc.html#py:module:collections.abc" title="collections.abc: Abstract base classes for containers"><code class="xref py module docutils literal">collections.abc</code></a>: Deprecated <a class="reference internal" href="../library/collections.abc.html#py:class:collections.abc.bytestring"><code class="xref py class docutils literal">collections.abc.ByteString</code></a>.</p>
 <p>Use <code>isinstance(obj, collections.abc.Buffer)</code> to test if <code>obj</code> implements
@@ -1435,7 +1435,7 @@ about the object. Other common buffer types such as <a class="reference internal
 also never understood as subtypes of <code class="xref py class docutils literal">ByteString</code> (either at
 runtime or by static type checkers).</p>
 <p>See <span class="target" id="index-30"></span><a class="pep reference external" href="https://peps.python.org/pep-0688/#current-options"><strong>PEP 688</strong></a> for more details.
-(Contributed by Shantanu Jain in :gh:`91896`.)</p>
+(Contributed by Shantanu Jain in 91896.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/datetime.html#py:module:datetime" title="datetime: Basic date and time types."><code class="xref py module docutils literal">datetime</code></a>: <a class="reference internal" href="../library/datetime.html#py:class:datetime.datetime"><code class="xref py class docutils literal">datetime.datetime</code></a>'s <a class="reference internal" href="../library/datetime.html#py:method:datetime.datetime.utcnow"><code class="xref py method docutils literal">utcnow</code></a> and
 <a class="reference internal" href="../library/datetime.html#py:method:datetime.datetime.utcfromtimestamp"><code class="xref py method docutils literal">utcfromtimestamp</code></a> are deprecated and will be
@@ -1443,10 +1443,10 @@ removed in a future version. Instead, use timezone-aware objects to represent
 datetimes in UTC: respectively, call <a class="reference internal" href="../library/datetime.html#py:method:datetime.datetime.now"><code class="xref py method docutils literal">now</code></a> and
 <a class="reference internal" href="../library/datetime.html#py:method:datetime.datetime.fromtimestamp"><code class="xref py method docutils literal">fromtimestamp</code></a>  with the <em>tz</em> parameter set to
 <a class="reference internal" href="../library/datetime.html#py:data:datetime.utc"><code class="xref py data docutils literal">datetime.UTC</code></a>.
-(Contributed by Paul Ganssle in :gh:`103857`.)</p>
+(Contributed by Paul Ganssle in 103857.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/email.html#py:module:email" title="email: Package supporting the parsing, manipulating, and generating email messages."><code class="xref py module docutils literal">email</code></a>: Deprecate the <em>isdst</em> parameter in <a class="reference internal" href="../library/email.utils.html#py:function:email.utils.localtime"><code class="xref py function docutils literal">email.utils.localtime</code></a>.
-(Contributed by Alan Williams in :gh:`72346`.)</p>
+(Contributed by Alan Williams in 72346.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/importlib.html#py:module:importlib.abc" title="importlib.abc: Abstract base classes related to import"><code class="xref py module docutils literal">importlib.abc</code></a>: Deprecated the following classes, scheduled for removal in
 Python 3.14:</p>
@@ -1465,18 +1465,18 @@ Python 3.14:</p>
 <li><p><a class="reference internal" href="../library/importlib.resources.abc.html#py:class:importlib.resources.abc.traversableresources"><code class="xref py class docutils literal">importlib.resources.abc.TraversableResources</code></a></p>
 </li>
 </ul>
-<p>(Contributed by Jason R. Coombs and Hugo van Kemenade in :gh:`93963`.)</p>
+<p>(Contributed by Jason R. Coombs and Hugo van Kemenade in 93963.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/itertools.html#py:module:itertools" title="itertools: Functions creating iterators for efficient looping."><code class="xref py module docutils literal">itertools</code></a>: Deprecate the support for copy, deepcopy, and pickle operations,
 which is undocumented, inefficient, historically buggy, and inconsistent.
 This will be removed in 3.14 for a significant reduction in code
 volume and maintenance burden.
-(Contributed by Raymond Hettinger in :gh:`101588`.)</p>
+(Contributed by Raymond Hettinger in 101588.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/multiprocessing.html#py:module:multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py module docutils literal">multiprocessing</code></a>: In Python 3.14, the default <a class="reference internal" href="../library/multiprocessing.html#py:module:multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py module docutils literal">multiprocessing</code></a>
 start method will change to a safer one on Linux, BSDs,
 and other non-macOS POSIX platforms where <code>'fork'</code> is currently
-the default (:gh:`84559`). Adding a runtime warning about this was deemed too
+the default (84559). Adding a runtime warning about this was deemed too
 disruptive as the majority of code is not expected to care. Use the
 <a class="reference internal" href="../library/multiprocessing.html#py:function:multiprocessing.get_context"><code class="xref py function docutils literal">get_context</code></a> or
 <a class="reference internal" href="../library/multiprocessing.html#py:function:multiprocessing.set_start_method"><code class="xref py function docutils literal">set_start_method</code></a> APIs to explicitly specify when
@@ -1485,12 +1485,12 @@ your code <em>requires</em> <code>'fork'</code>.  See <a href="../library/multip
 <li><p><a class="reference internal" href="../library/pkgutil.html#py:module:pkgutil" title="pkgutil: Utilities for the import system."><code class="xref py module docutils literal">pkgutil</code></a>: <code class="xref py function docutils literal">pkgutil.find_loader</code> and <code class="xref py function docutils literal">pkgutil.get_loader</code>
 are deprecated and will be removed in Python 3.14;
 use <a class="reference internal" href="../library/importlib.html#py:function:importlib.util.find_spec"><code class="xref py function docutils literal">importlib.util.find_spec</code></a> instead.
-(Contributed by Nikita Sobolev in :gh:`97850`.)</p>
+(Contributed by Nikita Sobolev in 97850.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/pty.html#py:module:pty" title="pty: Pseudo-Terminal Handling for Unix. (Unix)"><code class="xref py module docutils literal">pty</code></a>: The module has two undocumented <code>master_open()</code> and <code>slave_open()</code>
 functions that have been deprecated since Python 2 but only gained a
 proper <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> in 3.12. Remove them in 3.14.
-(Contributed by Soumendra Ganguly and Gregory P. Smith in :gh:`85984`.)</p>
+(Contributed by Soumendra Ganguly and Gregory P. Smith in 85984.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/os.html#py:module:os" title="os: Miscellaneous operating system interfaces."><code class="xref py module docutils literal">os</code></a>:</p>
 <ul>
@@ -1498,7 +1498,7 @@ proper <a class="reference internal" href="../library/exceptions.html#py:excepti
 Windows are deprecated. In a future release, they will contain the last
 metadata change time, consistent with other platforms. For now, they still
 contain the creation time, which is also available in the new <code>st_birthtime</code>
-field. (Contributed by Steve Dower in :gh:`99726`.)</p>
+field. (Contributed by Steve Dower in 99726.)</p>
 </li>
 <li><p>On POSIX platforms, <a class="reference internal" href="../library/os.html#py:function:os.fork"><code class="xref py function docutils literal">os.fork</code></a> can now raise a
 <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> when it can detect being called from a
@@ -1515,27 +1515,27 @@ longstanding platform compatibility problem to developers.</p>
 <a class="reference internal" href="../library/multiprocessing.html#py:module:multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py module docutils literal">multiprocessing</code></a> start method such as <code>"spawn"</code> or <code>"forkserver"</code>.</p>
 </li>
 <li><p><a class="reference internal" href="../library/shutil.html#py:module:shutil" title="shutil: High-level file operations, including copying."><code class="xref py module docutils literal">shutil</code></a>: The <em>onerror</em> argument of <a class="reference internal" href="../library/shutil.html#py:function:shutil.rmtree"><code class="xref py function docutils literal">shutil.rmtree</code></a> is deprecated;
-use <em>onexc</em> instead. (Contributed by Irit Katriel in :gh:`102828`.)</p>
+use <em>onexc</em> instead. (Contributed by Irit Katriel in 102828.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/sqlite3.html#py:module:sqlite3" title="sqlite3: A DB-API 2.0 implementation using SQLite 3.x."><code class="xref py module docutils literal">sqlite3</code></a>:</p>
 <ul>
 <li><p><a href="../library/sqlite3.html#sqlite3-default-converters">default adapters and converters</a> are now deprecated.
 Instead, use the <a href="../library/sqlite3.html#sqlite3-adapter-converter-recipes">Adapter and converter recipes</a>
 and tailor them to your needs.
-(Contributed by Erlend E. Aasland in :gh:`90016`.)</p>
+(Contributed by Erlend E. Aasland in 90016.)</p>
 </li>
 <li><p>In <a class="reference internal" href="../library/sqlite3.html#py:method:sqlite3.cursor.execute"><code class="xref py method docutils literal">execute</code></a>, <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> is now emitted
 when <a href="../library/sqlite3.html#sqlite3-placeholders">named placeholders</a> are used together with
 parameters supplied as a <a class="reference internal" href="../glossary.html#term-sequence"><span class="xref std std-term">sequence</span></a> instead of as a <a class="reference internal" href="../library/stdtypes.html#py:class:dict"><code class="xref py class docutils literal">dict</code></a>.
 Starting from Python 3.14, using named placeholders with parameters supplied
 as a sequence will raise a <a class="reference internal" href="../library/sqlite3.html#py:exception:sqlite3.programmingerror"><code class="xref py exception docutils literal">ProgrammingError</code></a>.
-(Contributed by Erlend E. Aasland in :gh:`101698`.)</p>
+(Contributed by Erlend E. Aasland in 101698.)</p>
 </li>
 </ul>
 </li>
 <li><p><a class="reference internal" href="../library/sys.html#py:module:sys" title="sys: Access system-specific parameters and functions."><code class="xref py module docutils literal">sys</code></a>: The <a class="reference internal" href="../library/sys.html#py:data:sys.last_type"><code class="xref py data docutils literal">sys.last_type</code></a>, <a class="reference internal" href="../library/sys.html#py:data:sys.last_value"><code class="xref py data docutils literal">sys.last_value</code></a> and <a class="reference internal" href="../library/sys.html#py:data:sys.last_traceback"><code class="xref py data docutils literal">sys.last_traceback</code></a>
 fields are deprecated. Use <a class="reference internal" href="../library/sys.html#py:data:sys.last_exc"><code class="xref py data docutils literal">sys.last_exc</code></a> instead.
-(Contributed by Irit Katriel in :gh:`102778`.)</p>
+(Contributed by Irit Katriel in 102778.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/tarfile.html#py:module:tarfile" title="tarfile: Read and write tar-format archive files."><code class="xref py module docutils literal">tarfile</code></a>: Extracting tar archives without specifying <em>filter</em> is deprecated until
 Python 3.14, when <code>'data'</code> filter will become the default.
@@ -1545,11 +1545,11 @@ See <a href="../library/tarfile.html#tarfile-extraction-filter">Extraction filte
 <ul>
 <li><p><a class="reference internal" href="../library/typing.html#py:class:typing.hashable"><code class="xref py class docutils literal">typing.Hashable</code></a> and <a class="reference internal" href="../library/typing.html#py:class:typing.sized"><code class="xref py class docutils literal">typing.Sized</code></a>, aliases for
 <a class="reference internal" href="../library/collections.abc.html#py:class:collections.abc.hashable"><code class="xref py class docutils literal">collections.abc.Hashable</code></a> and <a class="reference internal" href="../library/collections.abc.html#py:class:collections.abc.sized"><code class="xref py class docutils literal">collections.abc.Sized</code></a> respectively, are
-deprecated. (:gh:`94309`.)</p>
+deprecated. (94309.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/typing.html#py:class:typing.bytestring"><code class="xref py class docutils literal">typing.ByteString</code></a>, deprecated since Python 3.9, now causes a
 <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> to be emitted when it is used.
-(Contributed by Alex Waygood in :gh:`91896`.)</p>
+(Contributed by Alex Waygood in 91896.)</p>
 </li>
 </ul>
 </li>
@@ -1557,34 +1557,34 @@ deprecated. (:gh:`94309`.)</p>
 when testing the truth value of an <a class="reference internal" href="../library/xml.etree.elementtree.html#py:class:xml.etree.elementtree.element"><code class="xref py class docutils literal">xml.etree.ElementTree.Element</code></a>.
 Before, the Python implementation emitted <a class="reference internal" href="../library/exceptions.html#py:exception:futurewarning"><code class="xref py exception docutils literal">FutureWarning</code></a>, and the C
 implementation emitted nothing.
-(Contributed by Jacob Walls in :gh:`83122`.)</p>
+(Contributed by Jacob Walls in 83122.)</p>
 </li>
 <li><p>The 3-arg signatures (type, value, traceback) of <a class="reference internal" href="../reference/datamodel.html#py:method:coroutine.throw"><code class="xref py method docutils literal">coroutine throw()</code></a>, <a class="reference internal" href="../reference/expressions.html#py:method:generator.throw"><code class="xref py method docutils literal">generator throw()</code></a> and
 <a class="reference internal" href="../reference/expressions.html#py:method:agen.athrow"><code class="xref py method docutils literal">async generator throw()</code></a> are deprecated and
 may be removed in a future version of Python. Use the single-arg versions
-of these functions instead. (Contributed by Ofey Chan in :gh:`89874`.)</p>
+of these functions instead. (Contributed by Ofey Chan in 89874.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> is now raised when <a class="reference internal" href="../reference/datamodel.html#py:attribute:module.__package__"><code class="xref py attribute docutils literal">__package__</code></a> on a
 module differs from
 <a class="reference internal" href="../library/importlib.html#py:attribute:importlib.machinery.modulespec.parent"><code class="xref py attribute docutils literal">__spec__.parent</code></a> (previously
 it was <a class="reference internal" href="../library/exceptions.html#py:exception:importwarning"><code class="xref py exception docutils literal">ImportWarning</code></a>).
-(Contributed by Brett Cannon in :gh:`65961`.)</p>
+(Contributed by Brett Cannon in 65961.)</p>
 </li>
 <li><p>Setting <a class="reference internal" href="../reference/datamodel.html#py:attribute:module.__package__"><code class="xref py attribute docutils literal">__package__</code></a> or <a class="reference internal" href="../reference/datamodel.html#py:attribute:module.__cached__"><code class="xref py attribute docutils literal">__cached__</code></a> on a
 module is deprecated, and will cease to be set or taken into consideration by
-the import system in Python 3.14. (Contributed by Brett Cannon in :gh:`65961`.)</p>
+the import system in Python 3.14. (Contributed by Brett Cannon in 65961.)</p>
 </li>
 <li><p>The bitwise inversion operator (<code>~</code>) on bool is deprecated. It will throw an
 error in Python 3.16. Use <code>not</code> for logical negation of bools instead.
 In the rare case that you really need the bitwise inversion of the underlying
 <code>int</code>, convert to int explicitly: <code>~int(x)</code>. (Contributed by Tim Hoffmann
-in :gh:`103487`.)</p>
+in 103487.)</p>
 </li>
 <li><p>Accessing <a class="reference internal" href="../reference/datamodel.html#py:attribute:codeobject.co_lnotab"><code class="xref py attribute docutils literal">co_lnotab</code></a> on code objects was deprecated in
 Python 3.10 via <span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0626/"><strong>PEP 626</strong></a>,
 but it only got a proper <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> in 3.12.
 May be removed in 3.15.
-(Contributed by Nikita Sobolev in :gh:`101866`.)</p>
+(Contributed by Nikita Sobolev in 101866.)</p>
 </li>
 </ul>
 <h3 id="pending-removal-in-python-3-13">Pending removal in Python 3.13</h3>
@@ -1631,28 +1631,28 @@ May be removed in 3.15.
 </ul>
 <p>Other modules:</p>
 <ul>
-<li><p><code class="xref py module docutils literal">lib2to3</code>, and the <strong class="program">2to3</strong> program (:gh:`84540`)</p>
+<li><p><code class="xref py module docutils literal">lib2to3</code>, and the <strong class="program">2to3</strong> program (84540)</p>
 </li>
 </ul>
 <p>APIs:</p>
 <ul>
-<li><p><code class="xref py class docutils literal">configparser.LegacyInterpolation</code> (:gh:`90765`)</p>
+<li><p><code class="xref py class docutils literal">configparser.LegacyInterpolation</code> (90765)</p>
 </li>
-<li><p><code>locale.resetlocale()</code> (:gh:`90817`)</p>
+<li><p><code>locale.resetlocale()</code> (90817)</p>
 </li>
-<li><p><code class="xref py method docutils literal">turtle.RawTurtle.settiltangle</code> (:gh:`50096`)</p>
+<li><p><code class="xref py method docutils literal">turtle.RawTurtle.settiltangle</code> (50096)</p>
 </li>
-<li><p><code class="xref py function docutils literal">unittest.findTestCases</code> (:gh:`50096`)</p>
+<li><p><code class="xref py function docutils literal">unittest.findTestCases</code> (50096)</p>
 </li>
-<li><p><code class="xref py function docutils literal">unittest.getTestCaseNames</code> (:gh:`50096`)</p>
+<li><p><code class="xref py function docutils literal">unittest.getTestCaseNames</code> (50096)</p>
 </li>
-<li><p><code class="xref py function docutils literal">unittest.makeSuite</code> (:gh:`50096`)</p>
+<li><p><code class="xref py function docutils literal">unittest.makeSuite</code> (50096)</p>
 </li>
-<li><p><code class="xref py method docutils literal">unittest.TestProgram.usageExit</code> (:gh:`67048`)</p>
+<li><p><code class="xref py method docutils literal">unittest.TestProgram.usageExit</code> (67048)</p>
 </li>
-<li><p><code class="xref py class docutils literal">webbrowser.MacOSX</code> (:gh:`86421`)</p>
+<li><p><code class="xref py class docutils literal">webbrowser.MacOSX</code> (86421)</p>
 </li>
-<li><p><a href="#" class="broken-link"><code class="xref py class docutils literal">classmethod</code></a> descriptor chaining (:gh:`89519`)</p>
+<li><p><a href="#" class="broken-link"><code class="xref py class docutils literal">classmethod</code></a> descriptor chaining (89519)</p>
 </li>
 </ul>
 <h3 id="pending-removal-in-python-3-14">Pending removal in Python 3.14</h3>
@@ -1660,7 +1660,7 @@ May be removed in 3.15.
 <li><p><a class="reference internal" href="../library/argparse.html#py:module:argparse" title="argparse: Command-line option and argument parsing library."><code class="xref py module docutils literal">argparse</code></a>: The <em>type</em>, <em>choices</em>, and <em>metavar</em> parameters
 of <code class="xref py class docutils literal">argparse.BooleanOptionalAction</code> are deprecated
 and will be removed in 3.14.
-(Contributed by Nikita Sobolev in :gh:`92248`.)</p>
+(Contributed by Nikita Sobolev in 92248.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/ast.html#py:module:ast" title="ast: Abstract Syntax Tree classes and manipulation."><code class="xref py module docutils literal">ast</code></a>: The following features have been deprecated in documentation
 since Python 3.8, now cause a <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> to be emitted at
@@ -1678,7 +1678,7 @@ runtime when they are accessed or used, and will be removed in Python 3.14:</p>
 </li>
 </ul>
 <p>Use <a class="reference internal" href="../library/ast.html#py:class:ast.constant"><code class="xref py class docutils literal">ast.Constant</code></a> instead.
-(Contributed by Serhiy Storchaka in :gh:`90953`.)</p>
+(Contributed by Serhiy Storchaka in 90953.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/asyncio.html#py:module:asyncio" title="asyncio: Asynchronous I/O."><code class="xref py module docutils literal">asyncio</code></a>:</p>
 <ul>
@@ -1686,23 +1686,23 @@ runtime when they are accessed or used, and will be removed in Python 3.14:</p>
 <code class="xref py class docutils literal">asyncio.FastChildWatcher</code>, <code class="xref py class docutils literal">asyncio.AbstractChildWatcher</code>
 and <code class="xref py class docutils literal">asyncio.SafeChildWatcher</code> are deprecated and
 will be removed in Python 3.14.
-(Contributed by Kumar Aditya in :gh:`94597`.)</p>
+(Contributed by Kumar Aditya in 94597.)</p>
 </li>
 <li><p><code class="xref py function docutils literal">asyncio.set_child_watcher</code>, <code class="xref py function docutils literal">asyncio.get_child_watcher</code>,
 <code class="xref py method docutils literal">asyncio.AbstractEventLoopPolicy.set_child_watcher</code> and
 <code class="xref py method docutils literal">asyncio.AbstractEventLoopPolicy.get_child_watcher</code> are deprecated
 and will be removed in Python 3.14.
-(Contributed by Kumar Aditya in :gh:`94597`.)</p>
+(Contributed by Kumar Aditya in 94597.)</p>
 </li>
 <li><p>The <a href="#" class="broken-link"><code class="xref py method docutils literal">get_event_loop</code></a> method of the
 default event loop policy now emits a <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> if there
 is no current event loop set and it decides to create one.
-(Contributed by Serhiy Storchaka and Guido van Rossum in :gh:`100160`.)</p>
+(Contributed by Serhiy Storchaka and Guido van Rossum in 100160.)</p>
 </li>
 </ul>
 </li>
 <li><p><a class="reference internal" href="../library/email.html#py:module:email" title="email: Package supporting the parsing, manipulating, and generating email messages."><code class="xref py module docutils literal">email</code></a>: Deprecated the <em>isdst</em> parameter in <a class="reference internal" href="../library/email.utils.html#py:function:email.utils.localtime"><code class="xref py function docutils literal">email.utils.localtime</code></a>.
-(Contributed by Alan Williams in :gh:`72346`.)</p>
+(Contributed by Alan Williams in 72346.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/importlib.html#py:module:importlib.abc" title="importlib.abc: Abstract base classes related to import"><code class="xref py module docutils literal">importlib.abc</code></a> deprecated classes:</p>
 <ul>
@@ -1720,17 +1720,17 @@ is no current event loop set and it decides to create one.
 <li><p><a class="reference internal" href="../library/importlib.resources.abc.html#py:class:importlib.resources.abc.traversableresources"><code class="xref py class docutils literal">importlib.resources.abc.TraversableResources</code></a></p>
 </li>
 </ul>
-<p>(Contributed by Jason R. Coombs and Hugo van Kemenade in :gh:`93963`.)</p>
+<p>(Contributed by Jason R. Coombs and Hugo van Kemenade in 93963.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/itertools.html#py:module:itertools" title="itertools: Functions creating iterators for efficient looping."><code class="xref py module docutils literal">itertools</code></a> had undocumented, inefficient, historically buggy,
 and inconsistent support for copy, deepcopy, and pickle operations.
 This will be removed in 3.14 for a significant reduction in code
 volume and maintenance burden.
-(Contributed by Raymond Hettinger in :gh:`101588`.)</p>
+(Contributed by Raymond Hettinger in 101588.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/multiprocessing.html#py:module:multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py module docutils literal">multiprocessing</code></a>: The default start method will change to a safer one on
 Linux, BSDs, and other non-macOS POSIX platforms where <code>'fork'</code> is currently
-the default (:gh:`84559`). Adding a runtime warning about this was deemed too
+the default (84559). Adding a runtime warning about this was deemed too
 disruptive as the majority of code is not expected to care. Use the
 <a class="reference internal" href="../library/multiprocessing.html#py:function:multiprocessing.get_context"><code class="xref py function docutils literal">get_context</code></a> or
 <a class="reference internal" href="../library/multiprocessing.html#py:function:multiprocessing.set_start_method"><code class="xref py function docutils literal">set_start_method</code></a> APIs to explicitly specify when
@@ -1743,7 +1743,7 @@ deprecated.</p>
 <li><p><a class="reference internal" href="../library/pkgutil.html#py:module:pkgutil" title="pkgutil: Utilities for the import system."><code class="xref py module docutils literal">pkgutil</code></a>: <code class="xref py function docutils literal">pkgutil.find_loader</code> and <code class="xref py function docutils literal">pkgutil.get_loader</code>
 now raise <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a>;
 use <a class="reference internal" href="../library/importlib.html#py:function:importlib.util.find_spec"><code class="xref py function docutils literal">importlib.util.find_spec</code></a> instead.
-(Contributed by Nikita Sobolev in :gh:`97850`.)</p>
+(Contributed by Nikita Sobolev in 97850.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/pty.html#py:module:pty" title="pty: Pseudo-Terminal Handling for Unix. (Unix)"><code class="xref py module docutils literal">pty</code></a>:</p>
 <ul>
@@ -1766,7 +1766,7 @@ if <a href="../library/sqlite3.html#sqlite3-placeholders">named placeholders</a>
 <li><p><a class="reference internal" href="../library/urllib.html#py:module:urllib" title="urllib"><code class="xref py module docutils literal">urllib</code></a>:
 <code class="xref py class docutils literal">urllib.parse.Quoter</code> is deprecated: it was not intended to be a
 public API.
-(Contributed by Gregory P. Smith in :gh:`88168`.)</p>
+(Contributed by Gregory P. Smith in 88168.)</p>
 </li>
 </ul>
 <h3 id="pending-removal-in-python-3-15">Pending removal in Python 3.15</h3>
@@ -1776,12 +1776,12 @@ public API.
 <li><p>Setting <a class="reference internal" href="../reference/datamodel.html#py:attribute:module.__cached__"><code class="xref py attribute docutils literal">__cached__</code></a> on a module while
 failing to set <a class="reference internal" href="../library/importlib.html#py:attribute:importlib.machinery.modulespec.cached"><code class="xref py attribute docutils literal">__spec__.cached</code></a>
 is deprecated. In Python 3.15, <code class="xref py attribute docutils literal">__cached__</code> will cease to be set or
-take into consideration by the import system or standard library. (:gh:`97879`)</p>
+take into consideration by the import system or standard library. (97879)</p>
 </li>
 <li><p>Setting <a class="reference internal" href="../reference/datamodel.html#py:attribute:module.__package__"><code class="xref py attribute docutils literal">__package__</code></a> on a module while
 failing to set <a class="reference internal" href="../library/importlib.html#py:attribute:importlib.machinery.modulespec.parent"><code class="xref py attribute docutils literal">__spec__.parent</code></a>
 is deprecated. In Python 3.15, <code class="xref py attribute docutils literal">__package__</code> will cease to be set or
-take into consideration by the import system or standard library. (:gh:`97879`)</p>
+take into consideration by the import system or standard library. (97879)</p>
 </li>
 </ul>
 </li>
@@ -1815,11 +1815,11 @@ command-line interface has been deprecated since Python 3.13.</p>
 <ul>
 <li><p>The <a class="reference internal" href="../library/locale.html#py:function:locale.getdefaultlocale"><code class="xref py function docutils literal">getdefaultlocale</code></a> function
 has been deprecated since Python 3.11.
-Its removal was originally planned for Python 3.13 (:gh:`90817`),
+Its removal was originally planned for Python 3.13 (90817),
 but has been postponed to Python 3.15.
 Use <a class="reference internal" href="../library/locale.html#py:function:locale.getlocale"><code class="xref py function docutils literal">getlocale</code></a>, <a class="reference internal" href="../library/locale.html#py:function:locale.setlocale"><code class="xref py function docutils literal">setlocale</code></a>,
 and <a class="reference internal" href="../library/locale.html#py:function:locale.getencoding"><code class="xref py function docutils literal">getencoding</code></a> instead.
-(Contributed by Hugo van Kemenade in :gh:`111187`.)</p>
+(Contributed by Hugo van Kemenade in 111187.)</p>
 </li>
 </ul>
 </li>
@@ -1863,7 +1863,7 @@ deprecated in <span class="target" id="index-33"></span><a class="pep reference 
 since 3.10 and was planned to be removed in 3.12,
 but it only got a proper <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> in 3.12.
 May be removed in 3.15.
-(Contributed by Nikita Sobolev in :gh:`101866`.)</p>
+(Contributed by Nikita Sobolev in 101866.)</p>
 </li>
 </ul>
 </li>
@@ -1902,7 +1902,7 @@ have been deprecated since Python 3.13.</p>
 <ul>
 <li><p><a class="reference internal" href="../library/zipimport.html#py:method:zipimport.zipimporter.load_module"><code class="xref py method docutils literal">load_module</code></a> has been deprecated since
 Python 3.10. Use <a class="reference internal" href="../library/zipimport.html#py:method:zipimport.zipimporter.exec_module"><code class="xref py method docutils literal">exec_module</code></a> instead.
-(Contributed by Jiahao Li in :gh:`125746`.)</p>
+(Contributed by Jiahao Li in 125746.)</p>
 </li>
 </ul>
 </li>
@@ -1933,7 +1933,7 @@ for Unicode characters instead.</p>
 <li><p><code class="xref py function docutils literal">asyncio.iscoroutinefunction</code> is deprecated
 and will be removed in Python 3.16;
 use <a class="reference internal" href="../library/inspect.html#py:function:inspect.iscoroutinefunction"><code class="xref py function docutils literal">inspect.iscoroutinefunction</code></a> instead.
-(Contributed by Jiahao Li and Kumar Aditya in :gh:`122875`.)</p>
+(Contributed by Jiahao Li and Kumar Aditya in 122875.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/asyncio.html#py:module:asyncio" title="asyncio: Asynchronous I/O."><code class="xref py module docutils literal">asyncio</code></a> policy system is deprecated and will be removed in Python 3.16.
 In particular, the following classes and functions are deprecated:</p>
@@ -1961,7 +1961,7 @@ In particular, the following classes and functions are deprecated:</p>
 <span class="hl-source hl-python">    <span class="hl-constant hl-language hl-python">...</span></span>
 <span class="hl-source hl-python"></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">run</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">loop_factory</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">SelectorEventLoop</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
-<p>(Contributed by Kumar Aditya in :gh:`127949`.)</p>
+<p>(Contributed by Kumar Aditya in 127949.)</p>
 </li>
 </ul>
 </li>
@@ -1986,7 +1986,7 @@ or <em>sequence</em> as keyword arguments has been deprecated since Python 3.14.
 <li><p><a class="reference internal" href="../library/logging.html#py:module:logging" title="logging: Flexible event logging system for applications."><code class="xref py module docutils literal">logging</code></a>:</p>
 <p>Support for custom logging handlers with the <em>strm</em> argument is deprecated
 and scheduled for removal in Python 3.16. Define handlers with the <em>stream</em>
-argument instead. (Contributed by Mariusz Felisiak in :gh:`115032`.)</p>
+argument instead. (Contributed by Mariusz Felisiak in 115032.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/mimetypes.html#py:module:mimetypes" title="mimetypes: Mapping of filename extensions to MIME types."><code class="xref py module docutils literal">mimetypes</code></a>:</p>
 <ul>
@@ -1994,7 +1994,7 @@ argument instead. (Contributed by Mariusz Felisiak in :gh:`115032`.)</p>
 <a class="reference internal" href="../library/mimetypes.html#py:method:mimetypes.mimetypes.add_type"><code class="xref py method docutils literal">mimetypes.MimeTypes.add_type</code></a>.
 Undotted extensions are deprecated and will
 raise a <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> in Python 3.16.
-(Contributed by Hugo van Kemenade in :gh:`75223`.)</p>
+(Contributed by Hugo van Kemenade in 75223.)</p>
 </li>
 </ul>
 </li>
@@ -2056,7 +2056,7 @@ about the object. Other common buffer types such as <a class="reference internal
 were also never understood as subtypes of <code class="xref py class docutils literal">ByteString</code> (either at
 runtime or by static type checkers).</p>
 <p>See <span class="target" id="index-34"></span><a class="pep reference external" href="https://peps.python.org/pep-0688/#current-options"><strong>PEP 688</strong></a> for more details.
-(Contributed by Shantanu Jain in :gh:`91896`.)</p>
+(Contributed by Shantanu Jain in 91896.)</p>
 </li>
 </ul>
 </li>
@@ -2083,7 +2083,7 @@ about the object. Other common buffer types such as <a class="reference internal
 were also never understood as subtypes of <code class="xref py class docutils literal">ByteString</code> (either at
 runtime or by static type checkers).</p>
 <p>See <span class="target" id="index-35"></span><a class="pep reference external" href="https://peps.python.org/pep-0688/#current-options"><strong>PEP 688</strong></a> for more details.
-(Contributed by Shantanu Jain in :gh:`91896`.)</p>
+(Contributed by Shantanu Jain in 91896.)</p>
 </li>
 </ul>
 </li>
@@ -2118,7 +2118,7 @@ ambiguous expressions like <code>[0x1for x in y]</code> (which can be interprete
 if the numeric literal is immediately followed by one of keywords
 :keyword:`and`, :keyword:`else`, :keyword:`for`, :keyword:`if`,
 :keyword:`in`, :keyword:`is` and :keyword:`or`.  In a future release it
-will be changed to a syntax error. (:gh:`87999`)</p>
+will be changed to a syntax error. (87999)</p>
 </li>
 <li><p>Support for <code>__index__()</code> and <code>__int__()</code> method returning non-int type:
 these methods will be required to return an instance of a strict subclass of
@@ -2137,16 +2137,16 @@ these methods will be required to return an instance of a strict subclass of
 <li><p>Passing a complex number as the <em>real</em> or <em>imag</em> argument in the
 <a href="#" class="broken-link"><code class="xref py function docutils literal">complex</code></a> constructor is now deprecated; it should only be passed
 as a single positional argument.
-(Contributed by Serhiy Storchaka in :gh:`109218`.)</p>
+(Contributed by Serhiy Storchaka in 109218.)</p>
 </li>
 </ul>
 </li>
 <li><p><a class="reference internal" href="../library/calendar.html#py:module:calendar" title="calendar: Functions for working with calendars, including some emulation of the Unix cal program."><code class="xref py module docutils literal">calendar</code></a>: <code>calendar.January</code> and <code>calendar.February</code> constants are
 deprecated and replaced by <a class="reference internal" href="../library/calendar.html#py:data:calendar.january"><code class="xref py data docutils literal">calendar.JANUARY</code></a> and
 <a class="reference internal" href="../library/calendar.html#py:data:calendar.february"><code class="xref py data docutils literal">calendar.FEBRUARY</code></a>.
-(Contributed by Prince Roshan in :gh:`103636`.)</p>
+(Contributed by Prince Roshan in 103636.)</p>
 </li>
-<li><p><a class="reference internal" href="../library/codecs.html#py:module:codecs" title="codecs: Encode and decode data and streams."><code class="xref py module docutils literal">codecs</code></a>: use <a class="reference internal" href="../library/functions.html#py:function:open"><code class="xref py function docutils literal">open</code></a> instead of <a class="reference internal" href="../library/codecs.html#py:function:codecs.open"><code class="xref py function docutils literal">codecs.open</code></a>. (:gh:`133038`)</p>
+<li><p><a class="reference internal" href="../library/codecs.html#py:module:codecs" title="codecs: Encode and decode data and streams."><code class="xref py module docutils literal">codecs</code></a>: use <a class="reference internal" href="../library/functions.html#py:function:open"><code class="xref py function docutils literal">open</code></a> instead of <a class="reference internal" href="../library/codecs.html#py:function:codecs.open"><code class="xref py function docutils literal">codecs.open</code></a>. (133038)</p>
 </li>
 <li><p><a class="reference internal" href="../reference/datamodel.html#py:attribute:codeobject.co_lnotab"><code class="xref py attribute docutils literal">codeobject.co_lnotab</code></a>: use the <a class="reference internal" href="../reference/datamodel.html#py:method:codeobject.co_lines"><code class="xref py method docutils literal">codeobject.co_lines</code></a> method
 instead.</p>
@@ -2194,7 +2194,7 @@ and group names in regular expressions.  Only sequence of ASCII digits is now
 accepted as a numerical reference.  The group name in bytes patterns and
 replacement strings can now only contain ASCII letters and digits and
 underscore.
-(Contributed by Serhiy Storchaka in :gh:`91760`.)</p>
+(Contributed by Serhiy Storchaka in 91760.)</p>
 </li>
 <li><p><code class="xref py module docutils literal">sre_compile</code>, <code class="xref py module docutils literal">sre_constants</code> and <code class="xref py module docutils literal">sre_parse</code> modules.</p>
 </li>
@@ -2249,12 +2249,12 @@ use <a class="reference internal" href="../library/threading.html#py:attribute:t
 </li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="../library/typing.html#py:class:typing.text"><code class="xref py class docutils literal">typing.Text</code></a> (:gh:`92332`).</p>
+<li><p><a class="reference internal" href="../library/typing.html#py:class:typing.text"><code class="xref py class docutils literal">typing.Text</code></a> (92332).</p>
 </li>
 <li><p>The internal class <code>typing._UnionGenericAlias</code> is no longer used to implement
 <a class="reference internal" href="../library/typing.html#py:class:typing.union"><code class="xref py class docutils literal">typing.Union</code></a>. To preserve compatibility with users using this private
 class, a compatibility shim will be provided until at least Python 3.17. (Contributed by
-Jelle Zijlstra in :gh:`105499`.)</p>
+Jelle Zijlstra in 105499.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/unittest.html#py:class:unittest.isolatedasynciotestcase"><code class="xref py class docutils literal">unittest.IsolatedAsyncioTestCase</code></a>: it is deprecated to return a value
 that is not <code>None</code> from a test case.</p>
@@ -2305,13 +2305,13 @@ use <a class="reference internal" href="../library/sys.html#py:function:sys._cle
 according to the schedule in <span class="target" id="index-36"></span><a class="pep reference external" href="https://peps.python.org/pep-0594/"><strong>PEP 594</strong></a>,
 having been deprecated in Python 3.6.
 Use <a class="reference internal" href="../library/asyncio.html#py:module:asyncio" title="asyncio: Asynchronous I/O."><code class="xref py module docutils literal">asyncio</code></a> instead.
-(Contributed by Nikita Sobolev in :gh:`96580`.)</p>
+(Contributed by Nikita Sobolev in 96580.)</p>
 </li>
 </ul>
 <h3 id="configparser">configparser</h3>
 <ul>
 <li><p>Several names deprecated in the <a class="reference internal" href="../library/configparser.html#py:module:configparser" title="configparser: Configuration file parser."><code class="xref py module docutils literal">configparser</code></a> way back in 3.2 have
-been removed per :gh:`89336`:</p>
+been removed per 89336:</p>
 <ul>
 <li><p><a class="reference internal" href="../library/configparser.html#py:exception:configparser.parsingerror"><code class="xref py class docutils literal">configparser.ParsingError</code></a> no longer has a <code>filename</code> attribute
 or argument. Use the <code>source</code> attribute and argument instead.</p>
@@ -2332,7 +2332,7 @@ Use <a class="reference internal" href="../library/configparser.html#py:method:c
 <span class="target" id="index-37"></span><a class="pep reference external" href="https://peps.python.org/pep-0632/"><strong>PEP 632</strong></a> "Deprecate distutils module". For projects still using
 <code>distutils</code> and cannot be updated to something else, the <code>setuptools</code>
 project can be installed: it still provides <code>distutils</code>.
-(Contributed by Victor Stinner in :gh:`92584`.)</p>
+(Contributed by Victor Stinner in 92584.)</p>
 </li>
 </ul>
 <h3 id="ensurepip">ensurepip</h3>
@@ -2350,21 +2350,21 @@ are no longer provided by default in environments created with
 the <code>setuptools</code> package. For projects relying on these at runtime,
 the <code>setuptools</code> project should be declared as a dependency and
 installed separately (typically, using pip).</p>
-<p>(Contributed by Pradyun Gedam in :gh:`95299`.)</p>
+<p>(Contributed by Pradyun Gedam in 95299.)</p>
 </li>
 </ul>
 <h3 id="enum">enum</h3>
 <ul>
 <li><p>Remove <a class="reference internal" href="../library/enum.html#py:module:enum" title="enum: Implementation of an enumeration class."><code class="xref py module docutils literal">enum</code></a>'s <code>EnumMeta.__getattr__</code>, which is no longer needed for
 enum attribute access.
-(Contributed by Ethan Furman in :gh:`95083`.)</p>
+(Contributed by Ethan Furman in 95083.)</p>
 </li>
 </ul>
 <h3 id="ftplib">ftplib</h3>
 <ul>
 <li><p>Remove <a class="reference internal" href="../library/ftplib.html#py:module:ftplib" title="ftplib: FTP protocol client (requires sockets)."><code class="xref py module docutils literal">ftplib</code></a>'s <code>FTP_TLS.ssl_version</code> class attribute: use the
 <em>context</em> parameter instead.
-(Contributed by Victor Stinner in :gh:`94172`.)</p>
+(Contributed by Victor Stinner in 94172.)</p>
 </li>
 </ul>
 <h3 id="gzip">gzip</h3>
@@ -2373,7 +2373,7 @@ enum attribute access.
 deprecated since Python 2.6, use the <a class="reference internal" href="../library/gzip.html#py:attribute:gzip.gzipfile.name"><code class="xref py attribute docutils literal">name</code></a> attribute
 instead. In write mode, the <code>filename</code> attribute added <code>'.gz'</code> file
 extension if it was not present.
-(Contributed by Victor Stinner in :gh:`94196`.)</p>
+(Contributed by Victor Stinner in 94196.)</p>
 </li>
 </ul>
 <h3 id="hashlib">hashlib</h3>
@@ -2382,7 +2382,7 @@ extension if it was not present.
 <a class="reference internal" href="../library/hashlib.html#py:function:hashlib.pbkdf2_hmac"><code class="xref py function docutils literal">hashlib.pbkdf2_hmac</code></a>, deprecated in Python 3.10. Python 3.10 and
 newer requires OpenSSL 1.1.1 (<span class="target" id="index-38"></span><a class="pep reference external" href="https://peps.python.org/pep-0644/"><strong>PEP 644</strong></a>): this OpenSSL version provides
 a C implementation of <a class="reference internal" href="../library/hashlib.html#py:function:hashlib.pbkdf2_hmac"><code class="xref py function docutils literal">pbkdf2_hmac</code></a> which is faster.
-(Contributed by Victor Stinner in :gh:`94199`.)</p>
+(Contributed by Victor Stinner in 94199.)</p>
 </li>
 </ul>
 <h3 id="importlib">importlib</h3>
@@ -2391,17 +2391,17 @@ a C implementation of <a class="reference internal" href="../library/hashlib.htm
 completed:</p>
 <ul>
 <li><p>References to, and support for <code class="xref py method docutils literal">module_repr</code> has been removed.
-(Contributed by Barry Warsaw in :gh:`97850`.)</p>
+(Contributed by Barry Warsaw in 97850.)</p>
 </li>
 <li><p><code>importlib.util.set_package</code>, <code>importlib.util.set_loader</code> and
 <code>importlib.util.module_for_loader</code> have all been removed. (Contributed by
-Brett Cannon and Nikita Sobolev in :gh:`65961` and :gh:`97850`.)</p>
+Brett Cannon and Nikita Sobolev in 65961 and 97850.)</p>
 </li>
 <li><p>Support for <code>find_loader()</code> and <code>find_module()</code> APIs have been
-removed.  (Contributed by Barry Warsaw in :gh:`98040`.)</p>
+removed.  (Contributed by Barry Warsaw in 98040.)</p>
 </li>
 <li><p><code>importlib.abc.Finder</code>, <code>pkgutil.ImpImporter</code>, and <code>pkgutil.ImpLoader</code>
-have been removed.  (Contributed by Barry Warsaw in :gh:`98040`.)</p>
+have been removed.  (Contributed by Barry Warsaw in 98040.)</p>
 </li>
 </ul>
 </li>
@@ -2410,7 +2410,7 @@ have been removed.  (Contributed by Barry Warsaw in :gh:`98040`.)</p>
 <h3 id="imp">imp</h3>
 <ul>
 <li><p>The <code class="xref py module docutils literal">imp</code> module has been removed.  (Contributed by Barry Warsaw in
-:gh:`98040`.)</p>
+98040.)</p>
 <p>To migrate, consult the following correspondence table:</p>
 <blockquote>
 <table>
@@ -2540,14 +2540,14 @@ the locking scheme has changed in Python 3.3 to per-module locks.</p>
 3.10: just use <a class="reference internal" href="../library/functions.html#py:function:open"><code class="xref py function docutils literal">open</code></a> instead. The <a class="reference internal" href="../library/functions.html#py:function:open"><code class="xref py function docutils literal">open</code></a> (<a class="reference internal" href="../library/io.html#py:function:io.open"><code class="xref py function docutils literal">io.open</code></a>)
 function is a built-in function. Since Python 3.10, <code class="xref py function docutils literal">_pyio.open</code> is
 also a static method.
-(Contributed by Victor Stinner in :gh:`94169`.)</p>
+(Contributed by Victor Stinner in 94169.)</p>
 </li>
 </ul>
 <h3 id="locale">locale</h3>
 <ul>
 <li><p>Remove <a class="reference internal" href="../library/locale.html#py:module:locale" title="locale: Internationalization services."><code class="xref py module docutils literal">locale</code></a>'s <code class="xref py function docutils literal">locale.format</code> function, deprecated in Python 3.7:
 use <a class="reference internal" href="../library/locale.html#py:function:locale.format_string"><code class="xref py function docutils literal">locale.format_string</code></a> instead.
-(Contributed by Victor Stinner in :gh:`94226`.)</p>
+(Contributed by Victor Stinner in 94226.)</p>
 </li>
 </ul>
 <h3 id="smtpd">smtpd</h3>
@@ -2556,7 +2556,7 @@ use <a class="reference internal" href="../library/locale.html#py:function:local
 having been deprecated in Python 3.4.7 and 3.5.4.
 Use the :pypi:`aiosmtpd` PyPI module or any other
 <a class="reference internal" href="../library/asyncio.html#py:module:asyncio" title="asyncio: Asynchronous I/O."><code class="xref py module docutils literal">asyncio</code></a>-based server instead.
-(Contributed by Oleg Iarygin in :gh:`93243`.)</p>
+(Contributed by Oleg Iarygin in 93243.)</p>
 </li>
 </ul>
 <h3 id="sqlite3-1">sqlite3</h3>
@@ -2575,20 +2575,20 @@ Use the :pypi:`aiosmtpd` PyPI module or any other
 <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> since Python 3.3. Code that previously set the text factory to
 <code>OptimizedUnicode</code> can either use <code>str</code> explicitly, or rely on the
 default value which is also <code>str</code>.</p>
-<p>(Contributed by Erlend E. Aasland in :gh:`92548`.)</p>
+<p>(Contributed by Erlend E. Aasland in 92548.)</p>
 </li>
 </ul>
 <h3 id="ssl">ssl</h3>
 <ul>
 <li><p>Remove <a class="reference internal" href="../library/ssl.html#py:module:ssl" title="ssl: TLS/SSL wrapper for socket objects"><code class="xref py module docutils literal">ssl</code></a>'s <code class="xref py function docutils literal">ssl.RAND_pseudo_bytes</code> function, deprecated in Python 3.6:
 use <a class="reference internal" href="../library/os.html#py:function:os.urandom"><code class="xref py function docutils literal">os.urandom</code></a> or <a class="reference internal" href="../library/ssl.html#py:function:ssl.rand_bytes"><code class="xref py function docutils literal">ssl.RAND_bytes</code></a> instead.
-(Contributed by Victor Stinner in :gh:`94199`.)</p>
+(Contributed by Victor Stinner in 94199.)</p>
 </li>
 <li><p>Remove the <code class="xref py function docutils literal">ssl.match_hostname</code> function.
 It was deprecated in Python 3.7. OpenSSL performs
 hostname matching since Python 3.7, Python no longer uses the
 <code class="xref py function docutils literal">ssl.match_hostname</code> function.
-(Contributed by Victor Stinner in :gh:`94199`.)</p>
+(Contributed by Victor Stinner in 94199.)</p>
 </li>
 <li><p>Remove the <code class="xref py function docutils literal">ssl.wrap_socket</code> function, deprecated in Python 3.7:
 instead, create a <a class="reference internal" href="../library/ssl.html#py:class:ssl.sslcontext"><code class="xref py class docutils literal">ssl.SSLContext</code></a> object and call its
@@ -2596,7 +2596,7 @@ instead, create a <a class="reference internal" href="../library/ssl.html#py:cla
 <code class="xref py function docutils literal">ssl.wrap_socket</code> is broken and insecure. The function neither sends a
 SNI TLS extension nor validates the server hostname. Code is subject to <span class="target" id="index-40"></span><a class="cwe reference external" href="https://cwe.mitre.org/data/definitions/295.html"><strong>CWE 295</strong></a>
 (Improper Certificate Validation).
-(Contributed by Victor Stinner in :gh:`94199`.)</p>
+(Contributed by Victor Stinner in 94199.)</p>
 </li>
 </ul>
 <h3 id="unittest-1">unittest</h3>
@@ -2752,14 +2752,14 @@ your unit tests.</p>
 <code>_TextTestResult</code> (deprecated in Python 3.2).</p>
 </li>
 </ul>
-<p>(Contributed by Serhiy Storchaka in :gh:`89325`.)</p>
+<p>(Contributed by Serhiy Storchaka in 89325.)</p>
 </li>
 </ul>
 <h3 id="webbrowser">webbrowser</h3>
 <ul>
 <li><p>Remove support for obsolete browsers from <a class="reference internal" href="../library/webbrowser.html#py:module:webbrowser" title="webbrowser: Easy-to-use controller for web browsers."><code class="xref py module docutils literal">webbrowser</code></a>.
 The removed browsers include: Grail, Mosaic, Netscape, Galeon, Skipstone,
-Iceape, Firebird, and Firefox versions 35 and below (:gh:`102871`).</p>
+Iceape, Firebird, and Firefox versions 35 and below (102871).</p>
 </li>
 </ul>
 <h3 id="xml-etree-elementtree">xml.etree.ElementTree</h3>
@@ -2768,7 +2768,7 @@ Iceape, Firebird, and Firefox versions 35 and below (:gh:`102871`).</p>
 pure Python implementation, deprecated in Python 3.10, use the
 <a class="reference internal" href="../library/copy.html#py:function:copy.copy"><code class="xref py function docutils literal">copy.copy</code></a> function instead.  The C implementation of <a class="reference internal" href="../library/xml.etree.elementtree.html#py:module:xml.etree.elementtree" title="xml.etree.ElementTree: Implementation of the ElementTree API."><code class="xref py module docutils literal">xml.etree.ElementTree</code></a>
 has no <code>copy()</code> method, only a <code>__copy__()</code> method.
-(Contributed by Victor Stinner in :gh:`94383`.)</p>
+(Contributed by Victor Stinner in 94383.)</p>
 </li>
 </ul>
 <h3 id="zipimport">zipimport</h3>
@@ -2776,14 +2776,14 @@ has no <code>copy()</code> method, only a <code>__copy__()</code> method.
 <li><p>Remove <a class="reference internal" href="../library/zipimport.html#py:module:zipimport" title="zipimport: Support for importing Python modules from ZIP archives."><code class="xref py module docutils literal">zipimport</code></a>'s <code>find_loader()</code> and <code>find_module()</code> methods,
 deprecated in Python 3.10: use the <code>find_spec()</code> method instead.  See
 <span class="target" id="index-41"></span><a class="pep reference external" href="https://peps.python.org/pep-0451/"><strong>PEP 451</strong></a> for the rationale.
-(Contributed by Victor Stinner in :gh:`94379`.)</p>
+(Contributed by Victor Stinner in 94379.)</p>
 </li>
 </ul>
 <h3 id="others">Others</h3>
 <ul>
 <li><p>Remove the <code>suspicious</code> rule from the documentation :file:`Makefile` and
 :file:`Doc/tools/rstlint.py`, both in favor of <a href="https://github.com/sphinx-contrib/sphinx-lint">sphinx-lint</a>.
-(Contributed by Julien Palard in :gh:`98179`.)</p>
+(Contributed by Julien Palard in 98179.)</p>
 </li>
 <li><p>Remove the <em>keyfile</em> and <em>certfile</em> parameters from the
 <a class="reference internal" href="../library/ftplib.html#py:module:ftplib" title="ftplib: FTP protocol client (requires sockets)."><code class="xref py module docutils literal">ftplib</code></a>, <a class="reference internal" href="../library/imaplib.html#py:module:imaplib" title="imaplib: IMAP4 protocol client (requires sockets)."><code class="xref py module docutils literal">imaplib</code></a>, <a class="reference internal" href="../library/poplib.html#py:module:poplib" title="poplib: POP3 protocol client (requires sockets)."><code class="xref py module docutils literal">poplib</code></a> and <a class="reference internal" href="../library/smtplib.html#py:module:smtplib" title="smtplib: SMTP protocol client (requires sockets)."><code class="xref py module docutils literal">smtplib</code></a> modules,
@@ -2791,14 +2791,14 @@ and the <em>key_file</em>, <em>cert_file</em> and <em>check_hostname</em> parame
 <a class="reference internal" href="../library/http.client.html#py:module:http.client" title="http.client: HTTP and HTTPS protocol client (requires sockets)."><code class="xref py module docutils literal">http.client</code></a> module,
 all deprecated since Python 3.6. Use the <em>context</em> parameter
 (<em>ssl_context</em> in <a class="reference internal" href="../library/imaplib.html#py:module:imaplib" title="imaplib: IMAP4 protocol client (requires sockets)."><code class="xref py module docutils literal">imaplib</code></a>) instead.
-(Contributed by Victor Stinner in :gh:`94172`.)</p>
+(Contributed by Victor Stinner in 94172.)</p>
 </li>
 <li><p>Remove <code>Jython</code> compatibility hacks from several stdlib modules and tests.
-(Contributed by Nikita Sobolev in :gh:`99482`.)</p>
+(Contributed by Nikita Sobolev in 99482.)</p>
 </li>
 <li><p>Remove <code>_use_broken_old_ctypes_structure_semantics_</code> flag
 from <a class="reference internal" href="../library/ctypes.html#py:module:ctypes" title="ctypes: A foreign function library for Python."><code class="xref py module docutils literal">ctypes</code></a> module.
-(Contributed by Nikita Sobolev in :gh:`99285`.)</p>
+(Contributed by Nikita Sobolev in 99285.)</p>
 </li>
 </ul>
 <a id="whatsnew312-porting-to-python312"></a>
@@ -2812,7 +2812,7 @@ group names in regular expressions.
 Only sequence of ASCII digits is now accepted as a numerical reference.
 The group name in bytes patterns and replacement strings can now only
 contain ASCII letters and digits and underscore.
-(Contributed by Serhiy Storchaka in :gh:`91760`.)</p>
+(Contributed by Serhiy Storchaka in 91760.)</p>
 </li>
 <li><p>Remove <code>randrange()</code> functionality deprecated since Python 3.10.  Formerly,
 <code>randrange(10.0)</code> losslessly converted to <code>randrange(10)</code>. Now, it raises a
@@ -2820,7 +2820,7 @@ contain ASCII letters and digits and underscore.
 <code>randrange(10.5)</code> or <code>randrange('10')</code> has been changed from <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> to
 <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a>.  This also prevents bugs where <code>randrange(1e25)</code> would silently
 select from a larger range than <code>randrange(10**25)</code>.
-(Originally suggested by Serhiy Storchaka :gh:`86388`.)</p>
+(Originally suggested by Serhiy Storchaka 86388.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/argparse.html#py:class:argparse.argumentparser"><code class="xref py class docutils literal">argparse.ArgumentParser</code></a> changed encoding and error handler
 for reading arguments from file (e.g. <code>fromfile_prefix_chars</code> option)
@@ -2835,12 +2835,12 @@ and 3.5.4.  A recommended replacement is the
 <li><p><a class="reference internal" href="../library/shlex.html#py:function:shlex.split"><code class="xref py function docutils literal">shlex.split</code></a>: Passing <code>None</code> for <em>s</em> argument now raises an
 exception, rather than reading <a class="reference internal" href="../library/sys.html#py:data:sys.stdin"><code class="xref py data docutils literal">sys.stdin</code></a>. The feature was deprecated
 in Python 3.9.
-(Contributed by Victor Stinner in :gh:`94352`.)</p>
+(Contributed by Victor Stinner in 94352.)</p>
 </li>
 <li><p>The <a class="reference internal" href="../library/os.html#py:module:os" title="os: Miscellaneous operating system interfaces."><code class="xref py module docutils literal">os</code></a> module no longer accepts bytes-like paths, like
 <a class="reference internal" href="../library/stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a> and <a class="reference internal" href="../library/stdtypes.html#py:class:memoryview"><code class="xref py class docutils literal">memoryview</code></a> types: only the exact
 <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> type is accepted for bytes strings.
-(Contributed by Victor Stinner in :gh:`98393`.)</p>
+(Contributed by Victor Stinner in 98393.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/syslog.html#py:function:syslog.openlog"><code class="xref py function docutils literal">syslog.openlog</code></a> and <a class="reference internal" href="../library/syslog.html#py:function:syslog.closelog"><code class="xref py function docutils literal">syslog.closelog</code></a> now fail if used in subinterpreters.
 <a class="reference internal" href="../library/syslog.html#py:function:syslog.syslog"><code class="xref py function docutils literal">syslog.syslog</code></a> may still be used in subinterpreters,
@@ -2849,7 +2849,7 @@ These new restrictions do not apply to the main interpreter,
 so only a very small set of users might be affected.
 This change helps with interpreter isolation.  Furthermore, <a class="reference internal" href="../library/syslog.html#py:module:syslog" title="syslog: An interface to the Unix syslog library routines. (Unix)"><code class="xref py module docutils literal">syslog</code></a> is a wrapper
 around process-global resources, which are best managed from the main interpreter.
-(Contributed by Donghee Na in :gh:`99127`.)</p>
+(Contributed by Donghee Na in 99127.)</p>
 </li>
 <li><p>The undocumented locking behavior of <a class="reference internal" href="../library/functools.html#py:function:functools.cached_property"><code class="xref py function docutils literal">cached_property</code></a>
 is removed, because it locked across all instances of the class, leading to high
@@ -2862,7 +2862,7 @@ function or around multi-threaded access points.</p>
 </li>
 <li><p><a class="reference internal" href="../library/sys.html#py:function:sys._current_exceptions"><code class="xref py function docutils literal">sys._current_exceptions</code></a> now returns a mapping from thread-id to an
 exception instance, rather than to a <code>(typ, exc, tb)</code> tuple.
-(Contributed by Irit Katriel in :gh:`103176`.)</p>
+(Contributed by Irit Katriel in 103176.)</p>
 </li>
 <li><p>When extracting tar files using <a class="reference internal" href="../library/tarfile.html#py:module:tarfile" title="tarfile: Read and write tar-format archive files."><code class="xref py module docutils literal">tarfile</code></a> or
 <a class="reference internal" href="../library/shutil.html#py:function:shutil.unpack_archive"><code class="xref py function docutils literal">shutil.unpack_archive</code></a>, pass the <em>filter</em> argument to limit features
@@ -2913,7 +2913,7 @@ arguments that returns <code>True</code> if the current interpreter is the
 main interpreter.</p>
 <p>Any library or application that provides a custom <code>_thread</code> module
 should provide <code>_is_main_interpreter()</code>.
-(See :gh:`112826`.)</p>
+(See 112826.)</p>
 </li>
 </ul>
 <h2 id="build-changes">Build Changes</h2>
@@ -2922,22 +2922,22 @@ should provide <code>_is_main_interpreter()</code>.
 Build parameters like headers and libraries are detected in <code>configure</code>
 script. Extensions are built by :file:`Makefile`. Most extensions use
 <code>pkg-config</code> and fall back to manual detection.
-(Contributed by Christian Heimes in :gh:`93939`.)</p>
+(Contributed by Christian Heimes in 93939.)</p>
 </li>
 <li><p><code>va_start()</code> with two parameters, like <code>va_start(args, format),</code>
 is now required to build Python.
 <code>va_start()</code> is no longer called with a single parameter.
-(Contributed by Kumar Aditya in :gh:`93207`.)</p>
+(Contributed by Kumar Aditya in 93207.)</p>
 </li>
 <li><p>CPython now uses the ThinLTO option as the default link time optimization policy
 if the Clang compiler accepts the flag.
-(Contributed by Donghee Na in :gh:`89536`.)</p>
+(Contributed by Donghee Na in 89536.)</p>
 </li>
 <li><p>Add <code>COMPILEALL_OPTS</code> variable in :file:`Makefile` to override <a class="reference internal" href="../library/compileall.html#py:module:compileall" title="compileall: Tools for byte-compiling all Python source files in a directory tree."><code class="xref py module docutils literal">compileall</code></a>
 options (default: <code>-j0</code>) in <code>make install</code>. Also merged the 3
 <code>compileall</code> commands into a single command to build .pyc files for all
 optimization levels (0, 1, 2) at once.
-(Contributed by Victor Stinner in :gh:`99289`.)</p>
+(Contributed by Victor Stinner in 99289.)</p>
 </li>
 <li><p>Add platform triplets for 64-bit LoongArch:</p>
 <ul>
@@ -2948,13 +2948,13 @@ optimization levels (0, 1, 2) at once.
 <li><p>loongarch64-linux-gnu</p>
 </li>
 </ul>
-<p>(Contributed by Zhang Na in :gh:`90656`.)</p>
+<p>(Contributed by Zhang Na in 90656.)</p>
 </li>
 <li><p><code>PYTHON_FOR_REGEN</code> now require Python 3.10 or newer.</p>
 </li>
 <li><p>Autoconf 2.71 and aclocal 1.16.4 is now required to regenerate
 :file:`configure`.
-(Contributed by Christian Heimes in :gh:`89886`.)</p>
+(Contributed by Christian Heimes in 89886.)</p>
 </li>
 <li><p>Windows builds and macOS installers from python.org now use OpenSSL 3.0.</p>
 </li>
@@ -2986,7 +2986,7 @@ Its contents are marked by the <code>PyUnstable_</code> prefix in names.</p>
 </ul>
 <p>The original names will continue to be available until the respective
 API changes.</p>
-<p>(Contributed by Petr Viktorin in :gh:`101101`.)</p>
+<p>(Contributed by Petr Viktorin in 101101.)</p>
 </li>
 <li><p><span class="target" id="index-47"></span><a class="pep reference external" href="https://peps.python.org/pep-0697/"><strong>PEP 697</strong></a>: Add an API for extending types whose instance memory layout is
 opaque:</p>
@@ -3005,12 +3005,12 @@ added to allow safely extending certain variable-sized types, including
 <a class="reference internal" href="../c-api/structures.html#c:type:pymemberdef"><code class="xref c type docutils literal">members</code></a> in terms of a subclass-specific struct.</p>
 </li>
 </ul>
-<p>(Contributed by Petr Viktorin in :gh:`103509`.)</p>
+<p>(Contributed by Petr Viktorin in 103509.)</p>
 </li>
 <li><p>Add the new <a href="../c-api/stable.html#limited-c-api">limited C API</a> function <a class="reference internal" href="../c-api/type.html#c:function:pytype_frommetaclass"><code class="xref c function docutils literal">PyType_FromMetaclass</code></a>,
 which generalizes the existing <a class="reference internal" href="../c-api/type.html#c:function:pytype_frommoduleandspec"><code class="xref c function docutils literal">PyType_FromModuleAndSpec</code></a> using
 an additional metaclass argument.
-(Contributed by Wenzel Jakob in :gh:`93012`.)</p>
+(Contributed by Wenzel Jakob in 93012.)</p>
 </li>
 <li><p>API for creating objects that can be called using
 <a href="../c-api/call.html#vectorcall">the vectorcall protocol</a> was added to the
@@ -3031,7 +3031,7 @@ This makes vectorcall safe to use with mutable types (i.e. heap types
 without the immutable flag, <a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tpflags_immutabletype"><code class="xref c macro docutils literal">Py_TPFLAGS_IMMUTABLETYPE</code></a>).
 Mutable types that do not override <a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_call"><code class="xref c member docutils literal">tp_call</code></a> now
 inherit the <code>Py_TPFLAGS_HAVE_VECTORCALL</code> flag.
-(Contributed by Petr Viktorin in :gh:`93274`.)</p>
+(Contributed by Petr Viktorin in 93274.)</p>
 <p>The <a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tpflags_managed_dict"><code class="xref c macro docutils literal">Py_TPFLAGS_MANAGED_DICT</code></a> and <a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tpflags_managed_weakref"><code class="xref c macro docutils literal">Py_TPFLAGS_MANAGED_WEAKREF</code></a>
 flags have been added. This allows extensions classes to support object
 <a class="reference internal" href="../reference/datamodel.html#py:attribute:object.__dict__"><code class="xref py attribute docutils literal">__dict__</code></a> and weakrefs with less bookkeeping,
@@ -3050,36 +3050,36 @@ using less memory and with faster access.</p>
 </ul>
 <p>This means that both the incoming and outgoing ends of the vector call
 protocol are now available in the <a href="../c-api/stable.html#stable">Limited API</a>. (Contributed
-by Wenzel Jakob in :gh:`98586`.)</p>
+by Wenzel Jakob in 98586.)</p>
 </li>
 <li><p>Add two new public functions,
 <a class="reference internal" href="../c-api/init.html#c:function:pyeval_setprofileallthreads"><code class="xref c function docutils literal">PyEval_SetProfileAllThreads</code></a> and
 <a class="reference internal" href="../c-api/init.html#c:function:pyeval_settraceallthreads"><code class="xref c function docutils literal">PyEval_SetTraceAllThreads</code></a>, that allow to set tracing and profiling
 functions in all running threads in addition to the calling one. (Contributed
-by Pablo Galindo in :gh:`93503`.)</p>
+by Pablo Galindo in 93503.)</p>
 </li>
 <li><p>Add new function <a class="reference internal" href="../c-api/function.html#c:function:pyfunction_setvectorcall"><code class="xref c function docutils literal">PyFunction_SetVectorcall</code></a> to the C API
 which sets the vectorcall field of a given <a class="reference internal" href="../c-api/function.html#c:type:pyfunctionobject"><code class="xref c type docutils literal">PyFunctionObject</code></a>.
-(Contributed by Andrew Frost in :gh:`92257`.)</p>
+(Contributed by Andrew Frost in 92257.)</p>
 </li>
 <li><p>The C API now permits registering callbacks via <a class="reference internal" href="../c-api/dict.html#c:function:pydict_addwatcher"><code class="xref c function docutils literal">PyDict_AddWatcher</code></a>,
 <a class="reference internal" href="../c-api/dict.html#c:function:pydict_watch"><code class="xref c function docutils literal">PyDict_Watch</code></a> and related APIs to be called whenever a dictionary
 is modified. This is intended for use by optimizing interpreters, JIT
 compilers, or debuggers.
-(Contributed by Carl Meyer in :gh:`91052`.)</p>
+(Contributed by Carl Meyer in 91052.)</p>
 </li>
 <li><p>Add <a class="reference internal" href="../c-api/type.html#c:function:pytype_addwatcher"><code class="xref c function docutils literal">PyType_AddWatcher</code></a> and <a class="reference internal" href="../c-api/type.html#c:function:pytype_watch"><code class="xref c function docutils literal">PyType_Watch</code></a> API to register
 callbacks to receive notification on changes to a type.
-(Contributed by Carl Meyer in :gh:`91051`.)</p>
+(Contributed by Carl Meyer in 91051.)</p>
 </li>
 <li><p>Add <a class="reference internal" href="../c-api/code.html#c:function:pycode_addwatcher"><code class="xref c function docutils literal">PyCode_AddWatcher</code></a> and <a class="reference internal" href="../c-api/code.html#c:function:pycode_clearwatcher"><code class="xref c function docutils literal">PyCode_ClearWatcher</code></a>
 APIs to register callbacks to receive notification on creation and
 destruction of code objects.
-(Contributed by Itamar Oren in :gh:`91054`.)</p>
+(Contributed by Itamar Oren in 91054.)</p>
 </li>
 <li><p>Add <a class="reference internal" href="../c-api/frame.html#c:function:pyframe_getvar"><code class="xref c function docutils literal">PyFrame_GetVar</code></a> and <a class="reference internal" href="../c-api/frame.html#c:function:pyframe_getvarstring"><code class="xref c function docutils literal">PyFrame_GetVarString</code></a> functions to
 get a frame variable by its name.
-(Contributed by Victor Stinner in :gh:`91248`.)</p>
+(Contributed by Victor Stinner in 91248.)</p>
 </li>
 <li><p>Add <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_getraisedexception"><code class="xref c function docutils literal">PyErr_GetRaisedException</code></a> and <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_setraisedexception"><code class="xref c function docutils literal">PyErr_SetRaisedException</code></a>
 for saving and restoring the current exception.
@@ -3087,20 +3087,20 @@ These functions return and accept a single exception object,
 rather than the triple arguments of the now-deprecated
 <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_fetch"><code class="xref c function docutils literal">PyErr_Fetch</code></a> and <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_restore"><code class="xref c function docutils literal">PyErr_Restore</code></a>.
 This is less error prone and a bit more efficient.
-(Contributed by Mark Shannon in :gh:`101578`.)</p>
+(Contributed by Mark Shannon in 101578.)</p>
 </li>
 <li><p>Add <code>_PyErr_ChainExceptions1</code>, which takes an exception instance,
 to replace the legacy-API <code>_PyErr_ChainExceptions</code>, which is now
-deprecated. (Contributed by Mark Shannon in :gh:`101578`.)</p>
+deprecated. (Contributed by Mark Shannon in 101578.)</p>
 </li>
 <li><p>Add <a class="reference internal" href="../c-api/exceptions.html#c:function:pyexception_getargs"><code class="xref c function docutils literal">PyException_GetArgs</code></a> and <a class="reference internal" href="../c-api/exceptions.html#c:function:pyexception_setargs"><code class="xref c function docutils literal">PyException_SetArgs</code></a>
 as convenience functions for retrieving and modifying
 the <a class="reference internal" href="../library/exceptions.html#py:attribute:baseexception.args"><code class="xref py attribute docutils literal">args</code></a> passed to the exception's constructor.
-(Contributed by Mark Shannon in :gh:`101578`.)</p>
+(Contributed by Mark Shannon in 101578.)</p>
 </li>
 <li><p>Add <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_displayexception"><code class="xref c function docutils literal">PyErr_DisplayException</code></a>, which takes an exception instance,
 to replace the legacy-api <code class="xref c function docutils literal">PyErr_Display</code>. (Contributed by
-Irit Katriel in :gh:`102755`).</p>
+Irit Katriel in 102755).</p>
 </li>
 </ul>
 <a id="whatsnew312-pep683"></a>
@@ -3142,18 +3142,18 @@ correctly track reference counts and allocated blocks</p>
 </dl>
 </li>
 </ul>
-<p>(Contributed by Eddie Elizondo in :gh:`84436`.)</p>
+<p>(Contributed by Eddie Elizondo in 84436.)</p>
 </li>
 <li><p><span class="target" id="index-49"></span><a class="pep reference external" href="https://peps.python.org/pep-0684/"><strong>PEP 684</strong></a>: Add the new <a class="reference internal" href="../c-api/init.html#c:function:py_newinterpreterfromconfig"><code class="xref c function docutils literal">Py_NewInterpreterFromConfig</code></a>
 function and <a class="reference internal" href="../c-api/init.html#c:type:pyinterpreterconfig"><code class="xref c type docutils literal">PyInterpreterConfig</code></a>, which may be used
 to create sub-interpreters with their own GILs.
 (See <a href="3.12.html#whatsnew312-pep684">PEP 684: A Per-Interpreter GIL</a> for more info.)
-(Contributed by Eric Snow in :gh:`104110`.)</p>
+(Contributed by Eric Snow in 104110.)</p>
 </li>
 <li><p>In the limited C API version 3.12, <a class="reference internal" href="../c-api/refcounting.html#c:function:py_incref"><code class="xref c function docutils literal">Py_INCREF</code></a> and
 <a class="reference internal" href="../c-api/refcounting.html#c:function:py_decref"><code class="xref c function docutils literal">Py_DECREF</code></a> functions are now implemented as opaque function calls to
 hide implementation details.
-(Contributed by Victor Stinner in :gh:`105387`.)</p>
+(Contributed by Victor Stinner in 105387.)</p>
 </li>
 </ul>
 <h3 id="porting-to-python-3-12-1">Porting to Python 3.12</h3>
@@ -3184,17 +3184,17 @@ for example).</p>
 hexadecimals, <a href="#" class="broken-link"><code class="xref c type docutils literal">intmax_t</code></a>, <a href="#" class="broken-link"><code class="xref c type docutils literal">ptrdiff_t</code></a>, <a href="#" class="broken-link"><code class="xref c type docutils literal">wchar_t</code></a> C
 strings, variable width and precision) in <a class="reference internal" href="../c-api/unicode.html#c:function:pyunicode_fromformat"><code class="xref c function docutils literal">PyUnicode_FromFormat</code></a> and
 <a class="reference internal" href="../c-api/unicode.html#c:function:pyunicode_fromformatv"><code class="xref c function docutils literal">PyUnicode_FromFormatV</code></a>.
-(Contributed by Serhiy Storchaka in :gh:`98836`.)</p>
+(Contributed by Serhiy Storchaka in 98836.)</p>
 </li>
 <li><p>An unrecognized format character in <a class="reference internal" href="../c-api/unicode.html#c:function:pyunicode_fromformat"><code class="xref c function docutils literal">PyUnicode_FromFormat</code></a> and
 <a class="reference internal" href="../c-api/unicode.html#c:function:pyunicode_fromformatv"><code class="xref c function docutils literal">PyUnicode_FromFormatV</code></a> now sets a <a class="reference internal" href="../library/exceptions.html#py:exception:systemerror"><code class="xref py exception docutils literal">SystemError</code></a>.
 In previous versions it caused all the rest of the format string to be
 copied as-is to the result string, and any extra arguments discarded.
-(Contributed by Serhiy Storchaka in :gh:`95781`.)</p>
+(Contributed by Serhiy Storchaka in 95781.)</p>
 </li>
 <li><p>Fix wrong sign placement in <a class="reference internal" href="../c-api/unicode.html#c:function:pyunicode_fromformat"><code class="xref c function docutils literal">PyUnicode_FromFormat</code></a> and
 <a class="reference internal" href="../c-api/unicode.html#c:function:pyunicode_fromformatv"><code class="xref c function docutils literal">PyUnicode_FromFormatV</code></a>.
-(Contributed by Philip Georgi in :gh:`95504`.)</p>
+(Contributed by Philip Georgi in 95504.)</p>
 </li>
 <li><p>Extension classes wanting to add a <a class="reference internal" href="../reference/datamodel.html#py:attribute:object.__dict__"><code class="xref py attribute docutils literal">__dict__</code></a> or weak reference slot
 should use <a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tpflags_managed_dict"><code class="xref c macro docutils literal">Py_TPFLAGS_MANAGED_DICT</code></a> and
@@ -3202,7 +3202,7 @@ should use <a class="reference internal" href="../c-api/typeobj.html#c:macro:py_
 <code>tp_weaklistoffset</code>, respectively.
 The use of <code>tp_dictoffset</code> and <code>tp_weaklistoffset</code> is still
 supported, but does not fully support multiple inheritance
-(:gh:`95589`), and performance may be worse.
+(95589), and performance may be worse.
 Classes declaring <a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tpflags_managed_dict"><code class="xref c macro docutils literal">Py_TPFLAGS_MANAGED_DICT</code></a> must call
 <code class="xref c function docutils literal">_PyObject_VisitManagedDict</code> and <code class="xref c function docutils literal">_PyObject_ClearManagedDict</code>
 to traverse and clear their instance's dictionaries.
@@ -3211,17 +3211,17 @@ To clear weakrefs, call <a class="reference internal" href="../c-api/weakref.htm
 <li><p>The <a class="reference internal" href="../c-api/unicode.html#c:function:pyunicode_fsdecoder"><code class="xref c function docutils literal">PyUnicode_FSDecoder</code></a> function no longer accepts bytes-like
 paths, like <a class="reference internal" href="../library/stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a> and <a class="reference internal" href="../library/stdtypes.html#py:class:memoryview"><code class="xref py class docutils literal">memoryview</code></a> types: only the exact
 <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> type is accepted for bytes strings.
-(Contributed by Victor Stinner in :gh:`98393`.)</p>
+(Contributed by Victor Stinner in 98393.)</p>
 </li>
 <li><p>The <a class="reference internal" href="../c-api/refcounting.html#c:function:py_clear"><code class="xref c macro docutils literal">Py_CLEAR</code></a>, <a class="reference internal" href="../c-api/refcounting.html#c:macro:py_setref"><code class="xref c macro docutils literal">Py_SETREF</code></a> and <a class="reference internal" href="../c-api/refcounting.html#c:macro:py_xsetref"><code class="xref c macro docutils literal">Py_XSETREF</code></a>
 macros now only evaluate their arguments once. If an argument has side
 effects, these side effects are no longer duplicated.
-(Contributed by Victor Stinner in :gh:`98724`.)</p>
+(Contributed by Victor Stinner in 98724.)</p>
 </li>
 <li><p>The interpreter's error indicator is now always normalized. This means
 that <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_setobject"><code class="xref c function docutils literal">PyErr_SetObject</code></a>, <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_setstring"><code class="xref c function docutils literal">PyErr_SetString</code></a> and the other
 functions that set the error indicator now normalize the exception
-before storing it. (Contributed by Mark Shannon in :gh:`101578`.)</p>
+before storing it. (Contributed by Mark Shannon in 101578.)</p>
 </li>
 <li><p><code>_Py_RefTotal</code> is no longer authoritative and only kept around
 for ABI compatibility.  Note that it is an internal global and only
@@ -3279,7 +3279,7 @@ because clients generally rely on process-wide global state (since these
 callbacks have no way of recovering extension module state).</p>
 <p>This also avoids situations where extensions may find themselves running in a
 subinterpreter that they don't support (or haven't yet been loaded in). See
-:gh:`104668` for more info.</p>
+104668 for more info.</p>
 </li>
 <li><p><a href="#" class="broken-link"><code class="xref c struct docutils literal">PyLongObject</code></a> has had its internals changed for better performance.
 Although the internals of <a href="#" class="broken-link"><code class="xref c struct docutils literal">PyLongObject</code></a> are private, they are used
@@ -3308,7 +3308,7 @@ and CC <code>@ericsnowcurrently</code>.</p>
 <li><p>In accordance with <span class="target" id="index-50"></span><a class="pep reference external" href="https://peps.python.org/pep-0699/"><strong>PEP 699</strong></a>, the <code>ma_version_tag</code> field in <a class="reference internal" href="../c-api/dict.html#c:type:pydictobject"><code class="xref c type docutils literal">PyDictObject</code></a>
 is deprecated for extension modules. Accessing this field will generate a compiler
 warning at compile time. This field will be removed in Python 3.14.
-(Contributed by Ramvikrams and Kumar Aditya in :gh:`101193`. PEP by Ken Jin.)</p>
+(Contributed by Ramvikrams and Kumar Aditya in 101193. PEP by Ken Jin.)</p>
 </li>
 <li><p>Deprecate global configuration variable:</p>
 <ul>
@@ -3358,10 +3358,10 @@ and <a class="reference internal" href="../c-api/init_config.html#c:member:pycon
 </ul>
 <p>The <a class="reference internal" href="../c-api/init.html#c:function:py_initializefromconfig"><code class="xref c function docutils literal">Py_InitializeFromConfig</code></a> API should be used with
 <a class="reference internal" href="../c-api/init_config.html#c:type:pyconfig"><code class="xref c type docutils literal">PyConfig</code></a> instead.
-(Contributed by Victor Stinner in :gh:`77782`.)</p>
+(Contributed by Victor Stinner in 77782.)</p>
 </li>
 <li><p>Creating <a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tpflags_immutabletype"><code class="xref c member docutils literal">immutable types</code></a> with mutable
-bases is deprecated and will be disabled in Python 3.14. (:gh:`95388`)</p>
+bases is deprecated and will be disabled in Python 3.14. (95388)</p>
 </li>
 <li><p>The :file:`structmember.h` header is deprecated, though it continues to be
 available and there are no plans to remove it.</p>
@@ -3397,19 +3397,19 @@ It should be included manually when using <code>offsetof()</code>.</p>
 contents under the original names.
 Your old code can stay unchanged, unless the extra include and non-namespaced
 macros bother you greatly.</p>
-<p>(Contributed in :gh:`47146` by Petr Viktorin, based on
+<p>(Contributed in 47146 by Petr Viktorin, based on
 earlier work by Alexander Belopolsky and Matthias Braun.)</p>
 </li>
 <li><p><a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_fetch"><code class="xref c function docutils literal">PyErr_Fetch</code></a> and <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_restore"><code class="xref c function docutils literal">PyErr_Restore</code></a> are deprecated.
 Use <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_getraisedexception"><code class="xref c function docutils literal">PyErr_GetRaisedException</code></a> and
 <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_setraisedexception"><code class="xref c function docutils literal">PyErr_SetRaisedException</code></a> instead.
-(Contributed by Mark Shannon in :gh:`101578`.)</p>
+(Contributed by Mark Shannon in 101578.)</p>
 </li>
 <li><p><code class="xref c function docutils literal">PyErr_Display</code> is deprecated. Use <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_displayexception"><code class="xref c function docutils literal">PyErr_DisplayException</code></a>
-instead. (Contributed by Irit Katriel in :gh:`102755`).</p>
+instead. (Contributed by Irit Katriel in 102755).</p>
 </li>
 <li><p><code>_PyErr_ChainExceptions</code> is deprecated. Use <code>_PyErr_ChainExceptions1</code>
-instead. (Contributed by Irit Katriel in :gh:`102192`.)</p>
+instead. (Contributed by Irit Katriel in 102192.)</p>
 </li>
 <li><p>Using <a class="reference internal" href="../c-api/type.html#c:function:pytype_fromspec"><code class="xref c function docutils literal">PyType_FromSpec</code></a>, <a class="reference internal" href="../c-api/type.html#c:function:pytype_fromspecwithbases"><code class="xref c function docutils literal">PyType_FromSpecWithBases</code></a>
 or <a class="reference internal" href="../c-api/type.html#c:function:pytype_frommoduleandspec"><code class="xref c function docutils literal">PyType_FromModuleAndSpec</code></a> to create a class whose metaclass
@@ -3420,10 +3420,10 @@ Call the metaclass instead.</p>
 <h4 id="pending-removal-in-python-3-14-1">Pending removal in Python 3.14</h4>
 <ul>
 <li><p>The <code>ma_version_tag</code> field in <a class="reference internal" href="../c-api/dict.html#c:type:pydictobject"><code class="xref c type docutils literal">PyDictObject</code></a> for extension modules
-(<span class="target" id="index-51"></span><a class="pep reference external" href="https://peps.python.org/pep-0699/"><strong>PEP 699</strong></a>; :gh:`101193`).</p>
+(<span class="target" id="index-51"></span><a class="pep reference external" href="https://peps.python.org/pep-0699/"><strong>PEP 699</strong></a>; 101193).</p>
 </li>
 <li><p>Creating <a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tpflags_immutabletype"><code class="xref c member docutils literal">immutable types</code></a> with mutable
-bases (:gh:`95388`).</p>
+bases (95388).</p>
 </li>
 </ul>
 <h4 id="pending-removal-in-python-3-15-1">Pending removal in Python 3.15</h4>
@@ -3666,7 +3666,7 @@ Unneeded since Python 3.7.</p>
 <li><p>Remove the :file:`token.h` header file. There was never any public tokenizer C
 API. The :file:`token.h` header file was only designed to be used by Python
 internals.
-(Contributed by Victor Stinner in :gh:`92651`.)</p>
+(Contributed by Victor Stinner in 92651.)</p>
 </li>
 <li><p>Legacy Unicode APIs have been removed. See <span class="target" id="index-52"></span><a class="pep reference external" href="https://peps.python.org/pep-0623/"><strong>PEP 623</strong></a> for detail.</p>
 <ul>
@@ -3691,7 +3691,7 @@ internals.
 </ul>
 </li>
 <li><p>Remove the <code>PyUnicode_InternImmortal()</code> function macro.
-(Contributed by Victor Stinner in :gh:`85858`.)</p>
+(Contributed by Victor Stinner in 85858.)</p>
 </li>
 </ul>
 

@@ -699,7 +699,12 @@ navigation and the page title, as for emphasis.</p>
 </td>
 <td><p>❌</p>
 </td>
-<td></td>
+<td><ul>
+<li><p>Shown as written and reported as <code>interpreted.unsupported-role</code>,
+which the language server shows as information in a Sphinx project.</p>
+</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -1203,12 +1208,16 @@ count in every directive.</p>
 <td><p>✅ ℹ️</p>
 </td>
 <td><ul>
-<li><p>Shown as the source they were written as, and not reported; docutils
-reports an unknown role.</p>
+<li><p>Shown as the source they were written as, and reported: a role
+docutils or Sphinx defines as <code>interpreted.unsupported-role</code>, any
+other as <code>interpreted.unknown-role</code>, as docutils reports it.</p>
+</li>
+<li><p>Role names are case-sensitive, so <code>:PEP:</code> is unknown; the warning
+names the spelling rinx takes.</p>
 </li>
 <li><p>A library's <code>rinx_parser.toml</code> may list them as <code>ignored_roles</code>,
 which are then shown as their text, as docutils' generic role shows
-it.</p>
+it, and not reported.</p>
 </li>
 </ul>
 </td>

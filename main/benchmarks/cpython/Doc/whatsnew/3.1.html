@@ -376,7 +376,7 @@ Mark Dickinson.</p>
 file can now be executed directly by passing their name to the
 interpreter. The directory/zipfile is automatically inserted as the
 first entry in sys.path.  (Suggestion and initial patch by Andy Chu;
-revised patch by Phillip J. Eby and Nick Coghlan; :issue:`1739468`.)</p>
+revised patch by Phillip J. Eby and Nick Coghlan; 1739468.)</p>
 </li>
 <li><p>The <a href="#" class="broken-link"><code class="xref py function docutils literal">int</code></a> type gained a <code>bit_length</code> method that returns the
 number of bits necessary to represent its argument in binary:</p>
@@ -392,7 +392,7 @@ number of bits necessary to represent its argument in binary:</p>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-group hl-python"><span class="hl-punctuation hl-section hl-group hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">n</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-section hl-group hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">bit_length</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">124</span></span></pre></div>
 <p>(Contributed by Fredrik Johansson, Victor Stinner, Raymond Hettinger,
-and Mark Dickinson; :issue:`3439`.)</p>
+and Mark Dickinson; 3439.)</p>
 </li>
 <li><p>The fields in <a class="reference internal" href="../library/functions.html#py:function:format"><code class="xref py function docutils literal">format</code></a> strings can now be automatically
 numbered:</p>
@@ -401,7 +401,7 @@ numbered:</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Sir Gallahad of Camelot<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
 <p>Formerly, the string would have required numbered fields such as:
 <code>'Sir {0} of {1}'</code>.</p>
-<p>(Contributed by Eric Smith; :issue:`5237`.)</p>
+<p>(Contributed by Eric Smith; 5237.)</p>
 </li>
 <li><p>The <code class="xref py function docutils literal">string.maketrans</code> function is deprecated and is replaced by new
 static methods, <a class="reference internal" href="../library/stdtypes.html#py:method:bytes.maketrans"><code class="xref py method docutils literal">bytes.maketrans</code></a> and <a class="reference internal" href="../library/stdtypes.html#py:method:bytearray.maketrans"><code class="xref py method docutils literal">bytearray.maketrans</code></a>.
@@ -409,7 +409,7 @@ This change solves the confusion around which types were supported by the
 <a class="reference internal" href="../library/string.html#py:module:string" title="string: Common string operations."><code class="xref py module docutils literal">string</code></a> module. Now, <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a>, <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>, and
 <a class="reference internal" href="../library/stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a> each have their own <strong>maketrans</strong> and <strong>translate</strong>
 methods with intermediate translation tables of the appropriate type.</p>
-<p>(Contributed by Georg Brandl; :issue:`5675`.)</p>
+<p>(Contributed by Georg Brandl; 5675.)</p>
 </li>
 <li><p>The syntax of the :keyword:`with` statement now allows multiple context
 managers in a single statement:</p>
@@ -428,7 +428,7 @@ Previously it returned a float:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">round</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1123</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1100</span></span></pre></div>
-<p>(Contributed by Mark Dickinson; :issue:`4707`.)</p>
+<p>(Contributed by Mark Dickinson; 4707.)</p>
 </li>
 <li><p>Python now uses David Gay's algorithm for finding the shortest floating-point
 representation that doesn't change its value.  This should help
@@ -460,7 +460,7 @@ it does not change the underlying values.  So, it is still the case that
 implementation.  If the required features are not found, the old
 algorithm will continue to be used.  Also, the text pickle protocols
 assure cross-platform portability by using the old algorithm.</p>
-<p>(Contributed by Eric Smith and Mark Dickinson; :issue:`1580`)</p>
+<p>(Contributed by Eric Smith and Mark Dickinson; 1580)</p>
 </li>
 </ul>
 <h2 id="new-improved-and-deprecated-modules">New, Improved, and Deprecated Modules</h2>
@@ -470,12 +470,12 @@ counting of unique items in a sequence or iterable:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Counter</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">red<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">blue<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">red<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">green<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">blue<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">blue<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Counter</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-begin hl-python">{</span></span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">blue<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span> </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">red<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span> </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">green<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
-<p>(Contributed by Raymond Hettinger; :issue:`1696199`.)</p>
+<p>(Contributed by Raymond Hettinger; 1696199.)</p>
 </li>
 <li><p>Added a new module, <a class="reference internal" href="../library/tkinter.ttk.html#py:module:tkinter.ttk" title="tkinter.ttk: Tk themed widget set"><code class="xref py module docutils literal">tkinter.ttk</code></a> for access to the Tk themed widget set.
 The basic idea of ttk is to separate, to the extent possible, the code
 implementing a widget's behavior from the code implementing its appearance.</p>
-<p>(Contributed by Guilherme Polo; :issue:`2983`.)</p>
+<p>(Contributed by Guilherme Polo; 2983.)</p>
 </li>
 <li><p>The <a class="reference internal" href="../library/gzip.html#py:class:gzip.gzipfile"><code class="xref py class docutils literal">gzip.GzipFile</code></a> and <a class="reference internal" href="../library/bz2.html#py:class:bz2.bz2file"><code class="xref py class docutils literal">bz2.BZ2File</code></a> classes now support
 the context management protocol:</p>
@@ -533,7 +533,7 @@ CSV header, SQL field list, or user input:</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UserQuery</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">region</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">South<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">dept</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Shipping<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">_2</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">185</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python"> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UserQuery</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">region</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">North<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">dept</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Accounting<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">_2</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">37</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python"> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UserQuery</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">region</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">West<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">dept</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Sales<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">_2</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">419</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span></span></pre></div>
-<p>(Contributed by Raymond Hettinger; :issue:`1818`.)</p>
+<p>(Contributed by Raymond Hettinger; 1818.)</p>
 </li>
 <li><p>The <a class="reference internal" href="../library/re.html#py:function:re.sub"><code class="xref py function docutils literal">re.sub</code></a>, <a class="reference internal" href="../library/re.html#py:function:re.subn"><code class="xref py function docutils literal">re.subn</code></a> and <a class="reference internal" href="../library/re.html#py:function:re.split"><code class="xref py function docutils literal">re.split</code></a> functions now
 accept a flags parameter.</p>
@@ -546,28 +546,28 @@ spurious warnings such as "No handlers could be found for logger foo":</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">h</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">logging</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">NullHandler</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">logging</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">getLogger</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">foo<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">addHandler</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">h</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
-<p>(Contributed by Vinay Sajip; :issue:`4384`).</p>
+<p>(Contributed by Vinay Sajip; 4384).</p>
 </li>
 <li><p>The <a class="reference internal" href="../library/runpy.html#py:module:runpy" title="runpy: Locate and run Python modules without importing them first."><code class="xref py module docutils literal">runpy</code></a> module which supports the <code>-m</code> command line switch
 now supports the execution of packages by looking for and executing
 a <code>__main__</code> submodule when a package name is supplied.</p>
-<p>(Contributed by Andi Vajda; :issue:`4195`.)</p>
+<p>(Contributed by Andi Vajda; 4195.)</p>
 </li>
 <li><p>The <a class="reference internal" href="../library/pdb.html#py:module:pdb" title="pdb: The Python debugger for interactive interpreters."><code class="xref py module docutils literal">pdb</code></a> module can now access and display source code loaded via
 <a class="reference internal" href="../library/zipimport.html#py:module:zipimport" title="zipimport: Support for importing Python modules from ZIP archives."><code class="xref py module docutils literal">zipimport</code></a> (or any other conformant <span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0302/"><strong>PEP 302</strong></a> loader).</p>
-<p>(Contributed by Alexander Belopolsky; :issue:`4201`.)</p>
+<p>(Contributed by Alexander Belopolsky; 4201.)</p>
 </li>
 <li><p><a href="#" class="broken-link"><code class="xref py class docutils literal">functools.partial</code></a> objects can now be pickled.</p>
 </li>
 </ul>
 <blockquote>
 <p>(Suggested by Antoine Pitrou and Jesse Noller.  Implemented by
-Jack Diederich; :issue:`5228`.)</p>
+Jack Diederich; 5228.)</p>
 </blockquote>
 <ul>
 <li><p>Add <a class="reference internal" href="../library/pydoc.html#py:module:pydoc" title="pydoc: Documentation generator and online help system."><code class="xref py module docutils literal">pydoc</code></a> help topics for symbols so that <code>help('@')</code>
 works as expected in the interactive environment.</p>
-<p>(Contributed by David Laban; :issue:`4739`.)</p>
+<p>(Contributed by David Laban; 4739.)</p>
 </li>
 <li><p>The <a class="reference internal" href="../library/unittest.html#py:module:unittest" title="unittest: Unit testing framework for Python."><code class="xref py module docutils literal">unittest</code></a> module now supports skipping individual tests or classes
 of tests. And it supports marking a test as an expected failure, a test that
@@ -608,10 +608,10 @@ method: <a class="reference internal" href="../library/os.html#py:data:os.seek_s
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">version_info</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">version_info</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">major</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">minor</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">micro</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">releaselevel</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">alpha<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">serial</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
-<p>(Contributed by Ross Light; :issue:`4285`.)</p>
+<p>(Contributed by Ross Light; 4285.)</p>
 </li>
 <li><p>The <code class="xref py module docutils literal">nntplib</code> and <a class="reference internal" href="../library/imaplib.html#py:module:imaplib" title="imaplib: IMAP4 protocol client (requires sockets)."><code class="xref py module docutils literal">imaplib</code></a> modules now support IPv6.</p>
-<p>(Contributed by Derek Morr; :issue:`1655` and :issue:`1664`.)</p>
+<p>(Contributed by Derek Morr; 1655 and 1664.)</p>
 </li>
 <li><p>The <a class="reference internal" href="../library/pickle.html#py:module:pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py module docutils literal">pickle</code></a> module has been adapted for better interoperability with
 Python 2.x when used with protocol 2 or lower.  The reorganization of the
@@ -633,7 +633,7 @@ pickles produced by Python 3.1 won't be readable with Python 3.0. The latest
 pickle protocol, protocol 3, should be used when migrating data between
 Python 3.x implementations, as it doesn't attempt to remain compatible with
 Python 2.x.</p>
-<p>(Contributed by Alexandre Vassalotti and Antoine Pitrou, :issue:`6137`.)</p>
+<p>(Contributed by Alexandre Vassalotti and Antoine Pitrou, 6137.)</p>
 </li>
 <li><p>A new module, <a class="reference internal" href="../library/importlib.html#py:module:importlib" title="importlib: The implementation of the import machinery."><code class="xref py module docutils literal">importlib</code></a> was added.  It provides a complete, portable,
 pure Python reference implementation of the :keyword:`import` statement and its
@@ -658,7 +658,7 @@ the <code>_pyio</code> module.</p>
 are not tracked by the garbage collector. This can reduce the size of
 collections and therefore the garbage collection overhead on long-running
 programs, depending on their particular use of datatypes.</p>
-<p>(Contributed by Antoine Pitrou, :issue:`4688`.)</p>
+<p>(Contributed by Antoine Pitrou, 4688.)</p>
 </li>
 <li><p>Enabling a configure option named <code>--with-computed-gotos</code>
 on compilers that support it (notably: gcc, SunPro, icc), the bytecode
@@ -666,11 +666,11 @@ evaluation loop is compiled with a new dispatch mechanism which gives
 speedups of up to 20%, depending on the system, the compiler, and
 the benchmark.</p>
 <p>(Contributed by Antoine Pitrou along with a number of other participants,
-:issue:`4753`).</p>
+4753).</p>
 </li>
 <li><p>The decoding of UTF-8, UTF-16 and LATIN-1 is now two to four times
 faster.</p>
-<p>(Contributed by Antoine Pitrou and Amaury Forgeot d'Arc, :issue:`4868`.)</p>
+<p>(Contributed by Antoine Pitrou and Amaury Forgeot d'Arc, 4868.)</p>
 </li>
 <li><p>The <a class="reference internal" href="../library/json.html#py:module:json" title="json: Encode and decode the JSON format."><code class="xref py module docutils literal">json</code></a> module now has a C extension to substantially improve
 its performance.  In addition, the API was modified so that json works
@@ -678,18 +678,18 @@ only with <a class="reference internal" href="../library/stdtypes.html#py:class:
 module closely match the <a href="https://json.org/">JSON specification</a>
 which is defined in terms of Unicode.</p>
 <p>(Contributed by Bob Ippolito and converted to Py3.1 by Antoine Pitrou
-and Benjamin Peterson; :issue:`4136`.)</p>
+and Benjamin Peterson; 4136.)</p>
 </li>
 <li><p>Unpickling now interns the attribute names of pickled objects.  This saves
 memory and allows pickles to be smaller.</p>
-<p>(Contributed by Jake McGuire and Antoine Pitrou; :issue:`5084`.)</p>
+<p>(Contributed by Jake McGuire and Antoine Pitrou; 5084.)</p>
 </li>
 </ul>
 <h2 id="idle">IDLE</h2>
 <ul>
 <li><p>IDLE's format menu now provides an option to strip trailing whitespace
 from a source file.</p>
-<p>(Contributed by Roger D. Serwy; :issue:`5150`.)</p>
+<p>(Contributed by Roger D. Serwy; 5150.)</p>
 </li>
 </ul>
 <h2 id="build-and-c-api-changes">Build and C API Changes</h2>
@@ -712,25 +712,25 @@ of the C type used to store each digit:</p>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span></span></span></span>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">int_info</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">int_info</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">bits_per_digit</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">30</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">sizeof_digit</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">4</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
-<p>(Contributed by Mark Dickinson; :issue:`4258`.)</p>
+<p>(Contributed by Mark Dickinson; 4258.)</p>
 </li>
 <li><p>The <a class="reference internal" href="../c-api/long.html#c:function:pylong_asunsignedlonglong"><code class="xref c function docutils literal">PyLong_AsUnsignedLongLong()</code></a> function now handles a negative
 <em>pylong</em> by raising <a class="reference internal" href="../library/exceptions.html#py:exception:overflowerror"><code class="xref py exception docutils literal">OverflowError</code></a> instead of <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a>.</p>
-<p>(Contributed by Mark Dickinson and Lisandro Dalcrin; :issue:`5175`.)</p>
+<p>(Contributed by Mark Dickinson and Lisandro Dalcrin; 5175.)</p>
 </li>
 <li><p>Deprecated <code class="xref c function docutils literal">PyNumber_Int</code>.  Use <a class="reference internal" href="../c-api/number.html#c:function:pynumber_long"><code class="xref c function docutils literal">PyNumber_Long</code></a> instead.</p>
-<p>(Contributed by Mark Dickinson; :issue:`4910`.)</p>
+<p>(Contributed by Mark Dickinson; 4910.)</p>
 </li>
 <li><p>Added a new <a class="reference internal" href="../c-api/conversion.html#c:function:pyos_string_to_double"><code class="xref c function docutils literal">PyOS_string_to_double</code></a> function to replace the
 deprecated functions <code class="xref c function docutils literal">PyOS_ascii_strtod</code> and <code class="xref c function docutils literal">PyOS_ascii_atof</code>.</p>
-<p>(Contributed by Mark Dickinson; :issue:`5914`.)</p>
+<p>(Contributed by Mark Dickinson; 5914.)</p>
 </li>
 <li><p>Added <a class="reference internal" href="../c-api/capsule.html#c:type:pycapsule"><code class="xref c type docutils literal">PyCapsule</code></a> as a replacement for the <code class="xref c type docutils literal">PyCObject</code> API.
 The principal difference is that the new type has a well defined interface
 for passing typing safety information and a less complicated signature
 for calling a destructor.  The old type had a problematic API and is now
 deprecated.</p>
-<p>(Contributed by Larry Hastings; :issue:`5630`.)</p>
+<p>(Contributed by Larry Hastings; 5630.)</p>
 </li>
 </ul>
 <h2 id="porting-to-python-3-1">Porting to Python 3.1</h2>

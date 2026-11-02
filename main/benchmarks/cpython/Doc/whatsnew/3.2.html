@@ -721,7 +721,7 @@ follow it.</p>
 '0o24'
 &gt;&gt;&gt; format(12.34, '#5.0f')
 '  12.'</pre></div>
-<p>(Suggested by Mark Dickinson and implemented by Eric Smith in :issue:`7094`.)</p>
+<p>(Suggested by Mark Dickinson and implemented by Eric Smith in 7094.)</p>
 </li>
 <li><p>There is also a new <a class="reference internal" href="../library/stdtypes.html#py:method:str.format_map"><code class="xref py method docutils literal">str.format_map</code></a> method that extends the
 capabilities of the existing <a class="reference internal" href="../library/stdtypes.html#py:method:str.format"><code class="xref py method docutils literal">str.format</code></a> method by accepting arbitrary
@@ -755,7 +755,7 @@ supply a <a class="reference internal" href="../reference/datamodel.html#py:meth
 </ul>
 <blockquote>
 <p>(Suggested by Raymond Hettinger and implemented by Eric Smith in
-:issue:`6081`.)</p>
+6081.)</p>
 </blockquote>
 <ul>
 <li><p>The interpreter can now be started with a quiet option, <code>-q</code>, to prevent
@@ -769,7 +769,7 @@ sys.flags(debug=0, division_warning=0, inspect=0, interactive=0,
 optimize=0, dont_write_bytecode=0, no_user_site=0, no_site=0,
 ignore_environment=0, verbose=0, bytes_warning=0, quiet=1)</pre></div>
 </div>
-<p>(Contributed by Marcin Wojdyr in :issue:`1772833`).</p>
+<p>(Contributed by Marcin Wojdyr in 1772833).</p>
 </li>
 <li><p>The <a class="reference internal" href="../library/functions.html#py:function:hasattr"><code class="xref py function docutils literal">hasattr</code></a> function works by calling <a class="reference internal" href="../library/functions.html#py:function:getattr"><code class="xref py function docutils literal">getattr</code></a> and detecting
 whether an exception is raised.  This technique allows it to detect methods
@@ -789,7 +789,7 @@ exceptions pass through:</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Traceback</span></span></span> </span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">most</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">recent</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">call</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">last</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
 <span class="hl-source hl-python">  <span class="hl-constant hl-language hl-python">...</span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-exception hl-python">ZeroDivisionError</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">integer</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">division</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">or</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">modulo</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">by</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">zero</span></span></span></pre></div>
-<p>(Discovered by Yury Selivanov and fixed by Benjamin Peterson; :issue:`9666`.)</p>
+<p>(Discovered by Yury Selivanov and fixed by Benjamin Peterson; 9666.)</p>
 </li>
 <li><p>The <a href="#" class="broken-link"><code class="xref py function docutils literal">str</code></a> of a float or complex number is now the same as its
 <a class="reference internal" href="../library/functions.html#py:function:repr"><code class="xref py function docutils literal">repr</code></a>. Previously, the <a href="#" class="broken-link"><code class="xref py function docutils literal">str</code></a> form was shorter but that just
@@ -803,7 +803,7 @@ caused confusion and is no longer needed now that the shortest possible
 &gt;&gt;&gt; str(math.pi)
 '3.141592653589793'</pre></div>
 </blockquote>
-<p>(Proposed and implemented by Mark Dickinson; :issue:`9337`.)</p>
+<p>(Proposed and implemented by Mark Dickinson; 9337.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/stdtypes.html#py:class:memoryview"><code class="xref py class docutils literal">memoryview</code></a> objects now have a <a href="#" class="broken-link"><code class="xref py method docutils literal">release</code></a> method
 and they also now support the context management protocol.  This allows timely
@@ -813,7 +813,7 @@ original object.</p>
 &gt;&gt;&gt; with memoryview(b'abcdefgh') as v:
 ...     print(v.tolist())
 [97, 98, 99, 100, 101, 102, 103, 104]</pre></div>
-<p>(Added by Antoine Pitrou; :issue:`9757`.)</p>
+<p>(Added by Antoine Pitrou; 9757.)</p>
 </li>
 <li><p>Previously it was illegal to delete a name from the local namespace if it
 occurs as a free variable in a nested block:</p>
@@ -835,7 +835,7 @@ is cleared, so this code which used to work with Python 2.6, raised a
 <span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-exception hl-catch hl-python"><span class="hl-keyword hl-control hl-exception hl-catch hl-python">except</span> <span class="hl-support hl-type hl-exception hl-python">Exception</span> <span class="hl-keyword hl-control hl-exception hl-catch hl-as hl-python">as</span></span><span class="hl-meta hl-statement hl-exception hl-catch hl-python"> <span class="hl-meta hl-generic-name hl-python">e</span></span><span class="hl-meta hl-statement hl-exception hl-catch hl-python"><span class="hl-punctuation hl-section hl-block hl-exception hl-catch hl-python">:</span></span></span>
 <span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">print_error</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python">        <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> implicit &quot;del e&quot; here</span></span></pre></div>
-<p>(See :issue:`4617`.)</p>
+<p>(See 4617.)</p>
 </li>
 <li><p><a href="../c-api/tuple.html#struct-sequence-objects">Struct sequence types</a> are now subclasses of tuple.
 This means that C structures like those returned by <a class="reference internal" href="../library/os.html#py:function:os.stat"><code class="xref py function docutils literal">os.stat</code></a>,
@@ -850,7 +850,7 @@ True
 &gt;&gt;&gt; 'Version %d.%d.%d %s(%d)' % sys.version_info
 'Version 3.2.0 final(0)'</pre></div>
 <p>(Suggested by Arfrever Frehtes Taifersar Arahesis and implemented
-by Benjamin Peterson in :issue:`8413`.)</p>
+by Benjamin Peterson in 8413.)</p>
 </li>
 <li><p>Warnings are now easier to control using the :envvar:`PYTHONWARNINGS`
 environment variable as an alternative to using <code>-W</code> at the command line:</p>
@@ -858,7 +858,7 @@ environment variable as an alternative to using <code>-W</code> at the command l
 <div class="highlight hl-code"><pre>
 $ export PYTHONWARNINGS='ignore::RuntimeWarning::,once::UnicodeWarning::'</pre></div>
 </div>
-<p>(Suggested by Barry Warsaw and implemented by Philip Jenvey in :issue:`7301`.)</p>
+<p>(Suggested by Barry Warsaw and implemented by Philip Jenvey in 7301.)</p>
 </li>
 <li><p>A new warning category, <a class="reference internal" href="../library/exceptions.html#py:exception:resourcewarning"><code class="xref py exception docutils literal">ResourceWarning</code></a>, has been added.  It is
 emitted when potential issues with resource consumption or cleanup
@@ -882,7 +882,7 @@ $ python -q -Wdefault
 &gt;&gt;&gt; del f
 __main__:1: ResourceWarning: unclosed file &lt;_io.BufferedWriter name='foo'&gt;</pre></div>
 </div>
-<p>(Added by Antoine Pitrou and Georg Brandl in :issue:`10093` and :issue:`477863`.)</p>
+<p>(Added by Antoine Pitrou and Georg Brandl in 10093 and 477863.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/stdtypes.html#py:class:range"><code class="xref py class docutils literal">range</code></a> objects now support <em>index</em> and <em>count</em> methods. This is part
 of an effort to make more objects fully implement the
@@ -899,8 +899,8 @@ now support slicing and negative indices, even with values larger than
 <span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span></span>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">range</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">100</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-separator hl-slice hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">5</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">range</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
-<p>(Contributed by Daniel Stutzbach in :issue:`9213`, by Alexander Belopolsky
-in :issue:`2690`, and by Nick Coghlan in :issue:`10889`.)</p>
+<p>(Contributed by Daniel Stutzbach in 9213, by Alexander Belopolsky
+in 2690, and by Nick Coghlan in 10889.)</p>
 </li>
 <li><p>The <a class="reference internal" href="../library/functions.html#py:function:callable"><code class="xref py function docutils literal">callable</code></a> builtin function from Py2.x was resurrected.  It provides
 a concise, readable alternative to using an <a class="reference internal" href="../glossary.html#term-abstract-base-class"><span class="xref std std-term">abstract base class</span></a> in an
@@ -910,7 +910,7 @@ expression like <code>isinstance(x, collections.Callable)</code>:</p>
 True
 &gt;&gt;&gt; callable(20)
 False</pre></div>
-<p>(See :issue:`10518`.)</p>
+<p>(See 10518.)</p>
 </li>
 <li><p>Python's import mechanism can now load modules installed in directories with
 non-ASCII characters in the path name.  This solved an aggravating problem
@@ -918,7 +918,7 @@ with home directories for users with non-ASCII characters in their usernames.</p
 </li>
 </ul>
 <blockquote>
-<p>(Required extensive work by Victor Stinner in :issue:`9425`.)</p>
+<p>(Required extensive work by Victor Stinner in 9425.)</p>
 </blockquote>
 <h2 id="new-improved-and-deprecated-modules">New, Improved, and Deprecated Modules</h2>
 <p>Python's standard library has undergone significant maintenance efforts and
@@ -971,7 +971,7 @@ and a new method, <a class="reference internal" href="../library/smtplib.html#py
 <em>from_addr</em> and <em>to_addrs</em> addresses directly from the object.</p>
 </li>
 </ul>
-<p>(Proposed and implemented by R. David Murray, :issue:`4661` and :issue:`10321`.)</p>
+<p>(Proposed and implemented by R. David Murray, 4661 and 10321.)</p>
 <h3 id="elementtree">elementtree</h3>
 <p>The <a class="reference internal" href="../library/xml.etree.elementtree.html#py:module:xml.etree.elementtree" title="xml.etree.ElementTree: Implementation of the ElementTree API."><code class="xref py module docutils literal">xml.etree.ElementTree</code></a> package and its <code class="xref py module docutils literal">xml.etree.cElementTree</code>
 counterpart have been updated to version 1.3.</p>
@@ -1010,7 +1010,7 @@ declaration</p>
 </ul>
 <p>For details of the update, see <a href="https://web.archive.org/web/20200703234532/http://effbot.org/zone/elementtree-13-intro.htm">Introducing ElementTree</a>
 on Fredrik Lundh's website.</p>
-<p>(Contributed by Florent Xicluna and Fredrik Lundh, :issue:`6472`.)</p>
+<p>(Contributed by Florent Xicluna and Fredrik Lundh, 6472.)</p>
 <h3 id="functools">functools</h3>
 <ul>
 <li><p>The <a class="reference internal" href="../library/functools.html#py:module:functools" title="functools: Higher-order functions and operations on callable objects."><code class="xref py module docutils literal">functools</code></a> module includes a new decorator for caching function
@@ -1038,8 +1038,8 @@ cleared with:</p>
 <div class="highlight hl-code"><pre>
 &gt;&gt;&gt; get_phone_number.cache_clear()</pre></div>
 <p>(Contributed by Raymond Hettinger and incorporating design ideas from Jim
-Baker, Miki Tebeka, and Nick Coghlan; see <a href="https://code.activestate.com/recipes/498245-lru-and-lfu-cache-decorators/">recipe 498245</a>, <a href="https://code.activestate.com/recipes/577479-simple-caching-decorator/">recipe 577479</a>, :issue:`10586`, and
-:issue:`10593`.)</p>
+Baker, Miki Tebeka, and Nick Coghlan; see <a href="https://code.activestate.com/recipes/498245-lru-and-lfu-cache-decorators/">recipe 498245</a>, <a href="https://code.activestate.com/recipes/577479-simple-caching-decorator/">recipe 577479</a>, 10586, and
+10593.)</p>
 </li>
 <li><p>The <a class="reference internal" href="../library/functools.html#py:function:functools.wraps"><code class="xref py function docutils literal">functools.wraps</code></a> decorator now adds a <a href="#" class="broken-link"><code class="xref py attribute docutils literal">__wrapped__</code></a> attribute
 pointing to the original callable function.  This allows wrapped functions to
@@ -1051,8 +1051,8 @@ might not be defined for the wrapped callable.</p>
 function:</p>
 <div class="highlight hl-code"><pre>
 &gt;&gt;&gt; get_phone_number = get_phone_number.__wrapped__    # uncached function</pre></div>
-<p>(By Nick Coghlan and Terrence Cole; :issue:`9567`, :issue:`3445`, and
-:issue:`8814`.)</p>
+<p>(By Nick Coghlan and Terrence Cole; 9567, 3445, and
+8814.)</p>
 </li>
 <li><p>To help write classes with rich comparison methods, a new decorator
 <a class="reference internal" href="../library/functools.html#py:function:functools.total_ordering"><code class="xref py function docutils literal">functools.total_ordering</code></a> will use existing equality and inequality
@@ -1208,7 +1208,7 @@ sealed and deposited in a queue for later handling.</p>
 for more examples of how barriers can be used in parallel computing.  Also, there is
 a simple but thorough explanation of barriers in <a href="https://greenteapress.com/semaphores/LittleBookOfSemaphores.pdf">The Little Book of Semaphores</a>, <em>section 3.6</em>.</p>
 <p>(Contributed by Kristján Valur Jónsson with an API review by Jeffrey Yasskin in
-:issue:`8777`.)</p>
+8777.)</p>
 <h3 id="datetime-and-time">datetime and time</h3>
 <ul>
 <li><p>The <a class="reference internal" href="../library/datetime.html#py:module:datetime" title="datetime: Basic date and time types."><code class="xref py module docutils literal">datetime</code></a> module has a new type <a class="reference internal" href="../library/datetime.html#py:class:datetime.timezone"><code class="xref py class docutils literal">timezone</code></a> that
@@ -1263,9 +1263,9 @@ accept any year that fits in a C int, while the <a class="reference internal" hr
 corresponding operating system functions.</p>
 </li>
 </ul>
-<p>(Contributed by Alexander Belopolsky and Victor Stinner in :issue:`1289118`,
-:issue:`5094`, :issue:`6641`, :issue:`2706`, :issue:`1777412`, :issue:`8013`,
-and :issue:`10827`.)</p>
+<p>(Contributed by Alexander Belopolsky and Victor Stinner in 1289118,
+5094, 6641, 2706, 1777412, 8013,
+and 10827.)</p>
 <h3 id="math">math</h3>
 <p>The <a class="reference internal" href="../library/math.html#py:module:math" title="math: Mathematical functions (sin() etc.)."><code class="xref py module docutils literal">math</code></a> module has been updated with six new functions inspired by the
 C99 standard.</p>
@@ -1320,7 +1320,7 @@ implemented:</p>
 <span class="hl-source hl-python">    <span class="hl-meta hl-annotation hl-python"><span class="hl-punctuation hl-definition hl-annotation hl-python">@</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">abc</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-annotation hl-python"><span class="hl-meta hl-generic-name hl-python">abstractclassmethod</span></span></span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">from_celsius</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">cls</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">t</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
 <span class="hl-source hl-python">        <span class="hl-constant hl-language hl-python">...</span></span></pre></div>
-<p>(Patch submitted by Daniel Urban; :issue:`5867`.)</p>
+<p>(Patch submitted by Daniel Urban; 5867.)</p>
 <h3 id="io">io</h3>
 <p>The <a class="reference internal" href="../library/io.html#py:class:io.bytesio"><code class="xref py class docutils literal">io.BytesIO</code></a> has a new method, <a class="reference internal" href="../library/io.html#py:method:io.bytesio.getbuffer"><code class="xref py method docutils literal">getbuffer</code></a>, which
 provides functionality similar to <a href="#" class="broken-link"><code class="xref py function docutils literal">memoryview</code></a>.  It creates an editable
@@ -1347,7 +1347,7 @@ for slice notation are well-suited to in-place editing:</p>
 <span class="hl-source hl-python"><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">G3805  showroom   Main chassis    <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
 <span class="hl-source hl-python"><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">X7899  warehouse  Reserve cog     <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
 <span class="hl-source hl-python"><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">L6988  receiving  Primary sprocket<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
-<p>(Contributed by Antoine Pitrou in :issue:`5506`.)</p>
+<p>(Contributed by Antoine Pitrou in 5506.)</p>
 <h3 id="reprlib">reprlib</h3>
 <p>When writing a <a class="reference internal" href="../reference/datamodel.html#py:method:object.__repr__"><code class="xref py method docutils literal">__repr__</code></a> method for a custom container, it is easy to
 forget to handle the case where a member refers back to the container itself.
@@ -1368,7 +1368,7 @@ decorator, <a class="reference internal" href="../library/reprlib.html#py:functi
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">m</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">append</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">x<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">m</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&lt;</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">a<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">|</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">b<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">|</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">c<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">|</span><span class="hl-constant hl-language hl-python">...</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">|</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">x<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span></span></pre></div>
-<p>(Contributed by Raymond Hettinger in :issue:`9826` and :issue:`9840`.)</p>
+<p>(Contributed by Raymond Hettinger in 9826 and 9840.)</p>
 <h3 id="logging">logging</h3>
 <p>In addition to dictionary-based configuration described above, the
 <a class="reference internal" href="../library/logging.html#py:module:logging" title="logging: Flexible event logging system for applications."><code class="xref py module docutils literal">logging</code></a> package has many other improvements.</p>
@@ -1414,8 +1414,8 @@ the field names:</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-begin hl-python">{</span></span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">name<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">susan<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span> </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">dept<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Salesl<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">tom<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>,<span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">accounting<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">susan<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>,<span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">sales<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span></pre></div>
-<p>(New dialect suggested by Jay Talbot in :issue:`5975`, and the new method
-suggested by Ed Abraham in :issue:`1537721`.)</p>
+<p>(New dialect suggested by Jay Talbot in 5975, and the new method
+suggested by Ed Abraham in 1537721.)</p>
 <h3 id="contextlib">contextlib</h3>
 <p>There is a new and slightly mind-blowing tool
 <a class="reference internal" href="../library/contextlib.html#py:class:contextlib.contextdecorator"><code class="xref py class docutils literal">ContextDecorator</code></a> that is helpful for creating a
@@ -1461,11 +1461,11 @@ a :keyword:`with` statement, but there is no parallel for function decorators.</
 <p>In the above example, there is not a clean way for the <em>track_entry_and_exit</em>
 context manager to return a logging instance for use in the body of enclosed
 statements.</p>
-<p>(Contributed by Michael Foord in :issue:`9110`.)</p>
+<p>(Contributed by Michael Foord in 9110.)</p>
 <h3 id="decimal-and-fractions">decimal and fractions</h3>
 <p>Mark Dickinson crafted an elegant and efficient scheme for assuring that
 different numeric datatypes will have the same hash value whenever their actual
-values are equal (:issue:`8188`):</p>
+values are equal (8188):</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-control hl-flow hl-assert hl-python">assert</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">hash</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Fraction</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">hash</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">1<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>5</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-punctuation hl-separator hl-continuation hl-line hl-python">\</span></span>
 <span class="hl-source hl-python">       <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">hash</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Decimal</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">1.5<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">hash</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-python">complex</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">1<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>5</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
@@ -1486,16 +1486,16 @@ the constructor and to support mixed-type comparisons.</p>
 <ul>
 <li><p>The <a class="reference internal" href="../library/decimal.html#py:class:decimal.decimal"><code class="xref py class docutils literal">decimal.Decimal</code></a> constructor now accepts <a class="reference internal" href="../library/functions.html#py:class:float"><code class="xref py class docutils literal">float</code></a> objects
 directly so there in no longer a need to use the <a class="reference internal" href="../library/decimal.html#py:method:decimal.decimal.from_float"><code class="xref py method docutils literal">from_float</code></a>
-method (:issue:`8257`).</p>
+method (8257).</p>
 </li>
 <li><p>Mixed type comparisons are now fully supported so that
 <a class="reference internal" href="../library/decimal.html#py:class:decimal.decimal"><code class="xref py class docutils literal">Decimal</code></a> objects can be directly compared with <a class="reference internal" href="../library/functions.html#py:class:float"><code class="xref py class docutils literal">float</code></a>
-and <a class="reference internal" href="../library/fractions.html#py:class:fractions.fraction"><code class="xref py class docutils literal">fractions.Fraction</code></a> (:issue:`2531` and :issue:`8188`).</p>
+and <a class="reference internal" href="../library/fractions.html#py:class:fractions.fraction"><code class="xref py class docutils literal">fractions.Fraction</code></a> (2531 and 8188).</p>
 </li>
 </ul>
 <p>Similar changes were made to <a class="reference internal" href="../library/fractions.html#py:class:fractions.fraction"><code class="xref py class docutils literal">fractions.Fraction</code></a> so that the
 <a class="reference internal" href="../library/fractions.html#py:method:fractions.fraction.from_float"><code class="xref py method docutils literal">from_float</code></a> and <a class="reference internal" href="../library/fractions.html#py:method:fractions.fraction.from_decimal"><code class="xref py method docutils literal">from_decimal</code></a>
-methods are no longer needed (:issue:`8294`):</p>
+methods are no longer needed (8294):</p>
 <div class="highlight hl-code"><pre>
 &gt;&gt;&gt; from decimal import Decimal
 &gt;&gt;&gt; from fractions import Fraction
@@ -1506,7 +1506,7 @@ Fraction(2476979795053773, 2251799813685248)</pre></div>
 <p>Another useful change for the <a class="reference internal" href="../library/decimal.html#py:module:decimal" title="decimal: Implementation of the General Decimal Arithmetic Specification."><code class="xref py module docutils literal">decimal</code></a> module is that the
 <a class="reference internal" href="../library/decimal.html#py:attribute:decimal.context.clamp"><code class="xref py attribute docutils literal">Context.clamp</code></a> attribute is now public.  This is useful in creating
 contexts that correspond to the decimal interchange formats specified in IEEE
-754 (see :issue:`8540`).</p>
+754 (see 8540).</p>
 <p>(Contributed by Mark Dickinson and Raymond Hettinger.)</p>
 <h3 id="ftp">ftp</h3>
 <p>The <a class="reference internal" href="../library/ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">ftplib.FTP</code></a> class now supports the context management protocol to
@@ -1529,17 +1529,17 @@ also grew auto-closing context managers:</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fileinput</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">input</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">files</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">log1.txt<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">log2.txt<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">f</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
 <span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">line</span> <span class="hl-keyword hl-control hl-loop hl-for hl-in hl-python">in</span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">f</span></span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-punctuation hl-section hl-block hl-loop hl-for hl-python">:</span></span></span>
 <span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">process</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
-<p>(Contributed by Tarek Ziadé and Giampaolo Rodolà in :issue:`4972`, and
-by Georg Brandl in :issue:`8046` and :issue:`1286`.)</p>
+<p>(Contributed by Tarek Ziadé and Giampaolo Rodolà in 4972, and
+by Georg Brandl in 8046 and 1286.)</p>
 <p>The <a class="reference internal" href="../library/ftplib.html#py:class:ftplib.ftp_tls"><code class="xref py class docutils literal">FTP_TLS</code></a> class now accepts a <em>context</em> parameter, which is a
 <a class="reference internal" href="../library/ssl.html#py:class:ssl.sslcontext"><code class="xref py class docutils literal">ssl.SSLContext</code></a> object allowing bundling SSL configuration options,
 certificates and private keys into a single (potentially long-lived) structure.</p>
-<p>(Contributed by Giampaolo Rodolà; :issue:`8806`.)</p>
+<p>(Contributed by Giampaolo Rodolà; 8806.)</p>
 <h3 id="popen">popen</h3>
 <p>The <a class="reference internal" href="../library/os.html#py:function:os.popen"><code class="xref py function docutils literal">os.popen</code></a> and <a href="#" class="broken-link"><code class="xref py function docutils literal">subprocess.Popen</code></a> functions now support
 :keyword:`with` statements for auto-closing of the file descriptors.</p>
-<p>(Contributed by Antoine Pitrou and Brian Curtin in :issue:`7461` and
-:issue:`10554`.)</p>
+<p>(Contributed by Antoine Pitrou and Brian Curtin in 7461 and
+10554.)</p>
 <h3 id="select">select</h3>
 <p>The <a class="reference internal" href="../library/select.html#py:module:select" title="select: Wait for I/O completion on multiple streams."><code class="xref py module docutils literal">select</code></a> module now exposes a new, constant attribute,
 <a class="reference internal" href="../library/select.html#py:data:select.pipe_buf"><code class="xref py data docutils literal">PIPE_BUF</code></a>, which gives the minimum number of bytes which are
@@ -1549,7 +1549,7 @@ for writing.</p>
 &gt;&gt;&gt; import select
 &gt;&gt;&gt; select.PIPE_BUF
 512</pre></div>
-<p>(Available on Unix systems. Patch by Sébastien Sablé in :issue:`9862`)</p>
+<p>(Available on Unix systems. Patch by Sébastien Sablé in 9862)</p>
 <h3 id="gzip-and-zipfile">gzip and zipfile</h3>
 <p><a class="reference internal" href="../library/gzip.html#py:class:gzip.gzipfile"><code class="xref py class docutils literal">gzip.GzipFile</code></a> now implements the <a class="reference internal" href="../library/io.html#py:class:io.bufferediobase"><code class="xref py class docutils literal">io.BufferedIOBase</code></a>
 <a class="reference internal" href="../glossary.html#term-abstract-base-class"><span class="xref std std-term">abstract base class</span></a> (except for <code>truncate()</code>).  It also has a
@@ -1571,15 +1571,15 @@ before compressing and decompressing:</p>
 77
 &gt;&gt;&gt; gzip.decompress(c).decode()[:42]      # decompress and convert to text
 'Three shall be the number thou shalt count'</pre></div>
-<p>(Contributed by Anand B. Pillai in :issue:`3488`; and by Antoine Pitrou, Nir
-Aides and Brian Curtin in :issue:`9962`, :issue:`1675951`, :issue:`7471` and
-:issue:`2846`.)</p>
+<p>(Contributed by Anand B. Pillai in 3488; and by Antoine Pitrou, Nir
+Aides and Brian Curtin in 9962, 1675951, 7471 and
+2846.)</p>
 <p>Also, the <a href="#" class="broken-link"><code class="xref py class docutils literal">zipfile.ZipExtFile</code></a> class was reworked internally to represent
 files stored inside an archive.  The new implementation is significantly faster
 and can be wrapped in an <a class="reference internal" href="../library/io.html#py:class:io.bufferedreader"><code class="xref py class docutils literal">io.BufferedReader</code></a> object for more speedups.  It
 also solves an issue where interleaved calls to <em>read</em> and <em>readline</em> gave the
 wrong results.</p>
-<p>(Patch submitted by Nir Aides in :issue:`7610`.)</p>
+<p>(Patch submitted by Nir Aides in 7610.)</p>
 <h3 id="tarfile">tarfile</h3>
 <p>The <a class="reference internal" href="../library/tarfile.html#py:class:tarfile.tarfile"><code class="xref py class docutils literal">TarFile</code></a> class can now be used as a context manager.  In
 addition, its <a class="reference internal" href="../library/tarfile.html#py:method:tarfile.tarfile.add"><code class="xref py method docutils literal">add</code></a> method has a new option, <em>filter</em>,
@@ -1610,7 +1610,7 @@ function can return <code>None</code>:</p>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rw</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">r</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">r</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">monty</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">501</span>       <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3514</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2011</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>1</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">26</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">17</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">59</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">11</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">prion</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">txt</span></span></span>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rw</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">r</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">r</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">monty</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">501</span>        <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">124</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2011</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>1</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">26</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">17</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">59</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">11</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">py_todo</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">txt</span></span></span>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rw</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">r</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">r</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">monty</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">501</span>       <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1399</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2011</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>1</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">26</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">17</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">59</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">11</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">semaphore_notes</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">txt</span></span></span></pre></div>
-<p>(Proposed by Tarek Ziadé and implemented by Lars Gustäbel in :issue:`6856`.)</p>
+<p>(Proposed by Tarek Ziadé and implemented by Lars Gustäbel in 6856.)</p>
 <h3 id="hashlib">hashlib</h3>
 <p>The <a class="reference internal" href="../library/hashlib.html#py:module:hashlib" title="hashlib: Secure hash and message digest algorithms."><code class="xref py module docutils literal">hashlib</code></a> module has two new constant attributes listing the hashing
 algorithms guaranteed to be present in all implementations and those available
@@ -1626,7 +1626,7 @@ on the current implementation:</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-set hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">sha512<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">ripemd160<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">SHA1<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">MDC2<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">SHA<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">SHA384<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">MD2<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-set hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">ecdsa-with-SHA1<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">md4<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">md5<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">sha1<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">DSA-SHA<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">sha224<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-set hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">dsaEncryption<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">DSA<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">RIPEMD160<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">sha<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">MD5<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">sha384<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-set hl-end hl-python">}</span></span></span></pre></div>
-<p>(Suggested by Carl Chenet in :issue:`7418`.)</p>
+<p>(Suggested by Carl Chenet in 7418.)</p>
 <h3 id="ast">ast</h3>
 <p>The <a class="reference internal" href="../library/ast.html#py:module:ast" title="ast: Abstract Syntax Tree classes and manipulation."><code class="xref py module docutils literal">ast</code></a> module has a wonderful a general-purpose tool for safely
 evaluating expression strings using the Python literal
@@ -1729,7 +1729,7 @@ extensions from ".so" files.  One well-known extension is the fulltext-search
 extension distributed with SQLite.</p>
 </li>
 </ul>
-<p>(Contributed by R. David Murray and Shashwat Anand; :issue:`8845`.)</p>
+<p>(Contributed by R. David Murray and Shashwat Anand; 8845.)</p>
 <h3 id="html">html</h3>
 <p>A new <a class="reference internal" href="../library/html.html#py:module:html" title="html: Helpers for manipulating HTML."><code class="xref py module docutils literal">html</code></a> module was introduced with only a single function,
 <a class="reference internal" href="../library/html.html#py:function:html.escape"><code class="xref py function docutils literal">escape</code></a>, which is used for escaping reserved characters from HTML
@@ -1744,12 +1744,12 @@ markup:</p>
 <li><p>Socket objects now have a <a class="reference internal" href="../library/socket.html#py:method:socket.socket.detach"><code class="xref py method docutils literal">detach</code></a> method which puts
 the socket into closed state without actually closing the underlying file
 descriptor.  The latter can then be reused for other purposes.
-(Added by Antoine Pitrou; :issue:`8524`.)</p>
+(Added by Antoine Pitrou; 8524.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/socket.html#py:function:socket.create_connection"><code class="xref py function docutils literal">socket.create_connection</code></a> now supports the context management protocol
 to unconditionally consume <a class="reference internal" href="../library/socket.html#py:exception:socket.error"><code class="xref py exception docutils literal">socket.error</code></a> exceptions and to close the
 socket when done.
-(Contributed by Giampaolo Rodolà; :issue:`9794`.)</p>
+(Contributed by Giampaolo Rodolà; 9794.)</p>
 </li>
 </ul>
 <h3 id="ssl">ssl</h3>
@@ -1789,8 +1789,8 @@ attributes <a class="reference internal" href="../library/ssl.html#py:data:ssl.o
 <a class="reference internal" href="../library/ssl.html#py:data:ssl.openssl_version_number"><code class="xref py data docutils literal">ssl.OPENSSL_VERSION_NUMBER</code></a> (an integer).</p>
 </li>
 </ul>
-<p>(Contributed by Antoine Pitrou in :issue:`8850`, :issue:`1589`, :issue:`8322`,
-:issue:`5639`, :issue:`4870`, :issue:`8484`, and :issue:`8321`.)</p>
+<p>(Contributed by Antoine Pitrou in 8850, 1589, 8322,
+5639, 4870, 8484, and 8321.)</p>
 <h3 id="nntp">nntp</h3>
 <p>The <code class="xref py module docutils literal">nntplib</code> module has a revamped implementation with better bytes and
 text semantics as well as more practical APIs.  These improvements break
@@ -1799,17 +1799,17 @@ dysfunctional in itself.</p>
 <p>Support for secure connections through both implicit (using
 <code class="xref py class docutils literal">nntplib.NNTP_SSL</code>) and explicit (using <code class="xref py method docutils literal">nntplib.NNTP.starttls</code>)
 TLS has also been added.</p>
-<p>(Contributed by Antoine Pitrou in :issue:`9360` and Andrew Vant in :issue:`1926`.)</p>
+<p>(Contributed by Antoine Pitrou in 9360 and Andrew Vant in 1926.)</p>
 <h3 id="certificates">certificates</h3>
 <p><a class="reference internal" href="../library/http.client.html#py:class:http.client.httpsconnection"><code class="xref py class docutils literal">http.client.HTTPSConnection</code></a>, <a class="reference internal" href="../library/urllib.request.html#py:class:urllib.request.httpshandler"><code class="xref py class docutils literal">urllib.request.HTTPSHandler</code></a>
 and <a class="reference internal" href="../library/urllib.request.html#py:function:urllib.request.urlopen"><code class="xref py function docutils literal">urllib.request.urlopen</code></a> now take optional arguments to allow for
 server certificate checking against a set of Certificate Authorities,
 as recommended in public uses of HTTPS.</p>
-<p>(Added by Antoine Pitrou, :issue:`9003`.)</p>
+<p>(Added by Antoine Pitrou, 9003.)</p>
 <h3 id="imaplib">imaplib</h3>
 <p>Support for explicit TLS on standard IMAP4 connections has been added through
 the new <a href="#" class="broken-link"><code class="xref py module docutils literal">imaplib.IMAP4.starttls</code></a> method.</p>
-<p>(Contributed by Lorenzo M. Catucci and Antoine Pitrou, :issue:`4471`.)</p>
+<p>(Contributed by Lorenzo M. Catucci and Antoine Pitrou, 4471.)</p>
 <h3 id="http-client">http.client</h3>
 <p>There were a number of small API improvements in the <a class="reference internal" href="../library/http.client.html#py:module:http.client" title="http.client: HTTP and HTTPS protocol client (requires sockets)."><code class="xref py module docutils literal">http.client</code></a> module.
 The old-style HTTP 0.9 simple responses are no longer supported and the <em>strict</em>
@@ -1832,7 +1832,7 @@ port for HTTP Connect tunneling.</p>
 <p>To match the behavior of <a class="reference internal" href="../library/http.server.html#py:module:http.server" title="http.server: HTTP server and request handlers."><code class="xref py module docutils literal">http.server</code></a>, the HTTP client library now also
 encodes headers with ISO-8859-1 (Latin-1) encoding.  It was already doing that
 for incoming headers, so now the behavior is consistent for both incoming and
-outgoing traffic. (See work by Armin Ronacher in :issue:`10980`.)</p>
+outgoing traffic. (See work by Armin Ronacher in 10980.)</p>
 <h3 id="unittest">unittest</h3>
 <p>The unittest module has a number of improvements supporting test discovery for
 packages, easier experimentation at the interactive prompt, new testcase
@@ -1840,7 +1840,7 @@ methods, improved diagnostic messages for test failures, and better method
 names.</p>
 <ul>
 <li><p>The command-line call <code>python -m unittest</code> can now accept file paths
-instead of module names for running specific tests (:issue:`10620`).  The new
+instead of module names for running specific tests (10620).  The new
 test discovery can find tests within packages, locating any test importable
 from the top-level directory.  The top-level directory can be specified with
 the <code>-t</code> option, a pattern for matching files with <code>-p</code>, and a directory to
@@ -1866,7 +1866,7 @@ is triggered by the code under test:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">assertWarns</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-exception hl-python">DeprecationWarning</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
 <span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">legacy_function</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">XYZ<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
-<p>(Contributed by Antoine Pitrou, :issue:`9754`.)</p>
+<p>(Contributed by Antoine Pitrou, 9754.)</p>
 <p>Another new method, <a class="reference internal" href="../library/unittest.html#py:method:unittest.testcase.assertcountequal"><code class="xref py method docutils literal">assertCountEqual</code></a> is used to
 compare two iterables to determine if their element counts are equal (whether
 the same elements are present with the same number of occurrences regardless
@@ -1941,7 +1941,7 @@ deprecated in favor of the preferred names:</p>
 </blockquote>
 <p>Likewise, the <code>TestCase.fail*</code> methods deprecated in Python 3.1 are expected
 to be removed in Python 3.3.</p>
-<p>(Contributed by Ezio Melotti; :issue:`9424`.)</p>
+<p>(Contributed by Ezio Melotti; 9424.)</p>
 </li>
 <li><p>The <code class="xref py method docutils literal">assertDictContainsSubset</code> method was deprecated
 because it was misimplemented with the arguments in the wrong order.  This
@@ -1959,13 +1959,13 @@ selection is kept only when it falls within the range <code>0 &lt;= x &lt; n</co
 functions and methods affected are <a class="reference internal" href="../library/random.html#py:function:random.randrange"><code class="xref py function docutils literal">randrange</code></a>,
 <a class="reference internal" href="../library/random.html#py:function:random.randint"><code class="xref py function docutils literal">randint</code></a>, <a class="reference internal" href="../library/random.html#py:function:random.choice"><code class="xref py function docutils literal">choice</code></a>, <a class="reference internal" href="../library/random.html#py:function:random.shuffle"><code class="xref py function docutils literal">shuffle</code></a> and
 <a class="reference internal" href="../library/random.html#py:function:random.sample"><code class="xref py function docutils literal">sample</code></a>.</p>
-<p>(Contributed by Raymond Hettinger; :issue:`9025`.)</p>
+<p>(Contributed by Raymond Hettinger; 9025.)</p>
 <h3 id="poplib">poplib</h3>
 <p><a class="reference internal" href="../library/poplib.html#py:class:poplib.pop3_ssl"><code class="xref py class docutils literal">POP3_SSL</code></a> class now accepts a <em>context</em> parameter, which is a
 <a class="reference internal" href="../library/ssl.html#py:class:ssl.sslcontext"><code class="xref py class docutils literal">ssl.SSLContext</code></a> object allowing bundling SSL configuration options,
 certificates and private keys into a single (potentially long-lived)
 structure.</p>
-<p>(Contributed by Giampaolo Rodolà; :issue:`8807`.)</p>
+<p>(Contributed by Giampaolo Rodolà; 8807.)</p>
 <h3 id="asyncore">asyncore</h3>
 <p><code class="xref py class docutils literal">asyncore.dispatcher</code> now provides a
 <code class="xref py method docutils literal">handle_accepted</code> method
@@ -1973,7 +1973,7 @@ returning a <code>(sock, addr)</code> pair which is called when a connection has
 been established with a new remote endpoint. This is supposed to be used as a
 replacement for old <code class="xref py method docutils literal">handle_accept</code> and avoids
 the user  to call <code class="xref py method docutils literal">accept</code> directly.</p>
-<p>(Contributed by Giampaolo Rodolà; :issue:`6706`.)</p>
+<p>(Contributed by Giampaolo Rodolà; 6706.)</p>
 <h3 id="tempfile">tempfile</h3>
 <p>The <a class="reference internal" href="../library/tempfile.html#py:module:tempfile" title="tempfile: Generate temporary files and directories."><code class="xref py module docutils literal">tempfile</code></a> module has a new context manager,
 <a class="reference internal" href="../library/tempfile.html#py:class:tempfile.temporarydirectory"><code class="xref py class docutils literal">TemporaryDirectory</code></a> which provides easy deterministic
@@ -1981,7 +1981,7 @@ cleanup of temporary directories:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">tempfile</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">TemporaryDirectory</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">tmpdirname</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
 <span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">created temporary dir:<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">tmpdirname</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
-<p>(Contributed by Neil Schemenauer and Nick Coghlan; :issue:`5178`.)</p>
+<p>(Contributed by Neil Schemenauer and Nick Coghlan; 5178.)</p>
 <h3 id="inspect">inspect</h3>
 <ul>
 <li><p>The <a class="reference internal" href="../library/inspect.html#py:module:inspect" title="inspect: Extract information and source code from live objects."><code class="xref py module docutils literal">inspect</code></a> module has a new function
@@ -2002,7 +2002,7 @@ generator-iterator:</p>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">next</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">g</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-language hl-python">None</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">getgeneratorstate</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">g</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">GEN_CLOSED<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
-<p>(Contributed by Rodolpho Eckhardt and Nick Coghlan, :issue:`10220`.)</p>
+<p>(Contributed by Rodolpho Eckhardt and Nick Coghlan, 10220.)</p>
 </li>
 <li><p>To support lookups without the possibility of activating a dynamic attribute,
 the <a class="reference internal" href="../library/inspect.html#py:module:inspect" title="inspect: Extract information and source code from live objects."><code class="xref py module docutils literal">inspect</code></a> module has a new function, <a class="reference internal" href="../library/inspect.html#py:function:inspect.getattr_static"><code class="xref py function docutils literal">getattr_static</code></a>.
@@ -2034,7 +2034,7 @@ to display that server:</p>
 <div class="highlight hl-code"><pre>
 $ pydoc3.2 -b</pre></div>
 </div>
-<p>(Contributed by Ron Adam; :issue:`2001`.)</p>
+<p>(Contributed by Ron Adam; 2001.)</p>
 <h3 id="dis">dis</h3>
 <p>The <a class="reference internal" href="../library/dis.html#py:module:dis" title="dis: Disassembler for Python bytecode."><code class="xref py module docutils literal">dis</code></a> module gained two new functions for inspecting code,
 <a class="reference internal" href="../library/dis.html#py:function:dis.code_info"><code class="xref py function docutils literal">code_info</code></a> and <a class="reference internal" href="../library/dis.html#py:function:dis.show_code"><code class="xref py function docutils literal">show_code</code></a>.  Both provide detailed code
@@ -2086,10 +2086,10 @@ to <code>dis(s)</code>:</p>
 <p>Taken together, these improvements make it easier to explore how CPython is
 implemented and to see for yourself what the language syntax does
 under-the-hood.</p>
-<p>(Contributed by Nick Coghlan in :issue:`9147`.)</p>
+<p>(Contributed by Nick Coghlan in 9147.)</p>
 <h3 id="dbm">dbm</h3>
 <p>All database modules now support the <code class="xref py method docutils literal">get</code> and <code class="xref py method docutils literal">setdefault</code> methods.</p>
-<p>(Suggested by Ray Allen in :issue:`9523`.)</p>
+<p>(Suggested by Ray Allen in 9523.)</p>
 <h3 id="ctypes">ctypes</h3>
 <p>A new type, <a class="reference internal" href="../library/ctypes.html#py:class:ctypes.c_ssize_t"><code class="xref py class docutils literal">ctypes.c_ssize_t</code></a> represents the C <a href="#" class="broken-link"><code class="xref c type docutils literal">ssize_t</code></a> datatype.</p>
 <h3 id="site">site</h3>
@@ -2124,7 +2124,7 @@ $ python -m site --user-base
 $ python -m site --user-site
 /Users/raymondhettinger/.local/lib/python3.2/site-packages</pre></div>
 </div>
-<p>(Contributed by Tarek Ziadé in :issue:`6693`.)</p>
+<p>(Contributed by Tarek Ziadé in 6693.)</p>
 <h3 id="sysconfig">sysconfig</h3>
 <p>The new <a class="reference internal" href="../library/sysconfig.html#py:module:sysconfig" title="sysconfig: Python's configuration information"><code class="xref py module docutils literal">sysconfig</code></a> module makes it straightforward to discover
 installation paths and configuration variables that vary across platforms and
@@ -2331,8 +2331,8 @@ parameters, the return types will also be an ASCII-encoded byte strings:</p>
 ParseResultBytes(scheme=b'http', netloc=b'www.python.org:80',
                  path=b'/about/', params=b'', query=b'', fragment=b'')</pre></div>
 </blockquote>
-<p>(Work by Nick Coghlan, Dan Mahn, and Senthil Kumaran in :issue:`2987`,
-:issue:`5468`, and :issue:`9873`.)</p>
+<p>(Work by Nick Coghlan, Dan Mahn, and Senthil Kumaran in 2987,
+5468, and 9873.)</p>
 <h3 id="mailbox">mailbox</h3>
 <p>Thanks to a concerted effort by R. David Murray, the <a class="reference internal" href="../library/mailbox.html#py:module:mailbox" title="mailbox: Manipulate mailboxes in various formats"><code class="xref py module docutils literal">mailbox</code></a> module has
 been fixed for Python 3.2.  The challenge was that mailbox had been originally
@@ -2356,7 +2356,7 @@ to a given <em>key</em>.</p>
 is not very useful.  Instead, it is best to extract messages from
 a <a class="reference internal" href="../library/mailbox.html#py:class:mailbox.message"><code class="xref py class docutils literal">Message</code></a> object or to load them from binary input.</p>
 <p>(Contributed by R. David Murray, with efforts from Steffen Daode Nurpmeso and an
-initial patch by Victor Stinner in :issue:`9124`.)</p>
+initial patch by Victor Stinner in 9124.)</p>
 <h3 id="turtledemo">turtledemo</h3>
 <p>The demonstration code for the <a class="reference internal" href="../library/turtle.html#py:module:turtle" title="turtle: An educational framework for simple graphics applications"><code class="xref py module docutils literal">turtle</code></a> module was moved from the <em>Demo</em>
 directory to main library.  It includes over a dozen sample scripts with
@@ -2366,7 +2366,7 @@ from the command-line:</p>
 <div class="highlight hl-code"><pre>
 $ python -m turtledemo</pre></div>
 </div>
-<p>(Moved from the Demo directory by Alexander Belopolsky in :issue:`10199`.)</p>
+<p>(Moved from the Demo directory by Alexander Belopolsky in 10199.)</p>
 <h2 id="multi-threading">Multi-threading</h2>
 <ul>
 <li><p>The mechanism for serializing execution of concurrently running Python threads
@@ -2385,16 +2385,16 @@ for inclusion).</p>
 </li>
 <li><p>Regular and recursive locks now accept an optional <em>timeout</em> argument to their
 <a class="reference internal" href="../library/threading.html#py:method:threading.lock.acquire"><code class="xref py method docutils literal">acquire</code></a> method.  (Contributed by Antoine Pitrou;
-:issue:`7316`.)</p>
+7316.)</p>
 </li>
 <li><p>Similarly, <a class="reference internal" href="../library/threading.html#py:method:threading.semaphore.acquire"><code class="xref py method docutils literal">threading.Semaphore.acquire</code></a> also gained a <em>timeout</em>
-argument.  (Contributed by Torsten Landschoff; :issue:`850728`.)</p>
+argument.  (Contributed by Torsten Landschoff; 850728.)</p>
 </li>
 <li><p>Regular and recursive lock acquisitions can now be interrupted by signals on
 platforms using Pthreads.  This means that Python programs that deadlock while
 acquiring locks can be successfully killed by repeatedly sending SIGINT to the
 process (by pressing :kbd:`Ctrl+C` in most shells).
-(Contributed by Reid Kleckner; :issue:`8844`.)</p>
+(Contributed by Reid Kleckner; 8844.)</p>
 </li>
 </ul>
 <h2 id="optimizations">Optimizations</h2>
@@ -2410,12 +2410,12 @@ and operationally fast:</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">extension</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">name</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">rpartition</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">.<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
 <span class="hl-source hl-python"><span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">extension</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-set hl-python"><span class="hl-punctuation hl-section hl-set hl-begin hl-python">{</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">xml<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">html<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">xhtml<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-set hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">css<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-set hl-end hl-python">}</span></span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
 <span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">handle</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">name</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
-<p>(Patch and additional tests contributed by Dave Malcolm; :issue:`6690`).</p>
+<p>(Patch and additional tests contributed by Dave Malcolm; 6690).</p>
 </li>
 <li><p>Serializing and unserializing data using the <a class="reference internal" href="../library/pickle.html#py:module:pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py module docutils literal">pickle</code></a> module is now
 several times faster.</p>
 <p>(Contributed by Alexandre Vassalotti, Antoine Pitrou
-and the Unladen Swallow team in :issue:`9410` and :issue:`3873`.)</p>
+and the Unladen Swallow team in 9410 and 3873.)</p>
 </li>
 <li><p>The <a href="https://en.wikipedia.org/wiki/Timsort">Timsort algorithm</a> used in
 <a class="reference internal" href="../library/stdtypes.html#py:method:list.sort"><code class="xref py method docutils literal">list.sort</code></a> and <a class="reference internal" href="../library/functions.html#py:function:sorted"><code class="xref py function docutils literal">sorted</code></a> now runs faster and uses less memory
@@ -2424,39 +2424,39 @@ a list was wrapped with a temporary object that remembered the key value
 associated with each element.  Now, two arrays of keys and values are
 sorted in parallel.  This saves the memory consumed by the sort wrappers,
 and it saves time lost to delegating comparisons.</p>
-<p>(Patch by Daniel Stutzbach in :issue:`9915`.)</p>
+<p>(Patch by Daniel Stutzbach in 9915.)</p>
 </li>
 <li><p>JSON decoding performance is improved and memory consumption is reduced
 whenever the same string is repeated for multiple keys.  Also, JSON encoding
 now uses the C speedups when the <code>sort_keys</code> argument is true.</p>
-<p>(Contributed by Antoine Pitrou in :issue:`7451` and by Raymond Hettinger and
-Antoine Pitrou in :issue:`10314`.)</p>
+<p>(Contributed by Antoine Pitrou in 7451 and by Raymond Hettinger and
+Antoine Pitrou in 10314.)</p>
 </li>
 <li><p>Recursive locks (created with the <a href="#" class="broken-link"><code class="xref py function docutils literal">threading.RLock</code></a> API) now benefit
 from a C implementation which makes them as fast as regular locks, and between
 10x and 15x faster than their previous pure Python implementation.</p>
-<p>(Contributed by Antoine Pitrou; :issue:`3001`.)</p>
+<p>(Contributed by Antoine Pitrou; 3001.)</p>
 </li>
 <li><p>The fast-search algorithm in stringlib is now used by the <a class="reference internal" href="../library/stdtypes.html#py:method:str.split"><code class="xref py method docutils literal">split</code></a>,
 <a class="reference internal" href="../library/stdtypes.html#py:method:str.rsplit"><code class="xref py method docutils literal">rsplit</code></a>, <a class="reference internal" href="../library/stdtypes.html#py:method:str.splitlines"><code class="xref py method docutils literal">splitlines</code></a> and <a class="reference internal" href="../library/stdtypes.html#py:method:str.replace"><code class="xref py method docutils literal">replace</code></a> methods on
 <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>, <a class="reference internal" href="../library/stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a> and <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> objects. Likewise, the
 algorithm is also used by <a class="reference internal" href="../library/stdtypes.html#py:method:str.rfind"><code class="xref py method docutils literal">rfind</code></a>, <a class="reference internal" href="../library/stdtypes.html#py:method:str.rindex"><code class="xref py method docutils literal">rindex</code></a>, <a class="reference internal" href="../library/stdtypes.html#py:method:str.rsplit"><code class="xref py method docutils literal">rsplit</code></a> and
 <a class="reference internal" href="../library/stdtypes.html#py:method:str.rpartition"><code class="xref py method docutils literal">rpartition</code></a>.</p>
-<p>(Patch by Florent Xicluna in :issue:`7622` and :issue:`7462`.)</p>
+<p>(Patch by Florent Xicluna in 7622 and 7462.)</p>
 </li>
 <li><p>Integer to string conversions now work two "digits" at a time, reducing the
 number of division and modulo operations.</p>
-<p>(:issue:`6713` by Gawain Bolton, Mark Dickinson, and Victor Stinner.)</p>
+<p>(6713 by Gawain Bolton, Mark Dickinson, and Victor Stinner.)</p>
 </li>
 </ul>
 <p>There were several other minor optimizations. Set differencing now runs faster
 when one operand is much larger than the other (patch by Andress Bennetts in
-:issue:`8685`).  The <code class="xref py method docutils literal">array.repeat</code> method has a faster implementation
-(:issue:`1569291` by Alexander Belopolsky). The <a class="reference internal" href="../library/http.server.html#py:class:http.server.basehttprequesthandler"><code class="xref py class docutils literal">BaseHTTPRequestHandler</code></a>
-has more efficient buffering (:issue:`3709` by Andrew Schaaf).  The
-<a class="reference internal" href="../library/operator.html#py:function:operator.attrgetter"><code class="xref py function docutils literal">operator.attrgetter</code></a> function has been sped-up (:issue:`10160` by
+8685).  The <code class="xref py method docutils literal">array.repeat</code> method has a faster implementation
+(1569291 by Alexander Belopolsky). The <a class="reference internal" href="../library/http.server.html#py:class:http.server.basehttprequesthandler"><code class="xref py class docutils literal">BaseHTTPRequestHandler</code></a>
+has more efficient buffering (3709 by Andrew Schaaf).  The
+<a class="reference internal" href="../library/operator.html#py:function:operator.attrgetter"><code class="xref py function docutils literal">operator.attrgetter</code></a> function has been sped-up (10160 by
 Christos Georgiou).  And <a class="reference internal" href="../library/configparser.html#py:class:configparser.configparser"><code class="xref py class docutils literal">ConfigParser</code></a> loads multi-line arguments a bit
-faster (:issue:`7113` by Łukasz Langa).</p>
+faster (7113 by Łukasz Langa).</p>
 <h2 id="unicode">Unicode</h2>
 <p>Python has been updated to <a href="https://unicode.org/versions/Unicode6.0.0/">Unicode 6.0.0</a>.  The update to the standard adds
 over 2,000 new characters including <a href="https://en.wikipedia.org/wiki/Emoji">emoji</a>
@@ -2466,7 +2466,7 @@ Kannada characters (U+0CF1, U+0CF2) and one New Tai Lue numeric character
 (U+19DA), making the former eligible for use in identifiers while disqualifying
 the latter.  For more information, see <a href="https://www.unicode.org/versions/Unicode6.0.0/#Database_Changes">Unicode Character Database Changes</a>.</p>
 <h2 id="codecs">Codecs</h2>
-<p>Support was added for <em>cp720</em> Arabic DOS encoding (:issue:`1616979`).</p>
+<p>Support was added for <em>cp720</em> Arabic DOS encoding (1616979).</p>
 <p>MBCS encoding no longer ignores the error handler argument. In the default
 strict mode, it raises an <a class="reference internal" href="../library/exceptions.html#py:exception:unicodedecodeerror"><code class="xref py exception docutils literal">UnicodeDecodeError</code></a> when it encounters an
 undecodable byte sequence and an <a class="reference internal" href="../library/exceptions.html#py:exception:unicodeencodeerror"><code class="xref py exception docutils literal">UnicodeEncodeError</code></a> for an unencodable
@@ -2506,22 +2506,22 @@ module has an extensive section, <a href="../library/re.html#re-examples">Regula
 <li><p>The <a class="reference internal" href="../library/datetime.html#py:module:datetime" title="datetime: Basic date and time types."><code class="xref py module docutils literal">datetime</code></a> module now has an auxiliary implementation in pure Python.
 No functionality was changed.  This just provides an easier-to-read alternate
 implementation.</p>
-<p>(Contributed by Alexander Belopolsky in :issue:`9528`.)</p>
+<p>(Contributed by Alexander Belopolsky in 9528.)</p>
 </li>
 <li><p>The unmaintained :file:`Demo` directory has been removed.  Some demos were
 integrated into the documentation, some were moved to the :file:`Tools/demo`
 directory, and others were removed altogether.</p>
-<p>(Contributed by Georg Brandl in :issue:`7962`.)</p>
+<p>(Contributed by Georg Brandl in 7962.)</p>
 </li>
 </ul>
 <h2 id="idle">IDLE</h2>
 <ul>
 <li><p>The format menu now has an option to clean source files by stripping
 trailing whitespace.</p>
-<p>(Contributed by Raymond Hettinger; :issue:`5150`.)</p>
+<p>(Contributed by Raymond Hettinger; 5150.)</p>
 </li>
 <li><p>IDLE on Mac OS X now works with both Carbon AquaTk and Cocoa AquaTk.</p>
-<p>(Contributed by Kevin Walzer, Ned Deily, and Ronald Oussoren; :issue:`6075`.)</p>
+<p>(Contributed by Kevin Walzer, Ned Deily, and Ronald Oussoren; 6075.)</p>
 </li>
 </ul>
 <h2 id="code-repository">Code Repository</h2>
@@ -2538,7 +2538,7 @@ Mercurial Workflows</a>.</p>
 <p>Changes to Python's build process and to the C API include:</p>
 <ul>
 <li><p>The <em>idle</em>, <em>pydoc</em> and <em>2to3</em> scripts are now installed with a
-version-specific suffix on <code>make altinstall</code> (:issue:`10679`).</p>
+version-specific suffix on <code>make altinstall</code> (10679).</p>
 </li>
 <li><p>The C functions that access the Unicode Database now accept and return
 characters from the full Unicode range, even on narrow unicode builds
@@ -2546,16 +2546,16 @@ characters from the full Unicode range, even on narrow unicode builds
 in Python is that <a class="reference internal" href="../library/unicodedata.html#py:function:unicodedata.numeric"><code class="xref py function docutils literal">unicodedata.numeric</code></a> now returns the correct value
 for large code points, and <a class="reference internal" href="../library/functions.html#py:function:repr"><code class="xref py function docutils literal">repr</code></a> may consider more characters as
 printable.</p>
-<p>(Reported by Bupjoe Lee and fixed by Amaury Forgeot D'Arc; :issue:`5127`.)</p>
+<p>(Reported by Bupjoe Lee and fixed by Amaury Forgeot D'Arc; 5127.)</p>
 </li>
 <li><p>Computed gotos are now enabled by default on supported compilers (which are
 detected by the configure script).  They can still be disabled selectively by
 specifying <code>--without-computed-gotos</code>.</p>
-<p>(Contributed by Antoine Pitrou; :issue:`9203`.)</p>
+<p>(Contributed by Antoine Pitrou; 9203.)</p>
 </li>
 <li><p>The option <code>--with-wctype-functions</code> was removed.  The built-in unicode
 database is now used for all functions.</p>
-<p>(Contributed by Amaury Forgeot D'Arc; :issue:`9210`.)</p>
+<p>(Contributed by Amaury Forgeot D'Arc; 9210.)</p>
 </li>
 <li><p>Hash values are now values of a new type, <a class="reference internal" href="../c-api/hash.html#c:type:py_hash_t"><code class="xref c type docutils literal">Py_hash_t</code></a>, which is
 defined to be the same size as a pointer.  Previously they were of type long,
@@ -2564,24 +2564,24 @@ result of this fix, <a class="reference internal" href="../library/stdtypes.html
 <code>2**32</code> entries on builds with 64-bit pointers (previously, they could grow
 to that size but their performance degraded catastrophically).</p>
 <p>(Suggested by Raymond Hettinger and implemented by Benjamin Peterson;
-:issue:`9778`.)</p>
+9778.)</p>
 </li>
 <li><p>A new macro <code class="xref c macro docutils literal">Py_VA_COPY</code> copies the state of the variable argument
 list.  It is equivalent to C99 <em>va_copy</em> but available on all Python platforms
-(:issue:`2443`).</p>
+(2443).</p>
 </li>
 <li><p>A new C API function <code class="xref c function docutils literal">PySys_SetArgvEx</code> allows an embedded interpreter
 to set <a class="reference internal" href="../library/sys.html#py:data:sys.argv"><code class="xref py data docutils literal">sys.argv</code></a> without also modifying <a class="reference internal" href="../library/sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a>
-(:issue:`5753`).</p>
+(5753).</p>
 </li>
 <li><p><code class="xref c function docutils literal">PyEval_CallObject</code> is now only available in macro form.  The
 function declaration, which was kept for backwards compatibility reasons, is
-now removed – the macro was introduced in 1997 (:issue:`8276`).</p>
+now removed – the macro was introduced in 1997 (8276).</p>
 </li>
 <li><p>There is a new function <a class="reference internal" href="../c-api/long.html#c:function:pylong_aslonglongandoverflow"><code class="xref c function docutils literal">PyLong_AsLongLongAndOverflow</code></a> which
 is analogous to <a class="reference internal" href="../c-api/long.html#c:function:pylong_aslongandoverflow"><code class="xref c function docutils literal">PyLong_AsLongAndOverflow</code></a>.  They both serve to
 convert Python <a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a> into a native fixed-width type while providing
-detection of cases where the conversion won't fit (:issue:`7767`).</p>
+detection of cases where the conversion won't fit (7767).</p>
 </li>
 <li><p>The <a class="reference internal" href="../c-api/unicode.html#c:function:pyunicode_comparewithasciistring"><code class="xref c function docutils literal">PyUnicode_CompareWithASCIIString</code></a> function now returns <em>not
 equal</em> if the Python string is <em>NUL</em> terminated.</p>
@@ -2589,15 +2589,15 @@ equal</em> if the Python string is <em>NUL</em> terminated.</p>
 <li><p>There is a new function <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_newexceptionwithdoc"><code class="xref c function docutils literal">PyErr_NewExceptionWithDoc</code></a> that is
 like <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_newexception"><code class="xref c function docutils literal">PyErr_NewException</code></a> but allows a docstring to be specified.
 This lets C exceptions have the same self-documenting capabilities as
-their pure Python counterparts (:issue:`7033`).</p>
+their pure Python counterparts (7033).</p>
 </li>
 <li><p>When compiled with the <code>--with-valgrind</code> option, the pymalloc
 allocator will be automatically disabled when running under Valgrind.  This
 gives improved memory leak detection when running under Valgrind, while taking
-advantage of pymalloc at other times (:issue:`2422`).</p>
+advantage of pymalloc at other times (2422).</p>
 </li>
 <li><p>Removed the <code>O?</code> format from the <em>PyArg_Parse</em> functions.  The format is no
-longer used and it had never been documented (:issue:`8837`).</p>
+longer used and it had never been documented (8837).</p>
 </li>
 </ul>
 <p>There were a number of other small changes to the C-API.  See the
@@ -2656,7 +2656,7 @@ they should be converted to <a class="reference internal" href="../library/stdty
 <li><p>The <code class="xref py method docutils literal">array.tostring</code> and <code class="xref py method docutils literal">array.fromstring</code> have been renamed to
 <a class="reference internal" href="../library/array.html#py:method:array.array.tobytes"><code class="xref py method docutils literal">array.tobytes()</code></a> and
 <a class="reference internal" href="../library/array.html#py:method:array.array.frombytes"><code class="xref py method docutils literal">array.frombytes()</code></a> for clarity.  The old names
-have been deprecated. (See :issue:`8990`.)</p>
+have been deprecated. (See 8990.)</p>
 </li>
 <li><p><code>PyArg_Parse*()</code> functions:</p>
 <ul>
@@ -2686,7 +2686,7 @@ types were supported by the <a class="reference internal" href="../library/strin
 <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>, and <a class="reference internal" href="../library/stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a> each have their own <strong>maketrans</strong> and
 <strong>translate</strong> methods with intermediate translation tables of the appropriate
 type.</p>
-<p>(Contributed by Georg Brandl; :issue:`5675`.)</p>
+<p>(Contributed by Georg Brandl; 5675.)</p>
 </li>
 <li><p>The previously deprecated <code class="xref py function docutils literal">contextlib.nested</code> function has been removed
 in favor of a plain :keyword:`with` statement which can accept multiple
@@ -2708,7 +2708,7 @@ correct encoding and because a variable-length encoding can fail when writing
 to fixed length segment of a structure.</p>
 <p>Code such as <code>struct.pack('&lt;6sHHBBB', 'GIF87a', x, y)</code> should be rewritten
 with to use bytes instead of text, <code>struct.pack('&lt;6sHHBBB', b'GIF87a', x, y)</code>.</p>
-<p>(Discovered by David Beazley and fixed by Victor Stinner; :issue:`10783`.)</p>
+<p>(Discovered by David Beazley and fixed by Victor Stinner; 10783.)</p>
 </li>
 <li><p>The <a href="#" class="broken-link"><code class="xref py class docutils literal">xml.etree.ElementTree</code></a> class now raises an
 <a class="reference internal" href="../library/xml.etree.elementtree.html#py:class:xml.etree.elementtree.parseerror"><code class="xref py exception docutils literal">xml.etree.ElementTree.ParseError</code></a> when a parse fails. Previously it
@@ -2727,11 +2727,11 @@ process.</p>
 <li><p>Support for legacy HTTP 0.9 has been removed from <a class="reference internal" href="../library/urllib.request.html#py:module:urllib.request" title="urllib.request: Extensible library for opening URLs."><code class="xref py module docutils literal">urllib.request</code></a>
 and <a class="reference internal" href="../library/http.client.html#py:module:http.client" title="http.client: HTTP and HTTPS protocol client (requires sockets)."><code class="xref py module docutils literal">http.client</code></a>.  Such support is still present on the server side
 (in <a class="reference internal" href="../library/http.server.html#py:module:http.server" title="http.server: HTTP server and request handlers."><code class="xref py module docutils literal">http.server</code></a>).</p>
-<p>(Contributed by Antoine Pitrou, :issue:`10711`.)</p>
+<p>(Contributed by Antoine Pitrou, 10711.)</p>
 </li>
 <li><p>SSL sockets in timeout mode now raise <a class="reference internal" href="../library/socket.html#py:exception:socket.timeout"><code class="xref py exception docutils literal">socket.timeout</code></a> when a timeout
 occurs, rather than a generic <a class="reference internal" href="../library/ssl.html#py:exception:ssl.sslerror"><code class="xref py exception docutils literal">SSLError</code></a>.</p>
-<p>(Contributed by Antoine Pitrou, :issue:`10272`.)</p>
+<p>(Contributed by Antoine Pitrou, 10272.)</p>
 </li>
 <li><p>The misleading functions <code class="xref c function docutils literal">PyEval_AcquireLock</code> and
 <code class="xref c function docutils literal">PyEval_ReleaseLock</code> have been officially deprecated.  The
@@ -2740,7 +2740,7 @@ and <a class="reference internal" href="../c-api/init.html#c:function:pyeval_res
 </li>
 <li><p>Due to security risks, <code class="xref py function docutils literal">asyncore.handle_accept</code> has been deprecated, and
 a new function, <code class="xref py function docutils literal">asyncore.handle_accepted</code>, was added to replace it.</p>
-<p>(Contributed by Giampaolo Rodola in :issue:`6706`.)</p>
+<p>(Contributed by Giampaolo Rodola in 6706.)</p>
 </li>
 <li><p>Due to the new <a class="reference internal" href="../glossary.html#term-gil"><span class="xref std std-term">GIL</span></a> implementation, <code class="xref c function docutils literal">PyEval_InitThreads</code>
 cannot be called before <a class="reference internal" href="../c-api/init.html#c:function:py_initialize"><code class="xref c function docutils literal">Py_Initialize</code></a> anymore.</p>

@@ -321,8 +321,13 @@ as docutils shows a role it has no meaning for:</p>
 <li><p>With a domain: as knuth1984 shows.</p>
 </li>
 </ul>
-<p>A role neither implemented nor ignored keeps the source it was written as:
-:gh:`99`.</p>
+<p>A role neither implemented nor ignored keeps the source it was written as,
+and is reported as <code>interpreted.unknown-role</code> — silenced here:</p>
+<p>:gh:`99`.</p>
+<p>A role Sphinx defines that rinx does not implement yet is reported as
+<code>interpreted.unsupported-role</code> instead, which the language server shows as
+information in a Sphinx project:</p>
+<p>Press :kbd:`Ctrl+C`.</p>
 
       
       <nav class="page-relations">

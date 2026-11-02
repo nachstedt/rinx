@@ -435,7 +435,7 @@ Use <code class="xref c function docutils literal">memcpy</code> directly instea
   <dt id="c:macro:py_no_inline"><code class="sig-name">Py_NO_INLINE</code></dt>
   <dd><p>Disable inlining on a function. For example, it reduces the C stack
 consumption: useful on LTO+PGO builds which heavily inline code (see
-:issue:`33720`).</p>
+33720).</p>
 <p>Usage:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-c">Py_NO_INLINE <span class="hl-storage hl-modifier hl-c">static</span> <span class="hl-storage hl-type hl-c">int</span> <span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">random</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-storage hl-type hl-c">void</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-meta hl-function hl-c"> </span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"> <span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">4</span><span class="hl-punctuation hl-terminator hl-c">;</span> </span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span></pre></div>

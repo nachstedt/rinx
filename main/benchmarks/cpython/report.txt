@@ -53,7 +53,9 @@ Toctree Options Exercised Summary:
 
 Parser Diagnostics Summary:
 ---------------------------
+interpreted.unsupported-role: 3662
 directive.unknown: 1889
+interpreted.unknown-role: 388
 c-decl.unparsed: 108
 option.malformed-spec: 63
 substitution.undefined: 23
@@ -71,6 +73,7 @@ link.broken-anonymous: 180
 c-decl.unparsed: 108
 option.malformed-spec: 63
 link.broken-hyperlink: 36
+interpreted.unknown-role: 34
 link.broken-ref: 33
 substitution.undefined: 23
 directive.unsupported-option: 17

@@ -676,7 +676,7 @@ name while leaving <em>sequence</em> set to <code>None</code>.</p>
 If they end with <code>\x00</code> nul bytes or characters, those may be
 <em>silently stripped</em> when fetching them by index from the
 <code class="xref py class docutils literal">ShareableList</code>. This <code>.rstrip(b'\x00')</code> behavior is
-considered a bug and may go away in the future. See :gh:`106939`.</p>
+considered a bug and may go away in the future. See 106939.</p>
 </div>
 <p>For applications where rstripping of trailing nulls is a problem,
 work around it by always unconditionally appending an extra non-0

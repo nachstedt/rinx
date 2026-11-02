@@ -932,7 +932,7 @@ operation. For <a class="reference internal" href="shutil.html#py:function:shuti
 (<a class="reference internal" href="shutil.html#py:function:shutil.copyfile"><code class="xref py function docutils literal">copyfile</code></a>, <a class="reference internal" href="shutil.html#py:function:shutil.copy"><code class="xref py function docutils literal">copy</code></a>, <a class="reference internal" href="shutil.html#py:function:shutil.copy2"><code class="xref py function docutils literal">copy2</code></a>,
 <a class="reference internal" href="shutil.html#py:function:shutil.copytree"><code class="xref py function docutils literal">copytree</code></a>, and <a class="reference internal" href="shutil.html#py:function:shutil.move"><code class="xref py function docutils literal">move</code></a>) may use
 platform-specific "fast-copy" syscalls in order to copy the file more
-efficiently (see :issue:`33671`).
+efficiently (see 33671).
 "fast-copy" means that the copying operation occurs within the kernel, avoiding
 the use of userspace buffers in Python as in "<code>outfd.write(infd.read())</code>".</p>
 <p>On macOS <a href="#" class="broken-link">fcopyfile</a> is used to copy the file content (not metadata).</p>

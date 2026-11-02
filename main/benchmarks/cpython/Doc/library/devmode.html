@@ -573,7 +573,7 @@ OSError: [Errno 9] Bad file descriptor</pre></div>
 <p><code>os.close(fp.fileno())</code> closes the file descriptor. When the file object
 finalizer tries to close the file descriptor again, it fails with the <code>Bad
 file descriptor</code> error. A file descriptor must be closed only once. In the
-worst case scenario, closing it twice can lead to a crash (see :issue:`18748`
+worst case scenario, closing it twice can lead to a crash (see 18748
 for an example).</p>
 <p>The fix is to remove the <code>os.close(fp.fileno())</code> line, or open the file with
 <code>closefd=False</code>.</p>

@@ -561,13 +561,13 @@ handles on Windows.</p>
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
 <p>On macOS, the <em>spawn</em> start method is now the default.  The <em>fork</em> start
 method should be considered unsafe as it can lead to crashes of the
-subprocess as macOS system libraries may start threads. See :issue:`33725`.</p>
+subprocess as macOS system libraries may start threads. See 33725.</p>
 </div>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
 <p>On POSIX platforms the default start method was changed from <em>fork</em> to
 <em>forkserver</em> to retain the performance but avoid common multithreaded
-process incompatibilities. See :gh:`84559`.</p>
+process incompatibilities. See 84559.</p>
 </div>
 <p>On POSIX using the <em>spawn</em> or <em>forkserver</em> start methods will also
 start a <em>resource tracker</em> process which tracks the unlinked named
@@ -933,7 +933,7 @@ in order to be loaded during unpickling.</p>
 not true if using the <code>"fork"</code> start method, as of Python <code>3.14</code> that
 is no longer the default on any platform.  See
 <a href="multiprocessing.html#multiprocessing-start-methods">Contexts and start methods</a>.
-See also :gh:`132898`.</p>
+See also 132898.</p>
 </div>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
@@ -1356,7 +1356,7 @@ underlying pipe, and you don't care about lost data.</p>
 implementation on the host operating system. Without one, the
 functionality in this class will be disabled, and attempts to
 instantiate a <a class="reference internal" href="queue.html#py:class:queue.queue"><code class="xref py class docutils literal">Queue</code></a> will result in an <a class="reference internal" href="exceptions.html#py:exception:importerror"><code class="xref py exception docutils literal">ImportError</code></a>. See
-:issue:`3770` for additional information.  The same holds true for any
+3770 for additional information.  The same holds true for any
 of the specialized queue types listed below.</p>
 </div>
 </dd>
@@ -1533,7 +1533,7 @@ or <code>None</code>.  See <a href="multiprocessing.html#multiprocessing-start-m
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
 <p>On macOS, the <em>spawn</em> start method is now the default.  The <em>fork</em> start
 method should be considered unsafe as it can lead to crashes of the
-subprocess. See :issue:`33725`.</p>
+subprocess. See 33725.</p>
 </div>
 </dd>
 </dl>
@@ -1927,7 +1927,7 @@ a timeout will emulate that function's behavior using a sleeping loop.</p>
 implementation on the host operating system. Without one, the
 <a href="#" class="broken-link"><code class="xref py module docutils literal">multiprocessing.synchronize</code></a> module will be disabled, and attempts to
 import it will result in an <a class="reference internal" href="exceptions.html#py:exception:importerror"><code class="xref py exception docutils literal">ImportError</code></a>. See
-:issue:`3770` for additional information.</p>
+3770 for additional information.</p>
 </div>
 <h3 id="shared-ctypes-objects">Shared <a class="reference internal" href="ctypes.html#py:module:ctypes" title="ctypes: A foreign function library for Python."><code class="xref py module docutils literal">ctypes</code></a> Objects</h3>
 <p>It is possible to create shared objects using shared memory which can be
@@ -3372,7 +3372,7 @@ and discarding the cache when the pid changes. For example:</p>
 <span class="hl-source hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">_pid</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">pid</span></span></span>
 <span class="hl-source hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">_cache</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-sequence hl-list hl-empty hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span></span>
 <span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">_cache</span></span></span></pre></div>
-<p>For more information, see :issue:`5155`, :issue:`5313` and :issue:`5331`</p>
+<p>For more information, see 5155, 5313 and 5331</p>
 </blockquote>
 <a id="multiprocessing-programming-spawn"></a>
 <a id="multiprocessing-programming-forkserver"></a>

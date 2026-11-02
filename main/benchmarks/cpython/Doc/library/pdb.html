@@ -409,7 +409,7 @@ or on a user signal.</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">breakpoint</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
 <p>at the location you want to break into the debugger, and then run the program.
 You can then step through the code following this statement, and continue
-running without the debugger using the :pdbcmd:`continue` command.</p>
+running without the debugger using the continue command.</p>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
 <p>The built-in <a class="reference internal" href="functions.html#py:function:breakpoint"><code class="xref py function docutils literal">breakpoint</code></a>, when called with defaults, can be used
@@ -522,8 +522,8 @@ slightly different way:</p>
   <dt id="py:function:pdb.run"><code class="sig-name">run(statement, globals=None, locals=None)</code></dt>
   <dd><p>Execute the <em>statement</em> (given as a string or a code object) under debugger
 control.  The debugger prompt appears before any code is executed; you can
-set breakpoints and type :pdbcmd:`continue`, or you can step through the
-statement using :pdbcmd:`step` or :pdbcmd:`next` (all these commands are
+set breakpoints and type continue, or you can step through the
+statement using step or next (all these commands are
 explained below).  The optional <em>globals</em> and <em>locals</em> arguments specify the
 environment in which the code is executed; by default the dictionary of the
 module <a class="reference internal" href="__main__.html#py:module:__main__" title="__main__: The environment where top-level code is run. Covers command-line interfaces, import-time behavior, and ``__name__ == '__main__'``."><code class="xref py module docutils literal">__main__</code></a> is used.  (See the explanation of the built-in
@@ -638,7 +638,7 @@ underlying <a class="reference internal" href="cmd.html#py:class:cmd.cmd"><code 
 patterns.  The debugger will not step into frames that originate in a module
 that matches one of these patterns. [1]_</p>
 <p>By default, Pdb sets a handler for the SIGINT signal (which is sent when the
-user presses :kbd:`Ctrl-C` on the console) when you give a :pdbcmd:`continue` command.
+user presses :kbd:`Ctrl-C` on the console) when you give a continue command.
 This allows you to break into the debugger again by pressing :kbd:`Ctrl-C`.  If you
 want Pdb not to touch the SIGINT handler, set <em>nosigint</em> to true.</p>
 <p>The <em>readrc</em> argument defaults to true and controls whether Pdb will load
@@ -712,7 +712,7 @@ square brackets (<code>[]</code>) in the command syntax; the square brackets mus
 typed.  Alternatives in the command syntax are separated by a vertical bar
 (<code>|</code>).</p>
 <p>Entering a blank line repeats the last command entered.  Exception: if the last
-command was a :pdbcmd:`list` command, the next 11 lines are listed.</p>
+command was a list command, the next 11 lines are listed.</p>
 <p>Commands that the debugger doesn't recognize are assumed to be Python statements
 and are executed in the context of the program being debugged.  Python
 statements can also be prefixed with an exclamation point (<code>!</code>).  This is a
@@ -769,7 +769,7 @@ can be overridden by the local file.</p>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
 <p>:file:`.pdbrc` can now contain commands that continue debugging, such as
-:pdbcmd:`continue` or :pdbcmd:`next`.  Previously, these commands had no
+continue or next.  Previously, these commands had no
 effect.</p>
 </div>
 <div class="versionchanged">

@@ -230,6 +230,8 @@
 </li>
 <li><p><code>extensions</code>: how strictly the project's findings are reported (see below).</p>
 </li>
+<li><p><code>extlinks</code>: the roles it defines, when <code>extensions</code> declares <code>sphinx.ext.extlinks</code> (see below).</p>
+</li>
 <li><p><code>intersphinx_mapping</code> and <code>intersphinx_cache_limit</code>: the other sites the project links into, when <code>extensions</code> declares <code>sphinx.ext.intersphinx</code> (see <a href="vscode.html#vscode-intersphinx">Inventories</a>).</p>
 </li>
 <li><p><code>rst_prolog</code> and <code>rst_epilog</code>: text parsed at the start and the end of every document, typically substitutions. Read without running <code>conf.py</code>, only a literal string is taken: an f-string such as CPython's <code>rst_epilog</code> is reported, and its substitutions stay undefined. A mistake in the text itself is shown at the start of each document it is parsed with.</p>
@@ -253,10 +255,12 @@
 <ul>
 <li><p>An unknown directive that a declared extension provides, such as <code>.. automodule::</code> under <code>sphinx.ext.autodoc</code>, is <em>Information</em>: its contents are not checked. Any other unknown directive stays a warning, since it may be a typo.</p>
 </li>
+<li><p>An unknown role is <em>Information</em> when a declared extension provides it, such as <code>:cite:p:</code> under <code>sphinxcontrib.bibtex</code>, or when <code>sphinx.ext.extlinks</code> is declared and <code>extlinks</code> names it — only its keys are read, so a dict whose values are computed counts too. A role Sphinx defines that rinx does not implement yet, such as <code>:kbd:</code>, is <em>Information</em> as well (<code>interpreted.unsupported-role</code>). Any other unknown role stays a warning; list a role of the project's own extensions in <code>rinx_parser.toml</code> to show it as its text instead (see <a href="rules.html#parser-config">Parse configuration</a>).</p>
+</li>
 <li><p>A domain reference that resolves to nothing, such as <code>:py:func:`spam.eggs`</code>, is a <em>Hint</em> when a declared extension may define it: autodoc defines <code>py</code> objects. <code>:ref:</code>, <code>:doc:</code> and every other reference stay warnings.</p>
 </li>
 </ul>
-<p>Which extensions rinx knows, and what each one adds, is a table in the repository, <code>crates/lsp/src/project/extension_profiles.toml</code>; teaching it another extension needs no Rust. An extension missing from the table is assumed to define objects of every domain, so it lowers every broken domain reference to a hint, but it explains no directive: nothing says which are its. The server names those extensions once, in a notification, when it first finds the project. The code of a lowered diagnostic is unchanged, so a <code>.. noqa:</code> still names it, and the build still reports it as a warning.</p>
+<p>Which extensions rinx knows, and what each one adds, is a table in the repository, <code>crates/lsp/src/project/extension_profiles.toml</code>; teaching it another extension needs no Rust. An extension missing from the table is assumed to define objects of every domain, so it lowers every broken domain reference to a hint, but it explains no directive or role: nothing says which are its. The server names those extensions once, in a notification, when it first finds the project. The code of a lowered diagnostic is unchanged, so a <code>.. noqa:</code> still names it, and the build still reports it as a warning.</p>
 <a id="vscode-running-conf"></a>
 <h3 id="running-conf-py">Running <code>conf.py</code></h3>
 <p>A project that computes its settings — a version imported from the package it documents, an epilog built with an f-string, exclusions added inside an <code>if</code> — gets their exact values once the server may run its <code>conf.py</code>. Turn on <code>rinx.conf.execute</code>: the server then runs each <code>conf.py</code> whose reading fell short, and only those, and only in a workspace you trust: in an untrusted one the extension names no interpreter, whatever the settings say. It runs in <code>rinx.conf.pythonPath</code> when set — a command on the <code>PATH</code>, or a path relative to the workspace folder — or else in the interpreter the Python extension has selected for the file.</p>
