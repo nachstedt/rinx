@@ -11,8 +11,8 @@
 use std::cell::RefCell;
 
 use rinx_ast::{
-    BlockId, BlockKind, NameId, SourceMap, Span, SuppressionSite, SyntaxBlock, SyntaxToken,
-    TokenKind, TokenModifiers,
+    BlockId, BlockKind, IgnoredRoleUse, NameId, SourceMap, Span, SuppressionSite, SyntaxBlock,
+    SyntaxToken, TokenKind, TokenModifiers,
 };
 
 /// One document's source map, as it fills.
@@ -36,6 +36,15 @@ impl SyntaxRecorder {
         self.map.borrow_mut().syntax.tokens.push(SyntaxToken {
             kind,
             modifiers,
+            span,
+        });
+    }
+
+    /// Records a use of the ignored role `name`, whose `:name:` stands at
+    /// `span`.
+    pub(crate) fn ignored_role(&self, name: &str, span: Span) {
+        self.map.borrow_mut().ignored_roles.push(IgnoredRoleUse {
+            name: name.to_string(),
             span,
         });
     }

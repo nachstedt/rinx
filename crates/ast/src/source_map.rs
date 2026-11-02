@@ -17,6 +17,15 @@ use crate::span::Span;
 use crate::suppression::SuppressionSite;
 use crate::syntax::SyntaxTable;
 
+/// One use of a role the library's parse configuration ignores.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct IgnoredRoleUse {
+    /// The role's name as written, domain prefix included.
+    pub name: String,
+    /// Where its `:name:` stands.
+    pub span: Span,
+}
+
 /// What the parser recorded about where a document's markup was written,
 /// beside the [`Document`](crate::Document) it parsed.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -28,6 +37,10 @@ pub struct SourceMap {
     /// met — what an editor needs to point at the line that included a
     /// problem.
     pub include_sites: Vec<IncludeSite>,
+    /// Every use of a role the library's parse configuration ignores, in the
+    /// order they were read — which the document does not show, an ignored
+    /// role being plain text there.
+    pub ignored_roles: Vec<IgnoredRoleUse>,
     /// Exactly the characters of each name the document was written with, by
     /// the [`NameId`] its [`Named`](crate::Named) value carries.
     names: Vec<Span>,
@@ -106,6 +119,7 @@ mod tests {
         // Then
         assert_eq!(map.syntax, SyntaxTable::new());
         assert!(map.include_sites.is_empty());
+        assert!(map.ignored_roles.is_empty());
         assert_eq!(map.name_span(NameId::new(0)), None);
         assert_eq!(map.block_lines(BlockId::new(0)), None);
         assert!(map.suppression_sites().is_empty());

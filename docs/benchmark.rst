@@ -90,8 +90,8 @@ Note that ``scripts/domain_warnings_whitelist.json`` is tied to the pinned corpu
 2. **Bazel Project Generation**: A ``BUILD.bazel`` file is generated on the fly inside the ``Doc/`` directory of the clone, utilizing a ``glob(["**/*.rst"])`` statement to automatically capture all reStructuredText files into a single ``rinx_library`` target. It also generates a ``rinx_site`` target to assemble the HTML, and a ``rinx_parser.toml`` beside ``conf.py`` that the library names as its ``parse_config``: it ignores the roles CPython's own extensions add (``IGNORED_ROLES`` in ``scripts/benchmark.py``), so the build and the language server alike show them as their text (see :ref:`parser-config`).
 3. **Warm-up build**: A second, one-document site (``bench_warmup/``, generated beside ``Doc/``) is built first. Its only purpose is to compile the ``rinx`` binary and resolve the Rust, Java and Python toolchains *before* the clock starts on the documentation build — see "Rendering Time" below for why this is a separate build rather than a ``bazel build @rinx//:rinx``.
 4. **Execution**: The script then runs ``bazel build //Doc:site``. This triggers ``rinx`` to parse, validate, and render every ``.rst`` file into HTML in parallel. The build currently succeeds outright against CPython's docs — toctree validation passes and HTML is produced for every page.
-5. **Analysis**: Once the build completes, the script traverses the generated Abstract Syntax Tree (``.ast``) JSON files located in ``bazel-bin/``. It tallies up ``Directive::Unknown`` nodes (directives the parser doesn't recognize), ``Toctree.ignored_options`` (recognized toctree options the parser doesn't yet act on, e.g. ``:caption:``), and per-document parser diagnostics, and prints each as a frequency map.
-6. **Language server**: Once the build has succeeded, and before the analysis writes its report, the script runs ``rinx lsp --check Doc/`` with the binary the build ran — found by ``bazel cquery`` among the warm-up site's dependencies, since it is built in the exec configuration. That is the language server driven in-process: it reads ``Doc/conf.py`` as an editor opening ``Doc/`` would, opens every document the project indexes, renders each one, and prints, as JSON, what it would show for every file. The script counts it by severity for the summary, and the warnings by code for the full report.
+5. **Language server**: Once the build has succeeded, the script runs ``rinx lsp --check Doc/`` with the binary the build ran — found by ``bazel cquery`` among the warm-up site's dependencies, since it is built in the exec configuration. That is the language server driven in-process: it reads ``Doc/conf.py`` as an editor opening ``Doc/`` would, opens every document the project indexes, renders each one, and prints, as JSON, what it would show for every file, and each project's ``analysis``: what its documents wrote that this build does not support. The script counts what is shown by severity for the summary, and the warnings by code for the full report; every construct tally below comes from that ``analysis``, so the count exists once and reads the project as an editor does.
+6. **Analysis**: The script writes the language server's tallies as frequency maps, beside the domain-object warnings the build wrote, into its report.
 
 Interpreting Results
 --------------------
@@ -115,7 +115,7 @@ Each build's output is captured (so the script can time and parse it), which mea
 
 2. Unsupported Directives Summary
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-A sorted list of Sphinx directives that ``rinx`` encountered but doesn't yet recognize (surfaced as ``Directive::Unknown`` nodes in the AST).
+A sorted list of Sphinx directives that ``rinx`` encountered but doesn't yet recognize (each reporting ``directive.unknown``, ``.. noqa:`` or not).
 
 ::
 
@@ -135,11 +135,15 @@ Every one of these also reports ``directive.unknown`` and renders as a visible e
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The same shape, for directives ``rinx`` *does* implement whose content it had to refuse (``Directive::Malformed`` nodes) — a ``.. figure::`` with no image path, a ``.. csv-table::`` whose data would not parse. These used to inflate the unsupported tally above, which made a document's mistake look like a gap in coverage. Each one has already reported its own diagnostic under the summary below, so this is a count rather than a roadmap.
 
-4. Ignored Toctree Options / Parser Diagnostics Summaries
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Two smaller summaries follow: options seen on ``.. toctree::`` directives that are recognized but not yet acted upon (e.g. ``:caption:``, ``:numbered:``, ``:hidden:``), and aggregated parser diagnostics (e.g. malformed grid tables) emitted per document. Both are minor compared to the unsupported-directives list, but flag smaller gaps worth closing.
+4. Unsupported Options and Roles Summaries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Options this build refuses, as ``directive:option``, then three lists of roles: *unknown* ones nothing answers to, *unsupported* ones docutils or Sphinx defines and this build does not implement yet, and *ignored* ones the corpus' ``rinx_parser.toml`` names.
 
-5. Domain-Object Warnings vs. the Whitelist
+5. Toctree Options / Parser Diagnostics Summaries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Two smaller summaries follow: which options ``.. toctree::`` directives write (e.g. ``:caption:``, ``:numbered:``, ``:hidden:``), and aggregated parser diagnostics (e.g. malformed grid tables) emitted per document, suppressed ones included.
+
+6. Domain-Object Warnings vs. the Whitelist
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The render step reports **domain-object** cross-references (``:func:``, ``:py:class:``, ``:c:type:``, …) that either fail to resolve or resolve only via an object-type alias fallback. Against a large corpus like CPython these number in the hundreds, and most are *expected* — references to stdlib/C-API symbols this doc set doesn't index. To separate those from genuine regressions, the benchmark diffs them against a checked-in whitelist.
 
@@ -174,7 +178,7 @@ It then prints a count of occurrences suppressed by the whitelist, and a **Stale
 
 **Auto-pruning:** stale entries are removed from the whitelist file automatically, but only when the warning data is trustworthy — the Bazel build succeeded **and** at least one sidecar was found. Otherwise pruning is skipped (and says why), so a broken or empty build can never silently delete your accepted entries along with their comments. This is why the build no longer runs under ``--keep_going``: a failed render must fail the whole build rather than under-report a document's warnings and get its whitelist entries pruned as "stale".
 
-6. Language Server Warnings
+7. Language Server Warnings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The summary's *Language server* line counts what ``rinx lsp --check`` showed across CPython's documents, by severity, and ``benchmark_result.txt`` lists the warnings by code. It is the bar roadmap step #11 set (``docs/dev/lsp-roadmap.md``): CPython's own documentation, read by its own ``conf.py``, should not drown an author in warnings. Its extensions lower what they explain (see the editor guide's "Sphinx projects"), so most of what remains are directives CPython's local extensions add (``availability``, ``audit-event``, …) and Sphinx directives rinx does not implement yet (``sectionauthor``, ``rubric``, …).
 

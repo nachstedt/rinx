@@ -21,6 +21,9 @@ pub enum DiagnosticSubject {
     /// An interpreted text role, by its name as written — domain prefix
     /// included, as in `cpp:class`.
     Role(String),
+    /// An option a directive takes in the reference implementation and not in
+    /// this build, both by their names as written.
+    UnsupportedOption { directive: String, option: String },
     /// A reference into a domain's objects that resolved to nothing: a domain
     /// role, or `:option:` (the `std` domain's).
     DomainReference(Domain),
@@ -57,6 +60,10 @@ mod tests {
         let subjects = [
             DiagnosticSubject::Directive("cpp:class".to_string()),
             DiagnosticSubject::Role("cpp:class".to_string()),
+            DiagnosticSubject::UnsupportedOption {
+                directive: "image".to_string(),
+                option: "loading".to_string(),
+            },
             DiagnosticSubject::DomainReference(Domain::C),
             DiagnosticSubject::AnyReference,
             DiagnosticSubject::Inventory(InventoryName::new("python").unwrap()),

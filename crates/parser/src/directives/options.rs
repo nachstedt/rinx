@@ -16,7 +16,7 @@
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rinx_ast::{Diagnostic, DiagnosticCode, Span, TokenKind, TokenModifiers};
+use rinx_ast::{Diagnostic, DiagnosticCode, DiagnosticSubject, Span, TokenKind, TokenModifiers};
 
 use super::spec::{OptionSet, OptionSpec, OptionSupport, OptionValue};
 
@@ -541,11 +541,17 @@ pub(in crate::directives) fn report_unsupported_option(
         Some(advice) => format!("{refusal}; {advice}"),
         None => refusal,
     };
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::DirectiveUnsupportedOption,
-        message,
-        ctx.line_span(line.line_index, &line.raw),
-    ));
+    diagnostics.push(
+        Diagnostic::at(
+            DiagnosticCode::DirectiveUnsupportedOption,
+            message,
+            ctx.line_span(line.line_index, &line.raw),
+        )
+        .about(DiagnosticSubject::UnsupportedOption {
+            directive: directive.to_string(),
+            option: line.name.clone(),
+        }),
+    );
 }
 
 /// The names of every value of an enum, for an [`OptionValue::Choice`]
