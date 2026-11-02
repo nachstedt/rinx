@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Numeric and Mathematical Modules — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Numeric and Mathematical Modules"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="numbers.html">numbers — Numeric abstract base classes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="math.html">math — Mathematical functions</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="cmath.html">cmath — Mathematical functions for complex numbers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="decimal.html">decimal — Decimal fixed-point and floating-point arithmetic</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="fractions.html">fractions — Rational numbers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="random.html">random — Generate pseudo-random numbers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="statistics.html">statistics — Mathematical statistics functions</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="graphlib.html">&larr; graphlib — Functionality to operate with graph-like structures</a>
+        <a class="next" href="numbers.html">numbers — Numeric abstract base classes &rarr;</a>
+      </nav>
+      
+      <a id="numeric"></a>
+<h1 id="numeric-and-mathematical-modules">Numeric and Mathematical Modules</h1>
+<p>The modules described in this chapter provide numeric and math-related functions
+and data types. The <a class="reference internal" href="numbers.html#py:module:numbers" title="numbers: Numeric abstract base classes (Complex, Real, Integral, etc.)."><code class="xref py module docutils literal">numbers</code></a> module defines an abstract hierarchy of
+numeric types. The <a class="reference internal" href="math.html#py:module:math" title="math: Mathematical functions (sin() etc.)."><code class="xref py module docutils literal">math</code></a> and <a class="reference internal" href="cmath.html#py:module:cmath" title="cmath: Mathematical functions for complex numbers."><code class="xref py module docutils literal">cmath</code></a> modules contain various
+mathematical functions for floating-point and complex numbers. The <a class="reference internal" href="decimal.html#py:module:decimal" title="decimal: Implementation of the General Decimal Arithmetic Specification."><code class="xref py module docutils literal">decimal</code></a>
+module supports exact representations of decimal numbers, using arbitrary precision
+arithmetic.</p>
+<p>The following modules are documented in this chapter:</p>
+<ul>
+  <li><a href="numbers.html">numbers — Numeric abstract base classes</a>
+<ul>
+  <li><a href="numbers.html#the-numeric-tower">The numeric tower</a></li>
+  <li><a href="numbers.html#notes-for-type-implementers">Notes for type implementers</a>
+<ul>
+  <li><a href="numbers.html#adding-more-numeric-abcs">Adding More Numeric ABCs</a></li>
+  <li><a href="numbers.html#implementing-the-arithmetic-operations">Implementing the arithmetic operations</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li><a href="math.html">math — Mathematical functions</a>
+<ul>
+  <li><a href="math.html#number-theoretic-functions">Number-theoretic functions</a></li>
+  <li><a href="math.html#floating-point-arithmetic">Floating point arithmetic</a></li>
+  <li><a href="math.html#floating-point-manipulation-functions">Floating point manipulation functions</a></li>
+  <li><a href="math.html#power-exponential-and-logarithmic-functions">Power, exponential and logarithmic functions</a></li>
+  <li><a href="math.html#summation-and-product-functions">Summation and product functions</a></li>
+  <li><a href="math.html#angular-conversion">Angular conversion</a></li>
+  <li><a href="math.html#trigonometric-functions">Trigonometric functions</a></li>
+  <li><a href="math.html#hyperbolic-functions">Hyperbolic functions</a></li>
+  <li><a href="math.html#special-functions">Special functions</a></li>
+  <li><a href="math.html#constants">Constants</a></li>
+</ul>
+  </li>
+  <li><a href="cmath.html">cmath — Mathematical functions for complex numbers</a>
+<ul>
+  <li><a href="cmath.html#conversions-to-and-from-polar-coordinates">Conversions to and from polar coordinates</a></li>
+  <li><a href="cmath.html#power-and-logarithmic-functions">Power and logarithmic functions</a></li>
+  <li><a href="cmath.html#trigonometric-functions">Trigonometric functions</a></li>
+  <li><a href="cmath.html#hyperbolic-functions">Hyperbolic functions</a></li>
+  <li><a href="cmath.html#classification-functions">Classification functions</a></li>
+  <li><a href="cmath.html#constants">Constants</a></li>
+</ul>
+  </li>
+  <li><a href="decimal.html">decimal — Decimal fixed-point and floating-point arithmetic</a>
+<ul>
+  <li><a href="decimal.html#quick-start-tutorial">Quick-start tutorial</a></li>
+  <li><a href="decimal.html#decimal-objects">Decimal objects</a>
+<ul>
+  <li><a href="decimal.html#logical-operands">Logical operands</a></li>
+</ul>
+  </li>
+  <li><a href="decimal.html#context-objects">Context objects</a></li>
+  <li><a href="decimal.html#constants">Constants</a></li>
+  <li><a href="decimal.html#rounding-modes">Rounding modes</a></li>
+  <li><a href="decimal.html#signals">Signals</a></li>
+  <li><a href="decimal.html#floating-point-notes">Floating-point notes</a>
+<ul>
+  <li><a href="decimal.html#mitigating-round-off-error-with-increased-precision">Mitigating round-off error with increased precision</a></li>
+  <li><a href="decimal.html#special-values">Special values</a></li>
+</ul>
+  </li>
+  <li><a href="decimal.html#working-with-threads">Working with threads</a></li>
+  <li><a href="decimal.html#recipes">Recipes</a></li>
+  <li><a href="decimal.html#decimal-faq">Decimal FAQ</a></li>
+</ul>
+  </li>
+  <li><a href="fractions.html">fractions — Rational numbers</a></li>
+  <li><a href="random.html">random — Generate pseudo-random numbers</a>
+<ul>
+  <li><a href="random.html#bookkeeping-functions">Bookkeeping functions</a></li>
+  <li><a href="random.html#functions-for-bytes">Functions for bytes</a></li>
+  <li><a href="random.html#functions-for-integers">Functions for integers</a></li>
+  <li><a href="random.html#functions-for-sequences">Functions for sequences</a></li>
+  <li><a href="random.html#discrete-distributions">Discrete distributions</a></li>
+  <li><a href="random.html#real-valued-distributions">Real-valued distributions</a></li>
+  <li><a href="random.html#alternative-generator">Alternative Generator</a></li>
+  <li><a href="random.html#notes-on-reproducibility">Notes on Reproducibility</a></li>
+  <li><a href="random.html#examples">Examples</a></li>
+  <li><a href="random.html#recipes">Recipes</a></li>
+  <li><a href="random.html#command-line-usage">Command-line usage</a></li>
+  <li><a href="random.html#command-line-example">Command-line example</a></li>
+</ul>
+  </li>
+  <li><a href="statistics.html">statistics — Mathematical statistics functions</a>
+<ul>
+  <li><a href="statistics.html#averages-and-measures-of-central-location">Averages and measures of central location</a></li>
+  <li><a href="statistics.html#measures-of-spread">Measures of spread</a></li>
+  <li><a href="statistics.html#statistics-for-relations-between-two-inputs">Statistics for relations between two inputs</a></li>
+  <li><a href="statistics.html#function-details">Function details</a></li>
+  <li><a href="statistics.html#exceptions">Exceptions</a></li>
+  <li><a href="statistics.html#normaldist-objects">NormalDist objects</a></li>
+  <li><a href="statistics.html#examples-and-recipes">Examples and Recipes</a>
+<ul>
+  <li><a href="statistics.html#classic-probability-problems">Classic probability problems</a></li>
+  <li><a href="statistics.html#monte-carlo-inputs-for-simulations">Monte Carlo inputs for simulations</a></li>
+  <li><a href="statistics.html#approximating-binomial-distributions">Approximating binomial distributions</a></li>
+  <li><a href="statistics.html#naive-bayesian-classifier">Naive bayesian classifier</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="graphlib.html">&larr; graphlib — Functionality to operate with graph-like structures</a>
+        <a class="next" href="numbers.html">numbers — Numeric abstract base classes &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

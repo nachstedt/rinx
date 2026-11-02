@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>xml.dom.pulldom — Support for building partial DOM trees — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Structured Markup Processing Tools"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="html.html">html — HyperText Markup Language support</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="html.parser.html">html.parser — Simple HTML and XHTML parser</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="html.entities.html">html.entities — Definitions of HTML general entities</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.html">XML Processing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.etree.elementtree.html">xml.etree.ElementTree — The ElementTree XML API</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.dom.html">xml.dom — The Document Object Model API</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.dom.minidom.html">xml.dom.minidom — Minimal DOM implementation</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="xml.dom.pulldom.html">xml.dom.pulldom — Support for building partial DOM trees</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle xml.dom.pulldom — Support for building partial DOM trees"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="xml.dom.pulldom.html#domeventstream-objects">DOMEventStream Objects</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.sax.html">xml.sax — Support for SAX2 parsers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.sax.handler.html">xml.sax.handler — Base classes for SAX handlers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.sax.utils.html">xml.sax.saxutils — SAX Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xml.sax.reader.html">xml.sax.xmlreader — Interface for XML parsers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pyexpat.html">xml.parsers.expat — Fast XML parsing using Expat</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="xml.dom.minidom.html">&larr; xml.dom.minidom — Minimal DOM implementation</a>
+        <a class="next" href="xml.sax.html">xml.sax — Support for SAX2 parsers &rarr;</a>
+      </nav>
+      
+      <h1 id="xml-dom-pulldom-support-for-building-partial-dom-trees"><code class="xref py module docutils literal">xml.dom.pulldom</code> — Support for building partial DOM trees</h1>
+<dl class="py module">
+  <dt id="py:module:xml.dom.pulldom"><code class="sig-name">xml.dom.pulldom</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'moduleauthor'</p>
+<pre class="directive-error-source">.. moduleauthor:: Paul Prescod &lt;paul@prescod.net&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/xml/dom/pulldom.py`</p>
+<hr />
+<p>The <a class="reference internal" href="xml.dom.pulldom.html#py:module:xml.dom.pulldom" title="xml.dom.pulldom: Support for building partial DOM trees from SAX events."><code class="xref py module docutils literal">xml.dom.pulldom</code></a> module provides a "pull parser" which can also be
+asked to produce DOM-accessible fragments of the document where necessary. The
+basic concept involves pulling "events" from a stream of incoming XML and
+processing them. In contrast to SAX which also employs an event-driven
+processing model together with callbacks, the user of a pull parser is
+responsible for explicitly pulling events from the stream, looping over those
+events until either processing is finished or an error condition occurs.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>If you need to parse untrusted or unauthenticated data, see
+<a href="xml.html#xml-security">XML security</a>.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7.1:</span></p>
+<p>The SAX parser no longer processes general external entities by default to
+increase security by default. To enable processing of external entities,
+pass a custom parser instance in:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">xml</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-import-name hl-python">dom</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-import-name hl-python">pulldom</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">parse</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">xml</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-import-name hl-python">sax</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">make_parser</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">xml</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-import-name hl-python">sax</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-import-name hl-python">handler</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">feature_external_ges</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">parser</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">make_parser</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">parser</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">setFeature</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">feature_external_ges</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-language hl-python">True</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">parse</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">filename</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">parser</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">parser</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">xml</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-import-name hl-python">dom</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">pulldom</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">doc</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">pulldom</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">parse</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">sales_items.xml<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">event</span><span class="hl-punctuation hl-separator hl-target-list hl-python">,</span> <span class="hl-meta hl-generic-name hl-python">node</span> <span class="hl-keyword hl-control hl-loop hl-for hl-in hl-python">in</span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">doc</span></span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-punctuation hl-section hl-block hl-loop hl-for hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">event</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">pulldom</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">START_ELEMENT</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">and</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">node</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">tagName</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">item<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-python">int</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">node</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">getAttribute</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">price<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">50</span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">            <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">doc</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">expandNode</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">node</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">            <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">node</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">toxml</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p><code>event</code> is a constant and can be one of:</p>
+<ul>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">START_ELEMENT</code></a></p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">END_ELEMENT</code></a></p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">COMMENT</code></a></p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">START_DOCUMENT</code></a></p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">END_DOCUMENT</code></a></p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">CHARACTERS</code></a></p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">PROCESSING_INSTRUCTION</code></a></p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">IGNORABLE_WHITESPACE</code></a></p>
+</li>
+</ul>
+<p><code>node</code> is an object of type <a href="#" class="broken-link"><code class="xref py class docutils literal">xml.dom.minidom.Document</code></a>,
+<a href="#" class="broken-link"><code class="xref py class docutils literal">xml.dom.minidom.Element</code></a> or <a href="#" class="broken-link"><code class="xref py class docutils literal">xml.dom.minidom.Text</code></a>.</p>
+<p>Since the document is treated as a "flat" stream of events, the document "tree"
+is implicitly traversed and the desired elements are found regardless of their
+depth in the tree. In other words, one does not need to consider hierarchical
+issues such as recursive searching of the document nodes, although if the
+context of elements were important, one would either need to maintain some
+context-related state (i.e. remembering where one is in the document at any
+given point) or to make use of the <a href="#" class="broken-link"><code class="xref py function docutils literal">DOMEventStream.expandNode</code></a> method
+and switch to DOM-related processing.</p>
+<dl class="py class">
+  <dt id="py:class:xml.dom.pulldom.pulldom"><em class="property">class</em> <code class="sig-name">PullDOM(documentFactory=None)</code></dt>
+  <dd><p>Subclass of <a class="reference internal" href="xml.sax.handler.html#py:class:xml.sax.handler.contenthandler"><code class="xref py class docutils literal">xml.sax.handler.ContentHandler</code></a>.</p>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:xml.dom.pulldom.sax2dom"><em class="property">class</em> <code class="sig-name">SAX2DOM(documentFactory=None)</code></dt>
+  <dd><p>Subclass of <a class="reference internal" href="xml.sax.handler.html#py:class:xml.sax.handler.contenthandler"><code class="xref py class docutils literal">xml.sax.handler.ContentHandler</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:xml.dom.pulldom.parse"><code class="sig-name">parse(stream_or_string, parser=None, bufsize=None)</code></dt>
+  <dd><p>Return a <a class="reference internal" href="xml.dom.pulldom.html#py:class:xml.dom.pulldom.domeventstream"><code class="xref py class docutils literal">DOMEventStream</code></a> from the given input. <em>stream_or_string</em> may be
+either a file name, or a file-like object. <em>parser</em>, if given, must be an
+<a class="reference internal" href="xml.sax.reader.html#py:class:xml.sax.xmlreader.xmlreader"><code class="xref py class docutils literal">XMLReader</code></a> object. This function will change the
+document handler of the
+parser and activate namespace support; other parser configuration (like
+setting an entity resolver) must have been done in advance.</p>
+</dd>
+</dl>
+<p>If you have XML in a string, you can use the <a class="reference internal" href="xml.dom.pulldom.html#py:function:xml.dom.pulldom.parsestring"><code class="xref py function docutils literal">parseString</code></a> function instead:</p>
+<dl class="py function">
+  <dt id="py:function:xml.dom.pulldom.parsestring"><code class="sig-name">parseString(string, parser=None)</code></dt>
+  <dd><p>Return a <a class="reference internal" href="xml.dom.pulldom.html#py:class:xml.dom.pulldom.domeventstream"><code class="xref py class docutils literal">DOMEventStream</code></a> that represents the (Unicode) <em>string</em>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:xml.dom.pulldom.default_bufsize"><code class="sig-name">default_bufsize</code></dt>
+  <dd><p>Default value for the <em>bufsize</em> parameter to <a class="reference internal" href="xml.dom.pulldom.html#py:function:xml.dom.pulldom.parse"><code class="xref py function docutils literal">parse</code></a>.</p>
+<p>The value of this variable can be changed before calling <a class="reference internal" href="xml.dom.pulldom.html#py:function:xml.dom.pulldom.parse"><code class="xref py function docutils literal">parse</code></a> and
+the new value will take effect.</p>
+</dd>
+</dl>
+<a id="domeventstream-objects"></a>
+<h2 id="domeventstream-objects">DOMEventStream Objects</h2>
+<dl class="py class">
+  <dt id="py:class:xml.dom.pulldom.domeventstream"><em class="property">class</em> <code class="sig-name">DOMEventStream(stream, parser, bufsize)</code></dt>
+  <dd><div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>Support for <a class="reference internal" href="../reference/datamodel.html#py:method:object.__getitem__"><code class="xref py method docutils literal">__getitem__</code></a> method has been removed.</p>
+</div>
+<dl class="py method">
+  <dt id="py:method:xml.dom.pulldom.domeventstream.getevent"><code class="sig-name">getEvent()</code></dt>
+  <dd><p>Return a tuple containing <em>event</em> and the current <em>node</em> as
+<a href="#" class="broken-link"><code class="xref py class docutils literal">xml.dom.minidom.Document</code></a> if event equals <a href="#" class="broken-link"><code class="xref py data docutils literal">START_DOCUMENT</code></a>,
+<a href="#" class="broken-link"><code class="xref py class docutils literal">xml.dom.minidom.Element</code></a> if event equals <a href="#" class="broken-link"><code class="xref py data docutils literal">START_ELEMENT</code></a> or
+<a href="#" class="broken-link"><code class="xref py data docutils literal">END_ELEMENT</code></a> or <a href="#" class="broken-link"><code class="xref py class docutils literal">xml.dom.minidom.Text</code></a> if event equals
+<a href="#" class="broken-link"><code class="xref py data docutils literal">CHARACTERS</code></a>.
+The current node does not contain information about its children, unless
+<a href="#" class="broken-link"><code class="xref py function docutils literal">expandNode</code></a> is called.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.dom.pulldom.domeventstream.expandnode"><code class="sig-name">expandNode(node)</code></dt>
+  <dd><p>Expands all children of <em>node</em> into <em>node</em>. Example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">xml</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-import-name hl-python">dom</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">pulldom</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">xml</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&lt;html&gt;&lt;title&gt;Foo&lt;/title&gt; &lt;p&gt;Some text &lt;div&gt;and more&lt;/div&gt;&lt;/p&gt; &lt;/html&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">doc</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">pulldom</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">parseString</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">xml</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">event</span><span class="hl-punctuation hl-separator hl-target-list hl-python">,</span> <span class="hl-meta hl-generic-name hl-python">node</span> <span class="hl-keyword hl-control hl-loop hl-for hl-in hl-python">in</span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">doc</span></span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-punctuation hl-section hl-block hl-loop hl-for hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">event</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">pulldom</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">START_ELEMENT</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">and</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">node</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">tagName</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">p<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Following statement only prints &#39;&lt;p/&gt;&#39;
+</span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">node</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">toxml</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">doc</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">expandNode</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">node</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Following statement prints node with all its children &#39;&lt;p&gt;Some text &lt;div&gt;and more&lt;/div&gt;&lt;/p&gt;&#39;
+</span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">node</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">toxml</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:xml.dom.pulldom.domeventstream.reset"><code class="sig-name">DOMEventStream.reset()</code></dt>
+  <dd></dd>
+</dl>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="xml.dom.minidom.html">&larr; xml.dom.minidom — Minimal DOM implementation</a>
+        <a class="next" href="xml.sax.html">xml.sax — Support for SAX2 parsers &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

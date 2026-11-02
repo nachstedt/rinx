@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>msvcrt — Useful routines from the MS VC++ runtime — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle MS Windows Specific Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 current has-children">
+            <a href="msvcrt.html">msvcrt — Useful routines from the MS VC++ runtime</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle msvcrt — Useful routines from the MS VC++ runtime"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="msvcrt.html#file-operations">File Operations</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="msvcrt.html#console-i-o">Console I&#x2f;O</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="msvcrt.html#other-functions">Other Functions</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="winreg.html">winreg — Windows registry access</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="winsound.html">winsound — Sound-playing interface for Windows</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="windows.html">&larr; MS Windows Specific Services</a>
+        <a class="next" href="winreg.html">winreg — Windows registry access &rarr;</a>
+      </nav>
+      
+      <h1 id="msvcrt-useful-routines-from-the-ms-vc-runtime"><code class="xref py module docutils literal">msvcrt</code> — Useful routines from the MS VC++ runtime</h1>
+<dl class="py module">
+  <dt id="py:module:msvcrt"><code class="sig-name">msvcrt</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Fred L. Drake, Jr. &lt;fdrake@acm.org&gt;</pre>
+</div>
+<hr />
+<p>These functions provide access to some useful capabilities on Windows platforms.
+Some higher-level modules use these functions to build the Windows
+implementations of their services. For example, the <a class="reference internal" href="getpass.html#py:module:getpass" title="getpass: Portable reading of passwords and retrieval of the userid."><code class="xref py module docutils literal">getpass</code></a> module uses
+this in the implementation of the <a href="#" class="broken-link"><code class="xref py function docutils literal">getpass</code></a> function.</p>
+<p>Further documentation on these functions can be found in the Platform API
+documentation.</p>
+<p>The module implements both the normal and wide char variants of the console I/O
+api. The normal API deals only with ASCII characters and is of limited use
+for internationalized applications. The wide char API should be used where
+ever possible.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'availability'</p>
+<pre class="directive-error-source">.. availability:: Windows.</pre>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Operations in this module now raise <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> where <a class="reference internal" href="exceptions.html#py:exception:ioerror"><code class="xref py exception docutils literal">IOError</code></a>
+was raised.</p>
+</div>
+<a id="msvcrt-files"></a>
+<h2 id="file-operations">File Operations</h2>
+<dl class="py function">
+  <dt id="py:function:msvcrt.locking"><code class="sig-name">locking(fd, mode, nbytes)</code></dt>
+  <dd><p>Lock part of a file based on file descriptor <em>fd</em> from the C runtime. Raises
+<a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> on failure. The locked region of the file extends from the
+current file position for <em>nbytes</em> bytes, and may continue beyond the end of the
+file. <em>mode</em> must be one of the <code class="xref py data docutils literal">LK_*</code> constants listed below. Multiple
+regions in a file may be locked at the same time, but may not overlap. Adjacent
+regions are not merged; they must be unlocked individually.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: msvcrt.locking fd,mode,nbytes msvcrt.locking</pre>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.lk_lock"><code class="sig-name">LK_LOCK</code></dt>
+  <dt id="py:data:msvcrt.lk_rlck"><code class="sig-name">LK_RLCK</code></dt>
+  <dd><p>Locks the specified bytes. If the bytes cannot be locked, the program
+immediately tries again after 1 second. If, after 10 attempts, the bytes cannot
+be locked, <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> is raised.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.lk_nblck"><code class="sig-name">LK_NBLCK</code></dt>
+  <dt id="py:data:msvcrt.lk_nbrlck"><code class="sig-name">LK_NBRLCK</code></dt>
+  <dd><p>Locks the specified bytes. If the bytes cannot be locked, <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> is
+raised.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.lk_unlck"><code class="sig-name">LK_UNLCK</code></dt>
+  <dd><p>Unlocks the specified bytes, which must have been previously locked.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:msvcrt.setmode"><code class="sig-name">setmode(fd, flags)</code></dt>
+  <dd><p>Set the line-end translation mode for the file descriptor <em>fd</em>. To set it to
+text mode, <em>flags</em> should be <a class="reference internal" href="os.html#py:data:os.o_text"><code class="xref py data docutils literal">os.O_TEXT</code></a>; for binary, it should be
+<a class="reference internal" href="os.html#py:data:os.o_binary"><code class="xref py data docutils literal">os.O_BINARY</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:msvcrt.open_osfhandle"><code class="sig-name">open_osfhandle(handle, flags)</code></dt>
+  <dd><p>Create a C runtime file descriptor from the file handle <em>handle</em>. The <em>flags</em>
+parameter should be a bitwise OR of <a class="reference internal" href="os.html#py:data:os.o_append"><code class="xref py data docutils literal">os.O_APPEND</code></a>,
+<a class="reference internal" href="os.html#py:data:os.o_rdonly"><code class="xref py data docutils literal">os.O_RDONLY</code></a>, <a class="reference internal" href="os.html#py:data:os.o_text"><code class="xref py data docutils literal">os.O_TEXT</code></a> and <a class="reference internal" href="os.html#py:data:os.o_noinherit"><code class="xref py data docutils literal">os.O_NOINHERIT</code></a>.
+The returned file descriptor may be used as a parameter
+to <a class="reference internal" href="os.html#py:function:os.fdopen"><code class="xref py function docutils literal">os.fdopen</code></a> to create a file object.</p>
+<p>The file descriptor is inheritable by default. Pass <a class="reference internal" href="os.html#py:data:os.o_noinherit"><code class="xref py data docutils literal">os.O_NOINHERIT</code></a>
+flag to make it non inheritable.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: msvcrt.open_osfhandle handle,flags msvcrt.open_osfhandle</pre>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:msvcrt.get_osfhandle"><code class="sig-name">get_osfhandle(fd)</code></dt>
+  <dd><p>Return the file handle for the file descriptor <em>fd</em>. Raises <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> if
+<em>fd</em> is not recognized.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: msvcrt.get_osfhandle fd msvcrt.get_osfhandle</pre>
+</div>
+</dd>
+</dl>
+<a id="msvcrt-console"></a>
+<h2 id="console-i-o">Console I/O</h2>
+<dl class="py function">
+  <dt id="py:function:msvcrt.kbhit"><code class="sig-name">kbhit()</code></dt>
+  <dd><p>Returns a nonzero value if a keypress is waiting to be read. Otherwise,
+return 0.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:msvcrt.getch"><code class="sig-name">getch()</code></dt>
+  <dd><p>Read a keypress and return the resulting character as a byte string.
+Nothing is echoed to the console. This call will block if a keypress
+is not already available, but will not wait for :kbd:`Enter` to be
+pressed. If the pressed key was a special function key, this will
+return <code>'\000'</code> or <code>'\xe0'</code>; the next call will return the keycode.
+The :kbd:`Control-C` keypress cannot be read with this function.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:msvcrt.getwch"><code class="sig-name">getwch()</code></dt>
+  <dd><p>Wide char variant of <a class="reference internal" href="msvcrt.html#py:function:msvcrt.getch"><code class="xref py function docutils literal">getch</code></a>, returning a Unicode value.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:msvcrt.getche"><code class="sig-name">getche()</code></dt>
+  <dd><p>Similar to <a class="reference internal" href="msvcrt.html#py:function:msvcrt.getch"><code class="xref py function docutils literal">getch</code></a>, but the keypress will be echoed if it represents a
+printable character.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:msvcrt.getwche"><code class="sig-name">getwche()</code></dt>
+  <dd><p>Wide char variant of <a class="reference internal" href="msvcrt.html#py:function:msvcrt.getche"><code class="xref py function docutils literal">getche</code></a>, returning a Unicode value.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:msvcrt.putch"><code class="sig-name">putch(char)</code></dt>
+  <dd><p>Print the byte string <em>char</em> to the console without buffering.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:msvcrt.putwch"><code class="sig-name">putwch(unicode_char)</code></dt>
+  <dd><p>Wide char variant of <a class="reference internal" href="msvcrt.html#py:function:msvcrt.putch"><code class="xref py function docutils literal">putch</code></a>, accepting a Unicode value.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:msvcrt.ungetch"><code class="sig-name">ungetch(char)</code></dt>
+  <dd><p>Cause the byte string <em>char</em> to be "pushed back" into the console buffer;
+it will be the next character read by <a class="reference internal" href="msvcrt.html#py:function:msvcrt.getch"><code class="xref py function docutils literal">getch</code></a> or <a class="reference internal" href="msvcrt.html#py:function:msvcrt.getche"><code class="xref py function docutils literal">getche</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:msvcrt.ungetwch"><code class="sig-name">ungetwch(unicode_char)</code></dt>
+  <dd><p>Wide char variant of <a class="reference internal" href="msvcrt.html#py:function:msvcrt.ungetch"><code class="xref py function docutils literal">ungetch</code></a>, accepting a Unicode value.</p>
+</dd>
+</dl>
+<a id="msvcrt-other"></a>
+<h2 id="other-functions">Other Functions</h2>
+<dl class="py function">
+  <dt id="py:function:msvcrt.heapmin"><code class="sig-name">heapmin()</code></dt>
+  <dd><p>Force the <a href="#" class="broken-link"><code class="xref c function docutils literal">malloc</code></a> heap to clean itself up and return unused blocks to
+the operating system. On failure, this raises <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:msvcrt.set_error_mode"><code class="sig-name">set_error_mode(mode)</code></dt>
+  <dd><p>Changes the location where the C runtime writes an error message for an error
+that might end the program. <em>mode</em> must be one of the <code class="xref py data docutils literal">OUT_*</code>
+constants listed below  or <a class="reference internal" href="msvcrt.html#py:data:msvcrt.report_errmode"><code class="xref py data docutils literal">REPORT_ERRMODE</code></a>. Returns the old setting
+or -1 if an error occurs. Only available in
+<a href="../using/configure.html#debug-build">debug build of Python</a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.out_to_default"><code class="sig-name">OUT_TO_DEFAULT</code></dt>
+  <dd><p>Error sink is determined by the app's type. Only available in
+<a href="../using/configure.html#debug-build">debug build of Python</a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.out_to_stderr"><code class="sig-name">OUT_TO_STDERR</code></dt>
+  <dd><p>Error sink is a standard error. Only available in
+<a href="../using/configure.html#debug-build">debug build of Python</a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.out_to_msgbox"><code class="sig-name">OUT_TO_MSGBOX</code></dt>
+  <dd><p>Error sink is a message box. Only available in
+<a href="../using/configure.html#debug-build">debug build of Python</a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.report_errmode"><code class="sig-name">REPORT_ERRMODE</code></dt>
+  <dd><p>Report the current error mode value. Only available in
+<a href="../using/configure.html#debug-build">debug build of Python</a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:msvcrt.crtsetreportmode"><code class="sig-name">CrtSetReportMode(type, mode)</code></dt>
+  <dd><p>Specifies the destination or destinations for a specific report type
+generated by <code class="xref c function docutils literal">_CrtDbgReport</code> in the MS VC++ runtime. <em>type</em> must be
+one of the <code class="xref py data docutils literal">CRT_*</code> constants listed below. <em>mode</em> must be one of the
+<code class="xref py data docutils literal">CRTDBG_*</code> constants listed below. Only available in
+<a href="../using/configure.html#debug-build">debug build of Python</a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:msvcrt.crtsetreportfile"><code class="sig-name">CrtSetReportFile(type, file)</code></dt>
+  <dd><p>After you use <a class="reference internal" href="msvcrt.html#py:function:msvcrt.crtsetreportmode"><code class="xref py function docutils literal">CrtSetReportMode</code></a> to specify <a class="reference internal" href="msvcrt.html#py:data:msvcrt.crtdbg_mode_file"><code class="xref py data docutils literal">CRTDBG_MODE_FILE</code></a>,
+you can specify the file handle to receive the message text. <em>type</em> must be
+one of the <code class="xref py data docutils literal">CRT_*</code> constants listed below. <em>file</em> should be the file
+handle your want specified. Only available in
+<a href="../using/configure.html#debug-build">debug build of Python</a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.crt_warn"><code class="sig-name">CRT_WARN</code></dt>
+  <dd><p>Warnings, messages, and information that doesn't need immediate attention.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.crt_error"><code class="sig-name">CRT_ERROR</code></dt>
+  <dd><p>Errors, unrecoverable problems, and issues that require immediate attention.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.crt_assert"><code class="sig-name">CRT_ASSERT</code></dt>
+  <dd><p>Assertion failures.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.crtdbg_mode_debug"><code class="sig-name">CRTDBG_MODE_DEBUG</code></dt>
+  <dd><p>Writes the message to the debugger's output window.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.crtdbg_mode_file"><code class="sig-name">CRTDBG_MODE_FILE</code></dt>
+  <dd><p>Writes the message to a user-supplied file handle. <a class="reference internal" href="msvcrt.html#py:function:msvcrt.crtsetreportfile"><code class="xref py function docutils literal">CrtSetReportFile</code></a>
+should be called to define the specific file or stream to use as
+the destination.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.crtdbg_mode_wndw"><code class="sig-name">CRTDBG_MODE_WNDW</code></dt>
+  <dd><p>Creates a message box to display the message along with the <code>Abort</code>,
+<code>Retry</code>, and <code>Ignore</code> buttons.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.crtdbg_report_mode"><code class="sig-name">CRTDBG_REPORT_MODE</code></dt>
+  <dd><p>Returns current <em>mode</em> for the specified <em>type</em>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.crt_assembly_version"><code class="sig-name">CRT_ASSEMBLY_VERSION</code></dt>
+  <dd><p>The CRT Assembly version, from the :file:`crtassem.h` header file.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.vc_assembly_publickeytoken"><code class="sig-name">VC_ASSEMBLY_PUBLICKEYTOKEN</code></dt>
+  <dd><p>The VC Assembly public key token, from the :file:`crtassem.h` header file.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:msvcrt.libraries_assembly_name_prefix"><code class="sig-name">LIBRARIES_ASSEMBLY_NAME_PREFIX</code></dt>
+  <dd><p>The Libraries Assembly name prefix, from the :file:`crtassem.h` header file.</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="windows.html">&larr; MS Windows Specific Services</a>
+        <a class="next" href="winreg.html">winreg — Windows registry access &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

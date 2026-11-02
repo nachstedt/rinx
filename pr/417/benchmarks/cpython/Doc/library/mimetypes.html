@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mimetypes — Map filenames to MIME types — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Internet Data Handling"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="email.html">email — An email and MIME handling package</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="json.html">json — JSON encoder and decoder</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mailbox.html">mailbox — Manipulate mailboxes in various formats</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="mimetypes.html">mimetypes — Map filenames to MIME types</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle mimetypes — Map filenames to MIME types"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="mimetypes.html#mimetypes-objects">MimeTypes objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="mimetypes.html#command-line-usage">Command-line usage</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="mimetypes.html#command-line-example">Command-line example</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="base64.html">base64 — Base16, Base32, Base64, Base85 Data Encodings</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="binascii.html">binascii — Convert between binary and ASCII</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="quopri.html">quopri — Encode and decode MIME quoted-printable data</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="mailbox.html">&larr; mailbox — Manipulate mailboxes in various formats</a>
+        <a class="next" href="base64.html">base64 — Base16, Base32, Base64, Base85 Data Encodings &rarr;</a>
+      </nav>
+      
+      <h1 id="mimetypes-map-filenames-to-mime-types"><code class="xref py module docutils literal">mimetypes</code> — Map filenames to MIME types</h1>
+<dl class="py module">
+  <dt id="py:module:mimetypes"><code class="sig-name">mimetypes</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Fred L. Drake, Jr. &lt;fdrake@acm.org&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/mimetypes.py`</p>
+<span id="index-0"></span>
+<hr />
+<p>The <a class="reference internal" href="mimetypes.html#py:module:mimetypes" title="mimetypes: Mapping of filename extensions to MIME types."><code class="xref py module docutils literal">mimetypes</code></a> module converts between a filename or URL and the MIME type
+associated with the filename extension.  Conversions are provided from filename
+to MIME type and from MIME type to filename extension; encodings are not
+supported for the latter conversion.</p>
+<p>The module provides one class and a number of convenience functions. The
+functions are the normal interface to this module, but some applications may be
+interested in the class as well.</p>
+<p>The functions described below provide the primary interface for this module.  If
+the module has not been initialized, they will call <a class="reference internal" href="mimetypes.html#py:function:mimetypes.init"><code class="xref py function docutils literal">init</code></a> if they rely on
+the information <a class="reference internal" href="mimetypes.html#py:function:mimetypes.init"><code class="xref py function docutils literal">init</code></a> sets up.</p>
+<dl class="py function">
+  <dt id="py:function:mimetypes.guess_type"><code class="sig-name">guess_type(url, strict=True)</code></dt>
+  <dd><span id="index-1"></span>
+<p>Guess the type of a file based on its filename, path or URL, given by <em>url</em>.
+URL can be a string or a <a class="reference internal" href="../glossary.html#term-path-like-object"><span class="xref std std-term">path-like object</span></a>.</p>
+<p>The return value is a tuple <code>(type, encoding)</code> where <em>type</em> is <code>None</code> if the
+type can't be guessed (missing or unknown suffix) or a string of the form
+<code>'type/subtype'</code>, usable for a MIME :mailheader:`content-type` header.</p>
+<p><em>encoding</em> is <code>None</code> for no encoding or the name of the program used to encode
+(e.g. <strong class="program">compress</strong> or <strong class="program">gzip</strong>). The encoding is suitable for use
+as a :mailheader:`Content-Encoding` header, <strong>not</strong> as a
+:mailheader:`Content-Transfer-Encoding` header. The mappings are table driven.
+Encoding suffixes are case sensitive; type suffixes are first tried case
+sensitively, then case insensitively.</p>
+<p>The optional <em>strict</em> argument is a flag specifying whether the list of known MIME types
+is limited to only the official types <a href="https://www.iana.org/assignments/media-types/media-types.xhtml">registered with IANA</a>.
+However, the behavior of this module also depends on the underlying operating
+system. Only file types recognized by the OS or explicitly registered with
+Python's internal database can be identified. When <em>strict</em> is <code>True</code> (the
+default), only the IANA types are supported; when <em>strict</em> is <code>False</code>, some
+additional non-standard but commonly used MIME types are also recognized.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
+<p>Added support for <em>url</em> being a <a class="reference internal" href="../glossary.html#term-path-like-object"><span class="xref std std-term">path-like object</span></a>.</p>
+</div>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.13:</span></p>
+<p>Passing a file path instead of URL is <a class="reference internal" href="../glossary.html#term-soft-deprecated"><span class="xref std std-term">soft deprecated</span></a>.
+Use <a class="reference internal" href="mimetypes.html#py:function:mimetypes.guess_file_type"><code class="xref py function docutils literal">guess_file_type</code></a> for this.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:mimetypes.guess_file_type"><code class="sig-name">guess_file_type(path, *, strict=True)</code></dt>
+  <dd><span id="index-2"></span>
+<p>Guess the type of a file based on its path, given by <em>path</em>.
+Similar to the <a class="reference internal" href="mimetypes.html#py:function:mimetypes.guess_type"><code class="xref py function docutils literal">guess_type</code></a> function, but accepts a path instead of URL.
+Path can be a string, a bytes object or a <a class="reference internal" href="../glossary.html#term-path-like-object"><span class="xref std std-term">path-like object</span></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:mimetypes.guess_all_extensions"><code class="sig-name">guess_all_extensions(type, strict=True)</code></dt>
+  <dd><p>Guess the extensions for a file based on its MIME type, given by <em>type</em>. The
+return value is a list of strings giving all possible filename extensions,
+including the leading dot (<code>'.'</code>).  The extensions are not guaranteed to have
+been associated with any particular data stream, but would be mapped to the MIME
+type <em>type</em> by <a class="reference internal" href="mimetypes.html#py:function:mimetypes.guess_type"><code class="xref py function docutils literal">guess_type</code></a> and <a class="reference internal" href="mimetypes.html#py:function:mimetypes.guess_file_type"><code class="xref py function docutils literal">guess_file_type</code></a>.</p>
+<p>The optional <em>strict</em> argument has the same meaning as with the <a class="reference internal" href="mimetypes.html#py:function:mimetypes.guess_type"><code class="xref py function docutils literal">guess_type</code></a> function.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:mimetypes.guess_extension"><code class="sig-name">guess_extension(type, strict=True)</code></dt>
+  <dd><p>Guess the extension for a file based on its MIME type, given by <em>type</em>. The
+return value is a string giving a filename extension, including the leading dot
+(<code>'.'</code>).  The extension is not guaranteed to have been associated with any
+particular data stream, but would be mapped to the MIME type <em>type</em> by
+<a class="reference internal" href="mimetypes.html#py:function:mimetypes.guess_type"><code class="xref py function docutils literal">guess_type</code></a> and <a class="reference internal" href="mimetypes.html#py:function:mimetypes.guess_file_type"><code class="xref py function docutils literal">guess_file_type</code></a>.
+If no extension can be guessed for <em>type</em>, <code>None</code> is returned.</p>
+<p>The optional <em>strict</em> argument has the same meaning as with the <a class="reference internal" href="mimetypes.html#py:function:mimetypes.guess_type"><code class="xref py function docutils literal">guess_type</code></a> function.</p>
+</dd>
+</dl>
+<p>Some additional functions and data items are available for controlling the
+behavior of the module.</p>
+<dl class="py function">
+  <dt id="py:function:mimetypes.init"><code class="sig-name">init(files=None)</code></dt>
+  <dd><p>Initialize the internal data structures.  If given, <em>files</em> must be a sequence
+of file names which should be used to augment the default type map.  If omitted,
+the file names to use are taken from <a class="reference internal" href="mimetypes.html#py:data:mimetypes.knownfiles"><code class="xref py data docutils literal">knownfiles</code></a>; on Windows, the
+current registry settings are loaded.  Each file named in <em>files</em> or
+<a class="reference internal" href="mimetypes.html#py:data:mimetypes.knownfiles"><code class="xref py data docutils literal">knownfiles</code></a> takes precedence over those named before it.  Calling
+<a class="reference internal" href="mimetypes.html#py:function:mimetypes.init"><code class="xref py function docutils literal">init</code></a> repeatedly is allowed.</p>
+<p>Specifying an empty list for <em>files</em> will prevent the system defaults from
+being applied: only the well-known values will be present from a built-in list.</p>
+<p>If <em>files</em> is <code>None</code> the internal data structure is completely rebuilt to its
+initial default value. This is a stable operation and will produce the same results
+when called multiple times.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p>Previously, Windows registry settings were ignored.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:mimetypes.read_mime_types"><code class="sig-name">read_mime_types(filename)</code></dt>
+  <dd><p>Load the type map given in the file <em>filename</em>, if it exists.  The type map is
+returned as a dictionary mapping filename extensions, including the leading dot
+(<code>'.'</code>), to strings of the form <code>'type/subtype'</code>.  If the file <em>filename</em>
+does not exist or cannot be read, <code>None</code> is returned.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:mimetypes.add_type"><code class="sig-name">add_type(type, ext, strict=True)</code></dt>
+  <dd><p>Add a mapping from the MIME type <em>type</em> to the extension <em>ext</em>. When the
+extension is already known, the new type will replace the old one. When the type
+is already known the extension will be added to the list of known extensions.</p>
+<p>When <em>strict</em> is <code>True</code> (the default), the mapping will be added to the
+official MIME types, otherwise to the non-standard ones.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:mimetypes.inited"><code class="sig-name">inited</code></dt>
+  <dd><p>Flag indicating whether or not the global data structures have been initialized.
+This is set to <code>True</code> by <a class="reference internal" href="mimetypes.html#py:function:mimetypes.init"><code class="xref py function docutils literal">init</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:mimetypes.knownfiles"><code class="sig-name">knownfiles</code></dt>
+  <dd><span id="index-3"></span>
+<p>List of type map file names commonly installed.  These files are typically named
+:file:`mime.types` and are installed in different locations by different
+packages.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:mimetypes.suffix_map"><code class="sig-name">suffix_map</code></dt>
+  <dd><p>Dictionary mapping suffixes to suffixes.  This is used to allow recognition of
+encoded files for which the encoding and the type are indicated by the same
+extension.  For example, the :file:`.tgz` extension is mapped to :file:`.tar.gz`
+to allow the encoding and type to be recognized separately.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:mimetypes.encodings_map"><code class="sig-name">encodings_map</code></dt>
+  <dd><p>Dictionary mapping filename extensions to encoding types.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:mimetypes.types_map"><code class="sig-name">types_map</code></dt>
+  <dd><p>Dictionary mapping filename extensions to MIME types.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:mimetypes.common_types"><code class="sig-name">common_types</code></dt>
+  <dd><p>Dictionary mapping filename extensions to non-standard, but commonly found MIME
+types.</p>
+</dd>
+</dl>
+<p>An example usage of the module:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mimetypes</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mimetypes</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">init</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mimetypes</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">knownfiles</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">/etc/mime.types<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">/etc/httpd/mime.types<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-language hl-python">...</span> <span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mimetypes</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">suffix_map</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">.tgz<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">.tar.gz<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mimetypes</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">encodings_map</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">.gz<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">gzip<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mimetypes</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">types_map</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">.tgz<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">application/x-tar-gz<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
+<a id="mimetypes-objects"></a>
+<h2 id="mimetypes-objects">MimeTypes objects</h2>
+<p>The <a class="reference internal" href="mimetypes.html#py:class:mimetypes.mimetypes"><code class="xref py class docutils literal">MimeTypes</code></a> class may be useful for applications which may want more
+than one MIME-type database; it provides an interface similar to the one of the
+<a class="reference internal" href="mimetypes.html#py:module:mimetypes" title="mimetypes: Mapping of filename extensions to MIME types."><code class="xref py module docutils literal">mimetypes</code></a> module.</p>
+<dl class="py class">
+  <dt id="py:class:mimetypes.mimetypes"><em class="property">class</em> <code class="sig-name">MimeTypes(filenames=(), strict=True)</code></dt>
+  <dd><p>This class represents a MIME-types database.  By default, it provides access to
+the same database as the rest of this module. The initial database is a copy of
+that provided by the module, and may be extended by loading additional
+:file:`mime.types`-style files into the database using the <a class="reference internal" href="mimetypes.html#py:method:mimetypes.mimetypes.read"><code class="xref py method docutils literal">read</code></a> or
+<a class="reference internal" href="mimetypes.html#py:method:mimetypes.mimetypes.readfp"><code class="xref py method docutils literal">readfp</code></a> methods.  The mapping dictionaries may also be cleared before
+loading additional data if the default data is not desired.</p>
+<p>The optional <em>filenames</em> parameter can be used to cause additional files to be
+loaded "on top" of the default database.</p>
+<dl class="py attribute">
+  <dt id="py:attribute:mimetypes.mimetypes.suffix_map"><code class="sig-name">MimeTypes.suffix_map</code></dt>
+  <dd><p>Dictionary mapping suffixes to suffixes.  This is used to allow recognition of
+encoded files for which the encoding and the type are indicated by the same
+extension.  For example, the :file:`.tgz` extension is mapped to :file:`.tar.gz`
+to allow the encoding and type to be recognized separately.  This is initially a
+copy of the global <a class="reference internal" href="mimetypes.html#py:data:mimetypes.suffix_map"><code class="xref py data docutils literal">suffix_map</code></a> defined in the module.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:mimetypes.mimetypes.encodings_map"><code class="sig-name">MimeTypes.encodings_map</code></dt>
+  <dd><p>Dictionary mapping filename extensions to encoding types.  This is initially a
+copy of the global <a class="reference internal" href="mimetypes.html#py:data:mimetypes.encodings_map"><code class="xref py data docutils literal">encodings_map</code></a> defined in the module.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:mimetypes.mimetypes.types_map"><code class="sig-name">MimeTypes.types_map</code></dt>
+  <dd><p>Tuple containing two dictionaries, mapping filename extensions to MIME types:
+the first dictionary is for the non-standards types and the second one is for
+the standard types. They are initialized by <a class="reference internal" href="mimetypes.html#py:data:mimetypes.common_types"><code class="xref py data docutils literal">common_types</code></a> and
+<a class="reference internal" href="mimetypes.html#py:data:mimetypes.types_map"><code class="xref py data docutils literal">types_map</code></a>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:mimetypes.mimetypes.types_map_inv"><code class="sig-name">MimeTypes.types_map_inv</code></dt>
+  <dd><p>Tuple containing two dictionaries, mapping MIME types to a list of filename
+extensions: the first dictionary is for the non-standards types and the
+second one is for the standard types. They are initialized by
+<a class="reference internal" href="mimetypes.html#py:data:mimetypes.common_types"><code class="xref py data docutils literal">common_types</code></a> and <a class="reference internal" href="mimetypes.html#py:data:mimetypes.types_map"><code class="xref py data docutils literal">types_map</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mimetypes.mimetypes.guess_extension"><code class="sig-name">MimeTypes.guess_extension(type, strict=True)</code></dt>
+  <dd><p>Similar to the <a class="reference internal" href="mimetypes.html#py:function:mimetypes.guess_extension"><code class="xref py function docutils literal">guess_extension</code></a> function, using the tables stored as part
+of the object.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mimetypes.mimetypes.guess_type"><code class="sig-name">MimeTypes.guess_type(url, strict=True)</code></dt>
+  <dd><p>Similar to the <a class="reference internal" href="mimetypes.html#py:function:mimetypes.guess_type"><code class="xref py function docutils literal">guess_type</code></a> function, using the tables stored as part of
+the object.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mimetypes.mimetypes.guess_file_type"><code class="sig-name">MimeTypes.guess_file_type(path, *, strict=True)</code></dt>
+  <dd><p>Similar to the <a class="reference internal" href="mimetypes.html#py:function:mimetypes.guess_file_type"><code class="xref py function docutils literal">guess_file_type</code></a> function, using the tables stored
+as part of the object.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mimetypes.mimetypes.guess_all_extensions"><code class="sig-name">MimeTypes.guess_all_extensions(type, strict=True)</code></dt>
+  <dd><p>Similar to the <a class="reference internal" href="mimetypes.html#py:function:mimetypes.guess_all_extensions"><code class="xref py function docutils literal">guess_all_extensions</code></a> function, using the tables stored
+as part of the object.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mimetypes.mimetypes.read"><code class="sig-name">MimeTypes.read(filename, strict=True)</code></dt>
+  <dd><p>Load MIME information from a file named <em>filename</em>.  This uses <a class="reference internal" href="mimetypes.html#py:method:mimetypes.mimetypes.readfp"><code class="xref py method docutils literal">readfp</code></a> to
+parse the file.</p>
+<p>If <em>strict</em> is <code>True</code>, information will be added to list of standard types,
+else to the list of non-standard types.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mimetypes.mimetypes.readfp"><code class="sig-name">MimeTypes.readfp(fp, strict=True)</code></dt>
+  <dd><p>Load MIME type information from an open file <em>fp</em>.  The file must have the format of
+the standard :file:`mime.types` files.</p>
+<p>If <em>strict</em> is <code>True</code>, information will be added to the list of standard
+types, else to the list of non-standard types.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mimetypes.mimetypes.read_windows_registry"><code class="sig-name">MimeTypes.read_windows_registry(strict=True)</code></dt>
+  <dd><p>Load MIME type information from the Windows registry.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'availability'</p>
+<pre class="directive-error-source">.. availability:: Windows.</pre>
+</div>
+<p>If <em>strict</em> is <code>True</code>, information will be added to the list of standard
+types, else to the list of non-standard types.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mimetypes.mimetypes.add_type"><code class="sig-name">MimeTypes.add_type(type, ext, strict=True)</code></dt>
+  <dd><p>Add a mapping from the MIME type <em>type</em> to the extension <em>ext</em>.
+Valid extensions start with a '.' or are empty. When the
+extension is already known, the new type will replace the old one. When the type
+is already known the extension will be added to the list of known extensions.</p>
+<p>When <em>strict</em> is <code>True</code> (the default), the mapping will be added to the
+official MIME types, otherwise to the non-standard ones.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'deprecated-removed'</p>
+<pre class="directive-error-source">.. deprecated-removed:: 3.14 3.16
+   Invalid, undotted extensions will raise a
+   :exc:`ValueError` in Python 3.16.</pre>
+</div>
+</dd>
+</dl>
+</dd>
+</dl>
+<a id="mimetypes-cli"></a>
+<h2 id="command-line-usage">Command-line usage</h2>
+<p>The <code class="xref py module docutils literal">mimetypes</code> module can be executed as a script from the command line.</p>
+<div class="highlight-sh notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">python</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"><span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>m</span> mimetypes <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>-h<span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span> <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>-e<span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span> <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>-l<span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span> type <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>type ...<span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span></span></span></pre></div>
+</div>
+<p>The following options are accepted:</p>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:mimetypes.-h"><code class="sig-name">-h</code></dt>
+  <dt id="std:cmdoption:mimetypes.--help"><code class="sig-name">--help</code></dt>
+  <dd><p>Show the help message and exit.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:mimetypes.-e"><code class="sig-name">-e</code></dt>
+  <dt id="std:cmdoption:mimetypes.--extension"><code class="sig-name">--extension</code></dt>
+  <dd><p>Guess extension instead of type.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:mimetypes.-l"><code class="sig-name">-l</code></dt>
+  <dt id="std:cmdoption:mimetypes.--lenient"><code class="sig-name">--lenient</code></dt>
+  <dd><p>Additionally search for some common, but non-standard types.</p>
+</dd>
+</dl>
+<p>By default the script converts MIME types to file extensions.
+However, if <code>--extension</code> is specified,
+it converts file extensions to MIME types.</p>
+<p>For each <code>type</code> entry, the script writes a line into the standard output
+stream. If an unknown type occurs, it writes an error message into the
+standard error stream and exits with the return code <code>1</code>.</p>
+<h2 id="command-line-example">Command-line example</h2>
+<p>Here are some examples of typical usage of the <code class="xref py module docutils literal">mimetypes</code> command-line
+interface:</p>
+<div class="highlight-console notranslate">
+<div class="highlight hl-code"><pre>
+$ # get a MIME type by a file name
+$ python -m mimetypes filename.png
+type: image/png encoding: None
+
+$ # get a MIME type by a URL
+$ python -m mimetypes https://example.com/filename.txt
+type: text/plain encoding: None
+
+$ # get a complex MIME type
+$ python -m mimetypes filename.tar.gz
+type: application/x-tar encoding: gzip
+
+$ # get a MIME type for a rare file extension
+$ python -m mimetypes filename.pict
+error: unknown extension of filename.pict
+
+$ # now look in the extended database built into Python
+$ python -m mimetypes --lenient filename.pict
+type: image/pict encoding: None
+
+$ # get a file extension by a MIME type
+$ python -m mimetypes --extension text/javascript
+.js
+
+$ # get a file extension by a rare MIME type
+$ python -m mimetypes --extension text/xul
+error: unknown type text/xul
+
+$ # now look in the extended database again
+$ python -m mimetypes --extension --lenient text/xul
+.xul
+
+$ # try to feed an unknown file extension
+$ python -m mimetypes filename.sh filename.nc filename.xxx filename.txt
+type: application/x-sh encoding: None
+type: application/x-netcdf encoding: None
+error: unknown extension of filename.xxx
+
+$ # try to feed an unknown MIME type
+$ python -m mimetypes --extension audio/aac audio/opus audio/future audio/x-wav
+.aac
+.opus
+error: unknown type audio/future</pre></div>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="mailbox.html">&larr; mailbox — Manipulate mailboxes in various formats</a>
+        <a class="next" href="base64.html">base64 — Base16, Base32, Base64, Base85 Data Encodings &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Futures — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Networking and Interprocess Communication"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 ancestor has-children">
+            <a href="asyncio.html">asyncio — Asynchronous I&#x2f;O</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle asyncio — Asynchronous I&#x2f;O"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="asyncio-runner.html">Runners</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-task.html">Coroutines and Tasks</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-stream.html">Streams</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-sync.html">Synchronization Primitives</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-subprocess.html">Subprocesses</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-queue.html">Queues</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-exceptions.html">Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-graph.html">Call Graph Introspection</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-eventloop.html">Event Loop</a>
+            
+          </li>
+        
+          <li class="toctree-l4 current has-children">
+            <a href="asyncio-future.html">Futures</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Futures"></span></summary>
+              <ul>
+                
+          <li class="toctree-l5">
+            <a href="asyncio-future.html#future-functions">Future Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-future.html#future-object">Future Object</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-protocol.html">Transports and Protocols</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-policy.html">Policies</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-platforms.html">Platform Support</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-extending.html">Extending</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-api-index.html">High-level API Index</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-llapi-index.html">Low-level API Index</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-dev.html">Developing with asyncio</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="socket.html">socket — Low-level networking interface</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ssl.html">ssl — TLS&#x2f;SSL wrapper for socket objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="select.html">select — Waiting for I&#x2f;O completion</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="selectors.html">selectors — High-level I&#x2f;O multiplexing</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="signal.html">signal — Set handlers for asynchronous events</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mmap.html">mmap — Memory-mapped file support</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="asyncio-eventloop.html">&larr; Event Loop</a>
+        <a class="next" href="asyncio-protocol.html">Transports and Protocols &rarr;</a>
+      </nav>
+      
+      <a id="asyncio-futures"></a>
+<h1 id="futures">Futures</h1>
+<p><strong>Source code:</strong> :source:`Lib/asyncio/futures.py`,
+:source:`Lib/asyncio/base_futures.py`</p>
+<hr />
+<p><em>Future</em> objects are used to bridge <strong>low-level callback-based code</strong>
+with high-level async/await code.</p>
+<h2 id="future-functions">Future Functions</h2>
+<dl class="py function">
+  <dt id="py:function:asyncio.isfuture"><code class="sig-name">isfuture(obj)</code></dt>
+  <dd><p>Return <code>True</code> if <em>obj</em> is either of:</p>
+<ul>
+<li><p>an instance of <a class="reference internal" href="asyncio-future.html#py:class:asyncio.future"><code class="xref py class docutils literal">asyncio.Future</code></a>,</p>
+</li>
+<li><p>an instance of <a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">asyncio.Task</code></a>,</p>
+</li>
+<li><p>a Future-like object with a <code>_asyncio_future_blocking</code>
+attribute.</p>
+</li>
+</ul>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:asyncio.ensure_future"><code class="sig-name">ensure_future(obj, *, loop=None)</code></dt>
+  <dd><p>Return:</p>
+<ul>
+<li><p><em>obj</em> argument as is, if <em>obj</em> is a <a class="reference internal" href="asyncio-future.html#py:class:asyncio.future"><code class="xref py class docutils literal">Future</code></a>,
+a <a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">Task</code></a>, or a Future-like object (<a class="reference internal" href="asyncio-future.html#py:function:asyncio.isfuture"><code class="xref py function docutils literal">isfuture</code></a>
+is used for the test.)</p>
+</li>
+<li><p>a <a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">Task</code></a> object wrapping <em>obj</em>, if <em>obj</em> is a
+coroutine (<a class="reference internal" href="asyncio-task.html#py:function:asyncio.iscoroutine"><code class="xref py function docutils literal">iscoroutine</code></a> is used for the test);
+in this case the coroutine will be scheduled by
+<code>ensure_future()</code>.</p>
+</li>
+<li><p>a <a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">Task</code></a> object that would await on <em>obj</em>, if <em>obj</em> is an
+awaitable (<a class="reference internal" href="inspect.html#py:function:inspect.isawaitable"><code class="xref py function docutils literal">inspect.isawaitable</code></a> is used for the test.)</p>
+</li>
+</ul>
+<p>If <em>obj</em> is neither of the above a <a class="reference internal" href="exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> is raised.</p>
+<div class="admonition important">
+  <p class="admonition-title">Important</p>
+<p>Save a reference to the result of this function, to avoid
+a task disappearing mid-execution.</p>
+<p>See also the <a class="reference internal" href="asyncio-task.html#py:function:asyncio.create_task"><code class="xref py function docutils literal">create_task</code></a> function which is the
+preferred way for creating new tasks or use <a class="reference internal" href="asyncio-task.html#py:class:asyncio.taskgroup"><code class="xref py class docutils literal">asyncio.TaskGroup</code></a>
+which keeps reference to the task internally.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5.1:</span></p>
+<p>The function accepts any <a class="reference internal" href="../glossary.html#term-awaitable"><span class="xref std std-term">awaitable</span></a> object.</p>
+</div>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.10:</span></p>
+<p>Deprecation warning is emitted if <em>obj</em> is not a Future-like object
+and <em>loop</em> is not specified and there is no running event loop.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:asyncio.wrap_future"><code class="sig-name">wrap_future(future, *, loop=None)</code></dt>
+  <dd><p>Wrap a <a class="reference internal" href="concurrent.futures.html#py:class:concurrent.futures.future"><code class="xref py class docutils literal">concurrent.futures.Future</code></a> object in a
+<a class="reference internal" href="asyncio-future.html#py:class:asyncio.future"><code class="xref py class docutils literal">asyncio.Future</code></a> object.</p>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.10:</span></p>
+<p>Deprecation warning is emitted if <em>future</em> is not a Future-like object
+and <em>loop</em> is not specified and there is no running event loop.</p>
+</div>
+</dd>
+</dl>
+<a id="asyncio-future-obj"></a>
+<h2 id="future-object">Future Object</h2>
+<dl class="py class">
+  <dt id="py:class:asyncio.future"><em class="property">class</em> <code class="sig-name">Future(*, loop=None)</code></dt>
+  <dd><p>A Future represents an eventual result of an asynchronous
+operation.  Not thread-safe.</p>
+<p>Future is an <a class="reference internal" href="../glossary.html#term-awaitable"><span class="xref std std-term">awaitable</span></a> object.  Coroutines can await on
+Future objects until they either have a result or an exception
+set, or until they are cancelled. A Future can be awaited multiple
+times and the result is same.</p>
+<p>Typically Futures are used to enable low-level
+callback-based code (e.g. in protocols implemented using asyncio
+<a href="asyncio-protocol.html#asyncio-transports-protocols">transports</a>)
+to interoperate with high-level async/await code.</p>
+<p>The rule of thumb is to never expose Future objects in user-facing
+APIs, and the recommended way to create a Future object is to call
+<a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_future"><code class="xref py method docutils literal">loop.create_future</code></a>.  This way alternative event loop
+implementations can inject their own optimized implementations
+of a Future object.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>Added support for the <a class="reference internal" href="contextvars.html#py:module:contextvars" title="contextvars: Context Variables"><code class="xref py module docutils literal">contextvars</code></a> module.</p>
+</div>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.10:</span></p>
+<p>Deprecation warning is emitted if <em>loop</em> is not specified
+and there is no running event loop.</p>
+</div>
+<dl class="py method">
+  <dt id="py:method:asyncio.future.result"><code class="sig-name">result()</code></dt>
+  <dd><p>Return the result of the Future.</p>
+<p>If the Future is <em>done</em> and has a result set by the
+<a class="reference internal" href="asyncio-future.html#py:method:asyncio.future.set_result"><code class="xref py method docutils literal">set_result</code></a> method, the result value is returned.</p>
+<p>If the Future is <em>done</em> and has an exception set by the
+<a class="reference internal" href="asyncio-future.html#py:method:asyncio.future.set_exception"><code class="xref py method docutils literal">set_exception</code></a> method, this method raises the exception.</p>
+<p>If the Future has been <em>cancelled</em>, this method raises
+a <a class="reference internal" href="asyncio-exceptions.html#py:exception:asyncio.cancellederror"><code class="xref py exception docutils literal">CancelledError</code></a> exception.</p>
+<p>If the Future's result isn't yet available, this method raises
+an <a class="reference internal" href="asyncio-exceptions.html#py:exception:asyncio.invalidstateerror"><code class="xref py exception docutils literal">InvalidStateError</code></a> exception.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.future.set_result"><code class="sig-name">set_result(result)</code></dt>
+  <dd><p>Mark the Future as <em>done</em> and set its result.</p>
+<p>Raises an <a class="reference internal" href="asyncio-exceptions.html#py:exception:asyncio.invalidstateerror"><code class="xref py exception docutils literal">InvalidStateError</code></a> error if the Future is
+already <em>done</em>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.future.set_exception"><code class="sig-name">set_exception(exception)</code></dt>
+  <dd><p>Mark the Future as <em>done</em> and set an exception.</p>
+<p>Raises an <a class="reference internal" href="asyncio-exceptions.html#py:exception:asyncio.invalidstateerror"><code class="xref py exception docutils literal">InvalidStateError</code></a> error if the Future is
+already <em>done</em>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.future.done"><code class="sig-name">done()</code></dt>
+  <dd><p>Return <code>True</code> if the Future is <em>done</em>.</p>
+<p>A Future is <em>done</em> if it was <em>cancelled</em> or if it has a result
+or an exception set with <a class="reference internal" href="asyncio-future.html#py:method:asyncio.future.set_result"><code class="xref py method docutils literal">set_result</code></a> or
+<a class="reference internal" href="asyncio-future.html#py:method:asyncio.future.set_exception"><code class="xref py method docutils literal">set_exception</code></a> calls.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.future.cancelled"><code class="sig-name">cancelled()</code></dt>
+  <dd><p>Return <code>True</code> if the Future was <em>cancelled</em>.</p>
+<p>The method is usually used to check if a Future is not
+<em>cancelled</em> before setting a result or an exception for it:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-keyword hl-operator hl-logical hl-python">not</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fut</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">cancelled</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fut</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">set_result</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">42</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.future.add_done_callback"><code class="sig-name">add_done_callback(callback, *, context=None)</code></dt>
+  <dd><p>Add a callback to be run when the Future is <em>done</em>.</p>
+<p>The <em>callback</em> is called with the Future object as its only
+argument.</p>
+<p>If the Future is already <em>done</em> when this method is called,
+the callback is scheduled with <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.call_soon"><code class="xref py method docutils literal">loop.call_soon</code></a>.</p>
+<p>An optional keyword-only <em>context</em> argument allows specifying a
+custom <a class="reference internal" href="contextvars.html#py:class:contextvars.context"><code class="xref py class docutils literal">contextvars.Context</code></a> for the <em>callback</em> to run in.
+The current context is used when no <em>context</em> is provided.</p>
+<p><a class="reference internal" href="functools.html#py:function:functools.partial"><code class="xref py function docutils literal">functools.partial</code></a> can be used to pass parameters
+to the callback, e.g.:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Call &#39;print(&quot;Future:&quot;, fut)&#39; when &quot;fut&quot; is done.
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fut</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">add_done_callback</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">functools</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">partial</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Future:<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>The <em>context</em> keyword-only parameter was added.
+See <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0567/"><strong>PEP 567</strong></a> for more details.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.future.remove_done_callback"><code class="sig-name">remove_done_callback(callback)</code></dt>
+  <dd><p>Remove <em>callback</em> from the callbacks list.</p>
+<p>Returns the number of callbacks removed, which is typically 1,
+unless a callback was added more than once.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.future.cancel"><code class="sig-name">cancel(msg=None)</code></dt>
+  <dd><p>Cancel the Future and schedule callbacks.</p>
+<p>If the Future is already <em>done</em> or <em>cancelled</em>, return <code>False</code>.
+Otherwise, change the Future's state to <em>cancelled</em>,
+schedule the callbacks, and return <code>True</code>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.9:</span></p>
+<p>Added the <em>msg</em> parameter.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.future.exception"><code class="sig-name">exception()</code></dt>
+  <dd><p>Return the exception that was set on this Future.</p>
+<p>The exception (or <code>None</code> if no exception was set) is
+returned only if the Future is <em>done</em>.</p>
+<p>If the Future has been <em>cancelled</em>, this method raises a
+<a class="reference internal" href="asyncio-exceptions.html#py:exception:asyncio.cancellederror"><code class="xref py exception docutils literal">CancelledError</code></a> exception.</p>
+<p>If the Future isn't <em>done</em> yet, this method raises an
+<a class="reference internal" href="asyncio-exceptions.html#py:exception:asyncio.invalidstateerror"><code class="xref py exception docutils literal">InvalidStateError</code></a> exception.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.future.get_loop"><code class="sig-name">get_loop()</code></dt>
+  <dd><p>Return the event loop the Future object is bound to.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+</dd>
+</dl>
+</dd>
+</dl>
+<a id="asyncio_example_future"></a>
+<p>This example creates a Future object, creates and schedules an
+asynchronous Task to set result for the Future, and waits until
+the Future has a result:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async</span> <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">set_after</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">fut</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">delay</span><span class="hl-punctuation hl-separator hl-parameters hl-python">,</span> <span class="hl-variable hl-parameter hl-python">value</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Sleep for *delay* seconds.
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">sleep</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">delay</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Set *value* as a result of *fut* Future.
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fut</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">set_result</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">value</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async</span> <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Get the current event loop.
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">loop</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_running_loop</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Create a new Future object.
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fut</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">loop</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">create_future</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Run &quot;set_after()&quot; coroutine in a parallel Task.
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> We are using the low-level &quot;loop.create_task()&quot; API here because
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> we already have a reference to the event loop at hand.
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Otherwise we could have just used &quot;asyncio.create_task()&quot;.
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">loop</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">create_task</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">set_after</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fut</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">... world<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">hello ...<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Wait until *fut* has a result (1 second) and print it.
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-other hl-await hl-python">await</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fut</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">asyncio</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">run</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="admonition important">
+  <p class="admonition-title">Important</p>
+<p>The Future object was designed to mimic
+<a class="reference internal" href="concurrent.futures.html#py:class:concurrent.futures.future"><code class="xref py class docutils literal">concurrent.futures.Future</code></a>.  Key differences include:</p>
+<ul>
+<li><p>unlike asyncio Futures, <a class="reference internal" href="concurrent.futures.html#py:class:concurrent.futures.future"><code class="xref py class docutils literal">concurrent.futures.Future</code></a>
+instances cannot be awaited.</p>
+</li>
+<li><p><a class="reference internal" href="asyncio-future.html#py:method:asyncio.future.result"><code class="xref py method docutils literal">asyncio.Future.result</code></a> and <a class="reference internal" href="asyncio-future.html#py:method:asyncio.future.exception"><code class="xref py method docutils literal">asyncio.Future.exception</code></a>
+do not accept the <em>timeout</em> argument.</p>
+</li>
+<li><p><a class="reference internal" href="asyncio-future.html#py:method:asyncio.future.result"><code class="xref py method docutils literal">asyncio.Future.result</code></a> and <a class="reference internal" href="asyncio-future.html#py:method:asyncio.future.exception"><code class="xref py method docutils literal">asyncio.Future.exception</code></a>
+raise an <a class="reference internal" href="asyncio-exceptions.html#py:exception:asyncio.invalidstateerror"><code class="xref py exception docutils literal">InvalidStateError</code></a> exception when the Future is not
+<em>done</em>.</p>
+</li>
+<li><p>Callbacks registered with <a class="reference internal" href="asyncio-future.html#py:method:asyncio.future.add_done_callback"><code class="xref py method docutils literal">asyncio.Future.add_done_callback</code></a>
+are not called immediately.  They are scheduled with
+<a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.call_soon"><code class="xref py method docutils literal">loop.call_soon</code></a> instead.</p>
+</li>
+<li><p>asyncio Future is not compatible with the
+<a class="reference internal" href="concurrent.futures.html#py:function:concurrent.futures.wait"><code class="xref py function docutils literal">concurrent.futures.wait</code></a> and
+<a class="reference internal" href="concurrent.futures.html#py:function:concurrent.futures.as_completed"><code class="xref py function docutils literal">concurrent.futures.as_completed</code></a> functions.</p>
+</li>
+<li><p><a class="reference internal" href="asyncio-future.html#py:method:asyncio.future.cancel"><code class="xref py method docutils literal">asyncio.Future.cancel</code></a> accepts an optional <code>msg</code> argument,
+but <a class="reference internal" href="concurrent.futures.html#py:method:concurrent.futures.future.cancel"><code class="xref py method docutils literal">concurrent.futures.Future.cancel</code></a> does not.</p>
+</li>
+</ul>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="asyncio-eventloop.html">&larr; Event Loop</a>
+        <a class="next" href="asyncio-protocol.html">Transports and Protocols &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

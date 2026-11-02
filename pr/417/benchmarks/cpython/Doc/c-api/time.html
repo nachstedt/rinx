@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PyTime C API — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python&#x2f;C API Reference Manual</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python&#x2f;C API Reference Manual"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stable.html">C API Stability</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="veryhigh.html">The Very High Level Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="refcounting.html">Reference Counting</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Exception Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="extension-modules.html">Defining extension modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="utilities.html">Utilities</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Utilities"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="sys.html">Operating System Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="import.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="marshal.html">Data marshalling support</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="arg.html">Parsing arguments and building values</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="conversion.html">String conversion and formatting</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="hash.html">PyHash API</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="reflection.html">Reflection</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="codec.html">Codec registry and support functions</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="time.html">PyTime C API</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle PyTime C API"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="time.html#types">Types</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="time.html#clock-functions">Clock Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="time.html#raw-clock-functions">Raw Clock Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="time.html#conversion-functions">Conversion functions</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="perfmaps.html">Support for Perf Maps</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="abstract.html">Abstract Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concrete.html">Concrete Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init.html">Initialization, Finalization, and Threads</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init_config.html">Python Initialization Configuration</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="memory.html">Memory Management</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="objimpl.html">Object Implementation Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="apiabiversion.html">API and ABI Versioning</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="monitoring.html">Monitoring C API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="codec.html">&larr; Codec registry and support functions</a>
+        <a class="next" href="perfmaps.html">Support for Perf Maps &rarr;</a>
+      </nav>
+      
+      <a id="c-api-time"></a>
+<h1 id="pytime-c-api">PyTime C API</h1>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+<p>The clock C API provides access to system clocks.
+It is similar to the Python <a class="reference internal" href="../library/time.html#py:module:time" title="time: Time access and conversions."><code class="xref py module docutils literal">time</code></a> module.</p>
+<p>For C API related to the <a class="reference internal" href="../library/datetime.html#py:module:datetime" title="datetime: Basic date and time types."><code class="xref py module docutils literal">datetime</code></a> module, see <a href="datetime.html#datetimeobjects">DateTime Objects</a>.</p>
+<h2 id="types">Types</h2>
+<dl class="c type">
+  <dt id="c:type:pytime_t"><code class="sig-name">PyTime_t</code></dt>
+  <dd><p>A timestamp or duration in nanoseconds, represented as a signed 64-bit
+integer.</p>
+<p>The reference point for timestamps depends on the clock used. For example,
+<a class="reference internal" href="time.html#c:function:pytime_time"><code class="xref c function docutils literal">PyTime_Time</code></a> returns timestamps relative to the UNIX epoch.</p>
+<p>The supported range is around [-292.3 years; +292.3 years].
+Using the Unix epoch (January 1st, 1970) as reference, the supported date
+range is around [1677-09-21; 2262-04-11].
+The exact limits are exposed as constants:</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pytime_min"><code class="sig-name">PyTime_t PyTime_MIN</code></dt>
+  <dd><p>Minimum value of <a class="reference internal" href="time.html#c:type:pytime_t"><code class="xref c type docutils literal">PyTime_t</code></a>.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pytime_max"><code class="sig-name">PyTime_t PyTime_MAX</code></dt>
+  <dd><p>Maximum value of <a class="reference internal" href="time.html#c:type:pytime_t"><code class="xref c type docutils literal">PyTime_t</code></a>.</p>
+</dd>
+</dl>
+<h2 id="clock-functions">Clock Functions</h2>
+<p>The following functions take a pointer to a :c:expr:`PyTime_t` that they
+set to the value of a particular clock.
+Details of each clock are given in the documentation of the corresponding
+Python function.</p>
+<p>The functions return <code>0</code> on success, or <code>-1</code> (with an exception set)
+on failure.</p>
+<p>On integer overflow, they set the <a class="reference internal" href="exceptions.html#c:member:pyexc_overflowerror"><code class="xref c member docutils literal">PyExc_OverflowError</code></a> exception and
+set <code>*result</code> to the value clamped to the <code>[PyTime_MIN; PyTime_MAX]</code>
+range.
+(On current systems, integer overflows are likely caused by misconfigured
+system time.)</p>
+<p>As any other C API (unless otherwise specified), the functions must be called
+with an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>.</p>
+<dl class="c function">
+  <dt id="c:function:pytime_monotonic"><code class="sig-name">int PyTime_Monotonic(PyTime_t *result)</code></dt>
+  <dd><p>Read the monotonic clock.
+See <a class="reference internal" href="../library/time.html#py:function:time.monotonic"><code class="xref py function docutils literal">time.monotonic</code></a> for important details on this clock.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pytime_perfcounter"><code class="sig-name">int PyTime_PerfCounter(PyTime_t *result)</code></dt>
+  <dd><p>Read the performance counter.
+See <a class="reference internal" href="../library/time.html#py:function:time.perf_counter"><code class="xref py function docutils literal">time.perf_counter</code></a> for important details on this clock.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pytime_time"><code class="sig-name">int PyTime_Time(PyTime_t *result)</code></dt>
+  <dd><p>Read the “wall clock” time.
+See <a class="reference internal" href="../library/time.html#py:function:time.time"><code class="xref py function docutils literal">time.time</code></a> for details important on this clock.</p>
+</dd>
+</dl>
+<h2 id="raw-clock-functions">Raw Clock Functions</h2>
+<p>Similar to clock functions, but don't set an exception on error and don't
+require the caller to have an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>.</p>
+<p>On success, the functions return <code>0</code>.</p>
+<p>On failure, they set <code>*result</code> to <code>0</code> and return <code>-1</code>, <em>without</em> setting
+an exception. To get the cause of the error, <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attach</span></a> a <a class="reference internal" href="../glossary.html#term-thread-state"><span class="xref std std-term">thread state</span></a>,
+and call the regular (non-<code>Raw</code>) function. Note that the regular function may succeed after
+the <code>Raw</code> one failed.</p>
+<dl class="c function">
+  <dt id="c:function:pytime_monotonicraw"><code class="sig-name">int PyTime_MonotonicRaw(PyTime_t *result)</code></dt>
+  <dd><p>Similar to <a class="reference internal" href="time.html#c:function:pytime_monotonic"><code class="xref c function docutils literal">PyTime_Monotonic</code></a>,
+but don't set an exception on error and don't require an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pytime_perfcounterraw"><code class="sig-name">int PyTime_PerfCounterRaw(PyTime_t *result)</code></dt>
+  <dd><p>Similar to <a class="reference internal" href="time.html#c:function:pytime_perfcounter"><code class="xref c function docutils literal">PyTime_PerfCounter</code></a>,
+but don't set an exception on error and don't require an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pytime_timeraw"><code class="sig-name">int PyTime_TimeRaw(PyTime_t *result)</code></dt>
+  <dd><p>Similar to <a class="reference internal" href="time.html#c:function:pytime_time"><code class="xref c function docutils literal">PyTime_Time</code></a>,
+but don't set an exception on error and don't require an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>.</p>
+</dd>
+</dl>
+<h2 id="conversion-functions">Conversion functions</h2>
+<dl class="c function">
+  <dt id="c:function:pytime_assecondsdouble"><code class="sig-name">double PyTime_AsSecondsDouble(PyTime_t t)</code></dt>
+  <dd><p>Convert a timestamp to a number of seconds as a C :c:expr:`double`.</p>
+<p>The function cannot fail, but note that :c:expr:`double` has limited
+accuracy for large values.</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="codec.html">&larr; Codec registry and support functions</a>
+        <a class="next" href="perfmaps.html">Support for Perf Maps &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

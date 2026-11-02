@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>faulthandler — Dump the Python traceback — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Debugging and Profiling"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="audit_events.html">Audit events table</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="bdb.html">bdb — Debugger framework</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="faulthandler.html">faulthandler — Dump the Python traceback</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle faulthandler — Dump the Python traceback"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="faulthandler.html#dumping-the-traceback">Dumping the traceback</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="faulthandler.html#dumping-the-c-stack">Dumping the C stack</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="faulthandler.html#fault-handler-state">Fault handler state</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="faulthandler.html#dumping-the-tracebacks-after-a-timeout">Dumping the tracebacks after a timeout</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="faulthandler.html#dumping-the-traceback-on-a-user-signal">Dumping the traceback on a user signal</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="faulthandler.html#issue-with-file-descriptors">Issue with file descriptors</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="faulthandler.html#example">Example</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pdb.html">pdb — The Python Debugger</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="profile.html">The Python Profilers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="timeit.html">timeit — Measure execution time of small code snippets</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="trace.html">trace — Trace or track Python statement execution</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tracemalloc.html">tracemalloc — Trace memory allocations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="bdb.html">&larr; bdb — Debugger framework</a>
+        <a class="next" href="pdb.html">pdb — The Python Debugger &rarr;</a>
+      </nav>
+      
+      <h1 id="faulthandler-dump-the-python-traceback"><code class="xref py module docutils literal">faulthandler</code> — Dump the Python traceback</h1>
+<dl class="py module">
+  <dt id="py:module:faulthandler"><code class="sig-name">faulthandler</code></dt>
+  <dd></dd>
+</dl>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+<hr />
+<p>This module contains functions to dump Python tracebacks explicitly, on a fault,
+after a timeout, or on a user signal. Call <a class="reference internal" href="faulthandler.html#py:function:faulthandler.enable"><code class="xref py function docutils literal">faulthandler.enable</code></a> to
+install fault handlers for the <a class="reference internal" href="signal.html#py:data:signal.sigsegv"><code class="xref py data docutils literal">SIGSEGV</code></a>,
+<a class="reference internal" href="signal.html#py:data:signal.sigfpe"><code class="xref py data docutils literal">SIGFPE</code></a>, <a class="reference internal" href="signal.html#py:data:signal.sigabrt"><code class="xref py data docutils literal">SIGABRT</code></a>, <a class="reference internal" href="signal.html#py:data:signal.sigbus"><code class="xref py data docutils literal">SIGBUS</code></a>, and
+<a class="reference internal" href="signal.html#py:data:signal.sigill"><code class="xref py data docutils literal">SIGILL</code></a> signals. You can also
+enable them at startup by setting the :envvar:`PYTHONFAULTHANDLER` environment
+variable or by using the <a class="reference internal" href="../using/cmdline.html#std:cmdoption:-x"><code class="xref std cmdoption docutils literal">-X</code></a> <code>faulthandler</code> command line option.</p>
+<p>The fault handler is compatible with system fault handlers like Apport or the
+Windows fault handler. The module uses an alternative stack for signal handlers
+if the <code class="xref c function docutils literal">sigaltstack</code> function is available. This allows it to dump the
+traceback even on a stack overflow.</p>
+<p>The fault handler is called on catastrophic cases and therefore can only use
+signal-safe functions (e.g. it cannot allocate memory on the heap). Because of
+this limitation traceback dumping is minimal compared to normal Python
+tracebacks:</p>
+<ul>
+<li><p>Only ASCII is supported. The <code>backslashreplace</code> error handler is used on
+encoding.</p>
+</li>
+<li><p>Each string is limited to 500 characters.</p>
+</li>
+<li><p>Only the filename, the function name and the line number are
+displayed. (no source code)</p>
+</li>
+<li><p>It is limited to 100 frames and 100 threads.</p>
+</li>
+<li><p>The order is reversed: the most recent call is shown first.</p>
+</li>
+</ul>
+<p>By default, the Python traceback is written to <a class="reference internal" href="sys.html#py:data:sys.stderr"><code class="xref py data docutils literal">sys.stderr</code></a>. To see
+tracebacks, applications must be run in the terminal. A log file can
+alternatively be passed to <a class="reference internal" href="faulthandler.html#py:function:faulthandler.enable"><code class="xref py function docutils literal">faulthandler.enable</code></a>.</p>
+<p>The module is implemented in C, so tracebacks can be dumped on a crash or when
+Python is deadlocked.</p>
+<p>The <a href="devmode.html#devmode">Python Development Mode</a> calls <a class="reference internal" href="faulthandler.html#py:function:faulthandler.enable"><code class="xref py function docutils literal">faulthandler.enable</code></a>
+at Python startup.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>Module <a class="reference internal" href="pdb.html#py:module:pdb" title="pdb: The Python debugger for interactive interpreters."><code class="xref py module docutils literal">pdb</code></a></dt>
+<dd><p>Interactive source code debugger for Python programs.</p>
+</dd>
+<dt>Module <a class="reference internal" href="traceback.html#py:module:traceback" title="traceback: Print or retrieve a stack traceback."><code class="xref py module docutils literal">traceback</code></a></dt>
+<dd><p>Standard interface to extract, format and print stack traces of Python programs.</p>
+</dd>
+</dl>
+</div>
+<h2 id="dumping-the-traceback">Dumping the traceback</h2>
+<dl class="py function">
+  <dt id="py:function:faulthandler.dump_traceback"><code class="sig-name">dump_traceback(file=sys.stderr, all_threads=True)</code></dt>
+  <dd><p>Dump the tracebacks of all threads into <em>file</em>. If <em>all_threads</em> is
+<code>False</code>, dump only the current thread.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p><a class="reference internal" href="traceback.html#py:function:traceback.print_tb"><code class="xref py function docutils literal">traceback.print_tb</code></a>, which can be used to print a traceback object.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Added support for passing file descriptor to this function.</p>
+</div>
+</dd>
+</dl>
+<h2 id="dumping-the-c-stack">Dumping the C stack</h2>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+<dl class="py function">
+  <dt id="py:function:faulthandler.dump_c_stack"><code class="sig-name">dump_c_stack(file=sys.stderr)</code></dt>
+  <dd><p>Dump the C stack trace of the current thread into <em>file</em>.</p>
+<p>If the Python build does not support it or the operating system
+does not provide a stack trace, then this prints an error in place
+of a dumped C stack.</p>
+</dd>
+</dl>
+<a id="c-stack-compatibility"></a>
+<h3 id="c-stack-compatibility">C Stack Compatibility</h3>
+<p>If the system does not support the C-level :manpage:`backtrace(3)`
+or :manpage:`dladdr1(3)`, then C stack dumps will not work.
+An error will be printed instead of the stack.</p>
+<p>Additionally, some compilers do not support <a class="reference internal" href="../glossary.html#term-cpython"><span class="xref std std-term">CPython's</span></a>
+implementation of C stack dumps. As a result, a different error may be printed
+instead of the stack, even if the operating system supports dumping stacks.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Dumping C stacks can be arbitrarily slow, depending on the DWARF level
+of the binaries in the call stack.</p>
+</div>
+<h2 id="fault-handler-state">Fault handler state</h2>
+<dl class="py function">
+  <dt id="py:function:faulthandler.enable"><code class="sig-name">enable(file=sys.stderr, all_threads=True, c_stack=True)</code></dt>
+  <dd><p>Enable the fault handler: install handlers for the <a class="reference internal" href="signal.html#py:data:signal.sigsegv"><code class="xref py data docutils literal">SIGSEGV</code></a>,
+<a class="reference internal" href="signal.html#py:data:signal.sigfpe"><code class="xref py data docutils literal">SIGFPE</code></a>, <a class="reference internal" href="signal.html#py:data:signal.sigabrt"><code class="xref py data docutils literal">SIGABRT</code></a>, <a class="reference internal" href="signal.html#py:data:signal.sigbus"><code class="xref py data docutils literal">SIGBUS</code></a>
+and <a class="reference internal" href="signal.html#py:data:signal.sigill"><code class="xref py data docutils literal">SIGILL</code></a>
+signals to dump the Python traceback. If <em>all_threads</em> is <code>True</code>,
+produce tracebacks for every running thread. Otherwise, dump only the current
+thread.</p>
+<p>The <em>file</em> must be kept open until the fault handler is disabled: see
+<a href="faulthandler.html#faulthandler-fd">issue with file descriptors</a>.</p>
+<p>If <em>c_stack</em> is <code>True</code>, then the C stack trace is printed after the Python
+traceback, unless the system does not support it. See <a class="reference internal" href="faulthandler.html#py:function:faulthandler.dump_c_stack"><code class="xref py function docutils literal">dump_c_stack</code></a> for
+more information on compatibility.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Added support for passing file descriptor to this function.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>On Windows, a handler for Windows exception is also installed.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>The dump now mentions if a garbage collector collection is running
+if <em>all_threads</em> is true.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>Only the current thread is dumped if the <a class="reference internal" href="../glossary.html#term-gil"><span class="xref std std-term">GIL</span></a> is disabled to
+prevent the risk of data races.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>The dump now displays the C stack trace if <em>c_stack</em> is true.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:faulthandler.disable"><code class="sig-name">disable()</code></dt>
+  <dd><p>Disable the fault handler: uninstall the signal handlers installed by
+<a class="reference internal" href="faulthandler.html#py:function:faulthandler.enable"><code class="xref py function docutils literal">enable</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:faulthandler.is_enabled"><code class="sig-name">is_enabled()</code></dt>
+  <dd><p>Check if the fault handler is enabled.</p>
+</dd>
+</dl>
+<h2 id="dumping-the-tracebacks-after-a-timeout">Dumping the tracebacks after a timeout</h2>
+<dl class="py function">
+  <dt id="py:function:faulthandler.dump_traceback_later"><code class="sig-name">dump_traceback_later(timeout, repeat=False, file=sys.stderr, exit=False)</code></dt>
+  <dd><p>Dump the tracebacks of all threads, after a timeout of <em>timeout</em> seconds, or
+every <em>timeout</em> seconds if <em>repeat</em> is <code>True</code>.  If <em>exit</em> is <code>True</code>, call
+<code class="xref c function docutils literal">_exit</code> with status=1 after dumping the tracebacks.  (Note
+<code class="xref c function docutils literal">_exit</code> exits the process immediately, which means it doesn't do any
+cleanup like flushing file buffers.) If the function is called twice, the new
+call replaces previous parameters and resets the timeout. The timer has a
+sub-second resolution.</p>
+<p>The <em>file</em> must be kept open until the traceback is dumped or
+<a class="reference internal" href="faulthandler.html#py:function:faulthandler.cancel_dump_traceback_later"><code class="xref py function docutils literal">cancel_dump_traceback_later</code></a> is called: see <a href="faulthandler.html#faulthandler-fd">issue with file
+descriptors</a>.</p>
+<p>This function is implemented using a watchdog thread.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Added support for passing file descriptor to this function.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>This function is now always available.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:faulthandler.cancel_dump_traceback_later"><code class="sig-name">cancel_dump_traceback_later()</code></dt>
+  <dd><p>Cancel the last call to <a class="reference internal" href="faulthandler.html#py:function:faulthandler.dump_traceback_later"><code class="xref py function docutils literal">dump_traceback_later</code></a>.</p>
+</dd>
+</dl>
+<h2 id="dumping-the-traceback-on-a-user-signal">Dumping the traceback on a user signal</h2>
+<dl class="py function">
+  <dt id="py:function:faulthandler.register"><code class="sig-name">register(signum, file=sys.stderr, all_threads=True, chain=False)</code></dt>
+  <dd><p>Register a user signal: install a handler for the <em>signum</em> signal to dump
+the traceback of all threads, or of the current thread if <em>all_threads</em> is
+<code>False</code>, into <em>file</em>. Call the previous handler if chain is <code>True</code>.</p>
+<p>The <em>file</em> must be kept open until the signal is unregistered by
+<a class="reference internal" href="faulthandler.html#py:function:faulthandler.unregister"><code class="xref py function docutils literal">unregister</code></a>: see <a href="faulthandler.html#faulthandler-fd">issue with file descriptors</a>.</p>
+<p>Not available on Windows.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Added support for passing file descriptor to this function.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:faulthandler.unregister"><code class="sig-name">unregister(signum)</code></dt>
+  <dd><p>Unregister a user signal: uninstall the handler of the <em>signum</em> signal
+installed by <a class="reference internal" href="faulthandler.html#py:function:faulthandler.register"><code class="xref py function docutils literal">register</code></a>. Return <code>True</code> if the signal was registered,
+<code>False</code> otherwise.</p>
+<p>Not available on Windows.</p>
+</dd>
+</dl>
+<a id="faulthandler-fd"></a>
+<h2 id="issue-with-file-descriptors">Issue with file descriptors</h2>
+<p><a class="reference internal" href="faulthandler.html#py:function:faulthandler.enable"><code class="xref py function docutils literal">enable</code></a>, <a class="reference internal" href="faulthandler.html#py:function:faulthandler.dump_traceback_later"><code class="xref py function docutils literal">dump_traceback_later</code></a> and <a class="reference internal" href="faulthandler.html#py:function:faulthandler.register"><code class="xref py function docutils literal">register</code></a> keep the
+file descriptor of their <em>file</em> argument. If the file is closed and its file
+descriptor is reused by a new file, or if <a class="reference internal" href="os.html#py:function:os.dup2"><code class="xref py function docutils literal">os.dup2</code></a> is used to replace
+the file descriptor, the traceback will be written into a different file. Call
+these functions again each time that the file is replaced.</p>
+<h2 id="example">Example</h2>
+<p>Example of a segmentation fault on Linux with and without enabling the fault
+handler:</p>
+<div class="highlight-shell-session notranslate">
+<div class="highlight hl-code"><pre>
+$ python -c "import ctypes; ctypes.string_at(0)"
+Segmentation fault
+
+$ python -q -X faulthandler
+&gt;&gt;&gt; import ctypes
+&gt;&gt;&gt; ctypes.string_at(0)
+Fatal Python error: Segmentation fault
+
+Current thread 0x00007fb899f39700 (most recent call first):
+  File "/opt/python/Lib/ctypes/__init__.py", line 486 in string_at
+  File "&lt;stdin&gt;", line 1 in &lt;module&gt;
+
+Current thread's C stack trace (most recent call first):
+  Binary file "/opt/python/python", at _Py_DumpStack+0x42 [0x5b27f7d7147e]
+  Binary file "/opt/python/python", at +0x32dcbd [0x5b27f7d85cbd]
+  Binary file "/opt/python/python", at +0x32df8a [0x5b27f7d85f8a]
+  Binary file "/usr/lib/libc.so.6", at +0x3def0 [0x77b73226bef0]
+  Binary file "/usr/lib/libc.so.6", at +0x17ef9c [0x77b7323acf9c]
+  Binary file "/opt/python/build/lib.linux-x86_64-3.14/_ctypes.cpython-314d-x86_64-linux-gnu.so", at +0xcdf6 [0x77b7315dddf6]
+  Binary file "/usr/lib/libffi.so.8", at +0x7976 [0x77b73158f976]
+  Binary file "/usr/lib/libffi.so.8", at +0x413c [0x77b73158c13c]
+  Binary file "/usr/lib/libffi.so.8", at ffi_call+0x12e [0x77b73158ef0e]
+  Binary file "/opt/python/build/lib.linux-x86_64-3.14/_ctypes.cpython-314d-x86_64-linux-gnu.so", at +0x15a33 [0x77b7315e6a33]
+  Binary file "/opt/python/build/lib.linux-x86_64-3.14/_ctypes.cpython-314d-x86_64-linux-gnu.so", at +0x164fa [0x77b7315e74fa]
+  Binary file "/opt/python/build/lib.linux-x86_64-3.14/_ctypes.cpython-314d-x86_64-linux-gnu.so", at +0xc624 [0x77b7315dd624]
+  Binary file "/opt/python/python", at _PyObject_MakeTpCall+0xce [0x5b27f7b73883]
+  Binary file "/opt/python/python", at +0x11bab6 [0x5b27f7b73ab6]
+  Binary file "/opt/python/python", at PyObject_Vectorcall+0x23 [0x5b27f7b73b04]
+  Binary file "/opt/python/python", at _PyEval_EvalFrameDefault+0x490c [0x5b27f7cbb302]
+  Binary file "/opt/python/python", at +0x2818e6 [0x5b27f7cd98e6]
+  Binary file "/opt/python/python", at +0x281aab [0x5b27f7cd9aab]
+  Binary file "/opt/python/python", at PyEval_EvalCode+0xc5 [0x5b27f7cd9ba3]
+  Binary file "/opt/python/python", at +0x255957 [0x5b27f7cad957]
+  Binary file "/opt/python/python", at +0x255ab4 [0x5b27f7cadab4]
+  Binary file "/opt/python/python", at _PyEval_EvalFrameDefault+0x6c3e [0x5b27f7cbd634]
+  Binary file "/opt/python/python", at +0x2818e6 [0x5b27f7cd98e6]
+  Binary file "/opt/python/python", at +0x281aab [0x5b27f7cd9aab]
+  Binary file "/opt/python/python", at +0x11b6e1 [0x5b27f7b736e1]
+  Binary file "/opt/python/python", at +0x11d348 [0x5b27f7b75348]
+  Binary file "/opt/python/python", at +0x11d626 [0x5b27f7b75626]
+  Binary file "/opt/python/python", at PyObject_Call+0x20 [0x5b27f7b7565e]
+  Binary file "/opt/python/python", at +0x32a67a [0x5b27f7d8267a]
+  Binary file "/opt/python/python", at +0x32a7f8 [0x5b27f7d827f8]
+  Binary file "/opt/python/python", at +0x32ac1b [0x5b27f7d82c1b]
+  Binary file "/opt/python/python", at Py_RunMain+0x31 [0x5b27f7d82ebe]
+  &lt;truncated rest of calls&gt;
+Segmentation fault</pre></div>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="bdb.html">&larr; bdb — Debugger framework</a>
+        <a class="next" href="pdb.html">pdb — The Python Debugger &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Python Tutorial — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="index.html">The Python Tutorial</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Tutorial"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="appetite.html"><span class="section-number">1. </span>Whetting Your Appetite</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="interpreter.html"><span class="section-number">2. </span>Using the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="introduction.html"><span class="section-number">3. </span>An Informal Introduction to Python</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="controlflow.html"><span class="section-number">4. </span>More Control Flow Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datastructures.html"><span class="section-number">5. </span>Data Structures</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html"><span class="section-number">6. </span>Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="inputoutput.html"><span class="section-number">7. </span>Input and Output</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="errors.html"><span class="section-number">8. </span>Errors and Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="classes.html"><span class="section-number">9. </span>Classes</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdlib.html"><span class="section-number">10. </span>Brief Tour of the Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdlib2.html"><span class="section-number">11. </span>Brief Tour of the Standard Library — Part II</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="venv.html"><span class="section-number">12. </span>Virtual Environments and Packages</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="whatnow.html"><span class="section-number">13. </span>What Now?</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="interactive.html"><span class="section-number">14. </span>Interactive Input Editing and History Substitution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="floatingpoint.html"><span class="section-number">15. </span>Floating-Point Arithmetic:  Issues and Limitations</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="appendix.html"><span class="section-number">16. </span>Appendix</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="../whatsnew/changelog.html">&larr; Changelog</a>
+        <a class="next" href="appetite.html">Whetting Your Appetite &rarr;</a>
+      </nav>
+      
+      <a id="tutorial-index"></a>
+<h1 id="the-python-tutorial">The Python Tutorial</h1>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'Tip'</p>
+<pre class="directive-error-source">.. Tip:: This tutorial is designed for
+   *programmers* that are new to the Python language,
+   **not** *beginners* who are new to programming.</pre>
+</div>
+<p>Python is an easy to learn, powerful programming language. It has efficient
+high-level data structures and a simple but effective approach to
+object-oriented programming. Python's elegant syntax and dynamic typing,
+together with its interpreted nature, make it an ideal language for scripting
+and rapid application development in many areas on most platforms.</p>
+<p>The Python interpreter and the extensive standard library are freely available
+in source or binary form for all major platforms from the Python website,
+https://www.python.org/, and may be freely distributed. The same site also
+contains distributions of and pointers to many free third party Python modules,
+programs and tools, and additional documentation.</p>
+<p>The Python interpreter is easily extended with new functions and data types
+implemented in C or C++ (or other languages callable from C). Python is also
+suitable as an extension language for customizable applications.</p>
+<p>This tutorial introduces the reader informally to the basic concepts and
+features of the Python language and system. Be aware that it expects you to
+have a basic understanding of programming in general. It helps to have a Python
+interpreter handy for hands-on experience, but all examples are self-contained,
+so the tutorial can be read off-line as well.</p>
+<p>For a description of standard objects and modules, see <a href="../library/index.html#library-index">The Python Standard Library</a>.
+<a href="../reference/index.html#reference-index">The Python Language Reference</a> gives a more formal definition of the language.  To write
+extensions in C or C++, read <a href="../extending/index.html#extending-index">Extending and Embedding the Python Interpreter</a> and
+<a href="../c-api/index.html#c-api-index">Python/C API Reference Manual</a>. There are also several books covering Python in depth.</p>
+<p>This tutorial does not attempt to be comprehensive and cover every single
+feature, or even every commonly used feature. Instead, it introduces many of
+Python's most noteworthy features, and will give you a good idea of the
+language's flavor and style. After reading it, you will be able to read and
+write Python modules and programs, and you will be ready to learn more about the
+various Python library modules described in <a href="../library/index.html#library-index">The Python Standard Library</a>.</p>
+<p>The <a href="../glossary.html#glossary">Glossary</a> is also worth going through.</p>
+<ul>
+  <li><a href="appetite.html"><span class="section-number">1. </span>Whetting Your Appetite</a></li>
+  <li><a href="interpreter.html"><span class="section-number">2. </span>Using the Python Interpreter</a>
+<ul>
+  <li><a href="interpreter.html#invoking-the-interpreter"><span class="section-number">2.1. </span>Invoking the Interpreter</a>
+<ul>
+  <li><a href="interpreter.html#argument-passing"><span class="section-number">2.1.1. </span>Argument Passing</a></li>
+  <li><a href="interpreter.html#interactive-mode"><span class="section-number">2.1.2. </span>Interactive Mode</a></li>
+</ul>
+  </li>
+  <li><a href="interpreter.html#the-interpreter-and-its-environment"><span class="section-number">2.2. </span>The Interpreter and Its Environment</a>
+<ul>
+  <li><a href="interpreter.html#source-code-encoding"><span class="section-number">2.2.1. </span>Source Code Encoding</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li><a href="introduction.html"><span class="section-number">3. </span>An Informal Introduction to Python</a>
+<ul>
+  <li><a href="introduction.html#using-python-as-a-calculator"><span class="section-number">3.1. </span>Using Python as a Calculator</a>
+<ul>
+  <li><a href="introduction.html#numbers"><span class="section-number">3.1.1. </span>Numbers</a></li>
+  <li><a href="introduction.html#text"><span class="section-number">3.1.2. </span>Text</a></li>
+  <li><a href="introduction.html#lists"><span class="section-number">3.1.3. </span>Lists</a></li>
+</ul>
+  </li>
+  <li><a href="introduction.html#first-steps-towards-programming"><span class="section-number">3.2. </span>First Steps Towards Programming</a></li>
+</ul>
+  </li>
+  <li><a href="controlflow.html"><span class="section-number">4. </span>More Control Flow Tools</a>
+<ul>
+  <li><a href="controlflow.html#keyword-if-statements"><span class="section-number">4.1. </span>:keyword:`!if` Statements</a></li>
+  <li><a href="controlflow.html#keyword-for-statements"><span class="section-number">4.2. </span>:keyword:`!for` Statements</a></li>
+  <li><a href="controlflow.html#the-range-function"><span class="section-number">4.3. </span>The range Function</a></li>
+  <li><a href="controlflow.html#keyword-break-and-keyword-continue-statements"><span class="section-number">4.4. </span>:keyword:`!break` and :keyword:`!continue` Statements</a></li>
+  <li><a href="controlflow.html#keyword-else-clauses-on-loops"><span class="section-number">4.5. </span>:keyword:`!else` Clauses on Loops</a></li>
+  <li><a href="controlflow.html#keyword-pass-statements"><span class="section-number">4.6. </span>:keyword:`!pass` Statements</a></li>
+  <li><a href="controlflow.html#keyword-match-statements"><span class="section-number">4.7. </span>:keyword:`!match` Statements</a></li>
+  <li><a href="controlflow.html#defining-functions"><span class="section-number">4.8. </span>Defining Functions</a></li>
+  <li><a href="controlflow.html#more-on-defining-functions"><span class="section-number">4.9. </span>More on Defining Functions</a>
+<ul>
+  <li><a href="controlflow.html#default-argument-values"><span class="section-number">4.9.1. </span>Default Argument Values</a></li>
+  <li><a href="controlflow.html#keyword-arguments"><span class="section-number">4.9.2. </span>Keyword Arguments</a></li>
+  <li><a href="controlflow.html#special-parameters"><span class="section-number">4.9.3. </span>Special parameters</a>
+<ul>
+  <li><a href="controlflow.html#positional-or-keyword-arguments"><span class="section-number">4.9.3.1. </span>Positional-or-Keyword Arguments</a></li>
+  <li><a href="controlflow.html#positional-only-parameters"><span class="section-number">4.9.3.2. </span>Positional-Only Parameters</a></li>
+  <li><a href="controlflow.html#keyword-only-arguments"><span class="section-number">4.9.3.3. </span>Keyword-Only Arguments</a></li>
+  <li><a href="controlflow.html#function-examples"><span class="section-number">4.9.3.4. </span>Function Examples</a></li>
+  <li><a href="controlflow.html#recap"><span class="section-number">4.9.3.5. </span>Recap</a></li>
+</ul>
+  </li>
+  <li><a href="controlflow.html#arbitrary-argument-lists"><span class="section-number">4.9.4. </span>Arbitrary Argument Lists</a></li>
+  <li><a href="controlflow.html#unpacking-argument-lists"><span class="section-number">4.9.5. </span>Unpacking Argument Lists</a></li>
+  <li><a href="controlflow.html#lambda-expressions"><span class="section-number">4.9.6. </span>Lambda Expressions</a></li>
+  <li><a href="controlflow.html#documentation-strings"><span class="section-number">4.9.7. </span>Documentation Strings</a></li>
+  <li><a href="controlflow.html#function-annotations"><span class="section-number">4.9.8. </span>Function Annotations</a></li>
+</ul>
+  </li>
+  <li><a href="controlflow.html#intermezzo-coding-style"><span class="section-number">4.10. </span>Intermezzo: Coding Style</a></li>
+</ul>
+  </li>
+  <li><a href="datastructures.html"><span class="section-number">5. </span>Data Structures</a>
+<ul>
+  <li><a href="datastructures.html#more-on-lists"><span class="section-number">5.1. </span>More on Lists</a>
+<ul>
+  <li><a href="datastructures.html#using-lists-as-stacks"><span class="section-number">5.1.1. </span>Using Lists as Stacks</a></li>
+  <li><a href="datastructures.html#using-lists-as-queues"><span class="section-number">5.1.2. </span>Using Lists as Queues</a></li>
+  <li><a href="datastructures.html#list-comprehensions"><span class="section-number">5.1.3. </span>List Comprehensions</a></li>
+  <li><a href="datastructures.html#nested-list-comprehensions"><span class="section-number">5.1.4. </span>Nested List Comprehensions</a></li>
+</ul>
+  </li>
+  <li><a href="datastructures.html#the-keyword-del-statement"><span class="section-number">5.2. </span>The :keyword:`!del` statement</a></li>
+  <li><a href="datastructures.html#tuples-and-sequences"><span class="section-number">5.3. </span>Tuples and Sequences</a></li>
+  <li><a href="datastructures.html#sets"><span class="section-number">5.4. </span>Sets</a></li>
+  <li><a href="datastructures.html#dictionaries"><span class="section-number">5.5. </span>Dictionaries</a></li>
+  <li><a href="datastructures.html#looping-techniques"><span class="section-number">5.6. </span>Looping Techniques</a></li>
+  <li><a href="datastructures.html#more-on-conditions"><span class="section-number">5.7. </span>More on Conditions</a></li>
+  <li><a href="datastructures.html#comparing-sequences-and-other-types"><span class="section-number">5.8. </span>Comparing Sequences and Other Types</a></li>
+</ul>
+  </li>
+  <li><a href="modules.html"><span class="section-number">6. </span>Modules</a>
+<ul>
+  <li><a href="modules.html#more-on-modules"><span class="section-number">6.1. </span>More on Modules</a>
+<ul>
+  <li><a href="modules.html#executing-modules-as-scripts"><span class="section-number">6.1.1. </span>Executing modules as scripts</a></li>
+  <li><a href="modules.html#the-module-search-path"><span class="section-number">6.1.2. </span>The Module Search Path</a></li>
+  <li><a href="modules.html#compiled-python-files"><span class="section-number">6.1.3. </span>"Compiled" Python files</a></li>
+</ul>
+  </li>
+  <li><a href="modules.html#standard-modules"><span class="section-number">6.2. </span>Standard Modules</a></li>
+  <li><a href="modules.html#the-dir-function"><span class="section-number">6.3. </span>The dir Function</a></li>
+  <li><a href="modules.html#packages"><span class="section-number">6.4. </span>Packages</a>
+<ul>
+  <li><a href="modules.html#importing-from-a-package"><span class="section-number">6.4.1. </span>Importing * From a Package</a></li>
+  <li><a href="modules.html#intra-package-references"><span class="section-number">6.4.2. </span>Intra-package References</a></li>
+  <li><a href="modules.html#packages-in-multiple-directories"><span class="section-number">6.4.3. </span>Packages in Multiple Directories</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li><a href="inputoutput.html"><span class="section-number">7. </span>Input and Output</a>
+<ul>
+  <li><a href="inputoutput.html#fancier-output-formatting"><span class="section-number">7.1. </span>Fancier Output Formatting</a>
+<ul>
+  <li><a href="inputoutput.html#formatted-string-literals"><span class="section-number">7.1.1. </span>Formatted String Literals</a></li>
+  <li><a href="inputoutput.html#the-string-format-method"><span class="section-number">7.1.2. </span>The String format() Method</a></li>
+  <li><a href="inputoutput.html#manual-string-formatting"><span class="section-number">7.1.3. </span>Manual String Formatting</a></li>
+  <li><a href="inputoutput.html#old-string-formatting"><span class="section-number">7.1.4. </span>Old string formatting</a></li>
+</ul>
+  </li>
+  <li><a href="inputoutput.html#reading-and-writing-files"><span class="section-number">7.2. </span>Reading and Writing Files</a>
+<ul>
+  <li><a href="inputoutput.html#methods-of-file-objects"><span class="section-number">7.2.1. </span>Methods of File Objects</a></li>
+  <li><a href="inputoutput.html#saving-structured-data-with-json"><span class="section-number">7.2.2. </span>Saving structured data with json</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li><a href="errors.html"><span class="section-number">8. </span>Errors and Exceptions</a>
+<ul>
+  <li><a href="errors.html#syntax-errors"><span class="section-number">8.1. </span>Syntax Errors</a></li>
+  <li><a href="errors.html#exceptions"><span class="section-number">8.2. </span>Exceptions</a></li>
+  <li><a href="errors.html#handling-exceptions"><span class="section-number">8.3. </span>Handling Exceptions</a></li>
+  <li><a href="errors.html#raising-exceptions"><span class="section-number">8.4. </span>Raising Exceptions</a></li>
+  <li><a href="errors.html#exception-chaining"><span class="section-number">8.5. </span>Exception Chaining</a></li>
+  <li><a href="errors.html#user-defined-exceptions"><span class="section-number">8.6. </span>User-defined Exceptions</a></li>
+  <li><a href="errors.html#defining-clean-up-actions"><span class="section-number">8.7. </span>Defining Clean-up Actions</a></li>
+  <li><a href="errors.html#predefined-clean-up-actions"><span class="section-number">8.8. </span>Predefined Clean-up Actions</a></li>
+  <li><a href="errors.html#raising-and-handling-multiple-unrelated-exceptions"><span class="section-number">8.9. </span>Raising and Handling Multiple Unrelated Exceptions</a></li>
+  <li><a href="errors.html#enriching-exceptions-with-notes"><span class="section-number">8.10. </span>Enriching Exceptions with Notes</a></li>
+</ul>
+  </li>
+  <li><a href="classes.html"><span class="section-number">9. </span>Classes</a>
+<ul>
+  <li><a href="classes.html#a-word-about-names-and-objects"><span class="section-number">9.1. </span>A Word About Names and Objects</a></li>
+  <li><a href="classes.html#python-scopes-and-namespaces"><span class="section-number">9.2. </span>Python Scopes and Namespaces</a>
+<ul>
+  <li><a href="classes.html#scopes-and-namespaces-example"><span class="section-number">9.2.1. </span>Scopes and Namespaces Example</a></li>
+</ul>
+  </li>
+  <li><a href="classes.html#a-first-look-at-classes"><span class="section-number">9.3. </span>A First Look at Classes</a>
+<ul>
+  <li><a href="classes.html#class-definition-syntax"><span class="section-number">9.3.1. </span>Class Definition Syntax</a></li>
+  <li><a href="classes.html#class-objects"><span class="section-number">9.3.2. </span>Class Objects</a></li>
+  <li><a href="classes.html#instance-objects"><span class="section-number">9.3.3. </span>Instance Objects</a></li>
+  <li><a href="classes.html#method-objects"><span class="section-number">9.3.4. </span>Method Objects</a></li>
+  <li><a href="classes.html#class-and-instance-variables"><span class="section-number">9.3.5. </span>Class and Instance Variables</a></li>
+</ul>
+  </li>
+  <li><a href="classes.html#random-remarks"><span class="section-number">9.4. </span>Random Remarks</a></li>
+  <li><a href="classes.html#inheritance"><span class="section-number">9.5. </span>Inheritance</a>
+<ul>
+  <li><a href="classes.html#multiple-inheritance"><span class="section-number">9.5.1. </span>Multiple Inheritance</a></li>
+</ul>
+  </li>
+  <li><a href="classes.html#private-variables"><span class="section-number">9.6. </span>Private Variables</a></li>
+  <li><a href="classes.html#odds-and-ends"><span class="section-number">9.7. </span>Odds and Ends</a></li>
+  <li><a href="classes.html#iterators"><span class="section-number">9.8. </span>Iterators</a></li>
+  <li><a href="classes.html#generators"><span class="section-number">9.9. </span>Generators</a></li>
+  <li><a href="classes.html#generator-expressions"><span class="section-number">9.10. </span>Generator Expressions</a></li>
+</ul>
+  </li>
+  <li><a href="stdlib.html"><span class="section-number">10. </span>Brief Tour of the Standard Library</a>
+<ul>
+  <li><a href="stdlib.html#operating-system-interface"><span class="section-number">10.1. </span>Operating System Interface</a></li>
+  <li><a href="stdlib.html#file-wildcards"><span class="section-number">10.2. </span>File Wildcards</a></li>
+  <li><a href="stdlib.html#command-line-arguments"><span class="section-number">10.3. </span>Command Line Arguments</a></li>
+  <li><a href="stdlib.html#error-output-redirection-and-program-termination"><span class="section-number">10.4. </span>Error Output Redirection and Program Termination</a></li>
+  <li><a href="stdlib.html#string-pattern-matching"><span class="section-number">10.5. </span>String Pattern Matching</a></li>
+  <li><a href="stdlib.html#mathematics"><span class="section-number">10.6. </span>Mathematics</a></li>
+  <li><a href="stdlib.html#internet-access"><span class="section-number">10.7. </span>Internet Access</a></li>
+  <li><a href="stdlib.html#dates-and-times"><span class="section-number">10.8. </span>Dates and Times</a></li>
+  <li><a href="stdlib.html#data-compression"><span class="section-number">10.9. </span>Data Compression</a></li>
+  <li><a href="stdlib.html#performance-measurement"><span class="section-number">10.10. </span>Performance Measurement</a></li>
+  <li><a href="stdlib.html#quality-control"><span class="section-number">10.11. </span>Quality Control</a></li>
+  <li><a href="stdlib.html#batteries-included"><span class="section-number">10.12. </span>Batteries Included</a></li>
+</ul>
+  </li>
+  <li><a href="stdlib2.html"><span class="section-number">11. </span>Brief Tour of the Standard Library — Part II</a>
+<ul>
+  <li><a href="stdlib2.html#output-formatting"><span class="section-number">11.1. </span>Output Formatting</a></li>
+  <li><a href="stdlib2.html#templating"><span class="section-number">11.2. </span>Templating</a></li>
+  <li><a href="stdlib2.html#working-with-binary-data-record-layouts"><span class="section-number">11.3. </span>Working with Binary Data Record Layouts</a></li>
+  <li><a href="stdlib2.html#multi-threading"><span class="section-number">11.4. </span>Multi-threading</a></li>
+  <li><a href="stdlib2.html#logging"><span class="section-number">11.5. </span>Logging</a></li>
+  <li><a href="stdlib2.html#weak-references"><span class="section-number">11.6. </span>Weak References</a></li>
+  <li><a href="stdlib2.html#tools-for-working-with-lists"><span class="section-number">11.7. </span>Tools for Working with Lists</a></li>
+  <li><a href="stdlib2.html#decimal-floating-point-arithmetic"><span class="section-number">11.8. </span>Decimal Floating-Point Arithmetic</a></li>
+</ul>
+  </li>
+  <li><a href="venv.html"><span class="section-number">12. </span>Virtual Environments and Packages</a>
+<ul>
+  <li><a href="venv.html#introduction"><span class="section-number">12.1. </span>Introduction</a></li>
+  <li><a href="venv.html#creating-virtual-environments"><span class="section-number">12.2. </span>Creating Virtual Environments</a></li>
+  <li><a href="venv.html#managing-packages-with-pip"><span class="section-number">12.3. </span>Managing Packages with pip</a></li>
+</ul>
+  </li>
+  <li><a href="whatnow.html"><span class="section-number">13. </span>What Now?</a></li>
+  <li><a href="interactive.html"><span class="section-number">14. </span>Interactive Input Editing and History Substitution</a>
+<ul>
+  <li><a href="interactive.html#tab-completion-and-history-editing"><span class="section-number">14.1. </span>Tab Completion and History Editing</a></li>
+  <li><a href="interactive.html#alternatives-to-the-interactive-interpreter"><span class="section-number">14.2. </span>Alternatives to the Interactive Interpreter</a></li>
+</ul>
+  </li>
+  <li><a href="floatingpoint.html"><span class="section-number">15. </span>Floating-Point Arithmetic:  Issues and Limitations</a>
+<ul>
+  <li><a href="floatingpoint.html#representation-error"><span class="section-number">15.1. </span>Representation Error</a></li>
+</ul>
+  </li>
+  <li><a href="appendix.html"><span class="section-number">16. </span>Appendix</a>
+<ul>
+  <li><a href="appendix.html#interactive-mode"><span class="section-number">16.1. </span>Interactive Mode</a>
+<ul>
+  <li><a href="appendix.html#error-handling"><span class="section-number">16.1.1. </span>Error Handling</a></li>
+  <li><a href="appendix.html#executable-python-scripts"><span class="section-number">16.1.2. </span>Executable Python Scripts</a></li>
+  <li><a href="appendix.html#the-interactive-startup-file"><span class="section-number">16.1.3. </span>The Interactive Startup File</a></li>
+  <li><a href="appendix.html#the-customization-modules"><span class="section-number">16.1.4. </span>The Customization Modules</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="../whatsnew/changelog.html">&larr; Changelog</a>
+        <a class="next" href="appetite.html">Whetting Your Appetite &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

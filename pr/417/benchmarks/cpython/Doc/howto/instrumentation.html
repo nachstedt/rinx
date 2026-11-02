@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Instrumenting CPython with DTrace and SystemTap — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python HOWTOs</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python HOWTOs"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="a-conceptual-overview-of-asyncio.html">A Conceptual Overview of asyncio</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cporting.html">Porting Extension Modules to Python 3</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="curses.html">Curses Programming with Python</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="descriptor.html">Descriptor Guide</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="gdb_helpers.html">Debugging C API extensions and CPython Internals with GDB</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="enum.html">Enum HOWTO</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming HOWTO</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="logging.html">Logging HOWTO</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="logging-cookbook.html">Logging Cookbook</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="regex.html">Regular Expression HOWTO</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="sockets.html">Socket Programming HOWTO</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="sorting.html">Sorting Techniques</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unicode.html">Unicode HOWTO</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="urllib2.html">HOWTO Fetch Internet Resources Using The urllib Package</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="argparse.html">Argparse Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipaddress.html">An introduction to the ipaddress module</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="instrumentation.html">Instrumenting CPython with DTrace and SystemTap</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Instrumenting CPython with DTrace and SystemTap"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="instrumentation.html#enabling-the-static-markers">Enabling the static markers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="instrumentation.html#static-dtrace-probes">Static DTrace probes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="instrumentation.html#static-systemtap-markers">Static SystemTap markers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="instrumentation.html#available-static-markers">Available static markers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="instrumentation.html#systemtap-tapsets">SystemTap Tapsets</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="instrumentation.html#examples">Examples</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="perf_profiling.html">Python support for the Linux perf profiler</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="annotations.html">Annotations Best Practices</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="isolating-extensions.html">Isolating Extension Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="timerfd.html">timer file descriptor HOWTO</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mro.html">The Python 2.3 Method Resolution Order</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="free-threading-python.html">Python support for free threading</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="free-threading-extensions.html">C API Extension Support for Free Threading</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="remote_debugging.html">Remote debugging attachment protocol</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="ipaddress.html">&larr; An introduction to the ipaddress module</a>
+        <a class="next" href="perf_profiling.html">Python support for the Linux perf profiler &rarr;</a>
+      </nav>
+      
+      <a id="instrumentation"></a>
+<h1 id="instrumenting-cpython-with-dtrace-and-systemtap">Instrumenting CPython with DTrace and SystemTap</h1>
+<p>:author: David Malcolm
+:author: Łukasz Langa</p>
+<p>DTrace and SystemTap are monitoring tools, each providing a way to inspect
+what the processes on a computer system are doing.  They both use
+domain-specific languages allowing a user to write scripts which:</p>
+<ul>
+<li><p>filter which processes are to be observed</p>
+</li>
+<li><p>gather data from the processes of interest</p>
+</li>
+<li><p>generate reports on the data</p>
+</li>
+</ul>
+<p>As of Python 3.6, CPython can be built with embedded "markers", also
+known as "probes", that can be observed by a DTrace or SystemTap script,
+making it easier to monitor what the CPython processes on a system are
+doing.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+
+   DTrace markers are implementation details of the CPython interpreter.
+   No guarantees are made about probe compatibility between versions of
+   CPython. DTrace scripts can stop working or work incorrectly without
+   warning when changing CPython versions.</pre>
+</div>
+<h2 id="enabling-the-static-markers">Enabling the static markers</h2>
+<p>macOS comes with built-in support for DTrace.  On Linux, in order to
+build CPython with the embedded markers for SystemTap, the SystemTap
+development tools must be installed.</p>
+<p>On a Linux machine, this can be done via:</p>
+<div class="highlight hl-code"><pre>
+$ yum install systemtap-sdt-devel</pre></div>
+<p>or:</p>
+<div class="highlight hl-code"><pre>
+$ sudo apt-get install systemtap-sdt-dev</pre></div>
+<p>CPython must then be <a class="reference internal" href="../using/configure.html#std:cmdoption:--with-dtrace"><code class="xref std cmdoption docutils literal">configured with the --with-dtrace option</code></a>:</p>
+<div class="highlight-none notranslate">
+<div class="highlight hl-code"><pre>
+checking for --with-dtrace... yes</pre></div>
+</div>
+<p>On macOS, you can list available DTrace probes by running a Python
+process in the background and listing all probes made available by the
+Python provider:</p>
+<div class="highlight hl-code"><pre>
+$ python3.6 -q &amp;
+$ sudo dtrace -l -P python$!  # or: dtrace -l -m python3.6
+
+   ID   PROVIDER            MODULE                          FUNCTION NAME
+29564 python18035        python3.6          _PyEval_EvalFrameDefault function-entry
+29565 python18035        python3.6             dtrace_function_entry function-entry
+29566 python18035        python3.6          _PyEval_EvalFrameDefault function-return
+29567 python18035        python3.6            dtrace_function_return function-return
+29568 python18035        python3.6                           collect gc-done
+29569 python18035        python3.6                           collect gc-start
+29570 python18035        python3.6          _PyEval_EvalFrameDefault line
+29571 python18035        python3.6                 maybe_dtrace_line line</pre></div>
+<p>On Linux, you can verify if the SystemTap static markers are present in
+the built binary by seeing if it contains a ".note.stapsdt" section.</p>
+<div class="highlight hl-code"><pre>
+$ readelf -S ./python | grep .note.stapsdt
+[30] .note.stapsdt        NOTE         0000000000000000 00308d78</pre></div>
+<p>If you've built Python as a shared library
+(with the <a class="reference internal" href="../using/configure.html#std:cmdoption:--enable-shared"><code class="xref std cmdoption docutils literal">--enable-shared</code></a> configure option), you
+need to look instead within the shared library.  For example:</p>
+<div class="highlight hl-code"><pre>
+$ readelf -S libpython3.3dm.so.1.0 | grep .note.stapsdt
+[29] .note.stapsdt        NOTE         0000000000000000 00365b68</pre></div>
+<p>Sufficiently modern readelf can print the metadata:</p>
+<div class="highlight hl-code"><pre>
+$ readelf -n ./python
+
+Displaying notes found at file offset 0x00000254 with length 0x00000020:
+    Owner                 Data size          Description
+    GNU                  0x00000010          NT_GNU_ABI_TAG (ABI version tag)
+        OS: Linux, ABI: 2.6.32
+
+Displaying notes found at file offset 0x00000274 with length 0x00000024:
+    Owner                 Data size          Description
+    GNU                  0x00000014          NT_GNU_BUILD_ID (unique build ID bitstring)
+        Build ID: df924a2b08a7e89f6e11251d4602022977af2670
+
+Displaying notes found at file offset 0x002d6c30 with length 0x00000144:
+    Owner                 Data size          Description
+    stapsdt              0x00000031          NT_STAPSDT (SystemTap probe descriptors)
+        Provider: python
+        Name: gc__start
+        Location: 0x00000000004371c3, Base: 0x0000000000630ce2, Semaphore: 0x00000000008d6bf6
+        Arguments: -4@%ebx
+    stapsdt              0x00000030          NT_STAPSDT (SystemTap probe descriptors)
+        Provider: python
+        Name: gc__done
+        Location: 0x00000000004374e1, Base: 0x0000000000630ce2, Semaphore: 0x00000000008d6bf8
+        Arguments: -8@%rax
+    stapsdt              0x00000045          NT_STAPSDT (SystemTap probe descriptors)
+        Provider: python
+        Name: function__entry
+        Location: 0x000000000053db6c, Base: 0x0000000000630ce2, Semaphore: 0x00000000008d6be8
+        Arguments: 8@%rbp 8@%r12 -4@%eax
+    stapsdt              0x00000046          NT_STAPSDT (SystemTap probe descriptors)
+        Provider: python
+        Name: function__return
+        Location: 0x000000000053dba8, Base: 0x0000000000630ce2, Semaphore: 0x00000000008d6bea
+        Arguments: 8@%rbp 8@%r12 -4@%eax</pre></div>
+<p>The above metadata contains information for SystemTap describing how it
+can patch strategically placed machine code instructions to enable the
+tracing hooks used by a SystemTap script.</p>
+<h2 id="static-dtrace-probes">Static DTrace probes</h2>
+<p>The following example DTrace script can be used to show the call/return
+hierarchy of a Python script, only tracing within the invocation of
+a function called "start". In other words, import-time function
+invocations are not going to be listed:</p>
+<div class="highlight-none notranslate">
+<div class="highlight hl-code"><pre>
+self int indent;
+
+python$target:::function-entry
+/copyinstr(arg1) == "start"/
+{
+        self-&gt;trace = 1;
+}
+
+python$target:::function-entry
+/self-&gt;trace/
+{
+        printf("%d\t%*s:", timestamp, 15, probename);
+        printf("%*s", self-&gt;indent, "");
+        printf("%s:%s:%d\n", basename(copyinstr(arg0)), copyinstr(arg1), arg2);
+        self-&gt;indent++;
+}
+
+python$target:::function-return
+/self-&gt;trace/
+{
+        self-&gt;indent--;
+        printf("%d\t%*s:", timestamp, 15, probename);
+        printf("%*s", self-&gt;indent, "");
+        printf("%s:%s:%d\n", basename(copyinstr(arg0)), copyinstr(arg1), arg2);
+}
+
+python$target:::function-return
+/copyinstr(arg1) == "start"/
+{
+        self-&gt;trace = 0;
+}</pre></div>
+</div>
+<p>It can be invoked like this:</p>
+<div class="highlight hl-code"><pre>
+$ sudo dtrace -q -s call_stack.d -c "python3.6 script.py"</pre></div>
+<p>The output looks like this:</p>
+<div class="highlight-none notranslate">
+<div class="highlight hl-code"><pre>
+156641360502280  function-entry:call_stack.py:start:23
+156641360518804  function-entry: call_stack.py:function_1:1
+156641360532797  function-entry:  call_stack.py:function_3:9
+156641360546807 function-return:  call_stack.py:function_3:10
+156641360563367 function-return: call_stack.py:function_1:2
+156641360578365  function-entry: call_stack.py:function_2:5
+156641360591757  function-entry:  call_stack.py:function_1:1
+156641360605556  function-entry:   call_stack.py:function_3:9
+156641360617482 function-return:   call_stack.py:function_3:10
+156641360629814 function-return:  call_stack.py:function_1:2
+156641360642285 function-return: call_stack.py:function_2:6
+156641360656770  function-entry: call_stack.py:function_3:9
+156641360669707 function-return: call_stack.py:function_3:10
+156641360687853  function-entry: call_stack.py:function_4:13
+156641360700719 function-return: call_stack.py:function_4:14
+156641360719640  function-entry: call_stack.py:function_5:18
+156641360732567 function-return: call_stack.py:function_5:21
+156641360747370 function-return:call_stack.py:start:28</pre></div>
+</div>
+<h2 id="static-systemtap-markers">Static SystemTap markers</h2>
+<p>The low-level way to use the SystemTap integration is to use the static
+markers directly.  This requires you to explicitly state the binary file
+containing them.</p>
+<p>For example, this SystemTap script can be used to show the call/return
+hierarchy of a Python script:</p>
+<div class="highlight-none notranslate">
+<div class="highlight hl-code"><pre>
+probe process("python").mark("function__entry") {
+     filename = user_string($arg1);
+     funcname = user_string($arg2);
+     lineno = $arg3;
+
+     printf("%s =&gt; %s in %s:%d\\n",
+            thread_indent(1), funcname, filename, lineno);
+}
+
+probe process("python").mark("function__return") {
+    filename = user_string($arg1);
+    funcname = user_string($arg2);
+    lineno = $arg3;
+
+    printf("%s &lt;= %s in %s:%d\\n",
+           thread_indent(-1), funcname, filename, lineno);
+}</pre></div>
+</div>
+<p>It can be invoked like this:</p>
+<div class="highlight hl-code"><pre>
+$ stap \
+  show-call-hierarchy.stp \
+  -c "./python test.py"</pre></div>
+<p>The output looks like this:</p>
+<div class="highlight-none notranslate">
+<div class="highlight hl-code"><pre>
+11408 python(8274):        =&gt; __contains__ in Lib/_abcoll.py:362
+11414 python(8274):         =&gt; __getitem__ in Lib/os.py:425
+11418 python(8274):          =&gt; encode in Lib/os.py:490
+11424 python(8274):          &lt;= encode in Lib/os.py:493
+11428 python(8274):         &lt;= __getitem__ in Lib/os.py:426
+11433 python(8274):        &lt;= __contains__ in Lib/_abcoll.py:366</pre></div>
+</div>
+<p>where the columns are:</p>
+<ul>
+<li><p>time in microseconds since start of script</p>
+</li>
+<li><p>name of executable</p>
+</li>
+<li><p>PID of process</p>
+</li>
+</ul>
+<p>and the remainder indicates the call/return hierarchy as the script executes.</p>
+<p>For a <a class="reference internal" href="../using/configure.html#std:cmdoption:--enable-shared"><code class="xref std cmdoption docutils literal">--enable-shared</code></a> build of CPython, the markers are contained within the
+libpython shared library, and the probe's dotted path needs to reflect this. For
+example, this line from the above example:</p>
+<div class="highlight-none notranslate">
+<div class="highlight hl-code"><pre>
+probe process("python").mark("function__entry") {</pre></div>
+</div>
+<p>should instead read:</p>
+<div class="highlight-none notranslate">
+<div class="highlight hl-code"><pre>
+probe process("python").library("libpython3.6dm.so.1.0").mark("function__entry") {</pre></div>
+</div>
+<p>(assuming a <a href="../using/configure.html#debug-build">debug build</a> of CPython 3.6)</p>
+<a id="static-markers"></a>
+<h2 id="available-static-markers">Available static markers</h2>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'object'</p>
+<pre class="directive-error-source">.. object:: function__entry(str filename, str funcname, int lineno)
+
+   This marker indicates that execution of a Python function has begun.
+   It is only triggered for pure-Python (bytecode) functions.
+
+   The filename, function name, and line number are provided back to the
+   tracing script as positional arguments, which must be accessed using
+   ``$arg1``, ``$arg2``, ``$arg3``:
+
+       * ``$arg1`` : ``(const char *)`` filename, accessible using ``user_string($arg1)``
+
+       * ``$arg2`` : ``(const char *)`` function name, accessible using
+         ``user_string($arg2)``
+
+       * ``$arg3`` : ``int`` line number</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'object'</p>
+<pre class="directive-error-source">.. object:: function__return(str filename, str funcname, int lineno)
+
+   This marker is the converse of :c:func:`!function__entry`, and indicates that
+   execution of a Python function has ended (either via ``return``, or via an
+   exception).  It is only triggered for pure-Python (bytecode) functions.
+
+   The arguments are the same as for :c:func:`!function__entry`</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'object'</p>
+<pre class="directive-error-source">.. object:: line(str filename, str funcname, int lineno)
+
+   This marker indicates a Python line is about to be executed.  It is
+   the equivalent of line-by-line tracing with a Python profiler.  It is
+   not triggered within C functions.
+
+   The arguments are the same as for :c:func:`!function__entry`.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'object'</p>
+<pre class="directive-error-source">.. object:: gc__start(int generation)
+
+   Fires when the Python interpreter starts a garbage collection cycle.
+   ``arg0`` is the generation to scan, like :func:`gc.collect`.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'object'</p>
+<pre class="directive-error-source">.. object:: gc__done(long collected)
+
+   Fires when the Python interpreter finishes a garbage collection
+   cycle. ``arg0`` is the number of collected objects.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'object'</p>
+<pre class="directive-error-source">.. object:: import__find__load__start(str modulename)
+
+   Fires before :mod:`importlib` attempts to find and load the module.
+   ``arg0`` is the module name.
+
+   .. versionadded:: 3.7</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'object'</p>
+<pre class="directive-error-source">.. object:: import__find__load__done(str modulename, int found)
+
+   Fires after :mod:`importlib`'s find_and_load function is called.
+   ``arg0`` is the module name, ``arg1`` indicates if module was
+   successfully loaded.
+
+   .. versionadded:: 3.7</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'object'</p>
+<pre class="directive-error-source">.. object:: audit(str event, void *tuple)
+
+   Fires when :func:`sys.audit` or :c:func:`PySys_Audit` is called.
+   ``arg0`` is the event name as C string, ``arg1`` is a :c:type:`PyObject`
+   pointer to a tuple object.
+
+   .. versionadded:: 3.8</pre>
+</div>
+<h2 id="systemtap-tapsets">SystemTap Tapsets</h2>
+<p>The higher-level way to use the SystemTap integration is to use a "tapset":
+SystemTap's equivalent of a library, which hides some of the lower-level
+details of the static markers.</p>
+<p>Here is a tapset file, based on a non-shared build of CPython:</p>
+<div class="highlight-none notranslate">
+<div class="highlight hl-code"><pre>
+/*
+   Provide a higher-level wrapping around the function__entry and
+   function__return markers:
+ \*/
+probe python.function.entry = process("python").mark("function__entry")
+{
+    filename = user_string($arg1);
+    funcname = user_string($arg2);
+    lineno = $arg3;
+    frameptr = $arg4
+}
+probe python.function.return = process("python").mark("function__return")
+{
+    filename = user_string($arg1);
+    funcname = user_string($arg2);
+    lineno = $arg3;
+    frameptr = $arg4
+}</pre></div>
+</div>
+<p>If this file is installed in SystemTap's tapset directory (e.g.
+<code>/usr/share/systemtap/tapset</code>), then these additional probepoints become
+available:</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'object'</p>
+<pre class="directive-error-source">.. object:: python.function.entry(str filename, str funcname, int lineno, frameptr)
+
+   This probe point indicates that execution of a Python function has begun.
+   It is only triggered for pure-Python (bytecode) functions.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'object'</p>
+<pre class="directive-error-source">.. object:: python.function.return(str filename, str funcname, int lineno, frameptr)
+
+   This probe point is the converse of ``python.function.return``, and
+   indicates that execution of a Python function has ended (either via
+   ``return``, or via an exception).  It is only triggered for pure-Python
+   (bytecode) functions.</pre>
+</div>
+<h2 id="examples">Examples</h2>
+<p>This SystemTap script uses the tapset above to more cleanly implement the
+example given above of tracing the Python function-call hierarchy, without
+needing to directly name the static markers:</p>
+<div class="highlight-none notranslate">
+<div class="highlight hl-code"><pre>
+probe python.function.entry
+{
+  printf("%s =&gt; %s in %s:%d\n",
+         thread_indent(1), funcname, filename, lineno);
+}
+
+probe python.function.return
+{
+  printf("%s &lt;= %s in %s:%d\n",
+         thread_indent(-1), funcname, filename, lineno);
+}</pre></div>
+</div>
+<p>The following script uses the tapset above to provide a top-like view of all
+running CPython code, showing the top 20 most frequently entered bytecode
+frames, each second, across the whole system:</p>
+<div class="highlight-none notranslate">
+<div class="highlight hl-code"><pre>
+global fn_calls;
+
+probe python.function.entry
+{
+    fn_calls[pid(), filename, funcname, lineno] += 1;
+}
+
+probe timer.ms(1000) {
+    printf("\033[2J\033[1;1H") /* clear screen \*/
+    printf("%6s %80s %6s %30s %6s\n",
+           "PID", "FILENAME", "LINE", "FUNCTION", "CALLS")
+    foreach ([pid, filename, funcname, lineno] in fn_calls- limit 20) {
+        printf("%6d %80s %6d %30s %6d\n",
+            pid, filename, lineno, funcname,
+            fn_calls[pid, filename, funcname, lineno]);
+    }
+    delete fn_calls;
+}</pre></div>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="ipaddress.html">&larr; An introduction to the ipaddress module</a>
+        <a class="next" href="perf_profiling.html">Python support for the Linux perf profiler &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

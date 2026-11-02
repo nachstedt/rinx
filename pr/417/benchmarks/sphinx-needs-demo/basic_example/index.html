@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>🧰 Basic Example — Sphinx-Needs Demo Benchmark</title>
+  <link rel="stylesheet" href="../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">Sphinx-Needs Demo Benchmark</h2>
+        
+        
+        
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../demo_details.html">🔍 Demo details</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../online_editor.html">⌨ Online Editor</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="index.html">🧰 Basic Example</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle 🧰 Basic Example"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="index.html#sphinx-needs-objects">Sphinx-Needs objects</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#sphinx-needs-filtering">Sphinx-Needs filtering</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#sphinx-needs-debuging">Sphinx-Needs debuging</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#imported-needs">Imported needs</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#external-needs">External needs</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../coffee-machine/index.html">☕️ Coffee Machine Example</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../automotive-adas/index.html">🚗 Automotive ADAS</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../safety_example/index.html">🛡️ ISO 26262 Functional Safety Example</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="../online_editor.html">&larr; ⌨ Online Editor</a>
+        <a class="next" href="../coffee-machine/index.html">☕️ Coffee Machine Example &rarr;</a>
+      </nav>
+      
+      <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header sd-bg-success sd-bg-text-success">
+<span class="sd-summary-icon"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-light-bulb" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg></span><span class="sd-summary-text">Demo page details</span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<p class="sd-card-text"><strong>Page source code: index.rst</strong></p>
+<div class="highlight-rst notranslate">
+<div class="highlight hl-code"><pre>
+<span class="linenos">1</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">{% set page=&quot;index.rst&quot; %}</span></span>
+<span class="linenos">2</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">{% include &quot;demo_page_header.rst&quot; with context %}</span></span>
+<span class="linenos">3</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">4</span><span class="hl-text hl-restructuredtext"></span>
+<span class="linenos">5</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">🧰 Basic Example</span></span>
+<span class="linenos">6</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">================</span></span></span></span>
+<span class="linenos">7</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">8</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Sphinx-Needs objects</span></span>
+<span class="linenos">9</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">--------------------</span></span></span></span>
+<span class="linenos">10</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">11</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> req<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Example Requirement</span></span>
+<span class="linenos">12</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> EX_REQ_001</span></span>
+<span class="linenos">13</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>tags<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> security</span></span>
+<span class="linenos">14</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">15</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">16</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   A simple requirement used as example.</span></span>
+<span class="linenos">17</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   The content supports all kind of Sphinx features, like:</span></span>
+<span class="linenos">18</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">19</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-markup hl-bold hl-restructuredtext"><span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span>Bold<span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">**</span></span> or <span class="hl-markup hl-italic hl-restructuredtext"><span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">*</span>italic<span class="hl-punctuation hl-definition hl-italic hl-restructuredtext">*</span></span> text</span></span>
+<span class="linenos">20</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">21</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Web links, like this <span class="hl-meta hl-link hl-inline hl-restructuredtext"><span class="hl-punctuation hl-definition hl-link hl-restructuredtext">`</span><span class="hl-string hl-other hl-link hl-title hl-restructuredtext">google</span> <span class="hl-punctuation hl-definition hl-location hl-restructuredtext">&lt;</span><span class="hl-markup hl-underline hl-link hl-restructuredtext">https://google.com</span><span class="hl-punctuation hl-definition hl-location hl-restructuredtext">&gt;</span><span class="hl-punctuation hl-definition hl-link hl-restructuredtext">`_</span></span>_ link.</span></span>
+<span class="linenos">22</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">23</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Or even images:</span></span>
+<span class="linenos">24</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">25</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> image<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> /_images/sphinx-needs-logo.png</span></span>
+<span class="linenos">26</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>width<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> 50px</span></span>
+<span class="linenos">27</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">28</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> spec<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Example Specification</span></span>
+<span class="linenos">29</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> EX_SPEC_001</span></span>
+<span class="linenos">30</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>links<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> EX_REQ_001</span></span>
+<span class="linenos">31</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>tags<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> security, safety</span></span>
+<span class="linenos">32</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> closed</span></span>
+<span class="linenos">33</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">34</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">35</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   But also features from integated Sphinx exentions can be used, like this PlantUML generated image from this code</span></span>
+<span class="linenos">36</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">37</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> grid<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> 2</span></span>
+<span class="linenos">38</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">39</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> grid-item<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">40</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">41</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">         <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> code-block<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> rst</span></span>
+<span class="linenos">42</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">43</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">            <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> uml<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">44</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">45</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">               node A</span></span>
+<span class="linenos">46</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">               node B</span></span>
+<span class="linenos">47</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">               A --&gt; B</span></span>
+<span class="linenos">48</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">49</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> grid-item<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">50</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">51</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">         <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> uml<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">52</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">53</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">               node A</span></span>
+<span class="linenos">54</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">               node B</span></span>
+<span class="linenos">55</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">               A --&gt; B</span></span>
+<span class="linenos">56</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">57</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">This example test cases also links against an external need:</span></span>
+<span class="linenos">58</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">59</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> test<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Example Test case</span></span>
+<span class="linenos">60</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> EX_TEST_001</span></span>
+<span class="linenos">61</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>links<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> EX_SPEC_001, REQ_1_1_ext</span></span>
+<span class="linenos">62</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> passed</span></span>
+<span class="linenos">63</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">64</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   And for sure also all features from Sphinx-Needs, like this needflow:</span></span>
+<span class="linenos">65</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">66</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> needflow<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">67</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>filter<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> docname is not None and &quot;basic_example&quot; in docname</span></span>
+<span class="linenos">68</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">69</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Sphinx-Needs filtering</span></span>
+<span class="linenos">70</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">----------------------</span></span></span></span>
+<span class="linenos">71</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">72</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> code-block<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> rst</span></span>
+<span class="linenos">73</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">74</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> needtable<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">75</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>filter<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> docname is not None and &quot;basic_example&quot; in docname</span></span>
+<span class="linenos">76</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">77</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> needtable<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">78</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>filter<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> docname is not None and &quot;basic_example&quot; in docname</span></span>
+<span class="linenos">79</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">80</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">81</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> code-block<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> rst</span></span>
+<span class="linenos">82</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">83</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> needflow<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">84</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>filter<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> docname is not None and &quot;basic_example&quot; in docname</span></span>
+<span class="linenos">85</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">86</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> needflow<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">87</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>filter<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> docname is not None and &quot;basic_example&quot; in docname</span></span>
+<span class="linenos">88</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">89</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">90</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Sphinx-Needs debuging</span></span>
+<span class="linenos">91</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">---------------------</span></span></span></span>
+<span class="linenos">92</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">93</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">A Sphinx-Needs object using the <span class="hl-markup hl-raw hl-restructuredtext"><span class="hl-punctuation hl-definition hl-raw hl-restructuredtext">``</span>debug<span class="hl-punctuation hl-definition hl-raw hl-restructuredtext">``</span></span> layout to show all set and internal values, which can also be used in all filter strings.</span></span>
+<span class="linenos">94</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">95</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Sphinx-Needs collect and assigns a lot of data automatically for the specific needs, like their location or the headlines, under which</span></span>
+<span class="linenos">96</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">it is presented.</span></span>
+<span class="linenos">97</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">98</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> req<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Example Requirement with debug view</span></span>
+<span class="linenos">99</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> EX_REQ_002</span></span>
+<span class="linenos">100</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">101</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>tags<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> debug</span></span>
+<span class="linenos">102</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>layout<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> debug</span></span>
+<span class="linenos">103</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">104</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Some content</span></span>
+<span class="linenos">105</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">106</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Imported needs</span></span>
+<span class="linenos">107</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">--------------</span></span></span></span>
+<span class="linenos">108</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">109</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> needimport<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> imported_project</span></span>
+<span class="linenos">110</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">111</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">External needs</span></span>
+<span class="linenos">112</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">--------------</span></span></span></span>
+<span class="linenos">113</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">114</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Here are some needs that are external to the documentation,</span></span>
+<span class="linenos">115</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">but can still be linked by other needs in this documentation:</span></span>
+<span class="linenos">116</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">117</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">- <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>need<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span><span class="hl-markup hl-other hl-command hl-restructuredtext"><span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span>REQ_1_1_ext<span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span></span> (this is linked in this documentation by <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>need<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span><span class="hl-markup hl-other hl-command hl-restructuredtext"><span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span>EX_TEST_001<span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span></span>)</span></span>
+<span class="linenos">118</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">- <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>need<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span><span class="hl-markup hl-other hl-command hl-restructuredtext"><span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span>REQ_1_2_ext<span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span></span></span></span>
+<span class="linenos">119</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">- <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>need<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span><span class="hl-markup hl-other hl-command hl-restructuredtext"><span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span>SPEC_1_1_ext<span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span></span></span></span>
+<span class="linenos">120</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">- <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>need<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span><span class="hl-markup hl-other hl-command hl-restructuredtext"><span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span>SPEC_1_2_ext<span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span></span></span></span></pre></div>
+</div>
+</div>
+</details>
+<h1 id="basic-example">🧰 Basic Example</h1>
+<h2 id="sphinx-needs-objects">Sphinx-Needs objects</h2>
+<div class="entity entity-req" id="entity-EX_REQ_001"><p class="entity-header"><span class="entity-type">Requirement</span><span class="entity-title">Example Requirement</span><span class="entity-id">EX_REQ_001</span></p><div class="entity-content"><p>A simple requirement used as example.
+The content supports all kind of Sphinx features, like:</p>
+<p><strong>Bold</strong> or <em>italic</em> text</p>
+<p>Web links, like this <a href="https://google.com">google</a> link.</p>
+<p>Or even images:</p>
+<img src="../_images/_images/sphinx-needs-logo.png" alt="/_images/sphinx-needs-logo.png" style="width: 50px" />
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>security</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links incoming</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-EX_SPEC_001">EX_SPEC_001</a></li></ul></div></details></div><div class="entity entity-spec" id="entity-EX_SPEC_001"><p class="entity-header"><span class="entity-type">Specification</span><span class="entity-title">Example Specification</span><span class="entity-id">EX_SPEC_001</span></p><div class="entity-content"><p>But also features from integated Sphinx exentions can be used, like this PlantUML generated image from this code</p>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-column docutils">
+<div class="highlight-rst notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> uml<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   node A</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   node B</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   A --&gt; B</span></span></pre></div>
+</div>
+</div>
+<div class="sd-col sd-d-flex-column docutils">
+<div class="plantuml-diagram">
+  <img src="../_images/ed683bdcf0a1fed61b25904a7e3dd51fce7ddc0495fd41dbc7427d1820419560.svg" alt="PlantUML Diagram" />
+</div>
+</div>
+</div>
+</div>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>closed</td></tr><tr><th>Tags</th><td>security, safety</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links outgoing</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-EX_REQ_001">EX_REQ_001</a></li></ul><p class="entity-link-label">links incoming</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-EX_TEST_001">EX_TEST_001</a></li></ul></div></details></div><p>This example test cases also links against an external need:</p>
+<div class="entity entity-test" id="entity-EX_TEST_001"><p class="entity-header"><span class="entity-type">Test Case</span><span class="entity-title">Example Test case</span><span class="entity-id">EX_TEST_001</span></p><div class="entity-content"><p>And for sure also all features from Sphinx-Needs, like this needflow:</p>
+<div class="plantuml-diagram">
+  <img src="../_images/7e0b19a671a84570f31b2ada4f78f0acc41f3f3cb245e81b993f11c0b3f384bf.svg" alt="PlantUML Diagram" />
+</div>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>passed</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links outgoing</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-EX_SPEC_001">EX_SPEC_001</a></li><li><span class="broken-link">REQ_1_1_ext</span></li></ul></div></details></div><h2 id="sphinx-needs-filtering">Sphinx-Needs filtering</h2>
+<div class="highlight-rst notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> needtable<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>filter<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> docname is not None and &quot;basic_example&quot; in docname</span></span></pre></div>
+</div>
+<table class="entity-table">
+<thead>
+<tr>
+<th class="head">ID</th>
+<th class="head">Type</th>
+<th class="head">Title</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="reference internal" href="index.html#entity-EX_REQ_001">EX_REQ_001</a></td>
+<td>req</td>
+<td><a class="reference internal" href="index.html#entity-EX_REQ_001">Example Requirement</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="index.html#entity-EX_REQ_002">EX_REQ_002</a></td>
+<td>req</td>
+<td><a class="reference internal" href="index.html#entity-EX_REQ_002">Example Requirement with debug view</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="index.html#entity-EX_SPEC_001">EX_SPEC_001</a></td>
+<td>spec</td>
+<td><a class="reference internal" href="index.html#entity-EX_SPEC_001">Example Specification</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="index.html#entity-EX_TEST_001">EX_TEST_001</a></td>
+<td>test</td>
+<td><a class="reference internal" href="index.html#entity-EX_TEST_001">Example Test case</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="index.html#entity-REQ_1_1_imp">REQ_1_1_imp</a></td>
+<td>req</td>
+<td><a class="reference internal" href="index.html#entity-REQ_1_1_imp">Requirement page 1 nr 1</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="index.html#entity-REQ_1_2_imp">REQ_1_2_imp</a></td>
+<td>req</td>
+<td><a class="reference internal" href="index.html#entity-REQ_1_2_imp">Requirement page 1 nr 2</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="index.html#entity-SPEC_1_1_imp">SPEC_1_1_imp</a></td>
+<td>spec</td>
+<td><a class="reference internal" href="index.html#entity-SPEC_1_1_imp">Specification page 1 nr 1</a></td>
+</tr>
+<tr>
+<td><a class="reference internal" href="index.html#entity-SPEC_1_2_imp">SPEC_1_2_imp</a></td>
+<td>spec</td>
+<td><a class="reference internal" href="index.html#entity-SPEC_1_2_imp">Specification page 1 nr 2</a></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-rst notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> needflow<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>filter<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> docname is not None and &quot;basic_example&quot; in docname</span></span></pre></div>
+</div>
+<div class="plantuml-diagram">
+  <img src="../_images/7e0b19a671a84570f31b2ada4f78f0acc41f3f3cb245e81b993f11c0b3f384bf.svg" alt="PlantUML Diagram" />
+</div>
+<h2 id="sphinx-needs-debuging">Sphinx-Needs debuging</h2>
+<p>A Sphinx-Needs object using the <code>debug</code> layout to show all set and internal values, which can also be used in all filter strings.</p>
+<p>Sphinx-Needs collect and assigns a lot of data automatically for the specific needs, like their location or the headlines, under which
+it is presented.</p>
+<div class="entity entity-req" id="entity-EX_REQ_002"><p class="entity-header"><span class="entity-type">Requirement</span><span class="entity-title">Example Requirement with debug view</span><span class="entity-id">EX_REQ_002</span></p><div class="entity-content"><p>Some content</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>debug</td></tr><tr><th>Layout</th><td>debug</td></tr></tbody></table></details></div><h2 id="imported-needs">Imported needs</h2>
+<div class="entity entity-req" id="entity-REQ_1_1_imp"><p class="entity-header"><span class="entity-type">Requirement</span><span class="entity-title">Requirement page 1 nr 1</span><span class="entity-id">REQ_1_1_imp</span></p><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>approved</td></tr><tr><th>Number</th><td>1</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links incoming</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SPEC_1_1_imp">SPEC_1_1_imp</a></li></ul></div></details></div><div class="entity entity-req" id="entity-REQ_1_2_imp"><p class="entity-header"><span class="entity-type">Requirement</span><span class="entity-title">Requirement page 1 nr 2</span><span class="entity-id">REQ_1_2_imp</span></p><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>approved</td></tr><tr><th>Number</th><td>2</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links incoming</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SPEC_1_2_imp">SPEC_1_2_imp</a></li></ul></div></details></div><div class="entity entity-spec" id="entity-SPEC_1_1_imp"><p class="entity-header"><span class="entity-type">Specification</span><span class="entity-title">Specification page 1 nr 1</span><span class="entity-id">SPEC_1_1_imp</span></p><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Number</th><td>1</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links outgoing</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-REQ_1_1_imp">REQ_1_1_imp</a></li></ul></div></details></div><div class="entity entity-spec" id="entity-SPEC_1_2_imp"><p class="entity-header"><span class="entity-type">Specification</span><span class="entity-title">Specification page 1 nr 2</span><span class="entity-id">SPEC_1_2_imp</span></p><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Number</th><td>2</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links outgoing</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-REQ_1_2_imp">REQ_1_2_imp</a></li></ul></div></details></div><h2 id="external-needs">External needs</h2>
+<p>Here are some needs that are external to the documentation,
+but can still be linked by other needs in this documentation:</p>
+<ul>
+<li><p><a href="#" class="broken-link"><span class="xref entity">REQ_1_1_ext</span></a> (this is linked in this documentation by <a class="reference internal" href="index.html#entity-EX_TEST_001"><span class="xref entity entity-test">Example Test case</span></a>)</p>
+</li>
+<li><p><a href="#" class="broken-link"><span class="xref entity">REQ_1_2_ext</span></a></p>
+</li>
+<li><p><a href="#" class="broken-link"><span class="xref entity">SPEC_1_1_ext</span></a></p>
+</li>
+<li><p><a href="#" class="broken-link"><span class="xref entity">SPEC_1_2_ext</span></a></p>
+</li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="../online_editor.html">&larr; ⌨ Online Editor</a>
+        <a class="next" href="../coffee-machine/index.html">☕️ Coffee Machine Example &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

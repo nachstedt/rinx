@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pending removal in future versions — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="c-api-pending-removal-in-3.18.html">&larr; Pending removal in Python 3.18</a>
+        <a class="next" href="pending-removal-in-3.13.html">Pending removal in Python 3.13 &rarr;</a>
+      </nav>
+      
+      <h1 id="pending-removal-in-future-versions">Pending removal in future versions</h1>
+<p>The following APIs are deprecated and will be removed,
+although there is currently no date scheduled for their removal.</p>
+<ul>
+<li><p><a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tpflags_have_finalize"><code class="xref c macro docutils literal">Py_TPFLAGS_HAVE_FINALIZE</code></a>:
+Unneeded since Python 3.8.</p>
+</li>
+<li><p><a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_fetch"><code class="xref c function docutils literal">PyErr_Fetch</code></a>:
+Use <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_getraisedexception"><code class="xref c function docutils literal">PyErr_GetRaisedException</code></a> instead.</p>
+</li>
+<li><p><a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_normalizeexception"><code class="xref c function docutils literal">PyErr_NormalizeException</code></a>:
+Use <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_getraisedexception"><code class="xref c function docutils literal">PyErr_GetRaisedException</code></a> instead.</p>
+</li>
+<li><p><a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_restore"><code class="xref c function docutils literal">PyErr_Restore</code></a>:
+Use <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_setraisedexception"><code class="xref c function docutils literal">PyErr_SetRaisedException</code></a> instead.</p>
+</li>
+<li><p><a class="reference internal" href="../c-api/module.html#c:function:pymodule_getfilename"><code class="xref c function docutils literal">PyModule_GetFilename</code></a>:
+Use <a class="reference internal" href="../c-api/module.html#c:function:pymodule_getfilenameobject"><code class="xref c function docutils literal">PyModule_GetFilenameObject</code></a> instead.</p>
+</li>
+<li><p><a class="reference internal" href="../c-api/sys.html#c:function:pyos_afterfork"><code class="xref c function docutils literal">PyOS_AfterFork</code></a>:
+Use <a class="reference internal" href="../c-api/sys.html#c:function:pyos_afterfork_child"><code class="xref c function docutils literal">PyOS_AfterFork_Child</code></a> instead.</p>
+</li>
+<li><p><a class="reference internal" href="../c-api/slice.html#c:function:pyslice_getindicesex"><code class="xref c function docutils literal">PySlice_GetIndicesEx</code></a>:
+Use <a class="reference internal" href="../c-api/slice.html#c:function:pyslice_unpack"><code class="xref c function docutils literal">PySlice_Unpack</code></a> and <a class="reference internal" href="../c-api/slice.html#c:function:pyslice_adjustindices"><code class="xref c function docutils literal">PySlice_AdjustIndices</code></a> instead.</p>
+</li>
+<li><p><a class="reference internal" href="../c-api/unicode.html#c:function:pyunicode_ready"><code class="xref c function docutils literal">PyUnicode_READY</code></a>:
+Unneeded since Python 3.12</p>
+</li>
+<li><p><code class="xref c function docutils literal">PyErr_Display</code>:
+Use <a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_displayexception"><code class="xref c function docutils literal">PyErr_DisplayException</code></a> instead.</p>
+</li>
+<li><p><code class="xref c function docutils literal">_PyErr_ChainExceptions</code>:
+Use <code class="xref c function docutils literal">_PyErr_ChainExceptions1</code> instead.</p>
+</li>
+<li><p><code class="xref c member docutils literal">PyBytesObject.ob_shash</code> member:
+call <a class="reference internal" href="../c-api/object.html#c:function:pyobject_hash"><code class="xref c function docutils literal">PyObject_Hash</code></a> instead.</p>
+</li>
+<li><p>Thread Local Storage (TLS) API:</p>
+<ul>
+<li><p><a class="reference internal" href="../c-api/init.html#c:function:pythread_create_key"><code class="xref c function docutils literal">PyThread_create_key</code></a>:
+Use <a class="reference internal" href="../c-api/init.html#c:function:pythread_tss_alloc"><code class="xref c function docutils literal">PyThread_tss_alloc</code></a> instead.</p>
+</li>
+<li><p><a class="reference internal" href="../c-api/init.html#c:function:pythread_delete_key"><code class="xref c function docutils literal">PyThread_delete_key</code></a>:
+Use <a class="reference internal" href="../c-api/init.html#c:function:pythread_tss_free"><code class="xref c function docutils literal">PyThread_tss_free</code></a> instead.</p>
+</li>
+<li><p><a class="reference internal" href="../c-api/init.html#c:function:pythread_set_key_value"><code class="xref c function docutils literal">PyThread_set_key_value</code></a>:
+Use <a class="reference internal" href="../c-api/init.html#c:function:pythread_tss_set"><code class="xref c function docutils literal">PyThread_tss_set</code></a> instead.</p>
+</li>
+<li><p><a class="reference internal" href="../c-api/init.html#c:function:pythread_get_key_value"><code class="xref c function docutils literal">PyThread_get_key_value</code></a>:
+Use <a class="reference internal" href="../c-api/init.html#c:function:pythread_tss_get"><code class="xref c function docutils literal">PyThread_tss_get</code></a> instead.</p>
+</li>
+<li><p><a class="reference internal" href="../c-api/init.html#c:function:pythread_delete_key_value"><code class="xref c function docutils literal">PyThread_delete_key_value</code></a>:
+Use <a class="reference internal" href="../c-api/init.html#c:function:pythread_tss_delete"><code class="xref c function docutils literal">PyThread_tss_delete</code></a> instead.</p>
+</li>
+<li><p><a class="reference internal" href="../c-api/init.html#c:function:pythread_reinittls"><code class="xref c function docutils literal">PyThread_ReInitTLS</code></a>:
+Unneeded since Python 3.7.</p>
+</li>
+</ul>
+</li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="c-api-pending-removal-in-3.18.html">&larr; Pending removal in Python 3.18</a>
+        <a class="next" href="pending-removal-in-3.13.html">Pending removal in Python 3.13 &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

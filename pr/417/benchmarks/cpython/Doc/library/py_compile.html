@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>py_compile — Compile Python source files — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="language.html">Python Language Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python Language Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="ast.html">ast — Abstract syntax trees</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="symtable.html">symtable — Access to the compiler&#x27;s symbol tables</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="token.html">token — Constants used with Python parse trees</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="keyword.html">keyword — Testing for Python keywords</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tokenize.html">tokenize — Tokenizer for Python source</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tabnanny.html">tabnanny — Detection of ambiguous indentation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pyclbr.html">pyclbr — Python module browser support</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="py_compile.html">py_compile — Compile Python source files</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle py_compile — Compile Python source files"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="py_compile.html#command-line-interface">Command-Line Interface</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="compileall.html">compileall — Byte-compile Python libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="dis.html">dis — Disassembler for Python bytecode</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pickletools.html">pickletools — Tools for pickle developers</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="pyclbr.html">&larr; pyclbr — Python module browser support</a>
+        <a class="next" href="compileall.html">compileall — Byte-compile Python libraries &rarr;</a>
+      </nav>
+      
+      <h1 id="py-compile-compile-python-source-files"><code class="xref py module docutils literal">py_compile</code> — Compile Python source files</h1>
+<dl class="py module">
+  <dt id="py:module:py_compile"><code class="sig-name">py_compile</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Fred L. Drake, Jr. &lt;fdrake@acm.org&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/py_compile.py`</p>
+<span id="index-0"></span>
+<hr />
+<p>The <a class="reference internal" href="py_compile.html#py:module:py_compile" title="py_compile: Generate byte-code files from Python source files."><code class="xref py module docutils literal">py_compile</code></a> module provides a function to generate a byte-code file
+from a source file, and another function used when the module source file is
+invoked as a script.</p>
+<p>Though not often needed, this function can be useful when installing modules for
+shared use, especially if some of the users may not have permission to write the
+byte-code cache files in the directory containing the source code.</p>
+<dl class="py exception">
+  <dt id="py:exception:py_compile.pycompileerror"><em class="property">exception</em> <code class="sig-name">PyCompileError</code></dt>
+  <dd><p>Exception raised when an error occurs while attempting to compile the file.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:py_compile.compile"><code class="sig-name">compile(file, cfile=None, dfile=None, doraise=False, optimize=-1, invalidation_mode=PycInvalidationMode.TIMESTAMP, quiet=0)</code></dt>
+  <dd><p>Compile a source file to byte-code and write out the byte-code cache file.
+The source code is loaded from the file named <em>file</em>.  The byte-code is
+written to <em>cfile</em>, which defaults to the <span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-3147/"><strong>PEP 3147</strong></a>/<span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0488/"><strong>PEP 488</strong></a> path, ending
+in <code>.pyc</code>.
+For example, if <em>file</em> is <code>/foo/bar/baz.py</code> <em>cfile</em> will default to
+<code>/foo/bar/__pycache__/baz.cpython-32.pyc</code> for Python 3.2.  If <em>dfile</em> is
+specified, it is used instead of <em>file</em> as the name of the source file from
+which source lines are obtained for display in exception tracebacks.
+If <em>doraise</em> is true, a <a class="reference internal" href="py_compile.html#py:exception:py_compile.pycompileerror"><code class="xref py exception docutils literal">PyCompileError</code></a> is raised
+when an error is encountered while compiling <em>file</em>. If <em>doraise</em> is false
+(the default), an error string is written to <code>sys.stderr</code>, but no exception
+is raised.  This function returns the path to byte-compiled file, i.e.
+whatever <em>cfile</em> value was used.</p>
+<p>The <em>doraise</em> and <em>quiet</em> arguments determine how errors are handled while
+compiling file. If <em>quiet</em> is 0 or 1, and <em>doraise</em> is false, the default
+behaviour is enabled: an error string is written to <code>sys.stderr</code>, and the
+function returns <code>None</code> instead of a path. If <em>doraise</em> is true,
+a <a class="reference internal" href="py_compile.html#py:exception:py_compile.pycompileerror"><code class="xref py exception docutils literal">PyCompileError</code></a> is raised instead. However if <em>quiet</em> is 2,
+no message is written, and <em>doraise</em> has no effect.</p>
+<p>If the path that <em>cfile</em> becomes (either explicitly specified or computed)
+is a symlink or non-regular file, <a class="reference internal" href="exceptions.html#py:exception:fileexistserror"><code class="xref py exception docutils literal">FileExistsError</code></a> will be raised.
+This is to act as a warning that import will turn those paths into regular
+files if it is allowed to write byte-compiled files to those paths. This is
+a side-effect of import using file renaming to place the final byte-compiled
+file into place to prevent concurrent file writing issues.</p>
+<p><em>optimize</em> controls the optimization level and is passed to the built-in
+<a class="reference internal" href="functions.html#py:function:compile"><code class="xref py function docutils literal">compile</code></a> function.  The default of <code>-1</code> selects the optimization
+level of the current interpreter.</p>
+<p><em>invalidation_mode</em> should be a member of the <a class="reference internal" href="py_compile.html#py:class:py_compile.pycinvalidationmode"><code class="xref py class docutils literal">PycInvalidationMode</code></a>
+enum and controls how the generated bytecode cache is invalidated at
+runtime.  The default is <a class="reference internal" href="py_compile.html#py:attribute:py_compile.pycinvalidationmode.checked_hash"><code class="xref py attribute docutils literal">PycInvalidationMode.CHECKED_HASH</code></a> if
+the :envvar:`SOURCE_DATE_EPOCH` environment variable is set, otherwise
+the default is <a class="reference internal" href="py_compile.html#py:attribute:py_compile.pycinvalidationmode.timestamp"><code class="xref py attribute docutils literal">PycInvalidationMode.TIMESTAMP</code></a>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p>Changed default value of <em>cfile</em> to be :PEP:`3147`-compliant.  Previous
+default was <em>file</em> + <code>'c'</code> (<code>'o'</code> if optimization was enabled).
+Also added the <em>optimize</em> parameter.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>Changed code to use <a class="reference internal" href="importlib.html#py:module:importlib" title="importlib: The implementation of the import machinery."><code class="xref py module docutils literal">importlib</code></a> for the byte-code cache file writing.
+This means file creation/writing semantics now match what <a class="reference internal" href="importlib.html#py:module:importlib" title="importlib: The implementation of the import machinery."><code class="xref py module docutils literal">importlib</code></a>
+does, e.g. permissions, write-and-move semantics, etc. Also added the
+caveat that <a class="reference internal" href="exceptions.html#py:exception:fileexistserror"><code class="xref py exception docutils literal">FileExistsError</code></a> is raised if <em>cfile</em> is a symlink or
+non-regular file.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>The <em>invalidation_mode</em> parameter was added as specified in <span class="target" id="index-3"></span><a class="pep reference external" href="https://peps.python.org/pep-0552/"><strong>PEP 552</strong></a>.
+If the :envvar:`SOURCE_DATE_EPOCH` environment variable is set,
+<em>invalidation_mode</em> will be forced to
+<a class="reference internal" href="py_compile.html#py:attribute:py_compile.pycinvalidationmode.checked_hash"><code class="xref py attribute docutils literal">PycInvalidationMode.CHECKED_HASH</code></a>.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7.2:</span></p>
+<p>The :envvar:`SOURCE_DATE_EPOCH` environment variable no longer
+overrides the value of the <em>invalidation_mode</em> argument, and determines
+its default value instead.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
+<p>The <em>quiet</em> parameter was added.</p>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:py_compile.pycinvalidationmode"><em class="property">class</em> <code class="sig-name">PycInvalidationMode</code></dt>
+  <dd><p>An enumeration of possible methods the interpreter can use to determine
+whether a bytecode file is up to date with a source file. The <code>.pyc</code> file
+indicates the desired invalidation mode in its header. See
+<a href="../reference/import.html#pyc-invalidation">Cached bytecode invalidation</a> for more information on how Python invalidates
+<code>.pyc</code> files at runtime.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+<dl class="py attribute">
+  <dt id="py:attribute:py_compile.pycinvalidationmode.timestamp"><code class="sig-name">TIMESTAMP</code></dt>
+  <dd><p>The <code>.pyc</code> file includes the timestamp and size of the source file,
+which Python will compare against the metadata of the source file at
+runtime to determine if the <code>.pyc</code> file needs to be regenerated.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:py_compile.pycinvalidationmode.checked_hash"><code class="sig-name">CHECKED_HASH</code></dt>
+  <dd><p>The <code>.pyc</code> file includes a hash of the source file content, which Python
+will compare against the source at runtime to determine if the <code>.pyc</code>
+file needs to be regenerated.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:py_compile.pycinvalidationmode.unchecked_hash"><code class="sig-name">UNCHECKED_HASH</code></dt>
+  <dd><p>Like <a class="reference internal" href="py_compile.html#py:attribute:py_compile.pycinvalidationmode.checked_hash"><code class="xref py attribute docutils literal">CHECKED_HASH</code></a>, the <code>.pyc</code> file includes a hash of the source
+file content. However, Python will at runtime assume the <code>.pyc</code> file is
+up to date and not validate the <code>.pyc</code> against the source file at all.</p>
+<p>This option is useful when the <code>.pycs</code> are kept up to date by some
+system external to Python like a build system.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<a id="py_compile-cli"></a>
+<h2 id="command-line-interface">Command-Line Interface</h2>
+<p>This module can be invoked as a script to compile several source
+files.  The files named in <em>filenames</em> are compiled and the resulting
+bytecode is cached in the normal manner.  This program does not search
+a directory structure to locate source files; it only compiles files
+named explicitly. The exit status is nonzero if one of the files could
+not be compiled.</p>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:python--m-py_compile.&lt;file&gt; ... &lt;filen&gt;"><code class="sig-name">&lt;file&gt; ... &lt;fileN&gt;</code></dt>
+  <dt id="std:cmdoption:python--m-py_compile.-"><code class="sig-name">-</code></dt>
+  <dd><p>Positional arguments are files to compile.  If <code>-</code> is the only
+parameter, the list of files is taken from standard input.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:python--m-py_compile.-q"><a id="std:cmdoption:python--m-py_compile.--quiet"></a><code class="sig-name">-q, --quiet</code></dt>
+  <dd><p>Suppress errors output.</p>
+</dd>
+</dl>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p>Added support for <code>-</code>.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>Added support for <a class="reference internal" href="py_compile.html#std:cmdoption:python--m-py_compile.-q"><code class="xref std cmdoption docutils literal">-q</code></a>.</p>
+</div>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>Module <a class="reference internal" href="compileall.html#py:module:compileall" title="compileall: Tools for byte-compiling all Python source files in a directory tree."><code class="xref py module docutils literal">compileall</code></a></dt>
+<dd><p>Utilities to compile all Python source files in a directory tree.</p>
+</dd>
+</dl>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="pyclbr.html">&larr; pyclbr — Python module browser support</a>
+        <a class="next" href="compileall.html">compileall — Byte-compile Python libraries &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

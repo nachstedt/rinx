@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SYS.3 Architecture Design — Sphinx-Needs Demo Benchmark</title>
+  <link rel="stylesheet" href="../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">Sphinx-Needs Demo Benchmark</h2>
+        
+        
+        
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../demo_details.html">🔍 Demo details</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../online_editor.html">⌨ Online Editor</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../basic_example/index.html">🧰 Basic Example</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../coffee-machine/index.html">☕️ Coffee Machine Example</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">🚗 Automotive ADAS</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle 🚗 Automotive ADAS"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="index.html#v-model-and-service-connectors">V-model and service connectors</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#demo-object-and-meta-model">Demo Object and Meta Model</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="releases.html">📦 Releases</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persons.html">🧍 Persons</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="analysis.html">📊 Analysis</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="external_data.html">🌎 External Data Examples</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="sys_1_req_elicitation.html">SYS.1 Requirement Elicitation</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="sys_2_req_analysis.html">SYS.2 Requirement Analysis</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current">
+            <a href="sys_3_sys_arch.html">SYS.3 Architecture Design</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="swe_1_sw_req_analysis.html">SWE.1 Software Requirements</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="swe_2_sw_arch.html">SWE.2 Software Architecture</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="swe_3_sw_detailed_design.html">SWE.3 Detailed Design</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="swe_4_unit_tests.html">SWE.4 Unit Tests</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="swe_5_sw_integration_tests.html">SWE.5 Integration Test Cases</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="swe_6_sw_quali_tests.html">SWE.6 Qualification Test Cases</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="sys_4_sys_integation_tests.html">SYS.4 Integration Test Cases</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="sys_5_sys_quali_test.html">SYS.5 Qualification Test Cases</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="sys_5_sys_quali_test_results.html">SYS.5 Qualification Test Results</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../safety_example/index.html">🛡️ ISO 26262 Functional Safety Example</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="sys_2_req_analysis.html">&larr; SYS.2 Requirement Analysis</a>
+        <a class="next" href="swe_1_sw_req_analysis.html">SWE.1 Software Requirements &rarr;</a>
+      </nav>
+      
+      <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header sd-bg-success sd-bg-text-success">
+<span class="sd-summary-icon"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-light-bulb" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg></span><span class="sd-summary-text">Demo page details</span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<p class="sd-card-text"><strong>Page source code: sys_3_sys_arch.rst</strong></p>
+<div class="highlight-rst notranslate">
+<div class="highlight hl-code"><pre>
+<span class="linenos">1</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">{% set page=&quot;sys_3_sys_arch.rst&quot; %}</span></span>
+<span class="linenos">2</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">{% include &quot;demo_page_header.rst&quot; with context %}</span></span>
+<span class="linenos">3</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">4</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-link hl-reference hl-def hl-restructuredtext"><span class="hl-punctuation hl-definition hl-link hl-restructuredtext">..</span> <span class="hl-punctuation hl-definition hl-string hl-restructuredtext">_</span><span class="hl-string hl-other hl-link hl-title hl-restructuredtext">SYS3_Architecture_Design</span><span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">:</span>
+</span></span></span>
+<span class="linenos">5</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">6</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">===========================</span></span></span></span>
+<span class="linenos">7</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">SYS.3 Architecture Design</span></span>
+<span class="linenos">8</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">===========================</span></span></span></span>
+<span class="linenos">9</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">10</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> arch<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Lane Detection Module</span></span>
+<span class="linenos">11</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ARCH_001</span></span>
+<span class="linenos">12</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> in progress</span></span>
+<span class="linenos">13</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>links<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> REQ_001, REQ_002</span></span>
+<span class="linenos">14</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>author<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ALFRED</span></span>
+<span class="linenos">15</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">16</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Design the architecture for the Lane Detection Module, including components for camera input processing, lane identification, and integration with steering control.</span></span>
+<span class="linenos">17</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">18</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> uml<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">19</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">20</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @startuml</span></span>
+<span class="linenos">21</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      node &quot;Vehicle&quot; {</span></span>
+<span class="linenos">22</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component LaneDetection  {</span></span>
+<span class="linenos">23</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent detectLaneMarkings</span></span>
+<span class="linenos">24</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent applySteeringCorrection</span></span>
+<span class="linenos">25</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">26</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component CameraInput {</span></span>
+<span class="linenos">27</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent captureData</span></span>
+<span class="linenos">28</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">29</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component SteeringControl {</span></span>
+<span class="linenos">30</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent correctSteering</span></span>
+<span class="linenos">31</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">32</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      }</span></span>
+<span class="linenos">33</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      CameraInput --&gt; LaneDetection</span></span>
+<span class="linenos">34</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      LaneDetection --&gt; SteeringControl</span></span>
+<span class="linenos">35</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @enduml</span></span>
+<span class="linenos">36</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">37</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> arch<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Adaptive Cruise Control System</span></span>
+<span class="linenos">38</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ARCH_002</span></span>
+<span class="linenos">39</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> closed</span></span>
+<span class="linenos">40</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>links<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> REQ_003, REQ_004</span></span>
+<span class="linenos">41</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>author<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ALFRED</span></span>
+<span class="linenos">42</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">43</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Define the architecture for the Adaptive Cruise Control System, with subsystems for distance measurement, speed adjustment, and communication with the vehicle&#39;s control systems.</span></span>
+<span class="linenos">44</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">45</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> uml<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">46</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">47</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @startuml</span></span>
+<span class="linenos">48</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      node &quot;Vehicle&quot; {</span></span>
+<span class="linenos">49</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component AdaptiveCruiseControl {</span></span>
+<span class="linenos">50</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent measureDistance</span></span>
+<span class="linenos">51</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent adjustSpeed</span></span>
+<span class="linenos">52</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">53</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component RadarSensor {</span></span>
+<span class="linenos">54</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent measureDistance</span></span>
+<span class="linenos">55</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">56</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component SpeedController {</span></span>
+<span class="linenos">57</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent adjustSpeed</span></span>
+<span class="linenos">58</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">59</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component CommunicationModule {</span></span>
+<span class="linenos">60</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent sendReceiveData</span></span>
+<span class="linenos">61</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">62</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      }</span></span>
+<span class="linenos">63</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      RadarSensor --&gt; AdaptiveCruiseControl</span></span>
+<span class="linenos">64</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      AdaptiveCruiseControl --&gt; SpeedController</span></span>
+<span class="linenos">65</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      SpeedController --&gt; CommunicationModule</span></span>
+<span class="linenos">66</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @enduml</span></span>
+<span class="linenos">67</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">68</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> arch<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Collision Avoidance System</span></span>
+<span class="linenos">69</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ARCH_003</span></span>
+<span class="linenos">70</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">71</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>links<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> REQ_005, REQ_006</span></span>
+<span class="linenos">72</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>author<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ALFRED</span></span>
+<span class="linenos">73</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">74</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Develop the architecture for the Collision Avoidance System, focusing on modules for collision detection, predictive analytics, and autonomous braking.</span></span>
+<span class="linenos">75</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">76</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> uml<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">77</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">78</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @startuml</span></span>
+<span class="linenos">79</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      node &quot;Vehicle&quot; {</span></span>
+<span class="linenos">80</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component CollisionAvoidance {</span></span>
+<span class="linenos">81</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent detectCollisionRisk</span></span>
+<span class="linenos">82</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent applyEmergencyBraking</span></span>
+<span class="linenos">83</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">84</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component CollisionDetector {</span></span>
+<span class="linenos">85</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent detectCollision</span></span>
+<span class="linenos">86</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">87</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component RiskAnalyzer {</span></span>
+<span class="linenos">88</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent analyzeRisk</span></span>
+<span class="linenos">89</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">90</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component BrakeController {</span></span>
+<span class="linenos">91</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent applyBrakes</span></span>
+<span class="linenos">92</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">93</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      }</span></span>
+<span class="linenos">94</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      CollisionDetector --&gt; RiskAnalyzer</span></span>
+<span class="linenos">95</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      RiskAnalyzer --&gt; BrakeController</span></span>
+<span class="linenos">96</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      BrakeController --&gt; CollisionAvoidance</span></span>
+<span class="linenos">97</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @enduml</span></span>
+<span class="linenos">98</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">99</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> arch<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Pedestrian Safety Framework</span></span>
+<span class="linenos">100</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ARCH_004</span></span>
+<span class="linenos">101</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">102</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>links<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> REQ_007, REQ_008, REQ_009</span></span>
+<span class="linenos">103</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>author<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ALFRED</span></span>
+<span class="linenos">104</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">105</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Create the architecture for the Pedestrian Safety Framework, integrating pedestrian detection, alert mechanisms, and emergency braking functionalities.</span></span>
+<span class="linenos">106</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">107</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> uml<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">108</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">109</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @startuml</span></span>
+<span class="linenos">110</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      node &quot;Vehicle&quot; {</span></span>
+<span class="linenos">111</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component PedestrianSafety {</span></span>
+<span class="linenos">112</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent detectPedestrians</span></span>
+<span class="linenos">113</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent alertDriver</span></span>
+<span class="linenos">114</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent applyEmergencyBrakes</span></span>
+<span class="linenos">115</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">116</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component PedestrianDetector {</span></span>
+<span class="linenos">117</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent detectPedestrians</span></span>
+<span class="linenos">118</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">119</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component AlertSystem {</span></span>
+<span class="linenos">120</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent triggerAlert</span></span>
+<span class="linenos">121</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">122</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component EmergencyBrakeController {</span></span>
+<span class="linenos">123</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent applyEmergencyBrakes</span></span>
+<span class="linenos">124</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">125</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      }</span></span>
+<span class="linenos">126</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      PedestrianDetector --&gt; AlertSystem</span></span>
+<span class="linenos">127</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      AlertSystem --&gt; EmergencyBrakeController</span></span>
+<span class="linenos">128</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      EmergencyBrakeController --&gt; PedestrianSafety</span></span>
+<span class="linenos">129</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @enduml</span></span>
+<span class="linenos">130</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">131</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> arch<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Alert System Framework</span></span>
+<span class="linenos">132</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ARCH_005</span></span>
+<span class="linenos">133</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">134</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>links<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> REQ_008</span></span>
+<span class="linenos">135</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>author<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ALFRED</span></span>
+<span class="linenos">136</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">137</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Design the system-level architecture for the Alert System Framework, integrating multiple types of driver alerts including audio, visual, and haptic feedback mechanisms.</span></span>
+<span class="linenos">138</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">139</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> uml<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">140</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">141</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @startuml</span></span>
+<span class="linenos">142</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      node &quot;Vehicle&quot; {</span></span>
+<span class="linenos">143</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component AlertSystem {</span></span>
+<span class="linenos">144</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent manageAlerts</span></span>
+<span class="linenos">145</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent prioritizeAlerts</span></span>
+<span class="linenos">146</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">147</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component AudioAlerts {</span></span>
+<span class="linenos">148</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent generateAudioAlert</span></span>
+<span class="linenos">149</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">150</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component VisualAlerts {</span></span>
+<span class="linenos">151</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent displayVisualAlert</span></span>
+<span class="linenos">152</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">153</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component HapticAlerts {</span></span>
+<span class="linenos">154</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent provideHapticFeedback</span></span>
+<span class="linenos">155</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">156</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component SensorInputs {</span></span>
+<span class="linenos">157</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent receiveAlertTriggers</span></span>
+<span class="linenos">158</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">159</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      }</span></span>
+<span class="linenos">160</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      SensorInputs --&gt; AlertSystem</span></span>
+<span class="linenos">161</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      AlertSystem --&gt; AudioAlerts</span></span>
+<span class="linenos">162</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      AlertSystem --&gt; VisualAlerts</span></span>
+<span class="linenos">163</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      AlertSystem --&gt; HapticAlerts</span></span>
+<span class="linenos">164</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @enduml</span></span>
+<span class="linenos">165</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">166</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> arch<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Emergency Braking System</span></span>
+<span class="linenos">167</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ARCH_006</span></span>
+<span class="linenos">168</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">169</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>links<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> REQ_009</span></span>
+<span class="linenos">170</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>author<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ALFRED</span></span>
+<span class="linenos">171</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">172</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Create the system architecture for the Emergency Braking System, focusing on rapid response, optimal braking force calculation, and integration with pedestrian detection systems.</span></span>
+<span class="linenos">173</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">174</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> uml<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">175</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">176</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @startuml</span></span>
+<span class="linenos">177</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      node &quot;Vehicle&quot; {</span></span>
+<span class="linenos">178</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component EmergencyBrakingSystem {</span></span>
+<span class="linenos">179</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent calculateBrakingForce</span></span>
+<span class="linenos">180</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent initiateEmergencyBraking</span></span>
+<span class="linenos">181</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">182</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component BrakeActuator {</span></span>
+<span class="linenos">183</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent applyBrakes</span></span>
+<span class="linenos">184</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">185</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component ForceCalculator {</span></span>
+<span class="linenos">186</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent optimizeBrakingForce</span></span>
+<span class="linenos">187</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">188</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component ResponseTimer {</span></span>
+<span class="linenos">189</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent measureResponseTime</span></span>
+<span class="linenos">190</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">191</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component PedestrianDetection {</span></span>
+<span class="linenos">192</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent detectPedestrianThreat</span></span>
+<span class="linenos">193</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">194</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      }</span></span>
+<span class="linenos">195</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      PedestrianDetection --&gt; EmergencyBrakingSystem</span></span>
+<span class="linenos">196</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      EmergencyBrakingSystem --&gt; ForceCalculator</span></span>
+<span class="linenos">197</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      ForceCalculator --&gt; BrakeActuator</span></span>
+<span class="linenos">198</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      EmergencyBrakingSystem --&gt; ResponseTimer</span></span>
+<span class="linenos">199</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @enduml</span></span>
+<span class="linenos">200</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">201</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> arch<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Traffic Sign Recognition System</span></span>
+<span class="linenos">202</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ARCH_007</span></span>
+<span class="linenos">203</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> closed</span></span>
+<span class="linenos">204</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>links<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> REQ_010</span></span>
+<span class="linenos">205</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>author<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ALFRED</span></span>
+<span class="linenos">206</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">207</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Design the system architecture for traffic sign recognition, including camera</span></span>
+<span class="linenos">208</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   capture, sign classification, and distribution of detected speed limits to vehicle control functions.</span></span>
+<span class="linenos">209</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">210</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> uml<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">211</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">212</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @startuml</span></span>
+<span class="linenos">213</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      node &quot;Vehicle&quot; {</span></span>
+<span class="linenos">214</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component TrafficSignRecognition {</span></span>
+<span class="linenos">215</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent captureRoadScene</span></span>
+<span class="linenos">216</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent classifySpeedLimitSign</span></span>
+<span class="linenos">217</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">218</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component FrontCamera {</span></span>
+<span class="linenos">219</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent streamFrames</span></span>
+<span class="linenos">220</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">221</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component SignInterpreter {</span></span>
+<span class="linenos">222</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent extractSpeedLimit</span></span>
+<span class="linenos">223</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">224</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component VehicleControl {</span></span>
+<span class="linenos">225</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent consumeSpeedLimit</span></span>
+<span class="linenos">226</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">227</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      }</span></span>
+<span class="linenos">228</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      FrontCamera --&gt; TrafficSignRecognition</span></span>
+<span class="linenos">229</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      TrafficSignRecognition --&gt; SignInterpreter</span></span>
+<span class="linenos">230</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      SignInterpreter --&gt; VehicleControl</span></span>
+<span class="linenos">231</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @enduml</span></span>
+<span class="linenos">232</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">233</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> arch<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Blind Spot Monitoring System</span></span>
+<span class="linenos">234</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ARCH_008</span></span>
+<span class="linenos">235</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">236</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>links<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> REQ_011, REQ_012</span></span>
+<span class="linenos">237</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>author<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ALFRED</span></span>
+<span class="linenos">238</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">239</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Define the system architecture for blind spot monitoring, combining rear-corner</span></span>
+<span class="linenos">240</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   radar coverage with side-view camera input, and routing occupancy state to the</span></span>
+<span class="linenos">241</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   driver alert system whenever the turn signal indicates an imminent lane change.</span></span>
+<span class="linenos">242</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">243</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> uml<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">244</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">245</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @startuml</span></span>
+<span class="linenos">246</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      node &quot;Vehicle&quot; {</span></span>
+<span class="linenos">247</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component BlindSpotMonitor {</span></span>
+<span class="linenos">248</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent fuseSensorInputs</span></span>
+<span class="linenos">249</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent classifyZoneOccupancy</span></span>
+<span class="linenos">250</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">251</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component RearCornerRadar {</span></span>
+<span class="linenos">252</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent detectApproachingObjects</span></span>
+<span class="linenos">253</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">254</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component SideCamera {</span></span>
+<span class="linenos">255</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent captureBlindSpotImage</span></span>
+<span class="linenos">256</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">257</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component TurnSignalSensor {</span></span>
+<span class="linenos">258</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent reportIntent</span></span>
+<span class="linenos">259</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">260</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component DriverAlertSystem {</span></span>
+<span class="linenos">261</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent issueLaneChangeWarning</span></span>
+<span class="linenos">262</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">263</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      }</span></span>
+<span class="linenos">264</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      RearCornerRadar --&gt; BlindSpotMonitor</span></span>
+<span class="linenos">265</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      SideCamera --&gt; BlindSpotMonitor</span></span>
+<span class="linenos">266</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      TurnSignalSensor --&gt; BlindSpotMonitor</span></span>
+<span class="linenos">267</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      BlindSpotMonitor --&gt; DriverAlertSystem</span></span>
+<span class="linenos">268</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @enduml</span></span>
+<span class="linenos">269</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">270</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> arch<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Driver Drowsiness Detection System</span></span>
+<span class="linenos">271</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ARCH_009</span></span>
+<span class="linenos">272</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">273</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>links<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> REQ_013, REQ_014</span></span>
+<span class="linenos">274</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>author<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ALFRED</span></span>
+<span class="linenos">275</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">276</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Define the system architecture for driver drowsiness detection, combining cabin</span></span>
+<span class="linenos">277</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   camera capture with an eye-state estimator and a drowsiness scorer that emits</span></span>
+<span class="linenos">278</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   progressive alerts via the existing driver alert system.</span></span>
+<span class="linenos">279</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">280</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> uml<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">281</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">282</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @startuml</span></span>
+<span class="linenos">283</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      node &quot;Vehicle&quot; {</span></span>
+<span class="linenos">284</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component DrowsinessMonitor {</span></span>
+<span class="linenos">285</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent estimateEyeState</span></span>
+<span class="linenos">286</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent scoreDrowsiness</span></span>
+<span class="linenos">287</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">288</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component CabinCamera {</span></span>
+<span class="linenos">289</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent captureDriverFace</span></span>
+<span class="linenos">290</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">291</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component DrowsinessScorer {</span></span>
+<span class="linenos">292</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent updateScore</span></span>
+<span class="linenos">293</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">294</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component DriverAlertSystem {</span></span>
+<span class="linenos">295</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent issueDrowsinessAlert</span></span>
+<span class="linenos">296</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent suggestBreak</span></span>
+<span class="linenos">297</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">298</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      }</span></span>
+<span class="linenos">299</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      CabinCamera --&gt; DrowsinessMonitor</span></span>
+<span class="linenos">300</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      DrowsinessMonitor --&gt; DrowsinessScorer</span></span>
+<span class="linenos">301</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      DrowsinessScorer --&gt; DriverAlertSystem</span></span>
+<span class="linenos">302</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @enduml</span></span>
+<span class="linenos">303</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">304</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> arch<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> Automated Parking System</span></span>
+<span class="linenos">305</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>id<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ARCH_010</span></span>
+<span class="linenos">306</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>status<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> open</span></span>
+<span class="linenos">307</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>links<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> REQ_015, REQ_016</span></span>
+<span class="linenos">308</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>author<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span> ALFRED</span></span>
+<span class="linenos">309</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">310</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   Define the system architecture for automated parking, combining ultrasonic ranging</span></span>
+<span class="linenos">311</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   and surround-view camera input for slot detection, a trajectory planner, and the</span></span>
+<span class="linenos">312</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   actuator interface that commands steering, throttle, and brake during the park maneuver.</span></span>
+<span class="linenos">313</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">314</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   <span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> uml<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="linenos">315</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="linenos">316</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @startuml</span></span>
+<span class="linenos">317</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      node &quot;Vehicle&quot; {</span></span>
+<span class="linenos">318</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component ParkingAssist {</span></span>
+<span class="linenos">319</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent detectParkingSlot</span></span>
+<span class="linenos">320</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent planParkTrajectory</span></span>
+<span class="linenos">321</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent executeParkManeuver</span></span>
+<span class="linenos">322</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">323</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component UltrasonicArray {</span></span>
+<span class="linenos">324</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent measureClearances</span></span>
+<span class="linenos">325</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">326</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component SurroundCamera {</span></span>
+<span class="linenos">327</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent captureSlotImagery</span></span>
+<span class="linenos">328</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">329</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component TrajectoryPlanner {</span></span>
+<span class="linenos">330</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent computeWaypoints</span></span>
+<span class="linenos">331</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">332</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          component VehicleActuators {</span></span>
+<span class="linenos">333</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">              agent applySteeringThrottleBrake</span></span>
+<span class="linenos">334</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">          }</span></span>
+<span class="linenos">335</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      }</span></span>
+<span class="linenos">336</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      UltrasonicArray --&gt; ParkingAssist</span></span>
+<span class="linenos">337</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      SurroundCamera --&gt; ParkingAssist</span></span>
+<span class="linenos">338</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      ParkingAssist --&gt; TrajectoryPlanner</span></span>
+<span class="linenos">339</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      TrajectoryPlanner --&gt; VehicleActuators</span></span>
+<span class="linenos">340</span><span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">      @enduml</span></span></pre></div>
+</div>
+</div>
+</details>
+<a id="sys3_architecture_design"></a>
+<h1 id="sys-3-architecture-design">SYS.3 Architecture Design</h1>
+<div class="entity entity-arch" id="entity-ARCH_001"><p class="entity-header"><span class="entity-type">Architecture</span><span class="entity-title">Lane Detection Module</span><span class="entity-id">ARCH_001</span></p><div class="entity-content"><p>Design the architecture for the Lane Detection Module, including components for camera input processing, lane identification, and integration with steering control.</p>
+<div class="plantuml-diagram">
+  <img src="../_images/5bf522c4aae82427b648a1b82f2711f69bf54c6766820563322e330ea10cef84.svg" alt="PlantUML Diagram" />
+</div>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>in progress</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links outgoing</p><ul class="entity-link-list"><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_001">REQ_001</a></li><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_002">REQ_002</a></li></ul><p class="entity-link-label">author</p><ul class="entity-link-list"><li><a class="reference internal" href="persons.html#entity-ALFRED">ALFRED</a></li></ul><p class="entity-link-label">links incoming</p><ul class="entity-link-list"><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_001">SWREQ_001</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_002">SWREQ_002</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_003">SWREQ_003</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_011">SWREQ_011</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_012">SWREQ_012</a></li><li><a class="reference internal" href="sys_4_sys_integation_tests.html#entity-TEST_SYS_INT_001">TEST_SYS_INT_001</a></li></ul></div></details></div><div class="entity entity-arch" id="entity-ARCH_002"><p class="entity-header"><span class="entity-type">Architecture</span><span class="entity-title">Adaptive Cruise Control System</span><span class="entity-id">ARCH_002</span></p><div class="entity-content"><p>Define the architecture for the Adaptive Cruise Control System, with subsystems for distance measurement, speed adjustment, and communication with the vehicle's control systems.</p>
+<div class="plantuml-diagram">
+  <img src="../_images/adc50744e6081b63e0000699451f5b2473664cf2ac7fe2ef5db3e27ead919794.svg" alt="PlantUML Diagram" />
+</div>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>closed</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links outgoing</p><ul class="entity-link-list"><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_003">REQ_003</a></li><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_004">REQ_004</a></li></ul><p class="entity-link-label">author</p><ul class="entity-link-list"><li><a class="reference internal" href="persons.html#entity-ALFRED">ALFRED</a></li></ul><p class="entity-link-label">links incoming</p><ul class="entity-link-list"><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_004">SWREQ_004</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_005">SWREQ_005</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_013">SWREQ_013</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_014">SWREQ_014</a></li><li><a class="reference internal" href="sys_4_sys_integation_tests.html#entity-TEST_SYS_INT_002">TEST_SYS_INT_002</a></li></ul></div></details></div><div class="entity entity-arch" id="entity-ARCH_003"><p class="entity-header"><span class="entity-type">Architecture</span><span class="entity-title">Collision Avoidance System</span><span class="entity-id">ARCH_003</span></p><div class="entity-content"><p>Develop the architecture for the Collision Avoidance System, focusing on modules for collision detection, predictive analytics, and autonomous braking.</p>
+<div class="plantuml-diagram">
+  <img src="../_images/0c9eadc3696526c6a53efa4596f5664b135c20104c2db22f09687f74cb58c4a3.svg" alt="PlantUML Diagram" />
+</div>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links outgoing</p><ul class="entity-link-list"><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_005">REQ_005</a></li><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_006">REQ_006</a></li></ul><p class="entity-link-label">author</p><ul class="entity-link-list"><li><a class="reference internal" href="persons.html#entity-ALFRED">ALFRED</a></li></ul><p class="entity-link-label">links incoming</p><ul class="entity-link-list"><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_006">SWREQ_006</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_007">SWREQ_007</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_015">SWREQ_015</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_016">SWREQ_016</a></li><li><a class="reference internal" href="sys_4_sys_integation_tests.html#entity-TEST_SYS_INT_003">TEST_SYS_INT_003</a></li></ul></div></details></div><div class="entity entity-arch" id="entity-ARCH_004"><p class="entity-header"><span class="entity-type">Architecture</span><span class="entity-title">Pedestrian Safety Framework</span><span class="entity-id">ARCH_004</span></p><div class="entity-content"><p>Create the architecture for the Pedestrian Safety Framework, integrating pedestrian detection, alert mechanisms, and emergency braking functionalities.</p>
+<div class="plantuml-diagram">
+  <img src="../_images/e51c7a2d3bcaae7e11ebd214df2d157cf113b84559584e241ff841733c276b37.svg" alt="PlantUML Diagram" />
+</div>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links outgoing</p><ul class="entity-link-list"><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_007">REQ_007</a></li><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_008">REQ_008</a></li><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_009">REQ_009</a></li></ul><p class="entity-link-label">author</p><ul class="entity-link-list"><li><a class="reference internal" href="persons.html#entity-ALFRED">ALFRED</a></li></ul><p class="entity-link-label">links incoming</p><ul class="entity-link-list"><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_008">SWREQ_008</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_009">SWREQ_009</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_010">SWREQ_010</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_017">SWREQ_017</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_018">SWREQ_018</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_019">SWREQ_019</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_020">SWREQ_020</a></li><li><a class="reference internal" href="sys_4_sys_integation_tests.html#entity-TEST_SYS_INT_004">TEST_SYS_INT_004</a></li></ul></div></details></div><div class="entity entity-arch" id="entity-ARCH_005"><p class="entity-header"><span class="entity-type">Architecture</span><span class="entity-title">Alert System Framework</span><span class="entity-id">ARCH_005</span></p><div class="entity-content"><p>Design the system-level architecture for the Alert System Framework, integrating multiple types of driver alerts including audio, visual, and haptic feedback mechanisms.</p>
+<div class="plantuml-diagram">
+  <img src="../_images/b72d36fdefb15ddf55d178bc0592378d9d30b543696f3038a767a64aab3c8bb8.svg" alt="PlantUML Diagram" />
+</div>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links outgoing</p><ul class="entity-link-list"><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_008">REQ_008</a></li></ul><p class="entity-link-label">author</p><ul class="entity-link-list"><li><a class="reference internal" href="persons.html#entity-ALFRED">ALFRED</a></li></ul><p class="entity-link-label">links incoming</p><ul class="entity-link-list"><li><a class="reference internal" href="sys_4_sys_integation_tests.html#entity-TEST_SYS_INT_005">TEST_SYS_INT_005</a></li></ul></div></details></div><div class="entity entity-arch" id="entity-ARCH_006"><p class="entity-header"><span class="entity-type">Architecture</span><span class="entity-title">Emergency Braking System</span><span class="entity-id">ARCH_006</span></p><div class="entity-content"><p>Create the system architecture for the Emergency Braking System, focusing on rapid response, optimal braking force calculation, and integration with pedestrian detection systems.</p>
+<div class="plantuml-diagram">
+  <img src="../_images/a5987238ec66f54c2f4ea15118666057696a30aa6a40f65f2b2360a5ad086dfc.svg" alt="PlantUML Diagram" />
+</div>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links outgoing</p><ul class="entity-link-list"><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_009">REQ_009</a></li></ul><p class="entity-link-label">author</p><ul class="entity-link-list"><li><a class="reference internal" href="persons.html#entity-ALFRED">ALFRED</a></li></ul><p class="entity-link-label">links incoming</p><ul class="entity-link-list"><li><a class="reference internal" href="sys_4_sys_integation_tests.html#entity-TEST_SYS_INT_006">TEST_SYS_INT_006</a></li></ul></div></details></div><div class="entity entity-arch" id="entity-ARCH_007"><p class="entity-header"><span class="entity-type">Architecture</span><span class="entity-title">Traffic Sign Recognition System</span><span class="entity-id">ARCH_007</span></p><div class="entity-content"><p>Design the system architecture for traffic sign recognition, including camera
+capture, sign classification, and distribution of detected speed limits to vehicle control functions.</p>
+<div class="plantuml-diagram">
+  <img src="../_images/f6636cd597507262dbba25bcf299df87a33b315f615e57eb361ba790454b142c.svg" alt="PlantUML Diagram" />
+</div>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>closed</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links outgoing</p><ul class="entity-link-list"><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_010">REQ_010</a></li></ul><p class="entity-link-label">author</p><ul class="entity-link-list"><li><a class="reference internal" href="persons.html#entity-ALFRED">ALFRED</a></li></ul><p class="entity-link-label">links incoming</p><ul class="entity-link-list"><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_021">SWREQ_021</a></li><li><a class="reference internal" href="sys_4_sys_integation_tests.html#entity-TEST_SYS_INT_007">TEST_SYS_INT_007</a></li></ul></div></details></div><div class="entity entity-arch" id="entity-ARCH_008"><p class="entity-header"><span class="entity-type">Architecture</span><span class="entity-title">Blind Spot Monitoring System</span><span class="entity-id">ARCH_008</span></p><div class="entity-content"><p>Define the system architecture for blind spot monitoring, combining rear-corner
+radar coverage with side-view camera input, and routing occupancy state to the
+driver alert system whenever the turn signal indicates an imminent lane change.</p>
+<div class="plantuml-diagram">
+  <img src="../_images/7e414a5301ba6802b64dcd257b8eea6fedb9869d218d9563702e3caa00d3bd9d.svg" alt="PlantUML Diagram" />
+</div>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links outgoing</p><ul class="entity-link-list"><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_011">REQ_011</a></li><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_012">REQ_012</a></li></ul><p class="entity-link-label">author</p><ul class="entity-link-list"><li><a class="reference internal" href="persons.html#entity-ALFRED">ALFRED</a></li></ul><p class="entity-link-label">links incoming</p><ul class="entity-link-list"><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_022">SWREQ_022</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_023">SWREQ_023</a></li><li><a class="reference internal" href="sys_4_sys_integation_tests.html#entity-TEST_SYS_INT_008">TEST_SYS_INT_008</a></li></ul></div></details></div><div class="entity entity-arch" id="entity-ARCH_009"><p class="entity-header"><span class="entity-type">Architecture</span><span class="entity-title">Driver Drowsiness Detection System</span><span class="entity-id">ARCH_009</span></p><div class="entity-content"><p>Define the system architecture for driver drowsiness detection, combining cabin
+camera capture with an eye-state estimator and a drowsiness scorer that emits
+progressive alerts via the existing driver alert system.</p>
+<div class="plantuml-diagram">
+  <img src="../_images/3d1a8cdca5ee1cf62ad22b6adedf18f87dafd1e32d39b5b0d5f60810d3b033cf.svg" alt="PlantUML Diagram" />
+</div>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links outgoing</p><ul class="entity-link-list"><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_013">REQ_013</a></li><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_014">REQ_014</a></li></ul><p class="entity-link-label">author</p><ul class="entity-link-list"><li><a class="reference internal" href="persons.html#entity-ALFRED">ALFRED</a></li></ul><p class="entity-link-label">links incoming</p><ul class="entity-link-list"><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_024">SWREQ_024</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_025">SWREQ_025</a></li><li><a class="reference internal" href="sys_4_sys_integation_tests.html#entity-TEST_SYS_INT_009">TEST_SYS_INT_009</a></li></ul></div></details></div><div class="entity entity-arch" id="entity-ARCH_010"><p class="entity-header"><span class="entity-type">Architecture</span><span class="entity-title">Automated Parking System</span><span class="entity-id">ARCH_010</span></p><div class="entity-content"><p>Define the system architecture for automated parking, combining ultrasonic ranging
+and surround-view camera input for slot detection, a trajectory planner, and the
+actuator interface that commands steering, throttle, and brake during the park maneuver.</p>
+<div class="plantuml-diagram">
+  <img src="../_images/1d3bf6c1a9f7ce26c323a45cc520be4050cf860fedcb5c6216d138a290839ce2.svg" alt="PlantUML Diagram" />
+</div>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">links outgoing</p><ul class="entity-link-list"><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_015">REQ_015</a></li><li><a class="reference internal" href="sys_2_req_analysis.html#entity-REQ_016">REQ_016</a></li></ul><p class="entity-link-label">author</p><ul class="entity-link-list"><li><a class="reference internal" href="persons.html#entity-ALFRED">ALFRED</a></li></ul><p class="entity-link-label">links incoming</p><ul class="entity-link-list"><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_026">SWREQ_026</a></li><li><a class="reference internal" href="swe_1_sw_req_analysis.html#entity-SWREQ_027">SWREQ_027</a></li><li><a class="reference internal" href="sys_4_sys_integation_tests.html#entity-TEST_SYS_INT_010">TEST_SYS_INT_010</a></li></ul></div></details></div>
+      
+      <nav class="page-relations">
+        <a class="prev" href="sys_2_req_analysis.html">&larr; SYS.2 Requirement Analysis</a>
+        <a class="next" href="swe_1_sw_req_analysis.html">SWE.1 Software Requirements &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
