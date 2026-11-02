@@ -38,5 +38,6 @@ suite('Project analysis (e2e)', () => {
         // Then
         assert.match(page, /sphinx\.ext\.autodoc<\/code>: not fully supported/);
         assert.match(page, /compatibility\.html#compatibility-autodoc/);
+        assert.match(page, />sphinx\/api\.rst:4</);
     });
 });

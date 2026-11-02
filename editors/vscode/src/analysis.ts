@@ -112,9 +112,9 @@ export function projectTitle(project: ProjectStatus): string {
     return `Folder ${project.root}`;
 }
 
-/** The last path segment of `uri`, and its position, as a place is named. */
+/** The path of `site` relative to the workspace, and its line, as a place is named. */
 function siteName(site: ExampleSite): string {
-    return `${decodeURIComponent(site.uri.slice(site.uri.lastIndexOf('/') + 1))}:${site.line}`;
+    return `${vscode.workspace.asRelativePath(vscode.Uri.parse(site.uri))}:${site.line}`;
 }
 
 /** The link to the compatibility page for `construct`, if it has one. */
@@ -137,7 +137,7 @@ function constructRow(construct: ConstructReport): string {
     <td class="count">${construct.count}</td>
     <td>${escapeHtml(construct.provider ?? '')}</td>
     <td>${constructLink(construct)}</td>
-    <td>${examples}</td>
+    <td class="places">${examples}</td>
   </tr>`;
 }
 
@@ -218,6 +218,7 @@ export function reportPage(report: AnalysisReport, nonce: string): string {
   table { border-collapse: collapse; width: 100%; }
   th, td { border-bottom: 1px solid var(--vscode-panel-border); padding: 2px 8px; text-align: left; vertical-align: top; }
   .count { text-align: right; }
+  .places { overflow-wrap: anywhere; }
   .notice { color: var(--vscode-editorWarning-foreground); }
 </style>
 </head>

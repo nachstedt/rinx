@@ -58,7 +58,11 @@ suite('Analysis report Test Suite', () => {
             page,
             /data-link="https:\/\/example\.com\/compatibility\.html#compatibility-autodoc">compatibility</,
         );
-        assert.match(page, /data-uri="file:\/\/\/docs\/my%20page\.rst" data-line="4" data-column="1">my page\.rst:4</);
+        // No workspace is open here, so the whole path is shown.
+        assert.match(
+            page,
+            /data-uri="file:\/\/\/docs\/my%20page\.rst" data-line="4" data-column="1">\/docs\/my page\.rst:4</,
+        );
     });
 
     test('reportPage: a construct no row names says it is not listed', () => {
