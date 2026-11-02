@@ -38,6 +38,9 @@ use rinx_inventory::InventoryName;
 
 use super::extension_profile::{ExtensionProfile, ExtensionProfiles, TargetScope};
 
+/// The extension whose roles a project's `extlinks` setting names.
+pub(super) const EXTLINKS_EXTENSION: &str = "sphinx.ext.extlinks";
+
 /// How a project's findings are reported.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Strictness {
@@ -65,6 +68,46 @@ impl Strictness {
             extensions,
             ExtensionProfiles::known(),
         ))
+    }
+
+    /// The extensions the project declares, the ones the table describes
+    /// first, each in declaration order, with whether it does.
+    #[must_use]
+    pub fn declared_extensions(&self) -> Vec<(&str, bool)> {
+        match self {
+            Self::Legacy(policy) => policy
+                .modelled
+                .iter()
+                .map(|profile| (profile.name.as_str(), true))
+                .chain(policy.unmodelled.iter().map(|name| (name.as_str(), false)))
+                .collect(),
+            Self::Rinx => Vec::new(),
+        }
+    }
+
+    /// The declared extension providing the directive `name`, if the table
+    /// says one does.
+    #[must_use]
+    pub fn directive_provider(&self, name: &str) -> Option<&str> {
+        match self {
+            Self::Legacy(policy) => policy.provider_of(name),
+            Self::Rinx => None,
+        }
+    }
+
+    /// The declared extension providing the role `name`, if the table or
+    /// `extlinks` says one does.
+    #[must_use]
+    pub fn role_provider(&self, name: &str) -> Option<&str> {
+        match self {
+            Self::Legacy(policy) if policy.extlinks.contains(name) => Some(EXTLINKS_EXTENSION),
+            Self::Legacy(policy) => policy
+                .modelled
+                .iter()
+                .find(|profile| profile.roles.contains(name))
+                .map(|profile| profile.name.as_str()),
+            Self::Rinx => None,
+        }
     }
 
     /// How `diagnostic` is reported under this strictness.

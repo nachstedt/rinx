@@ -9,6 +9,8 @@ re-implementation of Sphinx.
   reports, with the same codes.
 - **Live preview.** `Rinx: Show Preview` renders the open document the way
   the site will.
+- **Project analysis.** `Rinx: Analyse Project` lists what a project writes
+  that rinx does not support, with counts and links to the compatibility page.
 
 ## Requirements
 

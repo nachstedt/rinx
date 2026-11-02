@@ -87,6 +87,27 @@ impl ExtensionProfiles {
     pub fn get(&self, name: &str) -> Option<&ExtensionProfile> {
         self.by_name.get(name)
     }
+
+    /// Every profile, by name.
+    pub fn iter(&self) -> impl Iterator<Item = &ExtensionProfile> {
+        self.by_name.values()
+    }
+
+    /// The name of the first extension adding the directive `name`.
+    #[must_use]
+    pub fn providing_directive(&self, name: &str) -> Option<&str> {
+        self.iter()
+            .find(|profile| profile.directives.contains(name))
+            .map(|profile| profile.name.as_str())
+    }
+
+    /// The name of the first extension adding the role `name`.
+    #[must_use]
+    pub fn providing_role(&self, name: &str) -> Option<&str> {
+        self.iter()
+            .find(|profile| profile.roles.contains(name))
+            .map(|profile| profile.name.as_str())
+    }
 }
 
 /// Reads an extension table, reporting every fault in it rather than the

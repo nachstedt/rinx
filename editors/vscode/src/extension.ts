@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { LanguageClient } from 'vscode-languageclient/node';
+import { AnalysisClient, AnalysisPanel } from './analysis';
 import { BazelScanner } from './bazel';
 import { bundledBinaryPath } from './binary';
 import { createLanguageClient, resolveServerBinary } from './client';
@@ -52,6 +53,11 @@ function runningClient(): PanelClient | undefined {
     return client?.isRunning() ? client : undefined;
 }
 
+/** The language client, while it runs: what the report panel asks. */
+function runningAnalysisClient(): AnalysisClient | undefined {
+    return client?.isRunning() ? client : undefined;
+}
+
 /** `rinx.site`, the site the user chose for this workspace, if set. */
 function configuredSite(): string | undefined {
     return vscode.workspace.getConfiguration('rinx').get<string>('site') || undefined;
@@ -75,6 +81,8 @@ export interface RinxApi {
     scrollPreviewTo(line: number): void;
     /** Moves the cursor as a double-click on the preview at the source line `line` does, if one is open. */
     doubleClickPreview(line: number): Promise<void>;
+    /** The page the report panel shows, if it is open and shows one. */
+    analysisHtml(): string | undefined;
 }
 
 export function activate(context: vscode.ExtensionContext): RinxApi {
@@ -85,6 +93,9 @@ export function activate(context: vscode.ExtensionContext): RinxApi {
         statusItem,
         vscode.commands.registerCommand('rinx.showPreview', () => {
             PreviewPanel.createOrShow(runningClient, context.extensionUri);
+        }),
+        vscode.commands.registerCommand('rinx.analyseProject', () => {
+            AnalysisPanel.createOrShow(runningAnalysisClient);
         }),
         vscode.commands.registerCommand('rinx.showLogs', () => {
             outputChannel.show();
@@ -107,6 +118,7 @@ export function activate(context: vscode.ExtensionContext): RinxApi {
         doubleClickPreview: async (line) => {
             await PreviewPanel.currentPanel?.switchToEditor(line);
         },
+        analysisHtml: () => AnalysisPanel.currentPanel?.html,
     };
 }
 
@@ -199,7 +211,11 @@ async function startServer(
         // Every handler is registered before the client starts: the server
         // asks for the Bazel manifests as soon as it has found the projects.
         client = createLanguageClient(binary, outputChannel);
-        client.onNotification(STATUS_METHOD, (status: IndexStatus) => statusItem.update(status));
+        client.onNotification(STATUS_METHOD, (status: IndexStatus) => {
+            statusItem.update(status);
+            // A report asked for during the scan said its counts may grow.
+            if (status.state === 'ready') void AnalysisPanel.currentPanel?.refresh();
+        });
         client.onRequest(FETCH_INVENTORY_METHOD, (params: FetchInventoryParams) => fetcher.fetchInventory(params));
         const running = client;
         const notify = (method: string) => {

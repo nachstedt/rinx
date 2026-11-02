@@ -28,6 +28,11 @@
         "icon": "$(open-preview)"
       },
       {
+        "command": "rinx.analyseProject",
+        "title": "Analyse Project",
+        "category": "Rinx"
+      },
+      {
         "command": "rinx.showLogs",
         "title": "Show Logs",
         "category": "Rinx"

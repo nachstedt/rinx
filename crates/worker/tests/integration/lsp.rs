@@ -219,6 +219,51 @@ fn test_lsp_reads_a_sphinx_projects_conf_py() {
 }
 
 #[test]
+fn test_lsp_reports_what_a_project_does_not_support() {
+    // Given — a Sphinx project declaring autodoc and using it
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_analysis");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    std::fs::write(
+        root.join("conf.py"),
+        "extensions = ['sphinx.ext.autodoc']\n",
+    )
+    .expect("write");
+    std::fs::write(root.join("index.rst"), ".. automodule:: spam\n").expect("write");
+    let mut server = Server::spawn();
+    server.initialize_with(json!({
+        "capabilities": {},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+    while !matches!(
+        server.receive(),
+        Message::Notification(notification)
+            if notification.method == "rinx/status" && notification.params["state"] == "ready"
+    ) {}
+
+    // When
+    server.request(2, "rinx/analyseProject", json!({}));
+    let report = loop {
+        if let Message::Response(response) = server.receive() {
+            break response.response_result.expect("the report");
+        }
+    };
+
+    // Then
+    assert_eq!(report["complete"], true);
+    let construct = &report["projects"][0]["constructs"][0];
+    assert_eq!(construct["kind"], "unknownDirective");
+    assert_eq!(construct["name"], "automodule");
+    assert_eq!(construct["provider"], "sphinx.ext.autodoc");
+    assert!(
+        construct["link"]
+            .as_str()
+            .is_some_and(|link| link.ends_with("#compatibility-autodoc")),
+        "{construct}"
+    );
+}
+
+#[test]
 fn test_lsp_lowers_what_a_sphinx_projects_extensions_explain() {
     // Given — a project declaring autodoc, and an extension no profile models
     let root = std::env::temp_dir().join("rinx_lsp_stdio_extensions");

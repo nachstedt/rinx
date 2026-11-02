@@ -75,6 +75,7 @@ What only VS Code has
 Some features need the editor to do something for the server, and only the VS Code extension does so far:
 
 - The live preview.
+- The panel drawing the project analysis. Any client can ask for its data, with ``rinx/analyseProject`` below.
 - Downloading inventories. The server never touches the network, so in other editors an inventory named by an address is not loaded, and references into it are hints rather than warnings.
 - Running ``conf.py``. The server needs to be told which interpreter to run it in, and only in a trusted workspace (see :ref:`vscode-running-conf`). Elsewhere, ``conf.py`` is only read.
 - Reading a Bazel workspace's sites as the build does. The server never runs Bazel, so it needs to be handed each site's manifest (see :ref:`vscode-bazel-projects`). Elsewhere, a Bazel workspace is read as a folder, so neither what fails the build nor the quick fix adding a missing ``deps`` entry is shown.
@@ -85,6 +86,7 @@ Protocol extensions
 
 A client can offer what VS Code offers through these messages. Each one is opt-in, so a client that knows none of them gets a working server:
 
+- ``rinx/analyseProject``, a request from the client, optionally naming a document, answered with what each project (or that document's) writes that rinx does not support: its declared extensions, and each unknown or unsupported directive, role and option with its count, the extension providing it, its row on :ref:`compatibility` and the first places it is written. ``rinx lsp --check`` prints the counts for a whole folder as ``analysis``.
 - ``rinx/status``, a notification from the server, with the index's state (``indexing`` or ``ready``), the number of documents indexed, and the projects found. A client may ignore it.
 - The ``fetchInventories`` initialization option. With it, the server sends ``rinx/fetchInventory`` requests naming an address, and the client answers with the downloaded inventory.
 - The ``evaluateConf`` initialization option. With it, the server sends a ``rinx/confInterpreter`` request for each ``conf.py`` it could not read, and the client answers with an interpreter or none. The client sends a ``rinx/confInterpreterChanged`` notification when its answer would change.

@@ -27,6 +27,7 @@ use serde::de::DeserializeOwned;
 use super::bazel_manifests::BAZEL_MANIFESTS_CHANGED_METHOD;
 use super::conf_runs::CONF_INTERPRETER_CHANGED_METHOD;
 use super::state::ServerState;
+use crate::analysis::{ANALYSE_PROJECT_METHOD, AnalyseProjectParams};
 use crate::position::PositionEncoding;
 use crate::preview::{PREVIEW_METHOD, PreviewParams, PreviewRefusal, PreviewResult};
 use crate::preview_link::{PREVIEW_LINK_METHOD, PreviewLinkParams};
@@ -231,6 +232,12 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
                     }
                 },
             )
+        }
+        ANALYSE_PROJECT_METHOD => {
+            answer(id, &method, params, |id, params: AnalyseProjectParams| {
+                let document = params.text_document.map(|document| document.uri);
+                Response::new_ok(id, state.analyse_project(document.as_ref()))
+            })
         }
         _ => Response::new_err(
             id,

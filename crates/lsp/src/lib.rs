@@ -7,6 +7,7 @@
 //! `lsp-server`, because the pipeline it drives is synchronous and CPU-bound.
 //!
 //! - `server` is the protocol loop and the pure handlers it dispatches to;
+//! - `analysis` reports what a project wrote that this build does not support;
 //! - `completion` completes a `:ref:` or `:doc:` target from the index;
 //! - `reference_at` finds the reference under the cursor, `hover` shows where
 //!   it leads — `entity_hover` an entity's fields, also on the directive
@@ -28,6 +29,7 @@
 //! - `project` finds the workspace's projects, reads their `conf.py`, and
 //!   scans and keeps each one's project index.
 
+pub mod analysis;
 mod code_action;
 mod completion;
 mod definition;

@@ -16,6 +16,7 @@
 
 mod bazel_manifest;
 mod build_file;
+mod compatibility_links;
 mod conf_eval;
 mod constructs;
 mod declarations;
@@ -37,16 +38,20 @@ mod symbols;
 
 pub use bazel_manifest::{BazelGrant, BazelRoots, read_bazel_projects};
 pub use build_file::{add_deps, build_file_of, library_listing};
+pub use compatibility_links::{CompatibilityLink, CompatibilityLinks};
 #[cfg(test)]
 pub use conf_eval::ConfValues;
 pub use conf_eval::{CONF_RUN_TIMEOUT, ConfEvaluation, ConfEvaluations, run_conf};
-pub use constructs::ConstructTally;
+#[cfg(test)]
+pub use constructs::ConstructSite;
+pub use constructs::{ConstructCount, ConstructTally};
 pub use declarations::{BundledFiles, undeclared_uses};
 pub use dependency_fix::missing_deps;
 pub use discover::{
     DiscoveredProject, contains_conf, discover_projects, discover_projects_with, is_conf,
     is_visible_under, sources_under,
 };
+pub use extension_profile::ExtensionProfiles;
 pub use index::{Definitions, IndexedDocument, Project};
 pub use inventories::Fetched;
 pub(crate) use model::{DEFAULT_ROOT_DOC, RST_SUFFIX};

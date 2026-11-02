@@ -1,0 +1,185 @@
+# Which row of `docs/compatibility.rst` says what rinx does about a construct
+# it does not support, for the language server's project report (roadmap #36).
+# A test checks each anchor exists on the page, and that no listed directive or
+# role is one rinx implements.
+#
+# One `[[row]]` per anchor, naming what the row is about. An extension's
+# directives and roles lead to its row through `extension_profiles.toml`, so
+# only what no extension provides is listed by name. An extension with a row
+# is one rinx does not support entirely.
+
+[[row]]
+anchor = "compatibility-semantic-roles"
+roles = [
+    "abbr",
+    "command",
+    "dfn",
+    "file",
+    "guilabel",
+    "kbd",
+    "mailheader",
+    "makevar",
+    "manpage",
+    "menuselection",
+    "mimetype",
+    "newsgroup",
+    "regexp",
+    "samp",
+]
+
+[[row]]
+anchor = "compatibility-docutils-roles"
+roles = ["emphasis", "strong", "literal", "abbreviation", "ab", "acronym", "ac", "raw"]
+
+[[row]]
+anchor = "compatibility-versionremoved"
+directives = ["versionremoved"]
+
+[[row]]
+anchor = "compatibility-topic"
+directives = ["topic", "sidebar", "rubric"]
+
+[[row]]
+anchor = "compatibility-epigraph"
+directives = ["epigraph", "highlights", "pull-quote"]
+
+[[row]]
+anchor = "compatibility-compound"
+directives = ["compound", "container"]
+
+[[row]]
+anchor = "compatibility-parsed-literal"
+directives = ["parsed-literal"]
+
+[[row]]
+anchor = "compatibility-raw"
+directives = ["raw"]
+
+[[row]]
+anchor = "compatibility-class"
+directives = ["rst-class"]
+
+[[row]]
+anchor = "compatibility-meta"
+directives = ["meta"]
+
+[[row]]
+anchor = "compatibility-centered"
+directives = ["centered"]
+
+[[row]]
+anchor = "compatibility-hlist"
+directives = ["hlist"]
+
+[[row]]
+anchor = "compatibility-productionlist"
+directives = ["productionlist"]
+
+[[row]]
+anchor = "compatibility-only"
+directives = ["only"]
+
+[[row]]
+anchor = "compatibility-authors"
+directives = ["sectionauthor", "moduleauthor", "codeauthor"]
+
+[[row]]
+anchor = "compatibility-target-notes"
+directives = ["target-notes"]
+
+[[row]]
+anchor = "compatibility-needlist"
+directives = ["needlist"]
+
+[[row]]
+anchor = "compatibility-simplepdf"
+directives = ["ifinclude", "pdfinclude"]
+
+[[row]]
+anchor = "compatibility-no-typesetting"
+options = ["no-typesetting"]
+
+[[row]]
+anchor = "compatibility-py-roles"
+roles = ["py:obj", "py:deco", "py:type"]
+
+[[row]]
+anchor = "compatibility-c-expr"
+roles = ["c:expr", "c:texpr"]
+
+[[row]]
+anchor = "compatibility-c-enum"
+directives = ["c:enum", "c:enumerator"]
+roles = ["c:enum", "c:enumerator"]
+
+[[row]]
+anchor = "compatibility-envvar"
+directives = ["envvar", "std:envvar"]
+roles = ["std:envvar"]
+
+[[row]]
+anchor = "compatibility-confval"
+directives = ["confval", "std:confval"]
+roles = ["std:confval"]
+
+[[row]]
+anchor = "compatibility-describe"
+directives = ["describe", "object"]
+
+[[row]]
+anchor = "compatibility-keyword"
+roles = ["std:keyword"]
+
+[[row]]
+anchor = "compatibility-token"
+roles = ["std:token"]
+
+# Extensions.
+
+[[row]]
+anchor = "compatibility-autodoc"
+extensions = ["sphinx.ext.autodoc"]
+
+[[row]]
+anchor = "compatibility-autosummary"
+extensions = ["sphinx.ext.autosummary"]
+
+[[row]]
+anchor = "compatibility-extlinks"
+extensions = ["sphinx.ext.extlinks"]
+
+[[row]]
+anchor = "compatibility-todo"
+extensions = ["sphinx.ext.todo"]
+
+[[row]]
+anchor = "compatibility-graphviz"
+extensions = ["sphinx.ext.graphviz"]
+
+[[row]]
+anchor = "compatibility-inheritance-diagram"
+extensions = ["sphinx.ext.inheritance_diagram"]
+
+[[row]]
+anchor = "compatibility-ifconfig"
+extensions = ["sphinx.ext.ifconfig"]
+
+[[row]]
+anchor = "compatibility-sphinx-design"
+extensions = ["sphinx_design"]
+
+[[row]]
+anchor = "compatibility-needs-other"
+extensions = ["sphinx_needs"]
+
+[[row]]
+anchor = "compatibility-sphinx-tabs"
+extensions = ["sphinx_tabs.tabs"]
+
+[[row]]
+anchor = "compatibility-mermaid"
+extensions = ["sphinxcontrib.mermaid"]
+
+[[row]]
+anchor = "compatibility-bibtex"
+extensions = ["sphinxcontrib.bibtex"]

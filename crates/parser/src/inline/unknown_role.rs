@@ -68,6 +68,15 @@ fn is_unsupported_role(name: &str) -> bool {
     })
 }
 
+/// Every role of [`UNSUPPORTED_ROLES`], as a domain's is qualified.
+pub fn unsupported_role_names() -> impl Iterator<Item = String> {
+    UNSUPPORTED_ROLES.iter().flat_map(|(domain, names)| {
+        names.iter().map(move |name| {
+            domain.map_or_else(|| (*name).to_string(), |domain| format!("{domain}:{name}"))
+        })
+    })
+}
+
 /// `source`, a role named `name` that nothing answers to, refused as
 /// unsupported or unknown.
 pub(super) fn refused_unknown_role(source: &str, name: &str) -> InlineNode {
@@ -92,13 +101,7 @@ mod tests {
     #[test]
     fn test_no_unsupported_role_is_one_this_build_implements() {
         // Given / When
-        let implemented: Vec<String> = UNSUPPORTED_ROLES
-            .iter()
-            .flat_map(|(domain, names)| {
-                names.iter().map(move |name| {
-                    domain.map_or_else(|| (*name).to_string(), |domain| format!("{domain}:{name}"))
-                })
-            })
+        let implemented: Vec<String> = unsupported_role_names()
             .filter(|spelled| is_fixed_role_name(spelled))
             .collect();
 
