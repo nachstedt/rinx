@@ -57,6 +57,8 @@ Heading adornments
      - ✅
      -
 
+.. _compatibility-inline-markup:
+
 Inline markup
 -------------
 
@@ -253,13 +255,21 @@ Inline markup
      - - Role names are case-sensitive, so ``:Title:`` is not recognized.
        - A section title holding one shows it as plain text in the
          navigation and the page title, as for emphasis.
-   * - Semantic markup roles (``:abbr:``, ``:command:``, ``:dfn:``,
+   * - .. _compatibility-semantic-roles:
+
+       Semantic markup roles (``:abbr:``, ``:command:``, ``:dfn:``,
        ``:file:``, ``:guilabel:``, ``:kbd:``, ``:mailheader:``,
        ``:makevar:``, ``:manpage:``, ``:menuselection:``, ``:mimetype:``,
        ``:newsgroup:``, ``:regexp:``, ``:samp:``)
      - ❌
      - - Shown as written and reported as ``interpreted.unsupported-role``,
          which the language server shows as information in a Sphinx project.
+   * - .. _compatibility-docutils-roles:
+
+       docutils' explicit roles (``:emphasis:``, ``:strong:``, ``:literal:``,
+       ``:abbreviation:``/``:ab:``, ``:acronym:``/``:ac:``, ``:raw:``)
+     - ❌
+     - - Shown as written and reported as ``interpreted.unsupported-role``.
 
 Domain-object roles are listed under their domain in
 :ref:`compatibility-domains` below.
@@ -331,6 +341,8 @@ Tables
        - ``:delim:``, ``:quote:`` and ``:escape:`` must be ASCII.
        - A ``:file:`` must be declared in ``parse_data``.
 
+.. _compatibility-directives:
+
 Directives
 ----------
 
@@ -390,7 +402,9 @@ Directives
        ``.. deprecated::``
      - ✅
      -
-   * - ``.. versionremoved::``
+   * - .. _compatibility-versionremoved:
+
+       ``.. versionremoved::``
      - ❌
      -
    * - ``.. image::``
@@ -442,25 +456,39 @@ Directives
          labelled equations are numbered, per document.
        - Under ``:nowrap:``, environments such as ``align`` restart their
          count in every directive.
-   * - autodoc (``.. automodule::``, ``.. autofunction::``, …)
+   * - .. _compatibility-autodoc:
+
+       autodoc (``.. automodule::``, ``.. autofunction::``, …)
      - ❌
      - - Out of scope: it would import user code.
-   * - ``.. topic::``, ``.. sidebar::``, ``.. rubric::``
+   * - .. _compatibility-topic:
+
+       ``.. topic::``, ``.. sidebar::``, ``.. rubric::``
      - ❌
      -
-   * - ``.. epigraph::``, ``.. highlights::``, ``.. pull-quote::``
+   * - .. _compatibility-epigraph:
+
+       ``.. epigraph::``, ``.. highlights::``, ``.. pull-quote::``
      - ❌
      -
-   * - ``.. compound::``, ``.. container::``
+   * - .. _compatibility-compound:
+
+       ``.. compound::``, ``.. container::``
      - ❌
      -
-   * - ``.. parsed-literal::``
+   * - .. _compatibility-parsed-literal:
+
+       ``.. parsed-literal::``
      - ❌
      -
-   * - ``.. raw::``
+   * - .. _compatibility-raw:
+
+       ``.. raw::``
      - ❌
      -
-   * - ``.. class::`` / ``.. rst-class::``
+   * - .. _compatibility-class:
+
+       ``.. class::`` / ``.. rst-class::``
      - ❌
      -
    * - Roles rinx does not implement
@@ -491,27 +519,43 @@ Directives
      - ✅ ℹ️
      - - Built-in role names are case-sensitive, so
          ``.. default-role:: Any`` is reported as an unknown role.
-   * - ``.. meta::``
+   * - .. _compatibility-meta:
+
+       ``.. meta::``
      - ❌
      -
-   * - ``.. centered::``
+   * - .. _compatibility-centered:
+
+       ``.. centered::``
      - ❌
      -
-   * - ``.. hlist::``
+   * - .. _compatibility-hlist:
+
+       ``.. hlist::``
      - ❌
      -
-   * - ``.. productionlist::``
+   * - .. _compatibility-productionlist:
+
+       ``.. productionlist::``
      - ❌
      -
-   * - ``.. only::``
+   * - .. _compatibility-only:
+
+       ``.. only::``
      - ❌
      - - ``.. if-builder::`` covers the builder case.
-   * - ``.. sectionauthor::``, ``.. moduleauthor::``, ``.. codeauthor::``
+   * - .. _compatibility-authors:
+
+       ``.. sectionauthor::``, ``.. moduleauthor::``, ``.. codeauthor::``
      - ❌
      -
-   * - ``.. target-notes::``
+   * - .. _compatibility-target-notes:
+
+       ``.. target-notes::``
      - ❌
      -
+
+.. _compatibility-extension-directives:
 
 Extension directives
 --------------------
@@ -544,7 +588,9 @@ always available, and its name cannot be used by an entity schema.
        - ``:ref-type:`` is refused.
        - ``:outline:`` without ``:color:`` warns.
        - A reference inside the label renders as its text.
-   * - ``:octicon:`` role, material icons, ``.. button-ref::``,
+   * - .. _compatibility-sphinx-design:
+
+       ``:octicon:`` role, material icons, ``.. button-ref::``,
        ``.. card::``, ``.. grid-item-card::``, ``.. tab-set::``
        (sphinx-design)
      - ❌
@@ -595,7 +641,9 @@ always available, and its name cannot be used by an entity schema.
        - A rotation that is not whole degrees is refused.
        - ``:style:`` and ``:status:``/``:tags:``/``:types:``/``:cypher:``
          are refused.
-   * - ``.. needlist::`` (sphinx-needs)
+   * - .. _compatibility-needlist:
+
+       ``.. needlist::`` (sphinx-needs)
      - ❌
      -
    * - ``.. needimport::`` (sphinx-needs)
@@ -642,7 +690,61 @@ always available, and its name cannot be used by an entity schema.
          stay sections.
        - An unknown builder name warns.
        - An empty selected body warns.
-   * - ``.. ifinclude::``, ``.. pdfinclude::`` (sphinx-simplepdf)
+   * - .. _compatibility-simplepdf:
+
+       ``.. ifinclude::``, ``.. pdfinclude::`` (sphinx-simplepdf)
+     - ❌
+     -
+   * - .. _compatibility-needs-other:
+
+       ``.. needreport::``, ``.. needextract::``, ``.. list2need::``,
+       ``:need:`` and the other need roles (sphinx-needs)
+     - ❌
+     -
+   * - .. _compatibility-autosummary:
+
+       ``.. autosummary::`` (``sphinx.ext.autosummary``)
+     - ❌
+     - - Out of scope, as autodoc is: it would import user code.
+   * - .. _compatibility-extlinks:
+
+       Roles from ``extlinks`` (``sphinx.ext.extlinks``)
+     - ❌
+     - - Shown as written; the language server shows them as information.
+   * - .. _compatibility-todo:
+
+       ``.. todo::``, ``.. todolist::`` (``sphinx.ext.todo``)
+     - ❌
+     -
+   * - .. _compatibility-graphviz:
+
+       ``.. graphviz::``, ``.. graph::``, ``.. digraph::``
+       (``sphinx.ext.graphviz``)
+     - ❌
+     -
+   * - .. _compatibility-inheritance-diagram:
+
+       ``.. inheritance-diagram::`` (``sphinx.ext.inheritance_diagram``)
+     - ❌
+     -
+   * - .. _compatibility-ifconfig:
+
+       ``.. ifconfig::`` (``sphinx.ext.ifconfig``)
+     - ❌
+     -
+   * - .. _compatibility-sphinx-tabs:
+
+       ``.. tabs::`` and its children (sphinx-tabs)
+     - ❌
+     -
+   * - .. _compatibility-mermaid:
+
+       ``.. mermaid::``, ``.. autoclasstree::`` (sphinxcontrib-mermaid)
+     - ❌
+     -
+   * - .. _compatibility-bibtex:
+
+       ``.. bibliography::``, ``:cite:`` and its forms (sphinxcontrib-bibtex)
      - ❌
      -
 
@@ -666,7 +768,9 @@ Every domain
      - 🔶
      - - ``:no-contents-entry:`` has no effect, since rinx lists no objects
          in a local table of contents.
-   * - ``:no-typesetting:``
+   * - .. _compatibility-no-typesetting:
+
+       ``:no-typesetting:``
      - ❌
      - - Warns as ``directive.unsupported-option``; on a ``.. py:module::``,
          where Sphinx accepts it and does nothing, it does nothing.
@@ -729,6 +833,11 @@ Python (``py``)
    * - ``.. py:attribute::`` and ``:attr:``
      - 🔶
      - - ``:canonical:`` is shown but creates no alias.
+   * - .. _compatibility-py-roles:
+
+       ``:py:obj:``, ``:py:deco:``, ``:py:type:`` roles
+     - ❌
+     -
    * - ``.. py:exception::`` and ``:exc:``
      - 🔶
      - - ``:abstract:`` is not supported.
@@ -767,7 +876,14 @@ C (``c``)
    * - ``.. c:type::`` and ``:type:``
      - ✅
      -
-   * - ``.. c:enum::`` / ``.. c:enumerator::``
+   * - .. _compatibility-c-expr:
+
+       ``:c:expr:``, ``:c:texpr:`` roles
+     - ❌
+     -
+   * - .. _compatibility-c-enum:
+
+       ``.. c:enum::`` / ``.. c:enumerator::``
      - ❌
      -
    * - ``.. c:namespace::``, ``.. c:namespace-push::``,
@@ -799,16 +915,29 @@ Standard (``std``)
    * - ``.. glossary::`` and ``:term:``
      - ✅
      -
-   * - ``.. envvar::`` and ``:envvar:``
+   * - .. _compatibility-envvar:
+
+       ``.. envvar::`` and ``:envvar:``
      - ❌
      -
-   * - ``.. confval::`` and ``:confval:``
+   * - .. _compatibility-confval:
+
+       ``.. confval::`` and ``:confval:``
      - ❌
      -
-   * - ``.. describe::`` / ``.. object::``
+   * - .. _compatibility-describe:
+
+       ``.. describe::`` / ``.. object::``
      - ❌
      -
-   * - ``:token:`` role
+   * - .. _compatibility-keyword:
+
+       ``:keyword:`` role
+     - ❌
+     -
+   * - .. _compatibility-token:
+
+       ``:token:`` role
      - ❌
      -
 

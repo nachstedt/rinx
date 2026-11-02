@@ -22,6 +22,7 @@ use lsp_types::{FileChangeType, FileEvent, Uri};
 
 use super::handlers::show_information;
 use super::state::ServerState;
+use crate::analysis::{AnalysisReport, project_report};
 use crate::diagnostics::conf_diagnostics;
 use crate::progress::{IndexState, IndexStatus, ProjectStatus};
 use crate::project::{
@@ -373,30 +374,56 @@ impl ServerState {
         projects.sort_by(|a, b| a.root().cmp(b.root()));
         projects
             .into_iter()
-            .filter_map(|project| {
-                let root = self.folders.get(project.folder())?;
-                match &project.model().source {
-                    ProjectSource::SphinxConf { conf } => Some(ProjectStatus::Sphinx {
-                        conf: relative_name(root, conf),
-                        executed_with: self
-                            .conf_runs
-                            .executed_with(conf, project.conf_text())
-                            .map(|interpreter| interpreter.display().to_string()),
-                    }),
-                    ProjectSource::Folder if project.document_count() > 0 => {
-                        Some(ProjectStatus::Folder {
-                            root: root.file_name().map_or_else(String::new, |name| {
-                                name.to_string_lossy().into_owned()
-                            }),
-                        })
-                    }
-                    ProjectSource::Bazel { site, .. } => {
-                        Some(ProjectStatus::Bazel { site: site.clone() })
-                    }
-                    ProjectSource::Folder => None,
-                }
-            })
+            .filter_map(|project| self.project_status(project))
             .collect()
+    }
+
+    /// How `project` is named, unless it is a folder holding no documents.
+    fn project_status(&self, project: &Project) -> Option<ProjectStatus> {
+        let root = self.folders.get(project.folder())?;
+        match &project.model().source {
+            ProjectSource::SphinxConf { conf } => Some(ProjectStatus::Sphinx {
+                conf: relative_name(root, conf),
+                executed_with: self
+                    .conf_runs
+                    .executed_with(conf, project.conf_text())
+                    .map(|interpreter| interpreter.display().to_string()),
+            }),
+            ProjectSource::Folder if project.document_count() > 0 => Some(ProjectStatus::Folder {
+                root: root
+                    .file_name()
+                    .map_or_else(String::new, |name| name.to_string_lossy().into_owned()),
+            }),
+            ProjectSource::Bazel { site, .. } => Some(ProjectStatus::Bazel { site: site.clone() }),
+            ProjectSource::Folder => None,
+        }
+    }
+
+    /// What the project holding `document` — or, without one, each project —
+    /// wrote that this build does not support.
+    pub(super) fn analyse_project(&self, document: Option<&Uri>) -> AnalysisReport {
+        let mut projects: Vec<&Project> = match document {
+            Some(uri) => file_path(uri)
+                .and_then(|path| self.project_holding(&path))
+                .into_iter()
+                .collect(),
+            None => self.projects.values().collect(),
+        };
+        projects.sort_by(|a, b| a.root().cmp(b.root()));
+        AnalysisReport {
+            complete: self.scan.is_none(),
+            projects: projects
+                .into_iter()
+                .filter_map(|project| {
+                    Some(project_report(
+                        self.project_status(project)?,
+                        project.document_count(),
+                        project.strictness(),
+                        &project.construct_tally(),
+                    ))
+                })
+                .collect(),
+        }
     }
 }
 

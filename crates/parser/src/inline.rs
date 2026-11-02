@@ -54,3 +54,4 @@ pub use regexes::role_specs;
 pub use roles::spec::{ExternalPrefix, RoleSpec};
 pub(super) use source_map::SourceMap;
 pub(super) use text::parse_inline_text_mapped;
+pub use unknown_role::unsupported_role_names;

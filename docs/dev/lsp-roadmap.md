@@ -41,8 +41,9 @@ finished one 🔶. A heading with no marker means the step has not started.
   #348, #351 and #353), #26 (PRs #358 and #362, prepared by #357) and
   #27 (PR #365, prepared by #363), #28 (PR #374), #29 (PR #378), #30 (PR #386),
   #31 (PR #393, prepared by #387 and #390), #32 (PR #395), #33 and #34
-  (prepared by #398, #400, #401 and #407), #35.
-- **Next: #36, "rinx: Analyse project".**
+  (prepared by #398, #400, #401 and #407), #35, #36 (prepared by #413, #414
+  and #416).
+- **Next: #37, `rinx init --from-sphinx`.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -1339,7 +1340,7 @@ Not done here:
 
 ## M6: Migration and scale
 
-### 36. "rinx: Analyse project"
+### 36. "rinx: Analyse project" ✅ (prepared by #413, #414 and #416)
 
 **You experience:** a report of unsupported constructs, with counts and links
 to the compatibility page.

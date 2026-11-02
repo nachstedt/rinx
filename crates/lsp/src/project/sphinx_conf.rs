@@ -29,6 +29,7 @@ use rinx_pyconf::{BoundValue, ModuleReading, Value, ValueKind, read_module};
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::conf_eval::{ConfValues, ExecutedValue, conf_settings};
+use super::strictness::EXTLINKS_EXTENSION;
 
 use super::exclusion::{Exclusion, INCLUDE_EVERYTHING};
 use super::intersphinx::{DEFAULT_CACHE_LIMIT_DAYS, IntersphinxSettings, read_mapping};
@@ -179,7 +180,6 @@ fn anchored(value: &Value, span: rinx_pyconf::Span) -> Value {
 
 /// The extension whose settings say which other sites a project links into.
 const INTERSPHINX: &str = "sphinx.ext.intersphinx";
-const EXTLINKS: &str = "sphinx.ext.extlinks";
 
 struct Reader<'a> {
     module: &'a ModuleReading,
@@ -416,7 +416,7 @@ impl<'a> Reader<'a> {
     /// the `SOURCE_URI` of `CPython`'s is, costs nothing: the roles are only told
     /// apart from mistakes.
     fn extlinks(&mut self, extensions: &[String]) -> BTreeSet<String> {
-        if !extensions.iter().any(|name| name == EXTLINKS) {
+        if !extensions.iter().any(|name| name == EXTLINKS_EXTENSION) {
             return BTreeSet::new();
         }
         let Some(keys) = self.dict_keys("extlinks", "a dict from a role name to `(url, caption)`")

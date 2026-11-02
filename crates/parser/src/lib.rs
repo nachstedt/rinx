@@ -30,6 +30,7 @@ pub use entity_schema::load_entity_schema;
 pub use explicit_title::role_target_range;
 pub use inline::{
     ExternalPrefix, RoleSpec, can_precede_inline_markup, is_fixed_role_name, read_role, role_specs,
+    unsupported_role_names,
 };
 pub use parser_config::{
     IgnoredRoleFault, IgnoredRoles, InvalidIgnoredRole, ParserConfig, load_parser_config,

@@ -12,6 +12,7 @@ rust_library(
         "theme/default.css",
         "theme/default.html",
         "src/project/conf_dump.py",
+        "src/project/compatibility_links.toml",
         "src/project/extension_profiles.toml",
     ],
     edition = "2024",

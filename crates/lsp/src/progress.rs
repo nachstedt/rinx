@@ -21,7 +21,7 @@ use lsp_types::{
     NumberOrString, ProgressParams, ProgressParamsValue, WorkDoneProgress, WorkDoneProgressBegin,
     WorkDoneProgressCreateParams, WorkDoneProgressEnd, WorkDoneProgressReport,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 /// The method of the status notification.
 pub const STATUS_METHOD: &str = "rinx/status";
@@ -53,7 +53,7 @@ pub struct IndexStatus {
 }
 
 /// One project, as `rinx/status` names it.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ProjectStatus {
     /// A Sphinx project, named by its `conf.py`'s path within its workspace

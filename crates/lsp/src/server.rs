@@ -30,6 +30,8 @@ mod scan;
 mod state;
 
 #[cfg(test)]
+mod analysis_tests;
+#[cfg(test)]
 mod bazel_manifest_tests;
 #[cfg(test)]
 mod code_action_tests;
