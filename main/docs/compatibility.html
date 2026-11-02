@@ -266,6 +266,7 @@ for the document; docutils drops it.</p>
 </tr>
 </tbody>
 </table>
+<a id="compatibility-inline-markup"></a>
 <h2 id="inline-markup">Inline markup</h2>
 <table class="list-table">
 <colgroup>
@@ -692,7 +693,8 @@ navigation and the page title, as for emphasis.</p>
 </td>
 </tr>
 <tr>
-<td><p>Semantic markup roles (<code>:abbr:</code>, <code>:command:</code>, <code>:dfn:</code>,
+<td><a id="compatibility-semantic-roles"></a>
+<p>Semantic markup roles (<code>:abbr:</code>, <code>:command:</code>, <code>:dfn:</code>,
 <code>:file:</code>, <code>:guilabel:</code>, <code>:kbd:</code>, <code>:mailheader:</code>,
 <code>:makevar:</code>, <code>:manpage:</code>, <code>:menuselection:</code>, <code>:mimetype:</code>,
 <code>:newsgroup:</code>, <code>:regexp:</code>, <code>:samp:</code>)</p>
@@ -702,6 +704,19 @@ navigation and the page title, as for emphasis.</p>
 <td><ul>
 <li><p>Shown as written and reported as <code>interpreted.unsupported-role</code>,
 which the language server shows as information in a Sphinx project.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a id="compatibility-docutils-roles"></a>
+<p>docutils' explicit roles (<code>:emphasis:</code>, <code>:strong:</code>, <code>:literal:</code>,
+<code>:abbreviation:</code>/<code>:ab:</code>, <code>:acronym:</code>/<code>:ac:</code>, <code>:raw:</code>)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td><ul>
+<li><p>Shown as written and reported as <code>interpreted.unsupported-role</code>.</p>
 </li>
 </ul>
 </td>
@@ -871,6 +886,7 @@ is interpreted.</p>
 </tr>
 </tbody>
 </table>
+<a id="compatibility-directives"></a>
 <h2 id="directives">Directives</h2>
 <table class="list-table">
 <colgroup>
@@ -1012,7 +1028,8 @@ discards the directive.</p>
 <td></td>
 </tr>
 <tr>
-<td><p><code>.. versionremoved::</code></p>
+<td><a id="compatibility-versionremoved"></a>
+<p><code>.. versionremoved::</code></p>
 </td>
 <td><p>❌</p>
 </td>
@@ -1150,7 +1167,8 @@ count in every directive.</p>
 </td>
 </tr>
 <tr>
-<td><p>autodoc (<code>.. automodule::</code>, <code>.. autofunction::</code>, …)</p>
+<td><a id="compatibility-autodoc"></a>
+<p>autodoc (<code>.. automodule::</code>, <code>.. autofunction::</code>, …)</p>
 </td>
 <td><p>❌</p>
 </td>
@@ -1161,42 +1179,48 @@ count in every directive.</p>
 </td>
 </tr>
 <tr>
-<td><p><code>.. topic::</code>, <code>.. sidebar::</code>, <code>.. rubric::</code></p>
+<td><a id="compatibility-topic"></a>
+<p><code>.. topic::</code>, <code>.. sidebar::</code>, <code>.. rubric::</code></p>
 </td>
 <td><p>❌</p>
 </td>
 <td></td>
 </tr>
 <tr>
-<td><p><code>.. epigraph::</code>, <code>.. highlights::</code>, <code>.. pull-quote::</code></p>
+<td><a id="compatibility-epigraph"></a>
+<p><code>.. epigraph::</code>, <code>.. highlights::</code>, <code>.. pull-quote::</code></p>
 </td>
 <td><p>❌</p>
 </td>
 <td></td>
 </tr>
 <tr>
-<td><p><code>.. compound::</code>, <code>.. container::</code></p>
+<td><a id="compatibility-compound"></a>
+<p><code>.. compound::</code>, <code>.. container::</code></p>
 </td>
 <td><p>❌</p>
 </td>
 <td></td>
 </tr>
 <tr>
-<td><p><code>.. parsed-literal::</code></p>
+<td><a id="compatibility-parsed-literal"></a>
+<p><code>.. parsed-literal::</code></p>
 </td>
 <td><p>❌</p>
 </td>
 <td></td>
 </tr>
 <tr>
-<td><p><code>.. raw::</code></p>
+<td><a id="compatibility-raw"></a>
+<p><code>.. raw::</code></p>
 </td>
 <td><p>❌</p>
 </td>
 <td></td>
 </tr>
 <tr>
-<td><p><code>.. class::</code> / <code>.. rst-class::</code></p>
+<td><a id="compatibility-class"></a>
+<p><code>.. class::</code> / <code>.. rst-class::</code></p>
 </td>
 <td><p>❌</p>
 </td>
@@ -1260,35 +1284,40 @@ class; Sphinx adds <code>highlight none</code>.</p>
 </td>
 </tr>
 <tr>
-<td><p><code>.. meta::</code></p>
+<td><a id="compatibility-meta"></a>
+<p><code>.. meta::</code></p>
 </td>
 <td><p>❌</p>
 </td>
 <td></td>
 </tr>
 <tr>
-<td><p><code>.. centered::</code></p>
+<td><a id="compatibility-centered"></a>
+<p><code>.. centered::</code></p>
 </td>
 <td><p>❌</p>
 </td>
 <td></td>
 </tr>
 <tr>
-<td><p><code>.. hlist::</code></p>
+<td><a id="compatibility-hlist"></a>
+<p><code>.. hlist::</code></p>
 </td>
 <td><p>❌</p>
 </td>
 <td></td>
 </tr>
 <tr>
-<td><p><code>.. productionlist::</code></p>
+<td><a id="compatibility-productionlist"></a>
+<p><code>.. productionlist::</code></p>
 </td>
 <td><p>❌</p>
 </td>
 <td></td>
 </tr>
 <tr>
-<td><p><code>.. only::</code></p>
+<td><a id="compatibility-only"></a>
+<p><code>.. only::</code></p>
 </td>
 <td><p>❌</p>
 </td>
@@ -1299,14 +1328,16 @@ class; Sphinx adds <code>highlight none</code>.</p>
 </td>
 </tr>
 <tr>
-<td><p><code>.. sectionauthor::</code>, <code>.. moduleauthor::</code>, <code>.. codeauthor::</code></p>
+<td><a id="compatibility-authors"></a>
+<p><code>.. sectionauthor::</code>, <code>.. moduleauthor::</code>, <code>.. codeauthor::</code></p>
 </td>
 <td><p>❌</p>
 </td>
 <td></td>
 </tr>
 <tr>
-<td><p><code>.. target-notes::</code></p>
+<td><a id="compatibility-target-notes"></a>
+<p><code>.. target-notes::</code></p>
 </td>
 <td><p>❌</p>
 </td>
@@ -1314,6 +1345,7 @@ class; Sphinx adds <code>highlight none</code>.</p>
 </tr>
 </tbody>
 </table>
+<a id="compatibility-extension-directives"></a>
 <h2 id="extension-directives">Extension directives</h2>
 <p>rinx has no <code>extensions =</code> setting: a supported extension directive is
 always available, and its name cannot be used by an entity schema.</p>
@@ -1382,7 +1414,8 @@ not bundled.</p>
 </td>
 </tr>
 <tr>
-<td><p><code>:octicon:</code> role, material icons, <code>.. button-ref::</code>,
+<td><a id="compatibility-sphinx-design"></a>
+<p><code>:octicon:</code> role, material icons, <code>.. button-ref::</code>,
 <code>.. card::</code>, <code>.. grid-item-card::</code>, <code>.. tab-set::</code>
 (sphinx-design)</p>
 </td>
@@ -1492,7 +1525,8 @@ are refused.</p>
 </td>
 </tr>
 <tr>
-<td><p><code>.. needlist::</code> (sphinx-needs)</p>
+<td><a id="compatibility-needlist"></a>
+<p><code>.. needlist::</code> (sphinx-needs)</p>
 </td>
 <td><p>❌</p>
 </td>
@@ -1609,7 +1643,98 @@ stay sections.</p>
 </td>
 </tr>
 <tr>
-<td><p><code>.. ifinclude::</code>, <code>.. pdfinclude::</code> (sphinx-simplepdf)</p>
+<td><a id="compatibility-simplepdf"></a>
+<p><code>.. ifinclude::</code>, <code>.. pdfinclude::</code> (sphinx-simplepdf)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><a id="compatibility-needs-other"></a>
+<p><code>.. needreport::</code>, <code>.. needextract::</code>, <code>.. list2need::</code>,
+<code>:need:</code> and the other need roles (sphinx-needs)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><a id="compatibility-autosummary"></a>
+<p><code>.. autosummary::</code> (<code>sphinx.ext.autosummary</code>)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td><ul>
+<li><p>Out of scope, as autodoc is: it would import user code.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a id="compatibility-extlinks"></a>
+<p>Roles from <code>extlinks</code> (<code>sphinx.ext.extlinks</code>)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td><ul>
+<li><p>Shown as written; the language server shows them as information.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a id="compatibility-todo"></a>
+<p><code>.. todo::</code>, <code>.. todolist::</code> (<code>sphinx.ext.todo</code>)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><a id="compatibility-graphviz"></a>
+<p><code>.. graphviz::</code>, <code>.. graph::</code>, <code>.. digraph::</code>
+(<code>sphinx.ext.graphviz</code>)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><a id="compatibility-inheritance-diagram"></a>
+<p><code>.. inheritance-diagram::</code> (<code>sphinx.ext.inheritance_diagram</code>)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><a id="compatibility-ifconfig"></a>
+<p><code>.. ifconfig::</code> (<code>sphinx.ext.ifconfig</code>)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><a id="compatibility-sphinx-tabs"></a>
+<p><code>.. tabs::</code> and its children (sphinx-tabs)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><a id="compatibility-mermaid"></a>
+<p><code>.. mermaid::</code>, <code>.. autoclasstree::</code> (sphinxcontrib-mermaid)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><a id="compatibility-bibtex"></a>
+<p><code>.. bibliography::</code>, <code>:cite:</code> and its forms (sphinxcontrib-bibtex)</p>
 </td>
 <td><p>❌</p>
 </td>
@@ -1651,7 +1776,8 @@ in a local table of contents.</p>
 </td>
 </tr>
 <tr>
-<td><p><code>:no-typesetting:</code></p>
+<td><a id="compatibility-no-typesetting"></a>
+<p><code>:no-typesetting:</code></p>
 </td>
 <td><p>❌</p>
 </td>
@@ -1814,6 +1940,14 @@ a site without the index, where Sphinx links a page it never wrote.</p>
 </td>
 </tr>
 <tr>
+<td><a id="compatibility-py-roles"></a>
+<p><code>:py:obj:</code>, <code>:py:deco:</code>, <code>:py:type:</code> roles</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
 <td><p><code>.. py:exception::</code> and <code>:exc:</code></p>
 </td>
 <td><p>🔶</p>
@@ -1906,7 +2040,16 @@ every C object below.</p>
 <td></td>
 </tr>
 <tr>
-<td><p><code>.. c:enum::</code> / <code>.. c:enumerator::</code></p>
+<td><a id="compatibility-c-expr"></a>
+<p><code>:c:expr:</code>, <code>:c:texpr:</code> roles</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><a id="compatibility-c-enum"></a>
+<p><code>.. c:enum::</code> / <code>.. c:enumerator::</code></p>
 </td>
 <td><p>❌</p>
 </td>
@@ -1983,28 +2126,40 @@ heuristic with a warning.</p>
 <td></td>
 </tr>
 <tr>
-<td><p><code>.. envvar::</code> and <code>:envvar:</code></p>
+<td><a id="compatibility-envvar"></a>
+<p><code>.. envvar::</code> and <code>:envvar:</code></p>
 </td>
 <td><p>❌</p>
 </td>
 <td></td>
 </tr>
 <tr>
-<td><p><code>.. confval::</code> and <code>:confval:</code></p>
+<td><a id="compatibility-confval"></a>
+<p><code>.. confval::</code> and <code>:confval:</code></p>
 </td>
 <td><p>❌</p>
 </td>
 <td></td>
 </tr>
 <tr>
-<td><p><code>.. describe::</code> / <code>.. object::</code></p>
+<td><a id="compatibility-describe"></a>
+<p><code>.. describe::</code> / <code>.. object::</code></p>
 </td>
 <td><p>❌</p>
 </td>
 <td></td>
 </tr>
 <tr>
-<td><p><code>:token:</code> role</p>
+<td><a id="compatibility-keyword"></a>
+<p><code>:keyword:</code> role</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><a id="compatibility-token"></a>
+<p><code>:token:</code> role</p>
 </td>
 <td><p>❌</p>
 </td>

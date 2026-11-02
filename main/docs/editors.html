@@ -223,6 +223,8 @@ $ cargo install --git https://github.com/nachstedt/rinx rinx</pre></div>
 <ul>
 <li><p>The live preview.</p>
 </li>
+<li><p>The panel drawing the project analysis. Any client can ask for its data, with <code>rinx/analyseProject</code> below.</p>
+</li>
 <li><p>Downloading inventories. The server never touches the network, so in other editors an inventory named by an address is not loaded, and references into it are hints rather than warnings.</p>
 </li>
 <li><p>Running <code>conf.py</code>. The server needs to be told which interpreter to run it in, and only in a trusted workspace (see <a href="vscode.html#vscode-running-conf">Running conf.py</a>). Elsewhere, <code>conf.py</code> is only read.</p>
@@ -235,6 +237,8 @@ $ cargo install --git https://github.com/nachstedt/rinx rinx</pre></div>
 <h3 id="protocol-extensions">Protocol extensions</h3>
 <p>A client can offer what VS Code offers through these messages. Each one is opt-in, so a client that knows none of them gets a working server:</p>
 <ul>
+<li><p><code>rinx/analyseProject</code>, a request from the client, optionally naming a document, answered with what each project (or that document's) writes that rinx does not support: its declared extensions, and each unknown or unsupported directive, role and option with its count, the extension providing it, its row on <a href="compatibility.html#compatibility">Compatibility status</a> and the first places it is written. <code>rinx lsp --check</code> prints the counts for a whole folder as <code>analysis</code>.</p>
+</li>
 <li><p><code>rinx/status</code>, a notification from the server, with the index's state (<code>indexing</code> or <code>ready</code>), the number of documents indexed, and the projects found. A client may ignore it.</p>
 </li>
 <li><p>The <code>fetchInventories</code> initialization option. With it, the server sends <code>rinx/fetchInventory</code> requests naming an address, and the client answers with the downloaded inventory.</p>

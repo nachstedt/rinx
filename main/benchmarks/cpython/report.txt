@@ -2,7 +2,7 @@
 
 Unsupported Directives Summary:
 -------------------------------
-availability: 433
+availability: 431
 audit-event: 221
 sectionauthor: 194
 opcode: 127
@@ -25,24 +25,70 @@ object: 10
 sidebar: 8
 topic: 6
 c:enumerator: 5
-awaitablefunction: 4
 .. index: 4
+awaitablefunction: 4
 raw: 4
-versionremoved: 1
-awaitablemethod: 1
-audit-event-table: 1
+Contents: 1
 Note: 1
-sourcecode: 1
-limited-api-list: 1
+Tip: 1
+audit-event-table: 1
+awaitablemethod: 1
 container: 1
 epigraph: 1
+limited-api-list: 1
 miscnews: 1
-Tip: 1
-Contents: 1
+sourcecode: 1
+versionremoved: 1
 
 Malformed Directives Summary:
 -----------------------------
 None found.
+
+Unsupported Options Summary:
+----------------------------
+py:method:no-typesetting: 13
+py:attribute:no-typesetting: 2
+c:macro:no-typesetting: 1
+py:function:no-typesetting: 1
+
+Unknown Roles Summary:
+----------------------
+:source:: 267
+:pypi:: 87
+:RFC:: 22
+:PEP:: 12
+
+Unsupported Roles Summary:
+--------------------------
+:keyword:: 1183
+:file:: 770
+:c:expr:: 448
+:envvar:: 426
+:mailheader:: 200
+:dfn:: 145
+:kbd:: 125
+:samp:: 90
+:mimetype:: 85
+:manpage:: 64
+:deco:: 36
+:command:: 27
+:abbr:: 26
+:token:: 18
+:menuselection:: 4
+:newsgroup:: 4
+:py:type:: 4
+:c:enumerator:: 3
+:makevar:: 2
+:c:enum:: 1
+:guilabel:: 1
+
+Ignored Roles Summary:
+----------------------
+:issue:: 2425
+:gh:: 1022
+:opcode:: 133
+:monitoring-event:: 76
+:pdbcmd:: 12
 
 Toctree Options Exercised Summary:
 ----------------------------------
@@ -54,7 +100,7 @@ Toctree Options Exercised Summary:
 Parser Diagnostics Summary:
 ---------------------------
 interpreted.unsupported-role: 3662
-directive.unknown: 1889
+directive.unknown: 1887
 interpreted.unknown-role: 388
 c-decl.unparsed: 108
 option.malformed-spec: 63
@@ -62,8 +108,8 @@ substitution.undefined: 23
 directive.unsupported-option: 17
 block-quote.unindent-no-blank-line: 4
 list.enumerated-start-not-one: 4
-table.grid.inconsistent-column-boundary: 1
 default-role.unknown-role: 1
+table.grid.inconsistent-column-boundary: 1
 
 Language Server Warnings Summary:
 ---------------------------------
