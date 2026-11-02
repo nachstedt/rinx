@@ -184,7 +184,7 @@ pub use rinx_inventory::InventoryName;
 pub use script_position::ScriptPosition;
 pub use section_id::{SectionId, SectionIdAllocator, allocate_section_ids, section_slug};
 pub use sectnum::SectnumOptions;
-pub use source_map::SourceMap;
+pub use source_map::{IgnoredRoleUse, SourceMap};
 pub use spacing::{InvalidSpacing, Spacing, SpacingKind, SpacingValue};
 pub use span::{FileId, Position, Span};
 pub use substitution::{SubstitutionDefinition, SubstitutionKind, TrimSides};

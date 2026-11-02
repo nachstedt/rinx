@@ -260,6 +260,7 @@ impl ExtensionPolicy {
             DiagnosticSubject::Directive(_)
             | DiagnosticSubject::Role(_)
             | DiagnosticSubject::Inventory(_)
+            | DiagnosticSubject::UnsupportedOption { .. }
             | DiagnosticSubject::UndeclaredToctreeEntry(_) => warning(),
         }
     }

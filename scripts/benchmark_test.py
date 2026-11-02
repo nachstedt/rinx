@@ -140,56 +140,43 @@ class TestReportDomainWarnings:
         assert len(benchmark_common.load_whitelist(wl)) == 1
 
 
-class TestAstTally:
-    def test_directives_are_counted_by_kind_and_name(self) -> None:
-        # Given one unknown, one malformed and one toctree directive, nested
-        # the way a document holds them
-        tree = {
-            "nodes": [
-                {"Directive": {"directive": {"Unknown": {"name": "automodule"}}}},
-                {
-                    "Section": {
-                        "children": [
-                            {"Directive": {"directive": {"Malformed": {"name": "csv-table"}}}}
-                        ]
-                    }
+class TestCountConstructs:
+    def test_each_list_is_summed_over_the_projects(self) -> None:
+        # Given two projects' tallies, each construct with its places
+        def project(count: int) -> dict[str, object]:
+            empty: dict[str, object] = {}
+            return {
+                "root": "/Doc",
+                "documents": 1,
+                "constructs": {
+                    "unknown_directives": {"automodule": {"count": count, "examples": []}},
+                    "malformed_directives": {"csv-table": {"count": 1, "examples": []}},
+                    "unsupported_options": empty,
+                    "unknown_roles": {"gh": {"count": 2, "examples": []}},
+                    "unsupported_roles": empty,
+                    "ignored_roles": {"issue": {"count": 3, "examples": []}},
+                    "toctree_options": {"maxdepth": 1, "titlesonly": 1},
+                    "diagnostics": {"directive.unknown": count},
                 },
-                {
-                    "Directive": {
-                        "directive": {
-                            "Toctree": {
-                                "options": {"maxdepth": 2, "caption": None, "flags": ["TitlesOnly"]}
-                            }
-                        }
-                    }
-                },
-            ]
-        }
-        tally = benchmark.AstTally()
+            }
 
         # When
-        tally.count(tree)
-
-        # Then — only options actually written count, spelled as authors do
-        assert tally.unknown_directives == {"automodule": 1}
-        assert tally.malformed_directives == {"csv-table": 1}
-        assert tally.toctree_options_used == {"maxdepth": 1, "titlesonly": 1}
-
-    def test_diagnostics_are_counted_by_code(self) -> None:
-        # Given a structured diagnostic and one from an older, string-only .ast
-        tree = {
-            "diagnostics": [
-                {"code": "directive.unknown", "message": "..."},
-                "role.unknown: :foo:",
-            ]
-        }
-        tally = benchmark.AstTally()
-
-        # When
-        tally.count(tree)
+        counts = benchmark.count_constructs({"analysis": [project(1), project(2)]})
 
         # Then
-        assert tally.parser_diagnostics == {"directive.unknown": 1, "role.unknown": 1}
+        assert counts.unknown_directives == {"automodule": 3}
+        assert counts.malformed_directives == {"csv-table": 2}
+        assert counts.unknown_roles == {"gh": 4}
+        assert counts.ignored_roles == {"issue": 6}
+        assert counts.toctree_options == {"maxdepth": 2, "titlesonly": 2}
+        assert counts.parser_diagnostics == {"directive.unknown": 3}
+
+    def test_a_check_without_an_analysis_counts_nothing(self) -> None:
+        # Given / When
+        counts = benchmark.count_constructs({})
+
+        # Then
+        assert counts == benchmark.ConstructCounts()
 
 
 class TestRenderCorpusBuildFile:
@@ -247,9 +234,10 @@ class TestRenderParserConfig:
 class TestSummaryRows:
     def test_every_count_is_listed_then_the_whitelist(self) -> None:
         # Given a tally and a domain summary
-        tally = benchmark.AstTally()
-        tally.unknown_directives.update({"automodule": 3, "autoclass": 1})
-        tally.parser_diagnostics.update({"role.unknown": 2})
+        constructs = benchmark.ConstructCounts()
+        constructs.unknown_directives.update({"automodule": 3, "autoclass": 1})
+        constructs.unknown_roles.update({"gh": 5})
+        constructs.parser_diagnostics.update({"interpreted.unknown-role": 2})
         whitelist = benchmark_common.WhitelistSummary(
             per_kind={}, suppressed=7, whitelist_size=4, stale_count=0, stale_pruned=False
         )
@@ -259,14 +247,31 @@ class TestSummaryRows:
         )
 
         # When
-        rows = benchmark.summary_rows(tally, domain)
+        rows = benchmark.summary_rows(constructs, domain)
 
         # Then
         values = {row.label: row.value for row in rows}
         assert values["Unsupported directives:"] == "2 distinct (4 occurrences)"
+        assert values["Unknown roles:"] == "1 distinct (5 occurrences)"
         assert values["Parser diagnostics:"] == "1 distinct"
         assert values["Unresolved domain refs:"] == "5 distinct (9 occurrences)"
         assert rows[-1].label == "Suppressed by whitelist:"
+
+    def test_no_tally_lists_only_the_domain_counts(self) -> None:
+        # Given a domain summary, and no language server run
+        whitelist = benchmark_common.WhitelistSummary(
+            per_kind={}, suppressed=0, whitelist_size=0, stale_count=0, stale_pruned=False
+        )
+        count = benchmark_common.SectionCount
+        domain = benchmark.DomainSummary(
+            unresolved=count(0, 0), ambiguous=count(0, 0), mismatch=count(0, 0), whitelist=whitelist
+        )
+
+        # When
+        rows = benchmark.summary_rows(None, domain)
+
+        # Then
+        assert "Unsupported directives:" not in {row.label for row in rows}
 
 
 def _check(*severities_and_codes: tuple[int, str]) -> dict[str, object]:

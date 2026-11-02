@@ -25,6 +25,12 @@ pub(super) fn record_inline_syntax(
 ) {
     for (kind, range) in inline_tokens(matched, node) {
         let span = map.span(offset + range.start, offset + range.end, ctx);
+        if kind == TokenKind::Role && matches!(node, InlineNode::Text(_)) {
+            let name = matched[range].trim_matches(':');
+            if ctx.ignores_role(name) {
+                ctx.record_ignored_role(name, span);
+            }
+        }
         ctx.record_token(kind, TokenModifiers::NONE, span);
     }
 }

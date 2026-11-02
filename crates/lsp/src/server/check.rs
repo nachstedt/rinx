@@ -34,7 +34,7 @@ use super::handlers::handle_notification;
 use super::scan::ScanEvent;
 use super::state::ServerState;
 use crate::position::PositionEncoding;
-use crate::project::{discover_projects, scan_projects};
+use crate::project::{ConstructTally, discover_projects, scan_projects};
 use crate::uri::file_uri;
 
 /// What the server shows for a folder's documents, all open.
@@ -49,6 +49,9 @@ pub struct FolderCheck {
     /// any, with their edits — what a script applies to fix a build.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub quick_fixes: BTreeMap<Uri, Vec<lsp_types::CodeAction>>,
+    /// What each project's documents wrote that this build does not support.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub analysis: Vec<ProjectAnalysis>,
     /// How each document [`CheckOptions::previews`] names was previewed.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub previews: BTreeMap<Uri, PreviewTiming>,
@@ -67,6 +70,16 @@ pub struct FolderCheck {
     /// coloured, in that order.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub semantic_tokens: Vec<SemanticTokensTiming>,
+}
+
+/// What one project's documents wrote that this build does not support.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct ProjectAnalysis {
+    /// The project's root folder.
+    pub root: PathBuf,
+    /// How many documents it holds.
+    pub documents: usize,
+    pub constructs: ConstructTally,
 }
 
 /// How long colouring one document's names took: from its latest parse, and
@@ -217,6 +230,15 @@ pub fn check_folder(root: &Path, options: &CheckOptions) -> FolderCheck {
             (!fixes.is_empty()).then_some((uri, fixes))
         })
         .collect();
+    let analysis = state
+        .projects
+        .values()
+        .map(|project| ProjectAnalysis {
+            root: project.root().to_path_buf(),
+            documents: project.document_count(),
+            constructs: project.construct_tally(),
+        })
+        .collect();
     let previews = options
         .previews
         .iter()
@@ -250,6 +272,7 @@ pub fn check_folder(root: &Path, options: &CheckOptions) -> FolderCheck {
         documents: documents.len(),
         published: last_published(&messages),
         quick_fixes,
+        analysis,
         previews,
         references,
         renames,
@@ -409,6 +432,32 @@ mod tests {
     use super::*;
     use crate::server::test_support::Workspace;
     use lsp_types::DiagnosticSeverity;
+
+    #[test]
+    fn test_check_folder_tallies_what_each_project_wrote() {
+        // Given a project one of whose documents silences what it writes
+        let workspace = Workspace::new(
+            "check_folder_analysis",
+            &[
+                ("conf.py", "extensions = ['sphinx.ext.autodoc']\n"),
+                (
+                    "index.rst",
+                    "Home\n====\n\n.. noqa: directive.unknown\n\n.. automodule:: spam\n",
+                ),
+            ],
+        );
+
+        // When
+        let check = check_folder(&workspace.root, &CheckOptions::default());
+
+        // Then
+        let [project] = check.analysis.as_slice() else {
+            panic!("one project: {:?}", check.analysis);
+        };
+        assert_eq!(project.root, workspace.root);
+        assert_eq!(project.documents, 1);
+        assert_eq!(project.constructs.unknown_directives["automodule"].count, 1);
+    }
 
     #[test]
     fn test_check_folder_shows_both_tiers_of_every_document_and_conf_py() {

@@ -11,11 +11,13 @@
 //! documents in parallel when the server starts, and [`index`] keeps one
 //! analysis per document and folds them into the project's index — beside
 //! which [`references`] keeps what each document uses and [`symbols`] what it
-//! defines, as a workspace search lists it.
+//! defines, as a workspace search lists it, and [`constructs`] what it wrote
+//! that this build does not support.
 
 mod bazel_manifest;
 mod build_file;
 mod conf_eval;
+mod constructs;
 mod declarations;
 mod dependency_fix;
 mod discover;
@@ -38,6 +40,7 @@ pub use build_file::{add_deps, build_file_of, library_listing};
 #[cfg(test)]
 pub use conf_eval::ConfValues;
 pub use conf_eval::{CONF_RUN_TIMEOUT, ConfEvaluation, ConfEvaluations, run_conf};
+pub use constructs::ConstructTally;
 pub use declarations::{BundledFiles, undeclared_uses};
 pub use dependency_fix::missing_deps;
 pub use discover::{

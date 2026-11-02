@@ -402,6 +402,14 @@ impl<'a> ParseCtx<'a> {
         }
     }
 
+    /// Records a use of the ignored role `name` at `span`, when this parse
+    /// records its syntax and the role came from the source.
+    pub(crate) fn record_ignored_role(&self, name: &str, span: Option<Span>) {
+        if let (Some(syntax), Some(span)) = (self.syntax, span) {
+            syntax.ignored_role(name, span);
+        }
+    }
+
     /// Records a name written as exactly the characters of `span`, yielding
     /// the id its [`rinx_ast::Named`] value carries — `None` when this parse
     /// records no source map or the name came from no source line.

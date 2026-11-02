@@ -28,10 +28,8 @@ from benchmark_common import (
     add_output_arguments,
     collect_warning_sidecars,
     count_row,
-    json_objects,
     whitelist_rows,
     write_frequency_summary,
-    written_directive,
 )
 
 TARGET_DIR = Path(tempfile.gettempdir()) / "rinx_benchmark_cpython"
@@ -350,71 +348,38 @@ def report_domain_warnings(
     )
 
 
-# The `.. toctree::` options with a value, as the AST names them.
-TOCTREE_VALUE_OPTIONS = ("maxdepth", "numbered", "caption", "name")
-
-
-@dataclass
-class AstTally:
-    """What the corpus' `.ast` files contain that the report counts."""
+@dataclass(frozen=True)
+class ConstructCounts:
+    """What the corpus wrote that the report counts, as the language server tallied it."""
 
     unknown_directives: Counter[str] = field(default_factory=Counter)
     malformed_directives: Counter[str] = field(default_factory=Counter)
-    toctree_options_used: Counter[str] = field(default_factory=Counter)
+    unsupported_options: Counter[str] = field(default_factory=Counter)
+    unknown_roles: Counter[str] = field(default_factory=Counter)
+    unsupported_roles: Counter[str] = field(default_factory=Counter)
+    ignored_roles: Counter[str] = field(default_factory=Counter)
+    toctree_options: Counter[str] = field(default_factory=Counter)
     parser_diagnostics: Counter[str] = field(default_factory=Counter)
 
-    def count(self, tree: object) -> None:
-        """Walk one parsed `.ast` file, counting everything in it."""
-        for node in json_objects(tree):
-            directive = written_directive(node)
-            if directive is not None:
-                self.count_directive(directive)
-            diagnostics = node.get("diagnostics")
-            if isinstance(diagnostics, list):
-                self.count_diagnostics(diagnostics)
 
-    def count_directive(self, directive: dict[str, Any]) -> None:
-        """Count one `Directive` node, if it is of a kind the report tallies."""
-        if "Unknown" in directive:
-            self.unknown_directives[directive["Unknown"].get("name", "unnamed")] += 1
-        elif "Malformed" in directive:
-            # A directive this build *does* implement, whose content it had to
-            # refuse. Counted separately from the unsupported tally above,
-            # which it used to inflate: "not implemented" and "implemented, and
-            # this document got it wrong" are different numbers, and only the
-            # first is a gap in coverage.
-            self.malformed_directives[directive["Malformed"].get("name", "unnamed")] += 1
-        elif "Toctree" in directive:
-            # Which `.. toctree::` options the corpus actually exercises. This
-            # used to count options the parser *ignored*, back when it recorded
-            # them in an `ignored_options` list and honoured none of them.
-            # Every option is honoured now and that field is gone, so counting
-            # usage is what keeps the number honest — a zero here would
-            # otherwise look like success while only meaning the field had been
-            # removed. An option the parser does not know is not counted here
-            # at all; it surfaces as a `directive.unknown-option` entry
-            # under parser diagnostics.
-            options = directive["Toctree"].get("options", {})
-            for name in TOCTREE_VALUE_OPTIONS:
-                if options.get(name) is not None:
-                    self.toctree_options_used[name] += 1
-            for flag in options.get("flags", []):
-                # `TitlesOnly` -> `titlesonly`, as an author writes it.
-                self.toctree_options_used[flag.lower()] += 1
-
-    def count_diagnostics(self, diagnostics: list[object]) -> None:
-        """Count a document's diagnostics by code."""
-        for diag in diagnostics:
-            # Aggregate by the diagnostic's own code. This used to key off the
-            # message's prefix as a stand-in; the code is the thing that prefix
-            # was approximating, and unlike a message it never varies with the
-            # offending text.
-            if isinstance(diag, dict):
-                code = diag.get("code", "unknown")
-            else:
-                # An .ast written before diagnostics were structured.
-                code = str(diag).split(":")[0]
-            self.parser_diagnostics[code] += 1
+def count_constructs(check: dict[str, Any]) -> ConstructCounts:
+    """Sums the `analysis` of one `rinx lsp --check` over the projects it found."""
+    counts = ConstructCounts()
+    for project in check.get("analysis", []):
+        constructs = project["constructs"]
+        for attribute in (
+            "unknown_directives",
+            "malformed_directives",
+            "unsupported_options",
+            "unknown_roles",
+            "unsupported_roles",
+            "ignored_roles",
+        ):
+            for name, construct in constructs[attribute].items():
+                getattr(counts, attribute)[name] += construct["count"]
+        counts.toctree_options.update(constructs["toctree_options"])
+        counts.parser_diagnostics.update(constructs["diagnostics"])
+    return counts
 
 
 @dataclass(frozen=True)
@@ -426,6 +391,8 @@ class LspCounts:
     by_severity: Counter[str]
     # The warnings by their code, for the full report.
     warnings_by_code: Counter[str]
+    # What the documents wrote that this build does not support.
+    constructs: ConstructCounts = field(default_factory=ConstructCounts)
 
     @property
     def warnings(self) -> int:
@@ -443,7 +410,9 @@ def count_lsp_check(check: dict[str, Any]) -> LspCounts:
             by_severity[severity] += 1
             if severity == "warnings":
                 warnings_by_code[diagnostic.get("code", "(no code)")] += 1
-    return LspCounts(check.get("documents", 0), by_severity, warnings_by_code)
+    return LspCounts(
+        check.get("documents", 0), by_severity, warnings_by_code, count_constructs(check)
+    )
 
 
 def lsp_rows(counts: LspCounts | None) -> list[SummaryRow]:
@@ -506,36 +475,41 @@ def run_lsp_check() -> LspCounts | None:
 def analyze_results(
     *, build_succeeded: bool = False, lsp: LspCounts | None = None
 ) -> list[SummaryRow]:
-    """Tally the corpus' `.ast` files and warnings into the report, returning the summary's rows."""
-    print("Analyzing AST output for unsupported constructs...")
-
-    ast_files = list(TARGET_DIR.glob("bazel-bin/Doc/**/*.ast"))
-
-    if not ast_files:
-        print("No .ast files found in bazel-bin. Did the build succeed?")
-        return []
-
-    tally = AstTally()
-    for ast_file in ast_files:
-        try:
-            tally.count(json.loads(ast_file.read_text()))
-        except (OSError, ValueError) as e:
-            print(f"Failed to parse {ast_file}: {e}")
+    """Write the language server's tally and the warnings into the report, returning the rows."""
+    constructs = lsp.constructs if lsp is not None else ConstructCounts()
 
     # The full listing is far too long for the terminal, so write it to a file
     # and show only a compact summary on screen.
     with RESULT_PATH.open("w") as out:
         print("=== rinx benchmark: full report ===", file=out)
-        write_frequency_summary(out, "Unsupported Directives Summary", tally.unknown_directives)
-        write_frequency_summary(out, "Malformed Directives Summary", tally.malformed_directives)
+        write_frequency_summary(
+            out, "Unsupported Directives Summary", constructs.unknown_directives
+        )
+        write_frequency_summary(
+            out, "Malformed Directives Summary", constructs.malformed_directives
+        )
+        write_frequency_summary(out, "Unsupported Options Summary", constructs.unsupported_options)
+        write_frequency_summary(
+            out, "Unknown Roles Summary", constructs.unknown_roles, key_prefix=":", key_suffix=":"
+        )
         write_frequency_summary(
             out,
-            "Toctree Options Exercised Summary",
-            tally.toctree_options_used,
+            "Unsupported Roles Summary",
+            constructs.unsupported_roles,
             key_prefix=":",
             key_suffix=":",
         )
-        write_frequency_summary(out, "Parser Diagnostics Summary", tally.parser_diagnostics)
+        write_frequency_summary(
+            out, "Ignored Roles Summary", constructs.ignored_roles, key_prefix=":", key_suffix=":"
+        )
+        write_frequency_summary(
+            out,
+            "Toctree Options Exercised Summary",
+            constructs.toctree_options,
+            key_prefix=":",
+            key_suffix=":",
+        )
+        write_frequency_summary(out, "Parser Diagnostics Summary", constructs.parser_diagnostics)
         write_frequency_summary(
             out,
             "Language Server Warnings Summary",
@@ -546,23 +520,40 @@ def analyze_results(
         )
 
     print(f"Full report written to: {RESULT_PATH}")
-    return [*summary_rows(tally, domain), *lsp_rows(lsp)]
+    return [*summary_rows(lsp.constructs if lsp is not None else None, domain), *lsp_rows(lsp)]
 
 
-def summary_rows(tally: AstTally, domain: DomainSummary) -> list[SummaryRow]:
-    """The compact summary's counts; the full listing is in the report."""
-    unknown = tally.unknown_directives
-    malformed = tally.malformed_directives
-    toctree_opts = tally.toctree_options_used
+def summary_rows(constructs: ConstructCounts | None, domain: DomainSummary) -> list[SummaryRow]:
+    """The compact summary's counts; the full listing is in the report.
+
+    `constructs` is `None` when the language server did not run, which its own
+    row says.
+    """
     return [
-        count_row("Unsupported directives:", len(unknown), unknown.total()),
-        count_row("Malformed directives:", len(malformed), malformed.total()),
-        count_row("Toctree options exercised:", len(toctree_opts), toctree_opts.total()),
-        count_row("Parser diagnostics:", len(tally.parser_diagnostics)),
+        *construct_rows(constructs),
         count_row("Unresolved domain refs:", *domain.unresolved),
         count_row("Ambiguous domain refs:", *domain.ambiguous),
         count_row("Domain type mismatches:", *domain.mismatch),
         *whitelist_rows(domain.whitelist),
+    ]
+
+
+def construct_rows(constructs: ConstructCounts | None) -> list[SummaryRow]:
+    """The summary's lines for what the corpus wrote, if it was tallied."""
+    if constructs is None:
+        return []
+    occurrences = (
+        ("Unsupported directives:", constructs.unknown_directives),
+        ("Malformed directives:", constructs.malformed_directives),
+        ("Unsupported options:", constructs.unsupported_options),
+        ("Unknown roles:", constructs.unknown_roles),
+        ("Unsupported roles:", constructs.unsupported_roles),
+        ("Ignored roles:", constructs.ignored_roles),
+        ("Toctree options exercised:", constructs.toctree_options),
+    )
+    return [
+        *(count_row(label, len(counter), counter.total()) for label, counter in occurrences),
+        count_row("Parser diagnostics:", len(constructs.parser_diagnostics)),
     ]
 
 

@@ -39,6 +39,7 @@ use rinx_ast::{Diagnostic, Document, Position, SourceMap};
 use rinx_index::{DefinitionKey, ExternalInventory, NameRange, ProjectIndex};
 use rinx_renderer::config::SiteConfig;
 
+use super::constructs::{ConstructTally, DocumentConstructs};
 use super::discover::DiscoveredProject;
 use super::inventories::{Fetched, ProjectInventories};
 use super::model::{DEFAULT_ROOT_DOC, ProjectModel, ProjectSource, RST_SUFFIX};
@@ -64,6 +65,8 @@ pub struct IndexedDocument {
     pub uses: DocumentUses,
     /// What the document defines, as a workspace search lists it.
     pub symbols: DocumentSymbols,
+    /// What the document wrote that this build does not support.
+    pub constructs: DocumentConstructs,
 }
 
 impl IndexedDocument {
@@ -83,6 +86,7 @@ impl IndexedDocument {
             analysis,
             reads,
             uses: DocumentUses::of(document, source_map),
+            constructs: DocumentConstructs::of(document, source_map),
         }
     }
 }
@@ -542,6 +546,17 @@ impl Project {
                 source_root: &self.model.source_root,
             })
         })
+    }
+
+    /// What the project's documents wrote that this build does not support,
+    /// by their latest parses, a document's example places in document order.
+    #[must_use]
+    pub fn construct_tally(&self) -> ConstructTally {
+        let mut tally = ConstructTally::default();
+        for indexed in self.documents.values() {
+            tally.add(&indexed.path, &self.model.source_root, &indexed.constructs);
+        }
+        tally
     }
 
     /// The project index, beside where its definitions were written, for a
