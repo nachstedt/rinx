@@ -25,7 +25,7 @@ rinx_library(
     srcs = ["docs/doctests.rst"],
 )
 
-# Executes the doctests on rinx's Python toolchain.
+# Executes the doctests on this build's default Python toolchain.
 rinx_doctest_tests(
     name = "doctests",
     lib = ":doctest_docs",

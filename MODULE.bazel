@@ -73,7 +73,16 @@ http_file(
 
 bazel_dep(name = "rules_python", version = "2.0.0")
 
-python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+# `rules_python` is a regular dependency, since `rules/doctest.bzl` loads
+# `py_test` from it in a user's build. The toolchain below is only this
+# repository's, for `scripts/` and the `pip` hub: a `rinx_doctest_tests` runs on
+# whatever Python the depending build defaults to, which is why
+# `scripts/doctest_runner.py` must stay Python 3.9-compatible.
+python = use_extension(
+    "@rules_python//python/extensions:python.bzl",
+    "python",
+    dev_dependency = True,
+)
 python.toolchain(
     python_version = "3.11",
     is_default = True,
