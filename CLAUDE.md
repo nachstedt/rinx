@@ -665,6 +665,10 @@ The user guides in `docs/` are reStructuredText, and `//docs:site` builds them w
 
 `docs/compatibility.rst` is a page of the documentation site listing every RST/Sphinx/extension construct as ✅ supported, ✅ ℹ️ supported with deliberate deviations, 🔶 partial (something we still intend to implement is missing) or ❌ unsupported. Notes are brief bullets naming only deviations or missing pieces. Update it when you add or fix parser/renderer coverage for a construct, and don't trust it blindly if it looks stale relative to recent commits.
 
+### Changelog
+
+`CHANGELOG.md` follows Keep a Changelog. Every pull request a user would notice — a feature, a behaviour change, a removal, a fix — adds its bullet to `[Unreleased]` in the same pull request, under Added, Changed, Removed or Fixed; refactors, CI, tests and dependency bumps add none. Bullets are short prose grouped by theme (extend an existing bullet rather than adding one per PR), name settings, attributes and codes in backticks, and carry no PR numbers. A change that breaks the Bazel rules or the CLI goes under Changed or Removed, since before 1.0 a minor release may break them.
+
 ## Working conventions
 
 These come from `guidelines.md`, which is actively maintained (an agent rule auto-appends new learned preferences there) — check it for the current, authoritative list; highlights that shape how code here is structured:
@@ -674,6 +678,7 @@ These come from `guidelines.md`, which is actively maintained (an agent rule aut
 - Tests follow Given-When-Then (see the inline `#[cfg(test)]` modules throughout `crates/*/src/` for the expected shape/comment style).
 - Name functions after what they concretely do (`build_project_index()`, not `analyze_many()`).
 - New `.rst` files added under `examples/` must be added to the corresponding `BUILD.bazel` `srcs`, and new features should get an example added to the example project covering all variants.
+- A user-visible change adds its bullet to `CHANGELOG.md`'s `[Unreleased]` in the same change (see "Changelog" above).
 - Don't commit unless explicitly asked.
 
 ### Shared rules from `.agents/rules/`

@@ -201,6 +201,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Keep a configuration snippet the documentation shows in a file that a test runs and the page includes, so the two cannot drift.
 - In docs/compatibility.rst, mark a row 🔶 partial only while something we still intend to implement is missing; a feature whose remaining differences are all deliberate is ✅ ℹ️.
 - A difference left out only to keep a change small is a gap, not a deliberate deviation, however easy it would be to add.
+- Every user-visible change adds a bullet to CHANGELOG.md's `[Unreleased]` section in the same pull request; refactors, CI, tests and dependency bumps do not.
 - Keep compatibility notes to brief bullets naming only what is missing or deviates, never explaining how something works.
 - Name project status pages neutrally ("compatibility status") rather than negatively ("gaps").
 - Keep the default theme's sidebar in view while reading, scrolling on its own; a second scrollbar is a smaller cost than navigation that scrolls away with a long page.
