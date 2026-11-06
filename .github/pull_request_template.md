@@ -7,3 +7,4 @@
 - [ ] New behaviour is covered by tests
 - [ ] New features have an example under `examples/`
 - [ ] `docs/compatibility.rst` is updated if RST/Sphinx coverage changed
+- [ ] `CHANGELOG.md`'s `[Unreleased]` is updated if users see the change
