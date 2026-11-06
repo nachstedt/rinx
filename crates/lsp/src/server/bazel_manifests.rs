@@ -10,7 +10,9 @@
 //!   initialization option is asked with a `rinx/bazelManifests` request,
 //!   once per Bazel workspace folder — one holding `MODULE.bazel` or a
 //!   `WORKSPACE` — and answers with the manifests it built, or why there are
-//!   none. When they may have changed — a `BUILD` file edited, the preferred
+//!   none. A folder that is no Bazel workspace may hold one: a Sphinx
+//!   project migrated into a module of its own (roadmap #37), whose
+//!   directory is asked about in the folder's place. When they may have changed — a `BUILD` file edited, the preferred
 //!   site changed — it sends `rinx/bazelManifestsChanged`, and every folder
 //!   is asked about again.
 //! - **`rinx lsp --check --manifest <path>`** grants manifests for every
@@ -49,7 +51,8 @@ const WORKSPACE_FILES: [&str; 3] = ["MODULE.bazel", "WORKSPACE", "WORKSPACE.baze
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BazelManifestsParams {
-    /// The workspace folder the manifests are asked for.
+    /// The Bazel workspace the manifests are asked for: a workspace folder,
+    /// or a directory in one holding a migrated project (roadmap #37).
     pub folder: Uri,
 }
 
@@ -113,8 +116,9 @@ pub struct BazelManifests {
     source: ManifestSource,
     /// What was answered for each folder, by its index.
     answers: BTreeMap<usize, Result<BazelGrant, String>>,
-    /// The folder each unanswered request asks about.
-    in_flight: BTreeMap<RequestId, usize>,
+    /// The folder each unanswered request asks about, by its index, and the
+    /// Bazel workspace in it the request names.
+    in_flight: BTreeMap<RequestId, (usize, PathBuf)>,
     /// Every finding the user has been shown, so a folder found again says
     /// nothing new.
     announced: BTreeSet<String>,
@@ -142,6 +146,21 @@ fn is_bazel_workspace(root: &Path) -> bool {
 }
 
 impl ServerState {
+    /// The Bazel workspace of folder `folder`, whose root is `root`: the
+    /// folder, when it is one, or else the first of its Sphinx projects
+    /// whose directory is — a project migrated into a module of its own.
+    fn bazel_workspace_of(&self, folder: usize, root: &Path) -> Option<PathBuf> {
+        if is_bazel_workspace(root) {
+            return Some(root.to_path_buf());
+        }
+        self.projects
+            .values()
+            .filter(|project| project.folder() == folder && project.conf_path().is_some())
+            .map(|project| project.root().to_path_buf())
+            .filter(|directory| is_bazel_workspace(directory))
+            .min()
+    }
+
     /// The Bazel projects of folder `folder`, read from the manifests the
     /// client granted for it — none before an answer — and the user told,
     /// once, what reading them found.
@@ -190,7 +209,7 @@ impl ServerState {
         for (folder, root) in self.folders.clone().iter().enumerate() {
             let bazel = &self.bazel;
             if bazel.answers.contains_key(&folder)
-                || bazel.in_flight.values().any(|asked| *asked == folder)
+                || bazel.in_flight.values().any(|(asked, _)| *asked == folder)
             {
                 continue;
             }
@@ -209,14 +228,14 @@ impl ServerState {
                     granted.push(folder);
                 }
                 ManifestSource::AskClient => {
-                    if !is_bazel_workspace(root) {
+                    let Some(workspace) = self.bazel_workspace_of(folder, root) else {
                         continue;
-                    }
-                    let Some(uri) = file_uri(root) else {
+                    };
+                    let Some(uri) = file_uri(&workspace) else {
                         continue;
                     };
                     let id = self.next_request_id();
-                    self.bazel.in_flight.insert(id.clone(), folder);
+                    self.bazel.in_flight.insert(id.clone(), (folder, workspace));
                     let params = BazelManifestsParams { folder: uri };
                     messages
                         .push(Request::new(id, BAZEL_MANIFESTS_METHOD.to_string(), params).into());
@@ -236,8 +255,7 @@ impl ServerState {
         &mut self,
         response: &Response,
     ) -> Option<Vec<Message>> {
-        let folder = self.bazel.in_flight.remove(&response.id)?;
-        let root = self.folders.get(folder)?.clone();
+        let (folder, root) = self.bazel.in_flight.remove(&response.id)?;
         let grant = match &response.response_result {
             Err(error) => Err(error.message.clone()),
             Ok(result) => serde_json::from_value::<BazelManifestsResult>(result.clone())

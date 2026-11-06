@@ -28,7 +28,8 @@ use rinx_parser::{DefaultRole, ParseCtx, RejectParseFiles};
 use rinx_pyconf::{BoundValue, ModuleReading, Value, ValueKind, read_module};
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::conf_eval::{ConfValues, ExecutedValue, conf_settings};
+use super::conf_eval::{ConfValues, ExecutedValue, served_settings};
+use super::conf_facts::read_conf_facts;
 use super::strictness::EXTLINKS_EXTENSION;
 
 use super::exclusion::{Exclusion, INCLUDE_EVERYTHING};
@@ -74,8 +75,9 @@ fn read_conf(text: &str, executed: Option<&ConfValues>) -> ConfReading {
         findings: Vec::new(),
         asked: Vec::new(),
     };
-    let (settings, needs) = reader.settings();
+    let (mut settings, needs) = reader.settings();
     let mut findings = reader.findings;
+    settings.conf_facts = Some(read_conf_facts(&module, executed.as_ref()));
     // What a run found does not depend on what reading the text could see.
     if executed.is_none() {
         findings.extend(static_reading_limits(&module));
@@ -122,7 +124,7 @@ fn static_reading_limits(module: &ModuleReading) -> Vec<Diagnostic> {
 fn falls_short(module: &ModuleReading) -> bool {
     !module.wildcard_imports.is_empty()
         || module.error.is_some()
-        || conf_settings().iter().any(|name| {
+        || served_settings().iter().any(|name| {
             module.binding(name).is_some_and(|binding| {
                 matches!(binding.value, BoundValue::Unread(_)) || !binding.modifications.is_empty()
             })
@@ -1289,7 +1291,7 @@ extlinks = {1: ('u', 'c'), 'pypi': ('u', 'c')}
         reader.settings();
 
         // Then
-        let asked_for = conf_settings();
+        let asked_for = served_settings();
         let missing: Vec<&String> = reader
             .asked
             .iter()

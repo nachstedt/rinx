@@ -94,6 +94,46 @@ target's name. Open its ``index.html``, or serve the directory:
 A broken cross-reference is a warning by default. Set ``strict_links = True``
 on the site to make it fail the build instead.
 
+.. _init-from-sphinx:
+
+From a Sphinx project
+---------------------
+
+An existing Sphinx project needs no hand-written build. In the directory
+holding its ``conf.py``, run:
+
+.. code-block:: bash
+
+   rinx init --from-sphinx .
+
+It writes the project's Bazel build from ``conf.py`` and from what the
+documents actually use:
+
+- ``BUILD.bazel``, with one ``rinx_library`` holding every document Sphinx
+  would build — the ``.rst`` files ``exclude_patterns`` leaves out are
+  excluded from its ``srcs`` glob — and the ``rinx_site`` rendering it. The
+  library declares exactly the files the documents read (``parse_data``),
+  show (``images``) and link (``downloads``), and ``diagrams = True`` when one
+  draws a diagram.
+- ``rinx.toml``, with the project's name, version, root document and the
+  other site settings ``conf.py`` sets.
+- ``rst_prolog.txt`` and ``rst_epilog.txt``, when ``conf.py`` sets them.
+- ``entities.toml``, when the project uses sphinx-needs: its configuration,
+  converted into an entity schema.
+- ``MODULE.bazel``: the dependency on rinx is added to the enclosing Bazel
+  module, or, outside any, the directory becomes a module of its own, so
+  every document keeps the name and the address it has under Sphinx.
+
+It never overwrites a file, and prints as JSON what it wrote and what it
+left out: a setting ``conf.py`` computes rather than spells, an
+``intersphinx_mapping`` entry (declare it as a ``rinx_inventory``), or a
+file a document reads from outside the directory. ``--python <exe>`` runs
+``conf.py`` for the settings it computes, ``--jinja`` renders every document
+as a Jinja template first (what a ``source-read`` hook does, which reading
+``conf.py`` cannot see), and ``--dry-run`` only reports. In VS Code, the
+*Rinx: Migrate Project to rinx* command does the same (see
+:ref:`vscode-migrate`).
+
 Where to go next
 ----------------
 

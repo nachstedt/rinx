@@ -178,3 +178,74 @@ fn test_an_edit_shows_in_the_next_report() {
         "foo"
     );
 }
+
+#[test]
+fn test_a_scanned_sphinx_project_reports_what_migrating_it_writes() {
+    // Given
+    let (workspace, mut state) = scanned(
+        "analyse_migration",
+        &[
+            (
+                "conf.py",
+                "extensions = ['sphinx.ext.intersphinx']\n\
+                 intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}\n",
+            ),
+            ("index.rst", "Home\n====\n"),
+        ],
+    );
+
+    // When
+    let report = analyse(&mut state, None);
+
+    // Then
+    let migration = report.projects[0]
+        .migration
+        .as_ref()
+        .expect("a migration is reported");
+    assert_eq!(migration.conf, workspace.uri("conf.py"));
+    assert_eq!(
+        migration.files,
+        [
+            workspace.uri("BUILD.bazel"),
+            workspace.uri("rinx.toml"),
+            workspace.uri("MODULE.bazel"),
+        ]
+    );
+    assert_eq!(migration.conflicts, []);
+    let [finding] = migration.findings.as_slice() else {
+        panic!("one finding: {migration:?}");
+    };
+    assert!(finding.contains("`python`"), "{finding}");
+}
+
+#[test]
+fn test_a_folder_reports_no_migration() {
+    // Given
+    let (_workspace, mut state) = scanned("analyse_no_migration", &[("index.rst", ".. foo::\n")]);
+
+    // When
+    let report = analyse(&mut state, None);
+
+    // Then
+    assert_eq!(report.projects[0].migration, None);
+}
+
+#[test]
+fn test_a_migration_names_the_files_it_will_not_overwrite() {
+    // Given
+    let (workspace, mut state) = scanned(
+        "analyse_migration_conflict",
+        &[
+            ("conf.py", ""),
+            ("index.rst", "Home\n====\n"),
+            ("rinx.toml", ""),
+        ],
+    );
+
+    // When
+    let report = analyse(&mut state, None);
+
+    // Then
+    let migration = report.projects[0].migration.as_ref().expect("a migration");
+    assert_eq!(migration.conflicts, [workspace.uri("rinx.toml")]);
+}

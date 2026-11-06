@@ -724,3 +724,64 @@ class TestFindRinxBinary:
         assert found == binary
         assert queries[0][:2] == ["bazel", "cquery"]
         assert any("deps(//bench_warmup:site)" in part for part in queries[0])
+
+
+class TestMigrateCorpus:
+    def test_runs_rinx_init_and_reads_its_report(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Given a binary reporting one file written and one finding
+        calls: list[list[str]] = []
+
+        def run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+            calls.append(command)
+            report = {
+                "files": [str(tmp_path / "BUILD.bazel")],
+                "conflicts": [],
+                "findings": [{"kind": "inventory", "name": "python", "message": "m"}],
+            }
+            return subprocess.CompletedProcess(command, 0, json.dumps(report), "")
+
+        monkeypatch.setattr(subprocess, "run", run)
+
+        # When
+        migration = benchmark_common.migrate_corpus(tmp_path / "rinx", tmp_path, ["--jinja"])
+
+        # Then
+        assert calls == [
+            [str(tmp_path / "rinx"), "init", "--from-sphinx", str(tmp_path), "--jinja"]
+        ]
+        assert migration is not None
+        assert migration.files == [str(tmp_path / "BUILD.bazel")]
+        assert [finding["name"] for finding in migration.of_kind("inventory")] == ["python"]
+        assert migration.of_kind("unread-setting") == []
+
+    def test_a_dry_run_asks_without_writing(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Given
+        calls: list[list[str]] = []
+
+        def run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+            calls.append(command)
+            report = {"files": [], "conflicts": [], "findings": []}
+            return subprocess.CompletedProcess(command, 0, json.dumps(report), "")
+
+        monkeypatch.setattr(subprocess, "run", run)
+
+        # When
+        benchmark_common.migrate_corpus(tmp_path / "rinx", tmp_path, dry_run=True)
+
+        # Then
+        assert calls[0][-1] == "--dry-run"
+
+    def test_is_none_when_init_fails(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        # Given
+        monkeypatch.setattr(
+            subprocess,
+            "run",
+            lambda command, **_: subprocess.CompletedProcess(command, 1, "", "refusing"),
+        )
+
+        # When / Then
+        assert benchmark_common.migrate_corpus(tmp_path / "rinx", tmp_path) is None

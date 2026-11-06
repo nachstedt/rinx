@@ -179,47 +179,61 @@ class TestCountConstructs:
         assert counts == benchmark.ConstructCounts()
 
 
-class TestRenderCorpusBuildFile:
-    def test_the_files_pages_download_are_declared(self) -> None:
-        # Given / When
-        text = benchmark.render_corpus_build_file()
+class TestRunBenchmark:
+    def test_migrates_the_corpus_between_the_warm_up_and_its_build(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Given every step recording that it ran
+        steps: list[str] = []
+        monkeypatch.setattr(benchmark_common, "discard_stale_corpus_outputs", lambda *_: None)
 
-        # Then CPython's example files are declared — without them the site's
-        # validate_assets fails as `download.undeclared` and no page renders
-        downloads = text.split("downloads = ")[1]
-        assert downloads.startswith("glob(")
-        assert '"includes/**"' in downloads
+        def build(_: Path, target: str, *__: object, **___: object) -> tuple[bool, float]:
+            steps.append(f"build {target}")
+            return True, 1.0
 
-    def test_rst_fragments_are_not_declared_as_downloads(self) -> None:
-        # Given / When
-        text = benchmark.render_corpus_build_file()
+        monkeypatch.setattr(benchmark_common, "timed_bazel_build", build)
+        monkeypatch.setattr(
+            benchmark_common, "find_rinx_binary", lambda _: steps.append("find") or tmp_path
+        )
+        migration = benchmark_common.Migration(files=[], findings=[])
+        monkeypatch.setattr(
+            benchmark_common,
+            "migrate_corpus",
+            lambda _, directory, *__, **___: steps.append(f"init {directory.name}") or migration,
+        )
 
-        # Then the fragments under includes/ stay sources, not downloads
-        downloads = text.split("downloads = ")[1].split("),")[0]
-        assert '"**/*.rst"' in downloads.split("exclude = ")[1]
-
-    def test_images_are_still_declared(self) -> None:
-        # Given / When
-        text = benchmark.render_corpus_build_file()
-
-        # Then
-        assert "images = glob(" in text
-
-    def test_the_site_writes_the_python_module_index(self) -> None:
-        # Given / When
-        text = benchmark.render_corpus_build_file()
-
-        # Then CPython's ~300 modules get the index Sphinx writes for them
-        site = text.split("rinx_site(")[1]
-        assert 'domain_indices = ["py-modindex"],' in site
-
-    def test_the_library_names_the_parser_config(self) -> None:
-        # Given / When
-        text = benchmark.render_corpus_build_file()
+        # When
+        result = benchmark.run_benchmark()
 
         # Then
-        library = text.split("rinx_library(")[1].split("rinx_site(")[0]
-        assert 'parse_config = "rinx_parser.toml",' in library
+        assert steps == [
+            f"build //{benchmark.WARMUP_PACKAGE}:site",
+            "find",
+            "init Doc",
+            "build //Doc:site",
+        ]
+        assert result.succeeded
+
+    def test_a_failed_migration_fails_without_building_the_corpus(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Given
+        built: list[str] = []
+        monkeypatch.setattr(benchmark_common, "discard_stale_corpus_outputs", lambda *_: None)
+        monkeypatch.setattr(
+            benchmark_common,
+            "timed_bazel_build",
+            lambda _, target, *__, **___: built.append(target) or (True, 1.0),
+        )
+        monkeypatch.setattr(benchmark_common, "find_rinx_binary", lambda _: tmp_path)
+        monkeypatch.setattr(benchmark_common, "migrate_corpus", lambda *_, **__: None)
+
+        # When
+        result = benchmark.run_benchmark()
+
+        # Then
+        assert not result.succeeded
+        assert built == [f"//{benchmark.WARMUP_PACKAGE}:site"]
 
 
 class TestRenderParserConfig:

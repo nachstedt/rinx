@@ -23,12 +23,14 @@ use std::path::{Path, PathBuf};
 
 use rinx_ast::{Diagnostic, DiagnosticCode, Span};
 use rinx_entity::needs_conf::{
-    NEEDS_SETTINGS, NeedsConfig, ReportEntry, SchemasFile, convert_needs,
+    NEEDS_SETTINGS, NeedsConfig, ReportEntry, SchemaProvenance, SchemasFile, convert_needs,
+    render_schema_toml,
 };
 use rinx_entity::{EntitySchema, load_raw_schema};
 use rinx_pyconf::{Value, ValueKind};
 use serde::Deserialize;
 
+use super::conf_facts::ConvertedNeeds;
 use super::python_value::PythonValue;
 
 /// The module names a `conf.py` declares sphinx-needs under: its own, and
@@ -113,6 +115,8 @@ pub struct ResolvedNeeds {
     pub import_keys: BTreeMap<String, String>,
     /// The files read besides `conf.py`, existing or not.
     pub files: Vec<PathBuf>,
+    /// The schema as a migration writes it.
+    pub converted: ConvertedNeeds,
 }
 
 /// The entity schema `declaration` describes for the project whose
@@ -179,21 +183,26 @@ pub(crate) fn resolve_needs(
         });
 
     let (declarations, unconverted) = convert_needs(&config, schemas.as_ref());
-    for entry in unconverted {
-        report.unconverted(&entry);
+    for entry in &unconverted {
+        report.unconverted(entry);
     }
-    let schema = load_raw_schema(declarations, &rinx_parser::is_builtin_directive_name)
-        .unwrap_or_else(|errors| {
-            report.invalid(format!(
-                "the need types it declares are no valid entity schema:\n{errors}"
-            ));
-            EntitySchema::empty()
-        });
+    let toml = render_schema_toml(&declarations, SchemaProvenance::Migrated);
+    let (schema, converted) =
+        match load_raw_schema(declarations, &rinx_parser::is_builtin_directive_name) {
+            Ok(schema) => (schema, ConvertedNeeds::Schema { toml, unconverted }),
+            Err(errors) => {
+                report.invalid(format!(
+                    "the need types it declares are no valid entity schema:\n{errors}"
+                ));
+                (EntitySchema::empty(), ConvertedNeeds::Invalid)
+            }
+        };
     let import_keys = schema.resolved_import_keys(&anchor_of("import_keys"));
     ResolvedNeeds {
         schema,
         import_keys,
         files,
+        converted,
     }
 }
 

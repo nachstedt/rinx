@@ -27,7 +27,10 @@ mod page_order;
 mod project_index;
 mod section_numbering;
 
-pub use declarations::{DeclaredFiles, disabled_diagrams, undeclared_assets};
+pub use declarations::{
+    DeclaredFiles, RequiredDeclarations, disabled_diagrams, required_declarations,
+    undeclared_assets,
+};
 pub use document_analysis::DocumentAnalysis;
 pub use document_index::analyze;
 // `normalize_path` lives in `rinx_ast`, which is the only crate both

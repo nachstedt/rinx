@@ -15,7 +15,8 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 use rinx_entity::needs_conf::{
-    DEFAULT_TOML_ROOT, NeedsConfig, ReportEntry, SchemasFile, convert_needs, render_schema_toml,
+    DEFAULT_TOML_ROOT, NeedsConfig, ReportEntry, SchemaProvenance, SchemasFile, convert_needs,
+    render_schema_toml,
 };
 
 use super::cli_args::{flag_value, flag_value_opt};
@@ -38,7 +39,7 @@ pub(super) fn process_needs_schema(
         .transpose()
         .context("Failed to read the schemas.json")?;
     let (declarations, report) = convert_needs(config, schemas.as_ref());
-    let text = render_schema_toml(&declarations);
+    let text = render_schema_toml(&declarations, SchemaProvenance::Generated);
     parse_entity_schema(&text, "the converted schema")?;
     Ok((text, report))
 }

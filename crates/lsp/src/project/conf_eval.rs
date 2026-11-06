@@ -21,6 +21,7 @@ use std::time::{Duration, Instant};
 use rinx_pyconf::{BoundValue, Value, read_module};
 use serde::Deserialize;
 
+use super::conf_facts::MIGRATION_SETTINGS;
 use super::needs::conf_setting_names;
 
 /// The script a run executes: `python -c <script> <conf.py> <names>`.
@@ -60,14 +61,23 @@ const READ_SETTINGS: &[&str] = &[
     "needs_from_toml_table",
 ];
 
-/// Every setting a run is asked for: each one the server reads.
+/// Every setting the server reads to serve a project.
 #[must_use]
-pub fn conf_settings() -> Vec<String> {
+pub fn served_settings() -> Vec<String> {
     READ_SETTINGS
         .iter()
         .map(|name| (*name).to_string())
         .chain(conf_setting_names().map(|(_, name)| name))
         .collect()
+}
+
+/// Every setting a run is asked for: each one the server reads, and each one
+/// a migration carries over.
+#[must_use]
+pub fn conf_settings() -> Vec<String> {
+    let mut names = served_settings();
+    names.extend(MIGRATION_SETTINGS.iter().map(|name| (*name).to_string()));
+    names
 }
 
 /// One setting as running `conf.py` left it.

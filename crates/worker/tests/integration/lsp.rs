@@ -264,6 +264,59 @@ fn test_lsp_reports_what_a_project_does_not_support() {
 }
 
 #[test]
+fn test_lsp_offers_a_client_creating_files_to_migrate_a_sphinx_project() {
+    // Given — a Sphinx project, and a client taking edits that create files
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_migrate");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    std::fs::write(root.join("conf.py"), "project = 'Demo'\n").expect("write");
+    std::fs::write(root.join("index.rst"), "Home\n====\n").expect("write");
+    let conf = format!("file://{}", root.join("conf.py").display());
+    let mut server = Server::spawn();
+    server.initialize_with(json!({
+        "capabilities": {"workspace": {"workspaceEdit": {
+            "documentChanges": true, "resourceOperations": ["create"],
+        }}},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+    while !matches!(
+        server.receive(),
+        Message::Notification(notification)
+            if notification.method == "rinx/status" && notification.params["state"] == "ready"
+    ) {}
+
+    // When
+    server.request(
+        2,
+        "textDocument/codeAction",
+        json!({
+            "textDocument": { "uri": conf },
+            "range": { "start": { "line": 0, "character": 0 }, "end": { "line": 0, "character": 0 } },
+            "context": { "diagnostics": [], "only": ["source"] },
+        }),
+    );
+    let actions = loop {
+        if let Message::Response(response) = server.receive() {
+            break response.response_result.expect("code actions");
+        }
+    };
+
+    // Then — it creates the build file first, and writes it
+    assert_eq!(actions[0]["kind"], "source.migrateToRinx");
+    let operations = &actions[0]["edit"]["documentChanges"];
+    let build = format!("file://{}", root.join("BUILD.bazel").display());
+    assert_eq!(operations[0]["kind"], "create");
+    assert_eq!(operations[0]["uri"], build);
+    assert_eq!(operations[1]["textDocument"]["uri"], build);
+    assert!(
+        operations[1]["edits"][0]["newText"]
+            .as_str()
+            .is_some_and(|text| text.contains("rinx_library(")),
+        "{operations}"
+    );
+}
+
+#[test]
 fn test_lsp_lowers_what_a_sphinx_projects_extensions_explain() {
     // Given — a project declaring autodoc, and an extension no profile models
     let root = std::env::temp_dir().join("rinx_lsp_stdio_extensions");
@@ -1738,7 +1791,7 @@ fn test_lsp_offers_the_missing_dependency_of_a_toctree_entry() {
     let capabilities = &initialized.response_result.expect("initialized")["capabilities"];
     assert_eq!(
         capabilities["codeActionProvider"],
-        json!({"codeActionKinds": ["quickfix"]})
+        json!({"codeActionKinds": ["quickfix", "source.migrateToRinx"]})
     );
     let actions = answered.response_result.expect("code actions");
     assert_eq!(actions[0]["title"], "Add //:guide to the deps of //:index");

@@ -28,6 +28,7 @@ use super::bazel_manifests::BAZEL_MANIFESTS_CHANGED_METHOD;
 use super::conf_runs::CONF_INTERPRETER_CHANGED_METHOD;
 use super::state::ServerState;
 use crate::analysis::{ANALYSE_PROJECT_METHOD, AnalyseProjectParams};
+use crate::code_action::MIGRATE_KIND;
 use crate::position::PositionEncoding;
 use crate::preview::{PREVIEW_METHOD, PreviewParams, PreviewRefusal, PreviewResult};
 use crate::preview_link::{PREVIEW_LINK_METHOD, PreviewLinkParams};
@@ -70,7 +71,10 @@ pub fn initialize_result(
                 }),
             ),
             code_action_provider: Some(CodeActionProviderCapability::Options(CodeActionOptions {
-                code_action_kinds: Some(vec![CodeActionKind::QUICKFIX]),
+                code_action_kinds: Some(vec![
+                    CodeActionKind::QUICKFIX,
+                    CodeActionKind::new(MIGRATE_KIND),
+                ]),
                 ..CodeActionOptions::default()
             })),
             ..ServerCapabilities::default()
@@ -197,7 +201,11 @@ pub fn handle_request(state: &mut ServerState, request: Request) -> Response {
         }
         CodeActionRequest::METHOD => answer(id, &method, params, |id, params: CodeActionParams| {
             let actions: Vec<CodeActionOrCommand> = state
-                .code_actions(&params.text_document.uri, params.range)
+                .code_actions(
+                    &params.text_document.uri,
+                    params.range,
+                    params.context.only.as_deref(),
+                )
                 .into_iter()
                 .map(CodeActionOrCommand::CodeAction)
                 .collect();

@@ -33,6 +33,11 @@
         "category": "Rinx"
       },
       {
+        "command": "rinx.migrateToRinx",
+        "title": "Migrate Project to rinx",
+        "category": "Rinx"
+      },
+      {
         "command": "rinx.showLogs",
         "title": "Show Logs",
         "category": "Rinx"

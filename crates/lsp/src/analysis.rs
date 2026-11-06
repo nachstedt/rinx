@@ -9,6 +9,9 @@
 use lsp_types::{TextDocumentIdentifier, Uri};
 use serde::{Deserialize, Serialize};
 
+use std::path::Path;
+
+use crate::migration::{MigrationFinding, MigrationPlan};
 use crate::progress::ProjectStatus;
 use crate::project::{
     CompatibilityLink, CompatibilityLinks, ConstructCount, ConstructTally, ExtensionProfiles,
@@ -48,6 +51,44 @@ pub struct ProjectReport {
     pub extensions: Vec<ExtensionReport>,
     /// What its documents wrote, by kind, then most frequent first.
     pub constructs: Vec<ConstructReport>,
+    /// What migrating it into a rinx build writes, for a Sphinx project
+    /// whose documents are scanned.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub migration: Option<MigrationReport>,
+}
+
+/// What the "Migrate to rinx" source action on a project's `conf.py` writes
+/// (roadmap #37), and what it leaves out.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MigrationReport {
+    /// The `conf.py` the action is offered on.
+    pub conf: Uri,
+    /// The files it writes, a new file or one it adds to.
+    pub files: Vec<Uri>,
+    /// The files it would overwrite, which keep it from being offered.
+    pub conflicts: Vec<Uri>,
+    /// What it leaves out, each a sentence an author can act on.
+    pub findings: Vec<String>,
+}
+
+/// The report of migrating the project configured by `conf` as `plan` says.
+#[must_use]
+pub fn migration_report(conf: &Path, plan: &MigrationPlan) -> Option<MigrationReport> {
+    Some(MigrationReport {
+        conf: file_uri(conf)?,
+        files: plan
+            .files
+            .iter()
+            .filter_map(|file| file_uri(&file.path))
+            .collect(),
+        conflicts: plan.conflicts().into_iter().filter_map(file_uri).collect(),
+        findings: plan
+            .findings
+            .iter()
+            .map(MigrationFinding::message)
+            .collect(),
+    })
 }
 
 /// How far this build supports a declared extension.
@@ -198,6 +239,7 @@ pub fn project_report(
         documents,
         extensions,
         constructs,
+        migration: None,
     }
 }
 

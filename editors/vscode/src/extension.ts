@@ -15,6 +15,7 @@ import {
     selectedByPythonExtension,
 } from './conf';
 import { errorMessage } from './errors';
+import { migrateCommand } from './migrate';
 import {
     CONSENT_KEY,
     DownloadSetting,
@@ -97,6 +98,9 @@ export function activate(context: vscode.ExtensionContext): RinxApi {
         vscode.commands.registerCommand('rinx.analyseProject', () => {
             AnalysisPanel.createOrShow(runningAnalysisClient);
         }),
+        vscode.commands.registerCommand('rinx.migrateToRinx', (conf?: vscode.Uri) =>
+            migrateCommand(client?.isRunning() ? client : undefined, conf),
+        ),
         vscode.commands.registerCommand('rinx.showLogs', () => {
             outputChannel.show();
         }),

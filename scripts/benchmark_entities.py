@@ -1,11 +1,11 @@
 """Benchmark the entity model against a real sphinx-needs project.
 
 `benchmark.py` measures general RST coverage against CPython. This one measures
-*entity* coverage against the useblocks sphinx-needs demo: it converts that
-project's own sphinx-needs configuration into a rinx entity schema
-(`rinx needs_schema`, the conversion the language server runs too), builds its
-documents against that schema, and reports everything the pipeline did not
-understand.
+*entity* coverage against the useblocks sphinx-needs demo: it migrates that
+project with `rinx init --from-sphinx`, which converts its own sphinx-needs
+configuration into a rinx entity schema (the conversion the language server
+runs too), builds its documents against that schema, and reports everything
+the pipeline did not understand.
 
 Unlike the CPython benchmark this is not a throughput measurement — 39
 documents will not stress the pipeline. What it produces is a triage list: each
@@ -29,8 +29,8 @@ import subprocess
 import sys
 import tempfile
 from collections import Counter
-from collections.abc import Iterable, Sequence
-from pathlib import Path, PurePosixPath
+from collections.abc import Iterable
+from pathlib import Path
 from typing import TextIO, TypeAlias
 
 import benchmark_common
@@ -51,7 +51,7 @@ from benchmark_common import (
 )
 
 # One `(category, detail)` entry per construct the converter could not carry
-# over, as `rinx needs_schema` prints them.
+# over, as `rinx init --from-sphinx` reports them.
 Report: TypeAlias = list[tuple[str, str]]
 
 TARGET_DIR = Path(tempfile.gettempdir()) / "rinx_benchmark_needs"
@@ -78,7 +78,7 @@ DEMO_VERSION = "0.1.5"
 # the workspace root, so a corpus whose `srcdir` is a subdirectory would have
 # every absolute image path miss by that prefix. Making the two roots the same
 # directory is the only arrangement in which the corpus' own paths resolve.
-# The corpus therefore lives in the *root* package, `//:demo_docs`.
+# The corpus therefore lives in the *root* package, `//:docs`.
 CORPUS_SRCDIR = "docs"
 
 # Generated packages placed inside the workspace. Each holds a BUILD file, which
@@ -86,32 +86,12 @@ CORPUS_SRCDIR = "docs"
 # stops at its boundary and cannot pick up the warm-up document.
 GENERATED_PACKAGES = ("assets", WARMUP_PACKAGE)
 
-# Bazel's convenience symlinks, which sit in the workspace *root* — and this
-# corpus' root package is the corpus itself, so every glob below would otherwise
-# follow them straight into the previous run's outputs.
-#
-# What that costs is not theoretical: a `**/*.jpg` matching
-# `bazel-bin/site_site_out/_images/...` makes the site's own output an input to
-# the action that writes it, and the image bundling then fails with a `cp` of a
-# path Bazel cannot materialize. It stays hidden while that action is an
-# action-cache hit and appears the moment anything re-keys it — such as a change
-# to the rinx binary, which is the one thing this benchmark exists to
-# measure. `discard_stale_corpus_outputs` below cannot be relied on to prevent
-# it: Bazel leaves its output directories read-only, so removing them is
-# best-effort.
-#
-# The CPython benchmark needs no such exclusion, and the difference is
-# structural rather than an oversight: its corpus is the `Doc/` *subdirectory*
-# of the generated workspace, so the symlinks are outside the globbed package.
-OUTPUT_SYMLINK_GLOB = "bazel-*/**"
+# The root package's build file, which `rinx init` writes for the corpus.
+ROOT_BUILD_FILE = "BUILD.bazel"
 
 # Hand-authored list of entity warnings we accept, relative to the workspace
 # root (main() chdirs there via BUILD_WORKSPACE_DIRECTORY).
 WHITELIST_PATH = Path("scripts/entity_warnings_whitelist.json")
-
-# The generated schema, written into the clone rather than into this repository:
-# it is derived data, regenerated on every run.
-SCHEMA_NAME = "entities.toml"
 
 # Where the analysis writes its full report, relative to the workspace root.
 RESULT_PATH = Path("benchmark_entities_result.txt")
@@ -129,142 +109,6 @@ def clone_repo(version: str) -> None:
         raise SystemExit(message)
 
 
-# ── Schema conversion ─────────────────────────────────────────────────────────
-
-
-def convert_schema(docs_dir: Path, binary: Path) -> Report | None:
-    """Convert the corpus' own sphinx-needs configuration into an entity schema.
-
-    Runs `rinx needs_schema` over `ubproject.toml`, which names its
-    `schemas.json` itself. Returns the converter's report of constructs with no
-    equivalent in our meta-model — half the point of the whole benchmark — or
-    None when the conversion failed.
-    """
-    print("Converting the project's sphinx-needs configuration into an entity schema...")
-    result = subprocess.run(
-        [
-            str(binary),
-            "needs_schema",
-            "--ubproject",
-            str(docs_dir / "ubproject.toml"),
-            "--output",
-            str(docs_dir / SCHEMA_NAME),
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if result.returncode != 0:
-        print(f"rinx needs_schema failed:\n{result.stderr}")
-        return None
-    print(f"Wrote {docs_dir / SCHEMA_NAME}.")
-    return [(entry["category"], entry["detail"]) for entry in json.loads(result.stdout)]
-
-
-# ── Bazel project generation ──────────────────────────────────────────────────
-
-# `.. include::` and `.. literalinclude::` name their source in the argument;
-# `.. csv-table::` names it in a `:file:` option.
-TRANSCLUSION_DIRECTIVE = re.compile(
-    r"^[ \t]*\.\.[ \t]+(?:include|literalinclude)::[ \t]*(\S+)[ \t]*$", re.MULTILINE
-)
-CSV_FILE_OPTION = re.compile(r"^[ \t]*:file:[ \t]*(\S+)[ \t]*$", re.MULTILINE)
-
-# The corpus renders every document as a Jinja template before Sphinx parses
-# it (`docs/conf.py`'s `rstjinja` handler on the `source-read` event), and uses
-# that for one thing: `{% include %}`-ing a shared page header. Those templates
-# are files the parser reads, so they belong in `parse_data` and out of `srcs`,
-# exactly like an `.. include::`d document.
-JINJA_INCLUDE = re.compile(r"""{%-?\s*include\s+["']([^"']+)["']""")
-
-
-def transclusion_targets(source_dir: Path) -> tuple[list[str], list[tuple[str, Path]]]:
-    """Find every file the corpus splices in at parse time.
-
-    Returns `(included_rst, outside)`. `included_rst` holds documents pulled in
-    by `.. include::`, as paths from the source root — they must be kept *out*
-    of `srcs`, or each would be published as a page of its own as well as being
-    spliced into its includer. `outside` holds `(source, destination)` pairs for
-    sources that live outside the source root: `source` is where the file
-    actually is, `destination` the source-root-relative path the parser will
-    look for it at.
-
-    That second list exists because the parser resolves `..` by *popping*
-    (`ast::normalize_path`), so a `.. literalinclude:: ../pharaoh.toml` written
-    in a root-level document is looked for at `pharaoh.toml` — inside the
-    source root. Copying the real file to that path is what makes the reference
-    resolve, and is the only alternative to editing the corpus.
-
-    A path starting with `/` is source-root-relative; anything else resolves
-    against the directory holding the document. Both rules are the parser's.
-    """
-    included_rst: set[str] = set()
-    outside: dict[str, Path] = {}
-
-    for document in sorted(source_dir.rglob("*.rst")):
-        relative_doc = document.relative_to(source_dir)
-        text = document.read_text(errors="replace")
-        targets = TRANSCLUSION_DIRECTIVE.findall(text) + CSV_FILE_OPTION.findall(text)
-        # A Jinja template name resolves against the *source root*, the way a
-        # `FileSystemLoader` rooted at the Sphinx source directory does — not
-        # against the including document, the way a `.. include::` does. The
-        # leading slash is how the parser's own resolver is told that.
-        targets += [f"/{name}" for name in JINJA_INCLUDE.findall(text)]
-        for target in targets:
-            # Pharaoh templates the argument (`{{page}}`); there is no file to
-            # declare, and the parse reports it.
-            if "{" in target or "}" in target:
-                continue
-
-            destination = resolve_from_document(target, relative_doc.as_posix())
-            actual = actual_location(source_dir, relative_doc, target)
-            if actual is not None and actual != source_dir / destination:
-                outside[destination] = actual
-            elif Path(destination).suffix == ".rst":
-                included_rst.add(destination)
-
-    return sorted(included_rst), sorted(outside.items())
-
-
-def resolve_from_document(written: str, doc_path: str) -> str:
-    """The parser's `ast::resolve_from_document`, in Python.
-
-    A leading `/` means "from the source root"; otherwise the path resolves
-    against the document's directory. `..` pops, so the result never escapes
-    the source root — which is exactly why an outside source needs copying to
-    where the parser will look.
-    """
-    if written.startswith("/"):
-        parts = written.lstrip("/").split("/")
-    else:
-        parts = PurePosixPath(doc_path).parent.as_posix().split("/") + written.split("/")
-
-    normalized: list[str] = []
-    for part in parts:
-        if part in {"", "."}:
-            continue
-        if part == "..":
-            if normalized:
-                normalized.pop()
-        else:
-            normalized.append(part)
-    return "/".join(normalized)
-
-
-def actual_location(source_dir: Path, relative_doc: Path, written: str) -> Path | None:
-    """Where the named file really is on disk, or None if it is not there.
-
-    Unlike the parser's view this one honours `..` as the filesystem does, so a
-    source outside the source root is found rather than clamped.
-    """
-    if written.startswith("/"):
-        candidate = source_dir / written.lstrip("/")
-    else:
-        candidate = source_dir / relative_doc.parent / written
-    candidate = Path(os.path.normpath(candidate))
-    return candidate if candidate.is_file() else None
-
-
 def corpus_workspace() -> Path:
     """The generated Bazel workspace: the clone's Sphinx source directory."""
     return TARGET_DIR / CORPUS_SRCDIR
@@ -276,130 +120,47 @@ def site_dir() -> Path:
 
 
 def generate_bazel_project(rinx_root: str) -> None:
-    """Turn the clone's source directory into a Bazel workspace of its own."""
-    print("Generating a Bazel project around the clone...")
-    workspace = corpus_workspace()
+    """Make the clone's source directory a Bazel workspace of its own.
 
+    The corpus' own build is not written here: `rinx init --from-sphinx`
+    writes it from `conf.py` once the warm-up has built the binary (see
+    `run_benchmark`), as it would for any Sphinx project.
+    """
+    print("Generating a Bazel workspace around the clone...")
+    workspace = corpus_workspace()
     (workspace / "MODULE.bazel").write_text(
         benchmark_common.rinx_module_bazel("sphinx_needs_demo_bench", rinx_root)
     )
-
+    # A placeholder until `rinx init` writes the corpus' own: rules_rust's
+    # crate_universe resolves `@@//:MODULE.bazel` while the warm-up builds,
+    # and fails without a root package.
+    (workspace / ROOT_BUILD_FILE).write_text("")
     benchmark_common.write_assets_alias(workspace)
-
-    (workspace / "rinx.toml").write_text('project = "Sphinx-Needs Demo Benchmark"\n')
-    default_template = Path(rinx_root) / "templates" / "default.html"
-    (workspace / "custom_template.html").write_text(default_template.read_text())
-
-    included_rst, outside = transclusion_targets(workspace)
-    copy_outside_sources(workspace, outside)
-    (workspace / "BUILD.bazel").write_text(
-        render_corpus_build_file(included_rst, [destination for destination, _ in outside])
-    )
-
     benchmark_common.generate_warmup_package(workspace, rinx_root)
 
 
-def copy_outside_sources(workspace: Path, outside: Iterable[tuple[str, Path]]) -> None:
-    """Place each source that lives outside the source root where the parser will look for it.
+def copy_outside_sources(workspace: Path, outside: Iterable[tuple[str, Path]]) -> list[Path]:
+    """Place each source that lives outside the source root where the build looks for it.
+
+    `outside` pairs that place, relative to `workspace`, with the source: what
+    `rinx init` reports as `outside-source-root`. The parser resolves `..` by
+    popping, so a `.. literalinclude:: ../pharaoh.toml` written in a
+    root-level document is looked for at `pharaoh.toml` — inside the source
+    root. Returns the copies, which the migration then declares.
 
     The alternative would be editing the corpus' own `.. literalinclude::`
     arguments, which would make the benchmark measure a document set nobody
     wrote. The generated workspace is disposable, so adding a file to it is the
     same kind of scaffolding as the generated BUILD file next to it.
     """
+    copies = []
     for destination, source in outside:
         target = workspace / destination
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(Path(source).read_bytes())
         print(f"Copied {source} -> {target} (spliced in from outside the source root).")
-
-
-def render_corpus_build_file(
-    included_rst: Sequence[str], spliced_from_outside: Iterable[str]
-) -> str:
-    """The workspace root package's BUILD.bazel.
-
-    The two lists are what makes the generated file corpus-specific: an
-    `.. include::`d document is excluded from `srcs` (or it would be published
-    as a page as well as spliced in) and declared as `parse_data` instead, and
-    so is every source copied in from outside the source root. The generated
-    `assets` and warm-up packages need no exclusion — a glob never crosses a
-    package boundary.
-    """
-    output_symlink_exclude = json.dumps(OUTPUT_SYMLINK_GLOB)
-    excludes = "".join(
-        f"            {json.dumps(path)},\n" for path in [*included_rst, OUTPUT_SYMLINK_GLOB]
-    )
-    spliced = "".join(
-        f"        {json.dumps(path)},\n"
-        for path in sorted(set(included_rst) | set(spliced_from_outside))
-    )
-    return f"""load("@rinx//:defs.bzl", "rinx_library", "rinx_site")
-
-rinx_library(
-    name = "demo_docs",
-    srcs = glob(
-        ["**/*.rst"],
-        exclude = [
-{excludes}        ],
-    ),
-    # The project's own sphinx-needs vocabulary, converted to an entity schema.
-    # A parse-time input: it is what makes `.. req::` a directive rather than an
-    # unknown name.
-    entity_schema = "{SCHEMA_NAME}",
-    # The corpus's `conf.py` renders every document as a Jinja template before
-    # parsing it — there is no Sphinx feature for that, so this build declares
-    # it instead. 24 of the 31 documents open with a `{{% set %}}` naming the
-    # page and an `{{% include %}}` pulling in the shared header.
-    jinja = True,
-    # The demo draws 21 `.. uml::` diagrams across its documents, and diagram
-    # compilation is opt-in per library. One library holds the whole corpus
-    # here, so it opts in as a whole; a real project would split its diagram
-    # documents into a library of their own to keep the cost on them.
-    diagrams = True,
-    images = glob(
-        [
-            "**/*.png",
-            "**/*.jpg",
-            "**/*.jpeg",
-            "**/*.gif",
-            "**/*.svg",
-            "**/*.webp",
-        ],
-        exclude = [{output_symlink_exclude}],
-        allow_empty = True,
-    ),
-    # Everything the *parser* reads at parse time: the documents `.. include::`
-    # splices in, plus the data and code `.. literalinclude::` and
-    # `.. csv-table:: :file:` pull from.
-    parse_data = glob(
-        [
-            "**/*.json",
-            "**/*.toml",
-            "**/*.py",
-            "**/*.need",
-            "**/*.csv",
-            "**/*.txt",
-            "**/*.yaml",
-        ],
-        exclude = [{output_symlink_exclude}],
-        allow_empty = True,
-    ) + [
-{spliced}    ],
-)
-
-rinx_site(
-    name = "site",
-    config = "rinx.toml",
-    template = "custom_template.html",
-    css = "//assets:default.css",
-    # Declared again here: the index action derives back-links from it and the
-    # render actions read its labels. A library parsed against a different
-    # schema than the site indexes with is reported as `entity.schema-mismatch`.
-    entity_schema = "{SCHEMA_NAME}",
-    deps = [":demo_docs"],
-)
-"""
+        copies.append(target)
+    return copies
 
 
 # ── Build ─────────────────────────────────────────────────────────────────────
@@ -474,11 +235,48 @@ def build_corpus(warmup_seconds: float) -> BuildResult:
     )
 
 
-def run_benchmark(*, clean: bool = False) -> tuple[BuildResult, Report]:
-    """Warm up, convert the schema with the binary that built, then build the corpus.
+# The corpus renders every document as a Jinja template before Sphinx parses
+# it — `docs/conf.py`'s `rstjinja` handler on the `source-read` event, which
+# reading `conf.py` cannot see — so the migration is told.
+INIT_ARGS = ("--jinja",)
 
-    The conversion needs the `rinx` binary, and the warm-up is what compiles it,
-    so it runs between the two builds and is not timed with either.
+
+def migrate(binary: Path) -> Report | None:
+    """Migrate the corpus with `rinx init --from-sphinx`.
+
+    A dry run first names the sources the corpus splices in from outside its
+    source root, which are copied to where the build looks for them and
+    declared; the migration's report of sphinx-needs constructs the entity
+    model has no vocabulary for — half the point of the whole benchmark — is
+    returned. None when the migration failed.
+    """
+    workspace = corpus_workspace()
+    # `rinx init` writes the root package's build file and overwrites none,
+    # so the warm-up's placeholder makes way.
+    (workspace / ROOT_BUILD_FILE).unlink(missing_ok=True)
+    preview = benchmark_common.migrate_corpus(binary, workspace, INIT_ARGS, dry_run=True)
+    if preview is None:
+        return None
+    outside = [
+        (finding["build_path"], Path(finding["path"]))
+        for finding in preview.of_kind("outside-source-root")
+    ]
+    copies = copy_outside_sources(workspace, outside)
+    parse_data = [arg for copy in copies for arg in ("--parse-data", str(copy))]
+    migration = benchmark_common.migrate_corpus(binary, workspace, [*INIT_ARGS, *parse_data])
+    if migration is None:
+        return None
+    return [
+        (finding["entry"]["category"], finding["entry"]["detail"])
+        for finding in migration.of_kind("needs-unconverted")
+    ]
+
+
+def run_benchmark(*, clean: bool = False) -> tuple[BuildResult, Report]:
+    """Warm up, migrate the corpus with the binary that built, then build it.
+
+    The migration needs the `rinx` binary, and the warm-up is what compiles
+    it, so it runs between the two builds and is not timed with either.
     """
     deps_built, deps_duration = warm_up(clean=clean)
     failed = BuildResult(succeeded=False, warmup_seconds=deps_duration, corpus_seconds=None)
@@ -488,7 +286,7 @@ def run_benchmark(*, clean: bool = False) -> tuple[BuildResult, Report]:
     if binary is None:
         print("Could not find the rinx binary the warm-up built.")
         return failed, []
-    schema_report = convert_schema(corpus_workspace(), binary)
+    schema_report = migrate(binary)
     if schema_report is None:
         return failed, []
     return build_corpus(deps_duration), schema_report

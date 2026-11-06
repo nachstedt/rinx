@@ -121,6 +121,52 @@ suite('Analysis report Test Suite', () => {
         assert.match(done, /<script nonce="abc">/);
     });
 
+    test('reportPage: a migration lists what it writes and leaves out, with its button', () => {
+        // Given
+        const migrating = report([]);
+        migrating.projects[0].migration = {
+            conf: 'file:///docs/conf.py',
+            files: ['file:///docs/BUILD.bazel', 'file:///docs/rinx.toml'],
+            conflicts: [],
+            findings: ['`version` is <computed>'],
+        };
+
+        // When
+        const page = reportPage(migrating, 'abc');
+
+        // Then
+        assert.match(page, /Migrating to rinx/);
+        assert.match(page, /<code>\/docs\/BUILD\.bazel<\/code>/);
+        assert.match(page, /&lt;computed&gt;/);
+        assert.match(page, /<button data-conf="file:\/\/\/docs\/conf\.py">Migrate to rinx<\/button>/);
+    });
+
+    test('reportPage: a migration that would overwrite a file offers no button', () => {
+        // Given
+        const migrating = report([]);
+        migrating.projects[0].migration = {
+            conf: 'file:///docs/conf.py',
+            files: ['file:///docs/BUILD.bazel'],
+            conflicts: ['file:///docs/BUILD.bazel'],
+            findings: [],
+        };
+
+        // When
+        const page = reportPage(migrating, 'abc');
+
+        // Then
+        assert.match(page, /Not offered: it would overwrite <code>\/docs\/BUILD\.bazel<\/code>/);
+        assert.doesNotMatch(page, /data-conf=/);
+    });
+
+    test('reportPage: a project with no migration has no such section', () => {
+        // Given / When
+        const page = reportPage(report([]), 'abc');
+
+        // Then
+        assert.doesNotMatch(page, /Migrating to rinx/);
+    });
+
     test('reportPage: no project is said', () => {
         // Given / When
         const page = reportPage({ complete: true, projects: [] }, 'abc');

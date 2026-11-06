@@ -208,6 +208,8 @@ entry under the heading it belongs to, as a single short sentence.
 - Gate CI on hard failures (a corpus no longer builds) and only report soft signals (new warnings, timings), since gating on noise trains people to ignore the gate.
 - Publish bulky derived artifacts only for the versions people actually compare against (main, previews, the newest release), so their cost does not grow with every release.
 - Pin every tool a build action runs, and the runtime it runs on, inside the build rather than relying on the host or on consumer flags, since anything outside the action key lets one key yield different outputs on different machines.
+- Generate a build file's declarations from what the tool's own parse found the documents use, not from globs by file extension, so the generated build and the build's checks cannot disagree.
+- When migrating a project into the build, place the build's root so every document keeps the name, address and path resolution it had under the old tool.
 
 ## Interoperability
 

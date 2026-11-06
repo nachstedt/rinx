@@ -8,6 +8,9 @@
 /e2e/*/bazel-*
 /e2e/*/MODULE.bazel.lock
 
+# What tests/test_init_from_sphinx.sh migrates, should it be interrupted
+/tests/sphinx_project_migrated/
+
 # Benchmark run output
 /benchmark_result.txt
 /benchmark_entities_result.txt

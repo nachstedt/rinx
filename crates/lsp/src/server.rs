@@ -38,6 +38,8 @@ mod code_action_tests;
 #[cfg(test)]
 mod completion_tests;
 #[cfg(test)]
+mod migrate_tests;
+#[cfg(test)]
 mod noqa_action_tests;
 // The interpreter the tests run is a shell script.
 #[cfg(all(test, unix))]

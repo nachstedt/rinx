@@ -16,6 +16,7 @@
 //! rinx extract_doctests --input <file.ast> --output <file.doctests.json>
 //! rinx embed_assets --input <file.ast> --output <file.embeds.json>
 //! rinx lsp [--stdio | --check <folder> [--python <exe>] [--manifest <file>]... [--preview <document>]... [--references <document>:<line>:<column>]... [--rename <document>:<line>:<column>=<name>]... [--symbols <query>]... [--semantic-tokens <document>]...]
+//! rinx init --from-sphinx <dir> [--python <exe>] [--jinja] [--parse-data <file>]... [--dry-run]
 //! rinx needs_schema --ubproject <ubproject.toml> [--schemas <schemas.json>] --output <entities.toml>
 //! rinx validate_assets [--image-dir <dir>] [--download-dir <dir>] [--diagram-dirs <puml_dir>...] --inputs <a.ast> [<b.ast> ...]
 //! ```
@@ -35,8 +36,8 @@ use std::fs;
 
 use commands::{
     cmd_diagnostic_codes_rst, cmd_embed_assets, cmd_entity_json_schema, cmd_extract_doctests,
-    cmd_genindex, cmd_index, cmd_inventory, cmd_lsp, cmd_modindex, cmd_needs_schema, cmd_parse,
-    cmd_render, cmd_validate_assets, cmd_validate_toctree,
+    cmd_genindex, cmd_index, cmd_init, cmd_inventory, cmd_lsp, cmd_modindex, cmd_needs_schema,
+    cmd_parse, cmd_render, cmd_validate_assets, cmd_validate_toctree,
 };
 
 fn cmd_legacy(path: &str) -> Result<()> {
@@ -66,11 +67,13 @@ fn run(args: &[String]) -> Result<()> {
             cmd_entity_json_schema();
             Ok(())
         }
+        // Migration aids, not pipeline phases: a Sphinx project's whole
+        // build, and the entity schema a sphinx-needs `ubproject.toml`
+        // describes.
+        Some("init") => cmd_init(&args[2..]),
+        Some("needs_schema") => cmd_needs_schema(&args[2..]),
         // Developer tooling too: regenerates `docs/diagnostics.rst`, the page
         // the language server links each diagnostic code to.
-        // A migration aid, not a pipeline phase: the entity schema a
-        // sphinx-needs `ubproject.toml` describes.
-        Some("needs_schema") => cmd_needs_schema(&args[2..]),
         Some("diagnostic_codes_rst") => {
             cmd_diagnostic_codes_rst();
             Ok(())
@@ -91,6 +94,7 @@ fn run(args: &[String]) -> Result<()> {
                    {program} modindex --index <project.index> --output <py-modindex.html> --config <config.toml> --template <template.html>\n\
                    {program} inventory --index <project.index> --output <objects.inv> --config <config.toml>\n\
                    {program} lsp [--stdio | --check <folder> [--python <exe>] [--manifest <file>]... [--preview <document>]... [--references <document>:<line>:<column>]... [--rename <document>:<line>:<column>=<name>]... [--symbols <query>]... [--semantic-tokens <document>]...]\n\
+                   {program} init --from-sphinx <dir> [--python <exe>] [--jinja] [--parse-data <file>]... [--dry-run]\n\
                    {program} needs_schema --ubproject <ubproject.toml> [--schemas <schemas.json>] --output <entities.toml>\n\
                    {program} validate_assets [--image-dir <dir>] [--download-dir <dir>] [--diagram-dirs <puml_dir>...] --inputs <a.ast> [<b.ast> ...]"
             );

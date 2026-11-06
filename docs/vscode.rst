@@ -175,6 +175,17 @@ Analysing a project
 
 The counts come from the parse, not from what the editor shows, so a construct silenced by a ``.. noqa:`` or shown only as information still counts. The roles the project's :ref:`rinx_parser.toml <parser-config>` ignores are listed apart. The panel refreshes when the scan finishes, and from its *Refresh* button; before the scan finishes it says the counts may grow.
 
+Once the scan finishes, each Sphinx project also says what migrating it writes and what that leaves out, with a *Migrate to rinx* button — or the files it would overwrite, if any exist already.
+
+.. _vscode-migrate:
+
+Migrating a project
+^^^^^^^^^^^^^^^^^^^
+
+*Rinx: Migrate Project to rinx*, from the command palette or the analysis panel, writes the project's Bazel build: the files ``rinx init --from-sphinx`` writes (see :ref:`init-from-sphinx`), computed by the language server from the project it has scanned. It migrates the project whose ``conf.py`` is open, or asks which one. It overwrites nothing: while a file it would write exists, it is not offered.
+
+Once the files are written, the extension builds the new site's manifest and the project is read as its Bazel build (see :ref:`vscode-bazel-projects`), which needs ``rinx.autoDiscover``. A project that became a Bazel module of its own, in a folder that is none, is asked about at its own directory.
+
 Development and Local Testing
 -----------------------------
 

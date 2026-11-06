@@ -306,6 +306,9 @@ jobs:
     - name: Run dependency quick fix test
       run: ./tests/test_dependency_quick_fix.sh
 
+    - name: Run init from Sphinx test
+      run: ./tests/test_init_from_sphinx.sh
+
     # rinx as a dependency of another module, the shape the Bazel Central
     # Registry's presubmit checks and every user has.
     - name: Build and test the smoke module
