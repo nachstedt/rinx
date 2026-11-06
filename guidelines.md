@@ -1,307 +1,187 @@
 # Development Guidelines
 
 What this repository has learned about how it wants to be built. Add a new
-entry under the heading it belongs to, as a single short sentence.
+entry under the heading it belongs to, as a single short sentence. Record a
+belief only when it will guide changes beyond the one that prompted it;
+details of a single construct belong in its ADR.
 
 ## About these guidelines
 
 - Guidelines are beliefs, preferences and style choices, not factual statements about tools or technologies.
+- A guideline that bars a technique bars it as a workaround, not as the feature the user explicitly asked for.
 
 ## Naming
 
-- Name types after what they do, not what they are used for.
-- Function names should describe what the function concretely does, not just reflect its abstract role (e.g., prefer `build_project_index()` over `analyze_many()`).
+- Name functions and types after what they concretely do, not their abstract role or what they are used for (`build_project_index()`, not `analyze_many()`).
+- Drop a name component the enclosing crate or directory already states (`scope/python.rs`, not `scope/python_scope.rs`).
+- When renaming, rename everywhere at once (package, targets, docs, attributes) rather than keeping the old spelling as an alias; before 1.0 an honest name is worth the churn.
 
 ## Types and invariants
 
-- Enforce invariants at the type level using opaque types with smart constructors ("parse, don't validate").
-- In a build system, deserialization should validate invariants strictly and return errors on violations.
-- Use enums for fields with a fixed set of predefined values to ensure type safety.
-- When a family of related kinds needs different options per kind, give each kind its own explicit variant/type with only its own fields, rather than one shared struct/variant carrying the union of every kind's options (most of them meaningless on most instances).
-- Put a field that every variant of a family shares, and that does not depend on the kind (where it was written, its body), once beside the family rather than repeated in each variant.
-- When several values play the same role, model them as one uniform collection rather than splitting the first out into its own field; if one of them is special, express that as a named accessor on the collection, not as a structural asymmetry.
-- Give two constructs one shared type when they are structurally identical and carry no kind-specific data; split them into separate types only when they differ in the fields they need.
-- Model a family of valueless flag options as one set of an enum rather than as several `bool` fields, so asking for one cannot be confused with asking for its neighbour.
-- Prefer a type that makes a meaningless value unrepresentable (`NonZeroUsize` for a depth) and resolve the ambiguity once, where the source text is read.
-- When a value is transformed once and then must never be re-transformed, give the result its own type that cannot express the untransformed state, so forgetting the step is a compile error.
-- Keep two views of one fact consistent through the compiler — an enum matched exhaustively, generated with its lookup and its data from one table — rather than through a test or a runtime assertion that only catches what happens to be exercised.
-- Keep a declarative fact beside the code that acts on it (a directive's spec in its parser's module), with only a data-free registry central, so the two are edited together.
-- Keep a declarative description free of behaviour and pair the two in a registry entry, so several consumers — a reader per input syntax, completion, documentation — can share the description.
-- Do not invent an identifier (an enum variant) for something the data already names; a registry entry holding the description and its behaviour needs no key.
-- Group cases by a real difference in how they are handled, never to work around a lint's length limit; if a `match` grows too long, give its arms one shared signature instead.
-- Keep the open-ended case of an enum as a validated newtype rather than enumerating a third party's whole vocabulary, which would import their knowledge into your own root crate and freeze it into serialized data.
-- Reserve special values of a field as their own variants, so a name that happens to collide with one cannot be mistaken for it.
-- Box a large enum variant's payload into its own struct, since an enum costs its largest variant everywhere it is stored.
-- When a construct's vocabulary is declared by the user, validate it once at the boundary and let every later phase read data already checked, rather than carrying a dynamically-typed value that each use re-inspects.
-- Separate a *value* from a *document* at the type level: something parsed into a node tree and something stored as a typed scalar diverge in every later phase, so one field kind with a "parsed" flag would carry the union of both meanings everywhere.
-- Never leave a field of a serialized type out of its wire form: put what only one reader needs in a separate type with no serde impl, which only that reader can obtain, so a type reads back exactly as it was written.
-- Point from serialized data into what only one process holds through an opaque typed handle that only that process's table can mint, so code holding the data but not the table cannot compile a lookup.
-- Give an operation one public entry point taking an options struct that implements `Default`, rather than a chain of wrappers each filling in one more setting, and let a caller that wants less of the result discard it visibly at the call site.
+- Enforce invariants at the type level using opaque types with smart constructors ("parse, don't validate"), and re-validate them strictly on deserialization.
+- Validate a user-declared vocabulary once at the boundary, so every later phase reads data already checked.
+- Use enums for fixed sets of values, and prefer types that make a meaningless value unrepresentable (`NonZeroUsize` for a depth).
+- When a value is transformed once and must never be re-transformed, give the result its own type that cannot express the untransformed state.
+- Give each kind in a family its own variant carrying only its own fields, rather than one struct holding the union of every kind's options; put a field all kinds share once beside the family.
+- Give two constructs one shared type when they are structurally identical, with a small enum recording which was written; split them only when they need different fields.
+- When a construct may later gain a sibling differing in one field, model that field as an enum from the first commit, so the sibling is a new arm rather than a change to every match and serialized file.
+- Keep two views of one fact consistent through the compiler — an exhaustive enum generated with its lookup and data from one table — rather than through a test that only catches what is exercised.
+- Keep a declarative description free of behaviour, beside the code that acts on it, paired in a data-only registry, so several consumers (readers, completion, documentation) share it.
+- Keep the open-ended case of an enum as a validated newtype rather than enumerating a third party's whole vocabulary.
+- Never leave a field of a serialized type out of its wire form: put what only one process needs in a separate type with no serde impl, reached through an opaque handle only that process can mint.
+- Give an operation one public entry point taking an options struct that implements `Default`, rather than a chain of wrappers each filling in one more setting.
+- Group `match` arms by a real difference in handling, never to satisfy a lint's length limit.
 
 ## Module and file organization
 
-- Prefer co-locating unit tests natively using inline `#[cfg(test)]` modules over splitting them into separate files with `include!` macros to satisfy arbitrary line-limit constraints.
-- When two roles/directives share the same sub-syntax (e.g. the `Display text <target>` explicit-title form), extract one shared helper and reuse it rather than re-implementing the same parsing logic per role.
-- Keep logic in the pipeline phase (and crate) that actually performs it; do not move it next to the data type it reads just because that type is defined elsewhere.
-- Split any file that grows past roughly 800 lines, along construct or responsibility boundaries rather than at an arbitrary midpoint.
-- Express a parent/child module relationship with a same-named subdirectory (`inline/reference.rs`), never with a filename prefix (`inline_reference.rs`).
-- A module file that owns a same-named directory should be a pure forwarder: a module doc comment, `mod` declarations, and re-exports, with no logic or tests of its own.
-- Place a module under whichever dispatcher actually calls it, which means grepping for its real callers rather than assuming from its name.
-- Suspect any file named after a construct that also holds general-purpose helpers, and split the helpers out under a name describing what they do.
-- Keep a helper flat at the crate's `src/` root only when it is genuinely reached from several sibling trees; nesting it under one construct's directory would misstate the dependency.
-- Give shared logic its own crate when the phases needing it are forbidden to depend on each other, rather than reintroducing a dependency an earlier split was made to remove.
-- When the callers sharing some logic already depend on an existing crate it fits, put it there rather than creating a new crate for it.
-- Split a meta-model from the instances it describes along the dependency arrow: what is written in a source file and survives into a build artefact belongs to the artefact's own crate.
-- Ask another crate for a fact it owns through an injected trait rather than keeping a second copy of it, since the copy drifts exactly when the check matters most.
-- Do not separate a type from the only code that constructs and reads it; modules that merely thread a value through their signatures are not users of it.
-- Treat two functions with identical bodies under different names as one function, and delete the duplicate rather than relocating both.
-- Prefer a plain private function in a parent module over a `pub(super)` one when only that module's own descendants call it.
-- Give an item re-exported by a forwarder a visibility at least as wide as the re-export itself, which in practice means `pub(crate)` rather than `pub(super)`.
-- Suffix a module name with an underscore when the natural name is a reserved word (`std_`, `mod_`, `type_`, `struct_`).
-- Keep an implementation whole and split only its `#[cfg(test)]` content into topic-named sibling files when the implementation is one cohesive unit.
-- A file that owns a test-only directory keeps no inline `#[cfg(test)]` module; all of its tests live in the topic-named siblings.
-- Drop a module-name component the enclosing crate or directory already states (`scope/python.rs`, not `scope/python_scope.rs`).
-- Give fixtures shared by two sibling test modules their own `#[cfg(test)]` support module rather than copying them into both.
-- Fix a bug test-first: write the regression test, see it fail against the current code, and only then change the code.
+- Split a file past roughly 800 lines along construct or responsibility boundaries, into a same-named subdirectory rather than filename-prefixed siblings.
+- A module file that owns a same-named directory is a pure forwarder: doc comment, `mod` declarations and re-exports only.
+- When an implementation is one cohesive unit, keep it whole and split only its tests into topic-named sibling files.
+- Place a module under whichever dispatcher actually calls it, found by grepping its callers, and split general-purpose helpers out of a construct's file under a name saying what they do.
+- Keep logic in the phase (and crate) that performs it, and keep a type with the only code that constructs and reads it.
+- Give shared logic its own crate when the phases needing it may not depend on each other; when an existing crate all callers already depend on fits, put it there instead.
+- Ask another crate for a fact it owns through an injected trait rather than keeping a second copy, since the copy drifts exactly when the check matters most.
+- When two constructs share a sub-syntax, extract one shared helper rather than re-implementing it per construct; treat two functions with identical bodies as one and delete the duplicate.
+- Co-locate unit tests in inline `#[cfg(test)]` modules, and give fixtures two test modules share their own `#[cfg(test)]` support module.
+- Remove a code path once its last caller is gone, together with the helpers and tests only it used.
 
 ## Refactoring safely
 
-- Never pick a weaker design to save mechanical edits the compiler finds for you: the number of call sites a change touches is not an argument against it.
-
-- Never mechanically re-indent code while moving it, since blanket whitespace edits silently rewrite string literals; move the text verbatim and let `cargo fmt` re-indent.
-- Treat a pure reorganization as behaviour-preserving and prove it, by comparing test counts before and after and diffing the moved files' string literals against the previous revision.
-- Check that every relocated test still carries its `#[test]` attribute, since a dropped attribute turns a test into dead code that clippy reports only as an unused function.
+- Never pick a weaker design to save mechanical edits the compiler finds for you.
+- Move code verbatim and let `cargo fmt` re-indent; blanket whitespace edits silently rewrite string literals.
+- Prove a pure reorganization behaviour-preserving, by comparing test counts and diffing moved string literals against the previous revision.
 
 ## Parsing and AST design
 
-- When adding a construct whose delimiter characters can collide with an existing construct's, fix the ambiguity at the root by tightening the existing detector to match the spec, rather than relying on parser dispatch order.
-- When constructs depend on exact character alignment (e.g. grid tables), validate the alignment strictly and reject on mismatch instead of silently padding lines to paper over it.
-- When a prefix/sigil is markup rather than part of a name, strip it during parsing and record its meaning as typed intent on the AST node, rather than leaving it in the string for a later phase to re-interpret.
-- Two directives that differ only in how their source spells out the same data should share one AST node, with a small enum recording which one wrote it.
-- Two directives asking one question with different presentations stay separate nodes; put the generality in the layer that answers the question, not in one directive with a mode switch whose options are each valid in only one mode.
-- Keep parse-time configuration in one context object threaded through the parsers, rather than adding a parameter per setting.
-- A pure phase should take an injected trait object for anything it cannot do itself (like reading a file) rather than acquiring the capability directly.
-- Convert an embedded notation (LaTeX, CSV) with an established library during the build rather than shipping a client-side script, so the output stays self-contained and malformed input becomes a build diagnostic instead of a silent failure in the reader's browser.
-- Let the build system's constraints decide a third-party library, not the library's feature list: a dependency needing a foreign toolchain costs more in a sandboxed, multi-platform build than any feature it adds.
-- Keep every linked dependency under MIT or Apache-2.0; when the best-known library is copyleft, take a maintained permissive alternative rather than hand-writing one.
-- Generate a derived artefact (a stylesheet, a table) from the same source the code uses, and check it in with a test that regenerates and compares, rather than maintaining a parallel copy by hand.
-- Before generating and vendoring a third party's data set, look for a crate that already redistributes it; a maintained redistribution tracks upstream for free, where a checked-in copy is ours to re-cut forever.
-- Store an embedded notation in the AST exactly as written and convert it only while rendering, so the choice of backend never reaches a serialized `.ast` file.
-- Leave a pattern unexpanded in the AST and the index when several later phases must expand it against different sets, so no phase has to reimplement the matcher against its own narrower set.
-- Prefer storing a graph plus each node's own data over a pre-flattened tree, since a flattened tree cannot be merged per document and loses the per-directive options that produced it.
-- Declare a relationship on the side that writes it, so the declared source can never drift from actual use, and derive the reverse direction rather than asking for it twice.
-- Give a generated identifier a deterministic source (position, not content) so a cached build artefact stays byte-identical, and say plainly which edits perturb it.
-- Store only what a later reader needs in a shared index: prose belongs in the document, not in an artefact every phase loads.
-- Never write data derivable from the AST into a serialized artefact beside it, since that creates an invariant between the two with no clear answer when they disagree; derive it in memory where it is read.
-- When several phases need the same state derived from a document, compute it once in an in-memory pre-pass answering by node, rather than replaying the rules in each phase's own walk.
-- When implementing a subset of a language a reference implementation embeds whole, recognise the constructs outside the subset and reject each *by name*, since the common failure is an unsupported feature rather than a typo.
-- Choose a parsing library for what it produces, not for what it saves: one that hands back a token tree still leaves the tree-building, the error wording and the panic-freedom to write by hand.
-- Before hand-writing a parser or an interpreter, check whether a maintained library already does the job, and record in the ADR why each candidate was rejected.
-- Weigh a library against the features still to come, not only the one at hand: accepting a vendored asset and a larger output is worth it when the next construct in the same family reuses the library's harder parts instead of hand-rolling them too.
-- Pin a rendering library to an asset-free, host-independent configuration and vendor whatever it then needs, since anything it resolves from the build host makes a cached artefact differ between machines.
+- Fix an ambiguity between constructs at the root, by tightening the detector to match the spec, rather than relying on dispatch order.
+- Validate alignment-sensitive input strictly and reject a mismatch rather than silently padding over it.
+- When a prefix is markup rather than part of a name, strip it while parsing and record its meaning as typed intent on the node.
+- Two directives asking one question with different presentations stay separate nodes; put the generality in the layer that answers the question, not behind a mode switch.
+- Keep parse-time configuration in one context object threaded through the parsers, and give a pure phase an injected trait for anything it cannot do itself (like reading a file).
+- Store an embedded notation exactly as written and convert it only while rendering, so the backend never reaches a serialized artefact.
+- Declare a relationship on the side that writes it and derive the reverse direction.
+- Store only what a later reader needs in a shared index, never write data derivable from the AST into an artefact beside it, and compute state several phases need once, in memory.
+- Give a generated identifier a deterministic source (a position, not content) so cached artefacts stay byte-identical.
+- When implementing a subset of a language, recognise the constructs outside it and refuse each by name, pointing at what does work.
+- Generate a derived construct's content as data rather than lowering it to a template of another construct, or every diagnostic lands on text the author never wrote.
+
+## Dependencies
+
+- Before hand-writing a parser, interpreter or vendored data set, look for a maintained library or redistribution, and record in the ADR why each candidate was rejected.
+- Let the build system's constraints decide a library, not its feature list: a foreign toolchain costs more in a sandboxed multi-platform build than any feature adds.
+- Keep every linked dependency under MIT or Apache-2.0.
+- Pin a library, tool and runtime to a host-independent configuration inside the build, since anything resolved from the host makes one action key yield different outputs.
+- When a backend cannot express a commonly used option but the missing piece is small and self-contained, write that piece rather than narrowing the option.
+- Generate a derived artefact from the same source the code uses and check it in with a test that regenerates and compares.
 
 ## Porting from a reference implementation
 
-- When emulating a reference implementation, deviate deliberately where it is silently permissive: keep the type/kind check on every lookup path even if the original skips it, so an author's mistake is reported instead of resolved to something plausible.
-- When a reference implementation's subsystems implement the same rule with different strictness, reproduce each subsystem's rule rather than unifying them behind the more lenient one.
-- When porting logic from a reference implementation, reproduce its observable outcome rather than its literal operation, since your own normalizing types can silently turn its miss into a hit.
-- When the reference implementation's output discards information the source expressed, render that information faithfully instead of reproducing the loss, and say so in a comment so nobody "fixes" it back.
-- Where a third-party library cannot reproduce the reference implementation's behaviour exactly, pick the narrower behaviour, diagnose what you refuse, and comment why so nobody widens it by accident.
-- Prefer a declarative property that states what the reference implementation computes by measuring, since the target platform can measure later and better than the build can.
-- When the reference implementation defines a rule over full Unicode character classes, port those classes rather than an ASCII approximation that happens to satisfy the current tests.
-- Transcribe a reference implementation's pre-generated tables rather than re-deriving them, so the two cannot drift apart as either side's inputs change; fetch the actual source rather than reconstructing a table from memory.
-- Keep the reference implementation's default for a feature that changes rendered output, so adopting it never alters a site that did not ask for it.
-- Mirror the reference's defaults for nested content (docutils' `nested_parse` forbids section titles) where a container is entered, and let each directive that differs opt back in, rather than allowing everything and refusing case by case.
+- Read the reference implementation's actual source, and transcribe its tables rather than re-deriving them from memory.
+- Reproduce its observable outcome rather than its literal operation, since your own normalizing types can turn its miss into a hit.
+- Keep its default for anything that changes rendered output, so adopting the tool never alters a site that did not ask for it.
+- Deviate deliberately where it is silently permissive or discards what the source expressed, and comment why so nobody "fixes" it back.
+- Where a library cannot reproduce its behaviour exactly, pick the narrower behaviour, diagnose what you refuse, and comment why.
+- When reimplementing a third party's directive, emit its element structure and class names verbatim, so existing stylesheets keep working.
+- Do not reproduce a structural wrapper the reference emits as plumbing when it would defeat the construct's purpose; splice transparently and say why in a comment.
 
 ## Diagnostics
 
-- Documentation builds should fail loudly if content invariants (like missing diagram images) are violated.
-- Keep the resilient parser and the strict build separate: the parser degrades bad input and records what went wrong, and the build step decides whether that is fatal.
-- Before choosing how to quiet a flood of findings, measure it on a real corpus by category; then let a project declare what to ignore rather than guessing from heuristics such as "it declares an unknown extension".
-- Do not diagnose a failure the author could not have caused or acted on: a value this codebase chose for them degrades silently, while one they wrote is reported.
-- When a lookup is genuinely ambiguous, do not pick a winner — leave it unresolved and emit a warning that names every candidate, so the diagnostic tells the author what to disambiguate between.
-- Never let a result depend on the order inputs arrive in: a definition claimed twice defines nothing, and its warning reads the same whichever came first.
-- When porting a reference implementation, port its full diagnostic set, and additionally invent diagnostics of your own wherever it silently degrades valid-looking input into something else.
-- When fixing one missing diagnostic of a construct, port every check the reference implementation makes on that construct, including where it may stand, rather than scoping the change to the case that was noticed.
-- When two phases must derive the same identifier, give them one function to call rather than two implementations to keep in step, and key it on something that cannot collide (a position) rather than on content that can.
-- Before keeping an invented diagnostic, measure its false-positive rate over the benchmark corpus; a heuristic that stays silent across real documents is safe to keep unnarrowed.
-- Report a malformed value in the earliest phase that reads the author's text, even where the reference implementation only notices it later, but keep the reference's output for it.
-- Every diagnostic carries a source position and a stable code; the position goes in a span and the code in an enum, never formatted into the message text.
-- Report a position as a range rather than a point, even while only its start is printed, because the end is free wherever the start is and retrofitting it later re-touches every reporting site.
-- Name a file a reader can actually open in a diagnostic — the source path, not an internal logical path that merely looks like one.
-- Count columns in characters, not bytes, and convert to a protocol's encoding at that protocol's boundary rather than in the middle.
-- Measure a source line against author-drawn markup in display columns, since the author drew it under what they saw, not under its encoded length.
-- Any code that dedents or re-slices lines before parsing them must rebase the position context by the same amount, so a helper that trims should return how much it trimmed rather than discarding it.
-- Report no position rather than a wrong one for content that corresponds to no source line.
-- Report a verdict about a construct as a whole on the line that introduces it (a directive's marker), and a finding inside its content that lost its own position on the content's first line — never on a blank or option line between them.
-- Author-facing suppression belongs in the document, spelled as a construct the reference implementation already ignores, so the file stays buildable by both tools.
-- Apply suppression at the reporting boundary, never where a problem is detected: the detecting phase must record everything, and only the reporting phase sees every phase's output.
-- A suppression must lift the consequence as well as the message — the strict-build failure and the machine-readable sidecar too — or it only hides the problem.
-- Diagnose a suppression that names an unknown code, since one that silently matches nothing is the same silent degradation the diagnostics exist to catch.
-- Generate an enum's string mapping and its parse-back from one table when both directions must be exact inverses.
-- Give each construct its own diagnostic family even when it shares a grammar and a parser with another, since a code names what the author wrote, not the code path that read it.
-- Report a mistake in the grammar every directive shares (an unknown option) under one code everywhere rather than one per directive, since the mistake is the same whichever directive it is written in.
-- Declare an option the reference implementation takes and this build lacks in the same table as the supported ones, marked unsupported with advice, so it is reported by name and an editor still knows it.
-- Give each distinct option set its own spec rather than one spec checked per spelling at run time, so the table states exactly what each directive accepts.
-- Where the reference implementation discards a whole construct over a shape error (a missing argument, surplus words), report the error and keep interpreting what was written, so the document stays renderable.
-- Build a feature's diagnostics with the feature, not after it: deferring them ships the silent degradation the diagnostics exist to catch, and retrofitting one usually turns out to need a data-model change the feature could have made for free.
-- Attach a position's *file* to the position itself, not to the diagnostic quoting it, when a later phase reads that position out of a serialized artifact — a file recorded only on parse-time diagnostics cannot serve the render-time ones.
-- Intern a repeated identifier to a small integer rather than storing the string, when the type carrying it is `Copy` and appears once per node; the indirection buys back both the trait and the wire size.
-- Route every construction of a position-bearing value through one function once any of them needs extra context, so a site that skipped it cannot compile rather than silently reporting against the wrong file.
-- Scope a suppression to the file it was written in; line numbers from two different files are not comparable, and matching them silences something the author never looked at.
-- Distinguish a fault in the *build's configuration* from a fault in a document: the first is reported outside the suppression mechanism, since no document's comment should be able to silence it.
-- When a pattern matches far more than the construct it is looking for, let an unrecognised match degrade to plain text rather than to a diagnostic — reporting on text the author never meant as markup is worse than staying quiet.
-- Render an unrecognized construct visibly, quoting its source, rather than omitting it: invisible content loss is worse than an ugly page.
-- Distinguish "this build does not know that name" from "it knows the name and had to refuse the content", since one diagnostic for both blames the wrong thing.
-- Build the node a reader sees and the diagnostic a log records from one message, so the page and the build log cannot explain the same failure differently.
-- Check a configuration invariant in both directions: the mistake of declaring something in one place and forgetting it in another is likelier than declaring it wrongly twice.
-- When a static reader meets code it cannot run, apply what it could read and report exactly what it skipped, rather than discarding the whole value.
-- Lower an unknown construct's severity only when a known source explains it; keep it a warning otherwise, and never ship one project's own vocabulary in the repository to quiet it.
+- Keep the resilient parser and the strict build separate: the parser degrades bad input and records what went wrong, and the build decides whether it is fatal.
+- Build a feature's diagnostics with the feature, port every check the reference makes on a construct, and add your own wherever it silently degrades valid-looking input.
+- Report a malformed value in the earliest phase that reads the author's text.
+- Every diagnostic carries a span and a stable code from an enum, never formatted into the message; a code names the construct, not the spelling or code path that read it.
+- Report a mistake in the grammar all directives share under one code everywhere.
+- Name a file a reader can open, count columns in characters, convert to a protocol's encoding at its boundary, and report no position rather than a wrong one.
+- Do not diagnose what the author could not have caused or acted on.
+- When a lookup is ambiguous, pick no winner: leave it unresolved and name every candidate, and never let a result depend on input order.
+- Measure a new or noisy diagnostic on the benchmark corpus by category before keeping, narrowing or quieting it.
+- When a pattern matches far more than the construct it looks for, let an unrecognised match degrade to plain text.
+- Render an unrecognized construct visibly, quoting its source, rather than omitting it, and keep a misplaced child or content behind an unreadable option.
+- Distinguish "this build does not know that name" from "it knows the name and had to refuse the content".
+- Build the node a reader sees and the diagnostic a log records from one message.
+- Where the reference discards a whole construct over a shape error, report it and keep interpreting what was written.
+- Author-facing suppression lives in the document, spelled as a construct the reference ignores; it applies at the reporting boundary, lifts every consequence (failure and sidecar too), is scoped to its file, and an unknown code in it is diagnosed.
+- Report a fault in the build's configuration outside the suppression mechanism, and check a configuration invariant in both directions.
+- When a static reader meets code it cannot run, apply what it could read and report exactly what it skipped.
+- Lower an unknown construct's severity only when a known source explains it, and never ship one project's vocabulary to quiet it.
+- Route every construction of a position-bearing value through one function once any needs extra context.
 
 ## Testing
 
-- All functions — including private and helper functions — should be thoroughly unit tested.
-- Tests should always follow the Given-When-Then pattern.
-- Always create unit tests for new functions introduced during refactoring.
-- Validate real-world/benchmark inputs against a parser before considering a feature done — a hand-built test suite can miss patterns (like a border line with a partial `+` set) that only show up in authentic external documents.
-- When deleting tests whose subject moved to another phase, check the destination already covers those cases and add an integration test for the seam, rather than letting the coverage go with the code.
-- Do not widen a public API to serve a test; keep test-only helpers and fixtures inside the `#[cfg(test)]` module that needs them, asserting through an existing observable effect instead.
-- Check a test's premise against what the parser can actually produce before treating its failure as a bug in the code.
-- Cover conversions and never-panic invariants with property tests against a reference implementation, and check in the regression seeds they find.
-- Give every user-visible editor feature an end-to-end test through real VS Code and the real binary, asserting on what the editor shows rather than on internals.
-- Assert on the specific marker a feature emits rather than on a substring that a shared wrapper also contains, or the test stops distinguishing the two.
-- When a table of related cases is maintained by hand, test its structural invariants (reflexivity, symmetry) across all entries rather than only asserting the individual rows, so a half-finished edit fails.
-- Test a hand-maintained list against the enum it mirrors where one exists, and settle for a representative sample where none does, rather than writing a probe so general it fights every construct's own input requirements.
-- Assert on the markers a renderer emits, not on the exact whitespace between them, or the test breaks on formatting that no reader would notice.
+- Unit test every function, including private helpers and those introduced while refactoring, in Given-When-Then style.
+- Fix a bug test-first: write the regression test and see it fail before changing the code.
+- Validate a feature against real-world corpora before calling it done; hand-built tests miss what authentic documents contain.
+- Cover conversions and never-panic invariants with property tests, and check in the seeds they find.
+- When deleting tests whose subject moved to another phase, check the destination covers the cases and test the seam.
+- Do not widen a public API to serve a test.
+- Assert on the specific markers a feature emits, not on whitespace or substrings a shared wrapper also contains.
+- Give every user-visible editor feature an end-to-end test through real VS Code and the real binary.
+- Run every shell test CI runs before calling a change done, and add new ones to the workflow in the same change.
+- A test proving a build declaration is load-bearing must force the affected action to re-run, and detects a rerun with `-s`, never with `(cached)`.
+- Resolve a tool from `PATH` in a test script rather than hardcoding its location.
+- Settle rendering and browser-behaviour questions in a headless browser, by screenshot, not by reading HTML or from memory.
 
 ## Configuration and CLI
 
-- Prefer a single configuration file over accumulating individual CLI flags; adding future fields requires no interface changes.
-- Keep a resource's *name* in configuration and its *path* on the command line, so a sandboxed build can relocate the file without invalidating the config that refers to it.
-- Configuration files should contain metadata and settings, not file paths; sandboxed build systems relocate files, breaking embedded paths.
-- Check whether a rule about configuration is about *paths* or about *phases* before invoking it: a config file the parser reads is fine, and a workspace-relative path survives relocation — what a config file cannot do is declare a build input.
-- Give each pipeline phase a configuration file of its own (`rinx_parser.toml` beside the renderer's `rinx.toml`), so editing one phase's settings never invalidates the other phase's cached work.
-- Relative file paths work correctly for offline viewing; do not use inlining as a workaround for path computation.
-- Decide which files a tool reads from explicit configuration, never from a convention meant for another tool such as `.gitignore`, since generated sources are often exactly what such a file ignores.
-- When a Sphinx project already configures a behaviour (such as `intersphinx_cache_limit`), the editor follows that value rather than adding an editor setting for it.
-- Implement a language-server feature in the server itself rather than delegating it to an external tool or to the VS Code extension, so it works in every editor and in `rinx lsp --check`.
-- An editor feature treats a reference exactly as the built page does: one the page draws broken leads nowhere and is nobody's use, even where a label of that name exists.
+- Prefer one configuration file over accumulating CLI flags.
+- Keep a resource's name in configuration and its path on the command line: sandboxes relocate files, so a config file holds no paths — though a config file a phase reads is fine, as long as it declares no build input.
+- Give each phase its own configuration file, and put a setting in the latest phase that needs it, so editing it never invalidates earlier phases' cached work.
+- Decide which files a tool reads from explicit configuration, never from another tool's convention such as `.gitignore`.
 
 ## Build, examples and documentation
 
-- Always add examples for all variants of a new feature to the example project.
-- When adding new `.rst` files to the example project, always declare them in `srcs` in the corresponding `BUILD.bazel` file.
-- Derive a target's inputs from the target it depends on rather than repeating them in the build file; where the build system cannot express that, choose the coarser granularity over a duplicated naming convention.
-- Give data a build target reads its own attribute, separate from the attribute that declares dependencies on other targets.
-- Name that attribute after *when* the build reads the files rather than after the one directive that first needed them, so the next reader of the same phase joins it instead of adding a third overlapping attribute.
-- Before 1.0, rename an attribute outright rather than keeping the old spelling as an alias: one honest name is worth more than the churn of updating every call site.
-- A test that proves a build declaration is load-bearing must also force the affected action to re-run, since Bazel does not invalidate an action when an input is merely removed.
-- Resolve a tool from `PATH` in a test script rather than hardcoding its install location.
-- Test every integration the documentation promises in CI rather than leaving it to a check by hand, including the editors other than the one we ship for.
-- Keep a configuration snippet the documentation shows in a file that a test runs and the page includes, so the two cannot drift.
-- In docs/compatibility.rst, mark a row 🔶 partial only while something we still intend to implement is missing; a feature whose remaining differences are all deliberate is ✅ ℹ️.
-- A difference left out only to keep a change small is a gap, not a deliberate deviation, however easy it would be to add.
-- Every user-visible change adds a bullet to CHANGELOG.md's `[Unreleased]` section in the same pull request; refactors, CI, tests and dependency bumps do not.
-- Keep compatibility notes to brief bullets naming only what is missing or deviates, never explaining how something works.
-- Name project status pages neutrally ("compatibility status") rather than negatively ("gaps").
-- Keep the default theme's sidebar in view while reading, scrolling on its own; a second scrollbar is a smaller cost than navigation that scrolls away with a long page.
-- When a build's output outgrows a platform limit, shrink the output at its source before designing around the limit.
-- Gate CI on hard failures (a corpus no longer builds) and only report soft signals (new warnings, timings), since gating on noise trains people to ignore the gate.
-- Publish bulky derived artifacts only for the versions people actually compare against (main, previews, the newest release), so their cost does not grow with every release.
-- Pin every tool a build action runs, and the runtime it runs on, inside the build rather than relying on the host or on consumer flags, since anything outside the action key lets one key yield different outputs on different machines.
-- Generate a build file's declarations from what the tool's own parse found the documents use, not from globs by file extension, so the generated build and the build's checks cannot disagree.
-- When migrating a project into the build, place the build's root so every document keeps the name, address and path resolution it had under the old tool.
+- Add examples for every variant of a new feature to the example project, declaring new `.rst` files in their `BUILD.bazel` `srcs`.
+- Derive a target's inputs from the targets it depends on rather than repeating them; give data a target reads its own attribute, named after when the build reads it.
+- Pay only for what you use: when Bazel cannot know before running actions whether a feature is used, make it a per-library opt-in, and a feature that declares no action of its own needs none.
+- An opt-in is only honest if forgetting it fails loudly at the line that needed it, naming the switch.
+- Make a feature opt-in when its trigger is a character sequence ordinary prose contains.
+- When two actions compute the same thing from the same inputs, fold them into one; when two phases must agree on a derived value, have both call one pure function rather than pass a sidecar.
+- A transform whose output only feeds the next step of the same process needs no intermediate artefact; give it a debugging flag instead.
+- Measure a plausible-sounding build optimization before keeping it, and record what an accepted regression costs, measured, in its ADR.
+- When a build's output outgrows a platform limit, shrink it at its source.
+- Gate CI on hard failures and only report soft signals such as new warnings and timings.
+- Test every integration the documentation promises in CI, and keep a configuration snippet the docs show in a file a test runs and the page includes.
+- Keep docs/compatibility.rst neutral and brief, naming only what is missing or deviates; a row is 🔶 partial while something we intend to implement is missing, and a gap left out to keep a change small is not a deliberate deviation.
+- Every user-visible change adds a bullet to CHANGELOG.md's `[Unreleased]` in the same pull request; refactors, CI, tests and dependency bumps do not.
+- Keep manual checklists (e.g. the PR template) to what a human must judge.
+- Match the specificity an existing or upstream CSS rule uses, or the new rule silently loses or blocks the override the framework expects.
+- Keep CLAUDE.md files to rules, gotchas and invariants likely to guide future changes; leave per-feature specifics to the ADRs and the code.
 
 ## Interoperability
 
-- Give a borrowed construct this project's own name and accept the other tool's spelling as an alias, so a migrating project keeps its documents without the foreign vocabulary becoming ours.
-- Name a diagnostic code after the construct rather than the spelling it was written under, so one code serves every alias of it.
-- Default a borrowed construct's options to what this project's own schema declares, not to the vocabulary the other tool hardcodes, and say in the ADR where the two deliberately disagree.
-- When neither the other tool's default nor a schema-derived one would give a meaningful result, make the option mandatory and name the valid choices in the diagnostic, rather than defaulting to a plausible but wrong output.
-- Do not reproduce a reference implementation's accidental duplication (e.g. per-start state that redraws the same message); deduplicate and record the deviation in the ADR.
-- Generate a derived construct's content as data rather than lowering it to a template of another construct: the shortcut works, but every diagnostic then lands on text the author never wrote.
-- Do not reproduce a structural node a reference implementation emits as plumbing, when wrapping the content would defeat the structure the construct exists to enable; splice it transparently and say in a comment why the wrapper is missing.
-- Read a reference implementation's actual source before porting it, rather than a neighbouring construct that solves the same problem: two tools' answers to one question differ in exactly the details worth porting.
-- Keep this project's own name unclaimed when a borrowed construct is only a compatibility bridge, adopt the other tool's spelling alone, and say in the ADR what the good name is being saved for.
-- Ignore a foreign format's bookkeeping fields by an explicit list and report every other unrecognised one, since silently ignoring them all drops exactly the data the import exists to carry.
-- Put an imported construct through the very same validation funnel the written one uses, so a value cannot be accepted by one path and refused by the other.
-- Separate "this argument was never a path" from "this path could not be read" before touching the filesystem, since a reference implementation's config may resolve the argument first and blaming the filesystem for a missing config fails the build for a document that is not wrong.
-- An exported record carries every registered field whether set or not, so treat an unrecognised empty value — or an explicit null — as absent rather than as something to report.
-- Declare a name a *document* writes in the project's own configuration rather than in the build file, so the meaning travels with the documents that depend on it.
-- Let an unmigrated Sphinx project try a tool without adopting Bazel first, since a low barrier to trying is what leads to adoption.
-- When a borrowed construct has a sibling that differs in exactly one field, model that field as an enum from the first commit — one variant is enough — so adding the sibling later is a new arm rather than a change to every match and every already-serialized file.
-- When a borrowed feature depends on reference behaviour the local implementation lacks (a bare `:ref:` showing its section title), implement that behaviour for the local path too rather than only for the new one.
-- Make a preview show what the reader will see; showing source in place of rendered output is no fallback to settle for while a faithful renderer exists.
-- To render a third party's format where its native tool cannot run, prefer that tool's own code built for the new platform over a reimplementation, since only the original agrees with the build.
+- Give a borrowed construct this project's own name and accept the other tool's spelling as an alias.
+- Default a borrowed construct's options to what this project's schema declares; when no default gives a meaningful result, make the option mandatory and name the valid choices.
+- Ignore a foreign format's bookkeeping fields by an explicit list and report every other unrecognised one.
+- Put an imported construct through the same validation funnel the written one uses.
+- Let an unmigrated Sphinx project try the tool without adopting Bazel first.
+- Make a preview show what the reader will see, and render a third party's format with its own code built for the new platform rather than a reimplementation.
 
 ## Editor features
 
-- A rename rewrites the name everywhere it is written, even where it doubles as visible text, rather than adding an alias that keeps the old wording.
-- When an editor feature has a counterpart VS Code already ships for another language (such as the Markdown preview's scroll sync), mirror that counterpart's behaviour and settings rather than designing our own.
-
-## Scope of a guideline
-
-- A guideline that bars a technique bars it as a workaround, not as the feature the user explicitly asked for.
+- Implement a language-server feature in the server itself, so it works in every editor and in `rinx lsp --check`.
+- An editor feature treats a reference exactly as the built page does.
+- Follow a setting the Sphinx project already configures rather than adding an editor setting for it.
+- When VS Code ships a counterpart feature for another language, mirror its behaviour and settings.
+- A rename rewrites the name everywhere it is written rather than adding an alias.
 
 ## Workflow and commits
 
-- Ship a construct together with any sibling syntax whose absence would make existing input render worse than before the change, rather than deferring that sibling to a follow-up.
-- When a feature brushes against behaviour that should hold for every construct of its kind (case-insensitive role names), leave it out of that feature and introduce it as one general concept in a follow-up change, rather than special-casing the first construct that needed it.
-
-- After every code modification session, run `cargo clippy --tests` and resolve all warnings before finishing.
-- After every code modification session, run `cargo fmt`.
-- Do not commit changes unless explicitly requested by the user.
-- File a GitHub issue for every problem discovered but not resolved in the current change, rather than leaving it only in a PR description or a summary.
-- Give every commit a conventional-commit subject line, e.g. `feat: support simple tables`.
-- Always follow that subject with a body summarizing at a high level what the commit does and the notable decisions behind it; a bare subject line is never enough.
-- After every code modification session, verify `bazel build //examples:site` succeeds.
-- Treat clippy warnings as refactoring opportunities; do not suppress them with `#[allow(...)]` attributes.
-- Verify a rendering change by screenshotting the built page in headless Chrome, not by reading the emitted HTML — markup that looks correct can still render as run-together text.
-- Settle a CSS or browser-behaviour question by testing it in a headless browser, not from memory; `<details>`, in particular, hides every child but its `<summary>` and no rule exempts one.
-- Keep presentation out of the entity meta-model: `entities.toml` is a parse-time input, so a flag there re-parses every document to change how something looks; put the switch in the render-time site config instead.
-- When a template must reproduce what built-in rendering does, give it the declared labels and the document order rather than letting it hardcode a second copy of either.
-- Render a declared vocabulary's parts in the order the schema declares them, not in document order or a map's key order; instances of one type should be comparable at a glance.
-- When adding a rule for a class on an element a generic selector already styles (`.document code`, `table th`), match that selector's specificity or the new rule silently loses.
-- When two phases must agree on a derived value, have both call one pure function rather than passing a sidecar between them; a sidecar makes the agreement a protocol, a shared function makes it impossible to break.
-- When a second construct needs the same reporting plumbing, widen the existing error type with a code field rather than adding a parallel one; the duplicate would have to re-derive every downstream rule, including the ones nothing tests.
-- A value that two callers each supply separately is the one input they can supply differently — put it on the data being processed, not in a context each of them fills in.
-- Measure a plausible-sounding build optimization before keeping it; batching many small Bazel actions into one action with many outputs can be slower than the actions it replaced.
-- Record what an accepted regression actually costs, measured, in the ADR that accepts it — "some overhead" is not a decision anyone can revisit later.
-- When a build system cannot honour an option's semantics (a `:save:` writing an undeclared path), diagnose it by name and point at what does work, rather than ignoring it or dropping the directive.
-- Pay only for what you use: when the build system cannot discover whether a feature is used before running actions, make it an explicit per-library opt-in rather than a cost every document of every project pays.
-- An opt-in is only honest if forgetting it fails loudly, at the line that needed it, naming the switch to flip.
-- Do not generate an artefact that makes no sense for a project (a Python module index for documentation without Python): when the build system must declare outputs before the documents are read, make such an output an explicit opt-in rather than writing it empty everywhere.
-- A feature that declares no build action of its own needs no opt-in at all: the per-library switch exists because actions are created before any document is read, so a step folded into an action that was already running is free and should stay unconditional.
-- When two actions compute the same thing from the same inputs, fold the second into the first rather than keeping them in step; the cheapest agreement is one process.
-- Check a generated artifact for the degenerate case the external tool it is fed to rejects; an empty PlantUML diagram fails the build with a syntax error naming a file nobody wrote, when the real cause is a filter that matched nothing.
-- Run every shell test the CI workflow runs before calling a change done, and add new ones to that workflow in the same change.
-- Make a feature opt-in when its trigger is a character sequence ordinary prose already contains; a construct nobody writes by accident (a directive name) can be always available, but `{{` cannot.
-- Narrow an opt-in further with a cheap lexical check, so that within an opted-in library only the documents actually using the feature are subject to its rules.
-- When emulating something another tool gets from a scripting hook, follow that tool's own resolution rules rather than the local convention, and say in the ADR where the two deliberately disagree.
-- A transform whose output only ever feeds the next step of the same process needs no intermediate artifact; splitting it into a pipeline phase costs a second file for the metadata that cannot be reconstructed from the first, with no cache firewall to win. Give it a debugging flag instead.
-- When a transform makes an existing position mapping non-affine, extend the lookup rather than the offset: consult the map once, at the single point that resolves a position, after every composable offset has been added.
-- Refuse a construct whose semantics the surrounding mechanism cannot preserve (a whitespace trim that would swallow an injected marker) by name, rather than rendering something subtly wrong.
-- When reimplementing a third party's directive, emit its own element structure and class names verbatim, so a project already styled for that extension keeps its appearance; the local rendering is what may differ, never the contract the stylesheet is written against.
-- A container directive is worth implementing for what it *contains*: an unrecognized one never parses its body, so every construct inside it — targets, entities, diagrams — silently vanishes from every later phase.
-- In a container, report a misplaced child and keep it rather than dropping it, just as an unreadable option must never cost the content written inside; both failures trade a visible warning for invisible content loss.
-- Adding a block-level container means adding an arm to *every* traversal that walks block content, not only the renderer's; grep for an existing container's variant and follow it everywhere it appears.
-- Keep a CSS width or layout rule at the specificity the upstream framework gives it; raising it (`> .sd-col` for `> *`) silently prevents the more specific override the framework expects to win.
-- When a backend library cannot express a commonly used option (text at any angle) but the missing piece is small and self-contained, write that piece yourself rather than narrowing the option; narrowing is for gaps too large to own.
-- Keep sibling directives on one selection language: refuse a legacy selection option by name with the `:filter:` to write instead, rather than translating it for one sibling alone.
-- When renaming, rename consistently everywhere (package, library, build targets, docs) rather than keeping the old name alive as a compatibility shim.
-- A test asserting that a build step is or is not re-run detects it with `-s` (did the action's key change), never with `(cached)`, whose answer depends on what a disk or remote cache happens to hold.
-- Keep manual checklists (e.g. the PR template) to what a human must judge; never list a check CI already enforces.
-- Remove a code path once its last caller is gone, together with the helpers and tests only it used, rather than keeping it for hypothetical callers.
-- Defer a known gap only to a roadmap step whose stated scope covers it; when none does, add a step of its own rather than stretching an unrelated one.
-- Leave a sibling case out of a feature only for a concrete technical reason; "not in the step's wording" or "a small extra" is no reason, so cover every case the existing machinery already answers.
+- After every code change, run `cargo clippy --workspace --tests` (fixing warnings rather than suppressing them), `cargo fmt`, and `bazel build //examples:site`.
+- Do not commit unless explicitly asked.
+- Give every commit a conventional-commit subject and a body summarizing what it does and the notable decisions behind it.
+- File a GitHub issue for every problem discovered but not resolved in the current change.
+- Ship a construct together with any sibling syntax whose absence would make existing input render worse, and leave a sibling case out only for a concrete technical reason.
+- When a feature touches behaviour that should hold for every construct of its kind, leave it out and introduce it as one general concept in a follow-up.
+- Defer a known gap only to a roadmap step whose scope covers it; otherwise add a step of its own.
+- When a second construct needs the same plumbing, widen the existing type rather than adding a parallel one.
+- A value two callers each supply separately belongs on the data being processed, not in a context each fills in.
 
 ## Python
 
-- Hold Python code to the same bar as Rust: fully annotated, type-checked, linted and formatted in CI, with lint findings treated as refactoring signals rather than suppressed.
-- Prefer the current Astral toolchain (uv, ruff, ty) configured in one `pyproject.toml`, over a Bazel-native lint setup.
-- Write Python tests in plain pytest style (functions, `assert`, fixtures) rather than `unittest` classes.
-- Run tests under Bazel with the same configuration file as the local runner, so the two cannot disagree about what runs or how.
+- Hold Python code to the same bar as Rust: fully annotated, type-checked, linted and formatted in CI, with lint findings treated as refactoring signals.
+- Use the Astral toolchain (uv, ruff, ty) configured in one `pyproject.toml`, and run tests under Bazel with that same file.
+- Write Python tests in plain pytest style.
 
 ## JavaScript
 
-- Run JavaScript tests hermetically under Bazel (rules_js, as a dev dependency) rather than relying on a Node.js installed on the machine.
+- Run JavaScript tests hermetically under Bazel (rules_js, as a dev dependency) rather than with a locally installed Node.js.

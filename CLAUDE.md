@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`rinx` is a Rust re-implementation of (a subset of) the Sphinx documentation generator, designed to be fast and to integrate natively with Bazel as a first-class, cache-friendly build step (not a wrapped external tool). It parses reStructuredText (`.rst`) into HTML documentation sites, with cross-file references, toctree-based navigation, and PlantUML diagram rendering.
+`rinx` is a Rust re-implementation of (a subset of) the Sphinx documentation generator, designed to be fast and to integrate natively with Bazel as a first-class, cache-friendly build step (not a wrapped external tool). It parses reStructuredText into HTML sites with cross-file references, toctree navigation and PlantUML diagrams, and ships a language server with a VS Code extension.
 
-Read `docs/dev/requirements.md` and `docs/dev/architecture.md` for the full design rationale — the paragraphs below only cover what differs from those aspirational docs, or what's needed to be productive immediately. The codebase is a Cargo workspace under `crates/` (`rinx_ast`, `rinx_scope`, `rinx_index`, `rinx_cdecl`, `rinx_toctree`, `rinx_entity`, `rinx_filter`, `rinx_inventory`, `rinx_pyconf`, `rinx_uml`, `rinx_template`, `rinx_parser`, `rinx_analyzer`, `rinx_renderer`, `rinx_lsp`, `rinx`); `rinx_scope`, `rinx_index`, `rinx_cdecl`, `rinx_toctree`, `rinx_entity`, `rinx_filter`, `rinx_inventory`, `rinx_pyconf`, `rinx_uml` and `rinx_template` aren't part of the architecture doc's crate split (that doc is aspirational and predates all ten), the other six match it.
+The code is a Cargo workspace under `crates/`. `docs/dev/requirements.md` and `docs/dev/architecture.md` are the original, aspirational design (they predate most crates). The rationale for each feature is an ADR in `docs/decisions/` — read the relevant one before changing a feature's design. Crates with non-obvious internals have their own `CLAUDE.md` (`crates/{ast,parser,renderer,lsp,uml,entity}/`, `rules/`), loaded when working under them; read it yourself before a change that reaches into that crate from elsewhere.
 
 ## Commands
 
@@ -15,677 +15,87 @@ Development uses plain Cargo; the Bazel build is the production/integration path
 ```bash
 cargo build
 cargo test --workspace            # unit tests (co-located #[cfg(test)] modules) + crates/worker/tests/integration/
-cargo test <substring>           # run a single test by name substring
-cargo test --test integration
-cargo clippy --workspace --tests  # must be warning-free before finishing any change (pedantic lints are on, see workspace Cargo.toml)
+cargo test <substring>
+cargo clippy --workspace --tests  # must be warning-free before finishing any change (pedantic lints are on)
 cargo fmt
 cargo run -p rinx -- diagnostic_codes_rst > docs/diagnostics.rst  # after adding a DiagnosticCode or editing its doc comment; a test compares
-cargo llvm-cov --workspace        # line coverage; CI's `Rust / coverage` enforces floors for the workspace and rinx_lsp
-fuzz/run.sh parse 60              # fuzz a target for N seconds (also `lsp_session`, `pyconf`); fuzz/ is its own nightly crate outside the workspace, see fuzz/Cargo.toml
+cargo llvm-cov --workspace        # CI enforces coverage floors for the workspace and rinx_lsp
+fuzz/run.sh parse 60              # fuzz a target (also lsp_session, pyconf); fuzz/ is its own nightly crate
 
-bazel build //:rinx    # build the CLI binary via Bazel
-bazel build //examples:site           # build the example multi-team site end-to-end
-bazel build //examples/team_a:docs    # build one team's library in isolation
-bazel build //docs:site               # rinx's own documentation, built by rinx and deployed to GitHub Pages (.github/workflows/pages.yml)
-bash tests/test_strict_deps.sh        # verifies Bazel fails the build when a toctree dep is missing from BUILD.bazel
-bash tests/test_strict_links.sh       # verifies broken links only warn by default, and fail the build when strict_links = True
-bash tests/test_diagram_cache_firewall.sh  # verifies an edit elsewhere does not restart the PlantUML JVM, and a diagram edit does
-bash tests/test_diagram_opt_in.sh     # verifies a diagram in a library without `diagrams = True` fails the build
-bash tests/test_download_data.sh      # verifies a `:download:` file must be declared in `downloads`, and lands under `_downloads/`
-bash tests/test_intersphinx.sh        # verifies a site links into another through its objects.inv, and that `inventories` is load-bearing
-bash tests/test_domain_indices.sh     # verifies `domain_indices` decides whether py-modindex.html is written and linked, and refuses unknown names
-bash tests/test_lsp_manifest.sh       # verifies the `lsp_manifest` output group describes every library's parse settings, and is no default output
-bash tests/test_dependency_quick_fix.sh  # verifies the language server's quick fix restores a removed toctree dep, and the site builds again
-bash tests/test_init_from_sphinx.sh   # verifies `rinx init --from-sphinx` migrates tests/sphinx_project into a package that builds, and refuses to run twice
-bazel build //examples/intersphinx:sibling_site  # a second site linking into //examples:site through its objects.inv
-(cd e2e/smoke && bazel test //...)       # rinx consumed as a dependency by another module — what the BCR presubmit (.bcr/) runs
-bazel run //scripts:benchmark         # clone CPython docs and benchmark the pipeline against it (see docs/benchmark.rst); CI adds --site-out/--summary-markdown
-bazel run //scripts:benchmark_entities  # benchmark the entity model against useblocks' sphinx-needs demo (see docs/benchmark.rst)
-bazel run //scripts:benchmark_warmup    # compile rinx into a disk cache both benchmarks share — CI's first benchmark step
+bazel build //:rinx
+bazel build //examples:site       # the example multi-team site end-to-end
+bazel build //docs:site           # rinx's own documentation, built by rinx (strict_links = True)
+bash tests/test_<mechanism>.sh    # one shell test per Bazel mechanism (strict deps, parse_data, images, diagrams, ...); run the one for what you touch
+(cd e2e/smoke && bazel test //...)   # rinx consumed as a dependency — what the BCR presubmit runs
+bazel run //scripts:benchmark     # CPython docs benchmark (see docs/benchmark.rst); also :benchmark_entities
+CARGO_BAZEL_REPIN=1 bazel build //examples:site   # after changing a Cargo dependency
 
 # Python scripts (scripts/, examples/shared/) — see docs/dev/python.md
-uv sync                    # install the pinned ruff, ty and pytest
-uv run ruff format && uv run ruff check && uv run ty check
-uv run pytest --cov        # the script tests, with the coverage floor
-bazel test //scripts:all   # the same tests, one target per file, under the same pyproject.toml
-bazel test //tests/js:all  # the default theme's browser scripts (assets/*.js), under rules_js' Node.js
+uv run ruff format && uv run ruff check && uv run ty check && uv run pytest --cov
+bazel test //scripts:all //tests/js:all   # the scripts' pytest files, and the theme's browser scripts (Bazel only)
 
-# VS Code extension (editors/vscode) — npm, not Bazel: its tests download and drive a real VS Code
-npm ci && npm run typecheck && npm run lint && npm run format:check   # oxlint, since TypeScript 7 has no API for typescript-eslint
-npm test                   # @vscode/test-cli (.vscode-test.mjs); VSCODE_VERSION=min|stable|insiders, `-- --coverage`, `-- --label unit|e2e|e2e-no-server|e2e-vsix`
-                           # e2e drives the real `rinx lsp`: RINX_BINARY, else the repository's target/debug/rinx (`cargo build` first)
-npm run package && npm run package:check   # esbuild bundle → rinx.vsix, files compared with vsix-files.txt; RINX_VSIX=rinx.vsix npm test -- --label e2e-vsix tests it installed
-uv export --only-group test --no-emit-project --format requirements-txt -o scripts/requirements.txt  # after changing the test group
-
-# Other editors (editors/{neovim,helix,emacs}) — each runs the snippet docs/editors.rst shows, against RINX_BINARY (default target/debug/rinx)
-editors/run-tests.sh neovim     # also emacs (Eglot, Emacs 29+) and helix (needs tmux); the `Editors` CI jobs run the same
-
-CARGO_BAZEL_REPIN=1 bazel build //examples:site   # after changing a Cargo dependency
+# VS Code extension (editors/vscode) — npm, not Bazel
+npm ci && npm run typecheck && npm run lint && npm run format:check
+npm test                          # drives a real VS Code against target/debug/rinx (cargo build first)
+editors/run-tests.sh neovim       # also emacs, helix: run the snippets docs/editors.rst shows
 ```
 
-There are no `rust_test` Bazel targets — Rust tests are run through Cargo only. The theme's JavaScript is the reverse: its tests (`tests/js/`) run through Bazel only. The Python scripts' pytest files run both through `uv run pytest` and as one Bazel `py_test` per file (`//scripts:all`), each running pytest under the same `pyproject.toml`.
+There are no `rust_test` Bazel targets — Rust tests run through Cargo only.
 
-After any code change: run `cargo clippy --workspace --tests` (fix all warnings, don't `#[allow(...)]` them — treat them as refactor signals) and `cargo fmt`, then verify `bazel build //examples:site` still succeeds. After a Python change, likewise run `uv run ruff format`, `uv run ruff check`, `uv run ty check` and `uv run pytest --cov` (the same rule: fix findings, don't `# noqa` them). `doctest_runner.py`, `publish_crates.py` and `publish_pages.py` must stay stdlib-only, and the former Python 3.9-compatible, since it runs in users' `py_test`s.
+After any code change: run `cargo clippy --workspace --tests` (fix warnings, don't `#[allow(...)]` them — treat them as refactor signals) and `cargo fmt`, then verify `bazel build //examples:site`. After a Python change, run ruff, ty and pytest likewise (fix findings, don't `# noqa` them). `doctest_runner.py`, `publish_crates.py` and `publish_pages.py` must stay stdlib-only, and the former Python 3.9-compatible, since it runs in users' `py_test`s.
 
-Adding or removing a Cargo dependency additionally needs `CARGO_BAZEL_REPIN=1` on the next Bazel build, to refresh `Cargo.bazel.lock` — the crate_universe resolver lockfile, which is separate from `Cargo.lock` and is checked in. Bazel fails with a repin request rather than silently using stale crates. That lockfile is not optional: without it rinx cannot be consumed as a non-root bzlmod module at all, which is exactly the shape `scripts/benchmark.py` builds the CPython corpus in.
+`Cargo.bazel.lock` (crate_universe's lockfile, separate from `Cargo.lock`) is checked in and required: without it rinx cannot be consumed as a non-root bzlmod module. Bazel asks for a repin rather than using stale crates.
 
 ## Architecture
 
-### Pipeline: parse → analyze/index → render
+### Pipeline: parse → index → render
 
-The binary (`crates/worker/src/main.rs`) is a multi-subcommand CLI, one subcommand per pipeline phase, because Bazel needs each phase as a separately cacheable action:
+The CLI (`crates/worker/src/main.rs`) has one subcommand per pipeline phase, because Bazel caches each phase as a separate action: `parse` (RST → serialized `.ast`), `validate_toctree`, `index` (all documents' analyses merged into one `ProjectIndex`), `render` (one `.ast` + the index → HTML, also writing diagram sources), PlantUML compile and `validate_assets` at the site level, plus `lsp` (the language server) and `init --from-sphinx` (migration). Each subcommand pairs a pure `process_*` function with a thin file-I/O `cmd_*` wrapper in one file under `commands/`; keep new subcommands to that split.
 
-- `parse --input file.rst --output file.ast` — RST text to a serialized `ast::Document` (JSON).
-- `validate_toctree --input file.ast --output file.ast [--allowed <doc>...]` — checks toctree entries only reference declared docs.
-- PlantUML compile / `validate_assets` — for a document whose library set `diagrams = True`, the `render` action (below) also writes each diagram's expanded text as `<hash>.puml` into `--diagram-outdir`; a per-document compile action turns those into SVGs via the `plantuml` jar, and `validate_assets` checks every `.puml` got its `.svg` (as well as every authored image and `:download:` file reaching its bundle). All of it is **after** indexing and at the *site* level, because a templated diagram's text is a question asked of the entity graph — see "Diagrams" below.
-- `index --inputs a.ast b.ast ... --output project.index` — merges all documents' local analysis (`analyzer::analyze`) into one global `rinx_index::ProjectIndex` (targets, document titles, nav tree, glossary terms).
-- `render --input file.ast --index project.index --doc-path rel/path --output file.html --config site.toml --template layout.html` — turns one AST + the global index into a final HTML page.
-- `lsp` — the language server over stdio, implemented by the `rinx_lsp` crate, which also serves the editor's preview (see "Live preview / LSP direction" below).
-- `init --from-sphinx <dir>` — writes a Sphinx project's Bazel build (`BUILD.bazel`, `rinx.toml`, `entities.toml`, the prolog/epilog files, the `MODULE.bazel` dependency) from the plan `rinx_lsp::migration` makes of the scanned project; not a pipeline phase, and the generator both benchmarks call (`docs/decisions/049-init-from-sphinx.md`).
-- Legacy: `rinx <file.rst>` prints HTML straight to stdout (used by `process_rst()` in `crates/worker/src/lib.rs`, mostly for quick manual checks).
+Dependencies between crates flow one way: from `ast` (and the leaf crates beneath it) through `entity`, `parser`, `scope`, `index` and `toctree` to `analyzer`, `uml` and `renderer`, then `lsp`, then `worker` (the `rinx` binary) — never add an edge backwards. Small leaf crates (`cdecl`, `filter`, `inventory`, `pyconf`, `template`, `toctree`) exist so that phases which may not depend on each other can share one implementation — when two phases need the same logic, lift it into such a crate rather than duplicating it.
 
-Each subcommand handler is split into a pure `process_*` function (testable without file I/O) and a thin `cmd_*` wrapper that does the file reads/writes, the two living together in their own file under `commands/` (e.g. `commands/render.rs` holds both `process_render` and `cmd_render`), with `main.rs` itself reduced to `mod commands;` and the `run()` dispatcher — keep new subcommands following that split.
+Invariants that span crates:
 
-### Crate layout (`crates/`)
+- **Parse, don't validate**: invariants live in opaque types with smart constructors, and their `Deserialize` re-validates on load.
+- **No I/O below the worker.** The parser reads files only through the injected `ParseFileLoader`; the renderer returns what should be written (e.g. diagram sources) and `cmd_*` writes it.
+- **The `.ast` and `.index` are cache keys.** Nothing positional that changes when lines move may enter them: where text was written lives in the parser's `SourceMap`, kept beside the `Document`, never serialized. Anything written must be deterministic (iterate `BTreeMap`s), or an unchanged input misses the cache.
+- **The parser is error-resilient**: bad input becomes a diagnostic plus an `Unknown`/`Malformed` node rendered as a visible error block, never a panic or silently dropped content.
+- **One implementation per question.** The build and the language server must answer alike (`lsp_parity.rs` checks the server reports what `rinx parse` warns): `.. noqa:` filtering goes through `rinx_ast::retain_reportable` only, the preview renders through the build's `render_document_page`, and so on.
+- **A diagnostic code names the construct, not its spelling** — `.. needtable::` and `.. entity-table::` share `entity-table.*`.
 
-Each crate is a workspace member with its own `Cargo.toml` and `BUILD.bazel`; dependencies between them flow strictly `ast → scope`/`index` → `analyzer`/`renderer` → `worker`, with `parser` depending only on `ast`, parallel to `scope` and `index`. `cdecl`, `filter`, `inventory` and `pyconf` are leaves depending on nothing of ours, with `ast → filter` because a parsed filter expression is stored in the `.ast`, and `ast → inventory` because an `:external+name:` role's inventory name is.
+### File organization
 
-Within a crate, a file is split once it grows past ~800 lines, along construct/responsibility boundaries. Prefer expressing the relationship via a same-named subdirectory (`inline.rs` splitting into `inline/reference.rs`, `inline/hyperlink.rs`, ...) over flat filename-prefixed siblings (`inline_reference.rs`) — `mod x;` in the parent file resolves to `parent_dir/x.rs` by default, so this needs no `#[path]` attribute; the one place this isn't possible is a crate root (`lib.rs`/`main.rs`), whose direct children are necessarily flat siblings of `lib.rs`/`main.rs` itself since that file's own directory *is* `src/`. When an implementation is genuinely one cohesive unit and its bulk is in `#[cfg(test)]` content (e.g. `ast/domain_object_body.rs`'s single enum+impl, `cdecl/parser.rs`'s one recursive-descent `Parser`), split only the tests into topic-based sibling files instead of fragmenting the implementation.
+A file is split once it grows past ~800 lines, along construct boundaries, into a same-named subdirectory (`inline.rs` + `inline/reference.rs`), not prefixed siblings. The owner then becomes a **pure forwarder**: a module doc comment, `mod` declarations and re-exports — no logic, no tests (so re-exported items need `pub(crate)`, not `pub(super)`). When a file is one cohesive unit whose bulk is tests, split only the tests into topic-named siblings and keep no inline `mod tests`. Place a module under the dispatcher that actually calls it (grep the callers), and split general-purpose helpers out under a name saying what they do rather than leaving them in a construct's file.
 
-Once a file owns a same-named directory it becomes a **pure forwarder**: a module doc comment explaining how the submodules fit together, the `mod` declarations, and the re-exports its parent needs — no logic, no tests. Every `X.rs`/`X/` pair in the workspace follows this — see `parser/blocks.rs`, `parser/directives.rs`, `parser/inline.rs`, `renderer/blocks.rs`, `renderer/page.rs`, `renderer/resolution.rs`, `ast/object_type.rs`, `worker/commands.rs`. The exception is the tests-only directory described above, whose owner keeps its implementation but must then hold *no* inline `#[cfg(test)] mod tests` either: all of its tests live in the topic-named siblings. Two consequences worth knowing before doing one: an item re-exported by the forwarder needs a visibility at least as wide as the re-export, so `pub(crate)` rather than `pub(super)`; and a helper used only by a directory's own children can stay a *private* `fn` in the parent, since Rust makes a module's private items visible to its descendants (e.g. `renderer/blocks/entity.rs`'s `effective_attribute`, reached from `blocks/entity/template.rs`).
+### Bazel rules: library vs. site (`rules/`, `defs.bzl`)
 
-Two rules keep these moves honest. Place a module under whichever dispatcher actually calls it — grep the callers rather than trusting the name; that is what moved `domains` under `directives`, `bullet_list` under `blocks`, and `renderer`'s `nav.rs` under its `blocks/` (only the node dispatcher calls it — `page/` computes its hrefs separately). And when a file named for a construct also holds general-purpose helpers, split those out under a name saying what they do rather than dragging them along: `parser/indent.rs` exists because `directive_body.rs` and `bullet_list.rs` were each hosting indentation utilities that twenty-odd files called, and `ast/object_naming.rs` because `domain_object_body.rs` was hosting the signature/option name extraction that three other crates call.
+Mirrors `cc_library`/`cc_binary`: `rinx_library` parses and validates its documents and exposes a `RinxInfo` provider; `rinx_site` collects everything transitively, runs the one index action, then one render action per document. Its dependency attributes are independent mechanisms — don't confuse them: `deps` (strict, only for documents a toctree pulls in), cross-references (never declared, resolved at index time — so link cycles are fine, toctree cycles are not), `parse_data` (files the parser reads), `rst_prolog`/`rst_epilog`, `images`, `downloads`, `diagrams` and `jinja` (both opt-in), `entity_schema` (on both rules), `parse_config`, and `inventories` (on the site). `rules/CLAUDE.md` has their traps.
 
-- `rinx_ast` (`crates/ast/src/lib.rs`) — AST node types, one per module, with seven families grouped into their own trees: `entity_flow/` (the flowchart's node, its two spellings and the two layout directions `PlantUML` has), `entity_pie/` (the pie chart's node, its two spellings and the wedge), `entity_bar/` (the bar chart's node, its two spellings, the always-rectangular labelled `BarGrid` and the `BarOrientation`/`BarArrangement` enums `:horizontal:`/`:stacked:` parse into), `object_type/` (`combined.rs`'s umbrella `ObjectType` over `py.rs`/`c.rs`/`std_.rs`), `doctest/`, `enumerator/` and `table/` (whose `TableSource` records whether a `Directive::DataTable` came from `list-table` or `csv-table` — the two are structurally identical after parsing, so they share one variant). `object_naming.rs` sits flat beside them because every later phase (parser, analyzer, renderer) calls its signature/option naming helpers. Note `HashedContent`, `TargetName`, `ChartColor` and `LabelRotation` (both flat, being values a chart is drawn with rather than nodes — as is `ChartValue`, the filter-or-number a pie's wedge and a bar chart's cell both hold): all are "parse, don't validate" opaque types (smart constructors + custom `Deserialize` that re-validates the invariant on load, e.g. `HashedContent`'s stored hash must match `sha256(body)`). Follow this pattern for new invariants rather than validating ad hoc at call sites. `asset_uri.rs`'s `AssetUri` is the external-URL/project-file split and the one `resolve` both an image's argument and a `:download:` target go through, so the bundler, validator and renderer agree on a path. `code_language.rs` holds the `CodeLanguage`/`ResolvedLanguage` pair a code block's language is parsed into: the second is the first minus its `Inherit` case, so a renderer that failed to apply `.. highlight::` inheritance cannot compile — see `docs/decisions/006-syntax-highlighting.md`. `directive.rs`'s `Unknown`/`Malformed` pair is the one place a directive that could not become content lands — see the extension-directives section below for the split. `span.rs`, `diagnostic.rs`, `diagnostic_code.rs`, `diagnostic_subject.rs` and `suppression.rs` are the *reporting* vocabulary rather than document content — they live here because `Document` carries them and every later phase both produces and forwards them; `DiagnosticCode`'s enum, `as_str`, `FromStr`, `ALL` and `description` (each variant's doc comment, which a test requires) are all generated by one macro from a single table, because a `.. noqa:` needs the two directions to be exact inverses (see `docs/decisions/003-diagnostics.md`). `suppression.rs` also holds the one `.. noqa:` filter, `retain_reportable`, over anything implementing its `Reported` trait (`Diagnostic` here, the renderer's typed findings in `renderer/src/reported.rs`): both front ends — the worker and the language server — call it, so the editor and CI cannot disagree about what a comment silences. `source_map.rs`'s `SourceMap` is what only the process that parsed a document can ask of it, kept *beside* the `Document` rather than in it and deliberately without a serde impl, so a build phase — which holds only what it read from a `.ast` — cannot reach it and a `Document` reads back from its `.ast` exactly as it was parsed (the worker's `tests/integration/ast_round_trip.rs` checks this over `examples/` and `docs/`, and a test in `source_map.rs` refuses any `serde(skip)` in the crate): `syntax.rs`'s `SyntaxTable`, where the markup was written — each heading, directive, comment, literal block and table's lines, and each directive, option and role name, reference target and substitution — recorded by the parser for an editor to fold and colour (`docs/decisions/047-syntax-table.md`), the `IncludeSite`s, each block a `.. noqa:` written before it would cover (`suppression.rs`'s `SuppressionSite`, recorded where `blocks/dispatch.rs` resolves a pending comment onto its block, whose `Suppression` both build through `SuppressionSite::suppression` — a table cell, under `ParseCtx::in_table_cell`, records none), and the exact characters of each written name. The document points into the last through a *typed handle*: `named.rs`'s `Named<T>` — a label, a `:name:`, a `:label:`, an entity's `:id:`, an `.. entity-update::`'s id argument — is a value and the `Option<NameId>` its characters were recorded under, both serialized, and `SourceMap::record_name` is the only way an id is made (the parser calls it through `ParseCtx::record_name`), so a build holds the id but cannot ask where the name stands, and an id moves only when names are added before it, never when lines move. `block_id.rs`'s `BlockId` does the same for every rendered block's lines — a paragraph's, a list item's, a literal block's, a table's, a section title's, a `.. _label:`'s, a directive's marker (which a domain object's or table directive's definition is), a glossary term's — carried as `block` by the `Node` variants that render (`Node::block`/`block_mut`; a list places its items, `ListItem`, `DefinitionListItem` and `OptionListItem`, rather than itself) and by `GlossaryTerm`. `SourceMap::record_block_lines` mints one (`ParseCtx::record_block_lines`): the block loop (`blocks/dispatch.rs`'s `record_block_lines`) places a construct yielding one node over the lines it consumed, a construct yielding several places them itself (a paragraph and the literal block its `::` introduces), and `try_parse_directive` places each directive at its marker — a node a nested parse already placed, such as one an `.. include::` spliced in, keeps its own. So lines moving above blocks leave the `.ast` byte-identical (`tests/integration/block_lines.rs`, `definition_spans.rs`); the parser's test-only `parse_document` drops every id (`unplaced`), so a test of a construct's structure compares structure. A span that stays in the document is one a build phase reports at: an inline reference's, a toctree entry's, an entity's. The parser's one entry point, `parse`, returns both as a `Parsed`, and a build keeps only its `document`.
-- `rinx_scope` (`crates/scope/src/`) — the scope a domain object is qualified in and a domain, `:any:` or `:option:` reference is resolved in: `Scope` over `python.rs`'s `PythonScope` (module and class stack), `c.rs`'s `CScope` and `program.rs`'s `ProgramScope`. `definition.rs` holds the one copy of the rules for how a scope directive and a definition move it (`Scope::apply_scope_directive`, `enter_definition`/`leave`, yielding `DefinitionNames`), and `document_scopes.rs`'s `DocumentScopes::of(&doc.nodes)` applies them in one walk (on `rinx_ast::for_each_child`) and answers by node identity — `definition(obj)` for the names an analyzer indexes and a renderer anchors under, `scope_at(reference)` for a resolution. Scope is a pure function of the document, so neither phase keeps any while it walks; and it is computed in memory per process, never stored in the `.ast`, so nothing derived can disagree with the document — the table borrows it. Kept as its own crate (rather than folded into `ast`, where it briefly lived) because it's traversal state, not parsed-document data.
-- `rinx_index` (`crates/index/src/`) — `ProjectIndex` and the data types it's built from (`GenIndexEntry`, `DocumentOutline`/`OutlineSection`, `DocumentToctree`, `DocumentNumbers`), plus `ProjectIndex::merge`/`insert_domain_object`. Pure data + `Serialize`/`Deserialize`, no traversal logic — kept separate from `rinx_analyzer` (which builds a `ProjectIndex`) because `rinx_renderer` only ever reads one; before this split, renderer depended on the whole analyzer crate just to get these types. Note there is **no** pre-flattened navigation tree: the index stores the toctree *graph* (`toctrees`, per document and mergeable) plus each document's `document_outlines`, and the renderer expands them per directive — see `docs/decisions/005-toctree-model.md` for why, and for why that is what makes the live-preview path correct.
-- `rinx_toctree` (`crates/toctree/src/`) — resolving a `.. toctree::`'s written entries (`expand_toctree`, `resolve_docname`, the `:glob:` matcher). Its own crate because three phases that may not depend on each other all need it: the analyzer, the renderer, and the Bazel strict-deps check — `declared.rs`'s `undeclared_toctree_entries` over a library's `DeclaredDocuments`, which the worker's `validate_toctree` and the language server both call. Each expands against a *different* universe of documents, which is why a glob survives unexpanded into the index rather than being resolved once — expanding early would leave the strict-deps check unable to check globs. `pattern.rs`'s `SphinxPattern` is Sphinx's `_translate_pattern`, ported over `regex` rather than delegated to a glob library (`globset` refuses a `**` inside a component); the language server matches a `conf.py`'s `exclude_patterns` with it too, so the two cannot read a pattern differently.
-- `rinx_inventory` (`crates/inventory/src/`) — Sphinx's `objects.inv` format, read (`read_inventory`) and written (`write_inventory`), and nothing else: no index, no resolution. A leaf crate like `rinx_cdecl`, because the worker writes one, the index holds one and the AST names one (`InventoryName`, re-exported by `rinx_ast` for `InventorySelector`). `testdata/sphinx-9.1.0.inv` is a real `sphinx-build` output and the compatibility bar for both directions.
-- `rinx_pyconf` (`crates/pyconf/src/`) — reading the literal settings of a Python module without running it, for the language server's `conf.py` (ADR-038 §4). `lexer/` is Python's lexical grammar, complete enough to find where any valid module's tokens end (f-strings with PEP 701's nested fields included, scanned but opaque); `literal.rs` reads an expression that is a literal and refuses every other one; `module.rs`'s `read_module` binds top-level names (a dict display whose keys alone are literals as `BoundValue::Dict`, for a setting keyed by name such as `extlinks`), recording a later `+=`, `.append(…)` or assignment inside a block as a *modification* it does not apply, and skipping function and class bodies. It knows nothing about Sphinx — `rinx_lsp`'s `project/sphinx_conf.rs` says what a binding means. Ruff's and RustPython's parsers were rejected (ADR-038's alternatives). `testdata/` holds CPython's and the quickstart's real `conf.py`s, the bar `tests/fixtures.rs` reads against.
-- `rinx_cdecl` (`crates/cdecl/src/`) — a small C declaration parser (`tokenize` → recursive-descent `Parser` → `Declaration`/`Declarator`), used by `parser`'s `c`-domain directives to find the declared name in a `c:function`/`c:type` signature. `parser.rs` is one cohesive recursive-descent unit, so only its tests are split into siblings (`parser/declaration_tests.rs`, `parser/function_tests.rs`).
-- `rinx_template` (`crates/template/src/`) — rendering a document's source as a Jinja template before it is parsed (`render_source`), the transform a Sphinx project gets from a `source-read` hook in its `conf.py`. A leaf crate like `rinx_cdecl` and `rinx_filter`, learning what it cannot do itself through the injected `TemplateLoader` the parser implements over its own file loader. The part that is not "call MiniJinja" is `marker.rs`: MiniJinja has no source map and an `{% include %}` shifts every line below it, so a `(template, line)` marker is injected into each line before rendering and read off afterwards, yielding one `SourceLine` per rendered line — without it every position, `.. noqa:` and stored `Span` below the first include would be wrong. `scan.rs` is the delimiter scanner deciding where a marker may go and collecting the template names to load; it also refuses whitespace-control modifiers and computed names by name. See `docs/decisions/013-source-templating.md`.
-- `rinx_parser` (`crates/parser/src/`) — three trees, one per parsing phase, each a forwarder over one module per construct: `blocks/` (block-level constructs — bullet/enumerated/definition lists, grid and simple tables, comments, transitions, literal and doctest blocks), `directives/` (everything behind a `.. name::` marker, with `directives/domains/{py,c,std_}/` for the domain objects and `directives/data_table/` for the two table directives that share an AST node; `directives/dropdown.rs`, `directives/grid.rs`, `directives/entity_table.rs`, `directives/entity_flow.rs`, `directives/entity_sequence.rs`, `directives/entity_pie.rs`, `directives/entity_bar.rs` and `directives/if_builder.rs` are the directives here that are neither docutils' nor Sphinx's — see "Extension directives" below; five of them share `directives/filter_option.rs`, the one reader of a filter: `read_filter_option` for a `:filter:` line and `read_filter_text` for the body lines a pie chart's wedges and a bar chart's cells are written on, so an option and a content cell report at the same column; the two charts also share `directives/chart_options.rs`, which reads the colour and placement options under each chart's own codes, the latter as its `ChartFigureOption` group), and `inline/` (inline markup, with `inline/roles/{py,c,std_}/` for the cross-reference roles, mirroring `domains/`'s shape). Every role with a fixed name has a `RoleSpec` beside its handler (`roles/spec.rs`: names, domains, what an `:external:` prefix does, a sentence of doc), and `inline/regexes.rs` builds its pattern from it with `role_regex`, so a role is matched by exactly the names it is listed under; `ROLES` is the one list pairing spec, pattern and dispatch `kind`, `scan_patterns` the scan's order (roles, links, the catch-all `named_role`), and the public `role_specs()` what completion lists, and `read_role` what node a role written so makes of a target — see `docs/decisions/044-role-table.md`. `directives/spec.rs` is the table of every directive with a fixed name (roadmap #25's prerequisite): each `DirectiveSpec` is pure data and lives beside its parser (`toctree.rs`'s `SPEC`, …), built from the leaf `spec/vocabulary.rs` alone, next to an `interpret_*` of one shared signature over `directives/invocation.rs`'s `DirectiveInvocation` — the block already split into arguments, options and content by `directives/reader.rs`, the one reStructuredText reader, which ports docutils' `parse_directive_block` over the spec's `arguments`, `takes_content` and derived `takes_options()` (transcribed from each directive's class), reports a shape error under one of three shared `directive.*` codes and reads the directive anyway, so no directive splits its own block and a MyST reader could produce the same invocation (see `docs/decisions/043-directive-table.md`); `spec/registry.rs`'s `DIRECTIVES` is the one list pairing spec and interpreter, so the dependencies run one way, and `dispatch.rs` finds a written name's entry and calls its interpreter — a module left out of the list is dead code, which clippy refuses; domain objects and scope directives have static specs too, beside their parsers, but are resolved against the default domain rather than by the registry: `domains/object_type.rs`'s `OBJECT_DIRECTIVES` (through `object_spec`) and `scope.rs`'s `SCOPE_DIRECTIVES` (through `ScopeDirective::spec`), which `domain_directive_specs` lists with the domain each is qualified in; an entity type's spec is `entity_spec.rs`'s `EntitySpec`, built from the schema's `EntityType` and lending a `DirectiveSpec<'_>` that borrows it (a spec is `DirectiveSpec<'a>`, a built-in's `'static`; a schema-declared choice is `OptionValue::Declared`); `is_builtin_directive_name` is derived from the registry plus the two domain tables. A spec's `options` are generated: each directive declares its options with `directives/options.rs`'s `directive_options!`, one row per option (spellings, `OptionValue`, a sentence of doc), yielding the enum its parser matches with no `_` arm — so an option listed and not read, or read and not listed, fails to compile — and the `OptionSpec`s completion reads; a shared set (`table_options.rs`'s `TableOption`, `chart_options.rs`'s `ChartFigureOption`, `domains/body.rs`'s `DescriptionOption`, `filter_option.rs`'s `ShorthandFilterOption`, …) is an enum of its own included as a wrapped variant, and an option the reference implementation takes and this build does not is a `_ =>` row with no variant, which `classify_options` reports as `directive.unsupported-option` with its advice. Every other option is `directive.unknown-option`, one code for every directive. A row may name the type its value is read into (`Align(ImageAlign) => (["align"], EntityFlowInvalidAlign, "…")`), and the variant then carries the parsed value: the type implements `directives/option_value.rs`'s `OptionValueType`, which both reads a value and says what completion offers, and `classify_options` reports a value that does not read under the row's code (or the shared `directive.invalid-option-value`), so an interpreter never sees a bad one; `Located<T>` keeps the line for a check only the content can make (`:widths:` against the columns). `DirectiveSpec::accepts_further` marks the two directives reading option lines beyond their listed ones (`.. entity-update::`, `.. needservice::`). `directives/code_block/` is the forwarder over the four directives that produce a code block (`block.rs` for `.. code-block::`/`.. code::`, `literal_include.rs`, `highlight.rs`) plus the vocabulary they share (`options.rs`, `dedent.rs`, `emphasize.rs`, `selection.rs` — which `directives/include.rs` also uses — and `diff.rs` for `:diff:`). Only `headings.rs`, `indent.rs`, `context.rs` and `diagnostics.rs` sit flat beside them, being reached from all three. `templating.rs` sits flat too, but is reached from neither: it runs *before* them, turning `rinx_template`'s per-line origins into the `TemplateMap` that `ParseCtx::position` resolves every position through. `parser::parse(path, text, &ctx)` is the one entry point (its `Parsed` holds the `Document` and the `SourceMap` beside it; the crate's tests read the former through the `#[cfg(test)]` `parse_document`), taking the `ParseCtx` (`context.rs`) that every block-level parser threads, carrying the default domain, the injected `ParseFileLoader` that `.. csv-table::`'s `:file:`, `.. include::` and `.. literalinclude::` read through (the crate itself performs no I/O, so the worker supplies the filesystem implementation), and the **`origin`** that turns a slice-relative line/column back into a document position. That last one is why `ParseCtx` is threaded at all rather than just consulted: **any code that dedents or re-slices lines before calling `parse_blocks` must rebase it with `ctx.nested(line_offset, column_offset)`**, or every position inside that block is wrong by the amount trimmed — which is why `collect_directive_body` and `normalize_cell_lines` return how much they trimmed instead of discarding it, and why the list, glossary, table-cell and directive-body parsers each rebase. Content with no source line at all (a `.. csv-table::`'s generated rows) parses under `ctx.synthetic()` and reports positionless diagnostics. `ParseCtx` also borrows the document's `DocumentRoles` table (`document_roles.rs`), its one piece of mutable state: `.. role:: name(code)` and `.. default-role::` fill it in and the inline scan of every later paragraph reads it, which is what makes a role, and a default role, apply from where it is written onwards without a whole-document pass — see `docs/decisions/029-code-role.md` and `docs/decisions/037-default-role.md`. `default_role.rs` sits flat beside it: `DefaultRole`, the role a bare `` `text` `` is read as, validated by asking the inline role table (`inline/interpreted.rs`'s `find_role_kind`) rather than a list of its own, and configured per library by `rinx_library`'s `default_role` attribute (`--default-role`). `parser_config.rs` sits flat too: `ParserConfig`, a library's `rinx_parser.toml` (`load_parser_config`), whose `IgnoredRoles` the catch-all `named_role` arm and the suffix form consult after the schema and the document's `.. role::` definitions, showing an ignored role as its text; a role none of them answers to is refused by `inline/unknown_role.rs` — `interpreted.unsupported-role` when its `UNSUPPORTED_ROLES` table lists it as docutils' or Sphinx's, else `interpreted.unknown-role` — through the shared `RefusedRole` pass. `syntax_recorder.rs`'s `SyntaxRecorder` is borrowed the same way, filling the document's `SyntaxTable` from where each construct is read: `blocks/dispatch.rs`'s block loop, `headings.rs`, `blocks/target.rs`, `directives/marker_syntax.rs` (every marker, before it is routed), the directive reader's options and `inline/syntax.rs` (each match the scan makes, by the node it made). `diagnostics.rs`'s `Diagnostics` is the collector threaded alongside it, holding the diagnostics found, the `.. noqa:` suppressions resolved to line ranges, and the table of files an `.. include::` spliced text in from — the three travel together because a span's `FileId` indexes the third and a suppression matches against it. The parser is meant to be error-resilient (bad input becomes an error/unknown node, not a panic/abort) to support live preview over incomplete documents.
-- `rinx_analyzer` (`crates/analyzer/src/lib.rs`) — builds the per-document and project-wide index: cross-reference targets, document titles, section outlines, the toctree graph, glossary terms, split across `document_index.rs`/`domain_object_index.rs`/`outline.rs`/`project_index.rs`. `declarations.rs` is the exception, not an index phase: `undeclared_assets` (over an injected `DeclaredFiles`) and `disabled_diagrams` are the per-document checks of what a Bazel library declared, here because both the worker and the language server must call them. `build_project_index` is a sequence of *named phases* (`merge_document_analyses` → `find_root_documents` → `assign_section_numbering` → `collect_page_order` → `collect_nav_diagnostics`) because they have a real order dependency: roots cannot be chosen until every toctree is known, and numbering and page order cannot start until the roots are. The first two are cohesive units whose bulk is tests, so each keeps its implementation whole and splits only its `#[cfg(test)]` content into topic-named siblings (`document_index/targets_and_titles_tests.rs`, …). `rinx_index::ProjectIndex::merge` is what folds the per-document analyses together, in the build's index action and in the language server alike. Its rule is a union of claimants per definition, so the result never depends on merge order: a name two documents define is moved to `ambiguous_definitions` and defines nothing, and the `duplicate_definitions` phase warns every claimant — see `docs/decisions/039-duplicate-definitions.md`. `definition_spans.rs` collects where each definition was written, recorded by the indexing walk at the very place it inserts the name, into the `rinx_index::DefinitionSites` (keyed by `DefinitionKey`) a `DocumentAnalysis` keeps beside its index fragment and no fold reads: the written `.index` must never hold a line, or every page would re-render when one moved (`docs/decisions/045-definition-spans.md`, checked by the worker's `tests/integration/definition_spans.rs`).
-- `rinx_uml` (`crates/uml/src/`) — turning a diagram into the `PlantUML` text that gets compiled: `expand` for a written template, `build_flow` for a generated `.. entity-flow::` flowchart and `build_sequence` for a walked `.. entity-sequence::`, all finishing through `assemble.rs` so there is one population of diagram hashes. The renderer is its only caller; it is a crate of its own because it evaluates templates against an owned snapshot of the entity graph with none of the HTML vocabulary around it — an earlier second caller, a separate expansion action, was removed as duplicate work. `snapshot.rs` owns the awkward part: MiniJinja functions must be `Send + Sync + 'static`, so the entity graph is materialized into an owned snapshot before any closure sees it, with every field's value coming from `rinx_index::EntitySubject` so a diagram's `filter()` and a table's `:filter:` cannot disagree. `template.rs` builds the environment; its `uml()`/`imports()` recurse *through* MiniJinja, which is why the import chain and the first-failure slot are shared `Arc`s rather than stack locals.
-- `rinx_renderer` (`crates/renderer/src/`) — AST + `rinx_index::ProjectIndex` to HTML, in four trees mirroring `parser`'s shape. Its diagnostics carry the `Span` the offending `InlineNode` was parsed with; `inline/ref_text.rs`'s `RefText` bundles the display/target/span triple every index-resolved role passes to its renderer. `lib.rs` holds `RenderCtx`, `RenderOutput` and the `render()`/`render_with_config()` entry points (with the diagnostics it reports in `broken_link.rs`); `highlight.rs` sits flat at the root as the one place `syntect` is called — the same containment `math.rs` gives `math-core`, `octicon.rs` gives `octicons-pack` and the `chart/` tree gives `plotters` (`pie.rs`, `bar/`, the shared `style.rs`, and `placed_text.rs`, which writes chart text itself because `plotters` can only turn text by quarter turns), and for the same reason: the backend must never reach a `.ast` file. It returns **one HTML string per line**, because `:linenos:` and `:emphasize-lines:` need to address a line on its own, and it rebalances each line's `<span>` tags so a scope spanning several lines cannot nest illegally around that per-line markup; `blocks/` renders body content, its `dispatch.rs` walking the node tree and delegating to one module per construct (`tables.rs`, `data_table.rs` for `list-table`/`csv-table`, `admonitions.rs`, `doctest.rs`, `glossary.rs`, `nav.rs` for local toctrees, `entity_flow.rs` for the generated flowchart, `entity_sequence.rs` for the walked sequence diagram, `entity_pie/` and `entity_bar/` for the two charts — both counting through the flat `chart_counts.rs` and placed by the flat `chart_figure.rs` — and `domain_object/` for the definition directives; `diagram_figure.rs` is the picture markup every *compiled* diagram shares, which a chart deliberately does not use since it has no `<img>`); `inline/` mirrors that for inline markup, one file per role behind its own `dispatch.rs`; `page/` wraps a rendered body in the MiniJinja-templated chrome (`layout.rs`, `nav_hrefs.rs`; `document_page.rs`'s `render_document_page` is the one call assembling a document's page, shared by the build's render action and the language server's preview) and renders the general index (`genindex.rs`). `resolution/` (domain-object, `:option:`, document and `:any:` cross-reference lookup — the last asking the other three rather than repeating their searches, see `docs/decisions/025-any-role.md`; the document one is shared with `:doc:`, see `docs/decisions/026-doc-role.md`) and `nav/` (toctree expansion, entry resolution, section numbers, prev/next, and `collapse.rs`, which trims the sidebar to the current page's branch per `rinx.toml`'s `collapse_navigation` — a post-pass, so the walk stays shared with in-page toctrees; see `docs/decisions/031-collapsed-navigation.md`) stay flat at the root because both `blocks/` and `page/` reach them; `asset_href.rs` likewise, the one `_images/`/`_downloads/` href computation shared by `blocks/`'s pictures and `inline/`'s `:download:`. `written_reference.rs` is the reverse direction's half: `written_uses` lists a document's references, toctree entries and named references (`name_`, an alias target's `.. _a: name_`) as owned `WrittenUse`s, each scoped one carrying the scope it was written in and each named one the alias chain it follows in its own document (`hyperlink_target.rs`'s `alias_chain`, over the destinations `written_link_targets` reads, which the page's `DocumentHyperlinkTargets` reads too), and `UseResolver` (a `ReferenceResolver` holding no page) resolves them later — what the language server's find-references asks of documents it holds no parse of. `config.rs` holds `SiteConfig`, deserialized from `rinx.toml` — deliberately only metadata (project name/version), never file paths, see "Config vs CLI flags" below. `reference_target.rs` is the public `ReferenceResolver`, answering where one reference leads (`ReferenceTarget`: a title and a `Destination`) without rendering a page — the language server's question — and, through `resolve_as`, where it would lead had it named another target, in the scope it is written in, which is how completion checks a candidate; `inline/target.rs` dispatches it to the same role modules, each of whose writers is split into a resolution (`resolve_label`, `resolve_doc`, …, or the `resolution/` resolvers) that its HTML and its `*_target` function share, so an editor cannot describe a link the page would not write.
-- `rinx_lsp` (`crates/lsp/src/`) — the language server `rinx lsp` serves, on rust-analyzer's synchronous `lsp-server`/`lsp-types` (ADR-038). `server/` follows the `process_*`/`cmd_*` split: pure handlers (`handlers.rs`'s `handle_notification`, `handle_request`, `initialize_result`) from state plus one message to the messages to send, `state.rs`'s `ServerState` that turns a change into publishes, and the thin `run` loop over a `Connection` (`run.rs`), which also selects on the events of the workspace scan's thread (`scan.rs`) — so its tests drive the handlers directly, plus whole sessions over `Connection::memory()`; the real `rinx lsp` process — stdio, the command line and the exit code the protocol asks for (1 unless shut down) — is tested by the worker's `tests/integration/lsp.rs`, and `tests/integration/lsp_parity.rs` checks over every document under `examples/` and `docs/` (plus its own fixtures in `crates/worker/tests/parity/`, which hold the mistakes a published page must not) that the server reports what `rinx parse` warns about, file by file (ADR-038's promise), relaxed by name only for the gaps a roadmap step still has to close. `position.rs` is the one place rinx's 1-based character columns become the protocol's 0-based UTF-16 (or negotiated UTF-32) ones; `diagnostics.rs` parses an open document and converts what the parser reported — dropping what a `.. noqa:` silences through `rinx_ast::retain_reportable`, and linking each code to its section of the generated `docs/diagnostics.rst` (`codeDescription`, anchored by `rinx_ast::section_slug`); `files.rs` is its overlay `ParseFileLoader` — an open buffer first, the disk second — which also records every file a parse read; `uri.rs` converts between `file:` URIs and paths. `project/` is the workspace index (roadmap steps #4 and #10): `discover.rs` finds a folder's projects in one walk — a Sphinx project at each `conf.py`, the folder itself for what lies under none, a file belonging to the nearest — and each one's documents (skipping hidden and symlinked directories and whatever the project excludes, never consulting `.gitignore`); `model.rs`'s `ProjectModel` (a `ProjectSource` plus `ProjectSettings`) is what every feature reads — a folder's and a `conf.py`'s documents are the files their rules match (`Membership::Matched`), a Bazel site's exactly the `srcs` its manifest lists (`Membership::Listed`), each parsed with its library's `ParseSettings` through `ProjectModel::parse_settings` (a library's `jinja_context` among them, when it sets `jinja = True`, so its documents are rendered as its parse action renders them — roadmap #20); `bazel_manifest.rs` reads a `rinx_site`'s `lsp_manifest.json` (written by `rules/site.bzl`'s `lsp_manifest` output group from what each `rinx_library` encodes into `RinxInfo.lsp_libraries`) into one, and `server/bazel_manifests.rs` gets the manifests from the client with `rinx/bazelManifests` (the VS Code extension's `manifests.ts` builds them; `rinx lsp --check --manifest` grants them) — a listed file belongs to its site wherever it lies (`projects.rs`'s `holding`), so the walk leaves it alone; `sphinx_conf.rs` fills it from a `conf.py` through `rinx_pyconf`, reporting what it could not read as `conf.*` diagnostics in `conf.py` — or, where reading fell short and the client granted an interpreter (`rinx/confInterpreter`; `server/conf_runs.rs`, opt-in and trusted workspaces only, ADR-038 §4), from what `conf_eval.rs` found running it with the embedded `conf_dump.py`, each value's `repr` read back through the same literal reader, so a run is checked as a written value is; and `needs.rs` turns a declared sphinx-needs configuration (with the `ubproject.toml`/`schemas.json` it names, recorded as `ProjectSettings::config_files` so editing one reloads the project) into the `ParseSettings::schema` every parse, fold, render and completion of the project reads, and `exclusion.rs` is Sphinx's `exclude_patterns`/`include_patterns` matching; `strictness.rs`'s `Strictness` (ADR-038 §5, roadmap #11) is the one place a diagnostic's severity is decided — an unknown directive or role a declared extension provides becomes *Information* (as do a role `conf.py`'s `extlinks` names, read from its keys alone through `rinx_pyconf`'s `BoundValue::Dict`, and a Sphinx role rinx lacks, `interpreted.unsupported-role`), a broken domain reference a declared extension may define a *Hint* — keyed on the `DiagnosticSubject` the parser and renderer attach (`rinx_ast::Diagnostic::subject`, never the message), against the extension table `extension_profile.rs` loads from `extension_profiles.toml` (data, compiled in; a test loads it); every document is named `<docname>.rst` whatever its `source_suffix`, the project mapping a name back to its file. `scan.rs` parses and analyses the documents in parallel with rayon through the same `parse_source` an open document goes through, with its project's parse settings, and `index.rs`'s `Project` keeps one `rinx_analyzer::DocumentAnalysis` per document and folds them with `build_project_index_from_analyses` — a fold rather than a merge, so a deleted label is really gone; the fold's own findings (toctree, duplicate definitions, entity graph — the build's `index` warnings) are cached with it by document and published with the render tier, which `lsp_parity.rs`'s project test compares over `crates/worker/tests/parity_project/`. `server/projects.rs` holds the server's projects by a `ProjectId` no other project ever gets: until the scan's `ScanEvent::Projects` arrives a folder is one project with no configuration, and finding a folder's projects again (that event, or a `conf.py` changing on disk) keeps every project whose model is unchanged, forgets from it what now belongs elsewhere, and re-reads the documents the graph diagnoses under the folder. One parse per change feeds both a document's diagnostics and its index entry, and a closed document that includes an open file is diagnosed for that file only. `progress.rs` holds the `rinx/status` notification and the `$/progress` state machine. `project/intersphinx.rs` reads a `conf.py`'s `intersphinx_mapping` (only when `extensions` declares intersphinx) and `project/inventories.rs` loads each entry's sources in order — a file from the disk, an address through the `rinx/fetchInventory` request `server/inventories.rs` sends (once per address, and only to a client passing the `fetchInventories` initialization option: the server never touches the network, and the VS Code extension's `inventories.ts` asks consent, downloads and caches) — into the `ExternalInventory`s a `Project` moves into its fold whole; one not loaded lowers broken domain references to Hints through `Project::strictness`. `server/check.rs`'s `check_folder` drives the same state in-process over a whole folder — scan, open every document, drain the render queue — for `rinx lsp --check <folder>`, which the CPython benchmark gates on (`MAX_LSP_WARNINGS`); over stdio only a timeout could say when rendering is done. One parse can report on several files, since a diagnostic inside an `.. include::`d fragment carries its `FileId`, so `diagnostics.rs` returns them by URI and `includes.rs`'s `IncludeGraph` decides what each file shows: what the open documents including it found there, or else its own parse. An edit re-diagnoses the open documents that read the edited file. The disk is watched too, when the client allows dynamic registration: `state.rs` registers one `**/*` watcher and treats each `workspace/didChangeWatchedFiles` event as an edit of the documents it touches (filtering by whether the file's project would take it as a document, the scan's own rule), and a closed document whose file is gone is `forget`-ten by its `Project` — which keeps a tombstone until the scan's result is recorded, so a document deleted mid-scan is not brought back. `reference_at.rs` finds the reference whose span holds a position and `hover.rs` turns its `rinx_renderer::ReferenceTarget` into the hover (title, and a link to the target's file), read from the document's latest parse rather than waiting for the render tier; a target naming an entity (`ReferenceTarget::entity`) shows `entity_hover.rs`'s text instead — `rinx_index::EntityFields`, the list the page's entity box draws — which is also what hovering a relation's id or an entity's own marker (`entity_at.rs`) shows, and what documents its completion items. `completion/` answers a completion: `context.rs` and `targets/` a role's target — the role read by the parser itself (`rinx_parser::read_role`, or, for a domain role, `:option:`, `:any:` and a bare backtick read as the default role, from a probe parsing the text above the cursor with the target closed, which holds the scope and the `.. default-role::` in force there), `targets/candidates.rs` listing the targets of its kind from the index and the inventories (`rinx_renderer::inventory_entry_types`) with the spellings each might be written in, and `targets/select.rs` keeping only those `ReferenceResolver::resolve_as` leads somewhere, each written in its shortest spelling leading to the same place, nearest first, cut at 200 and marked incomplete so the editor asks again — `directive_context.rs` and `directive_items.rs` a directive's name, option or option value from the parser's specs (a relation's ids from `entity_id_items.rs`, by the `to` `OptionValue::EntityIds` carries) (`rinx_parser::directive_specs`, `domain_directive_specs`, an `EntitySpec` per schema type, a bare domain-object name resolved by `rinx_parser::directive_spec`; `.. entity-update::`'s fields from the entities `rinx_analyzer::matched_entities` finds), so the editor never offers what the parser does not take; `role_name_context.rs` and `role_name_items.rs` a role's name, from `rinx_parser::role_specs` spelled for the default domain, the schema's entity roles, and the `.. role::` definitions the parse of the text above the cursor holds (`diagnostics.rs`'s `parse_prefix`, over the parser's `parse_prefix` and its `RolesInForce`). `document_symbol.rs` is the outline (`textDocument/documentSymbol`), read from the open document's latest parse by the lines its `SourceMap` records for each definition: sections nested by level, the domain objects and entities written in them, an included definition on its `.. include::` line, nested or flat by the client's `OutlineShape`; its symbol types are its own, since `lsp_types`' cannot be built without naming a deprecated field. `Project::index_and_definitions` lends a fold beside the `Definitions` over every document's `DefinitionSites`, which `:ref:` completion reads to name a label's fragment. `project/references.rs` is find-references' reverse index: each `IndexedDocument` keeps its `DocumentUses` (the renderer's `written_uses` plus its relation option ids and the ids its `.. entity-update::` arguments name, placed at the argument), and `Project::uses_of` resolves them against the current fold through `UseResolver`, keeping each document's resolution until the fold changes or that document does; the top-level `references.rs` turns the `UseSite`s into the response's locations. `project/constructs.rs` is what a project's documents wrote that this build does not support (roadmap #36): each `IndexedDocument` keeps its `DocumentConstructs`, read from its whole `diagnostics` list (by `DiagnosticSubject`, `.. noqa:` or not), its `Directive::Malformed` nodes and `SourceMap::ignored_roles` (an ignored role being plain text in the document), and `Project::construct_tally` folds them into the `ConstructTally` `rinx lsp --check` prints as `analysis`, which `scripts/benchmark.py` reads. `analysis.rs` answers the `rinx/analyseProject` request from that tally: `AnalysisReport`, naming each construct's declared extension (`Strictness`) and its row of `docs/compatibility.rst` through `project/compatibility_links.rs` (data in `compatibility_links.toml`, compiled in; a test holds it to the page and to what the parser implements, and an extension with a row is one rinx does not support entirely), which the VS Code extension's `src/analysis.ts` draws as the *Rinx: Analyse Project* panel. `project/symbols.rs` is the workspace search's list (`workspace/symbol`, roadmap #32): each `IndexedDocument` keeps its `DocumentSymbols`, its definition sites named from its own `DocumentAnalysis::index_fragment` (so a name two documents define is listed under both), and the top-level `workspace_symbol.rs` matches `Project::symbols` with frizbee, ranks, cuts at 200 and places only those. Rename (ADR-046) asks the same question: `rename.rs` is pure — `Renamed` (a label, entity or equation; every other kind refused), where the name stands in each `UseSite` by its `UseForm` (a role's target through `rinx_parser::role_target_range`, a named reference's name, an id on a relation line, an exact name) and in a definition's `DefinitionSite::name`, and the `RenameRefusal` an editor shows — and `server/renames.rs` collects the definition and every use, reads each place from the open buffer or disk and refuses the whole rename unless each still names the definition, then answers `prepareRename` and a `WorkspaceEdit` (versioned `documentChanges` for a client taking them). The names' characters come from the parser's `SourceMap`, by the `NameId` each `rinx_ast::Named<T>` carries; `IndexedDocument::of` and `DocumentUses::of` (through the renderer's `written_uses`, which reads an alias target's line from it) take the map beside the document, and `rinx_analyzer::DocumentAnalysis::of` an `Option<&SourceMap>` (`None` in the build, which reads no site). `folding_range.rs` (`textDocument/foldingRange`) and `semantic_tokens.rs` (`…/semanticTokens/full` and `/range`, with the legend `initialize_result` announces) read the open document's `rinx_ast::SyntaxTable` (its parse's `SourceMap`) alone, its own file's entries only (ADR-047); the outline reads a directive's extent from it too. `definition.rs` turns the same `ReferenceTarget` into a go-to-definition: the target names its definition by the index's `DefinitionKey` (`ReferenceTarget::definition`, set by each role's resolution), an entity id in a relation option is read as one too (`state.rs`'s `relation_id_at`, beside the hover), and the server's `written_at` looks up its site through `Project::definitions` — the line it was written on, in an `.. include::`d fragment's file when it was — with the start of the document's file for a `:doc:` or a definition with no site; a `LocationLink` from the whole reference when the client announces `linkSupport`. Hover's file link carries the same line as a `#L<line>` fragment. `code_action/` holds the quick fixes, each edit computed with its action. `dependency.rs` fixes a toctree entry outside `deps` (roadmap #21, ADR-041): `project/dependency_fix.rs`'s `missing_deps` finds the library from the `DiagnosticSubject::UndeclaredToctreeEntry` the finding carries — the site's, else `project/build_file/srcs.rs`'s `library_listing` over the build file of the document's package — and `project/build_file/`'s `add_deps` edits the writer's `deps` from `rinx_pyconf`'s tokens, never buildozer; `rinx lsp --check` lists these fixes of the build (`quick_fixes`, from `ServerState::build_fixes`), which `tests/test_dependency_quick_fix.sh` applies against the real build. `noqa.rs` writes a `.. noqa:` for every other finding a comment can silence (roadmap #35): `diagnostics.rs`'s `shown_findings` is the one list of what is shown and suppressible (`to_lsp_diagnostics` adds the undeclared and the include summaries to it), and the fix writes before the innermost `rinx_ast::SuppressionSite` covering the finding that only its indentation precedes, or extends the listed `.. noqa:` already there; `IncludeGraph::shown_from` names the parses whose findings a fragment shows, so a fragment's squiggle is fixed in the fragment. `crates/worker/tests/integration/noqa_quick_fix.rs` applies it to every finding of `crates/worker/tests/noqa_fix/` and the parity fixtures over stdio. `preview.rs` answers the `rinx/preview` request with a document's whole page (see "Live preview / LSP direction" below), and `preview_link.rs` the `rinx/previewLink` request with the source one of its links leads to, beside `render.rs`, which renders one for its findings only. `include_summary.rs` adds, on each `.. include::` that brought problems in, an editor-only *Information* diagnostic linking to them — found through `rinx_ast::IncludeSite`, which the parser records per include (by file, not by diagnostic index, because substitutions and refused roles are reported by post-passes) in the `SourceMap` `diagnostics.rs`'s `ParsedSource` keeps beside its document. `migration/` is roadmap #37 (ADR-049): `plan.rs`'s `plan_migration` turns a scanned Sphinx `Project` into the files of its Bazel build — the library declaring each document's `IndexedDocument::reads` and `required` (`rinx_analyzer::required_declarations`, the inverse of the build's `undeclared_assets`/`disabled_diagrams`), `srcs.rs`'s glob excluding exactly the package's `.rst` files that are no documents rather than a translation of `exclude_patterns`, `rinx_toml.rs` from `conf.py`'s settings and `project/conf_facts.rs`'s `ConfFacts` (what only a migration reads, quietly), `module_bazel.rs`/`package.rs` the enclosing module's dependency or a module at `conf.py`'s directory — and `MigrationFinding`s for what it leaves out; `init.rs`'s `init_from_sphinx` runs discovery and the scan in-process for the worker's `init`, and `code_action/migrate.rs` offers the same plan as the `source.migrateToRinx` source action to a client whose `EditShape` is `CreatingFiles`, while `rinx/analyseProject` reports it (`analysis.rs`'s `MigrationReport`). A folder that is no Bazel workspace but holds a Sphinx project migrated into a module of its own is asked about at that directory (`bazel_manifests.rs`'s `bazel_workspace_of`). The worker depends on it, never the reverse — the worker's `commands/` internals (`ParseInputs`, ...) are therefore out of its reach until lifted into a crate both share, as the roadmap's later steps do.
-- `rinx` (`crates/worker/src/`) — `main.rs` is the CLI entry point, dispatching into `commands/`, which holds one file per subcommand, each pairing a pure `process_*` with its file-I/O `cmd_*` wrapper per the split described above; `commands/cli_args.rs` holds the shared flag-parsing helpers, `commands/parse_files.rs` the filesystem loader every parse-time file read goes through, `commands/diagnostics.rs` the warning formatting shared by `parse` and `render` (one shape for both: `warning: path:line:column: code: message`), with `rinx_ast::retain_reportable` applying `.. noqa:` immediately before it — the filtering runs *inside* `process_render` rather than in its caller, so a suppressed link is invisible to the warning, the `--strict-links` failure and the `--warnings-output` sidecar alike. `lib.rs` holds `process_rst()`, `doctest_plan.rs` (see "Doctests" below) and `domain_warnings.rs`. What fails a Bazel build because a library did not declare it — a toctree entry outside `deps`, a diagram without `diagrams = True`, an undeclared image or download — is printed as `error: path:line:column: code: message` by `validate_toctree`, `parse` and `validate_assets`, from the shared checks in `rinx_toctree` and `rinx_analyzer`'s `declarations.rs`, never subject to `.. noqa:`.
+The recurring design is the **cache firewall**: a cheap per-document action extracts only what a costly step depends on (doctest plans, embedded images, `.puml` diagram sources), so an unrelated edit leaves its output bytes identical and the costly step stays cached. Keep new expensive steps behind one.
 
-### Bazel rule pair: library vs. site (`rules/library.bzl`, `rules/site.bzl`, `defs.bzl`)
+### Config vs. CLI flags (`docs/decisions/001-template-system.md`)
 
-Mirrors `cc_library`/`cc_binary`: `rinx_library` runs Phase 1 (parse, toctree-validate, extract doctests, embed assets) per `.rst` file and exposes a `RinxInfo` provider carrying `.ast` files — plus `diagram_ast_files`, the subset whose library set `diagrams = True`. `rinx_site` collects everything transitively from `deps`, runs the single Phase 2 index action, then one render action per `.ast` file (which, for a `diagram_ast_files` document, also writes its `.puml` sources, followed by a compile action), bundles images, and copies CSS. Diagrams are the site's job rather than the library's — see "Diagrams" below.
+`rinx.toml` holds only metadata, never file paths: Bazel sandboxes relocate files, so paths are always CLI flags / rule attributes (`--template`, `--config`, `template =`, `css =`). Don't "fix" this by putting paths into the TOML. A value naming a language or a URL the browser fetches is fine.
 
-Eleven independent dependency mechanisms, don't confuse them:
-- **`deps` on `rinx_library`** — strict, DAG-enforced, required *only* for docs pulled in via `.. toctree::`. This is what `validate_toctree` checks against (`--allowed`).
-- **Cross-references / hyperlinks in text** — not declared in `deps` at all; stored as symbolic markers in the Phase-1 AST and resolved later, globally, during the Phase 2 index step. This is why cyclic hyperlinks between docs are fine but cyclic toctrees are not.
-- **`parse_data` on `rinx_library`** — files, not documents: everything the *parser* reads *at parse time*. That is the `.csv` behind a `.. csv-table:: :file:`, the templates a Jinja `{% include %}` reads (see `jinja` below), and the sources `.. include::` and `.. literalinclude::` splice into a document. They join the parse action's inputs, so a path resolves inside the sandbox; an undeclared file is simply absent and the parse fails. Nothing about this is a dependency on another library. Two traps worth knowing: an `.rst` reached by `.. include::` must **not** also appear in `srcs`, or it is published as a page of its own as well as being spliced in; and a `.. toctree::` written *inside* an included fragment still needs its documents in `deps`, because `validate_toctree` runs on the already-merged AST. Unlike `images` below there is no cache firewall here — an included file's text really is part of the including document, so editing it re-parses and re-renders every page that includes it.
-- **`rst_prolog` / `rst_epilog` on `rinx_library`** — Sphinx's settings of those names, as *files*: reStructuredText parsed at the start (after the leading field list) and end of **every** document of the library, so each is an input of every parse action and editing one re-parses the library. Not spliced into the text: `parser/blocks/splice.rs` parses each as a segment of its own under a `FileId` named after the file, so the document's positions never move and a mistake in one names its own line. The `srcs` trap of `.. include::` applies. The language server reads the same settings as `conf.py` strings, named `<rst_prolog>`/`<rst_epilog>`. See `docs/decisions/040-rst-prolog.md`.
-- **`images` on `rinx_library`** — the pictures a `.. image::`/`.. figure::` shows. Unlike `parse_data` these are *not* parse-action inputs: parsing succeeds whether or not the file exists, because nothing reads it then. They ride the provider to the site rule, which copies them into `_images/` keeping their source-root-relative path (not Sphinx's flattened basename — see `docs/decisions/007-image-assets.md`), and an undeclared one fails the site's `validate_assets` action. A `:loading: embed` image is additionally read by the per-document `embed_assets` action described below.
-- **`downloads` on `rinx_library`** — the files a `:download:` role links. Like `images` minus the embedding: read by *no* action but the site's `RinxBundleDownloads` copy into `_downloads/` (source-root-relative path again), so editing one re-renders no page — the page's `href` follows from the path as written. An undeclared one fails `validate_assets` as `download.undeclared`; that action runs for every site, since a document can name a file in a site that bundled none. It finds the roles in the `.ast` JSON, because `walk_nodes` does not descend into inline content. See `docs/decisions/027-download-role.md`.
+### Documentation, compatibility, changelog
 
-- **`diagrams` on `rinx_library`** — whether its documents may hold
-  PlantUML diagrams. **Off by default**, and that is the point: Bazel cannot
-  know before reading a document whether it draws anything, so without an
-  opt-in every document of every project would pay for the diagram pipeline.
-  A library that leaves it off gets no diagram actions at all; a diagram
-  written in one fails its parse as `uml.diagrams-disabled`, naming the
-  attribute. Keep diagram documents in a library of their own to keep the
-  cost on them — `examples/entities/BUILD.bazel`'s `diagram_docs` does, the
-  same way `doctest_docs` isolates doctests.
-
-- **`jinja` / `jinja_context` on `rinx_library`** — whether its `.rst`
-  sources are rendered as Jinja templates before they are parsed, which is what
-  a Sphinx project gets by connecting the `source-read` event in its
-  `conf.py` — see `docs/decisions/013-source-templating.md`. **Off by default**,
-  unlike the extension directives: a directive name is a construct nobody
-  writes by accident, but `{{` and `{%` are ordinary characters and a page
-  *about* templating would otherwise become a syntax error. The templates an
-  `{% include %}` names are ordinary `parse_data`, with the same `srcs` trap
-  `.. include::` has — but note a template name resolves against the **source
-  root**, as Jinja's own loader does, not against the document that includes
-  it. `jinja_context` is the `html_context` such a project passes to the
-  render; a name bound by neither it nor a `{% set %}` is reported rather than
-  emptied.
-
-- **`entity_schema` on both rules** — the project's construct vocabulary, not
-  content. Read at *parse* time (it is what makes `.. req::` a directive), so it
-  is declared on `rinx_library`, and again on `rinx_site` whose
-  index action derives back-links from it and whose render actions read its
-  labels. Both must name the same file; a mismatch is `entity.schema-mismatch`.
-  Unlike `parse_data` there is no cache firewall and no per-directive scope:
-  editing it re-parses every document in the library. Note this is a *config
-  file the parser reads* — there is nothing odd about that, and its
-  `[import_keys]` table is a second thing the parser takes from it. What a
-  config file cannot do is declare a build input, which is why a keyed
-  `needs.json` still needs its `parse_data` entry.
-
-- **`parse_config` on `rinx_library`** — the library's `rinx_parser.toml`,
-  what it tells the parser beyond its attributes (today `ignored_roles`, the
-  roles shown as their text). A parse-action input like `entity_schema`, so
-  editing it re-parses the library; kept apart from the site's `rinx.toml`,
-  which only render actions read, so each file is a cache firewall for the
-  other. Loaded by `rinx_parser`'s `load_parser_config` for the worker's
-  `--parse-config`, the manifest's libraries and the language server's
-  legacy mode, which reads the same file beside `conf.py`.
-
-- **`inventories` on `rinx_site`** — other documentation sites this
-  one links into (intersphinx), each a `rinx_inventory` pairing a
-  pinned `objects.inv` with its `base_url`. Not documents and not parse
-  input: only the site's index action reads them, and a reference no document
-  defines resolves into them while rendering. Nothing is fetched — `src` is a
-  vendored file, an `http_file` with `sha256`, or another site's `inventory`
-  output group. See "Inventories" below.
-
-(One more attribute, `py_deps` on `rinx_doctest_tests`, is *not* a mechanism of rinx's own — it is rules_python's ordinary `py_test.deps`, surfaced so documented code is importable while doctests run. It has nothing to do with any of the above.)
-
-See `examples/BUILD.bazel` + `examples/team_a`, `examples/team_b` for a concrete two-team library/site setup, and `tests/test_strict_deps.sh` for how the strict-toctree-dep enforcement is tested (it mutates `examples/BUILD.bazel` temporarily to prove a missing dep fails the build). `tests/test_parse_data.sh` does the same for `parse_data` (checking all three of its readers: `csv-table :file:`, `include` and `literalinclude`), and `tests/test_image_data.sh` for `images` (`tests/test_download_data.sh` for `downloads`); the first two have to edit the referencing `.rst` as well, since Bazel does not invalidate an action when an input is merely *removed*, so the affected action must be forced to re-run before the missing file is observed. Note `examples/BUILD.bazel` declares *two* libraries in one package: `root_docs` and the `doctest_docs` it depends on — see the doctest section below for why that split exists.
-
-### Doctests: rendered by the build, executed by tests (`rules/doctest.bzl`, see `docs/decisions/002-doctest-execution.md`)
-
-The `sphinx.ext.doctest` family (`doctest`, `testcode`, `testoutput`, `testsetup`, `testcleanup`) is split across Bazel's build/test line, and the split is the design:
-
-- **Rendering** happens in the normal pipeline. `bazel build //examples:site` produces HTML for these blocks and never starts a Python interpreter.
-- **Execution** is `rinx_doctest_tests`, a macro emitting one stock `py_test` per `rinx_library`. It is opt-in and enforced by `tests/test_doctest_isolation.sh`.
-
-Between them sits the **cache firewall**. `rinx_library` declares an `extract_doctests` action per document (`crates/worker/src/doctest_plan.rs`) producing a `.doctests.json` that keeps only what changes how the code runs — never `:hide:`, the trim tri-state, or line numbers. A prose edit re-runs that cheap AST walk but leaves its bytes identical, so `bazel test` reports `(cached)` and no interpreter starts. `tests/test_doctest_cache_firewall.sh` asserts both directions.
-
-Two details worth knowing before touching this:
-
-- The plans live in a **non-default output group** (`doctest_plans`), so building a site never produces them. The macro consumes that group through a `filegroup` — this is the whole interface between the two files, and the reason neither needs the document list.
-- Granularity is the library, not the document: a code edit in one document re-runs its library's other documents, and they all share one interpreter. **Split the library** to narrow that — `examples/BUILD.bazel` keeps `doctests.rst` in its own `doctest_docs` library for exactly this reason.
-
-`scripts/doctest_runner.py` drives CPython's stdlib `doctest` rather than reimplementing its comparison semantics. Note the one non-obvious mechanism: `doctest` hard-codes `compile(..., "single", ...)`, which rejects the multi-statement code a `testcode` block normally holds, so the runner replaces the `compile` that `doctest`'s module globals resolve — the same workaround Sphinx uses.
-
-### Embedded image assets (`docs/decisions/007-image-assets.md`)
-
-`:loading: embed` inlines a picture's bytes into the page as a `data:` URI, and where that reading happens is the design. It cannot be the renderer (which performs no I/O), and it must not be the parser (whose `.ast` is a cache unit and a live-preview payload, so base64 must never enter it). So `rinx_library` runs a per-document `embed_assets` action — `crates/worker/src/commands/embed_assets.rs` — producing a `<doc>.embeds.json` of `resolved path -> data: URI`, which the render action takes via `--embeds`.
-
-That is the same **cache firewall** shape as the doctest plans: every declared image is an input to the embed action (Bazel cannot know at analysis time which one a document embeds), so an image edit re-runs that cheap AST walk everywhere, but its bytes only differ for a document that actually embeds the changed file — and only that page re-renders. `tests/test_image_data.sh` and the ADR cover the rest.
-
-Keys are the path from `ast::AssetUri::resolve` (shared with `:download:`), which the embedder, the `validate_assets` check and the renderer all call, so no two phases can disagree about where `../shared/logo.png` points.
-
-### Importing entities (`docs/decisions/016-needimport.md`)
-
-`.. needimport::` reads a sphinx-needs `needs.json` and splices the needs in it
-into the document as ordinary `Directive::Entity` nodes — the third splicing
-directive, and the only one whose nodes are not reStructuredText the author
-wrote. Four things to know:
-
-- **It is a bridge, so it takes sphinx-needs' name *alone*.** Every other
-  borrowed construct here gets a local name plus the foreign spelling as an
-  alias; this one deliberately does not, so `entity-import` stays free for the
-  richer construct that would read this project's own format and carry named
-  sections. The diagnostic family is `needimport.*` for the same reason: here
-  the spelling is the construct.
-- **Importing at parse time is what makes every later phase free.** The
-  analyzer, index and renderer were not touched: an imported need is indexed,
-  is a `:ref:` target, contributes derived back-links and is listed by
-  `.. entity-table::`/`.. entity-flow::` because it is an ordinary entity of
-  the importing document. Merging an external graph at index time was rejected
-  — an entity no document holds has no anchor and nowhere to render.
-- **The schema is the authority over the file.** `needs_json.rs`'s
-  `INTERNAL_FIELDS` lists sphinx-needs' ~34 bookkeeping keys, ignored by
-  design; any *other* undeclared field is reported rather than dropped. Values
-  go through the same `parse_attribute_value` funnel a written option does, via
-  `directives/entity_fields.rs` — which exists so a written `.. req::` and an
-  imported one cannot validate differently.
-- **The file is ordinary `parse_data`, and nothing is fetched.** A URL argument
-  is refused by name. JSON has no line numbers, so every diagnostic lands on
-  the `.. needimport::` line and imported prose parses under `ctx.synthetic()`,
-  reporting positionless — as a `.. csv-table::`'s `:file:` rows already do.
-- **An argument may be a *name*, resolved through the schema's
-  `[import_keys]`** — sphinx-needs' `needs_import_keys`. It lives in
-  `entities.toml` rather than in the build file because the alias is written in
-  a document and must travel with it; a value resolves relative to the schema
-  file, or to the source root with a leading `/`. The worker resolves it once
-  (`commands/entity_schema.rs`) and `ParseCtx::import_keys` carries the result.
-  It is deliberately outside the schema fingerprint: parse-only, so no
-  `entity.schema-mismatch`.
-- **An export's unset fields are silent.** A `needs.json` writes every
-  registered option for every need, so an undeclared field with an empty value,
-  an explicit `null`, and a back-link this build *derives* are all skipped; a
-  field carrying a real value is still reported. Measured against the benchmark
-  corpus, where the alternative was 19 spurious names per need.
-
-### Inventories (`docs/decisions/023-inventories.md`, `docs/intersphinx.rst`)
-
-Every site writes an `objects.inv` (`commands/inventory.rs`, a projection of
-`ProjectIndex` using the renderer's own anchor functions), and links into
-other sites' through `inventories`. Three things to know before touching it:
-
-- **The index action reads inventories and the index holds them**, as
-  `ProjectIndex::external_inventories`, in declaration order and never merged.
-  They are **pruned** to the
-  targets some document writes (`ExternalInventory::retain_referenced`, fed
-  from each AST's JSON by `written_reference_targets`): stored whole, Python's
-  inventory cost every render ~18 ms. Pruning is exact only because an
-  external lookup never scope-qualifies a name — keep it that way, or widen
-  the pruning with it.
-- **Local always wins, then Sphinx's order** (`renderer/src/resolution/
-  external.rs`): the target as written in every inventory, then a `name:`
-  prefix. `:external:`/`:external+name:` are markup, stripped by the parser's
-  one `EXTERNAL_PREFIX` pattern into an `InventorySelector` on the four
-  index-resolved inline nodes.
-- **A label's link text and anchor come from the index**: `target_titles`
-  (what a bare `:ref:` shows — the heading or caption under the label) and
-  `target_anchors` (for a target whose `id` is not its name, e.g. an entity's
-  `entity-<id>`), read through `ProjectIndex::target_anchor`.
-
-### Numbering: `numfig` and `:numref:` (`docs/decisions/028-numref-role.md`)
-
-`numfig = true` in `rinx.toml` numbers every *captioned* figure, table and code
-block (labelled or not, as Sphinx does), and `:numref:` shows a number. Three
-things to know before touching it:
-
-- **One function decides which elements are numbered**:
-  `rinx_ast::enumerable_elements`. The analyzer stores numbers by an element's
-  position in its result (`ProjectIndex::element_numbers`), and the renderer's
-  `numbering.rs` calls it again on the same document to find each caption's
-  number by the directive's address. Never count elements separately on either
-  side.
-- **Input merges, numbers are recomputed.** `numbering_steps` and
-  `numref_targets` are per document; `element_numbers` is produced by the
-  `assign_element_numbers` phase (a port of Sphinx's `assign_figure_numbers`),
-  which runs after section numbering.
-- **A refused `:numref:` title is reported while parsing** through an
-  intermediate `InlineNode::RefusedRole`, which
-  `parser/blocks/refused_roles.rs` reports and lowers after substitutions — the
-  one node and pass every refusable role shares (`:pep:` too), its
-  `RoleRefusal` saying which role and how to lower it. It walks inline content
-  with `rinx_ast`'s `for_each_inline_list_mut`, the traversal substitution
-  resolution uses too.
-
-### Registry roles: `:pep:`, `:rfc:`, `:cve:`, `:cwe:` (`docs/decisions/030-pep-role.md`, `docs/decisions/034-registry-roles.md`)
-
-`InlineNode::RegistryReference` is one node standing for Sphinx's three — the
-general-index entry, its anchor and the link — for all four roles, which differ
-only in their `RegistryTarget` (`ast/registry_target/`: one enum over a target
-type per registry, plus the `Registry` tag whose `role_name`/`label`/
-`index_group` are Sphinx's). Things to know:
-
-- **Per-registry behaviour lives on the target, nowhere else.**
-  `display_text()` is both the link text and the index subentry (an RFC spells
-  out `section-`/`appendix-`/`page-` anchors), `page_path()` is relative to the
-  registry's base. A new registry is a variant there and a regex alternative,
-  not a node.
-- **The anchor is minted after parsing**, by `parser/blocks/index_ids.rs`'s
-  `assign_registry_index_ids`, continuing the `.. index::` counter and running
-  after substitutions so each use of a definition gets its own id. The analyzer
-  finds the roles with `rinx_ast::for_each_inline_list` — generated from the
-  same macro body as the parser's `for_each_inline_list_mut`
-  (`ast/inline_lists.rs`), so an entry exists for exactly the roles that have
-  an anchor.
-- **The `.ast` holds the page, not its URL.** The renderer prefixes
-  `rinx.toml`'s `pep_base_url`/`rfc_base_url` (one `RegistryBaseUrl<S>` type,
-  `renderer/registry_base_url.rs`), so changing them re-parses nothing; CVE's
-  and CWE's addresses are constants, as Sphinx hard-codes them
-  (`renderer/inline/registry_reference.rs`).
-- **A refusal names its registry, a code names the construct**:
-  `RoleRefusal::RegistryTarget` maps to `pep.invalid-number`,
-  `rfc.invalid-number`, `cwe.invalid-number` or `cve.invalid-id`. `:cve:` is
-  validated where Sphinx accepts anything (year and sequence number; a `CVE-`
-  prefix is refused by name) — a deliberate deviation, see ADR-034.
-- **Role names stay case-sensitive** (`:PEP:` is not recognized), deliberately:
-  docutils' case-insensitivity belongs to every role and is left to a change
-  that introduces it for all of them.
-- **`:index:` shares the anchor pass, not the node** (`InlineNode::IndexReference`;
-  `docs/decisions/035-index-role.md`): `assign_inline_index_ids` numbers it
-  among the registry roles, and its target is parsed by the `.. index::`
-  directive's own `parse_index_line`/`parse_typed_entry`, which return
-  `InvalidIndexEntry` rather than reporting — the directive reports it as
-  `index.*`, the role as `index-role.*`. A refused one lowers to its title
-  with no entries, so the refusal pass runs before the anchor pass.
-  `see:`/`seealso:` entries become `ProjectIndex::genindex_redirects`, kept
-  apart from the linked `genindex_entries`.
-- **docutils' `:pep-reference:` and `:rfc-reference:` are sibling nodes, not
-  flags** (`InlineNode::DocutilsPepReference`/`DocutilsRfcReference`; see
-  `docs/decisions/033-pep-reference-role.md`): no anchor, no index entry, no
-  title. They never meet the anchor or index passes, and share only the
-  refusal pass, the digit reader and their base URL.
-
-### Source transclusion (`docs/decisions/008-source-transclusion.md`)
-
-`.. include::` and `.. literalinclude::` read a file and splice it into the
-document **while parsing**, through the injected `ParseFileLoader` seam on
-`ParseCtx` (`crates/parser/src/context.rs`) that `.. csv-table::`'s `:file:`
-already used — the parser still performs no I/O of its own, and
-`crates/worker/src/commands/parse_files.rs` supplies the filesystem.
-
-Two consequences shape the code around them:
-
-- **An include is a transclusion, not a container.** It is the one directive
-  yielding *several* nodes, which is why `try_parse_directive` returns a
-  `Vec<Node>`. Wrapping the result in a node of its own would break section
-  nesting, targets and toctrees inside the fragment.
-- **A span can name a file other than the document.** `Span` carries an
-  interned `Option<FileId>` indexing `Document::source_files`, so a diagnostic
-  from inside a fragment names the fragment — at parse time *and* at render
-  time, where a broken `:ref:` is found in a different process entirely. An id
-  rather than a path keeps `Span` `Copy`. `Suppression` carries the matching
-  field, so a `.. noqa:` only silences diagnostics from the file it was written
-  in. The worker's `WarningOrigin` (`commands/diagnostics.rs`) is the one place
-  that turns an id back into a path.
-
-`.. literalinclude::` adds no AST node: it lowers to the same
-`Directive::CodeBlock` the two inline code directives produce, tagged
-`CodeBlockSource::LiteralInclude`, because every option it adds is a parse-time
-source transform. The renderer needed no changes at all.
-
-### Templated sources (`docs/decisions/013-source-templating.md`)
-
-`jinja = True` on a `rinx_library` renders each of its `.rst` sources
-as a Jinja template before parsing it — what a Sphinx project gets by
-connecting the `source-read` event in `conf.py`, which this build cannot run.
-Three things to know before touching it:
-
-- **It is opt-in, and within a library a document holding no Jinja delimiter
-  is not rendered at all.** Both guards exist because `{{` and `{%` are
-  ordinary characters in prose.
-- **A template name is source-root-relative**, as Jinja's own loader is —
-  the one place `{% include %}` and `.. include::` deliberately disagree.
-- **The rendered text is never materialized.** It lives inside the parse
-  action; `parse --dump-rendered <path>` is a debugging flag no Bazel rule
-  passes.
-
-The mechanism worth understanding is the line map. A Jinja pass moves lines and
-MiniJinja has no source map, so `rinx_template` injects a
-`(template, line)` marker into every markable line and reads it back off the
-output. `ParseCtx` holds the result as a `TemplateMap` — and unlike `Origin`
-it is **not** an offset and does not compose, so it is consulted once at the
-end of `ParseCtx::position`, which is why that returns a `SourcePoint` (a
-position *and* its file) and why building a `Span` now lives on
-`SourcePoint::to`.
-
-### Entities: a project's own construct vocabulary (`docs/entities.rst`, `docs/decisions/009-entities.md`)
-
-A project declares its own entity types — `.. req::`, `.. audit-event::`,
-whatever it names — in a schema file, and the build treats them as first-class
-constructs. `docs/entities.rst` is the guide; the two things to know before
-touching the code:
-
-- **Four kinds of declaration, and they are not interchangeable.**
-  *Attributes* are values (typed, validated, indexed, never parsed as RST);
-  *sections* are documents (fully-parsed RST, not indexed) and are what this
-  model adds over sphinx-needs; *relations* are edges declared on the type that
-  carries them, with back-links **derived** project-wide, never declared;
-  *roles* are optional sugar, since every entity is already a `:ref:` target.
-- **The schema is a parse-time input.** It is what makes `.. req::` a directive
-  rather than an unknown name, so `entity_schema` is an attribute on
-  `rinx_library` *and* on `rinx_site`, and editing it re-parses
-  everything. A library parsed against a different schema than the site indexes
-  with is reported as `entity.schema-mismatch`, in both directions.
-
-A schema may also constrain values with a `pattern` (`docs/decisions/022-value-patterns.md`):
-on `id`, checked after the id is determined and reported as
-`entity.id-pattern-mismatch` with the id **kept**; and on a text attribute,
-where it lives *inside* the `AttributeType` variant so `parse_attribute_value`
-enforces it on every route a value arrives by (written option, `needimport`,
-`entity-update`). Both are `rinx_entity::ValuePattern`, compiled once
-when the schema loads.
-
-`schemas/entities.schema.json` is generated from the loader's `Raw*` types
-(`cargo run -p rinx -- entity_json_schema`) and checked in, with a
-test that regenerates and compares; it gives editors completion over an
-`entities.toml` but validates only its *grammar* — every cross-reference rule
-stays in `crates/entity/src/load.rs`, which is the authority.
-
-A sphinx-needs configuration converts into a schema in `rinx_entity`'s
-`needs_conf/` (roadmap #15): `NeedsConfig` is the `[needs]` table's shape,
-which a `ubproject.toml` and a `conf.py`'s literal `needs_*` settings
-(through `rinx_lsp`'s `project/python_value.rs` deserializer) both read into,
-and `convert_needs` yields the loader's own `RawSchema`, checked by
-`load_raw_schema` exactly as a written schema is — plus a report of what has
-no equivalent, collected rather than dropped. Two front ends call it:
-`rinx needs_schema` (which the entity benchmark runs between its warm-up and
-its timed build) and the language server's `project/needs.rs`, which reports
-that list in `conf.py` as `conf.needs-unconverted`. `toml`'s `preserve_order`
-is on because a need's fields are listed in the order they are written.
-
-`rinx_entity` owns the meta-model; `rinx_ast`'s `entity/` owns
-the instance data (`EntityId`, `AttributeValue`, `EntityBody`, `EntitySection`),
-because that is what survives into a `.ast` file. The dependency runs
-`ast → entity`, so the split cannot go the other way.
-
-- `rinx_filter` (`crates/filter/src/`) — the typed expression language a
-  listing directive's `:filter:` is written in (`parse_filter` → `Expr` →
-  `Expr::matches`). A leaf crate like `rinx_cdecl`, and for the same
-  reason its parser is hand-rolled: two phases that may not depend on each other
-  both need it — the **parser** parses a filter, so a syntax error lands on the
-  option line the author wrote, and the **renderer** evaluates one. It therefore
-  knows nothing about entities at all; what it learns about the thing being
-  filtered arrives through the injected `FilterSubject` trait, which
-  `renderer`'s `blocks/entity_table/subject.rs` implements over an
-  `EntityRecord`. Python's spelling over the subset real sphinx-needs filters
-  use, with everything outside it — calls, comprehensions, `!= None`, `&&`,
-  ordering — refused *by name* with a character offset rather than as a generic
-  syntax error. Which field *names* exist is not here but in
-  `rinx_entity`'s `field.rs`, because the parser must check them without
-  an index in hand; this crate only evaluates.
-
-### Diagrams: opt-in per library, compiled behind the index (`docs/decisions/012-entity-diagrams.md`, `docs/decisions/014-entity-flow.md`, `docs/decisions/020-entity-sequence.md`)
-
-Six spellings — `.. plantuml::`/`.. uml::`, `.. entity-diagram::`/`.. needuml::`
-and `.. entity-arch::`/`.. needarch::` — parse to one `Directive::Uml`, which
-carries the diagram's **template** rather than its finished text. Two more
-constructs, `.. entity-flow::`/`.. needflow::` and
-`.. entity-sequence::`/`.. needsequence::`, have no template at all (see
-below) but share everything from the finished text onwards. Five things
-follow, and none of them is optional:
-
-- **You pay only for what you use.** `diagrams = True` on a library is what
-  creates any diagram action at all (see the dependency mechanisms above).
-  Measured on CPython's docs — ~500 documents, no diagrams — the site builds in
-  the same 15.6s it did before diagrams existed; an always-on pipeline cost it
-  20.4s.
-- **Compilation is a `rinx_site` action, never a library one.** A
-  templated diagram asks the entity graph questions only `ProjectIndex` can
-  answer. The plain PlantUML pair goes the same way rather than keeping its old
-  Phase-1 path, because two paths would mean two hash populations. A plain
-  `.. plantuml::` is a template with nothing to expand, so its hash is
-  unchanged.
-- **The render action writes the `.puml` files.** It already expands each
-  diagram to get the hash its `<img>` names, so `rinx_uml::expand` is
-  called once per diagram, in one process that emits both the page and the
-  file — no separate expansion action, no sidecar. The renderer crate still
-  does no I/O: `RenderOutput::diagram_sources` hands the text back and
-  `cmd_render` writes it. The expander must be **deterministic** (every
-  iteration is over a `BTreeMap`), or an unchanged diagram hashes differently
-  and its compile misses the cache.
-- **The cache firewall is the `.puml` directory.** The index is an input, so any
-  edit re-runs every render; identical bytes leave the per-document compile
-  action's key unchanged and no JVM starts.
-- **Layout is ELK, never a host `dot`** (`-Playout=elk` in `rules/site.bzl`;
-  Smetana crashes on cyclic flowcharts). Without Graphviz, PlantUML draws a "Cannot find Graphviz"
-  picture and exits 0, and the host's `dot` is not in the action key — so a
-  build looked fine locally while CI published error pictures. `validate_assets`
-  fails on such exit-0 error pictures as a backstop, and `rules/plantuml.bzl`
-  pins PlantUML to JDK 21, which the jar's ELK needs, whatever the consuming
-  build's `--tool_java_runtime_version` says (ADR-012 §8).
-
-`filter()` is `rinx_filter` and `flow()`/`ref()` build hrefs from
-`rinx_index`'s `relative_doc_href`/`entity_anchor` — which is why those
-two, and `EntitySubject`, live in `index` rather than in the renderer where
-they began. A filter or a link meaning one thing in a table and another in a
-diagram would be a bug neither crate's tests could see. `EntityFields`
-(`index/src/entity_fields.rs`) is there for the same reason: it is what an
-entity shows besides its prose — labelled attributes, relations and
-back-links, with every update applied — read by the renderer's built-in box
-and, next, the language server's hover.
-
-**`.. entity-flow::` / `.. needflow::`** (ADR-014) is the flowchart: a
-`Directive::EntityFlow` carrying a *question* — a filter and which relations
-become edges — with the `PlantUML` **generated** by `rinx_uml`'s
-`build_flow` while rendering. It is a sibling of `Directive::EntityTable`, not
-of `Directive::Uml`: same question, different presentation. Lowering it to a
-`Uml` node holding generated Jinja was rejected because every diagnostic would
-then be reported against text the author never wrote. Three modules exist
-purely so the two paths cannot drift: `uml/assemble.rs` (the `@startuml`
-wrapping, `:config:` preamble, empty-diagram refusal and hash), `uml/node.rs`
-(the `rectangle` one entity is drawn as, shared with the `flow(id)` template
-function) and `renderer/blocks/diagram_figure.rs` (the `<img>`, caption and
-`:debug:` block). Its diagnostics are `entity-flow.*`, not `uml.*`, for the
-reason the diagram family is `uml.*`: a code names the construct.
-
-**`.. entity-sequence::` / `.. needsequence::`** (ADR-020) is the flowchart's
-sibling: a `Directive::EntitySequence` carrying a *walk* — start entities and
-the relations that carry messages — generated by `rinx_uml`'s
-`build_sequence`. Its `start` and `relations` are `NonEmptyVector`s: both are
-mandatory (`:relations:` deliberately, where sphinx-needs defaults to `links`),
-so a directive missing either degrades to `Directive::Malformed` while parsing.
-Unlike a flowchart's, not every finding is fatal — an unknown start or a
-`:max-items:` truncation still draws — so `build_sequence` returns a
-`SequenceDrawing` (content *and* problems) rather than a `Result`, and the
-renderer's `DiagramFailure::Sequence` carries findings that sit beside a
-picture as well as ones that replace it.
-
-### Extension directives (`.. dropdown::`, `.. grid::`, `.. entity-table::`, `.. entity-flow::`, `.. entity-sequence::`, `.. entity-pie::`, `.. entity-bar::`, `.. if-builder::`; see `docs/decisions/011-entity-listing.md`)
-
-Everything else this build parses is docutils' or Sphinx's own. `.. dropdown::`
-and `.. grid::`/`.. grid-item::` come from **sphinx-design**,
-`.. entity-table::`/`.. needtable::`, `.. entity-flow::`/`.. needflow::`,
-`.. entity-sequence::`/`.. needsequence::`, `.. entity-pie::`/`.. needpie::`
-and `.. entity-bar::`/`.. needbar::` from **sphinx-needs**, and `.. if-builder::`
-from **sphinx-simplepdf**. They share a rule the built-ins do not:
-
-- **There is no `extensions =` config**, so a supported extension directive is
-  simply always available, and its names join the table — which means an
-  entity schema can no longer declare a section by that name
-  (`is_builtin_directive_name` is derived from the table).
-- **An unknown directive never parses its body** — it becomes a
-  `Directive::Unknown`, reports `directive.unknown`, and is drawn as a visible
-  error block quoting its source, so the content it swallows is never lost
-  silently. A directive whose *name* is recognized but whose content this build
-  must refuse becomes a `Directive::Malformed` instead, carrying the message its
-  own diagnostic reports; both are built by `parser/directives/error_node.rs`
-  and rendered by `renderer/blocks/directive_error.rs`. That an unknown one
-  parses no body is also why these earned
-  their place ahead of prettier candidates: the entity benchmark's corpus nests
-  `.. seq_msg::` entities inside dropdowns, and every one of them was invisible
-  to the index until the container parsed — and it draws a `.. uml::` inside a
-  `.. grid-item::`, which reached no later phase at all until the grid parsed
-  its body. The corollary shapes both parsers: an unreadable *option* never
-  costs the container, and a misplaced *child* is reported and **kept**, never
-  dropped. Two consequences are easy to miss when adding a container here — a
-  body must be parsed under `ctx.nested(...)` or every span inside it is wrong,
-  and the container needs an arm in every traversal that walks block content
-  (`analyzer`'s `index_nodes`, `parser`'s `assign_index_ids`, `renderer`'s
-  `collect_anonymous_targets`, `ast`'s `walk_nodes`) or targets written inside
-  it silently vanish.
-
-`.. entity-table::` is the odd member of that group: the name is *ours* and
-`.. needtable::` is the compatibility spelling, since the entity model's whole
-claim is that sphinx-needs is a schema rather than a feature. Both names are
-reserved, they parse to one `Directive::EntityTable` recording which was
-written, and they share one `entity-table.*` diagnostic family — a code names
-the construct, not the spelling. It is also the only directive whose *content*
-comes from other documents: the node carries a question and
-`renderer/blocks/entity_table/` resolves the rows against `ProjectIndex`, which
-is why an empty result can only be reported while rendering. `.. entity-flow::`
-is its twin in all of that — our name, a `needflow` alias, one node, one
-`entity-flow.*` family, content from other documents — and differs only in
-drawing the answer instead of tabulating it; its filter goes through the one
-shared reader in `parser/directives/filter_option.rs`, so the two cannot select
-differently.
-
-`.. entity-pie::` (`.. needpie::`; ADR-017) is the third presentation of that
-same question — rows, a graph, or proportions — and the one that breaks the
-other two's shape: a table takes **no argument**, a flowchart takes **no
-content**, and a chart takes **both**. The argument is the title and each
-content line is one wedge's filter, read through `filter_option.rs`'s
-`read_filter_text` so a body line reports at the same column an option line
-would. Two things about it are worth knowing before touching the diagram
-pipeline:
-
-- **It is never compiled.** The SVG is drawn by the render action itself
-  (`renderer/src/chart/`, the one place `plotters` is named), so there is
-  no `.puml`, no hash, no compile action, and — deliberately, departing from
-  ADR-012 §4 — **no `diagrams = True`** and no `entity-pie.diagrams-disabled`
-  code. `diagrams = True` exists because Bazel must declare actions before
-  reading any document; a chart declares none. Keep charts in an ordinary
-  library, as `examples/entities/charts.rst` is.
-- **The generality is in the counting, not in the directive.** Making
-  `needpie` and `needbar` one `.. entity-chart::` with a `:type:` switch was
-  rejected — their bodies and option surfaces barely overlap — so what they
-  share is `renderer/blocks/chart_counts.rs`, which walks the index once per
-  chart for a pie's wedges and a bar chart's flattened grid alike.
-
-`.. entity-bar::` (`.. needbar::`; ADR-021) is the pie's sibling with a grid
-for a body: each line a series, each `:separator:`-split cell a category.
-`FROM_DATA` labels and `:transpose:` are settled while parsing, so the node's
-`BarGrid` is already labelled and oriented. Where sphinx-needs raises — ragged
-rows, label lists of the wrong length — it reports and draws. Every piece of
-its text is a `chart/placed_text.rs` `PlacedText` spliced into the SVG, since
-its rotation options take any angle.
-
-Its empty result goes through `renderer`'s `EmptyListingError`, shared with
-`.. entity-table::` and carrying its own `DiagnosticCode`: a code still names
-the construct, but the `.. noqa:` filtering and the formatting are written
-once.
-
-`.. if-builder::` is the odd one out of that group in a different way: it is a
-**splicing** directive, not a container at all. It, `.. include::` and
-`.. needimport::` are the only three that contribute *several* nodes to the
-enclosing block rather than exactly one, which every `interpret_*` may (all
-return `Vec<Node>`; `.. role::` and `.. default-role::` return none), each
-under `DirectiveInput::splice_ctx` rather than the body context. That is what keeps a heading, target or `.. toctree::` written inside a
-selected block belonging to the document, and it is the directive's whole
-point: a container node would put the body where `build_document_outline`
-stops. Its body is parsed only when the argument names this build's builder
-(`html`), so an excluded block reports nothing and needs no `deps` entry. See
-`docs/decisions/015-builder-conditionals.md`, which also records why the
-`<div class="docutils container">` upstream emits is deliberately not
-reproduced.
-
-Icons come from `octicons-pack` (a redistribution of `@primer/octicons`), and
-the split of responsibility is deliberate: the AST carries only the *name*
-(`OcticonName`, which validates its shape and nothing else, so an old `.ast`
-cannot fail to load after an icon-set upgrade), the **parser** checks that name
-against the set — where the `:icon:` line can be pointed at — and the
-**renderer** is the only place that draws one.
-
-### Config vs. CLI flags (see `docs/decisions/001-template-system.md`)
-
-`rinx.toml` (`rinx_renderer::config`) holds only metadata — never file paths. Template/CSS/index paths are always passed as separate CLI flags / Bazel rule attributes (`--template`, `--config`, `template =`, `css =`). This is deliberate: Bazel sandboxes relocate files, so a path baked into the config would break; keeping paths out of the config also means new metadata fields don't require CLI changes. Don't "fix" this by inlining paths into the TOML.
-
-`highlight_language` is the one exception-shaped addition: it names a language, not a path, so it respects the rule above, and it is deserialized through the same smart constructor the parser uses so a typo fails on load.
-
-`[version_switcher] json_url` is a URL the *browser* fetches, not a path the build reads, so it respects the rule too. What it deliberately lacks is pydata-sphinx-theme's `version_match`: `assets/version_switcher.js` finds the page's version by the page's own address, so the build never learns which version it is and one commit's `main/` and preview builds share their cached renders — see `docs/decisions/024-versioned-docs.md`. That script's pure functions are tested by `bazel test //tests/js:all`, a rules_js `js_test` under a hermetic Node.js — no local Node needed. `aspect_rules_js` is a `dev_dependency` and must stay one, which is why the test lives in its own package: the root package is loaded by every module depending on rinx, and `assets/` cannot become a package without breaking the `@rinx//:assets/default.css` label. rules_js brings Aspect's usage telemetry, which `.bazelrc` opts out of with `DO_NOT_TRACK`.
-
-Templates are rendered with MiniJinja (chosen over compile-time Rust templates or reusing Sphinx's Python/Jinja2 templates directly — see the ADR for why). Changing the default template invalidates every cached page render, which is expected.
-
-### Live preview / LSP direction
-
-`editors/vscode/` (`src/extension.ts`, `src/analysis.ts`, `src/migrate.ts`, `src/preview.ts`, `src/diagrams.ts`, `src/scrollSync.ts`, `src/bazel.ts`, `src/client.ts`, `src/binary.ts`, `src/status.ts`) is a working VS Code extension implementing `docs/vscode.rst`. On activation (any reStructuredText document) `client.ts` starts `rinx lsp` through `vscode-languageclient`, finding the binary through `binary.ts`'s one precedence (explicit `rinx.binaryPath` → Bazel-discovered → bundled into the VSIX by `npm run package:bundled` → `rinx` on the PATH). The preview is served by that same server (roadmap #22): `preview.ts`'s webview panel sends a `rinx/preview` request for the reStructuredText document last active in an editor, debounced after any edit or on save per `rinx.previewMode`, and the server's `preview.rs` renders the page from the document's latest parse and its project's current fold through `rinx_renderer::render_document_page`, the call the build's render action makes — so the page is never stale, and `lsp_parity.rs` checks it equals what `rinx render` writes. A `rinx_site`'s `template`/`css`/`entity_templates` come from its manifest (`Presentation`), every other project uses the default template and stylesheet embedded from `crates/lsp/theme/` (links to the root's, which `cargo package` copies), and the stylesheet is embedded as a `data:` URI since a webview reads no file it was not given; `rinx lsp --check <folder> --preview <doc>` times it. The former `preview` subcommand, which merged one document into the last Bazel-built index, is gone. The server also scans every workspace folder at startup and reports its progress as a `rinx/status` notification, which `status.ts` shows in the status bar. The page's stylesheet and authored images are linked under the request's `resourceRoot` where they lie, when inside a workspace folder (`preview.rs`'s `ResourceRoot`, through `rinx_renderer::ImageLocator`; roadmap #23). A click on a link in the preview is the panel's to follow (roadmap #40): the webview script posts the `href` to `preview.ts`, which opens an `http(s):` link in the browser and otherwise asks the server with a `rinx/previewLink` request; `preview_link.rs`'s `resolve_page_href` reads the `href` back as the inverse of `relative_doc_href`/`relative_asset_href`, and the document it leads to is opened in an editor and previewed at the link's anchor. A diagram reaches the preview as its PlantUML text (`rinx_renderer::DiagramPictures::Source`, passed exactly when an image locator is, so a request without a `resourceRoot` still gets the build's page), and the webview draws it with `@plantuml/core` — PlantUML compiled to JavaScript, pinned to the build's jar version and copied into `dist/plantuml/` by `scripts/copy-plantuml.mjs` — through `diagrams.ts`'s `diagramDrawer`, which ships as its own source (`toString()`) and so must name nothing outside itself; no JVM runs anywhere in the editor, and a PlantUML syntax error reaches the picture, not the problems list (ADR-042). The preview and the editor scroll together as VS Code's Markdown preview does, under its four settings' names (`rinx.preview.*`; roadmap #34, ADR-048): a request with `sourceLines` gives `rinx_renderer::PageAssets` the document's `SourceMap`, and the renderer (`blocks/source_line.rs`) puts `data-source-line` on the first tag of every block whose `BlockId` names a line of the document's own file — a build holds no `SourceMap`, so its pages cannot carry one — which `scrollSync.ts`, shipped into the webview by `toString()` like the diagram drawer, maps to and from page positions. Not yet implemented: the language server's steps past `docs/dev/lsp-roadmap.md`'s *Next*. Other editors reach the same server through their own clients: `docs/editors.rst` shows each configuration with `.. literalinclude::` from `editors/neovim/rinx.lua`, `editors/helix/languages.toml` and `editors/emacs/rinx-eglot.el`, and `editors/run-tests.sh` runs those very files in the editor over `editors/test-fixtures/workspace`, so a snippet cannot drift from what CI tests — change a snippet and its test together. The language server's design — including a legacy mode for plain Sphinx projects — is `docs/decisions/038-language-server.md`, and the PR-by-PR order it is built in is `docs/dev/lsp-roadmap.md`.
-
-### Documentation site (`docs/`)
-
-The user guides in `docs/` are reStructuredText, and `//docs:site` builds them with rinx itself — the project's own dogfooding check, with `strict_links = True` so a broken reference fails CI. `.github/workflows/pages.yml` publishes it to <https://nachstedt.github.io/rinx/> together with `//examples:site`, one directory per version on the `gh-pages` branch: `main/` after CI succeeds on main, `vX.Y.Z/` from the release workflow, `pr/<N>/` for every open pull request (`pages-preview.yml`, from an artifact CI uploads; removed on close by `pages-preview-cleanup.yml`), with `//examples:site` under each one's `example-site/` and the two benchmark corpora's rendered sites under `benchmarks/<name>/`. Those come from `.github/workflows/benchmarks.yml`, a reusable workflow `ci.yml` runs on every pull request, push and release (failing only when a corpus stops building; `pages.yml` reuses CI's artifact rather than rerunning it), and each benchmark script exports its site via `--site-out` with its front page named in an `entry.txt`, so neither the publisher (`--benchmarks-dir`) nor any workflow names an individual benchmark. Only `main/`, the previews and the newest release carry them (~70 MB each, against Pages' 1 GB limit): `publish_pages.py` deletes a superseded release's `benchmarks/` whenever it regenerates the derived files. None of the writers share a `concurrency` group — GitHub would cancel all but one pending run — so the publisher's retry is what serializes them, and the preview workflow trusts nothing from CI's artifact but its files: the pull-request number is cross-checked against the pull request's head commit. `scripts/publish_pages.py` is the only writer of that branch, and regenerates `latest/`, `versions.json` and the redirects for the pre-version URLs on every run — see `docs/decisions/024-versioned-docs.md`. Only the guides are pages: `docs/decisions/` (ADRs) and `docs/dev/` (developer notes) stay Markdown and are linked on GitHub. A page is written only with constructs rinx supports — notably no footnotes. A new user-facing feature belongs on `docs/syntax.rst` or in the guide it extends, as well as in `examples/`.
-
-### Compatibility status
-
-`docs/compatibility.rst` is a page of the documentation site listing every RST/Sphinx/extension construct as ✅ supported, ✅ ℹ️ supported with deliberate deviations, 🔶 partial (something we still intend to implement is missing) or ❌ unsupported. Notes are brief bullets naming only deviations or missing pieces. Update it when you add or fix parser/renderer coverage for a construct, and don't trust it blindly if it looks stale relative to recent commits.
-
-### Changelog
-
-`CHANGELOG.md` follows Keep a Changelog. Every pull request a user would notice — a feature, a behaviour change, a removal, a fix — adds its bullet to `[Unreleased]` in the same pull request, under Added, Changed, Removed or Fixed; refactors, CI, tests and dependency bumps add none. Bullets are short prose grouped by theme (extend an existing bullet rather than adding one per PR), name settings, attributes and codes in backticks, and carry no PR numbers. A change that breaks the Bazel rules or the CLI goes under Changed or Removed, since before 1.0 a minor release may break them.
+- `docs/` is built by rinx itself; only the guides are pages, while `docs/decisions/` and `docs/dev/` stay Markdown. A page uses only constructs rinx supports (no footnotes). A new user-facing feature belongs on `docs/syntax.rst` or the guide it extends, and in `examples/`.
+- `docs/compatibility.rst` lists every construct as ✅, ✅ ℹ️ (deliberate deviations), 🔶 partial or ❌; update it when coverage changes, and don't trust it blindly if it looks stale.
+- `CHANGELOG.md` follows Keep a Changelog: every user-noticeable pull request adds a short bullet to `[Unreleased]` (Added/Changed/Removed/Fixed), extending an existing bullet where it fits, with no PR numbers; refactors, CI, tests and dependency bumps add none. Breaking the Bazel rules or the CLI goes under Changed or Removed.
 
 ## Working conventions
 
-These come from `guidelines.md`, which is actively maintained (an agent rule auto-appends new learned preferences there) — check it for the current, authoritative list; highlights that shape how code here is structured:
+These come from `guidelines.md`, which is actively maintained — check it for the authoritative list; highlights:
 
-- Enforce invariants at the type level with opaque types + smart constructors ("parse, don't validate") rather than validating at call sites.
-- All functions, including private/helper ones, should have unit tests; new functions introduced during refactoring need tests too.
-- Tests follow Given-When-Then (see the inline `#[cfg(test)]` modules throughout `crates/*/src/` for the expected shape/comment style).
+- Enforce invariants at the type level with opaque types + smart constructors rather than validating at call sites.
+- All functions, including private helpers, have unit tests, written Given-When-Then like the existing `#[cfg(test)]` modules.
 - Name functions after what they concretely do (`build_project_index()`, not `analyze_many()`).
-- New `.rst` files added under `examples/` must be added to the corresponding `BUILD.bazel` `srcs`, and new features should get an example added to the example project covering all variants.
-- A user-visible change adds its bullet to `CHANGELOG.md`'s `[Unreleased]` in the same change (see "Changelog" above).
+- New `.rst` files under `examples/` must be added to their `BUILD.bazel` `srcs`, and new features get an example covering all variants.
 - Don't commit unless explicitly asked.
 
 ### Shared rules from `.agents/rules/`
 
-This repo also defines always-on rules for the Antigravity agent under `.agents/rules/` (each file's `trigger: always_on` frontmatter is Antigravity-specific and can be ignored — the frontmatter is just inlined as text below by Claude Code's import). Importing them here keeps both agents' behavior in sync — in particular, `learning-agent.md` is the rule that keeps `guidelines.md` above up to date, so it must load for Claude Code too:
+These rules are shared with the Antigravity agent (their `trigger: always_on` frontmatter is Antigravity-specific). `learning-agent.md` is what keeps `guidelines.md` up to date, so it must load here too:
 
 @.agents/rules/learning-agent.md
-@.agents/rules/rust-fundamentals.md
-@.agents/rules/rust-testing.md
 @.agents/rules/test-drive-development.md
