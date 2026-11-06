@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Compound statements — CPython Benchmark</title>
+  <title>Compound statements — Python</title>
   <link rel="stylesheet" href="../../default.css">
 </head>
 <body>
   <div class="document-wrapper">
     <aside class="sidebar">
       <div class="sidebar-header">
-        <h2 class="project-name">CPython Benchmark</h2>
+        <h2 class="project-name">Python</h2>
         
         <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
         <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
@@ -551,7 +551,7 @@ is set as the context of the new exception.
 If the :keyword:`!finally` clause executes a :keyword:`return`, :keyword:`break`
 or :keyword:`continue` statement, the saved exception is discarded. For example,
 this function returns 42.</p>
-<div class="highlight-default notranslate">
+<div class="highlight-python3 notranslate">
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">f</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
 <span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-exception hl-try hl-python"><span class="hl-keyword hl-control hl-exception hl-try hl-python">try</span><span class="hl-punctuation hl-section hl-block hl-exception hl-try hl-python">:</span></span></span>
@@ -569,7 +569,7 @@ statement, the :keyword:`!finally` clause is also executed 'on the way out.'</p>
 statement executed.  Since the :keyword:`!finally` clause always executes, a
 :keyword:`!return` statement executed in the :keyword:`!finally` clause will
 always be the last one executed. The following function returns 'finally'.</p>
-<div class="highlight-default notranslate">
+<div class="highlight-python3 notranslate">
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">foo</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
 <span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-exception hl-try hl-python"><span class="hl-keyword hl-control hl-exception hl-try hl-python">try</span><span class="hl-punctuation hl-section hl-block hl-exception hl-try hl-python">:</span></span></span>

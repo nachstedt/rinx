@@ -44,6 +44,11 @@
           </li>
         
           <li class="toctree-l2">
+            <a href="getting_started.html#from-a-sphinx-project">From a Sphinx project</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
             <a href="getting_started.html#where-to-go-next">Where to go next</a>
             
           </li>
@@ -189,6 +194,46 @@ target's name. Open its <code>index.html</code>, or serve the directory:</p>
 </div>
 <p>A broken cross-reference is a warning by default. Set <code>strict_links = True</code>
 on the site to make it fail the build instead.</p>
+<a id="init-from-sphinx"></a>
+<h2 id="from-a-sphinx-project">From a Sphinx project</h2>
+<p>An existing Sphinx project needs no hand-written build. In the directory
+holding its <code>conf.py</code>, run:</p>
+<div class="highlight-bash notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">rinx</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> init<span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> --</span>from-sphinx</span> .</span></span></pre></div>
+</div>
+<p>It writes the project's Bazel build from <code>conf.py</code> and from what the
+documents actually use:</p>
+<ul>
+<li><p><code>BUILD.bazel</code>, with one <code>rinx_library</code> holding every document Sphinx
+would build — the <code>.rst</code> files <code>exclude_patterns</code> leaves out are
+excluded from its <code>srcs</code> glob — and the <code>rinx_site</code> rendering it. The
+library declares exactly the files the documents read (<code>parse_data</code>),
+show (<code>images</code>) and link (<code>downloads</code>), and <code>diagrams = True</code> when one
+draws a diagram.</p>
+</li>
+<li><p><code>rinx.toml</code>, with the project's name, version, root document and the
+other site settings <code>conf.py</code> sets.</p>
+</li>
+<li><p><code>rst_prolog.txt</code> and <code>rst_epilog.txt</code>, when <code>conf.py</code> sets them.</p>
+</li>
+<li><p><code>entities.toml</code>, when the project uses sphinx-needs: its configuration,
+converted into an entity schema.</p>
+</li>
+<li><p><code>MODULE.bazel</code>: the dependency on rinx is added to the enclosing Bazel
+module, or, outside any, the directory becomes a module of its own, so
+every document keeps the name and the address it has under Sphinx.</p>
+</li>
+</ul>
+<p>It never overwrites a file, and prints as JSON what it wrote and what it
+left out: a setting <code>conf.py</code> computes rather than spells, an
+<code>intersphinx_mapping</code> entry (declare it as a <code>rinx_inventory</code>), or a
+file a document reads from outside the directory. <code>--python &lt;exe&gt;</code> runs
+<code>conf.py</code> for the settings it computes, <code>--jinja</code> renders every document
+as a Jinja template first (what a <code>source-read</code> hook does, which reading
+<code>conf.py</code> cannot see), and <code>--dry-run</code> only reports. In VS Code, the
+<em>Rinx: Migrate Project to rinx</em> command does the same (see
+<a href="vscode.html#vscode-migrate">Migrating a project</a>).</p>
 <h2 id="where-to-go-next">Where to go next</h2>
 <ul>
 <li><p><a href="rules.html#rules">Bazel rules</a> lists every attribute of the four rules. Among them are

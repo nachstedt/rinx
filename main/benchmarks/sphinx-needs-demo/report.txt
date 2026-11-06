@@ -70,10 +70,10 @@ entity.role-type-mismatch (5):
 
 directive.unknown (4):
 ----------------------
-    1  coffee-machine/index.rst: unknown directive type 'src-trace'
     1  automotive-adas/sys_5_sys_quali_test_results.rst: unknown directive type 'test-file'
-    1  automotive-adas/swe_4_unit_tests.rst: unknown directive type 'automodule'
+    1  coffee-machine/index.rst: unknown directive type 'src-trace'
     1  automotive-adas/swe_3_sw_detailed_design.rst: unknown directive type 'automodule'
+    1  automotive-adas/swe_4_unit_tests.rst: unknown directive type 'automodule'
 
 directive.unsupported-option (4):
 ---------------------------------
@@ -109,9 +109,5 @@ interpreted.unknown-role (1):
 needservice.unsupported (1):
 ----------------------------
     1  automotive-adas/external_data.rst: needservice: querying an external service while building is not supported, since a sandboxed build may only read files declared before it runs; save the needs to a needs.json, declare it in the library's `parse_data` and read it with `.. needimport::`
-
-toctree.orphan-document (1):
-----------------------------
-    1  demo_hints/constraints.rst: Document 'demo_hints/constraints.rst' is not included in any toctree, so it is unreachable from the navigation. Add it to one, or write ':orphan:' at the top of the file.
 
 0 warning occurrence(s) suppressed by whitelist (0 entr(y/ies)).

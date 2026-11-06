@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>A Conceptual Overview of asyncio — CPython Benchmark</title>
+  <title>A Conceptual Overview of asyncio — Python</title>
   <link rel="stylesheet" href="../../default.css">
 </head>
 <body>
   <div class="document-wrapper">
     <aside class="sidebar">
       <div class="sidebar-header">
-        <h2 class="project-name">CPython Benchmark</h2>
+        <h2 class="project-name">Python</h2>
         
         <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
         <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
@@ -444,7 +444,7 @@ only a callback to the task is.
 This matters if the task object you created is garbage collected before it's
 called by the event loop.
 For example, consider this program:</p>
-<div class="highlight-default notranslate">
+<div class="highlight-python3 notranslate">
 <div class="highlight hl-code"><pre>
 <span class="linenos">1</span><span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-modifier hl-async hl-python">async</span> <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">hello</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
 <span class="linenos">2</span><span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">hello!<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
@@ -587,7 +587,7 @@ will be sent in as the return value of the <code>yield</code> statement which or
 paused it.
 If the coroutine is being used for the first time (as opposed to being resumed),
 <code>arg</code> must be <code>None</code>.</p>
-<div class="highlight-default notranslate">
+<div class="highlight-python3 notranslate">
 <div class="highlight hl-code"><pre>
 <span class="linenos">1</span><span class="hl-source hl-python"><span class="hl-meta hl-class hl-python"><span class="hl-storage hl-type hl-class hl-python"><span class="hl-keyword hl-declaration hl-class hl-python">class</span></span> <span class="hl-entity hl-name hl-class hl-python"><span class="hl-meta hl-generic-name hl-python">Rock</span></span><span class="hl-punctuation hl-section hl-class hl-begin hl-python">:</span></span></span>
 <span class="linenos">2</span><span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-support hl-function hl-magic hl-python">__await__</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
