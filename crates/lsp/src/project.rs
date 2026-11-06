@@ -18,6 +18,7 @@ mod bazel_manifest;
 mod build_file;
 mod compatibility_links;
 mod conf_eval;
+mod conf_facts;
 mod constructs;
 mod declarations;
 mod dependency_fix;
@@ -42,11 +43,13 @@ pub use compatibility_links::{CompatibilityLink, CompatibilityLinks};
 #[cfg(test)]
 pub use conf_eval::ConfValues;
 pub use conf_eval::{CONF_RUN_TIMEOUT, ConfEvaluation, ConfEvaluations, run_conf};
+pub use conf_facts::{ConfFacts, ConvertedNeeds};
 #[cfg(test)]
 pub use constructs::ConstructSite;
 pub use constructs::{ConstructCount, ConstructTally};
 pub use declarations::{BundledFiles, undeclared_uses};
 pub use dependency_fix::missing_deps;
+pub(crate) use discover::PARSER_CONFIG_FILE;
 pub use discover::{
     DiscoveredProject, contains_conf, discover_projects, discover_projects_with, is_conf,
     is_visible_under, sources_under,
@@ -54,9 +57,10 @@ pub use discover::{
 pub use extension_profile::ExtensionProfiles;
 pub use index::{Definitions, IndexedDocument, Project};
 pub use inventories::Fetched;
+pub use model::ProjectSettings;
 pub(crate) use model::{DEFAULT_ROOT_DOC, RST_SUFFIX};
 #[cfg(test)]
-pub use model::{LibraryModel, Listing, ProjectSettings};
+pub use model::{LibraryModel, Listing};
 pub use model::{
     Membership, PageFile, ParseSettings, Presentation, ProjectModel, ProjectSource, Splice,
 };

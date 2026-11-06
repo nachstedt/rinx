@@ -27,9 +27,12 @@ use crate::rename::{NamePlace, RenameRefusal, Renamed, definition_name_place, us
 use crate::uri::file_uri;
 
 /// How a client takes a workspace edit: as versioned document changes, when
-/// it announces `workspace.workspaceEdit.documentChanges`, else by URI.
+/// it announces `workspace.workspaceEdit.documentChanges` — creating the
+/// files one names too, when it announces `resourceOperations` holding
+/// `create` — else by URI.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EditShape {
+    CreatingFiles,
     Versioned,
     ByUri,
 }

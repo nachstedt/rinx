@@ -201,6 +201,9 @@ fn sphinx_project_at(directory: &Path, evaluations: &ConfEvaluations) -> Option<
         reading.settings.parse.schema = Arc::new(needs.schema);
         reading.settings.parse.import_keys = needs.import_keys;
         reading.settings.config_files = needs.files;
+        if let Some(facts) = &mut reading.settings.conf_facts {
+            facts.needs = Some(needs.converted);
+        }
     }
     read_parser_config(directory, &mut reading);
     if let Some(Ok(values)) = evaluation.map(|evaluation| &evaluation.outcome) {

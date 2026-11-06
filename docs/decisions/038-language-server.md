@@ -306,6 +306,7 @@ Two commands turn trying rinx into adopting it:
   project, and a `BUILD.bazel` with one globbed library. `scripts/benchmark.py`'s
   `render_corpus_build_file` becomes a call to it, so the generator exists
   once. Once the manifest appears, the server switches the project to rinx mode.
+  See ADR-049 for how it decides what to write.
 
 ### 8. Positions: converted at the boundary, definitions in the server
 

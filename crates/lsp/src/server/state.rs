@@ -65,7 +65,7 @@ use super::inventories::InventoryFetches;
 use super::projects::ProjectId;
 use super::renames::EditShape;
 use super::scan::ScanEvent;
-use crate::code_action::{NoqaFix, dependency_fixes, noqa_fixes};
+use crate::code_action::{MIGRATE_KIND, NoqaFix, dependency_fixes, migrate_action, noqa_fixes};
 use crate::completion::{
     DirectiveContext, DirectiveVocabulary, ItemStyle, PLACEHOLDER, RoleContext, RoleVocabulary,
     TargetQuestion, TextFormat, WrittenRole, directive_at, directive_items, identity_marker_line,
@@ -84,6 +84,7 @@ use crate::entity_hover::{declared_entity_markdown, indexed_entity_markdown};
 use crate::folding_range::folding_ranges;
 use crate::hover::{location_markdown, markdown_hover, reference_hover, targets_hover};
 use crate::includes::IncludeGraph;
+use crate::migration::{MigrationOptions, plan_migration};
 use crate::position::{PositionEncoding, char_index_of, to_lsp_position, to_lsp_range};
 use crate::preview::{
     PreviewRefusal, PreviewSettings, ResourceRoot, render_preview, render_preview_alone,
@@ -963,12 +964,45 @@ impl ServerState {
         })
     }
 
-    /// The quick fixes for what the document `uri` shows within `range`:
-    /// its [`Self::build_fixes`], then a `.. noqa:` for anything else.
-    pub(super) fn code_actions(&self, uri: &Uri, range: Range) -> Vec<CodeAction> {
-        let mut actions = self.build_fixes(uri, range);
-        actions.extend(self.noqa_actions(uri, range));
+    /// The actions for the document `uri` within `range`, of the kinds
+    /// `only` asks for when it asks: the quick fixes for what it shows — its
+    /// [`Self::build_fixes`], then a `.. noqa:` for anything else — and, on
+    /// a Sphinx project's `conf.py`, migrating the project.
+    pub(super) fn code_actions(
+        &mut self,
+        uri: &Uri,
+        range: Range,
+        only: Option<&[CodeActionKind]>,
+    ) -> Vec<CodeAction> {
+        let asked = |kind: &str| {
+            only.is_none_or(|kinds| kinds.iter().any(|asked| kind.starts_with(asked.as_str())))
+        };
+        let mut actions = Vec::new();
+        if asked(CodeActionKind::QUICKFIX.as_str()) {
+            actions.extend(self.build_fixes(uri, range));
+            actions.extend(self.noqa_actions(uri, range));
+        }
+        if asked(MIGRATE_KIND) {
+            actions.extend(self.migrate_action(uri));
+        }
         actions
+    }
+
+    /// Migrating the Sphinx project whose `conf.py` is `uri` — offered once
+    /// its documents are scanned, to a client that creates files.
+    fn migrate_action(&mut self, uri: &Uri) -> Option<CodeAction> {
+        if self.edit_shape != EditShape::CreatingFiles || self.scan.is_some() {
+            return None;
+        }
+        let conf = file_path(uri)?;
+        let project = self
+            .projects
+            .values_mut()
+            .find(|project| project.conf_path() == Some(conf.as_path()))?;
+        let plan = plan_migration(project, &MigrationOptions::default())?;
+        migrate_action(&plan, self.encoding, &|path| {
+            std::fs::read_to_string(path).ok()
+        })
     }
 
     /// The quick fixes for what the document `uri` fails the build on within

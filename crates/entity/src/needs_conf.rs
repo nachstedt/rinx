@@ -40,6 +40,6 @@ pub use config::{
 };
 pub use convert::convert_needs;
 pub use ordered_table::OrderedTable;
-pub use render::render_schema_toml;
+pub use render::{SchemaProvenance, render_schema_toml};
 pub use report::{ReportCategory, ReportEntry};
 pub use schemas_json::SchemasFile;

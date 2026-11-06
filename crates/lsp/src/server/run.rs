@@ -7,7 +7,9 @@ use anyhow::{Context, Result, bail};
 use crossbeam_channel::{Receiver, after, never, select, unbounded};
 use lsp_server::{Connection, Message};
 use lsp_types::notification::{Exit, Notification as _};
-use lsp_types::{ClientCapabilities, InitializeParams, Uri, WorkspaceFolder};
+use lsp_types::{
+    ClientCapabilities, InitializeParams, ResourceOperationKind, Uri, WorkspaceFolder,
+};
 use serde::Deserialize;
 
 use super::bazel_manifests::ManifestSource;
@@ -232,18 +234,25 @@ fn supports_definition_links(capabilities: &ClientCapabilities) -> bool {
 }
 
 /// How the client takes a workspace edit: versioned per document when it
-/// announces document changes, else by URI.
+/// announces document changes — creating files too, when it announces that
+/// operation — else by URI.
 fn edit_shape(capabilities: &ClientCapabilities) -> EditShape {
-    let versioned = capabilities
+    let Some(edit) = capabilities
         .workspace
         .as_ref()
         .and_then(|workspace| workspace.workspace_edit.as_ref())
-        .and_then(|edit| edit.document_changes)
-        .unwrap_or(false);
-    if versioned {
-        EditShape::Versioned
+        .filter(|edit| edit.document_changes == Some(true))
+    else {
+        return EditShape::ByUri;
+    };
+    let creates = edit
+        .resource_operations
+        .as_ref()
+        .is_some_and(|operations| operations.contains(&ResourceOperationKind::Create));
+    if creates {
+        EditShape::CreatingFiles
     } else {
-        EditShape::ByUri
+        EditShape::Versioned
     }
 }
 

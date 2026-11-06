@@ -22,8 +22,9 @@ use lsp_types::{FileChangeType, FileEvent, Uri};
 
 use super::handlers::show_information;
 use super::state::ServerState;
-use crate::analysis::{AnalysisReport, project_report};
+use crate::analysis::{AnalysisReport, migration_report, project_report};
 use crate::diagnostics::conf_diagnostics;
+use crate::migration::{MigrationOptions, plan_migration};
 use crate::progress::{IndexState, IndexStatus, ProjectStatus};
 use crate::project::{
     DiscoveredProject, Project, ProjectSource, contains_conf, discover_projects_with, is_conf,
@@ -400,29 +401,45 @@ impl ServerState {
     }
 
     /// What the project holding `document` — or, without one, each project —
-    /// wrote that this build does not support.
-    pub(super) fn analyse_project(&self, document: Option<&Uri>) -> AnalysisReport {
-        let mut projects: Vec<&Project> = match document {
+    /// wrote that this build does not support, and, once every document is
+    /// scanned, what migrating a Sphinx project writes.
+    pub(super) fn analyse_project(&mut self, document: Option<&Uri>) -> AnalysisReport {
+        let ids: Vec<ProjectId> = match document {
             Some(uri) => file_path(uri)
-                .and_then(|path| self.project_holding(&path))
+                .and_then(|path| self.holding(&path))
+                .map(|(id, _)| id)
                 .into_iter()
                 .collect(),
-            None => self.projects.values().collect(),
+            None => self.projects.keys().copied().collect(),
         };
-        projects.sort_by(|a, b| a.root().cmp(b.root()));
+        let complete = self.scan.is_none();
+        let mut reports = Vec::new();
+        for id in ids {
+            let migration = match self.projects.get_mut(&id) {
+                Some(project) if complete => plan_migration(project, &MigrationOptions::default())
+                    .zip(project.conf_path().map(Path::to_path_buf))
+                    .and_then(|(plan, conf)| migration_report(&conf, &plan)),
+                _ => None,
+            };
+            let Some(project) = self.projects.get(&id) else {
+                continue;
+            };
+            let Some(status) = self.project_status(project) else {
+                continue;
+            };
+            let mut report = project_report(
+                status,
+                project.document_count(),
+                project.strictness(),
+                &project.construct_tally(),
+            );
+            report.migration = migration;
+            reports.push((project.root().to_path_buf(), report));
+        }
+        reports.sort_by(|a, b| a.0.cmp(&b.0));
         AnalysisReport {
-            complete: self.scan.is_none(),
-            projects: projects
-                .into_iter()
-                .filter_map(|project| {
-                    Some(project_report(
-                        self.project_status(project)?,
-                        project.document_count(),
-                        project.strictness(),
-                        &project.construct_tally(),
-                    ))
-                })
-                .collect(),
+            complete,
+            projects: reports.into_iter().map(|(_, report)| report).collect(),
         }
     }
 }

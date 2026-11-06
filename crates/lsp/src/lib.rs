@@ -43,6 +43,7 @@ mod folding_range;
 mod hover;
 mod include_summary;
 mod includes;
+mod migration;
 mod position;
 mod preview;
 mod preview_link;
@@ -59,6 +60,10 @@ mod test_scripts;
 mod uri;
 mod workspace_symbol;
 
+pub use migration::{
+    InitOptions, MigrationFinding, MigrationOptions, MigrationPlan, PlannedContent, PlannedFile,
+    init_from_sphinx,
+};
 pub use position::PositionEncoding;
 pub use server::{CheckOptions, FolderCheck, ReferencesAt, check_folder, run};
 

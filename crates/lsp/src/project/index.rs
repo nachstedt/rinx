@@ -34,7 +34,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use rayon::prelude::*;
-use rinx_analyzer::{DocumentAnalysis, build_project_index_from_analyses};
+use rinx_analyzer::{
+    DocumentAnalysis, RequiredDeclarations, build_project_index_from_analyses,
+    required_declarations,
+};
 use rinx_ast::{Diagnostic, Document, Position, SourceMap};
 use rinx_index::{DefinitionKey, ExternalInventory, NameRange, ProjectIndex};
 use rinx_renderer::config::SiteConfig;
@@ -67,6 +70,9 @@ pub struct IndexedDocument {
     pub symbols: DocumentSymbols,
     /// What the document wrote that this build does not support.
     pub constructs: DocumentConstructs,
+    /// What the document needs a Bazel library to declare, which a
+    /// migration writes into the build file.
+    pub required: RequiredDeclarations,
 }
 
 impl IndexedDocument {
@@ -87,6 +93,7 @@ impl IndexedDocument {
             reads,
             uses: DocumentUses::of(document, source_map),
             constructs: DocumentConstructs::of(document, source_map),
+            required: required_declarations(document),
         }
     }
 }
@@ -450,6 +457,11 @@ impl Project {
         self.documents
             .iter()
             .map(|(doc_path, recorded)| (doc_path.as_str(), recorded.path.as_path()))
+    }
+
+    /// What the project records for each document.
+    pub fn indexed(&self) -> impl Iterator<Item = &IndexedDocument> {
+        self.documents.values()
     }
 
     /// The documents recorded at or under `path` — a document, or a directory

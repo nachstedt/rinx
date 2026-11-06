@@ -22,6 +22,7 @@ use rinx_index::DomainIndex;
 use rinx_parser::{DefaultRole, ParserConfig};
 use rinx_renderer::config::SiteConfig;
 
+use super::conf_facts::ConfFacts;
 use super::declarations::BuildDeclarations;
 use super::exclusion::Exclusion;
 use super::intersphinx::IntersphinxSettings;
@@ -272,6 +273,9 @@ pub struct ProjectSettings {
     /// from — the `ubproject.toml` and `schemas.json` of sphinx-needs — so
     /// a change to one is a change of configuration.
     pub config_files: Vec<PathBuf>,
+    /// What a migration carries from `conf.py` beyond the settings above —
+    /// for a Sphinx project only.
+    pub conf_facts: Option<ConfFacts>,
 }
 
 /// Sphinx's default root document.
@@ -302,6 +306,7 @@ impl Default for ProjectSettings {
             intersphinx: IntersphinxSettings::default(),
             domain_indices: BTreeSet::new(),
             config_files: Vec::new(),
+            conf_facts: None,
         }
     }
 }

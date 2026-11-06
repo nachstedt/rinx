@@ -14,8 +14,9 @@
 //! [`parse_files`] the filesystem loader that resolves `.. csv-table::`'s
 //! `:file:` option for both of them. [`entity_json_schema`] and
 //! [`diagnostic_codes_rst`] are developer tooling, regenerating checked-in
-//! files, and [`needs_schema`] converts a sphinx-needs configuration into an
-//! entity schema for a project migrating to the build.
+//! files, [`needs_schema`] converts a sphinx-needs configuration into an
+//! entity schema for a project migrating to the build, and [`init`] writes
+//! such a project's whole build.
 
 mod cli_args;
 mod diagnostic_codes_rst;
@@ -26,6 +27,7 @@ mod entity_schema;
 mod extract_doctests;
 mod genindex;
 mod index;
+mod init;
 mod inventory;
 mod lsp;
 mod modindex;
@@ -43,6 +45,7 @@ pub(crate) use entity_json_schema::cmd_entity_json_schema;
 pub(crate) use extract_doctests::cmd_extract_doctests;
 pub(crate) use genindex::cmd_genindex;
 pub(crate) use index::cmd_index;
+pub(crate) use init::cmd_init;
 pub(crate) use inventory::cmd_inventory;
 pub(crate) use lsp::cmd_lsp;
 pub(crate) use modindex::cmd_modindex;

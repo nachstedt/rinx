@@ -16,161 +16,6 @@ def write(path: Path, text: str) -> None:
     path.write_text(text)
 
 
-class TestTransclusionTargets:
-    def test_included_document_is_found_relative_to_the_including_file(
-        self, tmp_path: Path
-    ) -> None:
-        # Given a document in a subdirectory including a sibling
-        docs = tmp_path / "docs"
-        write(docs / "guide" / "index.rst", ".. include:: header.rst\n")
-        write(docs / "guide" / "header.rst", "Header\n======\n")
-
-        # When
-        included, outside = benchmark_entities.transclusion_targets(docs)
-
-        # Then the path is recorded relative to the corpus package
-        assert included == ["guide/header.rst"]
-        assert outside == []
-
-    def test_a_leading_slash_resolves_against_the_source_root(self, tmp_path: Path) -> None:
-        # Given an absolute (source-root-relative) include written from a
-        # subdirectory — the corpus package is the Sphinx source root
-        docs = tmp_path / "docs"
-        write(docs / "guide" / "index.rst", ".. include:: /shared/header.rst\n")
-        write(docs / "shared" / "header.rst", "Header\n======\n")
-
-        # When
-        included, _outside = benchmark_entities.transclusion_targets(docs)
-
-        # Then it resolves from the root, not from the including document
-        assert included == ["shared/header.rst"]
-
-    def test_a_source_outside_the_root_is_paired_with_where_the_parser_looks(
-        self, tmp_path: Path
-    ) -> None:
-        # Given a literalinclude escaping the source root
-        docs = tmp_path / "docs"
-        write(docs / "index.rst", ".. literalinclude:: ../pharaoh.toml\n")
-        write(tmp_path / "pharaoh.toml", "[tool]\n")
-
-        # When
-        included, outside = benchmark_entities.transclusion_targets(docs)
-
-        # Then the real location is paired with the source-root-relative
-        # path the parser clamps `..` to, which is where it must be copied
-        assert outside == [("pharaoh.toml", tmp_path / "pharaoh.toml")]
-        assert included == []
-
-    def test_a_csv_table_file_option_counts_as_a_parse_time_read(self, tmp_path: Path) -> None:
-        # Given a csv-table naming its data outside the source root
-        docs = tmp_path / "docs"
-        write(docs / "index.rst", ".. csv-table:: Cars\n   :file: ../data/cars.csv\n")
-        write(tmp_path / "data" / "cars.csv", "a,b\n")
-
-        # When
-        _included, outside = benchmark_entities.transclusion_targets(docs)
-
-        # Then
-        assert outside == [("data/cars.csv", tmp_path / "data" / "cars.csv")]
-
-    def test_a_source_that_does_not_exist_is_left_to_the_parser_to_report(
-        self, tmp_path: Path
-    ) -> None:
-        # Given a literalinclude naming a file nobody shipped
-        docs = tmp_path / "docs"
-        write(docs / "index.rst", ".. literalinclude:: ../gone.toml\n")
-
-        # When
-        included, outside = benchmark_entities.transclusion_targets(docs)
-
-        # Then nothing is declared or copied — there is nothing to copy, and
-        # `include.file-unreadable` is the honest outcome
-        assert (included, outside) == ([], [])
-
-    def test_a_templated_target_is_skipped(self, tmp_path: Path) -> None:
-        # Given a Pharaoh-templated include, which names no file at all
-        docs = tmp_path / "docs"
-        write(docs / "index.rst", ".. include:: {{page}}\n")
-
-        # When
-        included, outside = benchmark_entities.transclusion_targets(docs)
-
-        # Then nothing is declared — the parse will report it instead
-        assert (included, outside) == ([], [])
-
-    def test_a_jinja_include_is_declared_like_any_other_parse_time_read(
-        self, tmp_path: Path
-    ) -> None:
-        # Given the two lines 24 of the corpus's documents open with
-        docs = tmp_path / "docs"
-        write(
-            docs / "basic_example" / "index.rst",
-            '{% set page="index.rst" %}\n{% include "demo_page_header.rst" with context %}\n',
-        )
-        write(docs / "demo_page_header.rst", "Header\n")
-
-        # When
-        included, outside = benchmark_entities.transclusion_targets(docs)
-
-        # Then the template is a file the parser reads, so it is declared
-        # as parse_data and kept out of srcs — resolved from the *source
-        # root*, as Jinja's own loader resolves a template name, not from
-        # the subdirectory the including document sits in
-        assert included == ["demo_page_header.rst"]
-        assert outside == []
-
-    def test_the_corpus_library_asks_for_its_sources_to_be_templated(self) -> None:
-        # Given / When
-        text = benchmark_entities.render_corpus_build_file([], [])
-
-        # Then — without it the preamble would parse as the prose it is, and
-        # the shared header would never reach a page
-        assert "jinja = True" in text
-
-    def test_a_non_rst_source_inside_the_package_needs_no_special_handling(
-        self, tmp_path: Path
-    ) -> None:
-        # Given a literalinclude of a Python file inside the package, which the
-        # generated `parse_data` glob already covers
-        docs = tmp_path / "docs"
-        write(docs / "index.rst", ".. literalinclude:: utils/helper.py\n")
-        write(docs / "utils" / "helper.py", "x = 1\n")
-
-        # When
-        included, outside = benchmark_entities.transclusion_targets(docs)
-
-        # Then it appears in neither list
-        assert (included, outside) == ([], [])
-
-
-class TestResolveFromDocument:
-    def test_a_relative_path_resolves_against_the_documents_directory(self) -> None:
-        # Given
-        # When / Then
-        assert (
-            benchmark_entities.resolve_from_document("header.rst", "guide/index.rst")
-            == "guide/header.rst"
-        )
-
-    def test_a_leading_slash_means_the_source_root(self) -> None:
-        # Given a source-root-relative path written from a subdirectory
-        # When / Then
-        assert (
-            benchmark_entities.resolve_from_document("/_images/x.png", "a/b/index.rst")
-            == "_images/x.png"
-        )
-
-    def test_parent_components_pop_and_never_escape_the_root(self) -> None:
-        # Given a path with more `..` than there is depth — the parser pops
-        # rather than escaping, so the result is clamped at the root
-        # When / Then
-        assert benchmark_entities.resolve_from_document("../../x.toml", "index.rst") == "x.toml"
-        assert (
-            benchmark_entities.resolve_from_document("../shared/x.png", "a/b/i.rst")
-            == "a/shared/x.png"
-        )
-
-
 class TestCopyOutsideSources:
     def test_the_file_is_placed_where_the_parser_will_look_for_it(self, tmp_path: Path) -> None:
         # Given a source outside the source root and the path the parser clamps
@@ -181,11 +26,12 @@ class TestCopyOutsideSources:
         source.write_text("[tool]\n")
 
         # When
-        benchmark_entities.copy_outside_sources(workspace, [("pharaoh.toml", source)])
+        copies = benchmark_entities.copy_outside_sources(workspace, [("pharaoh.toml", source)])
 
         # Then the corpus itself is untouched; only the disposable generated
-        # workspace gains a file
+        # workspace gains a file, which the migration is told about
         assert (workspace / "pharaoh.toml").read_text() == "[tool]\n"
+        assert copies == [workspace / "pharaoh.toml"]
 
     def test_a_nested_destination_has_its_directories_created(self, tmp_path: Path) -> None:
         # Given a destination inside a directory that does not exist yet
@@ -199,49 +45,6 @@ class TestCopyOutsideSources:
 
         # Then
         assert (workspace / "data" / "cars.csv").read_text() == "a,b\n"
-
-
-class TestRenderCorpusBuildFile:
-    def test_included_documents_are_excluded_from_srcs_and_declared_as_data(self) -> None:
-        # Given one included document
-        # When
-        text = benchmark_entities.render_corpus_build_file(["header.rst"], [])
-
-        # Then it is kept out of srcs — or it would be published as a page of
-        # its own as well as being spliced in — and declared as parse_data
-        srcs, parse_data = text.split("parse_data = ")
-        assert '"header.rst"' in srcs.split("exclude = ")[1]
-        assert '"header.rst"' in parse_data
-
-    def test_a_source_copied_in_from_outside_is_declared_as_parse_data(self) -> None:
-        # Given a file copied to where the parser looks for it
-        # When
-        text = benchmark_entities.render_corpus_build_file([], ["pharaoh.toml"])
-
-        # Then it still has to reach the parse action's sandbox
-        assert '"pharaoh.toml"' in text.split("parse_data = ")[1]
-
-    def test_every_glob_excludes_bazels_output_symlinks(self) -> None:
-        # Given a corpus whose root package *is* the workspace root, so the
-        # convenience symlinks sit inside every glob's reach
-        # When
-        text = benchmark_entities.render_corpus_build_file([], [])
-
-        # Then no glob can follow one into the previous run's outputs — which
-        # would make the site's own output an input to the action writing it
-        globs = text.count("glob(")
-        excludes = text.count(f"{json.dumps(benchmark_entities.OUTPUT_SYMLINK_GLOB)}")
-        assert globs == 3
-        assert excludes == 3
-
-    def test_the_schema_is_declared_on_both_rules(self) -> None:
-        # Given any corpus — the library parses against the schema and the site
-        # indexes against it; a mismatch is `entity.schema-mismatch`
-        # When
-        text = benchmark_entities.render_corpus_build_file([], [])
-
-        # Then
-        assert text.count(f'entity_schema = "{benchmark_entities.SCHEMA_NAME}"') == 2
 
 
 class TestDiscardStaleCorpusOutputs:
@@ -473,45 +276,64 @@ class TestSummaryRows:
         assert rows[0].value == "2 distinct (6 occurrences)"
 
 
-class TestConvertSchema:
-    def test_runs_rinx_needs_schema_and_reads_its_report(
+class TestMigrate:
+    def test_copies_the_outside_sources_a_dry_run_names_then_migrates_declaring_them(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        # Given a binary that prints one unconvertible construct
-        calls: list[list[str]] = []
+        # Given a source outside the corpus, which the dry run names
+        workspace = tmp_path / "docs"
+        workspace.mkdir()
+        outside = tmp_path / "pharaoh.toml"
+        outside.write_text("[tool]\n")
+        monkeypatch.setattr(benchmark_entities, "corpus_workspace", lambda: workspace)
+        calls: list[tuple[list[str], bool]] = []
 
-        def run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
-            calls.append(command)
-            report = [{"category": "variants", "detail": "field a"}]
-            return subprocess.CompletedProcess(command, 0, json.dumps(report), "")
+        def migrate_corpus(
+            _: Path, __: Path, extra_args: list[str], *, dry_run: bool = False
+        ) -> benchmark_common.Migration:
+            calls.append((list(extra_args), dry_run))
+            outside_finding: benchmark_common.MigrationFinding = {
+                "kind": "outside-source-root",
+                "path": str(outside),
+                "build_path": "pharaoh.toml",
+                "message": "m",
+            }
+            unconverted: benchmark_common.MigrationFinding = {
+                "kind": "needs-unconverted",
+                "entry": {"category": "variants", "detail": "field a"},
+                "message": "m",
+            }
+            return benchmark_common.Migration(files=[], findings=[outside_finding, unconverted])
 
-        monkeypatch.setattr(benchmark_entities.subprocess, "run", run)
+        monkeypatch.setattr(benchmark_common, "migrate_corpus", migrate_corpus)
+
+        (workspace / "BUILD.bazel").write_text("")
 
         # When
-        report = benchmark_entities.convert_schema(tmp_path, tmp_path / "rinx")
+        report = benchmark_entities.migrate(tmp_path / "rinx")
 
-        # Then
+        # Then — the warm-up's placeholder made way for the migration's
+        assert not (workspace / "BUILD.bazel").exists()
+        assert (workspace / "pharaoh.toml").read_text() == "[tool]\n"
+        assert calls == [
+            (["--jinja"], True),
+            (["--jinja", "--parse-data", str(workspace / "pharaoh.toml")], False),
+        ]
         assert report == [("variants", "field a")]
-        assert calls[0][:2] == [str(tmp_path / "rinx"), "needs_schema"]
-        assert calls[0][calls[0].index("--ubproject") + 1] == str(tmp_path / "ubproject.toml")
-        assert calls[0][calls[0].index("--output") + 1] == str(tmp_path / "entities.toml")
 
-    def test_is_none_when_the_conversion_fails(
+    def test_is_none_when_the_migration_fails(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # Given
-        monkeypatch.setattr(
-            benchmark_entities.subprocess,
-            "run",
-            lambda command, **_: subprocess.CompletedProcess(command, 1, "", "boom"),
-        )
+        monkeypatch.setattr(benchmark_entities, "corpus_workspace", lambda: tmp_path)
+        monkeypatch.setattr(benchmark_common, "migrate_corpus", lambda *_, **__: None)
 
         # When / Then
-        assert benchmark_entities.convert_schema(tmp_path, tmp_path / "rinx") is None
+        assert benchmark_entities.migrate(tmp_path / "rinx") is None
 
 
 class TestRunBenchmark:
-    def test_converts_the_schema_between_the_warm_up_and_the_corpus_build(
+    def test_migrates_the_corpus_between_the_warm_up_and_its_build(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # Given every step recording that it ran
@@ -524,8 +346,8 @@ class TestRunBenchmark:
         )
         monkeypatch.setattr(
             benchmark_entities,
-            "convert_schema",
-            lambda *_: steps.append("convert") or [("variants", "x")],
+            "migrate",
+            lambda *_: steps.append("migrate") or [("variants", "x")],
         )
         built = benchmark_common.BuildResult(succeeded=True, warmup_seconds=1.0, corpus_seconds=2.0)
         monkeypatch.setattr(
@@ -536,17 +358,17 @@ class TestRunBenchmark:
         result, report = benchmark_entities.run_benchmark()
 
         # Then
-        assert steps == ["warm", "find", "convert", "build"]
+        assert steps == ["warm", "find", "migrate", "build"]
         assert result == built
         assert report == [("variants", "x")]
 
-    def test_a_failed_conversion_fails_without_building_the_corpus(
+    def test_a_failed_migration_fails_without_building_the_corpus(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # Given
         monkeypatch.setattr(benchmark_entities, "warm_up", lambda **_: (True, 1.0))
         monkeypatch.setattr(benchmark_common, "find_rinx_binary", lambda _: tmp_path)
-        monkeypatch.setattr(benchmark_entities, "convert_schema", lambda *_: None)
+        monkeypatch.setattr(benchmark_entities, "migrate", lambda *_: None)
 
         def build(_: float) -> benchmark_common.BuildResult:
             message = "the corpus must not be built"

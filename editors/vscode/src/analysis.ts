@@ -52,12 +52,26 @@ export interface ConstructReport {
     examples: ExampleSite[];
 }
 
+/** What migrating a Sphinx project into a rinx build writes, and leaves out. */
+export interface MigrationReport {
+    /** The conf.py the migration is offered on. */
+    conf: string;
+    /** The files it writes. */
+    files: string[];
+    /** The files it would overwrite, which keep it from being offered. */
+    conflicts: string[];
+    /** What it leaves out, each a sentence. */
+    findings: string[];
+}
+
 /** One project's part of the report. */
 export interface ProjectReport {
     project: ProjectStatus;
     documents: number;
     extensions: ExtensionReport[];
     constructs: ConstructReport[];
+    /** For a scanned Sphinx project. */
+    migration?: MigrationReport;
 }
 
 /** The answer to `rinx/analyseProject`. */
@@ -164,6 +178,33 @@ function extensionList(project: ProjectReport): string {
     return `<h3>Declared extensions</h3><ul>${items.join('')}</ul>`;
 }
 
+/** A bulleted list of `items`, each already HTML. */
+function htmlList(items: string[]): string {
+    return `<ul>${items.map((item) => `<li>${item}</li>`).join('')}</ul>`;
+}
+
+/** The path of the file at `uri` relative to the workspace. */
+function fileName(uri: string): string {
+    return vscode.workspace.asRelativePath(vscode.Uri.parse(uri));
+}
+
+/** What migrating `project` writes and leaves out, with the button doing it — or nothing for a project it is not offered for. */
+function migrationSection(project: ProjectReport): string {
+    const migration = project.migration;
+    if (!migration) return '';
+    const files = htmlList(migration.files.map((uri) => `<code>${escapeHtml(fileName(uri))}</code>`));
+    const action =
+        migration.conflicts.length === 0
+            ? `<button data-conf="${escapeHtml(migration.conf)}">Migrate to rinx</button>`
+            : `<p class="notice">Not offered: it would overwrite ${migration.conflicts
+                  .map((uri) => `<code>${escapeHtml(fileName(uri))}</code>`)
+                  .join(', ')}.</p>`;
+    const findings =
+        migration.findings.length === 0 ? '' : `<p>Left out:</p>${htmlList(migration.findings.map(escapeHtml))}`;
+    return `<h3>Migrating to rinx</h3>
+  <p>Writes the project's Bazel build:</p>${files}${findings}${action}`;
+}
+
 /** One project's part of the page. */
 function projectSection(project: ProjectReport): string {
     const docs = project.documents === 1 ? 'document' : 'documents';
@@ -173,6 +214,7 @@ function projectSection(project: ProjectReport): string {
   <p>${project.documents} ${docs}.${project.constructs.length === 0 ? ' Nothing rinx does not support.' : ''}</p>
   ${extensionList(project)}
   ${constructs}
+  ${migrationSection(project)}
 </section>`;
 }
 
@@ -185,6 +227,8 @@ document.addEventListener('click', (event) => {
     event.preventDefault();
     if (target.id === 'refresh') {
         vscode.postMessage({ type: 'refresh' });
+    } else if (target.dataset.conf) {
+        vscode.postMessage({ type: 'migrate', conf: target.dataset.conf });
     } else if (target.dataset.link) {
         vscode.postMessage({ type: 'link', href: target.dataset.link });
     } else if (target.dataset.uri) {
@@ -280,9 +324,18 @@ export class AnalysisPanel {
     ) {
         this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
         this.panel.webview.onDidReceiveMessage(
-            (message: { type?: string; href?: unknown; uri?: unknown; line?: unknown; column?: unknown }) => {
+            (message: {
+                type?: string;
+                href?: unknown;
+                uri?: unknown;
+                line?: unknown;
+                column?: unknown;
+                conf?: unknown;
+            }) => {
                 if (message.type === 'refresh') {
                     void this.refresh();
+                } else if (message.type === 'migrate' && typeof message.conf === 'string') {
+                    void this.migrate(message.conf);
                 } else if (message.type === 'link' && typeof message.href === 'string') {
                     void this.openLink(message.href);
                 } else if (
@@ -312,6 +365,12 @@ export class AnalysisPanel {
         if (this.disposed || !this.requests.isLatest(request)) return;
         this.page = page;
         this.panel.webview.html = page;
+    }
+
+    /** Migrates the project configured by `conf`, then shows what is left. */
+    private async migrate(conf: string): Promise<void> {
+        await vscode.commands.executeCommand('rinx.migrateToRinx', vscode.Uri.parse(conf));
+        await this.refresh();
     }
 
     /** Opens a compatibility link in the browser. */

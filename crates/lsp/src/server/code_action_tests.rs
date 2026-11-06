@@ -131,14 +131,14 @@ fn publishes(workspace: &Workspace, messages: &[Message], file: &str) -> bool {
 }
 
 #[test]
-fn test_the_initialize_result_announces_quick_fixes() {
+fn test_the_initialize_result_announces_quick_fixes_and_the_migration() {
     // When
     let (result, _) = initialize_result(&ClientCapabilities::default());
 
     // Then
     assert_eq!(
         serde_json::to_value(result.capabilities.code_action_provider).expect("serializes"),
-        serde_json::json!({"codeActionKinds": ["quickfix"]})
+        serde_json::json!({"codeActionKinds": ["quickfix", "source.migrateToRinx"]})
     );
 }
 

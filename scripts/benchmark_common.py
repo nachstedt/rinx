@@ -1,11 +1,12 @@
 """Corpus-agnostic machinery shared by the benchmark scripts.
 
 `benchmark.py` (CPython, general RST coverage) and `benchmark_entities.py`
-(sphinx-needs, entity-model coverage) do the same five things — clone a corpus
+(sphinx-needs, entity-model coverage) do the same six things — clone a corpus
 at a pinned tag, generate a Bazel workspace around it, build a warm-up site,
-time the corpus build, and diff the resulting warnings against a hand-authored
-whitelist. Only the corpus, the generated `BUILD.bazel` and the shape of the
-report differ, so everything else lives here.
+migrate the corpus with `rinx init --from-sphinx` (`migrate_corpus`), time the
+corpus build, and diff the resulting warnings against a hand-authored
+whitelist. Only the corpus and the shape of the report differ, so everything
+else lives here.
 
 The one structural difference from the original single-script version: every
 function takes the generated workspace directory explicitly rather than reading
@@ -738,6 +739,60 @@ def exit_status(*, build_succeeded: bool, failures: Sequence[str] = ()) -> int:
     `MAX_LSP_WARNINGS`).
     """
     return 0 if build_succeeded and not failures else 1
+
+
+class MigrationFinding(TypedDict, total=False):
+    """One thing `rinx init --from-sphinx` left out, as its report holds it.
+
+    `kind` and `message` are always there; the other keys belong to some
+    kinds only.
+    """
+
+    kind: str
+    message: str
+    setting: str
+    name: str
+    path: str
+    build_path: str
+    entry: dict[str, str]
+
+
+@dataclass(frozen=True)
+class Migration:
+    """What `rinx init --from-sphinx` wrote, or would write, and left out."""
+
+    files: list[str]
+    findings: list[MigrationFinding]
+
+    def of_kind(self, kind: str) -> list[MigrationFinding]:
+        """The findings of `kind`, in report order."""
+        return [finding for finding in self.findings if finding.get("kind") == kind]
+
+
+def migrate_corpus(
+    binary: Path, source_dir: Path, extra_args: Sequence[str] = (), *, dry_run: bool = False
+) -> Migration | None:
+    """Migrate the Sphinx project in `source_dir` into its rinx build.
+
+    Runs `rinx init --from-sphinx`, the generator a user runs too, so the
+    benchmarks build exactly what a migration writes. `dry_run` asks only
+    what it would write and leave out. None when it failed.
+    """
+    command = [str(binary), "init", "--from-sphinx", str(source_dir), *extra_args]
+    if dry_run:
+        command.append("--dry-run")
+    else:
+        print(f"Migrating {source_dir} with rinx init --from-sphinx...")
+    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        print(f"rinx init failed:\n{result.stderr}")
+        return None
+    report = json.loads(result.stdout)
+    migration = Migration(files=report["files"], findings=report["findings"])
+    if not dry_run:
+        for finding in migration.findings:
+            print(f"  left out: {finding.get('message')}")
+    return migration
 
 
 def find_rinx_binary(workspace: Path) -> Path | None:

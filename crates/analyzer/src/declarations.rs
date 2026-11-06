@@ -10,6 +10,7 @@
 //! None of these is subject to `.. noqa:`: each is a fault of the build file,
 //! which no comment in a document should be able to hide.
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use rinx_ast::{
@@ -66,6 +67,32 @@ pub fn undeclared_assets(doc: &Document, declared: &dyn DeclaredFiles) -> Vec<Di
         }
     }
     found
+}
+
+/// What a document needs its Bazel library to declare: the inverse of
+/// [`undeclared_assets`] and [`disabled_diagrams`], answered by the same walks
+/// so a generated build file declares exactly what the checks ask for.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct RequiredDeclarations {
+    /// The project files its pictures show, as paths from the source root.
+    pub images: BTreeSet<PathBuf>,
+    /// The project files its linked `:download:` roles name.
+    pub downloads: BTreeSet<PathBuf>,
+    /// Whether it draws a diagram, needing `diagrams = True`.
+    pub diagrams: bool,
+}
+
+/// What `doc` needs its library to declare.
+#[must_use]
+pub fn required_declarations(doc: &Document) -> RequiredDeclarations {
+    RequiredDeclarations {
+        images: image_paths(doc).into_iter().map(|(path, _)| path).collect(),
+        downloads: download_paths(doc)
+            .into_iter()
+            .map(|(path, _)| path)
+            .collect(),
+        diagrams: !disabled_diagrams(doc).is_empty(),
+    }
 }
 
 /// The project file each `.. image::`, `.. figure::` and `.. |name| image::`
@@ -542,5 +569,50 @@ mod tests {
 
         // When / Then
         assert!(disabled_diagrams(&doc).is_empty());
+    }
+
+    #[test]
+    fn test_required_declarations_lists_what_the_checks_would_ask_for() {
+        // Given — an image, a download and a diagram nested in an admonition
+        let doc = document(
+            "guide/index.rst",
+            vec![
+                Node::directive(Directive::Image(Box::new(image("logo.png", 1)))),
+                Node::paragraph(vec![download("https://example.org/a.csv", 2)]),
+                Node::paragraph(vec![download("a.csv", 3)]),
+                Node::directive(Directive::Admonition {
+                    kind: AdmonitionKind::Note,
+                    title: None,
+                    collapsible: None,
+                    body: vec![Node::directive(Directive::Uml(Box::new(Uml::new(
+                        UmlSource::PlantUml,
+                        "A -> B".to_string(),
+                    ))))],
+                }),
+            ],
+        );
+
+        // When
+        let required = required_declarations(&doc);
+
+        // Then
+        assert_eq!(
+            required.images,
+            BTreeSet::from([PathBuf::from("guide/logo.png")])
+        );
+        assert_eq!(
+            required.downloads,
+            BTreeSet::from([PathBuf::from("guide/a.csv")])
+        );
+        assert!(required.diagrams);
+    }
+
+    #[test]
+    fn test_required_declarations_of_a_plain_document_is_empty() {
+        // Given
+        let doc = document("index.rst", vec![Node::paragraph(Vec::new())]);
+
+        // When / Then
+        assert_eq!(required_declarations(&doc), RequiredDeclarations::default());
     }
 }

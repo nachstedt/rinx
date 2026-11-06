@@ -100,11 +100,13 @@ def clone_repo(python_version: str) -> None:
 
 
 def generate_bazel_project(workspace_root: str, python_version: str) -> None:
-    """Write the throwaway Bazel workspace around the cloned `Doc/` tree."""
-    print(
-        "Generating artificial Bazel project in /tmp "
-        "(MODULE.bazel, BUILD.bazel, config, and template)..."
-    )
+    """Write the throwaway Bazel workspace around the cloned `Doc/` tree.
+
+    `Doc/`'s own build is not written here: `rinx init --from-sphinx` writes
+    it from `Doc/conf.py` once the warm-up has built the binary (see
+    `run_benchmark`), as it would for any Sphinx project.
+    """
+    print("Generating artificial Bazel project in /tmp (MODULE.bazel and the warm-up)...")
 
     # Create MODULE.bazel
     #
@@ -132,23 +134,12 @@ python.toolchain(
     # resolves `@@//:MODULE.bazel` and fails to evaluate without it.
     (TARGET_DIR / "BUILD.bazel").write_text("")
 
-    # Create assets/BUILD.bazel for the CSS dependency
+    # The warm-up site's stylesheet.
     benchmark_common.write_assets_alias(TARGET_DIR)
 
-    doc_dir = TARGET_DIR / "Doc"
-
-    # Create config
-    (doc_dir / "rinx.toml").write_text('project = "CPython Benchmark"\n')
-
-    # Create template — use the project's default template for a nicely formatted output
-    default_template_path = Path(workspace_root) / "templates" / "default.html"
-    template_content = default_template_path.read_text()
-    (doc_dir / "custom_template.html").write_text(template_content)
-
-    # Beside `conf.py`, so the language server's `rinx lsp --check` reads the
-    # same file the build's parse actions do.
-    (doc_dir / "rinx_parser.toml").write_text(render_parser_config())
-    (doc_dir / "BUILD.bazel").write_text(render_corpus_build_file())
+    # Beside `conf.py`, where `rinx init` and the language server's
+    # `rinx lsp --check` both find it.
+    (TARGET_DIR / CORPUS_PACKAGE / "rinx_parser.toml").write_text(render_parser_config())
 
     benchmark_common.generate_warmup_package(TARGET_DIR, workspace_root)
 
@@ -169,56 +160,8 @@ def render_parser_config() -> str:
     )
 
 
-def render_corpus_build_file() -> str:
-    """The corpus package's `Doc/BUILD.bazel`: one library and its site."""
-    return """load("@rinx//:defs.bzl", "rinx_library", "rinx_site")
-
-rinx_library(
-    name = "cpython_docs",
-    srcs = glob(["**/*.rst"]),
-    # CPython's documents show real pictures, and an image has to be declared
-    # to reach the site — the same rule `parse_data` follows for the files a
-    # `.. csv-table::` reads. Globbed rather than listed because this file is
-    # generated: the corpus decides what is there, not us.
-    images = glob(
-        [
-            "**/*.png",
-            "**/*.jpg",
-            "**/*.jpeg",
-            "**/*.gif",
-            "**/*.svg",
-            "**/*.webp",
-        ],
-        allow_empty = True,
-    ),
-    # A `:download:` target has to be declared as well, or the site's
-    # validate_assets fails as `download.undeclared` and no page renders.
-    # CPython keeps the files its pages link under includes/; its .rst
-    # fragments there are sources (already in srcs), not downloads.
-    downloads = glob(
-        ["includes/**"],
-        exclude = ["**/*.rst"],
-        allow_empty = True,
-    ),
-    # The roles CPython's own extensions add; see IGNORED_ROLES.
-    parse_config = "rinx_parser.toml",
-)
-
-rinx_site(
-    name = "site",
-    config = "rinx.toml",
-    template = "custom_template.html",
-    css = "//assets:default.css",
-    # CPython documents ~300 modules, and Sphinx writes their index; so does
-    # this site, which the benchmark then measures too.
-    domain_indices = ["py-modindex"],
-    deps = [":cpython_docs"],
-)
-"""
-
-
 def run_benchmark(*, clean: bool = False) -> BuildResult:
-    """Builds rinx first, then times the CPython documentation build.
+    """Builds rinx first, migrates `Doc/` with it, then times the documentation build.
 
     The two are separate `bazel build` invocations on purpose. What the
     benchmark is about is how long it takes to turn 500-odd `.rst` files into
@@ -240,8 +183,15 @@ def run_benchmark(*, clean: bool = False) -> BuildResult:
         TARGET_DIR, f"//{WARMUP_PACKAGE}:site", "bazel_deps_build.log"
     )
     print(f"Dependency build finished in {deps_duration:.2f} seconds.")
+    failed = BuildResult(succeeded=False, warmup_seconds=deps_duration, corpus_seconds=None)
     if not deps_built:
-        return BuildResult(succeeded=False, warmup_seconds=deps_duration, corpus_seconds=None)
+        return failed
+    binary = benchmark_common.find_rinx_binary(TARGET_DIR)
+    if binary is None:
+        print("Could not find the rinx binary the warm-up built.")
+        return failed
+    if benchmark_common.migrate_corpus(binary, TARGET_DIR / CORPUS_PACKAGE) is None:
+        return failed
 
     print("\nRunning Bazel build of the CPython documentation...")
     build_succeeded, duration = benchmark_common.timed_bazel_build(

@@ -42,8 +42,8 @@ finished one 🔶. A heading with no marker means the step has not started.
   #27 (PR #365, prepared by #363), #28 (PR #374), #29 (PR #378), #30 (PR #386),
   #31 (PR #393, prepared by #387 and #390), #32 (PR #395), #33 and #34
   (prepared by #398, #400, #401 and #407), #35, #36 (prepared by #413, #414
-  and #416).
-- **Next: #37, `rinx init --from-sphinx`.**
+  and #416), #37.
+- **Next: #38, the performance pass.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -1350,7 +1350,7 @@ to the compatibility page.
 - Anchors in `compatibility.rst` to link to
 - Tests
 
-### 37. `rinx init --from-sphinx`
+### 37. `rinx init --from-sphinx` ✅
 
 **You experience:** one click writes `rinx.toml` and `BUILD.bazel`, and the
 server switches to rinx mode.
@@ -1359,6 +1359,25 @@ server switches to rinx mode.
 - `benchmark.py` calls it instead of its own generator
 - Extension command + reload into Bazel mode
 - Tests
+
+`rinx_lsp::migration` plans the files from the scanned project
+(ADR-049). The library declares what the documents' parses read, show,
+link and draw, and the `srcs` glob excludes what Sphinx does not build.
+`rinx init --from-sphinx` and the `source.migrateToRinx` source action on
+`conf.py` apply the plan, and the VS Code command *Rinx: Migrate Project to
+rinx* and the analysis panel's button trigger the action. A project outside
+any Bazel module becomes one at `conf.py`'s directory, and the server asks
+for that nested workspace's manifests. Both benchmarks migrate their corpus
+with `rinx init`. `tests/test_init_from_sphinx.sh` builds a migrated fixture.
+
+Not done here:
+- `intersphinx_mapping` is reported rather than written as `rinx_inventory`
+  targets, since pinning one needs its download and `sha256` (issue #420).
+- A `source-read` Jinja hook is invisible to reading `conf.py`, so only the
+  command line can say `--jinja` (issue #421).
+- A `/`-rooted path in a project migrated into an enclosing module resolves
+  from that module's root, unreported (issue #422).
+- A folder asks about one migrated module only (issue #423).
 
 ### 38. Performance pass
 
