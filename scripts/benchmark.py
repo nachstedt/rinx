@@ -114,8 +114,8 @@ def generate_bazel_project(workspace_root: str, python_version: str) -> None:
     # tree this workspace was cloned from, so an interpreter and the
     # documentation describing it can never disagree. `is_default = True` is
     # honoured only for the root module, and this generated workspace *is* the
-    # root when the benchmark builds — so this pin wins over the 3.x toolchain
-    # rinx registers for its own tests.
+    # root when the benchmark builds, and rinx declares a toolchain only for
+    # its own development — so this pin is the one the doctests would run on.
     module_bazel = benchmark_common.rinx_module_bazel("cpython_docs_bench", workspace_root)
     module_bazel += f"""
 # Pinned to the exact release this corpus was cloned from ({python_version});
