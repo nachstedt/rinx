@@ -20,13 +20,24 @@ module(
 
 bazel_dep(name = "rules_rust", version = "0.74.0")
 
-rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+# The toolchain this repository builds with. A build depending on rinx gets the
+# one rules_rust registers itself, and Bazel is moving towards ignoring
+# toolchains a non-root module registers, so rinx registers none for it. Every
+# target sets `edition = "2024"` itself, so neither depends on a default.
+rust = use_extension(
+    "@rules_rust//rust:extensions.bzl",
+    "rust",
+    dev_dependency = True,
+)
 rust.toolchain(
     edition = "2024",
 )
 use_repo(rust, "rust_toolchains")
 
-register_toolchains("@rust_toolchains//:all")
+register_toolchains(
+    "@rust_toolchains//:all",
+    dev_dependency = True,
+)
 
 # ── Crate dependencies (serde, serde_json) ────────────────────────────────────
 
