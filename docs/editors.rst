@@ -62,7 +62,7 @@ The server behaves the same in every editor. :ref:`vscode-diagnostics` describes
 - Completion of every role's targets — labels, documents, terms, numbers, equations, options, domain objects and entity ids, and the targets of loaded inventories — of directive names, options and option values, and of role names.
 - Hover, go to definition, find references and rename on references.
 - A quick fix on every diagnostic a ``.. noqa:`` can silence, writing that comment above the block holding it.
-- On a Sphinx project's ``conf.py``, the source action ``source.migrateToRinx``, writing the project's Bazel build as ``rinx init --from-sphinx`` does, for an editor that creates the files a workspace edit names.
+- On a Sphinx project's documents and its ``conf.py``, the source action ``source.migrateToRinx``, writing the project's Bazel build as ``rinx init --from-sphinx`` does, for an editor that creates the files a workspace edit names.
 - The document's outline: its sections, with the objects and entities written in them.
 - A search of the workspace's sections, labels, terms, objects and entities (``workspace/symbol``).
 - Folding of sections, directives, comments, literal blocks and tables, and the names the markup writes coloured by kind (semantic tokens). The Neovim snippet above links each kind's highlight group to a standard one; elsewhere, a theme colours ``directive``, ``option``, ``role``, ``reference`` and ``substitution`` tokens as it chooses.

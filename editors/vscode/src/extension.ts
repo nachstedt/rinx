@@ -98,7 +98,9 @@ export function activate(context: vscode.ExtensionContext): RinxApi {
         vscode.commands.registerCommand('rinx.analyseProject', () => {
             AnalysisPanel.createOrShow(runningAnalysisClient);
         }),
-        vscode.commands.registerCommand('rinx.migrateToRinx', (conf?: vscode.Uri) => migrateCommand(conf)),
+        vscode.commands.registerCommand('rinx.migrateToRinx', (conf?: vscode.Uri) =>
+            migrateCommand(client?.isRunning() ? client : undefined, conf),
+        ),
         vscode.commands.registerCommand('rinx.showLogs', () => {
             outputChannel.show();
         }),

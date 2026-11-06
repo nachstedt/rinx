@@ -967,7 +967,7 @@ impl ServerState {
     /// The actions for the document `uri` within `range`, of the kinds
     /// `only` asks for when it asks: the quick fixes for what it shows — its
     /// [`Self::build_fixes`], then a `.. noqa:` for anything else — and, on
-    /// a Sphinx project's `conf.py`, migrating the project.
+    /// a Sphinx project's `conf.py` or documents, migrating the project.
     pub(super) fn code_actions(
         &mut self,
         uri: &Uri,
@@ -988,17 +988,23 @@ impl ServerState {
         actions
     }
 
-    /// Migrating the Sphinx project whose `conf.py` is `uri` — offered once
-    /// its documents are scanned, to a client that creates files.
+    /// Migrating the Sphinx project whose `conf.py`, or one of whose
+    /// documents, is `uri` — offered once its documents are scanned, to a
+    /// client that creates files. A document offers it too because an editor
+    /// attaches the server to reStructuredText only, so asks it nothing about
+    /// `conf.py`.
     fn migrate_action(&mut self, uri: &Uri) -> Option<CodeAction> {
         if self.edit_shape != EditShape::CreatingFiles || self.scan.is_some() {
             return None;
         }
-        let conf = file_path(uri)?;
-        let project = self
+        let path = file_path(uri)?;
+        let id = self
             .projects
-            .values_mut()
-            .find(|project| project.conf_path() == Some(conf.as_path()))?;
+            .iter()
+            .find(|(_, project)| project.conf_path() == Some(path.as_path()))
+            .map(|(id, _)| *id)
+            .or_else(|| self.locate(&path).map(|(id, _)| id))?;
+        let project = self.projects.get_mut(&id)?;
         let plan = plan_migration(project, &MigrationOptions::default())?;
         migrate_action(&plan, self.encoding, &|path| {
             std::fs::read_to_string(path).ok()

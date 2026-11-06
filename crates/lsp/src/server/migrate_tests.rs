@@ -126,12 +126,27 @@ fn test_conf_py_is_offered_the_migration_writing_the_projects_build() {
 }
 
 #[test]
-fn test_the_migration_is_offered_on_conf_py_only() {
-    // Given
-    let (workspace, mut state) = migrating("migrate_conf_only");
+fn test_the_migration_is_offered_on_a_document_of_the_project_too() {
+    // Given — an editor asks about the documents it attaches the server to
+    let (workspace, mut state) = migrating("migrate_document");
 
     // When
     let offered = actions(&mut state, &workspace, "docs/index.rst", None);
+
+    // Then
+    assert!(migration(&offered).is_some(), "{offered:?}");
+}
+
+#[test]
+fn test_a_folder_without_conf_py_is_offered_no_migration() {
+    // Given
+    let workspace = Workspace::new("migrate_folder", &[("index.rst", "Home\n====\n")]);
+    let (state, _) = workspace.server(false);
+    let mut state = state.with_edit_shape(EditShape::CreatingFiles);
+    state.on_scan_event(workspace.scanned());
+
+    // When
+    let offered = actions(&mut state, &workspace, "index.rst", None);
 
     // Then
     assert!(migration(&offered).is_none(), "{offered:?}");

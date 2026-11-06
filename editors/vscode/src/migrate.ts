@@ -6,6 +6,7 @@
 // extension.ts tells the server, which switches the project to rinx mode.
 
 import * as vscode from 'vscode';
+import { CodeActionRequest, type LanguageClient } from 'vscode-languageclient/node';
 
 /** The kind the server offers the migration as. */
 export const MIGRATE_KIND = 'source.migrateToRinx';
@@ -79,21 +80,40 @@ async function confToMigrate(given: vscode.Uri | undefined): Promise<vscode.Uri 
     return picked?.uri;
 }
 
-/** The command: migrates `given`, or a project found as `confToMigrate` says. */
-export async function migrateCommand(given?: vscode.Uri): Promise<MigrationOutcome | undefined> {
+/**
+ * The source actions of `kind` the server behind `client` offers on `uri`.
+ *
+ * Asked of the client rather than through `vscode.executeCodeActionProvider`:
+ * the client is registered for reStructuredText only, so VS Code would ask
+ * it nothing about a conf.py.
+ */
+async function serverCodeActions(client: LanguageClient, uri: vscode.Uri, kind: string): Promise<vscode.CodeAction[]> {
+    const start = { line: 0, character: 0 };
+    const result = await client.sendRequest(CodeActionRequest.type, {
+        textDocument: { uri: client.code2ProtocolConverter.asUri(uri) },
+        range: { start, end: start },
+        context: { diagnostics: [], only: [kind] },
+    });
+    const converted = await client.protocol2CodeConverter.asCodeActionResult(result ?? []);
+    return converted.filter((action): action is vscode.CodeAction => action instanceof vscode.CodeAction);
+}
+
+/** The command: migrates `given`, or a project found as `confToMigrate` says, through `client`. */
+export async function migrateCommand(
+    client: LanguageClient | undefined,
+    given?: vscode.Uri,
+): Promise<MigrationOutcome | undefined> {
+    if (!client) {
+        void vscode.window.showWarningMessage('Rinx: the language server is not running yet.');
+        return undefined;
+    }
     const conf = await confToMigrate(given);
     if (!conf) {
         void vscode.window.showWarningMessage('Rinx: no Sphinx project (conf.py) to migrate.');
         return undefined;
     }
     const outcome = await migrateProject(conf, {
-        codeActions: async (uri, kind) =>
-            (await vscode.commands.executeCommand<vscode.CodeAction[] | undefined>(
-                'vscode.executeCodeActionProvider',
-                uri,
-                new vscode.Range(0, 0, 0, 0),
-                kind,
-            )) ?? [],
+        codeActions: (uri, kind) => serverCodeActions(client, uri, kind),
         applyEdit: (edit) => Promise.resolve(vscode.workspace.applyEdit(edit)),
         save: async (uri) => {
             await (await vscode.workspace.openTextDocument(uri)).save();
