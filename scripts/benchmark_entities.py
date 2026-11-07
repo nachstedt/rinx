@@ -131,10 +131,6 @@ def generate_bazel_project(rinx_root: str) -> None:
     (workspace / "MODULE.bazel").write_text(
         benchmark_common.rinx_module_bazel("sphinx_needs_demo_bench", rinx_root)
     )
-    # A placeholder until `rinx init` writes the corpus' own: rules_rust's
-    # crate_universe resolves `@@//:MODULE.bazel` while the warm-up builds,
-    # and fails without a root package.
-    (workspace / ROOT_BUILD_FILE).write_text("")
     benchmark_common.write_assets_alias(workspace)
     benchmark_common.generate_warmup_package(workspace, rinx_root)
 
@@ -252,7 +248,7 @@ def migrate(binary: Path) -> Report | None:
     """
     workspace = corpus_workspace()
     # `rinx init` writes the root package's build file and overwrites none,
-    # so the warm-up's placeholder makes way.
+    # so the one an earlier run wrote into the clone makes way.
     (workspace / ROOT_BUILD_FILE).unlink(missing_ok=True)
     preview = benchmark_common.migrate_corpus(binary, workspace, INIT_ARGS, dry_run=True)
     if preview is None:

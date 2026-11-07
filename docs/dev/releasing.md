@@ -28,8 +28,8 @@ rest:
    - Set the new version in `Cargo.toml`: `[workspace.package] version`, and
      the `version` of every entry under `[workspace.dependencies]`.
    - Set it in `MODULE.bazel`'s `module(version = ...)`.
-   - Run `cargo build` so `Cargo.lock` follows, and
-     `CARGO_BAZEL_REPIN=1 bazel build //:rinx` so `Cargo.bazel.lock` does.
+   - Run `cargo build` so `Cargo.lock` follows, and `bazel build //:rinx` so
+     `MODULE.bazel.lock` does.
    - In `CHANGELOG.md`, rename `## [Unreleased]`'s entries into a dated
      `## [X.Y.Z] - YYYY-MM-DD` section, and update the compare links at the
      bottom.

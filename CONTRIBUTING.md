@@ -35,8 +35,9 @@ bazel build //examples:site        # the example project, end to end
 bash tests/test_strict_deps.sh     # build-level tests live in tests/
 ```
 
-Changing a Cargo dependency requires `CARGO_BAZEL_REPIN=1` on the next Bazel
-build, which refreshes the checked-in `Cargo.bazel.lock`.
+Bazel resolves Cargo dependencies from `Cargo.lock` (through rules_rs), so a
+changed dependency needs nothing beyond `cargo build`; commit the updated
+`MODULE.bazel.lock` that the next Bazel build writes alongside it.
 
 ### What a pull request needs
 

@@ -35,9 +35,6 @@ def generate_warmup_workspace(target_dir: Path, rinx_root: str) -> None:
     (target_dir / "MODULE.bazel").write_text(
         benchmark_common.rinx_module_bazel(MODULE_NAME, rinx_root)
     )
-    # Empty, but it makes the root a package: rules_rust's crate_universe
-    # resolves `@@//:MODULE.bazel` and fails to evaluate without it.
-    (target_dir / "BUILD.bazel").write_text("")
     benchmark_common.write_assets_alias(target_dir)
     benchmark_common.generate_warmup_package(target_dir, rinx_root)
 

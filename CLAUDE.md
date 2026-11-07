@@ -28,7 +28,6 @@ bazel build //docs:site           # rinx's own documentation, built by rinx (str
 bash tests/test_<mechanism>.sh    # one shell test per Bazel mechanism (strict deps, parse_data, images, diagrams, ...); run the one for what you touch
 (cd e2e/smoke && bazel test //...)   # rinx consumed as a dependency — what the BCR presubmit runs
 bazel run //scripts:benchmark     # CPython docs benchmark (see docs/benchmark.rst); also :benchmark_entities
-CARGO_BAZEL_REPIN=1 bazel build //examples:site   # after changing a Cargo dependency
 
 # Python scripts (scripts/, examples/shared/) — see docs/dev/python.md
 uv run ruff format && uv run ruff check && uv run ty check && uv run pytest --cov
@@ -44,7 +43,7 @@ There are no `rust_test` Bazel targets — Rust tests run through Cargo only.
 
 After any code change: run `cargo clippy --workspace --tests` (fix warnings, don't `#[allow(...)]` them — treat them as refactor signals) and `cargo fmt`, then verify `bazel build //examples:site`. After a Python change, run ruff, ty and pytest likewise (fix findings, don't `# noqa` them). `doctest_runner.py`, `publish_crates.py` and `publish_pages.py` must stay stdlib-only, and the former Python 3.9-compatible, since it runs in users' `py_test`s.
 
-`Cargo.bazel.lock` (crate_universe's lockfile, separate from `Cargo.lock`) is checked in and required: without it rinx cannot be consumed as a non-root bzlmod module. Bazel asks for a repin rather than using stale crates.
+Bazel builds the Cargo workspace with rules_rs, which resolves crates from `Cargo.lock` itself: a Cargo dependency change needs no extra step, only the `MODULE.bazel.lock` the next Bazel build updates. `MODULE.bazel` declares a Rust *version* and the `rinx_crates` hub but registers no toolchain, and its `all_crate_deps(cargo_only = True)` keeps the workspace's own crates out of a target's generated deps, which `crates/*/BUILD.bazel` list explicitly (`docs/decisions/050-rules-rs.md`).
 
 ## Architecture
 

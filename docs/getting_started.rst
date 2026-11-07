@@ -3,7 +3,7 @@
 Getting started
 ===============
 
-rinx runs as part of a Bazel build. You need Bazel 8 or 9 (preferably through
+rinx runs as part of a Bazel build. You need Bazel 8.7 or later (preferably through
 `Bazelisk <https://github.com/bazelbuild/bazelisk>`__) and a C compiler for
 linking the Rust binary. Everything else, including the Rust, Java and Python
 toolchains, is fetched by Bazel.

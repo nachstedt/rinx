@@ -4,9 +4,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    # A Cargo change also needs `CARGO_BAZEL_REPIN=1` to refresh
-    # Cargo.bazel.lock, which Dependabot cannot do; grouping keeps that to one
-    # pull request a week.
+    # Grouped, so the weekly bumps arrive as one pull request.
     groups:
       cargo:
         patterns: ["*"]

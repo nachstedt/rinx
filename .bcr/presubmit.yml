@@ -1,7 +1,7 @@
 # The Bazel Central Registry's checks for a new rinx version.
 #
 # Windows is absent on purpose: the rules drive their actions through bash,
-# and crate_universe resolves only the platforms `MODULE.bazel` lists.
+# and rules_rs resolves crates only for the platforms `MODULE.bazel` lists.
 matrix:
   platform: ["debian11", "ubuntu2204", "macos", "macos_arm64"]
   bazel: ["8.x", "9.x"]

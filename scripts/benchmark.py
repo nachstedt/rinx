@@ -130,10 +130,6 @@ python.toolchain(
 """
     (TARGET_DIR / "MODULE.bazel").write_text(module_bazel)
 
-    # Empty, but it makes the root a package: rules_rust's crate_universe
-    # resolves `@@//:MODULE.bazel` and fails to evaluate without it.
-    (TARGET_DIR / "BUILD.bazel").write_text("")
-
     # The warm-up site's stylesheet.
     benchmark_common.write_assets_alias(TARGET_DIR)
 

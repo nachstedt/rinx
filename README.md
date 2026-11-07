@@ -126,8 +126,8 @@ bazel build //examples:site        # the example project, end to end
 bash tests/test_strict_deps.sh     # one of the build-level tests in tests/
 ```
 
-Changing a Cargo dependency requires `CARGO_BAZEL_REPIN=1` on the next Bazel
-build. [`CONTRIBUTING.md`](CONTRIBUTING.md) explains how to propose a change;
+Bazel resolves Cargo dependencies from `Cargo.lock` itself, so a changed
+dependency needs nothing beyond `cargo build`. [`CONTRIBUTING.md`](CONTRIBUTING.md) explains how to propose a change;
 [`CLAUDE.md`](CLAUDE.md) and [`guidelines.md`](guidelines.md) describe the code
 layout and conventions in detail.
 
