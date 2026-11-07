@@ -78,8 +78,10 @@ incompatible ways.
 - A directive's diagnostics are reported on its marker or first content line.
 - Unknown roles are reported, as `interpreted.unknown-role`, or as
   `interpreted.unsupported-role` for a docutils or Sphinx role rinx lacks.
-- rinx no longer adds a Python toolchain to the builds depending on it:
-  `rinx_doctest_tests` runs on the build's default Python.
+- rinx no longer adds a Python toolchain to, or registers a Rust toolchain
+  for, the builds depending on it: `rinx_doctest_tests` runs on the build's
+  default Python, and rinx is compiled with the Rust toolchain rules_rust
+  registers.
 
 ### Removed
 
