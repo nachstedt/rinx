@@ -64,7 +64,7 @@ Add rinx to your `MODULE.bazel`; it is in the
 [Bazel Central Registry](https://registry.bazel.build/modules/rinx):
 
 ```python
-bazel_dep(name = "rinx", version = "0.1.0")
+bazel_dep(name = "rinx", version = "0.2.0")
 ```
 
 Then declare your documents in a `BUILD.bazel`:

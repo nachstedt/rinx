@@ -9,6 +9,8 @@ incompatible ways.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-07
+
 ### Added
 
 - Roles: `:any:`, `:doc:`, `:download:` (with a `downloads` attribute on
@@ -127,5 +129,6 @@ The first public release. The documentation is at
   `button-link`.
 - A `preview` subcommand and a VS Code extension for live preview.
 
-[Unreleased]: https://github.com/nachstedt/rinx/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/nachstedt/rinx/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/nachstedt/rinx/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/nachstedt/rinx/releases/tag/v0.1.0
