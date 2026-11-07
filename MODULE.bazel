@@ -13,7 +13,8 @@ own examples, tests and scripts, and is invisible to such a user.
 
 module(
     name = "rinx",
-    version = "0.1.0",
+    version = "0.2.0",
+    bazel_compatibility = [">=8.7.0"],
 )
 
 # ── Rust toolchain and crates ─────────────────────────────────────────────────
