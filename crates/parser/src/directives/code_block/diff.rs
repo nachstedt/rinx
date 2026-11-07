@@ -7,8 +7,7 @@
 //!
 //! Written rather than pulled from a crate because the requirement is narrow:
 //! documentation examples, two files of a few hundred lines, output that only
-//! has to be readable and highlightable. A dependency would have to earn the
-//! `Cargo.bazel.lock` repin that adding one costs.
+//! has to be readable and highlightable, which does not earn a dependency.
 
 /// Lines of context shown either side of a change, matching `diff -u`.
 const CONTEXT: usize = 3;

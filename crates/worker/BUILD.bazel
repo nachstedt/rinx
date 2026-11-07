@@ -1,5 +1,6 @@
-load("@crates//:defs.bzl", "all_crate_deps")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("@rinx_crates//:defs.bzl", "all_crate_deps")
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
 
 rust_library(
     name = "rinx_lib",
@@ -7,6 +8,7 @@ rust_library(
     crate_name = "rinx",
     edition = "2024",
     deps = all_crate_deps(
+        cargo_only = True,
         normal = True,
     ) + [
         "//crates/analyzer:rinx_analyzer",
@@ -26,6 +28,7 @@ rust_binary(
     edition = "2024",
     visibility = ["//visibility:public"],
     deps = all_crate_deps(
+        cargo_only = True,
         normal = True,
     ) + [
         ":rinx_lib",

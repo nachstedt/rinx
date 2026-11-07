@@ -26,8 +26,6 @@ class TestGenerateWarmupWorkspace:
             benchmark_warmup.MODULE_NAME, str(root)
         )
         assert (target / "assets" / "BUILD.bazel").is_file()
-        # And its root is a package, which rules_rust's crate_universe needs
-        assert (target / "BUILD.bazel").is_file()
         assert (target / benchmark_common.WARMUP_PACKAGE / "BUILD.bazel").is_file()
 
     def test_replaces_a_workspace_left_by_an_earlier_run(self, tmp_path: Path) -> None:

@@ -312,7 +312,7 @@ class TestMigrate:
         # When
         report = benchmark_entities.migrate(tmp_path / "rinx")
 
-        # Then — the warm-up's placeholder made way for the migration's
+        # Then — an earlier run's build file made way for the migration's
         assert not (workspace / "BUILD.bazel").exists()
         assert (workspace / "pharaoh.toml").read_text() == "[tool]\n"
         assert calls == [
