@@ -275,6 +275,26 @@ def timed_bazel_build(
     return result.returncode == 0, duration
 
 
+# Matches the exec path of the rinx binary the warm-up site's build runs.
+RINX_BINARY_PATH_REGEX = ".*/crates/worker/rinx"
+
+
+def build_warmup_site(target_dir: Path, log_name: str) -> tuple[bool, float]:
+    """Builds the warm-up site, which compiles rinx, and times it.
+
+    The rinx binary is not a top-level output, so on a disk-cache hit Bazel
+    would not download it (build without the bytes) and `find_rinx_binary`
+    would point at a file that does not exist. Download flags are not part of
+    any action key, so forcing that one download costs no cache hits.
+    """
+    return timed_bazel_build(
+        target_dir,
+        f"//{WARMUP_PACKAGE}:site",
+        log_name,
+        [f"--remote_download_regex={RINX_BINARY_PATH_REGEX}"],
+    )
+
+
 def json_objects(node: object) -> Iterator[dict[str, Any]]:
     """Every JSON object in a parsed `.ast` tree, the root included, depth-first."""
     if isinstance(node, dict):

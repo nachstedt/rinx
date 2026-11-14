@@ -207,7 +207,7 @@ class TestRunBenchmark:
 
         # Then
         assert steps == [
-            f"build //{benchmark.WARMUP_PACKAGE}:site",
+            f"build //{benchmark_common.WARMUP_PACKAGE}:site",
             "find",
             "init Doc",
             "build //Doc:site",
@@ -233,7 +233,7 @@ class TestRunBenchmark:
 
         # Then
         assert not result.succeeded
-        assert built == [f"//{benchmark.WARMUP_PACKAGE}:site"]
+        assert built == [f"//{benchmark_common.WARMUP_PACKAGE}:site"]
 
 
 class TestRenderParserConfig:
