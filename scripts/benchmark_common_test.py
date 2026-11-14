@@ -1,5 +1,6 @@
 import argparse
 import json
+import re
 import subprocess
 from collections.abc import Sequence
 from pathlib import Path
@@ -302,6 +303,43 @@ class TestTimedBazelBuild:
         # Then the failure is reported, and both streams are on disk
         assert not succeeded
         assert (root / "build.log").read_text() == "out\nerr\n"
+
+
+class TestBuildWarmupSite:
+    def test_builds_the_warmup_site_downloading_the_rinx_binary(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        # Given a build recording what it was asked for
+        calls: list[tuple[str, str, list[str]]] = []
+
+        def build(
+            _: Path, target: str, log_name: str, extra_flags: Sequence[str] = ()
+        ) -> tuple[bool, float]:
+            calls.append((target, log_name, list(extra_flags)))
+            return True, 2.0
+
+        monkeypatch.setattr(benchmark_common, "timed_bazel_build", build)
+
+        # When
+        result = benchmark_common.build_warmup_site(tmp_path, "warmup.log")
+
+        # Then the warm-up site was built and its result passed through
+        assert result == (True, 2.0)
+        [(target, log_name, flags)] = calls
+        assert target == f"//{benchmark_common.WARMUP_PACKAGE}:site"
+        assert log_name == "warmup.log"
+
+        # And the exec-configuration rinx binary is downloaded even on a
+        # cache hit, but nothing else is
+        [pattern] = [
+            flag.removeprefix("--remote_download_regex=")
+            for flag in flags
+            if flag.startswith("--remote_download_regex=")
+        ]
+        binary = "bazel-out/k8-opt-exec-ST-1a2b/bin/external/rinx+/crates/worker/rinx"
+        assert re.fullmatch(pattern, binary)
+        assert not re.fullmatch(pattern, f"{binary}.d")
+        assert not re.fullmatch(pattern, "bazel-out/k8-opt/bin/bench_warmup/index.html")
 
 
 class TestJsonObjects:

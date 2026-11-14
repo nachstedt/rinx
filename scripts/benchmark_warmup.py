@@ -21,7 +21,6 @@ import tempfile
 from pathlib import Path
 
 import benchmark_common
-from benchmark_common import WARMUP_PACKAGE
 
 TARGET_DIR = Path(tempfile.gettempdir()) / "rinx_benchmark_warmup"
 MODULE_NAME = "rinx_benchmark_warmup"
@@ -45,9 +44,7 @@ def main() -> int:
     generate_warmup_workspace(TARGET_DIR, rinx_root)
 
     print("Building rinx and its toolchains for the benchmarks...")
-    built, duration = benchmark_common.timed_bazel_build(
-        TARGET_DIR, f"//{WARMUP_PACKAGE}:site", "bazel_build.log"
-    )
+    built, duration = benchmark_common.build_warmup_site(TARGET_DIR, "bazel_build.log")
     print(f"Warm-up build {'finished' if built else 'failed'} in {duration:.2f} seconds.")
     return benchmark_common.exit_status(build_succeeded=built)
 

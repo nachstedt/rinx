@@ -18,7 +18,6 @@ from typing import Any, TextIO
 
 import benchmark_common
 from benchmark_common import (
-    WARMUP_PACKAGE,
     BuildResult,
     ReportLayout,
     SectionCount,
@@ -175,8 +174,8 @@ def run_benchmark(*, clean: bool = False) -> BuildResult:
         benchmark_common.discard_stale_corpus_outputs(TARGET_DIR, CORPUS_PACKAGE)
 
     print("Building rinx and its toolchains (not timed as doc build)...")
-    deps_built, deps_duration = benchmark_common.timed_bazel_build(
-        TARGET_DIR, f"//{WARMUP_PACKAGE}:site", "bazel_deps_build.log"
+    deps_built, deps_duration = benchmark_common.build_warmup_site(
+        TARGET_DIR, "bazel_deps_build.log"
     )
     print(f"Dependency build finished in {deps_duration:.2f} seconds.")
     failed = BuildResult(succeeded=False, warmup_seconds=deps_duration, corpus_seconds=None)

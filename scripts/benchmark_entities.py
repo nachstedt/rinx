@@ -207,8 +207,8 @@ def warm_up(*, clean: bool = False) -> tuple[bool, float]:
         discard_stale_corpus_outputs(workspace)
 
     print("Building rinx and its toolchains (not timed as doc build)...")
-    deps_built, deps_duration = benchmark_common.timed_bazel_build(
-        workspace, f"//{WARMUP_PACKAGE}:site", "bazel_deps_build.log"
+    deps_built, deps_duration = benchmark_common.build_warmup_site(
+        workspace, "bazel_deps_build.log"
     )
     print(f"Dependency build finished in {deps_duration:.2f} seconds.")
     return deps_built, deps_duration
