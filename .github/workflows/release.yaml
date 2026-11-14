@@ -93,7 +93,7 @@ jobs:
       contents: write
     steps:
       - name: Publish the draft release
-        uses: softprops/action-gh-release@v3.0.3
+        uses: softprops/action-gh-release@v3.0.4
         with:
           tag_name: ${{ github.ref_name }}
           draft: false
