@@ -15,13 +15,13 @@ Add rinx to your ``MODULE.bazel``:
 
 .. code-block:: python
 
-   bazel_dep(name = "rinx", version = "0.1.0")
+   bazel_dep(name = "rinx", version = "0.2.0")
 
 To follow an unreleased commit instead, override it with the repository:
 
 .. code-block:: python
 
-   bazel_dep(name = "rinx", version = "0.1.0")
+   bazel_dep(name = "rinx", version = "0.2.0")
    git_override(
        module_name = "rinx",
        remote = "https://github.com/nachstedt/rinx.git",
