@@ -189,7 +189,7 @@ def _compile_in_current_mode(
     return compile(source, filename, _CURRENT_COMPILE_MODE, flags, dont_inherit)
 
 
-doctest.compile = _compile_in_current_mode  # ty: ignore[unresolved-attribute]
+doctest.compile = _compile_in_current_mode  # ty: ignore[missing-attribute]
 
 
 class compile_mode:  # noqa: N801 - used as a context manager, reads as one
